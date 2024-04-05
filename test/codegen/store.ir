@@ -1,0 +1,11 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @kernel(%a: memref<f32>, %b: memref<f32x10x?>, %c: f32) {
+    %1 = group_id
+    store %c, %a[] : memref<f32>
+    store %c, %b[5, %1] : memref<f32x10x?>
+    ; CHECK:      *a = c;
+    ; CHECK-NEXT: *(b + 5 * 1 + x1 * 10) = c;
+}

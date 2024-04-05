@@ -1,0 +1,12 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @for1() {
+  for %0 = 0,10 {
+  ; CHECK: for (uint x0 = 0; x0 < 10; ++x0)
+  }
+  for %1 = -2,2 : i16 {
+  ; CHECK: for (short x1 = -2; x1 < 2; ++x1)
+  }
+}

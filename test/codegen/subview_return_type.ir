@@ -1,0 +1,56 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @t1(%0: memref<f32x32x16>) {
+  %1 = subview %0[4:8,8:4] : memref<f32x32x16>
+  %2 = load %1[0,0] : memref<f32x8x4,strided<1,32>>
+}
+func @t2(%0: memref<f32x16x8>, %1: index) {
+  %2 = subview %0[2:4,%1] : memref<f32x16x8>
+  %3 = load %2[0] : memref<f32x4>
+}
+func @t3(%0: memref<f64x16x8>, %1: index) {
+  %2 = subview %0[2:4,%1:1] : memref<f64x16x8>
+  %3 = load %2[0,0] : memref<f64x4x1,strided<1,16>>
+}
+func @t4(%0: memref<f32x16>, %1: index) {
+  %2 = subview %0[0:%1] : memref<f32x16>
+  %3 = load %2[0] : memref<f32x?>
+}
+func @t5(%0: memref<f32x16x42x13>, %1: index) {
+  %2 = subview %0[2:4, 0:%1, 6:7] : memref<f32x16x42x13>
+  %3 = load %2[0,0,0] : memref<f32x4x?x7,strided<1,16,672>>
+}
+func @t6(%0: memref<f32x16x42x13,strided<1,?,?>>, %1: index) {
+  %2 = subview %0[2:4, 0:%1, 6:7] : memref<f32x16x42x13,strided<1,?,?>>
+  %3 = load %2[0,0,0] : memref<f32x4x?x7,strided<1,?,?>>
+}
+func @t7(%0: memref<f32x16>) {
+  %2 = subview %0[:] : memref<f32x16>
+; CHECK: global float* x2 = x0 + 0ll * 1;
+  %3 = load %2[0] : memref<f32x16>
+}
+func @t8(%0: memref<f32x?>) {
+  %2 = subview %0[:] : memref<f32x?>
+; CHECK:      global float* x2 = x0 + 0ll * 1;
+; CHECK-NEXT: uint x2_shape0 = x0_shape0 - 0ll;
+  %3 = load %2[0] : memref<f32x?>
+}
+func @t9(%0: memref<f32x16>) {
+  %2 = subview %0[5:?] : memref<f32x16>
+; CHECK:      global float* x2 = x0 + 5 * 1;
+  %3 = load %2[0] : memref<f32x11>
+}
+func @t10(%0: memref<f32x?>) {
+  %2 = subview %0[5:?] : memref<f32x?>
+; CHECK:      global float* x2 = x0 + 5 * 1;
+; CHECK-NEXT: uint x2_shape0 = x0_shape0 - 5;
+  %3 = load %2[0] : memref<f32x?>
+}
+func @t11(%0: memref<f32x16>, %1: index) {
+  %2 = subview %0[%1:?] : memref<f32x16>
+; CHECK:      global float* x2 = x0 + x1 * 1;
+; CHECK-NEXT: uint x2_shape0 = 16 - x1;
+  %3 = load %2[0] : memref<f32x?>
+}

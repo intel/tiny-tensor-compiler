@@ -1,0 +1,16 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @t1(%0: memref<f32x32x16>) {
+  %1 = size %0[0] : memref<f32x32x16>
+  %2 = size %0[1] : memref<f32x32x16>
+; CHECK:      uint x1 = 32;
+; CHECK-NEXT: uint x2 = 16;
+}
+func @t2(%0: memref<f32x?x?>) {
+  %1 = size %0[0] : memref<f32x?x?>
+  %2 = size %0[1] : memref<f32x?x?>
+; CHECK:      uint x1 = x0_shape0;
+; CHECK-NEXT: uint x2 = x0_shape1;
+}

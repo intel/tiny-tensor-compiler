@@ -1,0 +1,10 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+; CHECK: void kernel(global float* K0, uint K0_shape0, uint K0_shape1, uint K0_stride1, uint offset, uint size)
+func @kernel(%K0: memref<f32x?x?>, %offset: index, %size: index) {
+  ; CHECK-NEXT: global float* x0 = K0 + 4 * 1 + offset * K0_stride1;
+  ; CHECK-NEXT: uint x0_shape0 = size;
+  %0 = subview %K0[4:%size, %offset] : memref<f32x?x?>
+}

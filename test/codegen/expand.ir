@@ -1,0 +1,114 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @t1(%0: memref<f32x32x16x8>) {
+  %1 = expand %0[1->2x8] : memref<f32x32x16x8>
+  %2 = load %1[0,0,0,0] : memref<f32x32x2x8x8>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 1 + 0 * 32 + 0 * 64 + 0 * 512);
+}
+func @t2(%0: memref<f32x32x16x8>) {
+  %1 = expand %0[1->2x?] : memref<f32x32x16x8>
+  %2 = load %1[0,0,0,0] : memref<f32x32x2x8x8>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 1 + 0 * 32 + 0 * 64 + 0 * 512);
+}
+func @t3(%0: memref<f32x32x16x8>) {
+  %1 = expand %0[1->?x2x4] : memref<f32x32x16x8>
+  %2 = load %1[0,0,0,0,0] : memref<f32x32x2x2x4x8>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 1 + 0 * 32 + 0 * 64 + 0 * 128 + 0 * 512);
+}
+func @t4(%0: memref<f32x32x?x8>) {
+  %1 = expand %0[1->2x?] : memref<f32x32x?x8>
+  %2 = load %1[0,0,0,0] : memref<f32x32x2x?x8>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * 2 / x0_shape1;
+; CHECK-NEXT: uint x1_shape2 = inferred_size;
+; CHECK-NEXT: uint x1_stride3 = x0_stride2;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 1 + 0 * 32 + 0 * 64 + 0 * x1_stride3);
+}
+func @t5(%0: memref<f32x32x?x8>) {
+  %1 = expand %0[1->?x4x8] : memref<f32x32x?x8>
+  %2 = load %1[0,0,0,0,0] : memref<f32x32x?x4x8x8>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * 4 * 8 / x0_shape1;
+; CHECK-NEXT: uint x1_shape1 = inferred_size;
+; CHECK-NEXT: uint x1_stride2 = 32 * inferred_size;
+; CHECK-NEXT: uint x1_stride3 = 32 * inferred_size * 4;
+; CHECK-NEXT: uint x1_stride4 = x0_stride2;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 1 + 0 * 32 + 0 * x1_stride2 + 0 * x1_stride3 + 0 * x1_stride4);
+}
+func @t6(%0: memref<f32x32x?>) {
+  %1 = group_id
+  %2 = expand %0[1 -> %1 x ?] : memref<f32x32x?>
+  %3 = load %2[0,0,0] : memref<f32x32x?x?>
+; CHECK:      global float* x2 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * x1 / x0_shape1;
+; CHECK-NEXT: uint x2_shape1 = x1;
+; CHECK-NEXT: uint x2_shape2 = inferred_size;
+; CHECK-NEXT: uint x2_stride2 = 32 * x1;
+; CHECK-NEXT: float x3 = *(x2 + 0 * 1 + 0 * 32 + 0 * x2_stride2);
+}
+func @t7(%0: memref<f32x32x16>) {
+  %1 = group_id
+  %2 = expand %0[1 -> %1 x ?] : memref<f32x32x16>
+  %3 = load %2[0,0,0] : memref<f32x32x?x?>
+; CHECK:      global float* x2 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * x1 / 16;
+; CHECK-NEXT: uint x2_shape1 = x1;
+; CHECK-NEXT: uint x2_shape2 = inferred_size;
+; CHECK-NEXT: uint x2_stride2 = 32 * x1;
+; CHECK-NEXT: float x3 = *(x2 + 0 * 1 + 0 * 32 + 0 * x2_stride2);
+}
+func @t8(%0: memref<f32x32x?>) {
+  %1 = group_id
+  %2 = add %1, 5 : index
+  %3 = expand %0[1 -> %1 x %2] : memref<f32x32x?>
+  %4 = load %3[0,0,0] : memref<f32x32x?x?>
+; CHECK:      global float* x3 = x0;
+; CHECK-NEXT: uint x3_shape1 = x1;
+; CHECK-NEXT: uint x3_shape2 = x2;
+; CHECK-NEXT: uint x3_stride2 = 32 * x1;
+; CHECK-NEXT: float x4 = *(x3 + 0 * 1 + 0 * 32 + 0 * x3_stride2);
+}
+func @t9(%0: memref<f32x32x?>) {
+  %1 = group_id
+  %2 = expand %0[1 -> 4 x %1] : memref<f32x32x?>
+  %3 = load %2[0,0,0] : memref<f32x32x4x?>
+; CHECK:      global float* x2 = x0;
+; CHECK-NEXT: uint x2_shape2 = x1;
+; CHECK-NEXT: float x3 = *(x2 + 0 * 1 + 0 * 32 + 0 * 128);
+}
+func @t10(%0: memref<f32x32x7,strided<2,64>>) {
+  %1 = expand %0[0->4x8] : memref<f32x32x7,strided<2,64>>
+  %2 = load %1[0,0,0] : memref<f32x4x8x7,strided<2,8,64>>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 2 + 0 * 8 + 0 * 64);
+}
+func @t11(%0: memref<f32x32x7,strided<2,64>>) {
+  %1 = expand %0[0->4x?] : memref<f32x32x7,strided<2,64>>
+  %2 = load %1[0,0,0] : memref<f32x4x8x7,strided<2,8,64>>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 2 + 0 * 8 + 0 * 64);
+}
+func @t12(%0: memref<f32x?x7,strided<2,?>>) {
+  %1 = expand %0[0->?x4] : memref<f32x?x7,strided<2,?>>
+  %2 = load %1[0,0,0] : memref<f32x?x4x7,strided<2,?,?>>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * 4 / x0_shape0;
+; CHECK-NEXT: uint x1_shape0 = inferred_size;
+; CHECK-NEXT: uint x1_stride1 = 2 * inferred_size;
+; CHECK-NEXT: uint x1_stride2 = x0_stride1;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 2 + 0 * x1_stride1 + 0 * x1_stride2);
+}
+func @t13(%0: memref<f32x?x7,strided<2,?>>) {
+  %1 = expand %0[0->4x?] : memref<f32x?x7,strided<2,?>>
+  %2 = load %1[0,0,0] : memref<f32x4x?x7,strided<2,8,?>>
+; CHECK:      global float* x1 = x0;
+; CHECK-NEXT: uint inferred_size = 1 * 4 / x0_shape0;
+; CHECK-NEXT: uint x1_shape1 = inferred_size;
+; CHECK-NEXT: uint x1_stride2 = x0_stride1;
+; CHECK-NEXT: float x2 = *(x1 + 0 * 2 + 0 * 8 + 0 * x1_stride2);
+}
