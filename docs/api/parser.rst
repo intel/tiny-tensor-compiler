@@ -5,7 +5,7 @@
 Parser
 ======
 
-Programs written in the :ref:`tensor language <tensor ir>`
+Programs written in the :ref:`tensor language <tensor language>`
 are either parsed using a `source manager`_ or the `parse function`_.
 Using the source manager is the recommended method as it enhanced error
 messages with code context.
