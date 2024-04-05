@@ -1,0 +1,657 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Building and linking &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'manual/build';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Basic usage" href="usage.html" />
+    <link rel="prev" title="Tiny Tensor Compiler" href="../index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tensor-ir.html">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/parser.html">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/jit.html">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/runtime.html">Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipe/small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/builder.html">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/tiling.html">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/manual/build.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/manual/build.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fmanual/build.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/manual/build.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Building and linking</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-from-source-using-oneapi">Build from source using oneAPI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-options">Build options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linking-in-a-cmake-project">Linking in a CMake project</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="building-and-linking">
+<h1>Building and linking<a class="headerlink" href="#building-and-linking" title="Link to this heading">#</a></h1>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.cmake.org">CMake</a> &gt;= 3.23</p></li>
+<li><p><a class="reference external" href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html">Intel oneAPI Base Toolkit</a></p></li>
+<li><p>OpenCL</p></li>
+<li><p>Level Zero</p></li>
+<li><p><a class="reference external" href="https://github.com/intel/compute-runtime">ocloc</a> (OpenCL offline compiler from the Intel Compute Runtime)</p></li>
+<li><p><a class="reference external" href="https://github.com/intel/double-batched-fft-library">Double-Batched FFT Library</a> &gt;= 0.5.1</p></li>
+<li><p><a class="reference external" href="http://re2c.org">re2c</a> &gt;= 3.0</p></li>
+<li><p><a class="reference external" href="https://www.gnu.org/software/bison/">bison</a> &gt;= 3.8.2</p></li>
+</ul>
+</section>
+<section id="build-from-source-using-oneapi">
+<h2>Build from source using oneAPI<a class="headerlink" href="#build-from-source-using-oneapi" title="Link to this heading">#</a></h2>
+<p>Install CMake, the oneAPI Base Toolkit, the Intel compute runtime, re2c, and bison using your system
+package manager.</p>
+<p>Initialize the oneAPI environment.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">. /opt/intel/oneapi/setvars.sh</span>
+</pre></div>
+</div>
+<p>Clone the Double-Batched FFT library to your filesystem.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/intel/double-batched-fft-library.git</span>
+</pre></div>
+</div>
+<p>We only need libclir.so, which we build and install using the following steps.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cd double-batched-fft-library/clir/</span>
+<span class="go">cmake -Bbuild -GNinja -DCMAKE_CXX_COMPILER=icpx -DCMAKE_INSTALL_PREFIX=$(pwd)/../../install/ \</span>
+<span class="go">      -DCMAKE_CXX_FLAGS=&quot;-ffp-model=precise&quot; -DBUILD_SHARED_LIBS=YES</span>
+<span class="go">cmake --build build</span>
+<span class="go">cmake --install build</span>
+<span class="go">cd ../..</span>
+</pre></div>
+</div>
+<p>Then, build and install Tiny Tensor Compiler with the following steps</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/intel/tiny-tensor-compiler.git tinytc</span>
+<span class="go">cd tinytc</span>
+<span class="go">cmake -Bbuild -GNinja -DCMAKE_CXX_COMPILER=icpx -DCMAKE_INSTALL_PREFIX=$(pwd)/../install/ \</span>
+<span class="go">      -DCMAKE_PREFIX_PATH=$(pwd)/../install -DBUILD_SHARED_LIBS=YES</span>
+<span class="go">cmake --build build</span>
+<span class="go">cmake --install build</span>
+<span class="go">cd ..</span>
+</pre></div>
+</div>
+<p>If you need a static library, set <cite>-DBUILD_SHARED_LIBS=NO</cite> when compiling libclir and the Tiny Tensor Compiler.</p>
+</section>
+<section id="build-options">
+<h2>Build options<a class="headerlink" href="#build-options" title="Link to this heading">#</a></h2>
+<p>The following CMake option options are supported.</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BUILD_DOCUMENTATION</p></td>
+<td><p>Build the documentation</p></td>
+</tr>
+<tr class="row-odd"><td><p>BUILD_TESTING</p></td>
+<td><p>Build unit tests</p></td>
+</tr>
+<tr class="row-even"><td><p>BUILD_SYCL</p></td>
+<td><p>Build libtinytc-sycl for SYCL support</p></td>
+</tr>
+<tr class="row-odd"><td><p>BUILD_LEVEL_ZERO</p></td>
+<td><p>Build libtinytc-level-zero for Level Zero support (enforced if BUILD_SYCL=ON)</p></td>
+</tr>
+<tr class="row-even"><td><p>BUILD_OPENCL</p></td>
+<td><p>Build libtinytc-opencl for OpenCL support (enforced if BUILD_SYCL=ON)</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="linking-in-a-cmake-project">
+<h2>Linking in a CMake project<a class="headerlink" href="#linking-in-a-cmake-project" title="Link to this heading">#</a></h2>
+<p>CMake targets are exported, therefore you only need</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>in your CMakeLists.txt to find the Tiny Tensor Compiler.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For non-standard installation directories add -DCMAKE_PREFIX_PATH=/path/to/installation
+when invoking cmake.</p>
+</div>
+<p>Runtime support is split in the three library tinytc-level-zero, tinytc-opencl, and tinytc-sycl.
+The BUILD_(SYCL, LEVEL_ZERO, OPENCL) options control which libraries are built.
+For example, when using OpenCL only, you can set BUILD_SYCL=OFF such that you do
+not need a C++ compiler with SYCL support.</p>
+<p>For runtime support you have to add one of the following <cite>find_package</cite> calls to your CMakeLists.txt:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-sycl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+<span class="c"># or</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-level-zero</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+<span class="c"># or</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-opencl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can add “static” or “shared” after “REQUIRED” to explicitly request the static or shared library version.</p>
+</div>
+<p>For linking and setting up include directories you only need</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc-sycl</span><span class="p">)</span>
+<span class="c"># or</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc-level-zero</span><span class="p">)</span>
+<span class="c"># or</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::opencl</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="../index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tiny Tensor Compiler</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="usage.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Basic usage</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dependencies">Dependencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-from-source-using-oneapi">Build from source using oneAPI</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#build-options">Build options</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linking-in-a-cmake-project">Linking in a CMake project</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

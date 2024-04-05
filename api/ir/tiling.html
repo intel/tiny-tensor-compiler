@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Work-group size &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/ir/tiling';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Compiler passes" href="passes.html" />
+    <link rel="prev" title="Builder" href="builder.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/tensor-ir.html">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">tinytc</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parser.html">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jit.html">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime.html">Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../recipe/small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">IR module</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="builder.html">Builder</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/api/ir/tiling.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/api/ir/tiling.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fapi/ir/tiling.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/api/ir/tiling.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Work-group size</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE"><code class="docutils literal notranslate"><span class="pre">suggest_subgroup_size()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config"><code class="docutils literal notranslate"><span class="pre">suggest_local_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config"><code class="docutils literal notranslate"><span class="pre">suggest_local_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info"><code class="docutils literal notranslate"><span class="pre">suggest_subgroup_size_and_tiling()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir12local_tilingE"><code class="docutils literal notranslate"><span class="pre">local_tiling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling7m_tilesEv"><code class="docutils literal notranslate"><span class="pre">local_tiling::m_tiles()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling7n_tilesEv"><code class="docutils literal notranslate"><span class="pre">local_tiling::n_tiles()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">local_tiling::work_group_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">local_tiling::number_of_work_items()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shapeE"><code class="docutils literal notranslate"><span class="pre">blas_shape</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir10blas_shapeeqERK10blas_shape"><code class="docutils literal notranslate"><span class="pre">blas_shape::operator==()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir10blas_shapeneERK10blas_shape"><code class="docutils literal notranslate"><span class="pre">blas_shape::operator!=()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shape2tyE"><code class="docutils literal notranslate"><span class="pre">blas_shape::ty</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shape5shapeE"><code class="docutils literal notranslate"><span class="pre">blas_shape::shape</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="work-group-size">
+<h1>Work-group size<a class="headerlink" href="#work-group-size" title="Link to this heading">#</a></h1>
+<p>Instructions like gemm, axpby, ger, etc., are processed by a work-group collectively.
+Choosing the work-group size appropriately is critical for performance.
+If the work_group_size and subgroup_size attribute are omitted, heuristics are used.</p>
+<p>These work-group size heuristics can also be called manually.
+For example, if a kernel takes a memref of dynamic size, then the memref shapes are unknown at compile-time,
+and the automatic application of the heuristics is only giving a general-purpose work-group size.
+Therefore using the heuristics API, outlined below, one can supply memref shape constraints, like a maximum or
+typical shape.</p>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE">
+<span id="_CPPv3N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE"></span><span id="_CPPv2N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE"></span><span id="tinytc::ir::suggest_subgroup_size__std::vector:blas_shape:CR.std::vector:std::uint32_t:CR"></span><span class="target" id="tiling_8hpp_1ab3cd91645b712ed4943903b6da989da3"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">suggest_subgroup_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shapes</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">available_subgroup_sizes</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Suggest a subgroup size based on blas sizes. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shapes</strong> – Shapes that occur in kernel </p></li>
+<li><p><strong>available_subgroup_sizes</strong> – Subgroup sizes supported by device; must be in ascending order </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config">
+<span id="_CPPv3N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config"></span><span id="_CPPv2N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config"></span><span id="tinytc::ir::suggest_local_tiling__blas_shapeCR.core_configCR"></span><span class="target" id="tiling_8hpp_1a27963ed2cb3e3a7c6b3c89991c89d2a1"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">suggest_local_tiling</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bshape</span></span>, <a class="reference internal" href="../jit.html#_CPPv4N6tinytc11core_configE" title="tinytc::core_config"><span class="n"><span class="pre">core_config</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">core_cfg</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc2ir12local_tilingE" title="tinytc::ir::local_tiling"><span class="n"><span class="pre">local_tiling</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config" title="Link to this definition">#</a><br /></dt>
+<dd><p>Suggest a local tiling based on blas size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bshape</strong> – Shape that occurs in kernel </p></li>
+<li><p><strong>core_cfg</strong> – Core configuration for subgroup size</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config">
+<span id="_CPPv3N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config"></span><span id="_CPPv2N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config"></span><span id="tinytc::ir::suggest_local_tiling__std::vector:blas_shape:CR.core_configCR"></span><span class="target" id="tiling_8hpp_1a50ca3040ed6b767522eb883cf08319af"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">suggest_local_tiling</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shapes</span></span>, <a class="reference internal" href="../jit.html#_CPPv4N6tinytc11core_configE" title="tinytc::core_config"><span class="n"><span class="pre">core_config</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">core_cfg</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc2ir12local_tilingE" title="tinytc::ir::local_tiling"><span class="n"><span class="pre">local_tiling</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config" title="Link to this definition">#</a><br /></dt>
+<dd><p>Suggest a local tiling based on blas sizes. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shapes</strong> – Shapes that occur in kernel </p></li>
+<li><p><strong>core_cfg</strong> – Core configuration for subgroup size</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info">
+<span id="_CPPv3N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info"></span><span id="_CPPv2N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info"></span><span id="tinytc::ir::suggest_subgroup_size_and_tiling__std::vector:blas_shape:CR.core_infoCR"></span><span class="target" id="tiling_8hpp_1a1d462c8d456a94dcbf4ea312c532d1f5"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">suggest_subgroup_size_and_tiling</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">shapes</span></span>, <a class="reference internal" href="../jit.html#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">dev_info</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">tuple</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc2ir12local_tilingE" title="tinytc::ir::local_tiling"><span class="n"><span class="pre">local_tiling</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info" title="Link to this definition">#</a><br /></dt>
+<dd><p>Suggest both, subgroup size and tiling, based on blas sizes. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>shapes</strong> – Shapes that occur in kernel </p></li>
+<li><p><strong>dev_info</strong> – Device info</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>{subgroup size, local tiling} </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir12local_tilingE">
+<span id="_CPPv3N6tinytc2ir12local_tilingE"></span><span id="_CPPv2N6tinytc2ir12local_tilingE"></span><span id="tinytc::ir::local_tiling"></span><span class="target" id="classtinytc_1_1ir_1_1local__tiling"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">local_tiling</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir12local_tilingE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Size of 2D subgroup grid. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir12local_tiling7m_tilesEv">
+<span id="_CPPv3NK6tinytc2ir12local_tiling7m_tilesEv"></span><span id="_CPPv2NK6tinytc2ir12local_tiling7m_tilesEv"></span><span id="tinytc::ir::local_tiling::m_tilesC"></span><span class="target" id="classtinytc_1_1ir_1_1local__tiling_1ac833b5cca0892d0cec70bc9d1b1df0bb"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">m_tiles</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir12local_tiling7m_tilesEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Number of subgroups working on the row blocks (M-loop) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir12local_tiling7n_tilesEv">
+<span id="_CPPv3NK6tinytc2ir12local_tiling7n_tilesEv"></span><span id="_CPPv2NK6tinytc2ir12local_tiling7n_tilesEv"></span><span id="tinytc::ir::local_tiling::n_tilesC"></span><span class="target" id="classtinytc_1_1ir_1_1local__tiling_1ae87015dfa0dffc773f49981d1346f689"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">n_tiles</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir12local_tiling7n_tilesEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Number of subgroups working on the column blocks (N-loop) </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE">
+<span id="_CPPv3NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE"></span><span id="_CPPv2NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE"></span><span id="tinytc::ir::local_tiling::work_group_size__std::uint32_tC"></span><span class="target" id="classtinytc_1_1ir_1_1local__tiling_1a822bf71ed66479f924464a6b9663a1e5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_group_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2u</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Calculate work-group size. </p>
+<p>The work-group size is given by {<a class="reference internal" href="#classtinytc_1_1ir_1_1local__tiling_1ac833b5cca0892d0cec70bc9d1b1df0bb"><span class="std std-ref">m_tiles()</span></a> * subgroup_size, n_tiles}. The returned values can be used in the work_group_size function attribute </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE">
+<span id="_CPPv3NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE"></span><span id="_CPPv2NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE"></span><span id="tinytc::ir::local_tiling::number_of_work_items__std::uint32_tC"></span><span class="target" id="classtinytc_1_1ir_1_1local__tiling_1a71a891f5569e973ccd28030d070a8e29"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">number_of_work_items</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compute number of work items. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir10blas_shapeE">
+<span id="_CPPv3N6tinytc2ir10blas_shapeE"></span><span id="_CPPv2N6tinytc2ir10blas_shapeE"></span><span id="tinytc::ir::blas_shape"></span><span class="target" id="structtinytc_1_1ir_1_1blas__shape"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">blas_shape</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Matrix shape and element type </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir10blas_shapeeqERK10blas_shape">
+<span id="_CPPv3NK6tinytc2ir10blas_shapeeqERK10blas_shape"></span><span id="_CPPv2NK6tinytc2ir10blas_shapeeqERK10blas_shape"></span><span id="tinytc::ir::blas_shape::eq-operator__blas_shapeCRC"></span><span class="target" id="structtinytc_1_1ir_1_1blas__shape_1addaca8144bbe2c21e22707d63012da7a"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir10blas_shapeeqERK10blas_shape" title="Link to this definition">#</a><br /></dt>
+<dd><p>equal </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc2ir10blas_shapeneERK10blas_shape">
+<span id="_CPPv3NK6tinytc2ir10blas_shapeneERK10blas_shape"></span><span id="_CPPv2NK6tinytc2ir10blas_shapeneERK10blas_shape"></span><span id="tinytc::ir::blas_shape::neq-operator__blas_shapeCRC"></span><span class="target" id="structtinytc_1_1ir_1_1blas__shape_1abe5cdca8907a2d551a52f4e068a5aed9"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc2ir10blas_shapeE" title="tinytc::ir::blas_shape"><span class="n"><span class="pre">blas_shape</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><a class="headerlink" href="#_CPPv4NK6tinytc2ir10blas_shapeneERK10blas_shape" title="Link to this definition">#</a><br /></dt>
+<dd><p>not equal </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir10blas_shape2tyE">
+<span id="_CPPv3N6tinytc2ir10blas_shape2tyE"></span><span id="_CPPv2N6tinytc2ir10blas_shape2tyE"></span><span id="tinytc::ir::blas_shape::ty__ir::scalar_type"></span><span class="target" id="structtinytc_1_1ir_1_1blas__shape_1abf8046637492a1936a1fbbf638864129"></span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="builder.html#_CPPv4N6tinytc2ir11scalar_typeE" title="tinytc::ir::scalar_type"><span class="n"><span class="pre">scalar_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ty</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir10blas_shape2tyE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Element type. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc2ir10blas_shape5shapeE">
+<span id="_CPPv3N6tinytc2ir10blas_shape5shapeE"></span><span id="_CPPv2N6tinytc2ir10blas_shape5shapeE"></span><span id="tinytc::ir::blas_shape::shape__std::array:std::int64_t.2u:"></span><span class="target" id="structtinytc_1_1ir_1_1blas__shape_1af3b03fb6ca5928c8ba9dd03b365722fe"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2u</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shape</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc2ir10blas_shape5shapeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Matrix shape. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="builder.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Builder</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="passes.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Compiler passes</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE"><code class="docutils literal notranslate"><span class="pre">suggest_subgroup_size()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config"><code class="docutils literal notranslate"><span class="pre">suggest_local_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config"><code class="docutils literal notranslate"><span class="pre">suggest_local_tiling()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info"><code class="docutils literal notranslate"><span class="pre">suggest_subgroup_size_and_tiling()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir12local_tilingE"><code class="docutils literal notranslate"><span class="pre">local_tiling</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling7m_tilesEv"><code class="docutils literal notranslate"><span class="pre">local_tiling::m_tiles()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling7n_tilesEv"><code class="docutils literal notranslate"><span class="pre">local_tiling::n_tiles()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">local_tiling::work_group_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">local_tiling::number_of_work_items()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shapeE"><code class="docutils literal notranslate"><span class="pre">blas_shape</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir10blas_shapeeqERK10blas_shape"><code class="docutils literal notranslate"><span class="pre">blas_shape::operator==()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc2ir10blas_shapeneERK10blas_shape"><code class="docutils literal notranslate"><span class="pre">blas_shape::operator!=()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shape2tyE"><code class="docutils literal notranslate"><span class="pre">blas_shape::ty</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc2ir10blas_shape5shapeE"><code class="docutils literal notranslate"><span class="pre">blas_shape::shape</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

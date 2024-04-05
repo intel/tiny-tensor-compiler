@@ -1,0 +1,1090 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>JIT compiler &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/jit';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Runtime" href="runtime.html" />
+    <link rel="prev" title="Parser" href="parser.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/tensor-ir.html">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">tinytc</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="parser.html">Parser</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="recipe/small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="ir/builder.html">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/tiling.html">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/api/jit.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/api/jit.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fapi/jit.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/jit.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>JIT compiler</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enumerations">Enumerations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_formatE"><code class="docutils literal notranslate"><span class="pre">bundle_format</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_format5spirvE"><code class="docutils literal notranslate"><span class="pre">bundle_format::spirv</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_format6nativeE"><code class="docutils literal notranslate"><span class="pre">bundle_format::native</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc17core_feature_flagE"><code class="docutils literal notranslate"><span class="pre">core_feature_flag</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc17core_feature_flag19large_register_fileE"><code class="docutils literal notranslate"><span class="pre">core_feature_flag::large_register_file</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc22intel_gpu_architectureE"><code class="docutils literal notranslate"><span class="pre">intel_gpu_architecture</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc22intel_gpu_architecture3pvcE"><code class="docutils literal notranslate"><span class="pre">intel_gpu_architecture::pvc</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture"><code class="docutils literal notranslate"><span class="pre">get_core_info_intel_gpu()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"><code class="docutils literal notranslate"><span class="pre">optimize_and_make_binary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE"><code class="docutils literal notranslate"><span class="pre">compile_opencl_c()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_configE"><code class="docutils literal notranslate"><span class="pre">core_config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config13subgroup_sizeE"><code class="docutils literal notranslate"><span class="pre">core_config::subgroup_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config24max_number_of_work_itemsE"><code class="docutils literal notranslate"><span class="pre">core_config::max_number_of_work_items</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config17local_memory_sizeE"><code class="docutils literal notranslate"><span class="pre">core_config::local_memory_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config14register_spaceE"><code class="docutils literal notranslate"><span class="pre">core_config::register_space</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config10ip_versionE"><code class="docutils literal notranslate"><span class="pre">core_config::ip_version</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config13core_featuresE"><code class="docutils literal notranslate"><span class="pre">core_config::core_features</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_infoE"><code class="docutils literal notranslate"><span class="pre">core_info</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_infoD0Ev"><code class="docutils literal notranslate"><span class="pre">core_info::~core_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info10ip_versionEv"><code class="docutils literal notranslate"><span class="pre">core_info::ip_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info14subgroup_sizesEv"><code class="docutils literal notranslate"><span class="pre">core_info::subgroup_sizes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info13register_sizeEv"><code class="docutils literal notranslate"><span class="pre">core_info::register_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info24num_registers_per_threadEv"><code class="docutils literal notranslate"><span class="pre">core_info::num_registers_per_thread()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info::set_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info::clear_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">core_info::core_features()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info15get_core_configENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">core_info::get_core_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intelE"><code class="docutils literal notranslate"><span class="pre">core_info_intel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE"><code class="docutils literal notranslate"><span class="pre">core_info_intel::core_info_intel()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel10ip_versionEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::ip_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel14subgroup_sizesEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::subgroup_sizes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel13register_sizeEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::register_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel24num_registers_per_threadEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::num_registers_per_thread()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel16set_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info_intel::set_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info_intel::clear_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::core_features()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">core_info_intel::get_core_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6binaryE"><code class="docutils literal notranslate"><span class="pre">binary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">binary::binary()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary4dataEv"><code class="docutils literal notranslate"><span class="pre">binary::data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary4sizeEv"><code class="docutils literal notranslate"><span class="pre">binary::size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary6formatEv"><code class="docutils literal notranslate"><span class="pre">binary::format()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary8metadataEv"><code class="docutils literal notranslate"><span class="pre">binary::metadata()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary8metadataERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">binary::metadata()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">binary::core_features()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadataE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadata13subgroup_sizeE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata::subgroup_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadata15work_group_sizeE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata::work_group_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="jit-compiler">
+<h1>JIT compiler<a class="headerlink" href="#jit-compiler" title="Link to this heading">#</a></h1>
+<p>Tensor programs may be compiled at run-time using the following snippet:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc.hpp&gt;</span>
+
+<span class="c1">// Create source manager and get core info</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">srcman</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">source_manager</span><span class="p">(</span><span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">get_core_info_intel_gpu</span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">intel_gpu_architecture</span><span class="o">::</span><span class="n">pvc</span><span class="p">);</span>
+<span class="c1">// Parse file</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">prog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">srcman</span><span class="p">.</span><span class="n">parse_file</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">prog</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// nullptr returned on error</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// JIT compile program</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">bin</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">optimize_and_make_binary</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">prog</span><span class="p">),</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">bundle_format</span><span class="o">::</span><span class="n">spirv</span><span class="p">,</span>
+<span class="w">                                            </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">info</span><span class="p">),</span><span class="w"> </span><span class="n">srcman</span><span class="p">.</span><span class="n">error_reporter</span><span class="p">());</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">bin</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// nullptr returned on error</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="mi">-1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The call to <em>optimize_and_make_binary</em> first runs compiler passes on <em>prog</em>, that is, <em>prog</em> is modified.
+It then returns a <em>shared_ptr</em> to a <em>binary</em> object.
+The <em>binary</em> object contains either SPIR-V or a native device binary.</p>
+<p>Some compiler passes depend on the properties of the GPU device.
+Therefore, the <em>core_info</em> object is required.
+A <em>core_info</em> is obtained from an architecture look-up table by calling <em>get_core_info_intel_gpu</em>
+in the above example.
+As one typically combines a GPU run-time with JIT compilation, it is recommended to call
+<strong>get_core_info</strong> to obtain the <em>core_info</em> (available for Level Zero, OpenCL, and SYCL).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Code generation targets OpenCL-C. Currently, the library requires the
+<a class="reference external" href="https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_required_subgroup_size.html">cl_intel_required_subgroup_size</a> extension,
+the <a class="reference external" href="https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups.html">cl_intel_subgroups</a> extension,
+the <a class="reference external" href="https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups_long.html">cl_intel_subgroups_long</a> extension,
+and the <a class="reference external" href="https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups_short.html">cl_intel_subgroups_short</a> extension.</p>
+</div>
+<section id="enumerations">
+<h2>Enumerations<a class="headerlink" href="#enumerations" title="Link to this heading">#</a></h2>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc13bundle_formatE">
+<span id="_CPPv3N6tinytc13bundle_formatE"></span><span id="_CPPv2N6tinytc13bundle_formatE"></span><span class="target" id="bundle__format_8hpp_1ab073d6c1b26756506b69850e109bb208"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">bundle_format</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc13bundle_formatE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Target binary format. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc13bundle_format5spirvE">
+<span id="_CPPv3N6tinytc13bundle_format5spirvE"></span><span id="_CPPv2N6tinytc13bundle_format5spirvE"></span><span class="target" id="bundle__format_8hpp_1ab073d6c1b26756506b69850e109bb208a281026d966626615768589fa301ae6af"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">spirv</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc13bundle_format5spirvE" title="Link to this definition">#</a><br /></dt>
+<dd><p>SPIR-V. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc13bundle_format6nativeE">
+<span id="_CPPv3N6tinytc13bundle_format6nativeE"></span><span id="_CPPv2N6tinytc13bundle_format6nativeE"></span><span class="target" id="bundle__format_8hpp_1ab073d6c1b26756506b69850e109bb208a8e5f3adee38c8fccc13c1f3be0143796"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">native</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc13bundle_format6nativeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Native device binary. </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc17core_feature_flagE">
+<span id="_CPPv3N6tinytc17core_feature_flagE"></span><span id="_CPPv2N6tinytc17core_feature_flagE"></span><span class="target" id="device__info_8hpp_1aef63d01f96407dbfd2ce7871502fa729"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">core_feature_flag</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc17core_feature_flagE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Core features that may be optionally enabled. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc17core_feature_flag19large_register_fileE">
+<span id="_CPPv3N6tinytc17core_feature_flag19large_register_fileE"></span><span id="_CPPv2N6tinytc17core_feature_flag19large_register_fileE"></span><span class="target" id="device__info_8hpp_1aef63d01f96407dbfd2ce7871502fa729adecc2daea3996733f386ce4fe25bfcca"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">large_register_file</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x1</span></span><a class="headerlink" href="#_CPPv4N6tinytc17core_feature_flag19large_register_fileE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Request a large register file. On PVC this doubles the number of registers per vector engine but halves the number of available hardware threads. When this feature is activated, the kernel is compiled with the “-ze-opt-large-register-file” option. </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc22intel_gpu_architectureE">
+<span id="_CPPv3N6tinytc22intel_gpu_architectureE"></span><span id="_CPPv2N6tinytc22intel_gpu_architectureE"></span><span class="target" id="device__info_8hpp_1af19df89ed19b3011048f3eb53b962f18"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">intel_gpu_architecture</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc22intel_gpu_architectureE" title="Link to this definition">#</a><br /></dt>
+<dd><p>IP versions for Intel GPUs. </p>
+<p>Note: IP versions are extracted from<ul class="simple">
+<li><p><a class="github reference external" href="https://github.com/intel/compute-runtime/blob/4b5d5f235abf0ff67c9188f8096afd4da2e0574d/third_party/aot_config_headers/platforms.h">intel/compute-runtime</a></p></li>
+<li><p><a class="github reference external" href="https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619">intel/llvm</a></p></li>
+</ul>
+</p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc22intel_gpu_architecture3pvcE">
+<span id="_CPPv3N6tinytc22intel_gpu_architecture3pvcE"></span><span id="_CPPv2N6tinytc22intel_gpu_architecture3pvcE"></span><span class="target" id="device__info_8hpp_1af19df89ed19b3011048f3eb53b962f18a642542e40351edbd731ebad352b31317"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pvc</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x030f0007</span></span><a class="headerlink" href="#_CPPv4N6tinytc22intel_gpu_architecture3pvcE" title="Link to this definition">#</a><br /></dt>
+<dd><p>PVC. </p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture">
+<span id="_CPPv3N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture"></span><span id="_CPPv2N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture"></span><span id="tinytc::get_core_info_intel_gpu__intel_gpu_architecture"></span><span class="target" id="device__info_8hpp_1aa86f1512bf403946bae5d546df6d60ec"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_core_info_intel_gpu</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc22intel_gpu_architectureE" title="tinytc::intel_gpu_architecture"><span class="n"><span class="pre">intel_gpu_architecture</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">arch</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture" title="Link to this definition">#</a><br /></dt>
+<dd><p>Look up core info for Intel GPU architecture. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE">
+<span id="_CPPv3N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"></span><span id="_CPPv2N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"></span><span id="tinytc::optimize_and_make_binary__ir::prog.bundle_format.std::shared_ptr:core_info:.ir::error_reporter_function"></span><span class="target" id="binary_8hpp_1ac76e6f27db4c874b4fbee70ed7d96134"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">optimize_and_make_binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/builder.html#_CPPv4N6tinytc2ir4progE" title="tinytc::ir::prog"><span class="n"><span class="pre">prog</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">prog</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc13bundle_formatE" title="tinytc::bundle_format"><span class="n"><span class="pre">bundle_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">info</span></span>, <span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/error.html#_CPPv4N6tinytc2ir23error_reporter_functionE" title="tinytc::ir::error_reporter_function"><span class="n"><span class="pre">error_reporter_function</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">err</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">null_error_reporter</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc6binaryE" title="tinytc::binary"><span class="n"><span class="pre">binary</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Optimize program and creaty device binary. </p>
+<p>Compiler passes are applied on prog, therefore prog is modified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prog</strong> – Tensor program abstract syntax tree </p></li>
+<li><p><strong>format</strong> – Binary format </p></li>
+<li><p><strong>info</strong> – Core info </p></li>
+<li><p><strong>err</strong> – Error reporting functional</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>binary </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE">
+<span id="_CPPv3N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE"></span><span id="_CPPv2N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE"></span><span id="tinytc::compile_opencl_c__ssCR.bundle_format.std::uint32_t.std::vector:ss:CR.std::vector:ss:CR"></span><span class="target" id="opencl__cc_8hpp_1a54620462b4c41e25e272a19588594ef5"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">compile_opencl_c</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">source</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc13bundle_formatE" title="tinytc::bundle_format"><span class="n"><span class="pre">bundle_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ip_version</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">options</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">extensions</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Takes OpenCL-C code and outputs a SPIR-V or native device binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – OpenCL-C source code </p></li>
+<li><p><strong>format</strong> – Target binary format </p></li>
+<li><p><strong>ip_version</strong> – Device ip version; you may pass 0 for format==spirv </p></li>
+<li><p><strong>options</strong> – List of compiler options </p></li>
+<li><p><strong>extensions</strong> – List of OpenCL-C extensions</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>binary </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_configE">
+<span id="_CPPv3N6tinytc11core_configE"></span><span id="_CPPv2N6tinytc11core_configE"></span><span id="tinytc::core_config"></span><span class="target" id="classtinytc_1_1core__config"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_config</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_configE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Core parameters for a specific choice of subgroup size and core feature flags. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config13subgroup_sizeE">
+<span id="_CPPv3N6tinytc11core_config13subgroup_sizeE"></span><span id="_CPPv2N6tinytc11core_config13subgroup_sizeE"></span><span id="tinytc::core_config::subgroup_size__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1ac407fbc2b05777f7a4119d704a82f827"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_size</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config13subgroup_sizeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Smallest unit of execution. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config24max_number_of_work_itemsE">
+<span id="_CPPv3N6tinytc11core_config24max_number_of_work_itemsE"></span><span id="_CPPv2N6tinytc11core_config24max_number_of_work_itemsE"></span><span id="tinytc::core_config::max_number_of_work_items__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1ad0633ab436b9ac5103a64791fc2ae6c9"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">max_number_of_work_items</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config24max_number_of_work_itemsE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Maximum size of local work group in number of works items. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config17local_memory_sizeE">
+<span id="_CPPv3N6tinytc11core_config17local_memory_sizeE"></span><span id="_CPPv2N6tinytc11core_config17local_memory_sizeE"></span><span id="tinytc::core_config::local_memory_size__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1ad7aef388ef6967482063429035e874d4"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">local_memory_size</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config17local_memory_sizeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Maximum size of shared local memory in byte. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config14register_spaceE">
+<span id="_CPPv3N6tinytc11core_config14register_spaceE"></span><span id="_CPPv2N6tinytc11core_config14register_spaceE"></span><span id="tinytc::core_config::register_space__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1a20d6b3dead162b78c138086a168af645"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">register_space</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config14register_spaceE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Size of register file in bytes. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config10ip_versionE">
+<span id="_CPPv3N6tinytc11core_config10ip_versionE"></span><span id="_CPPv2N6tinytc11core_config10ip_versionE"></span><span id="tinytc::core_config::ip_version__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1a7c4eb0d90774820a4ea03463321b0dde"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ip_version</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config10ip_versionE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Device ip version. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11core_config13core_featuresE">
+<span id="_CPPv3N6tinytc11core_config13core_featuresE"></span><span id="_CPPv2N6tinytc11core_config13core_featuresE"></span><span id="tinytc::core_config::core_features__std::uint32_t"></span><span class="target" id="classtinytc_1_1core__config_1ad4bb9ba8290376e11466b07bd018bd8c"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_features</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc11core_config13core_featuresE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Required core features / compilation flags. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9core_infoE">
+<span id="_CPPv3N6tinytc9core_infoE"></span><span id="_CPPv2N6tinytc9core_infoE"></span><span id="tinytc::core_info"></span><span class="target" id="classtinytc_1_1core__info"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_info</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc9core_infoE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Set of core configurations. </p>
+<p>Subclassed by <a class="reference internal" href="#classtinytc_1_1core__info__intel"><span class="std std-ref">tinytc::core_info_intel</span></a></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9core_infoD0Ev">
+<span id="_CPPv3N6tinytc9core_infoD0Ev"></span><span id="_CPPv2N6tinytc9core_infoD0Ev"></span><span id="tinytc::core_info::~core_info"></span><span class="target" id="classtinytc_1_1core__info_1a49ad1f8c802821cfd1e0c843000289a5"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~core_info</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc9core_infoD0Ev" title="Link to this definition">#</a><br /></dt>
+<dd><p>empty dtor </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info10ip_versionEv">
+<span id="_CPPv3NK6tinytc9core_info10ip_versionEv"></span><span id="_CPPv2NK6tinytc9core_info10ip_versionEv"></span><span id="tinytc::core_info::ip_versionC"></span><span class="target" id="classtinytc_1_1core__info_1ad3d20c8214f6a07c787ced3eb21f4c72"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ip_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info10ip_versionEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns IP version. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info14subgroup_sizesEv">
+<span id="_CPPv3NK6tinytc9core_info14subgroup_sizesEv"></span><span id="_CPPv2NK6tinytc9core_info14subgroup_sizesEv"></span><span id="tinytc::core_info::subgroup_sizesC"></span><span class="target" id="classtinytc_1_1core__info_1ac75e13d5efa6724ec2d63959b42b1dd8"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_sizes</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info14subgroup_sizesEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns available subgroup sizes. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info13register_sizeEv">
+<span id="_CPPv3NK6tinytc9core_info13register_sizeEv"></span><span id="_CPPv2NK6tinytc9core_info13register_sizeEv"></span><span id="tinytc::core_info::register_sizeC"></span><span class="target" id="classtinytc_1_1core__info_1a484d8d8a00eb1c6baaef1b3ec8859d6e"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">register_size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info13register_sizeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns size of one register size in bytes. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info24num_registers_per_threadEv">
+<span id="_CPPv3NK6tinytc9core_info24num_registers_per_threadEv"></span><span id="_CPPv2NK6tinytc9core_info24num_registers_per_threadEv"></span><span id="tinytc::core_info::num_registers_per_threadC"></span><span class="target" id="classtinytc_1_1core__info_1aec29d8fb169c00e9a77aa8ca52871011"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_registers_per_thread</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info24num_registers_per_threadEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns available number of registers per subgroup. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag">
+<span id="_CPPv3N6tinytc9core_info16set_core_featureE17core_feature_flag"></span><span id="_CPPv2N6tinytc9core_info16set_core_featureE17core_feature_flag"></span><span id="tinytc::core_info::set_core_feature__core_feature_flag"></span><span class="target" id="classtinytc_1_1core__info_1ab3efd1230edd8cbc6371ebb75869a109"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc17core_feature_flagE" title="tinytc::core_feature_flag"><span class="n"><span class="pre">core_feature_flag</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">flag</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag" title="Link to this definition">#</a><br /></dt>
+<dd><p>Request core feature. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag">
+<span id="_CPPv3N6tinytc9core_info18clear_core_featureE17core_feature_flag"></span><span id="_CPPv2N6tinytc9core_info18clear_core_featureE17core_feature_flag"></span><span id="tinytc::core_info::clear_core_feature__core_feature_flag"></span><span class="target" id="classtinytc_1_1core__info_1a0f73d36e86a5c45d52cac67b37d4c0d0"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clear_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc17core_feature_flagE" title="tinytc::core_feature_flag"><span class="n"><span class="pre">core_feature_flag</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">flag</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag" title="Link to this definition">#</a><br /></dt>
+<dd><p>Clear core feature request. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info13core_featuresEv">
+<span id="_CPPv3NK6tinytc9core_info13core_featuresEv"></span><span id="_CPPv2NK6tinytc9core_info13core_featuresEv"></span><span id="tinytc::core_info::core_featuresC"></span><span class="target" id="classtinytc_1_1core__info_1a7ef1b4b818c10a500b243f7f0df2cf71"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_features</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info13core_featuresEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get core features. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc9core_info15get_core_configENSt8uint32_tE">
+<span id="_CPPv3NK6tinytc9core_info15get_core_configENSt8uint32_tE"></span><span id="_CPPv2NK6tinytc9core_info15get_core_configENSt8uint32_tE"></span><span id="tinytc::core_info::get_core_config__std::uint32_tC"></span><span class="target" id="classtinytc_1_1core__info_1ad80f28ee0c7f165850dbd6d94d50ef9d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_core_config</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc11core_configE" title="tinytc::core_config"><span class="n"><span class="pre">core_config</span></span></a><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK6tinytc9core_info15get_core_configENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Return core config for specific subgroup size and number of registers per tile. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15core_info_intelE">
+<span id="_CPPv3N6tinytc15core_info_intelE"></span><span id="_CPPv2N6tinytc15core_info_intelE"></span><span id="tinytc::core_info_intel"></span><span class="target" id="classtinytc_1_1core__info__intel"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_info_intel</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc15core_info_intelE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Set of core configurations for Intel GPUs. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE">
+<span id="_CPPv3N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE"></span><span id="_CPPv2N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE"></span><span id="tinytc::core_info_intel::core_info_intel__std::uint32_t.std::uint32_t.std::uint32_t.std::uint32_t.std::vector:std::uint32_t:"></span><span class="target" id="classtinytc_1_1core__info__intel_1a5542df8b9c6a02c702026a07744ed27d"></span><span class="sig-name descname"><span class="n"><span class="pre">core_info_intel</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ip_version</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_eus_per_subslice</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_threads_per_eu</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">local_memory_size</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_sizes</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>ctor </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ip_version</strong> – IP version of architecture </p></li>
+<li><p><strong>num_eus_per_subslice</strong> – Number of Execution Units (Xe Vector Engines) per subslice (Xe Core) </p></li>
+<li><p><strong>num_threads_per_eu</strong> – Number of threads per Execution Unit (Xe Vector Engine) </p></li>
+<li><p><strong>local_memory_size</strong> – Size of shared local memory </p></li>
+<li><p><strong>subgroup_sizes</strong> – Allowed subgroup sizes </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel10ip_versionEv">
+<span id="_CPPv3NK6tinytc15core_info_intel10ip_versionEv"></span><span id="_CPPv2NK6tinytc15core_info_intel10ip_versionEv"></span><span id="tinytc::core_info_intel::ip_versionC"></span><span class="target" id="classtinytc_1_1core__info__intel_1a76373d8af9288c618f7247e8489b1270"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ip_version</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel10ip_versionEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns IP version. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel14subgroup_sizesEv">
+<span id="_CPPv3NK6tinytc15core_info_intel14subgroup_sizesEv"></span><span id="_CPPv2NK6tinytc15core_info_intel14subgroup_sizesEv"></span><span id="tinytc::core_info_intel::subgroup_sizesC"></span><span class="target" id="classtinytc_1_1core__info__intel_1a34a3dbefba42824c9af990a3dc347946"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_sizes</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel14subgroup_sizesEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns available subgroup sizes. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel13register_sizeEv">
+<span id="_CPPv3NK6tinytc15core_info_intel13register_sizeEv"></span><span id="_CPPv2NK6tinytc15core_info_intel13register_sizeEv"></span><span id="tinytc::core_info_intel::register_sizeC"></span><span class="target" id="classtinytc_1_1core__info__intel_1a7acc1b32e74ba88dc5d26c93ba912160"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">register_size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel13register_sizeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns size of one register size in bytes. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel24num_registers_per_threadEv">
+<span id="_CPPv3NK6tinytc15core_info_intel24num_registers_per_threadEv"></span><span id="_CPPv2NK6tinytc15core_info_intel24num_registers_per_threadEv"></span><span id="tinytc::core_info_intel::num_registers_per_threadC"></span><span class="target" id="classtinytc_1_1core__info__intel_1afd26a9da419df6c4dc87a3206a40e2c9"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">num_registers_per_thread</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel24num_registers_per_threadEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns available number of registers per subgroup. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15core_info_intel16set_core_featureE17core_feature_flag">
+<span id="_CPPv3N6tinytc15core_info_intel16set_core_featureE17core_feature_flag"></span><span id="_CPPv2N6tinytc15core_info_intel16set_core_featureE17core_feature_flag"></span><span id="tinytc::core_info_intel::set_core_feature__core_feature_flag"></span><span class="target" id="classtinytc_1_1core__info__intel_1a5cdb481637921b7a73798693bdc2f95e"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">set_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc17core_feature_flagE" title="tinytc::core_feature_flag"><span class="n"><span class="pre">core_feature_flag</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">flag</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N6tinytc15core_info_intel16set_core_featureE17core_feature_flag" title="Link to this definition">#</a><br /></dt>
+<dd><p>Request core feature. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag">
+<span id="_CPPv3N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag"></span><span id="_CPPv2N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag"></span><span id="tinytc::core_info_intel::clear_core_feature__core_feature_flag"></span><span class="target" id="classtinytc_1_1core__info__intel_1a0639aea1150d10fcec5ceaf623f48e55"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clear_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc17core_feature_flagE" title="tinytc::core_feature_flag"><span class="n"><span class="pre">core_feature_flag</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">flag</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag" title="Link to this definition">#</a><br /></dt>
+<dd><p>Clear core feature request. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel13core_featuresEv">
+<span id="_CPPv3NK6tinytc15core_info_intel13core_featuresEv"></span><span id="_CPPv2NK6tinytc15core_info_intel13core_featuresEv"></span><span id="tinytc::core_info_intel::core_featuresC"></span><span class="target" id="classtinytc_1_1core__info__intel_1a54d3eaf94804b7254621104077669f7f"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_features</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel13core_featuresEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get core features. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE">
+<span id="_CPPv3NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE"></span><span id="_CPPv2NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE"></span><span id="tinytc::core_info_intel::get_core_config__std::uint32_tC"></span><span class="target" id="classtinytc_1_1core__info__intel_1ac8312fbb97cc3d138a338b78529cf7c9"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">get_core_config</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc11core_configE" title="tinytc::core_config"><span class="n"><span class="pre">core_config</span></span></a><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Return core config for specific subgroup size and number of registers per tile. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6binaryE">
+<span id="_CPPv3N6tinytc6binaryE"></span><span id="_CPPv2N6tinytc6binaryE"></span><span id="tinytc::binary"></span><span class="target" id="classtinytc_1_1binary"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">binary</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc6binaryE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Container encapsulating a SPIR-V or native device binary. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE">
+<span id="_CPPv3N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE"></span><span id="_CPPv2N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE"></span><span id="tinytc::binary::binary__std::vector:std::uint8_t:.bundle_format.std::unordered_map:ss.kernel_metadata:.std::uint32_t"></span><span class="target" id="classtinytc_1_1binary_1a1a2e81d64bcad4f19d93e8534064eefb"></span><span class="sig-name descname"><span class="n"><span class="pre">binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">data</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc13bundle_formatE" title="tinytc::bundle_format"><span class="n"><span class="pre">bundle_format</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">format</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_map</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc15kernel_metadataE" title="tinytc::kernel_metadata"><span class="n"><span class="pre">kernel_metadata</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">metadata_map</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – Binary data </p></li>
+<li><p><strong>format</strong> – Binary format (SPIR-V or native device binary) </p></li>
+<li><p><strong>metadata_map</strong> – Dictionary kernel name -&gt; kernel metadata </p></li>
+<li><p><strong>core_features</strong> – Required core features </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary4dataEv">
+<span id="_CPPv3NK6tinytc6binary4dataEv"></span><span id="_CPPv2NK6tinytc6binary4dataEv"></span><span id="tinytc::binary::dataC"></span><span class="target" id="classtinytc_1_1binary_1add2d41bbe55e052ebb3678ae30f8bf4d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">data</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="p"><span class="pre">*</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6binary4dataEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get raw data. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary4sizeEv">
+<span id="_CPPv3NK6tinytc6binary4sizeEv"></span><span id="_CPPv2NK6tinytc6binary4sizeEv"></span><span id="tinytc::binary::sizeC"></span><span class="target" id="classtinytc_1_1binary_1aed16a4e9f095b9a7e277ef61e9966676"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6binary4sizeEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get size of raw data. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary6formatEv">
+<span id="_CPPv3NK6tinytc6binary6formatEv"></span><span id="_CPPv2NK6tinytc6binary6formatEv"></span><span id="tinytc::binary::formatC"></span><span class="target" id="classtinytc_1_1binary_1af8529878197cd803860915313f81fa3e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">format</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc13bundle_formatE" title="tinytc::bundle_format"><span class="n"><span class="pre">bundle_format</span></span></a><a class="headerlink" href="#_CPPv4NK6tinytc6binary6formatEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get binary format. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary8metadataEv">
+<span id="_CPPv3NK6tinytc6binary8metadataEv"></span><span id="_CPPv2NK6tinytc6binary8metadataEv"></span><span id="tinytc::binary::metadataC"></span><span class="target" id="classtinytc_1_1binary_1ad969fc327c9421985192b7b4149758bc"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">metadata</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_map</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc15kernel_metadataE" title="tinytc::kernel_metadata"><span class="n"><span class="pre">kernel_metadata</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6binary8metadataEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get metadata map. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary8metadataERKNSt6stringE">
+<span id="_CPPv3NK6tinytc6binary8metadataERKNSt6stringE"></span><span id="_CPPv2NK6tinytc6binary8metadataERKNSt6stringE"></span><span id="tinytc::binary::metadata__ssCRC"></span><span class="target" id="classtinytc_1_1binary_1ae760b3168992b287803dc6dc8308a73a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">metadata</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc15kernel_metadataE" title="tinytc::kernel_metadata"><span class="n"><span class="pre">kernel_metadata</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6binary8metadataERKNSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get metadata for kernel name. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6binary13core_featuresEv">
+<span id="_CPPv3NK6tinytc6binary13core_featuresEv"></span><span id="_CPPv2NK6tinytc6binary13core_featuresEv"></span><span id="tinytc::binary::core_featuresC"></span><span class="target" id="classtinytc_1_1binary_1a4771af78637ff3e968afd32647053032"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">core_features</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6binary13core_featuresEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get core features. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15kernel_metadataE">
+<span id="_CPPv3N6tinytc15kernel_metadataE"></span><span id="_CPPv2N6tinytc15kernel_metadataE"></span><span id="tinytc::kernel_metadata"></span><span class="target" id="structtinytc_1_1kernel__metadata"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">kernel_metadata</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc15kernel_metadataE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Kernel metadata. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15kernel_metadata13subgroup_sizeE">
+<span id="_CPPv3N6tinytc15kernel_metadata13subgroup_sizeE"></span><span id="_CPPv2N6tinytc15kernel_metadata13subgroup_sizeE"></span><span id="tinytc::kernel_metadata::subgroup_size__std::uint32_t"></span><span class="target" id="structtinytc_1_1kernel__metadata_1a9563c1489a447b93c3670f621dd9c0cb"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_size</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc15kernel_metadata13subgroup_sizeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Subgroup size. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15kernel_metadata15work_group_sizeE">
+<span id="_CPPv3N6tinytc15kernel_metadata15work_group_sizeE"></span><span id="_CPPv2N6tinytc15kernel_metadata15work_group_sizeE"></span><span id="tinytc::kernel_metadata::work_group_size__std::array:std::uint32_t.2:"></span><span class="target" id="structtinytc_1_1kernel__metadata_1a596525a7435396216ea6f6e016c0845a"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_group_size</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc15kernel_metadata15work_group_sizeE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Work-group size. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="parser.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Parser</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="runtime.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Runtime</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#enumerations">Enumerations</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_formatE"><code class="docutils literal notranslate"><span class="pre">bundle_format</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_format5spirvE"><code class="docutils literal notranslate"><span class="pre">bundle_format::spirv</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc13bundle_format6nativeE"><code class="docutils literal notranslate"><span class="pre">bundle_format::native</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc17core_feature_flagE"><code class="docutils literal notranslate"><span class="pre">core_feature_flag</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc17core_feature_flag19large_register_fileE"><code class="docutils literal notranslate"><span class="pre">core_feature_flag::large_register_file</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc22intel_gpu_architectureE"><code class="docutils literal notranslate"><span class="pre">intel_gpu_architecture</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc22intel_gpu_architecture3pvcE"><code class="docutils literal notranslate"><span class="pre">intel_gpu_architecture::pvc</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture"><code class="docutils literal notranslate"><span class="pre">get_core_info_intel_gpu()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"><code class="docutils literal notranslate"><span class="pre">optimize_and_make_binary()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE"><code class="docutils literal notranslate"><span class="pre">compile_opencl_c()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_configE"><code class="docutils literal notranslate"><span class="pre">core_config</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config13subgroup_sizeE"><code class="docutils literal notranslate"><span class="pre">core_config::subgroup_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config24max_number_of_work_itemsE"><code class="docutils literal notranslate"><span class="pre">core_config::max_number_of_work_items</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config17local_memory_sizeE"><code class="docutils literal notranslate"><span class="pre">core_config::local_memory_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config14register_spaceE"><code class="docutils literal notranslate"><span class="pre">core_config::register_space</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config10ip_versionE"><code class="docutils literal notranslate"><span class="pre">core_config::ip_version</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc11core_config13core_featuresE"><code class="docutils literal notranslate"><span class="pre">core_config::core_features</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_infoE"><code class="docutils literal notranslate"><span class="pre">core_info</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_infoD0Ev"><code class="docutils literal notranslate"><span class="pre">core_info::~core_info()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info10ip_versionEv"><code class="docutils literal notranslate"><span class="pre">core_info::ip_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info14subgroup_sizesEv"><code class="docutils literal notranslate"><span class="pre">core_info::subgroup_sizes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info13register_sizeEv"><code class="docutils literal notranslate"><span class="pre">core_info::register_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info24num_registers_per_threadEv"><code class="docutils literal notranslate"><span class="pre">core_info::num_registers_per_thread()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info::set_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info::clear_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">core_info::core_features()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc9core_info15get_core_configENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">core_info::get_core_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intelE"><code class="docutils literal notranslate"><span class="pre">core_info_intel</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE"><code class="docutils literal notranslate"><span class="pre">core_info_intel::core_info_intel()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel10ip_versionEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::ip_version()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel14subgroup_sizesEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::subgroup_sizes()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel13register_sizeEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::register_size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel24num_registers_per_threadEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::num_registers_per_thread()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel16set_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info_intel::set_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag"><code class="docutils literal notranslate"><span class="pre">core_info_intel::clear_core_feature()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">core_info_intel::core_features()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">core_info_intel::get_core_config()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6binaryE"><code class="docutils literal notranslate"><span class="pre">binary</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">binary::binary()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary4dataEv"><code class="docutils literal notranslate"><span class="pre">binary::data()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary4sizeEv"><code class="docutils literal notranslate"><span class="pre">binary::size()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary6formatEv"><code class="docutils literal notranslate"><span class="pre">binary::format()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary8metadataEv"><code class="docutils literal notranslate"><span class="pre">binary::metadata()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary8metadataERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">binary::metadata()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6binary13core_featuresEv"><code class="docutils literal notranslate"><span class="pre">binary::core_features()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadataE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadata13subgroup_sizeE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata::subgroup_size</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc15kernel_metadata15work_group_sizeE"><code class="docutils literal notranslate"><span class="pre">kernel_metadata::work_group_size</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

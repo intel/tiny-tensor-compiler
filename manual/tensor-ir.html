@@ -1,0 +1,1694 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tensor language reference &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'manual/tensor-ir';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tinytc" href="../api/index.html" />
+    <link rel="prev" title="Calling convention" href="calling_convention.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/parser.html">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/jit.html">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/runtime.html">Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipe/small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../api/ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/builder.html">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/tiling.html">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../api/ir/error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/manual/tensor-ir.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/manual/tensor-ir.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fmanual/tensor-ir.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/manual/tensor-ir.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tensor language reference</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-model">Execution model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-rules">Core rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifier">Identifier</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constants">Constants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#regions">Regions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types">Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-types">Scalar types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#memref-type">Memref type</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#memory-layout">Memory layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#strided-layout">Strided layout</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-type">Group type</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instructions">Instructions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alloca">Alloca</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#returns">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-op">Binary op</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cast">Cast</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison">Comparison</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expand">Expand</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fuse">Fuse</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-id">Group id</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-size">Group size</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load">Load</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Returns</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">Size</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#subview">Subview</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#neg">Neg</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#if">If</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#axpby">Axpby</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for">For</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#foreach">Foreach</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gemm">GEMM</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gemv">GEMV</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ger">GER</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hadamard-product">Hadamard product</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#store">Store</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sum">Sum</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#yield">Yield</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-instructions">Additional instructions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-code">Sample code</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tensor-language-reference">
+<span id="tensor-language"></span><h1>Tensor language reference<a class="headerlink" href="#tensor-language-reference" title="Link to this heading">#</a></h1>
+<p>The grammar is given in <a class="reference external" href="https://www.ietf.org/rfc/rfc5234.txt">ABNF syntax</a>.</p>
+<section id="execution-model">
+<h2>Execution model<a class="headerlink" href="#execution-model" title="Link to this heading">#</a></h2>
+<p>The unit of execution described by a function written in the tensor language
+is called a <strong>kernel</strong>.
+Kernels are launched in batches, where each instance of the kernel is called a work-group.
+The kernel has access to its group id that is used to select the work done in the work group.
+Each work group consists of a fixed number of work-items that execute concurrently.
+The language distinguishes between two kinds of instructions: <em>replicated</em> and <em>collective</em> instructions.
+It is distinguished between <em>mixed</em> and <em>spmd</em> regions.
+Mixed regions may contain replicated and collective instructions whereas spmd regions
+may only contain replicated instructions.</p>
+<p>A collective instruction distributes the work among the work-items.
+The instruction is responsible to distribute the work in a sensible manner.</p>
+<p>A replicated instruction replicates the work across all work-items.
+In a mixed region, the replicated instructions always operate on the same data.
+In spmd regions, the replicated instructions can operate on multiple data,
+but in these regions collective instructions are prohibited.</p>
+<p>Mixed regions can be nested whereas spmd regions must not be nested.
+A mixed region may be nested in a spmd region.</p>
+</section>
+<section id="core-rules">
+<h2>Core rules<a class="headerlink" href="#core-rules" title="Link to this heading">#</a></h2>
+<p>White space is used to separate tokens, where a token is either an identifier,
+a literal, a keyword, or characters such as punctuation or delimiters.
+Otherwise, white space has no meaning.</p>
+<p>Comments start with <code class="docutils literal notranslate"><span class="pre">;</span></code> and stop at the end of the line (<code class="docutils literal notranslate"><span class="pre">\n</span></code>).</p>
+</section>
+<section id="identifier">
+<h2>Identifier<a class="headerlink" href="#identifier" title="Link to this heading">#</a></h2>
+<p>Identifiers are either named or unnamed.
+Named identifiers are letter followed by letters, underscores, or digits.
+Unnamed identifiers are simply numbers.
+As in LLVM, local identifiers are prefixed with <code class="docutils literal notranslate"><span class="pre">%</span></code>, whereas global identifiers
+are prefixed with <code class="docutils literal notranslate"><span class="pre">&#64;</span></code>.</p>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">identifier</span><span class="w">                  </span><span class="o">=</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="k">ALPHA</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="k">ALPHA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="k">DIGIT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;_&quot;</span><span class="p">))</span>
+<span class="nc">local-identifier</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;%&quot;</span><span class="w"> </span><span class="nc">identifier</span>
+<span class="nc">global-identifier</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;@&quot;</span><span class="w"> </span><span class="nc">identifier</span>
+</pre></div>
+</div>
+</section>
+<section id="constants">
+<h2>Constants<a class="headerlink" href="#constants" title="Link to this heading">#</a></h2>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">sign</span><span class="w">                        </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;-&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;+&quot;</span>
+<span class="nc">integer-constant</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;true&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;false&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span>
+<span class="nc">floating-constant</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="o">*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;.&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;e&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="p">]</span>
+<span class="nc">mantissa-dec</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;.&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;.&quot;</span>
+<span class="nc">mantissa-hex</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="k">HEXDIG</span><span class="w"> </span><span class="l">&quot;.&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">HEXDIG</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">1*</span><span class="k">HEXDIG</span><span class="w"> </span><span class="l">&quot;.&quot;</span>
+<span class="nc">exponent</span><span class="w">                    </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span>
+<span class="nc">floating-constant-dec</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="p">(</span><span class="nc">mantissa-dec</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;e&quot;</span><span class="w"> </span><span class="nc">exponent</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;e&quot;</span><span class="w"> </span><span class="nc">exponent</span><span class="p">)</span>
+<span class="nc">floating-constant-hex</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nc">sign</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;0x&quot;</span><span class="w"> </span><span class="p">(</span><span class="nc">mantissa-hex</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;p&quot;</span><span class="w"> </span><span class="nc">exponent</span><span class="p">]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="o">1*</span><span class="k">HEXDIG</span><span class="w"> </span><span class="l">&quot;p&quot;</span><span class="w"> </span><span class="nc">exponent</span><span class="p">)</span>
+<span class="nc">floating-constant</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="nc">floating-constant-dec</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">floating-constant-hex</span>
+</pre></div>
+</div>
+<p>Integer constants must lie in the range <span class="math notranslate nohighlight">\(-2^63+1,\dots,2^63-1\)</span>.</p>
+<p>Floating point constants are given in C syntax and expected to be in the range of double precision numbers.
+The hexadecimal floating point syntax is supported, too.
+<a class="reference external" href="https://en.cppreference.com/w/c/string/byte/strtof">strtod</a> can be used for parsing floating
+point numbers.</p>
+</section>
+<section id="functions">
+<span id="tensor-language-functions"></span><h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">function-definition</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;func&quot;</span><span class="w"> </span><span class="nc">global-identifier</span><span class="w"> </span><span class="l">&quot;(&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">argument-list</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;)&quot;</span><span class="w"> </span><span class="o">*</span><span class="nc">attribute</span><span class="w"> </span><span class="nc">region</span>
+<span class="nc">argument-list</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="nc">argument</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">argument</span><span class="p">)</span>
+<span class="nc">argument</span><span class="w">                    </span><span class="o">=</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">type</span>
+<span class="nc">attribute</span><span class="w">                   </span><span class="o">=</span><span class="w"> </span><span class="nc">work-group-size-attribute</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">subgroup-size-attribute</span>
+<span class="nc">work-group-size-attribute</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;work_group_size&quot;</span><span class="w"> </span><span class="l">&quot;(&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;)&quot;</span>
+<span class="nc">subgroup-size-attribute</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;subgroup_size&quot;</span><span class="w"> </span><span class="l">&quot;(&quot;</span><span class="w"> </span><span class="o">1*</span><span class="k">DIGIT</span><span class="w"> </span><span class="l">&quot;)&quot;</span>
+</pre></div>
+</div>
+<p>Defines a function that is callable from the host.</p>
+<p>Attributes are optional and autoatically determined if omitted.</p>
+<p>The work-group size attribute defines the size of the local work group.
+Due to the focus on matrix operations, the work-group size is always two-dimensional,
+where the first mode is used to tile the rows and the second mode is used
+to tile the columns.
+The first mode must be a multiple of the subgroup size.
+If the subgroup size is omitted, then the first mode must be a multiple of one of
+the subgroup sizes supported by the device.
+The product of the work-group size modes must be smaller or equal than the maximum
+work-group size of device.</p>
+<p>The work-group is divided into full subgroups, therefore the work-group size
+is always a multiple of the subgroup size.
+The subgroup size attribute enforces a particular subgroup device supported by
+the device.</p>
+</section>
+<section id="regions">
+<h2>Regions<a class="headerlink" href="#regions" title="Link to this heading">#</a></h2>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">region</span><span class="w">                      </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;{&quot;</span><span class="w"> </span><span class="o">*</span><span class="nc">instruction</span><span class="w"> </span><span class="l">&quot;}&quot;</span>
+</pre></div>
+</div>
+<p>A region is an ordered list of instructions.
+An instruction might contain a region.
+Regions have access to values from its enclosing region, but the enclosing region does not have access to
+values assigned in the region.</p>
+</section>
+<section id="types">
+<h2>Types<a class="headerlink" href="#types" title="Link to this heading">#</a></h2>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">type</span><span class="w">                        </span><span class="o">=</span><span class="w"> </span><span class="nc">void-type</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">group-type</span>
+<span class="nc">void-type</span><span class="w">                   </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;void&quot;</span>
+</pre></div>
+</div>
+<section id="scalar-types">
+<h3>Scalar types<a class="headerlink" href="#scalar-types" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">scalar-type</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="nc">integer-type</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">floating-type</span>
+<span class="nc">integer-type</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;bool&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="l">&quot;i&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;u&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">(</span><span class="l">&quot;1&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;8&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;16&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;32&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;64&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;index&quot;</span>
+<span class="nc">floating-type</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;f&quot;</span><span class="w"> </span><span class="p">(</span><span class="l">&quot;32&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;64&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Scalar types are either integer (“i”), unsigned integer (“u”),
+or floating point (“f”).
+The number behind the scalar type prefix denotes the number of bits,
+e.g. “f64” are double precision floating point numbers.
+The “index” type is an integer type whose width is platform-specific.</p>
+</section>
+<section id="memref-type">
+<h3>Memref type<a class="headerlink" href="#memref-type" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">memref-type</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;memref&lt;&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;x&quot;</span><span class="w"> </span><span class="nc">tensor-shape</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memory-layout</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;&gt;&quot;</span>
+<span class="nc">constant-or-dynamic</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;?&quot;</span>
+<span class="nc">tensor-shape</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;x&quot;</span><span class="w"> </span><span class="nc">constant-or-dynamic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A memref is a reference to a region of memory.
+In analogy to the C/C++-language, the memref can be thought of as a pointer,
+but with additional information on the size and memory layout of the memory region.
+The size information can be either fixed or dynamic.
+For example, the <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x4x8&gt;</span></code> is analogue to <code class="docutils literal notranslate"><span class="pre">float*</span></code> with the additional information
+that the memory region contains 32 floats structured in 4 rows and 8 columns.
+The <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x4x?&gt;</span></code> type is analogue to <code class="docutils literal notranslate"><span class="pre">float*</span></code>, too, but here the number of floats
+and the number of columns is only known at run-time.</p>
+<p>Run-time size information is stored in a dope vector; the calling convention for memrefs is
+implementation-defined.</p>
+<p>The memref can have order 0. E.g. <code class="docutils literal notranslate"><span class="pre">memref&lt;f32&gt;</span></code> can be thought of as a pointer to a single precision float.
+A vector is a tensor of order 1, e.g. <code class="docutils literal notranslate"><span class="pre">memref&lt;f64x4&gt;</span></code>.
+A matrix is a tensor of order 2, e.g. <code class="docutils literal notranslate"><span class="pre">memref&lt;f64x4x4&gt;</span></code>.
+A tensor of order n is given by <code class="docutils literal notranslate"><span class="pre">memref&lt;f32xs_1x...xs_n&gt;</span></code>.</p>
+<p>Dynamic mode sizes are written using a question mark in place of an integer constant.</p>
+<p>The default memory layout is the packed dense layout.
+E.g. the memory layout of <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x5x6x7&gt;</span></code> is <code class="docutils literal notranslate"><span class="pre">strided&lt;1,5,30&gt;</span></code>.
+We note that <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x5x6x7&gt;</span></code> and <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x5x6x7,strided&lt;1,5,30&gt;&gt;</span></code>
+are the same type.</p>
+<section id="memory-layout">
+<h4>Memory layout<a class="headerlink" href="#memory-layout" title="Link to this heading">#</a></h4>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">memory-layout</span><span class="w">               </span><span class="o">=</span><span class="w"> </span><span class="nc">strided-layout</span>
+</pre></div>
+</div>
+<section id="strided-layout">
+<h5>Strided layout<a class="headerlink" href="#strided-layout" title="Link to this heading">#</a></h5>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">strided-layout</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;strided&lt;&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">constant-or-dynamic-list</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;&gt;&quot;</span>
+<span class="nc">constant-or-dynamic-list</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="nc">constant-or-dynamic</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">constant-or-dynamic</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The strided layout is a sequence of integers <span class="math notranslate nohighlight">\(S_1,S_2,...,S_n\)</span>, where <em>n</em> must be equal
+to the order of the tensor.
+The strided layout is defined as the map</p>
+<div class="math notranslate nohighlight">
+\[(i_1,i_2,...,i_n) \mapsto i_1 S_1 + i_2 S_2 + ... + i_n S_n\]</div>
+<p>We further impose the following restriction for a tensor with shape <span class="math notranslate nohighlight">\(s_1\times s_2 \times ... \times s_n\)</span>:</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(1 \leq S_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\forall i \in [2,n]: S_{i-1}s_{i-1} \leq S_i\)</span></p></li>
+</ul>
+<p>Therefore, we have the “column-major” layout.
+The default packed dense layout is given by</p>
+<ul class="simple">
+<li><p><span class="math notranslate nohighlight">\(1 = S_1\)</span></p></li>
+<li><p><span class="math notranslate nohighlight">\(\forall i \in [2,n]: S_{i-1}s_{i-1} = S_i\)</span></p></li>
+</ul>
+<p>Stride modes might be dynamic as well, indicated by a question mark.</p>
+</section>
+</section>
+</section>
+<section id="group-type">
+<h3>Group type<a class="headerlink" href="#group-type" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">group-type</span><span class="w">                  </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;group&lt;&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;&gt;&quot;</span>
+</pre></div>
+</div>
+<p>The group type collects unstructured pointers to memref’s with potentially different dynamic mode sizes.
+The C-analogy of a group is a pointer-to-a-pointer.
+For example, the C-analogue of a <code class="docutils literal notranslate"><span class="pre">group&lt;memref&lt;f32x16x16&gt;&gt;</span></code> is a <code class="docutils literal notranslate"><span class="pre">float**</span></code>.</p>
+<p>Group size information is stored in a dope vector; the calling convention for groups is
+implementation-defined.
+The dope vector also contains size information for the memref type if it contains dynamic mode sizes
+or dynamic stride values.</p>
+</section>
+</section>
+<section id="instructions">
+<h2>Instructions<a class="headerlink" href="#instructions" title="Link to this heading">#</a></h2>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">value-instruction</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;=&quot;</span><span class="w"> </span><span class="p">(</span><span class="nc">alloca-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">binary-op-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">cast-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">comparison-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">expand-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">fuse-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">group-id-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">group-size-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">load-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">neg-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">size-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">subview-instruction</span><span class="p">)</span>
+<span class="nc">multi-value-instruction</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="nc">local-identifier-list</span><span class="w"> </span><span class="l">&quot;=&quot;</span><span class="p">]</span><span class="w"> </span><span class="nc">if-instruction</span>
+<span class="nc">local-identifier-list</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="p">)</span>
+<span class="nc">instruction</span><span class="w">                 </span><span class="o">=</span><span class="w"> </span><span class="nc">value-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">multi-value-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">axpby-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">barrier-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">for-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">foreach-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">lifetime-stop-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">gemm-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">gemv-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">ger-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">hadamard-product-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">store-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">sum-instruction</span>
+<span class="w">                              </span><span class="o">/</span><span class="w"> </span><span class="nc">yield-instruction</span>
+</pre></div>
+</div>
+<section id="alloca">
+<h3>Alloca<a class="headerlink" href="#alloca" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">alloca-instruction</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;alloca&quot;</span><span class="w"> </span><span class="l">&quot;-&gt;&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="overview">
+<h4>Overview<a class="headerlink" href="#overview" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+The alloca instruction allocates temporary memory that is freed automatically at the end of the block that contains the alloca.</p>
+</section>
+<section id="returns">
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">#</a></h4>
+<p>A memref of the memref-type.</p>
+</section>
+<section id="restrictions">
+<h4>Restrictions<a class="headerlink" href="#restrictions" title="Link to this heading">#</a></h4>
+<p>The memref’s size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.</p>
+</section>
+</section>
+<section id="binary-op">
+<h3>Binary op<a class="headerlink" href="#binary-op" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">identifier-or-constant</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">floating-constant</span>
+<span class="nc">binary-op-instruction</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="l">&quot;add&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;sub&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;mul&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;div&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;rem&quot;</span><span class="p">)</span>
+<span class="w">                              </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span>
+</pre></div>
+</div>
+<section id="id1">
+<h4>Overview<a class="headerlink" href="#id1" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Binary operation on scalars.
+Both operands, as well as the returned type, have the same scalar type.</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Op</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>add</p></td>
+<td><p>a + b</p></td>
+</tr>
+<tr class="row-odd"><td><p>sub</p></td>
+<td><p>a - b</p></td>
+</tr>
+<tr class="row-even"><td><p>mul</p></td>
+<td><p>a * b</p></td>
+</tr>
+<tr class="row-odd"><td><p>div</p></td>
+<td><p>a / b</p></td>
+</tr>
+<tr class="row-even"><td><p>rem</p></td>
+<td><p>a % b</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="cast">
+<h3>Cast<a class="headerlink" href="#cast" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">cast-instruction</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;cast&quot;</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;-&gt;&quot;</span><span class="w"> </span><span class="nc">scalar-type</span>
+</pre></div>
+</div>
+<section id="id2">
+<h4>Overview<a class="headerlink" href="#id2" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Cast scalar values.</p>
+</section>
+</section>
+<section id="comparison">
+<h3>Comparison<a class="headerlink" href="#comparison" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">comparison-instruction</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;cmp&quot;</span><span class="w"> </span><span class="p">(</span><span class="l">&quot;.eq&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.ne&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.gt&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.ge&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.lt&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.le&quot;</span><span class="p">)</span>
+<span class="w">                              </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span>
+</pre></div>
+</div>
+<section id="id3">
+<h4>Overview<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Scalar comparison.
+Both operands must have the same scalar type and the returned value is boolean.</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Cond</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>.eq</p></td>
+<td><p>Equal</p></td>
+</tr>
+<tr class="row-odd"><td><p>.ne</p></td>
+<td><p>Not equal</p></td>
+</tr>
+<tr class="row-even"><td><p>.gt</p></td>
+<td><p>Greater than</p></td>
+</tr>
+<tr class="row-odd"><td><p>.ge</p></td>
+<td><p>Greater than or equal</p></td>
+</tr>
+<tr class="row-even"><td><p>.lt</p></td>
+<td><p>Less than</p></td>
+</tr>
+<tr class="row-odd"><td><p>.le</p></td>
+<td><p>Less than or equal</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="expand">
+<h3>Expand<a class="headerlink" href="#expand" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">expand-instruction</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;expand&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="l">&quot;-&gt;&quot;</span><span class="w"> </span><span class="nc">expand-shape</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+<span class="nc">expand-shape</span><span class="w">                      </span><span class="o">=</span><span class="w"> </span><span class="nc">constant-or-dynamic-or-identifier</span><span class="w"> </span><span class="o">1*</span><span class="p">(</span><span class="l">&quot;x&quot;</span><span class="w"> </span><span class="nc">constant-or-dynamic-or-identifier</span><span class="p">)</span>
+<span class="nc">constant-or-dynamic-or-identifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;?&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">local-identifier</span>
+</pre></div>
+</div>
+<section id="id4">
+<h4>Overview<a class="headerlink" href="#id4" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+The expand instruction returns a view on a tensor with a mode viewed as higher-order mode.</p>
+</section>
+<section id="arguments">
+<h4>Arguments<a class="headerlink" href="#arguments" title="Link to this heading">#</a></h4>
+<p>The first argument must point to a value of memref type.
+The integer constant in square brackets gives the mode that shall be expanded.
+The expand shape gives the new shape of the mode.
+Values in the expand shape must have index type.</p>
+<p>The output type is a memref type according to the following rules:</p>
+<ol class="arabic">
+<li><p><strong>Shape:</strong> The mode size is replaced with the expand shape. If one entry in expand shape is dynamic,
+then either its size is inferred automatically if the mode size is known, or it determined automatically
+at run-time if the mode size is dynamic.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>expand %0[1 -&gt; 2x8]  : memref&lt;f32x32x16x8&gt; ; -&gt; memref&lt;f32x32x2x8x8&gt;
+expand %0[1 -&gt; 2x?]  : memref&lt;f32x32x16x8&gt; ; -&gt; memref&lt;f32x32x2x8x8&gt;
+expand %0[1 -&gt; ?x8]  : memref&lt;f32x32x16x8&gt; ; -&gt; memref&lt;f32x32x2x8x8&gt;
+expand %0[1 -&gt; 2x?]  : memref&lt;f32x32x?x8&gt;  ; -&gt; memref&lt;f32x32x2x?x8&gt;
+expand %0[1 -&gt; ?x8]  : memref&lt;f32x32x?x8&gt;  ; -&gt; memref&lt;f32x32x?x8x8&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Identifiers:</strong> Local identifiers in the expand shape are dynamic in the resulting memref type.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>expand %0[1 -&gt; %1 x ?]  : memref&lt;f32x32x?&gt;  ; -&gt; memref&lt;f32x32x?x?&gt;
+expand %0[1 -&gt; %1 x ?]  : memref&lt;f32x32x16&gt; ; -&gt; memref&lt;f32x32x?x?&gt;
+expand %0[1 -&gt; %1 x %2] : memref&lt;f32x32x?&gt;  ; -&gt; memref&lt;f32x32x?x?&gt;
+expand %0[1 -&gt; 4 x %1]  : memref&lt;f32x32x?&gt;  ; -&gt; memref&lt;f32x32x4x?&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Stride:</strong> A new stride entry is entered that follows the canonical stride computation.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>expand %0[0-&gt;4x8] : memref&lt;f32x32x7,strided&lt;2,64&gt;&gt; ; -&gt; memref&lt;f32x4x8x7,strided&lt;2,8,64&gt;&gt;
+expand %0[0-&gt;4x?] : memref&lt;f32x32x7,strided&lt;2,64&gt;&gt; ; -&gt; memref&lt;f32x4x8x7,strided&lt;2,8,64&gt;&gt;
+expand %0[0-&gt;?x4] : memref&lt;f32x?x7,strided&lt;2,?&gt;&gt;   ; -&gt; memref&lt;f32x?x8,strided&lt;2,?,?&gt;&gt;
+expand %0[0-&gt;4x?] : memref&lt;f32x?x7,strided&lt;2,?&gt;&gt;   ; -&gt; memref&lt;f32x4x?,strided&lt;2,8,?&gt;&gt;
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="id5">
+<h4>Restrictions<a class="headerlink" href="#id5" title="Link to this heading">#</a></h4>
+<p>At most one mode in expand-shape must be dynamic.</p>
+<p>The product of the expand shape must be the same as the mode size.
+If one entry in the expand shape is dynamic then the other must evenly divide the mode size.</p>
+</section>
+</section>
+<section id="fuse">
+<h3>Fuse<a class="headerlink" href="#fuse" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">fuse-instruction</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;fuse&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id6">
+<h4>Overview<a class="headerlink" href="#id6" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+The fuse instruction returns a view on a tensor with two or more adjacent modes viewed as a single mode.</p>
+</section>
+<section id="id7">
+<h4>Arguments<a class="headerlink" href="#id7" title="Link to this heading">#</a></h4>
+<p>The first argument must point to a value of memref type.
+The fused modes are specified as the interval [from, to], where from is given
+by the first integer and to is given by the second integer.
+Counting starts from 0 so we have</p>
+<div class="math notranslate nohighlight">
+\[0 \leq from &lt; to &lt; order(memref)\]</div>
+<p>The local identifier must have the memref type specified last.
+The output type is a memref type according to the following rules:</p>
+<ol class="arabic">
+<li><p><strong>Shape:</strong> The mode size of the fused modes is the product of the mode sizes. If one mode is dynamic the fused mode size is dynamic.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>fuse %0[1,3] : memref&lt;f32x32x16x8x4x42&gt;                     ; -&gt; memref&lt;f32x32x512x42&gt;
+fuse %0[1,3] : memref&lt;f32x32x16x?x4x42,strided&lt;1,16,?,?,?&gt;&gt; ; -&gt; memref&lt;f32x32x?x42,strided&lt;1,32,?&gt;&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Stride:</strong> Strides remain unchanged.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>fuse %0[1,2] : memref&lt;f32x32x16x2x2,strided&lt;1,48,768,1536&gt;&gt; ; -&gt; memref&lt;f32x32x32x2,strided&lt;1,48,1536&gt;&gt;
+fuse %0[0,1] : memref&lt;f32x8x?x32,strided&lt;1,?,?&gt;&gt;            ; -&gt; memref&lt;f32x?x32,strided&lt;1,?&gt;&gt;
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="id8">
+<h4>Restrictions<a class="headerlink" href="#id8" title="Link to this heading">#</a></h4>
+<p>Let i be the first mode and j the last mode.
+The stride vector S and the shape vector s must satisify the following compatibility condition:</p>
+<p><span class="math notranslate nohighlight">\(\forall k \in [i,j): S_{k}s_{k} = S_{k+1}\)</span></p>
+<p>If S(i:j) and s(i:j) are known at compile time, the fuse instruction is illegal if the compatibility
+condition is not satisfied.
+If a single entry in S(i:j) or s(i:j) is dynamic, then fusing modes that violate the compatbility condition
+is undefined beheaviour.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>fuse %0[0,1] : memref&lt;f32x8x16,strided&lt;1,10&gt;&gt; ; Illegal, modes cannot be fused
+fuse %0[0,1] : memref&lt;f32x8x16,strided&lt;1,?&gt;&gt;  ; Undefined behaviour if dynamic stride != 8
+</pre></div>
+</div>
+</section>
+</section>
+<section id="group-id">
+<h3>Group id<a class="headerlink" href="#group-id" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">group-id-instruction</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;group_id&quot;</span>
+</pre></div>
+</div>
+<section id="id9">
+<h4>Overview<a class="headerlink" href="#id9" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Returns the group id, an integer of type “index” inbetween 0 and the group size - 1.</p>
+</section>
+</section>
+<section id="group-size">
+<h3>Group size<a class="headerlink" href="#group-size" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">group-size-instruction</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;group_size&quot;</span>
+</pre></div>
+</div>
+<section id="id10">
+<h4>Overview<a class="headerlink" href="#id10" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Returns the group size, an integer of type “index”.</p>
+</section>
+</section>
+<section id="load">
+<h3>Load<a class="headerlink" href="#load" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">load-instruction</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;load&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">index-list</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-or-group-type</span>
+<span class="nc">index-list</span><span class="w">                  </span><span class="o">=</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="p">)</span>
+<span class="nc">identifier-or-int-constant</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="nc">memref-or-group-type</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">group-type</span>
+</pre></div>
+</div>
+<section id="id11">
+<h4>Overview<a class="headerlink" href="#id11" title="Link to this heading">#</a></h4>
+<p>Load the element given by the index list from a memref or group.
+The number of indices must match the order of the memref
+and a single index must be given for a group.</p>
+</section>
+<section id="id12">
+<h4>Arguments<a class="headerlink" href="#id12" title="Link to this heading">#</a></h4>
+<p>The first operand must have memref or group type.
+The indices must be of <code class="docutils literal notranslate"><span class="pre">index</span></code> type.</p>
+</section>
+<section id="id13">
+<h4>Returns<a class="headerlink" href="#id13" title="Link to this heading">#</a></h4>
+<p>A value of the memref’s element type or the group’s memref type.
+Examples:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">%0[]</span> <span class="pre">:</span> <span class="pre">memref&lt;f32&gt;</span></code> returns a <code class="docutils literal notranslate"><span class="pre">f32</span></code> value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">%0[5,</span> <span class="pre">%1]</span> <span class="pre">:</span> <span class="pre">memref&lt;f32x10x?&gt;</span></code> returns a <code class="docutils literal notranslate"><span class="pre">f32</span></code> value.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">load</span> <span class="pre">%0[%1]</span> <span class="pre">:</span> <span class="pre">group&lt;memref&lt;f32x42&gt;&gt;</span></code> returns a <code class="docutils literal notranslate"><span class="pre">memref&lt;f32x42&gt;</span></code> value.</p></li>
+</ol>
+</section>
+</section>
+<section id="size">
+<h3>Size<a class="headerlink" href="#size" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">size-instruction</span><span class="w">            </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;size&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="nc">integer-constant</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id14">
+<h4>Overview<a class="headerlink" href="#id14" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+The size instruction returns the i-th entry of the tensor’s shape, where “i” is given by the integer
+constant in square brackets.</p>
+</section>
+<section id="id15">
+<h4>Arguments<a class="headerlink" href="#id15" title="Link to this heading">#</a></h4>
+<p>The first argument must point to a value of memref type.
+The integer constant i gives the mode for which the size shall be returned.
+It is required that</p>
+<div class="math notranslate nohighlight">
+\[0 \leq i &lt; order(memref)\]</div>
+<p>The local identifier must have the memref type specified last.
+The instruction returns an integer of index type.</p>
+</section>
+</section>
+<section id="subview">
+<h3>Subview<a class="headerlink" href="#subview" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">subview-instruction</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;subview&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">index-or-slice-list</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+<span class="nc">index-or-slice-list</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="nc">index-or-slice</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">index-or-slice</span><span class="p">)</span>
+<span class="nc">index-or-slice</span><span class="w">              </span><span class="o">=</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="p">(</span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;?&quot;</span><span class="p">)]</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;:&quot;</span>
+</pre></div>
+</div>
+<section id="id16">
+<h4>Overview<a class="headerlink" href="#id16" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+The subview instruction returns a view on a tensor.</p>
+</section>
+<section id="id17">
+<h4>Arguments<a class="headerlink" href="#id17" title="Link to this heading">#</a></h4>
+<p>The first argument must point to a value of memref type.
+The number of indices in square brackets must match the order of the memref.
+The indices are either given as single index or as a slice, where
+slices are given in offset plus size notation (“%offset : %size”).
+E.g. the slice “%0 : %1” extracts a block of %1 elements beginning from %0, which is equivalent
+to the index interval [%0, %0 + %1).</p>
+<div class="admonition-note admonition">
+<p class="admonition-title">Note</p>
+<p>A slice is often defined as “%0 : %1” being the index interval [%0, %1).
+However, then the compiler needs to figure out whether %1 - %0 is constant or not in order
+to determine whether the mode size is known at compile-time or not.
+Therefore, we prefer the offset plus size notation.</p>
+</div>
+<p>A dynamic size (“?”) means that the size is the mode size inferred from the memref type
+minus the offset.
+A plain colon is syntactic sugar for “0:?”.</p>
+<p>There is no run-time check whether the indices are within bounds.
+Offset and size must be of index type.
+Offset must be non-negative and size must be positive.</p>
+<p>The local identifier must have the memref type specified last.
+The output type is a memref type according to the following rules:</p>
+<ol class="arabic">
+<li><p><strong>Invariant-stride:</strong> The stride is not changed.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subview</span> <span class="o">%</span><span class="mi">0</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">8</span><span class="p">,</span><span class="mi">8</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>  <span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f32x32x16</span><span class="o">&gt;</span> <span class="p">;</span> <span class="n">Returns</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f32x8x4</span><span class="p">,</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">32</span><span class="o">&gt;&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Rank-reduction:</strong> A mode accessed by a single constant or value is removed from the output tensor.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subview</span> <span class="o">%</span><span class="mi">0</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="o">%</span><span class="mi">1</span><span class="p">]</span>   <span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f32x16x8</span><span class="o">&gt;</span> <span class="p">;</span> <span class="n">Returns</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f32x4</span><span class="p">,</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">16</span><span class="o">&gt;&gt;</span>
+<span class="n">subview</span> <span class="o">%</span><span class="mi">0</span><span class="p">[</span><span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">,</span> <span class="o">%</span><span class="mi">1</span><span class="p">:</span><span class="mi">1</span><span class="p">]</span> <span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f64x16x8</span><span class="o">&gt;</span> <span class="p">;</span> <span class="n">Returns</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f64x4x1</span><span class="p">,</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,</span><span class="mi">16</span><span class="o">&gt;&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Output-mode size:</strong> The size of the output mode is determined by the size field of a slice
+and may be dynamic.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>subview %0[%1:4]            : memref&lt;f32x16&gt; ; Returns memref&lt;f32x4&gt;
+subview %0[%2:%2]           : memref&lt;f32x16&gt; ; Returns memref&lt;f32x?&gt;
+subview %0[2:4, %2:%2, 6:7] : memref&lt;f32x16x42x13&gt; ; Returns memref&lt;f32x4x?x7,strided&lt;1,16,672&gt;
+subview %0[2:4, %2:%2, 6:7] : memref&lt;f32x16x42x13,strided&lt;1,?,?&gt;&gt; ; Returns memref&lt;f32x4x?x7,strided&lt;1,?,?&gt;
+</pre></div>
+</div>
+</li>
+<li><p><strong>Dynamic size:</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>subview %0[:]               : memref&lt;f32x16&gt; ; Returns memref&lt;f32x16&gt;
+subview %0[:]               : memref&lt;f32x?&gt;  ; Returns memref&lt;f32x?&gt;
+subview %0[5:?]             : memref&lt;f32x16&gt; ; Returns memref&lt;f32x13&gt;
+subview %0[%2:?]            : memref&lt;f32x16&gt; ; Returns memref&lt;f32x?&gt;
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="neg">
+<h3>Neg<a class="headerlink" href="#neg" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">neg-instruction</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;neg&quot;</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span>
+</pre></div>
+</div>
+<section id="id18">
+<h4>Overview<a class="headerlink" href="#id18" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Negation operation.</p>
+</section>
+</section>
+<section id="if">
+<h3>If<a class="headerlink" href="#if" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">if-instruction</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;if&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;-&gt;&quot;</span><span class="w"> </span><span class="l">&quot;(&quot;</span><span class="w"> </span><span class="nc">scalar-type-list</span><span class="w"> </span><span class="l">&quot;)&quot;</span><span class="p">]</span>
+<span class="w">                           </span><span class="nc">region</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;else&quot;</span><span class="w"> </span><span class="nc">region</span><span class="p">]</span>
+<span class="nc">type-list</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id19">
+<h4>Overview<a class="headerlink" href="#id19" title="Link to this heading">#</a></h4>
+<p>An if statement.
+Both regions are <em>mixed regions</em>.</p>
+<p>The condition must be of bool type.</p>
+</section>
+<section id="id20">
+<h4>Arguments<a class="headerlink" href="#id20" title="Link to this heading">#</a></h4>
+<p>The if instruction may return multiple values, where the number of values and the value types
+are given by the scalar-type-list.
+If values are returned, the last instruction in both the “then”-region and the “else”-region must
+be a yield instruction (the “else”-region cannot be omitted).</p>
+<p>Example:</p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">cmp</span><span class="o">.</span><span class="n">lt</span> <span class="o">%</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16</span> <span class="p">:</span> <span class="n">i32</span>
+<span class="o">%</span><span class="n">x</span> <span class="o">=</span> <span class="k">if</span> <span class="o">%</span><span class="mi">1</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">i32</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">yield</span> <span class="o">%</span><span class="mi">0</span> <span class="p">:</span> <span class="n">i32</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="k">yield</span> <span class="mi">16</span> <span class="p">:</span> <span class="n">i32</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></blockquote>
+</section>
+</section>
+<section id="axpby">
+<h3>Axpby<a class="headerlink" href="#axpby" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">transpose</span><span class="w">                </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;.t&quot;</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="l">&quot;.n&quot;</span>
+<span class="nc">const-or-val</span><span class="w">             </span><span class="o">=</span><span class="w"> </span><span class="nc">floating-constant</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="nc">axpby-instruction</span><span class="w">        </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;axpby&quot;</span><span class="w"> </span><span class="nc">transpose</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                           </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                           </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id21">
+<h4>Overview<a class="headerlink" href="#id21" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+Axpby implements</p>
+<div class="math notranslate nohighlight">
+\[B := \alpha \text{op}(A) + \beta B\]</div>
+<p>for vectors and matrices.
+If the atomic flag is set, B is updated atomically.</p>
+</section>
+<section id="id22">
+<h4>Arguments<a class="headerlink" href="#id22" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span>, and the third argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second and the fourth argument must have memref type and give A and B, respectively.</p>
+<p>The transpose modifier defines <span class="math notranslate nohighlight">\(\text{op}\)</span> as following:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\text{op}_i(X) := \left\{
+                  \begin{array}{rcl}
+                    X^T &amp; \text{ if } &amp; \text{modifier}_i= t \wedge \text{order}(X) = 2,\\
+                    X   &amp; \text{ else. }
+                  \end{array}
+                  \right.\end{split}\]</div>
+<p>(Note that “.t” has no effect on vectors.)</p>
+<p>The shape of <span class="math notranslate nohighlight">\(\text{op}(A)\)</span> and B must be identical and the order of A and B needs to be 1 (vector)
+or 2 (matrix).</p>
+</section>
+</section>
+<section id="for">
+<h3>For<a class="headerlink" href="#for" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">for-instruction</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;for&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;=&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span>
+<span class="w">                                                      </span><span class="p">[</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="p">]</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">integer-type</span><span class="p">]</span><span class="w"> </span><span class="nc">region</span>
+</pre></div>
+</div>
+<section id="id23">
+<h4>Overview<a class="headerlink" href="#id23" title="Link to this heading">#</a></h4>
+<p>A for loop.
+Instructions in the for loop execute sequentially and its region is a <em>mixed region</em>.</p>
+<p>The loop’s range [from; to) is given by the first integer constant and second integer constant,
+and the trip count is stored in the local identifier.
+A step size can be given with the third integer constant.
+The step size defaults to 1 if omitted.
+The integer type of the loop variable and the loop bounds is given after the colon.
+The default integer type is <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
+</section>
+</section>
+<section id="foreach">
+<h3>Foreach<a class="headerlink" href="#foreach" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">foreach-instruction</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;foreach&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;=&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-int-constant</span>
+<span class="w">                           </span><span class="p">[</span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">integer-type</span><span class="p">]</span><span class="w"> </span><span class="nc">region</span>
+</pre></div>
+</div>
+<section id="id24">
+<h4>Overview<a class="headerlink" href="#id24" title="Link to this heading">#</a></h4>
+<p>A foreach loop that executes the loop’s range [from; to) without any sequence guarantee.
+The region of a foreach is a <em>spmd region</em>.</p>
+<p>The loop’s range [from; to) is given by the first integer constant and second integer constant,
+and the trip count is stored in the local identifier.
+The integer type of the loop variable is given after the colon.
+The integer type of the loop variable and the loop bounds is given after the colon.
+The default integer type is <code class="docutils literal notranslate"><span class="pre">index</span></code>.</p>
+</section>
+</section>
+<section id="gemm">
+<h3>GEMM<a class="headerlink" href="#gemm" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">gemm-instruction</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;gemm&quot;</span><span class="w"> </span><span class="nc">transpose</span><span class="w"> </span><span class="nc">transpose</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                           </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                           </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id25">
+<h4>Overview<a class="headerlink" href="#id25" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+GEMM implements the well-known GEMM BLAS-3 operation.</p>
+<div class="math notranslate nohighlight">
+\[C := \alpha \text{op}_1(A) \text{op}_2(B) + \beta C\]</div>
+<p>If the atomic flag is set, C is updated atomically.</p>
+</section>
+<section id="id26">
+<h4>Arguments<a class="headerlink" href="#id26" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span> and the fourth argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second, the third, and the fifth argument must have memref type and give
+A, B, and C, respectively.</p>
+<p>The first transpose modifier defines <span class="math notranslate nohighlight">\(\text{op}_1\)</span> and the second transpose modifier
+defines <span class="math notranslate nohighlight">\(\text{op}_2\)</span> as following:</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\text{op}_i(X) := \left\{
+                  \begin{array}{rcl}
+                    X^T &amp; \text{ if } &amp; \text{modifier}_i = t,\\
+                    X   &amp; \text{ if } &amp; \text{modifier}_i = n.
+                  \end{array}
+                  \right.\end{split}\]</div>
+<p>If <span class="math notranslate nohighlight">\(\text{op}_1(A)\)</span> has the shape MxK and
+<span class="math notranslate nohighlight">\(\text{op}_2(B)\)</span> has the shape KxN then C must have the shape MxN.</p>
+</section>
+</section>
+<section id="gemv">
+<h3>GEMV<a class="headerlink" href="#gemv" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">gemv-instruction</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;gemm&quot;</span><span class="w"> </span><span class="nc">transpose</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                           </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                           </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id27">
+<h4>Overview<a class="headerlink" href="#id27" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+GEMV implements the well-known GEMM BLAS-2 operation.</p>
+<div class="math notranslate nohighlight">
+\[c := \alpha \text{op}_1(A) b + \beta C\]</div>
+<p>If the atomic flag is set, c is updated atomically.</p>
+</section>
+<section id="id28">
+<h4>Arguments<a class="headerlink" href="#id28" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span> and the fourth argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second, the third, and the fifth argument must have memref type and give
+A, b, and c, respectively.</p>
+<p>The transpose modifier for A as in GEMM.</p>
+<p><span class="math notranslate nohighlight">\(\text{op}_1(A)\)</span> has the shape MxK and <span class="math notranslate nohighlight">\(B\)</span> has the shape K then c must have the shape M.</p>
+</section>
+</section>
+<section id="ger">
+<h3>GER<a class="headerlink" href="#ger" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">ger-instruction</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;ger&quot;</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                            </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                            </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id29">
+<h4>Overview<a class="headerlink" href="#id29" title="Link to this heading">#</a></h4>
+<p>Computes the general rank-1 update:</p>
+<div class="math notranslate nohighlight">
+\[C := \alpha a b^T + \beta C\]</div>
+<p>If the atomic flag is set, C is updated atomically.</p>
+</section>
+<section id="id30">
+<h4>Arguments<a class="headerlink" href="#id30" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span> and the fourth argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second, the third, and the fifth argument must have memref type and give
+a, b, and C, respectively.</p>
+<p>a and b must be vectors. If the size of a is M and the size of b is N the shape of C must be <span class="math notranslate nohighlight">\(M\times N\)</span>.</p>
+</section>
+</section>
+<section id="hadamard-product">
+<h3>Hadamard product<a class="headerlink" href="#hadamard-product" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">hadamard-product-instruction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;hadamard_product&quot;</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                               </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                               </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id31">
+<h4>Overview<a class="headerlink" href="#id31" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+Computes the Hadamard product of two tensors.
+That is, in index notation we have</p>
+<div class="math notranslate nohighlight">
+\[c_{i} := \alpha a_{i} b_{i} + \beta c_{i}\]</div>
+<p>If the atomic flag is set, c is updated atomically.</p>
+</section>
+<section id="id32">
+<h4>Arguments<a class="headerlink" href="#id32" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span> and the fourth argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second, the third, and the fifth argument must have memref type and give
+a, b, and c, respectively.</p>
+<p>a, b, and c must be vectors and have equal shape.</p>
+</section>
+</section>
+<section id="store">
+<h3>Store<a class="headerlink" href="#store" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">store-instruction</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;store&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;[&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">index-list</span><span class="p">]</span><span class="w"> </span><span class="l">&quot;]&quot;</span><span class="w"> </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id33">
+<h4>Overview<a class="headerlink" href="#id33" title="Link to this heading">#</a></h4>
+<p><em>Replicated instruction.</em>
+Store a scalar value in a memref at the position given by the index list.
+The number of indices must match the order of the memref.</p>
+<p><em>Note:</em> Store should only be used in SPMD regions as otherwise the same memory location is written
+from all work-items.</p>
+</section>
+<section id="id34">
+<h4>Arguments<a class="headerlink" href="#id34" title="Link to this heading">#</a></h4>
+<p>The first operand must have the same scalar type as the memref type.
+The indices must be of <code class="docutils literal notranslate"><span class="pre">index</span></code> type.</p>
+</section>
+</section>
+<section id="sum">
+<h3>Sum<a class="headerlink" href="#sum" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">sum-instruction</span><span class="w">          </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;sum&quot;</span><span class="w"> </span><span class="nc">transpose</span><span class="w"> </span><span class="p">[</span><span class="l">&quot;.atomic&quot;</span><span class="p">]</span>
+<span class="w">                           </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">const-or-val</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+<span class="w">                           </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">scalar-type</span><span class="w"> </span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">memref-type</span>
+</pre></div>
+</div>
+<section id="id35">
+<h4>Overview<a class="headerlink" href="#id35" title="Link to this heading">#</a></h4>
+<p><em>Collective instruction.</em>
+Computes the matrix-vector product or the dot product of A with a vector of ones.
+That is, for matrices we have</p>
+<div class="math notranslate nohighlight">
+\[B := \alpha \text{op}(A) \vec{1} + \beta B\]</div>
+<p>and for vectors we have</p>
+<div class="math notranslate nohighlight">
+\[b := \alpha \left&lt;a,\vec{1}\right&gt; + \beta b\]</div>
+<p>If the atomic flag is set, B is updated atomically.</p>
+</section>
+<section id="id36">
+<h4>Arguments<a class="headerlink" href="#id36" title="Link to this heading">#</a></h4>
+<p>The first argument gives <span class="math notranslate nohighlight">\(\alpha\)</span> and the third argument gives <span class="math notranslate nohighlight">\(\beta\)</span>.
+The second and the fourth argument must have memref type and give A and B, respectively.
+If A is a matrix then B must be a vector.
+The first mode size of <span class="math notranslate nohighlight">\(\text{op}(A)\)</span> must match the size of B.
+If A is a vector, then B must be a scalar memref.</p>
+<p>The transpose op is defined as in the axpby instruction.</p>
+</section>
+</section>
+<section id="yield">
+<h3>Yield<a class="headerlink" href="#yield" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">yield-instruction</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;yield&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">local-identifier-list</span><span class="p">]</span><span class="w">  </span><span class="l">&quot;:&quot;</span><span class="w"> </span><span class="p">[</span><span class="nc">scalar-type-list</span><span class="p">]</span>
+<span class="nc">identifier-or-constant-list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="w"> </span><span class="o">*</span><span class="p">(</span><span class="l">&quot;,&quot;</span><span class="w"> </span><span class="nc">identifier-or-constant</span><span class="p">)</span>
+</pre></div>
+</div>
+<section id="id37">
+<h4>Overview<a class="headerlink" href="#id37" title="Link to this heading">#</a></h4>
+<p>Yield returns values from an if or for instruction.</p>
+</section>
+<section id="id38">
+<h4>Arguments<a class="headerlink" href="#id38" title="Link to this heading">#</a></h4>
+<p>The length of the local identifier list must equal the length of the scalar type list.</p>
+</section>
+</section>
+<section id="additional-instructions">
+<h3>Additional instructions<a class="headerlink" href="#additional-instructions" title="Link to this heading">#</a></h3>
+<div class="highlight-abnf notranslate"><div class="highlight"><pre><span></span><span class="nc">barrier-instruction</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;barrier&quot;</span>
+<span class="nc">lifetime-stop-instruction</span><span class="w">   </span><span class="o">=</span><span class="w"> </span><span class="l">&quot;lifetime_stop&quot;</span><span class="w"> </span><span class="nc">local-identifier</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="sample-code">
+<h2>Sample code<a class="headerlink" href="#sample-code" title="Link to this heading">#</a></h2>
+<p>The following sample implements the kernel</p>
+<div class="math notranslate nohighlight">
+\[D := \alpha A B^T C + D \text{ with }
+    A \in \mathbb{R}^{16\times 8},
+    B \in \mathbb{R}^{8\times 8},
+    C \in \mathbb{R}^{8\times 16},
+    D \in \mathbb{R}^{16\times 16}\]</div>
+<p>where B and C are constant matrices and A and D are matrix batches.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @fused_kernel(%alpha: f32,
+                     %A: group&lt;memref&lt;f32x16x8&gt;&gt;,
+                     %B: memref&lt;f32x8x8&gt;,
+                     %C: memref&lt;f32x8x16&gt;,
+                     %D: memref&lt;f32x16x16x?&gt;) {
+  %0 = group_id
+  %1 = load %A[%0]        : group&lt;memref&lt;f32x16x8&gt;&gt; ; Returns memref&lt;f32x16x8&gt;
+  %2 = subview %D[:,:,%0] : memref&lt;f32x16x16x?&gt;     ; Returns memref&lt;f32x16x16&gt;
+  %tmp0 = alloca -&gt; memref&lt;f32x16x8&gt;
+  gemm.n.t 1.0, %1, %B, 0.0, %tmp0
+     : f32, memref&lt;f32x16x8&gt;, memref&lt;f32x8x8&gt;, f32, memref&lt;f32x16x8&gt;
+  gemm.n.n %alpha, %tmp0, %C, 1.0, %2
+     : f32, memref&lt;f32x16x8&gt;, memref&lt;f32x8x16&gt;, f32, memref&lt;f32x16x16&gt;
+}
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="calling_convention.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Calling convention</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../api/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">tinytc</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#execution-model">Execution model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#core-rules">Core rules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#identifier">Identifier</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#constants">Constants</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#regions">Regions</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#types">Types</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-types">Scalar types</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#memref-type">Memref type</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#memory-layout">Memory layout</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#strided-layout">Strided layout</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-type">Group type</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#instructions">Instructions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#alloca">Alloca</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#overview">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#returns">Returns</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#restrictions">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-op">Binary op</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cast">Cast</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#comparison">Comparison</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#expand">Expand</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arguments">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fuse">Fuse</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id7">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id8">Restrictions</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-id">Group id</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id9">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#group-size">Group size</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id10">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#load">Load</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id11">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id12">Arguments</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id13">Returns</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#size">Size</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id14">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id15">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#subview">Subview</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id16">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id17">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#neg">Neg</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id18">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#if">If</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id19">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id20">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#axpby">Axpby</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id21">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id22">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#for">For</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id23">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#foreach">Foreach</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id24">Overview</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gemm">GEMM</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id25">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id26">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#gemv">GEMV</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id27">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id28">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ger">GER</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id29">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id30">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#hadamard-product">Hadamard product</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id31">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id32">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#store">Store</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id33">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id34">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#sum">Sum</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id35">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id36">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#yield">Yield</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id37">Overview</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#id38">Arguments</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#additional-instructions">Additional instructions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#sample-code">Sample code</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

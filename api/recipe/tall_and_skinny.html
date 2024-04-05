@@ -1,0 +1,801 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tall and skinny GEMM &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/recipe/tall_and_skinny';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="IR module" href="../ir/index.html" />
+    <link rel="prev" title="Batched small GEMM" href="small_gemm_batched.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/tensor-ir.html">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="../index.html">tinytc</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../introduction.html">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../parser.html">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../jit.html">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../runtime.html">Runtime</a></li>
+<li class="toctree-l2 current active has-children"><a class="reference internal" href="index.html">Recipe module</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3 current active"><a class="current reference internal" href="#">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../ir/builder.html">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ir/tiling.html">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ir/passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ir/generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../ir/error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/api/recipe/tall_and_skinny.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/api/recipe/tall_and_skinny.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fapi/recipe/tall_and_skinny.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/api/recipe/tall_and_skinny.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Tall and skinny GEMM</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::context_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::device_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::command_list_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::event_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::native_event_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::mem_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::const_mem_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::howmany()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::tall_and_skinny()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_tRKNSt6vectorI14native_event_tEE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::operator()()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::operator()()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"><code class="docutils literal notranslate"><span class="pre">generate_tall_and_skinny_binary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="tall-and-skinny-gemm">
+<span id="tall-and-skinny-gemm-recipe"></span><h1>Tall and skinny GEMM<a class="headerlink" href="#tall-and-skinny-gemm" title="Link to this heading">#</a></h1>
+<p>The tall and skinny GEMM recipe implements the following tensor operation:</p>
+<div class="math notranslate nohighlight">
+\[C = \alpha AB + \beta C\]</div>
+<p>where
+<span class="math notranslate nohighlight">\(A \in \mathbb{R}^{M\times K}\)</span>,
+<span class="math notranslate nohighlight">\(B \in \mathbb{R}^{K\times N}\)</span>,
+<span class="math notranslate nohighlight">\(C \in \mathbb{R}^{M\times N}\)</span>,
+and <span class="math notranslate nohighlight">\(M \gg K\)</span>, <span class="math notranslate nohighlight">\(M \gg N\)</span>.</p>
+<p>The recipe can be used as following, assuming the SYCL runtime is selected
+and the memory layout is packed:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc-sycl.hpp&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc.hpp&gt;</span>
+
+<span class="k">using</span><span class="w"> </span><span class="k">namespace</span><span class="w"> </span><span class="nn">tinytc</span><span class="p">;</span>
+
+<span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">gemm</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">recipe</span><span class="o">::</span><span class="n">tall_and_skinny</span><span class="o">&lt;</span><span class="n">T</span><span class="p">,</span><span class="w"> </span><span class="n">sycl_runtime</span><span class="o">&gt;</span><span class="p">(</span><span class="n">N</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="p">,</span>
+<span class="w">                                                         </span><span class="n">get_core_info</span><span class="p">(</span><span class="n">q</span><span class="p">.</span><span class="n">get_device</span><span class="p">()),</span>
+<span class="w">                                                         </span><span class="n">q</span><span class="p">.</span><span class="n">get_context</span><span class="p">(),</span><span class="w"> </span><span class="n">q</span><span class="p">.</span><span class="n">get_device</span><span class="p">());</span>
+<span class="w">    </span><span class="n">gemm</span><span class="p">(</span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="mf">1.0</span><span class="p">,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">B</span><span class="p">,</span><span class="w"> </span><span class="n">K</span><span class="p">,</span><span class="w"> </span><span class="mf">0.0</span><span class="p">,</span><span class="w"> </span><span class="n">C</span><span class="p">,</span><span class="w"> </span><span class="n">M</span><span class="p">,</span><span class="w"> </span><span class="n">q</span><span class="p">).</span><span class="n">wait</span><span class="p">();</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">compilation_error</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">loc</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">sycl</span><span class="o">::</span><span class="n">exception</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="o">&amp;</span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">e</span><span class="p">.</span><span class="n">what</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">endl</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Advanced users may call the <a class="reference internal" href="#_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE" title="tinytc::recipe::generate_tall_and_skinny_binary"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">tinytc::recipe::generate_tall_and_skinny_binary()</span></code></a> function
+to create  a device binary.
+The binary may contain several kernels, e.g. a separate kernel for <span class="math notranslate nohighlight">\(\beta=0\)</span> and
+<span class="math notranslate nohighlight">\(\beta\neq 0\)</span>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>JIT compilation is expensive. Each recipe parameterization should only be created once
+and be reused many times.</p>
+</div>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Link to this heading">#</a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE">
+<span id="_CPPv3I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE"></span><span id="_CPPv2I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="../runtime.html#_CPPv4I0EN6tinytc7runtimeE" title="tinytc::runtime"><span class="n"><span class="pre">runtime</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">R</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tall_and_skinny</span></span></span><a class="headerlink" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Creates a tall and skinny GEMM functor. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>T</strong> – Floating point type </p></li>
+<li><p><strong>R</strong> – Runtime </p></li>
+</ul>
+</dd>
+</dl>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny9context_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny9context_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a31e4c9edbde93b7ddd88791557a74f83"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">context_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">context_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Context type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny8device_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny8device_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a3c73b52ef2cd1b1163ce046931502104"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">device_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">device_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Device type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny14command_list_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny14command_list_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a5fbc49fb55c81a367d15898828a0f20c"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">command_list_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">command_list_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Command list / queue type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny7event_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny7event_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a9d7cd4df3e7740565f19157df3d94533"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">event_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">event_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Event type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny14native_event_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny14native_event_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1aa5a735dc43ba0771e337fe60a94f9f75"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">native_event_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">native_event_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Native event type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny5mem_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny5mem_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a6b1cfba95cc7e9b3b555a8960519c7a6"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mem_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">mem_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Memory object type. </p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny11const_mem_tE"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny11const_mem_tE"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1abca841e5e57fb98beee2ee7588dfa766"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">const_mem_t</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">const_mem_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Const memory object type. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE">
+<span id="_CPPv3NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE"></span><span id="_CPPv2NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE"></span><span id="tinytc::recipe::tall_and_skinny::howmany__std::uint32_tC"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a280caee74e0c4d8930d5be7ac2605e97"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">howmany</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">M</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><a class="headerlink" href="#_CPPv4NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compute group size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>M</strong> – Number of rows of A and C</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Group size </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t"></span><span id="tinytc::recipe::tall_and_skinny::tall_and_skinny__std::uint32_t.std::uint32_t.std::shared_ptr:core_info:.context_t.device_t"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a3ceb3dcd33002b7f11a8e056b47e2ecb"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tall_and_skinny</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">K</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../jit.html#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">info</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE" title="tinytc::recipe::tall_and_skinny::context_t"><span class="n"><span class="pre">context_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ctx</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE" title="tinytc::recipe::tall_and_skinny::device_t"><span class="n"><span class="pre">device_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dev</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>ctor </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>N</strong> – Number of columns of B and C </p></li>
+<li><p><strong>K</strong> – Number of columns of A, number of rows B </p></li>
+<li><p><strong>info</strong> – Core info </p></li>
+<li><p><strong>ctx</strong> – Context </p></li>
+<li><p><strong>dev</strong> – Device </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_tRKNSt6vectorI14native_event_tEE">
+<span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1a2ea2570cb49a4acf2584a009ee86256a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">()</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">M</span></span>, <a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">alpha</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE" title="tinytc::recipe::tall_and_skinny::const_mem_t"><span class="n"><span class="pre">const_mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">A</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldA</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE" title="tinytc::recipe::tall_and_skinny::const_mem_t"><span class="n"><span class="pre">const_mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">B</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldB</span></span>, <a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">beta</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE" title="tinytc::recipe::tall_and_skinny::mem_t"><span class="n"><span class="pre">mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">C</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldC</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE" title="tinytc::recipe::tall_and_skinny::command_list_t"><span class="n"><span class="pre">command_list_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">q</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE" title="tinytc::recipe::tall_and_skinny::native_event_t"><span class="n"><span class="pre">native_event_t</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">dep_events</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE" title="tinytc::recipe::tall_and_skinny::event_t"><span class="n"><span class="pre">event_t</span></span></a><a class="headerlink" href="#_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_tRKNSt6vectorI14native_event_tEE" title="Link to this definition">#</a><br /><span class="k"><span class="pre">requires</span></span><span class="w"> </span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::R"><span class="n"><span class="pre">R</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_event_managed</span></span><span class="p"><span class="pre">)</span></span><br /></dt>
+<dd><p>Submits a kernel to the runtime for execution on the device. </p>
+<p>This submit prototype is only available if the runtime’s native event type supports reference counting.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>M</strong> – Number of rows of A and C </p></li>
+<li><p><strong>alpha</strong> – <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+<li><p><strong>A</strong> – Pointer to A </p></li>
+<li><p><strong>ldA</strong> – Number of elements between columns of A </p></li>
+<li><p><strong>B</strong> – Pointer to B </p></li>
+<li><p><strong>ldB</strong> – Number of elements between columns of B </p></li>
+<li><p><strong>beta</strong> – <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>C</strong> – Pointer to C </p></li>
+<li><p><strong>ldC</strong> – Number of elements between columns of C </p></li>
+<li><p><strong>q</strong> – Queue </p></li>
+<li><p><strong>dep_events</strong> – Vector of events that need to be waited on before execution </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t">
+<span id="_CPPv3N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t"></span><span id="_CPPv2N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t"></span><span id="tinytc::recipe::tall_and_skinny::call-operator__std::uint32_t.T.const_mem_t.std::uint32_t.const_mem_t.std::uint32_t.T.mem_t.std::uint32_t.command_list_t.native_event_t.std::uint32_t.native_event_tP"></span><span class="target" id="classtinytc_1_1recipe_1_1tall__and__skinny_1acad8a3862c2938b0cc6a3b79324c9664"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">()</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">M</span></span>, <a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">alpha</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE" title="tinytc::recipe::tall_and_skinny::const_mem_t"><span class="n"><span class="pre">const_mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">A</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldA</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE" title="tinytc::recipe::tall_and_skinny::const_mem_t"><span class="n"><span class="pre">const_mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">B</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldB</span></span>, <a class="reference internal" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE" title="tinytc::recipe::tall_and_skinny::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">beta</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE" title="tinytc::recipe::tall_and_skinny::mem_t"><span class="n"><span class="pre">mem_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">C</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ldC</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE" title="tinytc::recipe::tall_and_skinny::command_list_t"><span class="n"><span class="pre">command_list_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">q</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE" title="tinytc::recipe::tall_and_skinny::native_event_t"><span class="n"><span class="pre">native_event_t</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">signal_event</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_wait_events</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE" title="tinytc::recipe::tall_and_skinny::native_event_t"><span class="n"><span class="pre">native_event_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">wait_events</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Submits a kernel to the runtime for execution on the device. </p>
+<p>This submit prototype is only available if the lifetime of the runtime’s native event type is user-managed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>M</strong> – Number of rows of A and C </p></li>
+<li><p><strong>alpha</strong> – <span class="math notranslate nohighlight">\(\alpha\)</span></p></li>
+<li><p><strong>A</strong> – Pointer to A </p></li>
+<li><p><strong>ldA</strong> – Number of elements between columns of A </p></li>
+<li><p><strong>B</strong> – Pointer to B </p></li>
+<li><p><strong>ldB</strong> – Number of elements between columns of B </p></li>
+<li><p><strong>beta</strong> – <span class="math notranslate nohighlight">\(\beta\)</span></p></li>
+<li><p><strong>C</strong> – Pointer to C </p></li>
+<li><p><strong>ldC</strong> – Number of elements between columns of C </p></li>
+<li><p><strong>q</strong> – Command list </p></li>
+<li><p><strong>signal_event</strong> – Event that is signalled on kernel completion </p></li>
+<li><p><strong>num_wait_events</strong> – Number of events that need to be waited on before exuection </p></li>
+<li><p><strong>wait_events</strong> – Pointer to num_wait_events event handles </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="functions">
+<h2>Functions<a class="headerlink" href="#functions" title="Link to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE">
+<span id="_CPPv3N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"></span><span id="_CPPv2N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"></span><span id="tinytc::recipe::generate_tall_and_skinny_binary__ir::gemm_scalar_type.std::uint32_t.std::uint32_t.std::uint32_t.std::shared_ptr:core_info:.ir::error_reporter_function"></span><span class="target" id="tall__and__skinny_8hpp_1aa791c20a5f7cb4c2762cf51d5631e023"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">recipe</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">generate_tall_and_skinny_binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_typeE" title="tinytc::ir::gemm_scalar_type"><span class="n"><span class="pre">gemm_scalar_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">ty</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">M_block_size</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">N</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">K</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../jit.html#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">info</span></span>, <span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../ir/error.html#_CPPv4N6tinytc2ir23error_reporter_functionE" title="tinytc::ir::error_reporter_function"><span class="n"><span class="pre">error_reporter_function</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">err</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">null_error_reporter</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="../jit.html#_CPPv4N6tinytc6binaryE" title="tinytc::binary"><span class="n"><span class="pre">binary</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns a binary for the tall and skinny recipe. </p>
+<p>The binary contains a kernel for beta = 0 called “gemm_beta0” and a kernel for beta != 0 called “gemm”. M (= number of rows of A, C) and strides are dynamic.</p>
+<p>The signature of the generated kernels gemm and gemm_beta0 is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @{name}(%alpha: {ty.alpha},
+             %A: memref&lt;{ty.A}x?x{K},strided&lt;1,?&gt;&gt;,
+             %B: memref&lt;{ty.B}x{K}x{N},strided&lt;1,?&gt;&gt;,
+             %beta: {ty.beta},
+             %C: memref&lt;{ty.C}x?x{N},strided&lt;1,?&gt;&gt;)
+</pre></div>
+</div>
+<p>meaning that one has to set arguments to the kernel in the following order:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alpha</span><span class="p">,</span> <span class="n">A_ptr</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">ldA</span><span class="p">,</span> <span class="n">B_ptr</span><span class="p">,</span> <span class="n">ldB</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">C_ptr</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">ldC</span>
+</pre></div>
+</div>
+<p>where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ty</strong> – Scalar types of alpha, A, B, beta, C </p></li>
+<li><p><strong>M_block_size</strong> – Size of M block that each work group gets </p></li>
+<li><p><strong>N</strong> – Number of columns of B, C </p></li>
+<li><p><strong>K</strong> – Number columns of A, number of rows of B </p></li>
+<li><p><strong>info</strong> – Core info </p></li>
+<li><p><strong>err</strong> – Error reporting callback</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Shared pointer to binary; nullptr in case of error </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="small_gemm_batched.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Batched small GEMM</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="../ir/index.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">IR module</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#classes">Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::context_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::device_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::command_list_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::event_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::native_event_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::mem_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::const_mem_t</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::howmany()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::tall_and_skinny()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_tRKNSt6vectorI14native_event_tEE"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::operator()()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t"><code class="docutils literal notranslate"><span class="pre">tall_and_skinny::operator()()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#functions">Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE"><code class="docutils literal notranslate"><span class="pre">generate_tall_and_skinny_binary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

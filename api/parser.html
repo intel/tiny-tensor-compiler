@@ -1,0 +1,663 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Parser &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/parser';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="JIT compiler" href="jit.html" />
+    <link rel="prev" title="Introduction" href="introduction.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../manual/tensor-ir.html">Tensor language reference</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">tinytc</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="jit.html">JIT compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="recipe/small_gemm_batched.html">Batched small GEMM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="ir/builder.html">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/tiling.html">Work-group size</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/passes.html">Compiler passes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/generator.html">GEMM generator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ir/error.html">Error handling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="ze/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ze/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ze/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cl/runtime.html">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cl/error.html">Error handling</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="sycl/info.html">Device info</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sycl/runtime.html">Runtime</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/api/parser.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/api/parser.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fapi/parser.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/api/parser.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Parser</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-manager">Source manager</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_managerE"><code class="docutils literal notranslate"><span class="pre">source_manager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager14source_managerEPNSt7ostreamE"><code class="docutils literal notranslate"><span class="pre">source_manager::source_manager()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager10parse_fileERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager11parse_stdinEv"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_stdin()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager12parse_stringENSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_string()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::report_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager14error_reporterEv"><code class="docutils literal notranslate"><span class="pre">source_manager::error_reporter()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-function">Parse function</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">parse()</span></code></a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="parser">
+<h1>Parser<a class="headerlink" href="#parser" title="Link to this heading">#</a></h1>
+<p>Programs written in the <a class="reference internal" href="../manual/tensor-ir.html#tensor-language"><span class="std std-ref">tensor language</span></a>
+are either parsed using a <a class="reference internal" href="#source-manager">source manager</a> or the <a class="reference internal" href="#parse-function">parse function</a>.
+Using the source manager is the recommended method as it enhanced error
+messages with code context.</p>
+<p>For example, if the source manager is set up as following</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;tinytc/tinytc.hpp&gt;</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">srcman</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">source_manager</span><span class="p">(</span><span class="o">&amp;</span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">p</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">srcman</span><span class="p">.</span><span class="n">parse_file</span><span class="p">(</span><span class="s">&quot;test/codegen/type_mismatch0.ir&quot;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>and the source file contains an error, then the error message written to cerr contains context:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span> <span class="nd">@kernel</span><span class="p">(</span><span class="o">%</span><span class="n">K0</span><span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f32</span><span class="o">&gt;</span><span class="p">)</span> <span class="p">{</span>
+  <span class="o">%</span><span class="mi">0</span> <span class="o">=</span> <span class="n">load</span> <span class="o">%</span><span class="n">K0</span><span class="p">[]</span> <span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="n">f64</span><span class="o">&gt;</span>
+            <span class="o">~~~~~~~~~~~~~~~~~~~</span>
+<span class="n">test</span><span class="o">/</span><span class="n">codegen</span><span class="o">/</span><span class="n">type_mismatch0</span><span class="o">.</span><span class="n">ir</span><span class="p">:</span><span class="mf">6.13</span><span class="o">-</span><span class="mi">31</span><span class="p">:</span> <span class="n">Type</span> <span class="n">of</span> <span class="n">SSA</span> <span class="n">value</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">match</span> <span class="n">operand</span> <span class="nb">type</span>
+</pre></div>
+</div>
+<section id="source-manager">
+<span id="id1"></span><h2>Source manager<a class="headerlink" href="#source-manager" title="Link to this heading">#</a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_managerE">
+<span id="_CPPv3N6tinytc14source_managerE"></span><span id="_CPPv2N6tinytc14source_managerE"></span><span id="tinytc::source_manager"></span><span class="target" id="classtinytc_1_1source__manager"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">source_manager</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc14source_managerE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Source manager. </p>
+<p>The source manager can parse tensor programs from files, stdin, or memory. Source code is stored in the manager such that error messages can be enhanced with code context. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager14source_managerEPNSt7ostreamE">
+<span id="_CPPv3N6tinytc14source_manager14source_managerEPNSt7ostreamE"></span><span id="_CPPv2N6tinytc14source_manager14source_managerEPNSt7ostreamE"></span><span id="tinytc::source_manager::source_manager__osP"></span><span class="target" id="classtinytc_1_1source__manager_1af525850aae695d56caddaadc706e07b1"></span><span class="sig-name descname"><span class="n"><span class="pre">source_manager</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">oerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc14source_manager14source_managerEPNSt7ostreamE" title="Link to this definition">#</a><br /></dt>
+<dd><p>ctor </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>oerr</strong> – ostream for error printing; set to nullptr to omit output </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager10parse_fileERKNSt6stringE">
+<span id="_CPPv3N6tinytc14source_manager10parse_fileERKNSt6stringE"></span><span id="_CPPv2N6tinytc14source_manager10parse_fileERKNSt6stringE"></span><span id="tinytc::source_manager::parse_file__ssCR"></span><span class="target" id="classtinytc_1_1source__manager_1a1ba0597fa929ae8151217e0b98781140"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">parse_file</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">filename</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/builder.html#_CPPv4N6tinytc2ir4progE" title="tinytc::ir::prog"><span class="n"><span class="pre">prog</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc14source_manager10parse_fileERKNSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create abstract syntax tree from file. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager11parse_stdinEv">
+<span id="_CPPv3N6tinytc14source_manager11parse_stdinEv"></span><span id="_CPPv2N6tinytc14source_manager11parse_stdinEv"></span><span id="tinytc::source_manager::parse_stdin"></span><span class="target" id="classtinytc_1_1source__manager_1ac5019198ae38e7de9f5da026b8450471"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">parse_stdin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/builder.html#_CPPv4N6tinytc2ir4progE" title="tinytc::ir::prog"><span class="n"><span class="pre">prog</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc14source_manager11parse_stdinEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create abstract syntax tree from stdin. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager12parse_stringENSt6stringE">
+<span id="_CPPv3N6tinytc14source_manager12parse_stringENSt6stringE"></span><span id="_CPPv2N6tinytc14source_manager12parse_stringENSt6stringE"></span><span id="tinytc::source_manager::parse_string__ss"></span><span class="target" id="classtinytc_1_1source__manager_1a32614495e39705d8612a791426d43c69"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">parse_string</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">input</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/builder.html#_CPPv4N6tinytc2ir4progE" title="tinytc::ir::prog"><span class="n"><span class="pre">prog</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc14source_manager12parse_stringENSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create abstract syntax tree from string. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE">
+<span id="_CPPv3N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE"></span><span id="_CPPv2N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE"></span><span id="tinytc::source_manager::report_error__ir::locationCR.ssCR"></span><span class="target" id="classtinytc_1_1source__manager_1a4cf175e5e6d30bb0bdcbf500b1cf0c03"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">report_error</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/error.html#_CPPv4N6tinytc2ir8locationE" title="tinytc::ir::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">l</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">what</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Report error with code context. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14source_manager14error_reporterEv">
+<span id="_CPPv3N6tinytc14source_manager14error_reporterEv"></span><span id="_CPPv2N6tinytc14source_manager14error_reporterEv"></span><span id="tinytc::source_manager::error_reporter"></span><span class="target" id="classtinytc_1_1source__manager_1a94e27a5bdbc5b74846785639469a64bc"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error_reporter</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/error.html#_CPPv4N6tinytc2ir23error_reporter_functionE" title="tinytc::ir::error_reporter_function"><span class="n"><span class="pre">error_reporter_function</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc14source_manager14error_reporterEv" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get error reporter. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="parse-function">
+<span id="id2"></span><h2>Parse function<a class="headerlink" href="#parse-function" title="Link to this heading">#</a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE">
+<span id="_CPPv3N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE"></span><span id="_CPPv2N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE"></span><span id="tinytc::parse__ssCR.osP.ssCR"></span><span class="target" id="parser_8hpp_1a3cf457a9e625c8b9b159a344fd443223"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">parse</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">input</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">oerr</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">filename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="s"><span class="pre">&quot;&lt;memory&gt;&quot;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ir</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="ir/builder.html#_CPPv4N6tinytc2ir4progE" title="tinytc::ir::prog"><span class="n"><span class="pre">prog</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Parses a program written in the tensor language. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input</strong> – Code input </p></li>
+<li><p><strong>oerr</strong> – ostream for error printing; set to nullptr to omit output </p></li>
+<li><p><strong>filename</strong> – Optional filename that is added to source code locations</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Abstract syntax tree on success; nullptr on error </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="introduction.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Introduction</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="jit.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">JIT compiler</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-manager">Source manager</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_managerE"><code class="docutils literal notranslate"><span class="pre">source_manager</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager14source_managerEPNSt7ostreamE"><code class="docutils literal notranslate"><span class="pre">source_manager::source_manager()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager10parse_fileERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_file()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager11parse_stdinEv"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_stdin()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager12parse_stringENSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::parse_string()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">source_manager::report_error()</span></code></a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc14source_manager14error_reporterEv"><code class="docutils literal notranslate"><span class="pre">source_manager::error_reporter()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parse-function">Parse function</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#_CPPv4N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE"><code class="docutils literal notranslate"><span class="pre">parse()</span></code></a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

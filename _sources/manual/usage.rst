@@ -1,0 +1,159 @@
+.. Copyright (C) 2024 Intel Corporation
+   SPDX-License-Identifier: BSD-3-Clause
+
+===========
+Basic usage
+===========
+
+The Tiny Tensor Compiler library offers three method to build and run a tensor kernel:
+recipes, JIT compilation of a program written in tensor language, and the IR builder.
+
+Recipes
+=======
+
+Recipes cover the generation of a tensor program, just-in-time compilation, and
+submitting a kernel to the device for common use cases.
+
+The following recipes are available:
+
+* :ref:`Small GEMM batched recipe`
+* :ref:`Tall and skinny GEMM recipe`
+
+Recipes are the simplest method of using the library, as one only needs to create a functor,
+passing the desired runtime as template argument, and call the functor for executing the tensor
+program on the device.
+See the recipe sub-pages for code examples.
+
+JIT compilation
+===============
+
+Suppose we have the tensors
+:math:`Q \in \mathbb{R}^{56x9xE}`,
+:math:`K \in \mathbb{R}^{56x9}`,
+:math:`P \in \mathbb{R}^{56x9xE}`,
+and :math:`A_e \in \mathbb{R}^{9x9}, e\in[0,E)`.
+For all :math:`e\in[0,E)` we want to compute the matrix chain multiplication
+
+.. math::
+
+   Q(:,:,e) \gets Q(:,:,e) + K P(:,:,e) A_e,
+
+where :math:`Q(:,:,e)` selects a :math:`\mathbb{R}^{56x9}` submatrix from the tensor Q
+and likewise for :math:`P(:,:,e)`.
+
+In the :ref:`tensor language <tensor language>` we can implement that kernel as following:
+
+.. _fused kernel example:
+
+.. code-block::
+
+    func @fused_kernel(%K: memref<f32x56x56>,
+                       %P: memref<f32x56x9x?>,
+                       %A: group<memref<f32x9x9>>,
+                       %Q: memref<f32x56x9x?>) {
+        %gid = group_id                                ; Get our index e
+    
+        %p = subview %P[:,:,%gid] : memref<f32x56x9x?> ; %p has type memref<f32x56x9>
+        %a = load %A[%gid] : group<memref<f32x9x9>>    ; %a has type memref<f32x9x9>
+        %q = subview %Q[:,:,%gid] : memref<f32x56x9x?> ; %q has type memref<f32x56x9>
+    
+        %tmp = alloca -> memref<f32x56x9>              ; Reserve temporary memory
+    
+        gemm.n.n 1.0, %K, %p, 0.0, %tmp                ; Compute tmp <- K P(:,:,e)
+            : f32, memref<f32x56x56>, memref<f32x56x9>, f32, memref<f32x56x9>
+        gemm.n.n 1.0, %tmp, %a, 1.0, %q                ; Update Q(:,:,e) <- Q(:,:,e) + tmp A_e
+            : f32, memref<f32x56x9>, memref<f32x9x9>, f32, memref<f32x56x9>
+    }
+
+Compilation with the Tiny Tensor Compiler generates the following OpenCL-C code
+
+.. code-block:: c
+
+    kernel
+    __attribute__((reqd_work_group_size(64,1,1)))
+    __attribute__((intel_reqd_sub_group_size(32)))
+    fused_kernel(global float *K, global float *P, uint P_shape2, global float *global *A,
+                 global float *Q, uint Q_shape2) {
+        local uchar stack[2016] __attribute__((aligned(64)));
+        uint gid = get_global_id(2);
+        global float *p = P + 0ll * 1 + 0ll * 56 + gid * 504;
+        global float *a = *(A + gid);
+        global float *q = Q + 0ll * 1 + 0ll * 56 + gid * 504;
+        local float *tmp = (local float *)(stack + 0);
+        gemm_f32f32f32f32f32_An_Bn_M56_N9_K56_Astride1_56_Bstride1_56_Cstride1_56_alpha3ff0000000000000_beta0(
+            56, 9, 56, 0x1p+0f, K, 1, 56, p, 1, 56, 0x0p+0f, tmp, 1, 56);
+        barrier(CLK_LOCAL_MEM_FENCE);
+        gemm_f32f32f32f32f32_An_Bn_M56_N9_K9_Astride1_56_Bstride1_9_Cstride1_56_alpha3ff0000000000000_beta3ff0000000000000(
+            56, 9, 9, 0x1p+0f, tmp, 1, 56, a, 1, 9, 0x1p+0f, q, 1, 56);
+    }
+
+where the definition of the generated GEMM functions have been omitted for brevity.
+We observe that
+
+* a GEMM is processed in parallel by a work-group with 64 threads,
+* temporary memory is mapped to shared local memory (local uchar stack),
+* load and subview calls translate to simple pointer manipulation,
+* and that a barrier has been introduced between the GEMM calls to avoid data races.
+
+Our kernel is then compiled and run using the following pseudo-code:
+
+.. _kernel compilation and running example:
+
+.. code-block:: cpp
+
+    #include <tinytc/tinytc.hpp>
+    #include <sycl/sycl.hpp>
+
+    // Parse tensor program
+    auto srcman = tinytc::source_manager(&std::cerr);
+    auto prog = srcman.parse_file("fused_kernel.ir");
+    if (!prog) {
+        return -1;
+    }
+
+    // JIT compile program
+    auto q = sycl::queue{};
+    auto bin = tinytc::optimize_and_make_binary(std::move(prog), tinytc::bundle_format::spirv,
+                                                get_core_info(q.get_device()),
+                                                srcman.error_reporter());
+    if (!bin) {
+        return -1;
+    }
+
+    // Initialize tensors
+    float* K = ...;
+    float* P = ...;
+    float** A = ...;
+    float* Q = ...;
+    try {
+        auto bundle = tinytc::tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
+        auto kernel = bundle.get("fused_kernel");
+        kernel.set_args(K, P, howmany, A, Q, howmany);
+        for (int timestep = 0; timestep < num_timesteps; ++timestep) {
+            kernel.submit(howmany, q).wait();
+        }
+    } catch (std::exception const& e) {
+        ...
+    }
+
+Note that a fictional time-loop was introduced around `kernel.submit`.
+As a general rule, JIT compilation is expensive in comparison to kernel execution,
+hence, a compiled program should be reused many times.
+
+IR builder
+==========
+
+Some kind of templating is often required.
+For example, one might want to create a double-precision variant of the
+:ref:`above tensor kernel <fused kernel example>`,
+meaning that one needs to replace every occurence of "f32" with "f64".
+To faciliate templating in a programmatic way,
+the :ref:`tensor language builder <IR builder>` classes are offered as an alternative
+to writing tensor language in textual form.
+With the builder classes, place-holders are simply C++-objects.
+Moreover, complex code generation patterns can be realized, e.g. offering different code paths
+for specific values of a parameterization.
+
+When using builder classes, the parsing step in the
+:ref:`pseudo code <kernel compilation and running example>` listed above
+is omitted and the "prog" variable is directly obtained from a program builder object.
