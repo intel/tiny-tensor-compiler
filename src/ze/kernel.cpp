@@ -14,10 +14,9 @@
 
 namespace tinytc {
 
-TINYTC_EXPORT auto make_kernel_bundle(std::uint8_t const *binary, std::size_t binary_size,
-                                      bundle_format format, std::uint32_t core_features,
-                                      ze_context_handle_t context, ze_device_handle_t device)
-    -> ze_module_handle_t {
+auto make_kernel_bundle(std::uint8_t const *binary, std::size_t binary_size, bundle_format format,
+                        std::uint32_t core_features, ze_context_handle_t context,
+                        ze_device_handle_t device) -> ze_module_handle_t {
     auto const zformat = [](bundle_format format) -> ze_module_format_t {
         switch (format) {
         case bundle_format::spirv:

@@ -10,9 +10,7 @@
 
 namespace tinytc::ir {
 
-namespace internal {
 class inst_node;
-}
 
 //! Binary operations
 enum class TINYTC_EXPORT binary_op {
@@ -50,9 +48,9 @@ TINYTC_EXPORT char const *to_string(cmp_condition cond);
 TINYTC_EXPORT char const *to_string(transpose t);
 
 //! Reference-counted instruction handle
-class TINYTC_EXPORT inst : public clir::handle<internal::inst_node> {
+class TINYTC_EXPORT inst : public clir::handle<inst_node> {
   public:
-    using clir::handle<internal::inst_node>::handle;
+    using clir::handle<inst_node>::handle;
 };
 
 } // namespace tinytc::ir

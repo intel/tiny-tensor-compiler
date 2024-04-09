@@ -4,7 +4,6 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
-#include "tinytc/export.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/location.hpp"
 #include "tinytc/ir/scalar_type.hpp"
@@ -18,9 +17,9 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT data_type_node
+class data_type_node
     : public clir::virtual_type_list<class void_data_type, class group_data_type,
                                      class memref_data_type, class scalar_data_type> {
   public:
@@ -31,7 +30,7 @@ class TINYTC_EXPORT data_type_node
     location loc_;
 };
 
-class TINYTC_EXPORT group_data_type : public clir::visitable<group_data_type, data_type_node> {
+class group_data_type : public clir::visitable<group_data_type, data_type_node> {
   public:
     inline group_data_type(data_type ty) : ty_(std::move(ty)) {}
 
@@ -41,17 +40,19 @@ class TINYTC_EXPORT group_data_type : public clir::visitable<group_data_type, da
     data_type ty_;
 };
 
-class TINYTC_EXPORT void_data_type : public clir::visitable<void_data_type, data_type_node> {};
+class void_data_type : public clir::visitable<void_data_type, data_type_node> {};
 
-class TINYTC_EXPORT memref_data_type : public clir::visitable<memref_data_type, data_type_node> {
+class memref_data_type : public clir::visitable<memref_data_type, data_type_node> {
   public:
     memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                      std::vector<std::int64_t> stride = {}, location const &lc = {});
 
     inline scalar_type element_ty() { return element_ty_; }
-    inline clir::data_type clir_element_ty() { return to_clir_ty(element_ty_, addrspace_); }
+    inline clir::data_type clir_element_ty() {
+        return internal::to_clir_ty(element_ty_, addrspace_);
+    }
     inline clir::data_type clir_atomic_element_ty() {
-        return to_clir_atomic_ty(element_ty_, addrspace_);
+        return internal::to_clir_atomic_ty(element_ty_, addrspace_);
     }
     inline std::int64_t dim() const { return shape_.size(); }
     inline auto const &shape() const { return shape_; }
@@ -81,17 +82,17 @@ class TINYTC_EXPORT memref_data_type : public clir::visitable<memref_data_type, 
     clir::address_space addrspace_ = clir::address_space::global_t;
 };
 
-class TINYTC_EXPORT scalar_data_type : public clir::visitable<scalar_data_type, data_type_node> {
+class scalar_data_type : public clir::visitable<scalar_data_type, data_type_node> {
   public:
     inline scalar_data_type(scalar_type type) : ty_(type) {}
 
     inline scalar_type ty() { return ty_; }
-    inline clir::data_type clir_ty() { return to_clir_ty(ty_); }
+    inline clir::data_type clir_ty() { return internal::to_clir_ty(ty_); }
 
   private:
     scalar_type ty_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // DATA_TYPE_NODE_20230309_HPP

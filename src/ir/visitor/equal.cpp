@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/equal.hpp"
+#include "ir/visitor/equal.hpp"
 #include "tinytc/ir/data_type.hpp"
 
 #include <clir/handle.hpp>
@@ -12,7 +12,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 bool equal::operator()(data_type_node &, data_type_node &) { return false; }
 bool equal::operator()(void_data_type &, void_data_type &) { return true; }
@@ -24,4 +24,4 @@ bool equal::operator()(memref_data_type &a, memref_data_type &b) {
 }
 bool equal::operator()(scalar_data_type &a, scalar_data_type &b) { return a.ty() == b.ty(); }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

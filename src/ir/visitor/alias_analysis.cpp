@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/alias_analysis.hpp"
+#include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
@@ -14,7 +14,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 /* Stmt nodes */
 void alias_analyser::operator()(inst_node &) {}
@@ -66,4 +66,4 @@ void alias_analyser::operator()(function &fn) {
 
 aa_results alias_analyser::get_result() const { return aa_results(alias_); }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

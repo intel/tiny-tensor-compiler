@@ -4,20 +4,19 @@
 #ifndef DUMP_IR_20230330_HPP
 #define DUMP_IR_20230330_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
+#include "ir/node/data_type_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/node/value_node.hpp"
 
 #include <ostream>
 #include <string>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT ir_dumper {
+class ir_dumper {
   public:
     ir_dumper(std::ostream &os);
 
@@ -74,8 +73,7 @@ class TINYTC_EXPORT ir_dumper {
     void dump_blas_a3(blas_a3_inst &g);
 
     template <typename Iterator, typename Action>
-    TINYTC_NO_EXPORT void do_with_infix(Iterator begin, Iterator end, Action a,
-                                        std::string const &infix = ",") {
+    void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {
         for (auto it = begin; it != end; ++it) {
             if (it != begin) {
                 os_ << infix;
@@ -83,11 +81,11 @@ class TINYTC_EXPORT ir_dumper {
             a(*it);
         }
     }
-    inline TINYTC_NO_EXPORT auto indent() { return std::string(2 * lvl_, ' '); }
+    inline auto indent() { return std::string(2 * lvl_, ' '); }
     std::ostream &os_;
     int lvl_ = 0;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // DUMP_IR_20230330_HPP

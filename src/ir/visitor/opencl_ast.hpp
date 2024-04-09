@@ -4,15 +4,14 @@
 #ifndef OPENCL_AST_20230309_HPP
 #define OPENCL_AST_20230309_HPP
 
+#include "ir/node/data_type_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/node/value_node.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/export.hpp"
 #include "tinytc/ir/data_type.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
 #include "tinytc/ir/tiling.hpp"
 #include "tinytc/ir/value.hpp"
 
@@ -35,12 +34,10 @@
 #include <vector>
 
 namespace tinytc::ir {
+
 enum class scalar_type;
-}
 
-namespace tinytc::ir::internal {
-
-class TINYTC_EXPORT dope_vector {
+class dope_vector {
   public:
     enum class type { shape, stride };
     using decl_fun_t = std::function<void(clir::data_type, clir::var, type, std::int64_t)>;
@@ -59,7 +56,7 @@ class TINYTC_EXPORT dope_vector {
     std::vector<clir::expr> shape_, stride_;
 };
 
-class TINYTC_EXPORT opencl_ast {
+class opencl_ast {
   public:
     opencl_ast(std::shared_ptr<core_info> info);
 
@@ -131,6 +128,6 @@ class TINYTC_EXPORT opencl_ast {
     core_config core_cfg_ = {};
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // OPENCL_AST_20230309_HPP

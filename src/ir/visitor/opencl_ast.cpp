@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/opencl_ast.hpp"
+#include "ir/visitor/opencl_ast.hpp"
 #include "ir/codegen_tools.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
@@ -35,7 +35,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 std::string var_name(std::string name) {
     if (name.empty() || !isalpha(name[0])) {
@@ -50,12 +50,12 @@ dope_vector dope_vector::from_value(value v, decl_fun_t declare) {
     auto dt = clir::data_type{};
     visit(overloaded{[&](memref_data_type &mr) {
                          m = &mr;
-                         dt = to_clir_ty(scalar_type::index);
+                         dt = internal::to_clir_ty(scalar_type::index);
                      },
                      [&](group_data_type &g) {
                          m = dynamic_cast<memref_data_type *>(g.ty().get());
-                         dt = clir::pointer_to(
-                             to_clir_ty(scalar_type::index, clir::address_space::global_t));
+                         dt = clir::pointer_to(internal::to_clir_ty(scalar_type::index,
+                                                                    clir::address_space::global_t));
                      },
                      [](auto &) {}},
           *v->ty());
@@ -384,9 +384,9 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst &e) {
                 }
             }
             auto inferred_size = clir::var("inferred_size");
-            clinst.emplace_back(clir::declaration_assignment(to_clir_ty(scalar_type::index),
-                                                             inferred_size,
-                                                             std::move(prod) / dv.shape(e.mode())));
+            clinst.emplace_back(
+                clir::declaration_assignment(internal::to_clir_ty(scalar_type::index),
+                                             inferred_size, std::move(prod) / dv.shape(e.mode())));
             return std::move(inferred_size);
         }
         return eshape_cl[j];
@@ -651,7 +651,7 @@ std::vector<clir::stmt> opencl_ast::operator()(ger_inst &g) {
             bb.add(clir::for_loop_builder(clir::declaration_assignment(clir::generic_int(), n, 0),
                                           n < std::move(trip_count), ++n)
                        .body([&](clir::block_builder &bb) {
-                           auto b = bb.declare_assign(to_clir_ty(bt->element_ty()), "b",
+                           auto b = bb.declare_assign(internal::to_clir_ty(bt->element_ty()), "b",
                                                       B + (block + n) * bdv.stride(0));
                            auto Cb = bb.declare_assign(this->operator()(*ct), "Cb",
                                                        C + (block + n) * cdv.stride(1));
@@ -871,7 +871,7 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
     auto A = visit(*this, *inst.A());
     auto B = visit(*this, *inst.B());
     auto bb = clir::block_builder{};
-    auto acc = bb.declare_assign(to_clir_ty(at->element_ty()), "acc", std::move(zero));
+    auto acc = bb.declare_assign(internal::to_clir_ty(at->element_ty()), "acc", std::move(zero));
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
     auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
     if (bt->dim() == 0) {
@@ -891,7 +891,7 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
                                  inner_loop(bb);
                              }
                          });
-        auto sum = bb.declare_assign(to_clir_ty(bt->element_ty()), "sum",
+        auto sum = bb.declare_assign(internal::to_clir_ty(bt->element_ty()), "sum",
                                      clir::work_group_reduce_add(acc));
         bb.add(clir::if_selection_builder(clir::get_sub_group_id() == 0 &&
                                           clir::get_sub_group_local_id() == 0)
@@ -1041,4 +1041,4 @@ clir::prog opencl_ast::operator()(program &p) {
     return prog_builder_.get_product();
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

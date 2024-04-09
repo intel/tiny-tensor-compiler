@@ -4,7 +4,6 @@
 #ifndef INST_NODE_20230327_HPP
 #define INST_NODE_20230327_HPP
 
-#include "tinytc/export.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/location.hpp"
@@ -19,9 +18,9 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT inst_node
+class inst_node
     : public clir::virtual_type_list<
           class alloca_inst, class axpby_inst, class barrier_inst, class binary_op_inst,
           class cast_inst, class compare_inst, class expand_inst, class fuse_inst, class load_inst,
@@ -41,9 +40,9 @@ class TINYTC_EXPORT inst_node
     location loc_;
 };
 
-class TINYTC_EXPORT scalar_inst : public inst_node {};
+class scalar_inst : public inst_node {};
 
-class TINYTC_EXPORT blas_a2_inst : public inst_node {
+class blas_a2_inst : public inst_node {
   public:
     blas_a2_inst(value alpha, value A, value beta, value B, bool atomic);
 
@@ -61,7 +60,7 @@ class TINYTC_EXPORT blas_a2_inst : public inst_node {
     bool atomic_;
 };
 
-class TINYTC_EXPORT blas_a3_inst : public inst_node {
+class blas_a3_inst : public inst_node {
   public:
     blas_a3_inst(value alpha, value A, value B, value beta, value C, bool atomic);
 
@@ -80,7 +79,7 @@ class TINYTC_EXPORT blas_a3_inst : public inst_node {
     bool atomic_;
 };
 
-class TINYTC_EXPORT loop_inst : public inst_node {
+class loop_inst : public inst_node {
   public:
     loop_inst(value loop_var, value from, value to, region body, location const &loc = {});
     loop_inst(value loop_var, value from, value to, value step, region body,
@@ -97,7 +96,7 @@ class TINYTC_EXPORT loop_inst : public inst_node {
     region body_;
 };
 
-class TINYTC_EXPORT alloca_inst : public clir::visitable<alloca_inst, inst_node> {
+class alloca_inst : public clir::visitable<alloca_inst, inst_node> {
   public:
     alloca_inst(data_type ty, location const &loc = {});
 
@@ -111,7 +110,7 @@ class TINYTC_EXPORT alloca_inst : public clir::visitable<alloca_inst, inst_node>
     std::int64_t stack_ptr_;
 };
 
-class TINYTC_EXPORT axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst> {
+class axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst> {
   public:
     using super = clir::visitable<axpby_inst, blas_a2_inst>;
     axpby_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
@@ -123,13 +122,13 @@ class TINYTC_EXPORT axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst
     transpose tA_;
 };
 
-class TINYTC_EXPORT barrier_inst : public clir::visitable<barrier_inst, inst_node> {
+class barrier_inst : public clir::visitable<barrier_inst, inst_node> {
   public:
     inline value result() override { return value{}; }
     inline inst_kind kind() const override { return inst_kind::collective; }
 };
 
-class TINYTC_EXPORT binary_op_inst : public clir::visitable<binary_op_inst, scalar_inst> {
+class binary_op_inst : public clir::visitable<binary_op_inst, scalar_inst> {
   public:
     binary_op_inst(binary_op op, value a, value b, location const &lc = {});
 
@@ -144,7 +143,7 @@ class TINYTC_EXPORT binary_op_inst : public clir::visitable<binary_op_inst, scal
     value a_, b_, result_;
 };
 
-class TINYTC_EXPORT cast_inst : public clir::visitable<cast_inst, scalar_inst> {
+class cast_inst : public clir::visitable<cast_inst, scalar_inst> {
   public:
     cast_inst(value a, scalar_type to_ty, location const &lc = {});
     inline value &a() { return a_; }
@@ -155,7 +154,7 @@ class TINYTC_EXPORT cast_inst : public clir::visitable<cast_inst, scalar_inst> {
     value a_, result_;
 };
 
-class TINYTC_EXPORT compare_inst : public clir::visitable<compare_inst, scalar_inst> {
+class compare_inst : public clir::visitable<compare_inst, scalar_inst> {
   public:
     compare_inst(cmp_condition cond, value a, value b, location const &lc = {});
 
@@ -170,7 +169,7 @@ class TINYTC_EXPORT compare_inst : public clir::visitable<compare_inst, scalar_i
     value a_, b_, result_;
 };
 
-class TINYTC_EXPORT expand_inst : public clir::visitable<expand_inst, inst_node> {
+class expand_inst : public clir::visitable<expand_inst, inst_node> {
   public:
     expand_inst(value op, std::int64_t mode, std::vector<value> expand_shape,
                 location const &lc = {});
@@ -188,7 +187,7 @@ class TINYTC_EXPORT expand_inst : public clir::visitable<expand_inst, inst_node>
     std::vector<value> expand_shape_;
 };
 
-class TINYTC_EXPORT fuse_inst : public clir::visitable<fuse_inst, inst_node> {
+class fuse_inst : public clir::visitable<fuse_inst, inst_node> {
   public:
     fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc = {});
 
@@ -203,7 +202,7 @@ class TINYTC_EXPORT fuse_inst : public clir::visitable<fuse_inst, inst_node> {
     std::int64_t from_, to_;
 };
 
-class TINYTC_EXPORT load_inst : public clir::visitable<load_inst, inst_node> {
+class load_inst : public clir::visitable<load_inst, inst_node> {
   public:
     load_inst(value op, std::vector<value> index_list, location const &lc = {});
 
@@ -218,7 +217,7 @@ class TINYTC_EXPORT load_inst : public clir::visitable<load_inst, inst_node> {
     value result_;
 };
 
-class TINYTC_EXPORT group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
+class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
   public:
     inline group_id_inst() : result_{data_type(scalar_type::index)} {}
     inline value result() override { return result_; }
@@ -228,7 +227,7 @@ class TINYTC_EXPORT group_id_inst : public clir::visitable<group_id_inst, scalar
     value result_;
 };
 
-class TINYTC_EXPORT group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
+class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
   public:
     inline group_size_inst() : result_{data_type(scalar_type::index)} {}
     inline value result() override { return result_; }
@@ -238,7 +237,7 @@ class TINYTC_EXPORT group_size_inst : public clir::visitable<group_size_inst, sc
     value result_;
 };
 
-class TINYTC_EXPORT lifetime_stop_inst : public clir::visitable<lifetime_stop_inst, inst_node> {
+class lifetime_stop_inst : public clir::visitable<lifetime_stop_inst, inst_node> {
   public:
     inline lifetime_stop_inst(value obj) : obj_(std::move(obj)) {}
     inline value &object() { return obj_; }
@@ -249,7 +248,7 @@ class TINYTC_EXPORT lifetime_stop_inst : public clir::visitable<lifetime_stop_in
     value obj_;
 };
 
-class TINYTC_EXPORT gemm_inst : public clir::visitable<gemm_inst, blas_a3_inst> {
+class gemm_inst : public clir::visitable<gemm_inst, blas_a3_inst> {
   public:
     using super = clir::visitable<gemm_inst, blas_a3_inst>;
     gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
@@ -262,7 +261,7 @@ class TINYTC_EXPORT gemm_inst : public clir::visitable<gemm_inst, blas_a3_inst> 
     transpose tA_, tB_;
 };
 
-class TINYTC_EXPORT gemv_inst : public clir::visitable<gemv_inst, blas_a3_inst> {
+class gemv_inst : public clir::visitable<gemv_inst, blas_a3_inst> {
   public:
     using super = clir::visitable<gemv_inst, blas_a3_inst>;
     gemv_inst(transpose tA, value alpha, value A, value B, value beta, value C, bool atomic = false,
@@ -274,21 +273,21 @@ class TINYTC_EXPORT gemv_inst : public clir::visitable<gemv_inst, blas_a3_inst> 
     transpose tA_;
 };
 
-class TINYTC_EXPORT ger_inst : public clir::visitable<ger_inst, blas_a3_inst> {
+class ger_inst : public clir::visitable<ger_inst, blas_a3_inst> {
   public:
     using super = clir::visitable<ger_inst, blas_a3_inst>;
     ger_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
              location const &lc = {});
 };
 
-class TINYTC_EXPORT for_inst : public clir::visitable<for_inst, loop_inst> {
+class for_inst : public clir::visitable<for_inst, loop_inst> {
   public:
     using super = clir::visitable<for_inst, loop_inst>;
     using super::super;
     inline inst_kind kind() const override { return inst_kind::replicated; }
 };
 
-class TINYTC_EXPORT foreach_inst : public clir::visitable<foreach_inst, loop_inst> {
+class foreach_inst : public clir::visitable<foreach_inst, loop_inst> {
   public:
     using super = clir::visitable<foreach_inst, loop_inst>;
     inline foreach_inst(value loop_var, value from, value to, region body, location const &loc = {})
@@ -296,14 +295,14 @@ class TINYTC_EXPORT foreach_inst : public clir::visitable<foreach_inst, loop_ins
     inline inst_kind kind() const override { return inst_kind::collective; }
 };
 
-class TINYTC_EXPORT hadamard_inst : public clir::visitable<hadamard_inst, blas_a3_inst> {
+class hadamard_inst : public clir::visitable<hadamard_inst, blas_a3_inst> {
   public:
     using super = clir::visitable<hadamard_inst, blas_a3_inst>;
     hadamard_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
                   location const &lc = {});
 };
 
-class TINYTC_EXPORT if_inst : public clir::visitable<if_inst, inst_node> {
+class if_inst : public clir::visitable<if_inst, inst_node> {
   public:
     if_inst(value condition, region then, region otherwise = nullptr,
             std::vector<scalar_type> const &return_types = {});
@@ -321,7 +320,7 @@ class TINYTC_EXPORT if_inst : public clir::visitable<if_inst, inst_node> {
     std::vector<value> results_;
 };
 
-class TINYTC_EXPORT neg_inst : public clir::visitable<neg_inst, scalar_inst> {
+class neg_inst : public clir::visitable<neg_inst, scalar_inst> {
   public:
     neg_inst(value a, location const &lc = {});
 
@@ -333,7 +332,7 @@ class TINYTC_EXPORT neg_inst : public clir::visitable<neg_inst, scalar_inst> {
     value a_, result_;
 };
 
-class TINYTC_EXPORT size_inst : public clir::visitable<size_inst, inst_node> {
+class size_inst : public clir::visitable<size_inst, inst_node> {
   public:
     size_inst(value op, std::int64_t mode, location const &lc = {});
 
@@ -347,7 +346,7 @@ class TINYTC_EXPORT size_inst : public clir::visitable<size_inst, inst_node> {
     std::int64_t mode_;
 };
 
-class TINYTC_EXPORT subview_inst : public clir::visitable<subview_inst, inst_node> {
+class subview_inst : public clir::visitable<subview_inst, inst_node> {
   public:
     subview_inst(value op, std::vector<slice> slices, location const &lc = {});
 
@@ -362,7 +361,7 @@ class TINYTC_EXPORT subview_inst : public clir::visitable<subview_inst, inst_nod
     value result_;
 };
 
-class TINYTC_EXPORT store_inst : public clir::visitable<store_inst, inst_node> {
+class store_inst : public clir::visitable<store_inst, inst_node> {
   public:
     store_inst(value val, value op, std::vector<value> index_list, location const &lc = {});
 
@@ -377,7 +376,7 @@ class TINYTC_EXPORT store_inst : public clir::visitable<store_inst, inst_node> {
     std::vector<value> index_list_;
 };
 
-class TINYTC_EXPORT sum_inst : public clir::visitable<sum_inst, blas_a2_inst> {
+class sum_inst : public clir::visitable<sum_inst, blas_a2_inst> {
   public:
     using super = clir::visitable<sum_inst, blas_a2_inst>;
     sum_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
@@ -389,7 +388,7 @@ class TINYTC_EXPORT sum_inst : public clir::visitable<sum_inst, blas_a2_inst> {
     transpose tA_;
 };
 
-class TINYTC_EXPORT yield_inst : public clir::visitable<yield_inst, inst_node> {
+class yield_inst : public clir::visitable<yield_inst, inst_node> {
   public:
     inline yield_inst(std::vector<value> vals) : vals_(std::move(vals)) {}
     inline value result() override { return value{}; }
@@ -400,6 +399,6 @@ class TINYTC_EXPORT yield_inst : public clir::visitable<yield_inst, inst_node> {
     std::vector<value> vals_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // INST_NODE_20230327_HPP

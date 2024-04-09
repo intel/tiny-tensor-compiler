@@ -1,11 +1,11 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/internal/inst_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/data_type_node.hpp"
+#include "ir/node/value_node.hpp"
 #include "ir/visitor/util.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/handle.hpp>
@@ -16,7 +16,7 @@
 #include <memory>
 #include <sstream>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 scalar_data_type *get_scalar_type(location const &loc, value &v) {
     auto m = dynamic_cast<scalar_data_type *>(v->ty().get());
@@ -498,4 +498,4 @@ sum_inst::sum_inst(transpose tA, value alpha, value A, value beta, value B, bool
     }
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

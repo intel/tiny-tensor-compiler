@@ -1,12 +1,12 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/stack.hpp"
+#include "ir/visitor/stack.hpp"
+#include "ir/node/data_type_node.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
 
@@ -17,7 +17,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 /* Inst nodes */
 void stack_ptr::operator()(inst_node &) {}
@@ -78,4 +78,4 @@ void stack_ptr::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

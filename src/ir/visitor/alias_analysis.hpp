@@ -4,18 +4,17 @@
 #ifndef ALIAS_ANALYSIS_20230330_HPP
 #define ALIAS_ANALYSIS_20230330_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
-#include "tinytc/ir/visitor/aa_results.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/node/value_node.hpp"
+#include "ir/visitor/aa_results.hpp"
 
 #include <unordered_map>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT alias_analyser {
+class alias_analyser {
   public:
     /* Stmt nodes */
     void operator()(inst_node &);
@@ -38,6 +37,6 @@ class TINYTC_EXPORT alias_analyser {
     std::unordered_map<value_node *, value_node *> alias_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // ALIAS_ANALYSIS_20230330_HPP

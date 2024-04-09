@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/dump_ir.hpp"
+#include "ir/visitor/dump_ir.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
@@ -20,7 +20,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 ir_dumper::ir_dumper(std::ostream &os) : os_(os) {}
 
@@ -375,4 +375,4 @@ void ir_dumper::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

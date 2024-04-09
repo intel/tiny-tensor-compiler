@@ -15,10 +15,7 @@
 
 namespace tinytc::ir {
 
-namespace internal {
 class value_node;
-}
-
 class data_type;
 
 /**
@@ -28,9 +25,9 @@ class data_type;
  * (that is, result of an instruction or function argument, everything that starts with "%").
  * The type is always stored along the value.
  */
-class TINYTC_EXPORT value : public clir::handle<internal::value_node> {
+class TINYTC_EXPORT value : public clir::handle<value_node> {
   public:
-    using clir::handle<internal::value_node>::handle;
+    using clir::handle<value_node>::handle;
     //! Create value with data type ty
     value(data_type ty, std::string prefix = "");
     //! Create empty (invalid) value

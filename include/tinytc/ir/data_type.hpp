@@ -17,9 +17,7 @@
 namespace tinytc::ir {
 
 enum class scalar_type;
-namespace internal {
 class data_type_node;
-} // namespace internal
 
 //! Special int64 value reserved for dynamic modes ('?')
 constexpr static std::int64_t dynamic = std::numeric_limits<std::int64_t>::min();
@@ -28,9 +26,9 @@ constexpr static std::int64_t dynamic = std::numeric_limits<std::int64_t>::min()
 inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
 
 //! Reference-counted data type handle
-class TINYTC_EXPORT data_type : public clir::handle<internal::data_type_node> {
+class TINYTC_EXPORT data_type : public clir::handle<data_type_node> {
   public:
-    using clir::handle<internal::data_type_node>::handle;
+    using clir::handle<data_type_node>::handle;
     //! ctor; create from scalar_type
     data_type(scalar_type type);
 };

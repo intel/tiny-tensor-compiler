@@ -27,9 +27,9 @@ set(SOURCES
     ir/error.cpp
     ir/gemm_generator.cpp
     ir/inst.cpp
-    ir/internal/data_type_node.cpp
-    ir/internal/inst_node.cpp
     ir/location.cpp
+    ir/node/data_type_node.cpp
+    ir/node/inst_node.cpp
     ir/passes.cpp
     ir/precision_helper.cpp
     ir/prog.cpp
@@ -68,12 +68,6 @@ set(PUBLIC_HEADERS
     ir/func.hpp
     ir/gemm_generator.hpp
     ir/inst.hpp
-    ir/internal/data_type_node.hpp
-    ir/internal/function_node.hpp
-    ir/internal/inst_node.hpp
-    ir/internal/program_node.hpp
-    ir/internal/region_node.hpp
-    ir/internal/value_node.hpp
     ir/location.hpp
     ir/passes.hpp
     ir/prog.hpp
@@ -82,16 +76,6 @@ set(PUBLIC_HEADERS
     ir/slice.hpp
     ir/tiling.hpp
     ir/value.hpp
-    ir/visitor/aa_results.hpp
-    ir/visitor/alias_analysis.hpp
-    ir/visitor/check_ir.hpp
-    ir/visitor/dump_ir.hpp
-    ir/visitor/equal.hpp
-    ir/visitor/insert_barrier.hpp
-    ir/visitor/lifetime_analysis.hpp
-    ir/visitor/opencl_ast.hpp
-    ir/visitor/stack.hpp
-    ir/visitor/work_group_size.hpp
     opencl_cc.hpp
     parser.hpp
     recipe/small_gemm_batched.hpp
@@ -120,8 +104,8 @@ set(tinytc_export_header "${CMAKE_BINARY_DIR}/include/tinytc/export.hpp")
 generate_export_header(tinytc BASE_NAME TINYTC EXPORT_FILE_NAME "${tinytc_export_header}")
 
 # Generate version header
-set(tinytc_version_header_in "${PROJECT_SOURCE_DIR}/include/tinytc/version.hpp.in")
-set(tinytc_version_header "${PROJECT_BINARY_DIR}/include/tinytc/version.hpp")
+set(tinytc_version_header_in "${PROJECT_SOURCE_DIR}/include/tinytc/version.h.in")
+set(tinytc_version_header "${PROJECT_BINARY_DIR}/include/tinytc/version.h")
 git_version()
 configure_file(${tinytc_version_header_in} ${tinytc_version_header})
 

@@ -4,12 +4,11 @@
 #ifndef EQUAL_20240208_HPP
 #define EQUAL_20240208_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
+#include "ir/node/data_type_node.hpp"
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT equal {
+class equal {
   public:
     /* Data type nodes */
     bool operator()(data_type_node &a, data_type_node &b);
@@ -19,6 +18,6 @@ class TINYTC_EXPORT equal {
     bool operator()(scalar_data_type &a, scalar_data_type &b);
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // EQUAL_20240208_HPP

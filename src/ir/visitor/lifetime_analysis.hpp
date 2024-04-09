@@ -4,22 +4,21 @@
 #ifndef LIFETIME_ANALYSIS_20230329_HPP
 #define LIFETIME_ANALYSIS_20230329_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/visitor/aa_results.hpp"
 #include "tinytc/ir/value.hpp"
-#include "tinytc/ir/visitor/aa_results.hpp"
 
 #include <unordered_set>
 #include <vector>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 class value_node;
 
-class TINYTC_EXPORT find_alloca {
+class find_alloca {
   public:
     find_alloca(bool recursive = false);
 
@@ -38,7 +37,7 @@ class TINYTC_EXPORT find_alloca {
     std::vector<value> alloca_;
 };
 
-class TINYTC_EXPORT lifetime_inserter {
+class lifetime_inserter {
   public:
     /* Inst nodes */
     std::unordered_set<value_node *> operator()(blas_a2_inst &inst);
@@ -71,6 +70,6 @@ class TINYTC_EXPORT lifetime_inserter {
     aa_results aa_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // LIFETIME_ANALYSIS_20230329_HPP

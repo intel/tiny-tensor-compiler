@@ -26,6 +26,6 @@
 #include "tinytc/recipe/small_gemm_batched.hpp"
 #include "tinytc/recipe/tall_and_skinny.hpp"
 #include "tinytc/tensor_kernel.hpp"
-#include "tinytc/version.hpp"
+#include "tinytc/version.h"
 
 #endif // TINYTC_20240403_HPP

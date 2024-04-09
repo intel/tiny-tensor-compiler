@@ -4,19 +4,18 @@
 #ifndef STACK_20230413_HPP
 #define STACK_20230413_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/node/value_node.hpp"
 
 #include <cstddef>
 #include <list>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT stack_ptr {
+class stack_ptr {
   public:
     /* Inst nodes */
     void operator()(inst_node &);
@@ -42,6 +41,6 @@ class TINYTC_EXPORT stack_ptr {
     std::list<allocation> allocs_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // STACK_20230413_HPP
