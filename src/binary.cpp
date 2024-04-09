@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tinytc/binary.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/program_node.hpp"
 #include "ir/visitor/util.hpp"
 #include "tinytc/device_info.hpp"
 #include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
 #include "tinytc/ir/location.hpp"
 #include "tinytc/ir/passes.hpp"
 #include "tinytc/opencl_cc.hpp"
@@ -50,21 +50,20 @@ auto optimize_and_make_binary(ir::prog prog, bundle_format format, std::shared_p
 
         // Get work group sizes
         auto metadata = std::unordered_map<std::string, kernel_metadata>{};
-        auto *prog_node = dynamic_cast<ir::internal::program *>(prog.get());
+        auto *prog_node = dynamic_cast<ir::program *>(prog.get());
         if (prog_node == nullptr) {
             throw ir::compilation_error(ir::location{}, "Expected program node");
         }
         for (auto &decl : prog_node->declarations()) {
-            visit(ir::overloaded{[&metadata](ir::internal::function &f) {
+            visit(ir::overloaded{[&metadata](ir::function &f) {
                                      auto const name = visit(
-                                         ir::overloaded{
-                                             [](ir::internal::prototype &p) -> std::string_view {
-                                                 return p.name();
-                                             },
-                                             [](auto &f) -> std::string {
-                                                 throw ir::compilation_error(f.loc(),
-                                                                             "Expected prototype");
-                                             }},
+                                         ir::overloaded{[](ir::prototype &p) -> std::string_view {
+                                                            return p.name();
+                                                        },
+                                                        [](auto &f) -> std::string {
+                                                            throw ir::compilation_error(
+                                                                f.loc(), "Expected prototype");
+                                                        }},
                                          *f.prototype());
                                      auto m = kernel_metadata{};
                                      m.subgroup_size = f.subgroup_size();

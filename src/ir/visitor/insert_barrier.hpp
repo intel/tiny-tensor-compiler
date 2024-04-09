@@ -4,21 +4,20 @@
 #ifndef INSERT_BARRIER_20230310_HPP
 #define INSERT_BARRIER_20230310_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
-#include "tinytc/ir/visitor/aa_results.hpp"
+#include "ir/node/data_type_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
+#include "ir/node/value_node.hpp"
+#include "ir/visitor/aa_results.hpp"
 
 #include <cstdint>
 #include <unordered_set>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT insert_barrier {
+class insert_barrier {
   public:
     /* Data type nodes */
     bool operator()(void_data_type &);
@@ -63,6 +62,6 @@ class TINYTC_EXPORT insert_barrier {
     bool last_instruction_was_barrier_ = false;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // INSERT_BARRIER_20230310_HPP

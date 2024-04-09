@@ -1,24 +1,22 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/aa_results.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
+#include "ir/visitor/aa_results.hpp"
+#include "ir/node/value_node.hpp"
 
 #include <utility>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-aa_results::aa_results(std::unordered_map<internal::value_node *, internal::value_node *> alias)
+aa_results::aa_results(std::unordered_map<value_node *, value_node *> alias)
     : alias_(std::move(alias)) {}
-internal::value_node *aa_results::root(internal::value_node &a) {
+value_node *aa_results::root(value_node &a) {
     auto root = &a;
     if (alias_.find(root) != alias_.end()) {
         root = alias_[root];
     }
     return root;
 }
-bool aa_results::alias(internal::value_node &a, internal::value_node &b) {
-    return root(a) == root(b);
-}
+bool aa_results::alias(value_node &a, value_node &b) { return root(a) == root(b); }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

@@ -13,9 +13,9 @@
 
 namespace tinytc {
 
-TINYTC_EXPORT auto make_kernel_bundle(std::uint8_t const *binary, std::size_t binary_size,
-                                      bundle_format format, std::uint32_t core_features,
-                                      cl_context context, cl_device_id device) -> cl_program {
+auto make_kernel_bundle(std::uint8_t const *binary, std::size_t binary_size, bundle_format format,
+                        std::uint32_t core_features, cl_context context, cl_device_id device)
+    -> cl_program {
     cl_program mod;
     cl_int err;
     switch (format) {

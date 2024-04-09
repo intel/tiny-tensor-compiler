@@ -4,16 +4,15 @@
 #ifndef CHECK_IR_20240222_HPP
 #define CHECK_IR_20240222_HPP
 
-#include "tinytc/export.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT ir_checker {
+class ir_checker {
   public:
     ir_checker(error_reporter_function reporter);
 
@@ -38,6 +37,6 @@ class TINYTC_EXPORT ir_checker {
     error_reporter_function reporter_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // CHECK_IR_20240222_HPP

@@ -5,7 +5,7 @@
 %language "c++"
 
 %code requires {
-    #include "tinytc/ir/internal/function_node.hpp"
+    #include "ir/node/function_node.hpp"
     #include "tinytc/ir/data_type.hpp"
     #include "tinytc/ir/inst.hpp"
     #include "tinytc/ir/func.hpp"
@@ -30,14 +30,14 @@
 
 %code {
     #include "ir/visitor/util.hpp"
+    #include "ir/node/data_type_node.hpp"
+    #include "ir/node/inst_node.hpp"
+    #include "ir/node/program_node.hpp"
+    #include "ir/node/region_node.hpp"
+    #include "ir/node/value_node.hpp"
     #include "parser/parse_context.hpp"
     #include "parser/lexer.hpp"
     #include "tinytc/ir/error.hpp"
-    #include "tinytc/ir/internal/data_type_node.hpp"
-    #include "tinytc/ir/internal/inst_node.hpp"
-    #include "tinytc/ir/internal/program_node.hpp"
-    #include "tinytc/ir/internal/region_node.hpp"
-    #include "tinytc/ir/internal/value_node.hpp"
     #include "tinytc/ir/passes.hpp"
     
     #include <clir/visit.hpp>
@@ -53,8 +53,8 @@
     void check_scalar_type(ir::value & val, ir::scalar_type const& sty, ir::location & loc1,
                            ir::location & loc2) {
         clir::visit(
-            ir::overloaded{[&](ir::internal::int_imm &i) { i.ty(sty); },
-                           [&](ir::internal::float_imm &i) { i.ty(sty); },
+            ir::overloaded{[&](ir::int_imm &i) { i.ty(sty); },
+                           [&](ir::float_imm &i) { i.ty(sty); },
                            [&](auto &) {
                                if (!val->ty() || !is_equal(val->ty(), ir::data_type(sty))) {
                                    auto loc = loc1;
@@ -153,8 +153,8 @@
 %nterm <ir::func> func
 %nterm <std::vector<ir::value>> arguments
 %nterm <ir::value> argument
-%nterm <std::vector<std::function<void(ir::internal::function&)>>> attributes
-%nterm <std::function<void(ir::internal::function&)>> attribute
+%nterm <std::vector<std::function<void(ir::function&)>>> attributes
+%nterm <std::function<void(ir::function&)>> attribute
 %nterm <ir::data_type> data_type
 %nterm <ir::scalar_type> scalar_type
 %nterm <ir::data_type> memref_type
@@ -218,7 +218,7 @@
 %%
 prog:
     func_list { 
-        auto p = ir::prog{std::make_shared<ir::internal::program>(std::move($func_list))};
+        auto p = ir::prog{std::make_shared<ir::program>(std::move($func_list))};
         ctx.program(p);
         $$ = std::move(p);
     }
@@ -233,12 +233,12 @@ func:
         ctx.push_scope();
     } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
         auto proto = ir::func{
-            std::make_shared<ir::internal::prototype>($GLOBAL_IDENTIFIER, std::move($arguments))};
+            std::make_shared<ir::prototype>($GLOBAL_IDENTIFIER, std::move($arguments))};
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
         ctx.prototype($GLOBAL_IDENTIFIER, proto, loc);
         auto func_node =
-            std::make_shared<ir::internal::function>(std::move(proto), std::move($region));
+            std::make_shared<ir::function>(std::move(proto), std::move($region));
         for (auto &attr : $attributes) {
             attr(*func_node);
         }
@@ -277,14 +277,14 @@ attribute:
         }
         auto const wgs = std::array<std::uint32_t, 2>{static_cast<std::uint32_t>($m),
                                                       static_cast<std::uint32_t>($n)};
-        $$ = [=](ir::internal::function &f) { f.work_group_size(wgs); };
+        $$ = [=](ir::function &f) { f.work_group_size(wgs); };
     }
   | SUBGROUP_SIZE LPAREN INTEGER_CONSTANT RPAREN {
         if ($INTEGER_CONSTANT <= 0) {
             throw parser::syntax_error(@INTEGER_CONSTANT, "Must be a non-negative number");
         }
         auto const sgs = static_cast<std::uint32_t>($INTEGER_CONSTANT);
-        $$ = [=](ir::internal::function &f) { f.subgroup_size(sgs); };
+        $$ = [=](ir::function &f) { f.subgroup_size(sgs); };
     }
 ;
 
@@ -360,7 +360,7 @@ region:
     LBRACE {
         ctx.push_scope();
     } instructions RBRACE {
-        $$ = ir::region{std::make_shared<ir::internal::rgn>(std::move($instructions))};
+        $$ = ir::region{std::make_shared<ir::rgn>(std::move($instructions))};
         ctx.pop_scope();
     }
 ;
@@ -402,7 +402,7 @@ axpby_inst:
         check_type($b, $mb, @b, @mb);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::axpby_inst>($ta, std::move($alpha), std::move($a),
+                std::make_shared<ir::axpby_inst>($ta, std::move($alpha), std::move($a),
                                                            std::move($beta), std::move($b), $atomic,
                                                            @axpby_inst)
             };
@@ -447,7 +447,7 @@ gemm_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::gemm_inst>(
+                std::make_shared<ir::gemm_inst>(
                     $ta, $tb, std::move($alpha), std::move($a), std::move($b), std::move($beta),
                     std::move($c), $atomic, @gemm_inst)
             };
@@ -469,7 +469,7 @@ gemv_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::gemv_inst>($ta, std::move($alpha), std::move($a),
+                std::make_shared<ir::gemv_inst>($ta, std::move($alpha), std::move($a),
                                                           std::move($b), std::move($beta),
                                                           std::move($c), $atomic, @gemv_inst)
             };
@@ -496,7 +496,7 @@ ger_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::ger_inst>(std::move($alpha), std::move($a),
+                std::make_shared<ir::ger_inst>(std::move($alpha), std::move($a),
                                                          std::move($b), std::move($beta),
                                                          std::move($c), $atomic, @ger_inst)
             };
@@ -520,7 +520,7 @@ for_inst:
     } region {
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
+                std::make_shared<ir::for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
                                                          $optional_step, std::move($region),
                                                          @for_inst)
             };
@@ -544,7 +544,7 @@ foreach_inst:
     } region {
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::foreach_inst>(ctx.val($loop_var, @loop_var), $from,
+                std::make_shared<ir::foreach_inst>(ctx.val($loop_var, @loop_var), $from,
                                                              $to, std::move($region), @foreach_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -600,7 +600,7 @@ hadamard_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::hadamard_inst>(
+                std::make_shared<ir::hadamard_inst>(
                     std::move($alpha), std::move($a), std::move($b), std::move($beta),
                     std::move($c), $atomic, @hadamard_inst)
             };
@@ -620,7 +620,7 @@ sum_inst:
         check_type($b, $mb, @b, @mb);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::sum_inst>($ta, std::move($alpha), std::move($a),
+                std::make_shared<ir::sum_inst>($ta, std::move($alpha), std::move($a),
                                                          std::move($beta), std::move($b), $atomic,
                                                          @sum_inst)
             };
@@ -640,7 +640,7 @@ yield_inst:
         for (std::size_t i = 0; i < $vals.size(); ++i) {
             check_scalar_type($vals[i], $tys[i], @vals, @tys);
         }
-        $$ = ir::inst{std::make_shared<ir::internal::yield_inst>(std::move($vals))};
+        $$ = ir::inst{std::make_shared<ir::yield_inst>(std::move($vals))};
     }
 ;
 
@@ -664,7 +664,7 @@ alloca_inst:
     ALLOCA RETURNS memref_type {
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::alloca_inst>(std::move($memref_type), @alloca_inst)
+                std::make_shared<ir::alloca_inst>(std::move($memref_type), @alloca_inst)
             };
         } catch (ir::compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -678,7 +678,7 @@ binary_op_inst:
         check_scalar_type($b, $ty, @b, @ty);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::binary_op_inst>($BINARY_OP, std::move($a),
+                std::make_shared<ir::binary_op_inst>($BINARY_OP, std::move($a),
                                                                std::move($b), @binary_op_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -692,7 +692,7 @@ cast_inst:
         check_scalar_type($a, $from, @a, @from);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::cast_inst>(std::move($a), $to, @cast_inst)
+                std::make_shared<ir::cast_inst>(std::move($a), $to, @cast_inst)
             };
         } catch (ir::compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -706,7 +706,7 @@ compare_inst:
         check_scalar_type($b, $ty, @b, @ty);
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::compare_inst>($CMP_CONDITION, std::move($a),
+                std::make_shared<ir::compare_inst>($CMP_CONDITION, std::move($a),
                                                              std::move($b), @compare_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -724,7 +724,7 @@ expand_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::expand_inst>(std::move($var), $mode,
+                std::make_shared<ir::expand_inst>(std::move($var), $mode,
                                                             std::move($expand_shape), @expand_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -758,7 +758,7 @@ fuse_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::fuse_inst>(std::move($var), $from, $to, @fuse_inst)
+                std::make_shared<ir::fuse_inst>(std::move($var), $from, $to, @fuse_inst)
             };
         } catch (ir::compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -775,7 +775,7 @@ load_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::load_inst>(
+                std::make_shared<ir::load_inst>(
                     std::move($var), std::move($optional_index_list), @load_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -815,7 +815,7 @@ store_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::store_inst>(
+                std::make_shared<ir::store_inst>(
                     std::move($a), std::move($b), std::move($optional_index_list), @store_inst)
             };
         } catch (ir::compilation_error const &e) {
@@ -825,17 +825,17 @@ store_inst:
 ;
 
 group_id_inst:
-    GROUP_ID { $$ = ir::inst{std::make_shared<ir::internal::group_id_inst>()}; }
+    GROUP_ID { $$ = ir::inst{std::make_shared<ir::group_id_inst>()}; }
 ;
 
 group_size_inst:
-    GROUP_SIZE { $$ = ir::inst{std::make_shared<ir::internal::group_size_inst>()}; }
+    GROUP_SIZE { $$ = ir::inst{std::make_shared<ir::group_size_inst>()}; }
 ;
 
 if_inst:
     IF identifier_or_constant[condition] optional_returned_values region else_region {
         check_scalar_type($condition, ir::scalar_type::bool_, @condition, @condition);
-        $$ = ir::inst{std::make_shared<ir::internal::if_inst>(
+        $$ = ir::inst{std::make_shared<ir::if_inst>(
             std::move($condition), std::move($region), std::move($else_region),
             std::move($optional_returned_values))};
         $$->loc(@if_inst);
@@ -867,7 +867,7 @@ neg_inst:
     NEG identifier_or_constant[a] COLON scalar_type[ty] {
         check_scalar_type($a, $ty, @a, @ty);
         try {
-            $$ = ir::inst { std::make_shared<ir::internal::neg_inst>(std::move($a), @neg_inst) };
+            $$ = ir::inst { std::make_shared<ir::neg_inst>(std::move($a), @neg_inst) };
         } catch (ir::compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -883,7 +883,7 @@ size_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::size_inst>(std::move($var), $mode, @size_inst)
+                std::make_shared<ir::size_inst>(std::move($var), $mode, @size_inst)
             };
         } catch (ir::compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -900,7 +900,7 @@ subview_inst:
         }
         try {
             $$ = ir::inst {
-                std::make_shared<ir::internal::subview_inst>(
+                std::make_shared<ir::subview_inst>(
                     std::move($var), std::move($optional_slice_list), @subview_inst)
             };
         } catch (ir::compilation_error const &e) {

@@ -1,13 +1,13 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/internal/data_type_node.hpp"
+#include "ir/node/data_type_node.hpp"
 #include "tinytc/ir/error.hpp"
 
 #include <cstddef>
 #include <utility>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 memref_data_type::memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, location const &lc)
@@ -33,4 +33,4 @@ auto memref_data_type::canonical_stride() const -> std::vector<std::int64_t> {
     return stride;
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

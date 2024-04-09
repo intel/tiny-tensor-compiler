@@ -14,15 +14,12 @@
 namespace tinytc::ir {
 
 class func;
-
-namespace internal {
 class program_node;
-}
 
 //! Reference-counted program handle
-class TINYTC_EXPORT prog : public clir::handle<internal::program_node> {
+class TINYTC_EXPORT prog : public clir::handle<program_node> {
   public:
-    using clir::handle<internal::program_node>::handle;
+    using clir::handle<program_node>::handle;
 
     //! Create program containing single function
     prog(func fun);

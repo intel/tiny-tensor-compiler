@@ -8,9 +8,6 @@
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
 #include "tinytc/ir/location.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
@@ -50,12 +47,6 @@ class TINYTC_EXPORT region_builder : public internal::unique_name_giver {
   public:
     //! ctor; creates empty region
     region_builder();
-    /**
-     * @brief ctor; appends instructions to existing region
-     *
-     * @param region Existing region
-     */
-    region_builder(std::shared_ptr<internal::rgn> region);
 
     //! Returns built product
     region get_product();
@@ -264,8 +255,8 @@ class TINYTC_EXPORT region_builder : public internal::unique_name_giver {
   private:
     value create_binary_op(binary_op op, value a, value b, std::string const &prefix = "",
                            std::source_location const loc = std::source_location::current());
-    value insert(std::shared_ptr<internal::inst_node> s, std::string const &prefix = "");
-    std::shared_ptr<internal::rgn> region_;
+    value insert(std::shared_ptr<inst_node> s, std::string const &prefix = "");
+    region reg_;
 };
 
 //! Builder for functions
@@ -295,7 +286,7 @@ class TINYTC_EXPORT function_builder : public internal::unique_name_giver {
     }
 
   private:
-    std::shared_ptr<internal::prototype> proto_;
+    func proto_;
     region body_;
     std::array<std::uint32_t, 2> work_group_size_ = {0, 0};
     std::uint32_t subgroup_size_ = 0;

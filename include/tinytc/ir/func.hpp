@@ -10,14 +10,12 @@
 
 namespace tinytc::ir {
 
-namespace internal {
 class function_node;
-}
 
 //! Reference-counted function handle
-class TINYTC_EXPORT func : public clir::handle<internal::function_node> {
+class TINYTC_EXPORT func : public clir::handle<function_node> {
   public:
-    using clir::handle<internal::function_node>::handle;
+    using clir::handle<function_node>::handle;
 };
 
 } // namespace tinytc::ir

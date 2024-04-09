@@ -4,7 +4,6 @@
 #ifndef VALUE_NODE_20230309_HPP
 #define VALUE_NODE_20230309_HPP
 
-#include "tinytc/export.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/location.hpp"
 #include "tinytc/ir/scalar_type.hpp"
@@ -16,10 +15,9 @@
 #include <string_view>
 #include <utility>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT value_node
-    : public clir::virtual_type_list<class float_imm, class int_imm, class val> {
+class value_node : public clir::virtual_type_list<class float_imm, class int_imm, class val> {
   public:
     inline location const &loc() const { return loc_; }
     inline void loc(location const &loc) { loc_ = loc; }
@@ -33,7 +31,7 @@ class TINYTC_EXPORT value_node
     location loc_;
 };
 
-class TINYTC_EXPORT float_imm : public clir::visitable<float_imm, value_node> {
+class float_imm : public clir::visitable<float_imm, value_node> {
   public:
     inline float_imm(double v, scalar_type ty = scalar_type::f64) : ty_(ty), value_(v) {}
 
@@ -49,7 +47,7 @@ class TINYTC_EXPORT float_imm : public clir::visitable<float_imm, value_node> {
     double value_;
 };
 
-class TINYTC_EXPORT int_imm : public clir::visitable<int_imm, value_node> {
+class int_imm : public clir::visitable<int_imm, value_node> {
   public:
     inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64) : ty_(ty), value_(v) {}
 
@@ -65,7 +63,7 @@ class TINYTC_EXPORT int_imm : public clir::visitable<int_imm, value_node> {
     std::int64_t value_;
 };
 
-class TINYTC_EXPORT val : public clir::visitable<val, value_node> {
+class val : public clir::visitable<val, value_node> {
   public:
     inline val(data_type ty, std::string prefix = "")
         : ty_(std::move(ty)), name_(std::move(prefix)) {}
@@ -80,6 +78,6 @@ class TINYTC_EXPORT val : public clir::visitable<val, value_node> {
     std::string name_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // VALUE_NODE_20230309_HPP

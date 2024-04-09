@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/check_ir.hpp"
+#include "ir/visitor/check_ir.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
@@ -15,7 +15,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 ir_checker::ir_checker(error_reporter_function reporter) : reporter_(std::move(reporter)) {}
 
@@ -70,4 +70,4 @@ bool ir_checker::operator()(program &p) {
     return ok;
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

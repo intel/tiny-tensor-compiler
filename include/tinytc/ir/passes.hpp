@@ -6,7 +6,6 @@
 
 #include "tinytc/export.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/visitor/aa_results.hpp"
 
 #include <clir/prog.hpp>
 #include <iosfwd>
@@ -24,8 +23,6 @@ class data_type;
 class func;
 class prog;
 
-//! Check for aliasing of memrefs
-TINYTC_EXPORT internal::aa_results alias_analysis(func f);
 //! Check whether some IR rules are respected
 TINYTC_EXPORT bool check_ir(prog p, error_reporter_function reporter = null_error_reporter());
 //! Dump IR to ostream

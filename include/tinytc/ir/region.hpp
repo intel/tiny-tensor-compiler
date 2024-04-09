@@ -10,14 +10,12 @@
 
 namespace tinytc::ir {
 
-namespace internal {
 class region_node;
-}
 
 //! Reference-counted region handle
-class TINYTC_EXPORT region : public clir::handle<internal::region_node> {
+class TINYTC_EXPORT region : public clir::handle<region_node> {
   public:
-    using clir::handle<internal::region_node>::handle;
+    using clir::handle<region_node>::handle;
 };
 
 } // namespace tinytc::ir

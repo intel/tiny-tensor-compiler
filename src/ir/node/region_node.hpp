@@ -4,7 +4,6 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
-#include "tinytc/export.hpp"
 #include "tinytc/ir/inst.hpp"
 
 #include "clir/virtual_type_list.hpp"
@@ -13,13 +12,13 @@
 #include <string_view>
 #include <utility>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT region_node : public clir::virtual_type_list<class rgn> {
+class region_node : public clir::virtual_type_list<class rgn> {
   public:
 };
 
-class TINYTC_EXPORT rgn : public clir::visitable<rgn, region_node> {
+class rgn : public clir::visitable<rgn, region_node> {
   public:
     inline rgn(std::vector<inst> insts = {}) : insts_(std::move(insts)) {}
 
@@ -30,6 +29,6 @@ class TINYTC_EXPORT rgn : public clir::visitable<rgn, region_node> {
     std::vector<inst> insts_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // REGION_NODE_20230908_HPP

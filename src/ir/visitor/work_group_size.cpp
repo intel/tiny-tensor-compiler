@@ -1,14 +1,14 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/work_group_size.hpp"
+#include "ir/visitor/work_group_size.hpp"
+#include "ir/node/data_type_node.hpp"
+#include "ir/node/value_node.hpp"
 #include "tinytc/device_info.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/internal/data_type_node.hpp"
-#include "tinytc/ir/internal/value_node.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
 
@@ -24,7 +24,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 auto get_memref_type(value &v) {
     auto t = dynamic_cast<memref_data_type *>(v->ty().get());
@@ -130,4 +130,4 @@ void work_group_size::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir

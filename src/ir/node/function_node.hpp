@@ -4,7 +4,6 @@
 #ifndef FUNCTION_NODE_20230310_HPP
 #define FUNCTION_NODE_20230310_HPP
 
-#include "tinytc/export.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/location.hpp"
@@ -19,10 +18,9 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT function_node
-    : public clir::virtual_type_list<class prototype, class function> {
+class function_node : public clir::virtual_type_list<class prototype, class function> {
   public:
     inline location const &loc() const { return loc_; }
     inline void loc(location const &loc) { loc_ = loc; }
@@ -31,7 +29,7 @@ class TINYTC_EXPORT function_node
     location loc_;
 };
 
-class TINYTC_EXPORT prototype : public clir::visitable<prototype, function_node> {
+class prototype : public clir::visitable<prototype, function_node> {
   public:
     inline prototype(std::string name, std::vector<value> args = {})
         : name_(std::move(name)), args_(std::move(args)) {}
@@ -44,7 +42,7 @@ class TINYTC_EXPORT prototype : public clir::visitable<prototype, function_node>
     std::vector<value> args_;
 };
 
-class TINYTC_EXPORT function : public clir::visitable<function, function_node> {
+class function : public clir::visitable<function, function_node> {
   public:
     inline function(func prototype, region body,
                     std::array<std::uint32_t, 2> const &work_group_size = {0, 0},
@@ -69,6 +67,6 @@ class TINYTC_EXPORT function : public clir::visitable<function, function_node> {
     std::uint32_t subgroup_size_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // FUNCTION_NODE_20230310_HPP

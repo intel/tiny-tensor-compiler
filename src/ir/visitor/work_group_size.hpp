@@ -4,11 +4,10 @@
 #ifndef WORK_GROUP_SIZE_20240311_HPP
 #define WORK_GROUP_SIZE_20240311_HPP
 
-#include "tinytc/export.hpp"
-#include "tinytc/ir/internal/function_node.hpp"
-#include "tinytc/ir/internal/inst_node.hpp"
-#include "tinytc/ir/internal/program_node.hpp"
-#include "tinytc/ir/internal/region_node.hpp"
+#include "ir/node/function_node.hpp"
+#include "ir/node/inst_node.hpp"
+#include "ir/node/program_node.hpp"
+#include "ir/node/region_node.hpp"
 #include "tinytc/ir/tiling.hpp"
 
 #include <memory>
@@ -18,9 +17,9 @@ namespace tinytc {
 class core_info;
 }
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
-class TINYTC_EXPORT work_group_size {
+class work_group_size {
   public:
     work_group_size(std::shared_ptr<core_info> info);
 
@@ -46,6 +45,6 @@ class TINYTC_EXPORT work_group_size {
     std::unordered_set<blas_shape> shapes_;
 };
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
 
 #endif // WORK_GROUP_SIZE_20240311_HPP

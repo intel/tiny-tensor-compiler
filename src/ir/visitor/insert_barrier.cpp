@@ -1,13 +1,13 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/visitor/insert_barrier.hpp"
+#include "ir/visitor/insert_barrier.hpp"
+#include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
-#include "tinytc/ir/visitor/alias_analysis.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/handle.hpp>
@@ -21,7 +21,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir::internal {
+namespace tinytc::ir {
 
 /* Data type nodes */
 bool insert_barrier::operator()(void_data_type &) { return false; }
@@ -157,4 +157,4 @@ void insert_barrier::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir::internal
+} // namespace tinytc::ir
