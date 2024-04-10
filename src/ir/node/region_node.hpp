@@ -12,7 +12,7 @@
 #include <string_view>
 #include <utility>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class region_node : public clir::virtual_type_list<class rgn> {
   public:
@@ -29,6 +29,6 @@ class rgn : public clir::visitable<rgn, region_node> {
     std::vector<inst> insts_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // REGION_NODE_20230908_HPP

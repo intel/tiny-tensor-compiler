@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class value_node;
 
@@ -70,6 +70,6 @@ class lifetime_inserter {
     aa_results aa_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // LIFETIME_ANALYSIS_20230329_HPP

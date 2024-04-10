@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class inst_node
     : public clir::virtual_type_list<
@@ -399,6 +399,6 @@ class yield_inst : public clir::visitable<yield_inst, inst_node> {
     std::vector<value> vals_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // INST_NODE_20230327_HPP

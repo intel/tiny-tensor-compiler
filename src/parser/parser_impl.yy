@@ -37,7 +37,7 @@
     #include "ir/node/value_node.hpp"
     #include "parser/parse_context.hpp"
     #include "parser/lexer.hpp"
-    #include "tinytc/ir/error.hpp"
+    #include "error.hpp"
     #include "tinytc/ir/passes.hpp"
     
     #include <clir/visit.hpp>
@@ -50,13 +50,13 @@
     #include <utility>
 
     namespace tinytc::parser {
-    void check_scalar_type(ir::value & val, ir::scalar_type const& sty, ir::location & loc1,
-                           ir::location & loc2) {
+    void check_scalar_type(value & val, scalar_type const& sty, location & loc1,
+                           location & loc2) {
         clir::visit(
-            ir::overloaded{[&](ir::int_imm &i) { i.ty(sty); },
-                           [&](ir::float_imm &i) { i.ty(sty); },
+            overloaded{[&](int_imm &i) { i.ty(sty); },
+                           [&](float_imm &i) { i.ty(sty); },
                            [&](auto &) {
-                               if (!val->ty() || !is_equal(val->ty(), ir::data_type(sty))) {
+                               if (!val->ty() || !is_equal(val->ty(), data_type(sty))) {
                                    auto loc = loc1;
                                    loc.end = loc2.end;
                                    throw parser::syntax_error(
@@ -65,8 +65,8 @@
                            }},
             *val);
     }
-    void check_type(ir::value & val, ir::data_type & ty, ir::location & loc1,
-                    ir::location & loc2) {
+    void check_type(value & val, data_type & ty, location & loc1,
+                    location & loc2) {
         if (!val->ty() || !is_equal(val->ty(), ty)) {
             auto loc = loc1;
             loc.end = loc2.end;
@@ -81,7 +81,7 @@
 %parse-param { parse_context& ctx }
 %lex-param { lexer& lex }
 %locations
-%define api.location.type { ir::location }
+%define api.location.type { location }
 
 %define parse.assert
 %define parse.error detailed
@@ -143,82 +143,82 @@
 %token <std::string> GLOBAL_IDENTIFIER
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
-%token <ir::scalar_type> INTEGER_TYPE
-%token <ir::scalar_type> FLOATING_TYPE
-%token <ir::binary_op> BINARY_OP
-%token <ir::cmp_condition> CMP_CONDITION
+%token <scalar_type> INTEGER_TYPE
+%token <scalar_type> FLOATING_TYPE
+%token <binary_op> BINARY_OP
+%token <cmp_condition> CMP_CONDITION
 
-%nterm <ir::prog> prog
-%nterm <std::vector<ir::func>> func_list
-%nterm <ir::func> func
-%nterm <std::vector<ir::value>> arguments
-%nterm <ir::value> argument
-%nterm <std::vector<std::function<void(ir::function&)>>> attributes
-%nterm <std::function<void(ir::function&)>> attribute
-%nterm <ir::data_type> data_type
-%nterm <ir::scalar_type> scalar_type
-%nterm <ir::data_type> memref_type
+%nterm <prog> prog
+%nterm <std::vector<func>> func_list
+%nterm <func> func
+%nterm <std::vector<::tinytc::value>> arguments
+%nterm <::tinytc::value> argument
+%nterm <std::vector<std::function<void(function&)>>> attributes
+%nterm <std::function<void(function&)>> attribute
+%nterm <data_type> data_type
+%nterm <scalar_type> scalar_type
+%nterm <data_type> memref_type
 %nterm <std::vector<std::int64_t>> mode_list
 %nterm <std::vector<std::int64_t>> optional_stride_list
 %nterm <std::vector<std::int64_t>> stride_list
 %nterm <std::int64_t> constant_or_dynamic
-%nterm <ir::data_type> group_type
-%nterm <ir::data_type> memref_or_group_type
-%nterm <ir::region> region
-%nterm <ir::value> var
-%nterm <std::vector<ir::inst>> instructions
-%nterm <ir::inst> instruction
-%nterm <ir::inst> axpby_inst
+%nterm <data_type> group_type
+%nterm <data_type> memref_or_group_type
+%nterm <region> region
+%nterm <::tinytc::value> var
+%nterm <std::vector<inst>> instructions
+%nterm <inst> instruction
+%nterm <inst> axpby_inst
 %nterm <bool> atomic
-%nterm <ir::value> identifier_or_constant
-%nterm <std::vector<ir::value>> optional_identifier_or_constant_list
-%nterm <std::vector<ir::value>> identifier_or_constant_list
-%nterm <ir::inst> gemm_inst
-%nterm <ir::inst> gemv_inst
-%nterm <ir::inst> ger_inst
-%nterm <ir::transpose> transpose
-%nterm <ir::inst> for_inst
-%nterm <ir::value> optional_step
-%nterm <ir::inst> foreach_inst
-%nterm <ir::inst> hadamard_inst
-%nterm <ir::inst> if_inst
-%nterm <std::vector<ir::scalar_type>> optional_returned_values
-%nterm <std::vector<ir::scalar_type>> optional_scalar_type_list
-%nterm <std::vector<ir::scalar_type>> scalar_type_list
-%nterm <ir::region> else_region
-%nterm <ir::inst> sum_inst
-%nterm <ir::inst> yield_inst
-%nterm <ir::scalar_type> for_loop_var_type
-%nterm <ir::inst> var_definition
+%nterm <::tinytc::value> identifier_or_constant
+%nterm <std::vector<::tinytc::value>> optional_identifier_or_constant_list
+%nterm <std::vector<::tinytc::value>> identifier_or_constant_list
+%nterm <inst> gemm_inst
+%nterm <inst> gemv_inst
+%nterm <inst> ger_inst
+%nterm <transpose> transpose
+%nterm <inst> for_inst
+%nterm <::tinytc::value> optional_step
+%nterm <inst> foreach_inst
+%nterm <inst> hadamard_inst
+%nterm <inst> if_inst
+%nterm <std::vector<scalar_type>> optional_returned_values
+%nterm <std::vector<scalar_type>> optional_scalar_type_list
+%nterm <std::vector<scalar_type>> scalar_type_list
+%nterm <region> else_region
+%nterm <inst> sum_inst
+%nterm <inst> yield_inst
+%nterm <scalar_type> for_loop_var_type
+%nterm <inst> var_definition
 %nterm <std::vector<std::string>> identifier_list
-%nterm <ir::inst> valued_inst
-%nterm <ir::inst> alloca_inst
-%nterm <ir::inst> binary_op_inst
-%nterm <ir::inst> cast_inst
-%nterm <ir::inst> compare_inst
-%nterm <ir::inst> expand_inst
-%nterm <ir::value> constant_or_dynamic_or_identifier
-%nterm <std::vector<ir::value>> expand_shape
-%nterm <ir::inst> fuse_inst
-%nterm <ir::inst> load_inst
-%nterm <std::vector<ir::value>> optional_index_list
-%nterm <std::vector<ir::value>> index_list
-%nterm <ir::value> index_identifier_or_const
-%nterm <ir::inst> group_id_inst
-%nterm <ir::inst> group_size_inst
-%nterm <ir::inst> neg_inst
-%nterm <ir::inst> size_inst
-%nterm <ir::inst> store_inst
-%nterm <ir::inst> subview_inst
-%nterm <std::vector<ir::slice>> optional_slice_list
-%nterm <std::vector<ir::slice>> slice_list
-%nterm <ir::slice> slice
-%nterm <ir::value> slice_size
+%nterm <inst> valued_inst
+%nterm <inst> alloca_inst
+%nterm <inst> binary_op_inst
+%nterm <inst> cast_inst
+%nterm <inst> compare_inst
+%nterm <inst> expand_inst
+%nterm <::tinytc::value> constant_or_dynamic_or_identifier
+%nterm <std::vector<::tinytc::value>> expand_shape
+%nterm <inst> fuse_inst
+%nterm <inst> load_inst
+%nterm <std::vector<::tinytc::value>> optional_index_list
+%nterm <std::vector<::tinytc::value>> index_list
+%nterm <::tinytc::value> index_identifier_or_const
+%nterm <inst> group_id_inst
+%nterm <inst> group_size_inst
+%nterm <inst> neg_inst
+%nterm <inst> size_inst
+%nterm <inst> store_inst
+%nterm <inst> subview_inst
+%nterm <std::vector<slice>> optional_slice_list
+%nterm <std::vector<slice>> slice_list
+%nterm <slice> slice
+%nterm <::tinytc::value> slice_size
 
 %%
 prog:
     func_list { 
-        auto p = ir::prog{std::make_shared<ir::program>(std::move($func_list))};
+        auto p = prog{std::make_shared<program>(std::move($func_list))};
         ctx.program(p);
         $$ = std::move(p);
     }
@@ -232,17 +232,17 @@ func:
     FUNC {
         ctx.push_scope();
     } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
-        auto proto = ir::func{
-            std::make_shared<ir::prototype>($GLOBAL_IDENTIFIER, std::move($arguments))};
+        auto proto = func{
+            std::make_shared<prototype>($GLOBAL_IDENTIFIER, std::move($arguments))};
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
         ctx.prototype($GLOBAL_IDENTIFIER, proto, loc);
         auto func_node =
-            std::make_shared<ir::function>(std::move(proto), std::move($region));
+            std::make_shared<function>(std::move(proto), std::move($region));
         for (auto &attr : $attributes) {
             attr(*func_node);
         }
-        $func = ir::func{std::move(func_node)};
+        $func = func{std::move(func_node)};
         $func->loc(@func);
         ctx.pop_scope();
     }
@@ -256,7 +256,7 @@ arguments:
 
 argument:
     LOCAL_IDENTIFIER COLON data_type {
-        auto v = ir::value(std::move($data_type), $LOCAL_IDENTIFIER);
+        auto v = value(std::move($data_type), $LOCAL_IDENTIFIER);
         ctx.val($LOCAL_IDENTIFIER, v, @LOCAL_IDENTIFIER);
         $$ = std::move(v);
     }
@@ -277,20 +277,20 @@ attribute:
         }
         auto const wgs = std::array<std::uint32_t, 2>{static_cast<std::uint32_t>($m),
                                                       static_cast<std::uint32_t>($n)};
-        $$ = [=](ir::function &f) { f.work_group_size(wgs); };
+        $$ = [=](function &f) { f.work_group_size(wgs); };
     }
   | SUBGROUP_SIZE LPAREN INTEGER_CONSTANT RPAREN {
         if ($INTEGER_CONSTANT <= 0) {
             throw parser::syntax_error(@INTEGER_CONSTANT, "Must be a non-negative number");
         }
         auto const sgs = static_cast<std::uint32_t>($INTEGER_CONSTANT);
-        $$ = [=](ir::function &f) { f.subgroup_size(sgs); };
+        $$ = [=](function &f) { f.subgroup_size(sgs); };
     }
 ;
 
 
 data_type:
-    scalar_type { $$ = ir::data_type($scalar_type); $$->loc(@scalar_type); }
+    scalar_type { $$ = data_type($scalar_type); $$->loc(@scalar_type); }
   | memref_type
   | group_type
 ;
@@ -303,9 +303,9 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list RCHEV {
         try {
-            $$ = ir::memref_type($scalar_type, std::move($mode_list), std::vector<std::int64_t>{},
+            $$ = memref_type($scalar_type, std::move($mode_list), std::vector<std::int64_t>{},
                                  @memref_type);
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -316,9 +316,9 @@ memref_type:
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
         try {
-            $$ = ir::memref_type($scalar_type, std::move($mode_list),
+            $$ = memref_type($scalar_type, std::move($mode_list),
                                  std::move($optional_stride_list), @memref_type);
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -341,7 +341,7 @@ stride_list:
 
 constant_or_dynamic:
     INTEGER_CONSTANT { $$ = $INTEGER_CONSTANT; }
-  | DYNAMIC { $$ = ir::dynamic; }
+  | DYNAMIC { $$ = dynamic; }
 ;
 
 group_type:
@@ -360,7 +360,7 @@ region:
     LBRACE {
         ctx.push_scope();
     } instructions RBRACE {
-        $$ = ir::region{std::make_shared<ir::rgn>(std::move($instructions))};
+        $$ = region{std::make_shared<rgn>(std::move($instructions))};
         ctx.pop_scope();
     }
 ;
@@ -401,12 +401,12 @@ axpby_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($b, $mb, @b, @mb);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::axpby_inst>($ta, std::move($alpha), std::move($a),
+            $$ = inst {
+                std::make_shared<axpby_inst>($ta, std::move($alpha), std::move($a),
                                                            std::move($beta), std::move($b), $atomic,
                                                            @axpby_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -419,8 +419,8 @@ atomic:
 
 identifier_or_constant:
     var { $$ = $var; }
-  | INTEGER_CONSTANT { $$ = ir::value($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
-  | FLOATING_CONSTANT { $$ = ir::value($FLOATING_CONSTANT); $$->loc(@FLOATING_CONSTANT); }
+  | INTEGER_CONSTANT { $$ = value($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
+  | FLOATING_CONSTANT { $$ = value($FLOATING_CONSTANT); $$->loc(@FLOATING_CONSTANT); }
 ;
 
 optional_identifier_or_constant_list:
@@ -446,12 +446,12 @@ gemm_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::gemm_inst>(
+            $$ = inst {
+                std::make_shared<gemm_inst>(
                     $ta, $tb, std::move($alpha), std::move($a), std::move($b), std::move($beta),
                     std::move($c), $atomic, @gemm_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -468,20 +468,20 @@ gemv_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::gemv_inst>($ta, std::move($alpha), std::move($a),
+            $$ = inst {
+                std::make_shared<gemv_inst>($ta, std::move($alpha), std::move($a),
                                                           std::move($b), std::move($beta),
                                                           std::move($c), $atomic, @gemv_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
 ;
 
 transpose:
-    NOTRANS { $$ = ir::transpose::N; }
-  | TRANS { $$ = ir::transpose::T; }
+    NOTRANS { $$ = transpose::N; }
+  | TRANS { $$ = transpose::T; }
 ;
 
 ger_inst:
@@ -495,12 +495,12 @@ ger_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::ger_inst>(std::move($alpha), std::move($a),
+            $$ = inst {
+                std::make_shared<ger_inst>(std::move($alpha), std::move($a),
                                                          std::move($b), std::move($beta),
                                                          std::move($c), $atomic, @ger_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -515,16 +515,16 @@ for_inst:
         if ($optional_step) {
             check_scalar_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
-        auto v = ir::value(ir::data_type($for_loop_var_type), $loop_var);
+        auto v = value(data_type($for_loop_var_type), $loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
+            $$ = inst {
+                std::make_shared<for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
                                                          $optional_step, std::move($region),
                                                          @for_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -539,22 +539,22 @@ foreach_inst:
         EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] for_loop_var_type {
         check_scalar_type($from, $for_loop_var_type, @from, @for_loop_var_type);
         check_scalar_type($to, $for_loop_var_type, @to, @for_loop_var_type);
-        auto v = ir::value(ir::data_type($for_loop_var_type), $loop_var);
+        auto v = value(data_type($for_loop_var_type), $loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::foreach_inst>(ctx.val($loop_var, @loop_var), $from,
+            $$ = inst {
+                std::make_shared<foreach_inst>(ctx.val($loop_var, @loop_var), $from,
                                                              $to, std::move($region), @foreach_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
 ;
 
 for_loop_var_type:
-    %empty { $$ = ir::scalar_type::index; }
+    %empty { $$ = scalar_type::index; }
   | COLON INTEGER_TYPE { $$ = $INTEGER_TYPE; }
 ;
 
@@ -599,12 +599,12 @@ hadamard_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::hadamard_inst>(
+            $$ = inst {
+                std::make_shared<hadamard_inst>(
                     std::move($alpha), std::move($a), std::move($b), std::move($beta),
                     std::move($c), $atomic, @hadamard_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -619,12 +619,12 @@ sum_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($b, $mb, @b, @mb);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::sum_inst>($ta, std::move($alpha), std::move($a),
+            $$ = inst {
+                std::make_shared<sum_inst>($ta, std::move($alpha), std::move($a),
                                                          std::move($beta), std::move($b), $atomic,
                                                          @sum_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -633,14 +633,14 @@ sum_inst:
 yield_inst:
     YIELD optional_identifier_or_constant_list[vals] COLON optional_scalar_type_list[tys] {
         if ($vals.size() != $tys.size()) {
-            ir::location loc = @vals;
+            location loc = @vals;
             loc.end = @tys.end;
             throw syntax_error(loc, "Identifier and scalar type list must have the same length");
         }
         for (std::size_t i = 0; i < $vals.size(); ++i) {
             check_scalar_type($vals[i], $tys[i], @vals, @tys);
         }
-        $$ = ir::inst{std::make_shared<ir::yield_inst>(std::move($vals))};
+        $$ = inst{std::make_shared<yield_inst>(std::move($vals))};
     }
 ;
 
@@ -663,10 +663,10 @@ valued_inst:
 alloca_inst:
     ALLOCA RETURNS memref_type {
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::alloca_inst>(std::move($memref_type), @alloca_inst)
+            $$ = inst {
+                std::make_shared<alloca_inst>(std::move($memref_type), @alloca_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -677,11 +677,11 @@ binary_op_inst:
         check_scalar_type($a, $ty, @a, @ty);
         check_scalar_type($b, $ty, @b, @ty);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::binary_op_inst>($BINARY_OP, std::move($a),
+            $$ = inst {
+                std::make_shared<binary_op_inst>($BINARY_OP, std::move($a),
                                                                std::move($b), @binary_op_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -691,10 +691,10 @@ cast_inst:
     CAST identifier_or_constant[a] COLON scalar_type[from] RETURNS scalar_type[to] {
         check_scalar_type($a, $from, @a, @from);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::cast_inst>(std::move($a), $to, @cast_inst)
+            $$ = inst {
+                std::make_shared<cast_inst>(std::move($a), $to, @cast_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -705,11 +705,11 @@ compare_inst:
         check_scalar_type($a, $ty, @a, @ty);
         check_scalar_type($b, $ty, @b, @ty);
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::compare_inst>($CMP_CONDITION, std::move($a),
+            $$ = inst {
+                std::make_shared<compare_inst>($CMP_CONDITION, std::move($a),
                                                              std::move($b), @compare_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -723,11 +723,11 @@ expand_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::expand_inst>(std::move($var), $mode,
+            $$ = inst {
+                std::make_shared<expand_inst>(std::move($var), $mode,
                                                             std::move($expand_shape), @expand_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -735,18 +735,18 @@ expand_inst:
 
 expand_shape:
     constant_or_dynamic_or_identifier[a] TIMES constant_or_dynamic_or_identifier[b] {
-        $$ = std::vector<ir::value>{$a, $b};
+        $$ = std::vector<value>{$a, $b};
     }
   | expand_shape TIMES constant_or_dynamic_or_identifier[a] { $$ = std::move($1); $$.push_back($a); }
 ;
 
 constant_or_dynamic_or_identifier:
     var {
-        check_scalar_type($var, ir::scalar_type::index, @var, @var);
+        check_scalar_type($var, scalar_type::index, @var, @var);
         $$ = $var;
     }
-  | INTEGER_CONSTANT { $$ = ir::value($INTEGER_CONSTANT, ir::scalar_type::index); $$->loc(@INTEGER_CONSTANT); }
-  | DYNAMIC { $$ = ir::value(ir::dynamic); $$->loc(@DYNAMIC); }
+  | INTEGER_CONSTANT { $$ = value($INTEGER_CONSTANT, scalar_type::index); $$->loc(@INTEGER_CONSTANT); }
+  | DYNAMIC { $$ = value(dynamic); $$->loc(@DYNAMIC); }
 ;
 
 fuse_inst:
@@ -757,10 +757,10 @@ fuse_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::fuse_inst>(std::move($var), $from, $to, @fuse_inst)
+            $$ = inst {
+                std::make_shared<fuse_inst>(std::move($var), $from, $to, @fuse_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -774,11 +774,11 @@ load_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::load_inst>(
+            $$ = inst {
+                std::make_shared<load_inst>(
                     std::move($var), std::move($optional_index_list), @load_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -796,12 +796,12 @@ index_list:
 
 index_identifier_or_const:
     var {
-        check_scalar_type($var, ir::scalar_type::index, @var, @var);
+        check_scalar_type($var, scalar_type::index, @var, @var);
         $$ = $var;
     }
   | INTEGER_CONSTANT {
-        $$ = ir::value($INTEGER_CONSTANT);
-        $$->ty(ir::scalar_type::index);
+        $$ = value($INTEGER_CONSTANT);
+        $$->ty(scalar_type::index);
         $$->loc(@INTEGER_CONSTANT);
     }
 ;
@@ -814,28 +814,28 @@ store_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::store_inst>(
+            $$ = inst {
+                std::make_shared<store_inst>(
                     std::move($a), std::move($b), std::move($optional_index_list), @store_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
 ;
 
 group_id_inst:
-    GROUP_ID { $$ = ir::inst{std::make_shared<ir::group_id_inst>()}; }
+    GROUP_ID { $$ = inst{std::make_shared<group_id_inst>()}; }
 ;
 
 group_size_inst:
-    GROUP_SIZE { $$ = ir::inst{std::make_shared<ir::group_size_inst>()}; }
+    GROUP_SIZE { $$ = inst{std::make_shared<group_size_inst>()}; }
 ;
 
 if_inst:
     IF identifier_or_constant[condition] optional_returned_values region else_region {
-        check_scalar_type($condition, ir::scalar_type::bool_, @condition, @condition);
-        $$ = ir::inst{std::make_shared<ir::if_inst>(
+        check_scalar_type($condition, scalar_type::bool_, @condition, @condition);
+        $$ = inst{std::make_shared<if_inst>(
             std::move($condition), std::move($region), std::move($else_region),
             std::move($optional_returned_values))};
         $$->loc(@if_inst);
@@ -867,8 +867,8 @@ neg_inst:
     NEG identifier_or_constant[a] COLON scalar_type[ty] {
         check_scalar_type($a, $ty, @a, @ty);
         try {
-            $$ = ir::inst { std::make_shared<ir::neg_inst>(std::move($a), @neg_inst) };
-        } catch (ir::compilation_error const &e) {
+            $$ = inst { std::make_shared<neg_inst>(std::move($a), @neg_inst) };
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -882,10 +882,10 @@ size_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::size_inst>(std::move($var), $mode, @size_inst)
+            $$ = inst {
+                std::make_shared<size_inst>(std::move($var), $mode, @size_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -899,11 +899,11 @@ subview_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = ir::inst {
-                std::make_shared<ir::subview_inst>(
+            $$ = inst {
+                std::make_shared<subview_inst>(
                     std::move($var), std::move($optional_slice_list), @subview_inst)
             };
-        } catch (ir::compilation_error const &e) {
+        } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
     }
@@ -920,14 +920,14 @@ slice_list:
 ;
 
 slice:
-    COLON { $$ = ir::slice(static_cast<std::int64_t>(0), ir::dynamic); }
-  | index_identifier_or_const slice_size { $$ = ir::slice(std::move($1), std::move($2)); }
+    COLON { $$ = slice(static_cast<std::int64_t>(0), dynamic); }
+  | index_identifier_or_const slice_size { $$ = slice(std::move($1), std::move($2)); }
 ;
 
 slice_size:
     %empty { $$ = nullptr; }
   | COLON index_identifier_or_const { $$ = $2; }
-  | COLON DYNAMIC { $$ = ir::dynamic; }
+  | COLON DYNAMIC { $$ = dynamic; }
 ;
 
 %%

@@ -12,9 +12,9 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
-bool equal::operator()(data_type_node &, data_type_node &) { return false; }
+bool equal::operator()(::tinytc_data_type &, ::tinytc_data_type &) { return false; }
 bool equal::operator()(void_data_type &, void_data_type &) { return true; }
 bool equal::operator()(group_data_type &a, group_data_type &b) {
     return visit(*this, *a.ty(), *b.ty());
@@ -24,4 +24,4 @@ bool equal::operator()(memref_data_type &a, memref_data_type &b) {
 }
 bool equal::operator()(scalar_data_type &a, scalar_data_type &b) { return a.ty() == b.ty(); }
 
-} // namespace tinytc::ir
+} // namespace tinytc

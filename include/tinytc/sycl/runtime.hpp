@@ -6,7 +6,7 @@
 
 #include "tinytc/sycl/kernel.hpp"
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/tensor_kernel.hpp"
 
 #include <array>

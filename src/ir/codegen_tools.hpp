@@ -14,7 +14,7 @@ class expr;
 class var;
 }; // namespace clir
 
-namespace tinytc::ir {
+namespace tinytc {
 
 enum class scalar_type;
 
@@ -54,6 +54,6 @@ void tile_loop_uniformly_dynamic(clir::block_builder &bb, clir::expr loop_trip_c
                                  unsigned block_size, unsigned num_tiles, clir::var sg_id,
                                  uniform_loop_body_builder const &body);
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // CODEGEN_TOOLS_20240229_HPP

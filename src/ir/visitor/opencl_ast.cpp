@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/visitor/opencl_ast.hpp"
+#include "error.hpp"
 #include "ir/codegen_tools.hpp"
-#include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/ir/inst.hpp"
@@ -11,6 +11,7 @@
 #include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/slice.hpp"
 #include "tinytc/ir/value.hpp"
+#include "tinytc/types.hpp"
 #include "util.hpp"
 
 #include <clir/attr.hpp>
@@ -35,7 +36,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 std::string var_name(std::string name) {
     if (name.empty() || !isalpha(name[0])) {
@@ -61,7 +62,8 @@ dope_vector dope_vector::from_value(value v, decl_fun_t declare) {
           *v->ty());
     if (m == nullptr) {
         throw compilation_error(
-            v->loc(), "dope_vector::from_value must only be called for memref or group type");
+            v->loc(), status::internal_compiler_error,
+            "dope_vector::from_value must only be called for memref or group type");
     }
     return dope_vector::from_memref_type(std::string(v->name()), *m, std::move(dt),
                                          std::move(declare));
@@ -103,7 +105,8 @@ opencl_ast::opencl_ast(std::shared_ptr<core_info> info) : info_(std::move(info))
 auto opencl_ast::get_dope_vector(value v) -> dope_vector & {
     auto dv = dope_vector_.find(std::bit_cast<std::uintptr_t>(v.get()));
     if (dv == dope_vector_.end()) {
-        throw compilation_error(v->loc(), "Dope vector for value is missing");
+        throw compilation_error(v->loc(), status::internal_compiler_error,
+                                "Dope vector for value is missing");
     }
     return dv->second;
 }
@@ -117,7 +120,8 @@ clir::var opencl_ast::declare(value_node &v) {
     uintptr_t u = std::bit_cast<uintptr_t>(&v);
     for (auto it = declared_vars_.rbegin(); it != declared_vars_.rend(); ++it) {
         if (it->find(u) != it->end()) {
-            throw compilation_error(v.loc(), "Variable already declared");
+            throw compilation_error(v.loc(), status::internal_compiler_error,
+                                    "Variable already declared");
         }
     }
 
@@ -129,7 +133,7 @@ clir::var opencl_ast::declare(value_node &v) {
 memref_data_type *opencl_ast::get_memref_type(value &v) {
     auto t = dynamic_cast<memref_data_type *>(v->ty().get());
     if (t == nullptr) {
-        throw compilation_error(v->loc(), "Expected memref type: " + std::string(v->name()));
+        throw compilation_error(v->loc(), status::ir_expected_memref);
     }
     return t;
 }
@@ -139,7 +143,7 @@ scalar_type opencl_ast::get_scalar_type(data_type ty) {
                             [](memref_data_type &i) -> scalar_type { return i.element_ty(); },
                             [&](auto &) -> scalar_type {
                                 throw compilation_error(ty->loc(),
-                                                        "Expected scalar or memref type");
+                                                        status::ir_expected_memref_or_scalar);
                                 return scalar_type{};
                             }},
                  *ty);
@@ -156,7 +160,8 @@ clir::data_type opencl_ast::operator()(group_data_type &g) {
                               [](auto &) { return clir::data_type{}; }},
                    *ptr_ty);
     if (!ptr_ty) {
-        throw compilation_error(g.loc(), "Could not determine OpenCL type of group type");
+        throw compilation_error(g.loc(), status::internal_compiler_error,
+                                "Could not determine OpenCL type of group type");
     }
     return ptr_ty;
 }
@@ -182,19 +187,20 @@ clir::expr opencl_ast::operator()(val &v) {
         }
     }
 
-    throw compilation_error(v.loc(), "Undeclared variable: " + std::string(v.name()));
+    throw compilation_error(v.loc(), status::internal_compiler_error,
+                            "Undeclared variable: " + std::string(v.name()));
 }
 
 /* Stmt nodes */
 std::vector<clir::stmt> opencl_ast::operator()(alloca_inst &a) {
     if (a.stack_ptr() < 0) {
-        throw compilation_error(a.loc(),
+        throw compilation_error(a.loc(), status::internal_compiler_error,
                                 "Invalid stack_ptr in alloca. Did you run set_stack_ptrs?");
     }
     auto result_var = declare(*a.result());
     auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
     if (t == nullptr) {
-        throw compilation_error(a.loc(), "Expected memref type in alloca");
+        throw compilation_error(a.loc(), status::ir_expected_memref);
     }
     auto ptr_ty = clir::pointer_to(t->clir_element_ty());
     auto result = declaration_assignment(ptr_ty, std::move(result_var),
@@ -281,7 +287,7 @@ std::vector<clir::stmt> opencl_ast::operator()(axpby_inst &inst) {
             });
         return {bb.get_product()};
     }
-    throw compilation_error(inst.loc(), "Expected vector or matrix input");
+    throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(barrier_inst &) {
@@ -461,8 +467,7 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
     visit(overloaded{
               [&](group_data_type &) {
                   if (e.index_list().size() != 1) {
-                      throw compilation_error(e.loc(),
-                                              "Load on group operand needs exactly one index");
+                      throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                   }
                   auto idx = visit(*this, *e.index_list().front());
                   rhs = rhs + idx;
@@ -479,8 +484,7 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
               },
               [&](memref_data_type &m) {
                   if (static_cast<std::int64_t>(e.index_list().size()) != m.dim()) {
-                      throw compilation_error(
-                          e.loc(), "Number of indices must match memref order in load instruction");
+                      throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                   }
                   auto &dv = get_dope_vector(e.operand());
                   for (std::int64_t i = 0; i < m.dim(); ++i) {
@@ -488,14 +492,14 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
                   }
               },
               [&e](auto &) {
-                  throw compilation_error(e.loc(), "Expected memref or group operand in load");
+                  throw compilation_error(e.loc(), status::ir_expected_memref_or_group);
               }},
           *e.operand()->ty());
 
     auto lhs = declare(*e.result());
     auto result_type = e.result()->ty().get();
     if (result_type == nullptr) {
-        throw compilation_error(e.loc(), "Expected type");
+        throw compilation_error(e.loc(), status::internal_compiler_error, "Expected type");
     }
     clinst.emplace(clinst.begin(),
                    declaration_assignment(visit(*this, *result_type), std::move(lhs),
@@ -792,7 +796,7 @@ std::vector<clir::stmt> opencl_ast::operator()(subview_inst &s) {
     auto result_var = declare(*s.result());
     auto t = get_memref_type(s.operand());
     if (t->dim() != static_cast<std::int64_t>(s.slices().size())) {
-        throw compilation_error(s.loc(), "Number of indices must match memref order");
+        throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
     }
 
     auto &dv = get_dope_vector(s.operand());
@@ -842,8 +846,7 @@ std::vector<clir::stmt> opencl_ast::operator()(store_inst &s) {
     auto ot = get_memref_type(s.operand());
 
     if (static_cast<std::int64_t>(s.index_list().size()) != ot->dim()) {
-        throw compilation_error(s.loc(),
-                                "Number of indices must match memref order in store instruction");
+        throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
     }
 
     auto lhs = visit(*this, *s.operand());
@@ -931,18 +934,17 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
                 }
             });
     } else {
-        throw compilation_error(inst.loc(), "Expected vector or matrix input");
+        throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
     }
     return {bb.get_product()};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(yield_inst &in) {
     if (yielded_vars_.empty()) {
-        throw compilation_error(in.loc(), "Yield encountered in non-yielding region");
+        throw compilation_error(in.loc(), status::ir_unexpected_yield);
     }
     if (yielded_vars_.back().size() != in.vals().size()) {
-        throw compilation_error(
-            in.loc(), "Number of yielded values does not match number of values yielded by region");
+        throw compilation_error(in.loc(), status::ir_yield_mismatch);
     }
     std::vector<clir::stmt> clinst;
     for (std::size_t i = 0; i < in.vals().size(); ++i) {
@@ -999,7 +1001,7 @@ clir::func opencl_ast::operator()(function &fn) {
     try {
         core_cfg_ = info_->get_core_config(subgroup_size);
     } catch (std::out_of_range const &e) {
-        throw compilation_error(fn.loc(), "Unsupported subgroup size");
+        throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
     auto const work_group_size = fn.work_group_size();
     tiling_[0] = work_group_size[0] / subgroup_size;
@@ -1011,7 +1013,8 @@ clir::func opencl_ast::operator()(function &fn) {
     if (stack_high_water_mark_ > 0) {
         auto bb = dynamic_cast<clir::internal::block *>(body.get());
         if (bb == nullptr) {
-            throw compilation_error(fn.loc(), "Expected clir basic block");
+            throw compilation_error(fn.loc(), status::internal_compiler_error,
+                                    "Expected clir basic block");
         }
         bb->stmts().insert(bb->stmts().begin(),
                            declaration(clir::array_of(clir::data_type(clir::builtin_type::uchar_t,
@@ -1041,4 +1044,4 @@ clir::prog opencl_ast::operator()(program &p) {
     return prog_builder_.get_product();
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

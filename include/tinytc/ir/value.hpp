@@ -4,7 +4,7 @@
 #ifndef VAR_20230309_HPP
 #define VAR_20230309_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/scalar_type.hpp"
 
 #include <clir/handle.hpp>
@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class value_node;
 class data_type;
@@ -48,6 +48,6 @@ class TINYTC_EXPORT value : public clir::handle<value_node> {
     value(std::uint32_t imm, scalar_type ty = scalar_type::index);
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // VAR_20230309_HPP

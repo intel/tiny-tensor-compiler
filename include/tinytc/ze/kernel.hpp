@@ -4,7 +4,7 @@
 #ifndef ZE_KERNEL_20240307_HPP
 #define ZE_KERNEL_20240307_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <cstddef>
 #include <cstdint>

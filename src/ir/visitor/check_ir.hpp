@@ -10,7 +10,7 @@
 #include "ir/node/region_node.hpp"
 #include "tinytc/ir/error.hpp"
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class ir_checker {
   public:
@@ -37,6 +37,6 @@ class ir_checker {
     error_reporter_function reporter_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // CHECK_IR_20240222_HPP

@@ -22,7 +22,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 bool check_ir(prog p, error_reporter_function reporter) {
     return visit(ir_checker{std::move(reporter)}, *p);
@@ -53,5 +53,5 @@ void set_work_group_size(prog p, std::shared_ptr<core_info> info) {
     visit(work_group_size{std::move(info)}, *p);
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc
 

@@ -3,7 +3,7 @@
 
 #include "tinytc/ir/inst.hpp"
 
-namespace tinytc::ir {
+namespace tinytc {
 
 char const *to_string(binary_op op) {
     switch (op) {
@@ -49,4 +49,4 @@ char const *to_string(transpose t) {
     return "unknown";
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

@@ -4,7 +4,7 @@
 #ifndef BUILDER_20230309_HPP
 #define BUILDER_20230309_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
@@ -21,7 +21,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class prog;
 class slice;
@@ -307,9 +307,9 @@ class TINYTC_EXPORT program_builder {
     prog get_product();
 
   private:
-    std::vector<ir::func> functions_;
+    std::vector<func> functions_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // BUILDER_20230309_HPP

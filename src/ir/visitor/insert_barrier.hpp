@@ -15,7 +15,7 @@
 #include <cstdint>
 #include <unordered_set>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class insert_barrier {
   public:
@@ -62,6 +62,6 @@ class insert_barrier {
     bool last_instruction_was_barrier_ = false;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // INSERT_BARRIER_20230310_HPP

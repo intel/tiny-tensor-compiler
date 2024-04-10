@@ -6,7 +6,7 @@
 
 #include <unordered_map>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class alias_analyser;
 class value_node;
@@ -24,6 +24,6 @@ class aa_results {
     friend class alias_analyser;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // AA_RESULTS_20240314_HPP

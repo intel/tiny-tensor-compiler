@@ -18,7 +18,7 @@
 
 #include <algorithm>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 location to_location(std::source_location const loc) {
     auto l = location{};
@@ -227,4 +227,4 @@ void program_builder::add(func f) { functions_.emplace_back(std::move(f)); }
 
 prog program_builder::get_product() { return prog(std::make_shared<program>(functions_)); }
 
-} // namespace tinytc::ir
+} // namespace tinytc

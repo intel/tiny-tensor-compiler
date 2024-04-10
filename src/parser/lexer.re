@@ -147,24 +147,24 @@ lex:
         "yield"             { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
-        "add"               { adv_loc(); return parser::make_BINARY_OP(ir::binary_op::add, loc_); }
-        "sub"               { adv_loc(); return parser::make_BINARY_OP(ir::binary_op::sub, loc_); }
-        "mul"               { adv_loc(); return parser::make_BINARY_OP(ir::binary_op::mul, loc_); }
-        "div"               { adv_loc(); return parser::make_BINARY_OP(ir::binary_op::div, loc_); }
-        "rem"               { adv_loc(); return parser::make_BINARY_OP(ir::binary_op::rem, loc_); }
+        "add"               { adv_loc(); return parser::make_BINARY_OP(binary_op::add, loc_); }
+        "sub"               { adv_loc(); return parser::make_BINARY_OP(binary_op::sub, loc_); }
+        "mul"               { adv_loc(); return parser::make_BINARY_OP(binary_op::mul, loc_); }
+        "div"               { adv_loc(); return parser::make_BINARY_OP(binary_op::div, loc_); }
+        "rem"               { adv_loc(); return parser::make_BINARY_OP(binary_op::rem, loc_); }
 
         // comparison condition
-        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::eq,
+        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq,
        loc_); }
-        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::ne,
+        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne,
        loc_); }
-        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::gt,
+        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt,
        loc_); }
-        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::ge,
+        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge,
        loc_); }
-        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::lt,
+        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt,
        loc_); }
-        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(ir::cmp_condition::le,
+        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le,
        loc_); }
 
         whitespace          { adv_loc(); goto lex; }
@@ -226,42 +226,42 @@ double lexer::lex_floating_constant(char const *s, char const *e) {
     return d;
 }
 
-ir::scalar_type lexer::lex_integer_type(char const *s, char const *) {
+scalar_type lexer::lex_integer_type(char const *s, char const *) {
     char const *YYMARKER;
     /*!re2c
         re2c:yyfill:enable = 0;
         re2c:define:YYCURSOR = s;
 
-        "bool"  { return ir::scalar_type::bool_; }
-        "index" { return ir::scalar_type::index; }
-        "i8"    { return ir::scalar_type::i8; }
-        "i16"   { return ir::scalar_type::i16; }
-        "i32"   { return ir::scalar_type::i32; }
-        "i64"   { return ir::scalar_type::i64; }
-        "u8"    { return ir::scalar_type::u8; }
-        "u16"   { return ir::scalar_type::u16; }
-        "u32"   { return ir::scalar_type::u32; }
-        "u64"   { return ir::scalar_type::u64; }
+        "bool"  { return scalar_type::bool_; }
+        "index" { return scalar_type::index; }
+        "i8"    { return scalar_type::i8; }
+        "i16"   { return scalar_type::i16; }
+        "i32"   { return scalar_type::i32; }
+        "i64"   { return scalar_type::i64; }
+        "u8"    { return scalar_type::u8; }
+        "u16"   { return scalar_type::u16; }
+        "u32"   { return scalar_type::u32; }
+        "u64"   { return scalar_type::u64; }
         $       { return {}; }
         *       { return {}; }
     */
-    return ir::scalar_type{};
+    return scalar_type{};
 }
-ir::scalar_type lexer::lex_floating_type(char const *s, char const *) {
+scalar_type lexer::lex_floating_type(char const *s, char const *) {
     char const *YYMARKER;
     /*!re2c
         re2c:yyfill:enable = 0;
         re2c:define:YYCURSOR = s;
 
-        "f32"  { return ir::scalar_type::f32; }
-        "f64"  { return ir::scalar_type::f64; }
+        "f32"  { return scalar_type::f32; }
+        "f64"  { return scalar_type::f64; }
         $      { return {}; }
         *      { return {}; }
     */
-    return ir::scalar_type{};
+    return scalar_type{};
 }
 
-void lexer::error(ir::location const &l, std::string const &m) {
+void lexer::error(location const &l, std::string const &m) {
     report_error_with_context(oerr_, input_, YYLIMIT - input_, l, m);
 }
 

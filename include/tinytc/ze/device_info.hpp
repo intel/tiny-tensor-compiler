@@ -4,7 +4,7 @@
 #ifndef ZE_DEVICE_INFO_20240307_HPP
 #define ZE_DEVICE_INFO_20240307_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <cstdint>
 #include <level_zero/ze_api.h>

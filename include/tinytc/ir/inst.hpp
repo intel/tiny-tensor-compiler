@@ -4,11 +4,11 @@
 #ifndef INST_20230327_HPP
 #define INST_20230327_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include "clir/handle.hpp"
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class inst_node;
 
@@ -53,6 +53,6 @@ class TINYTC_EXPORT inst : public clir::handle<inst_node> {
     using clir::handle<inst_node>::handle;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // INST_20230327_HPP

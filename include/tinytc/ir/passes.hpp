@@ -4,7 +4,7 @@
 #ifndef PASSES_20240314_HPP
 #define PASSES_20240314_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
 
 #include <clir/prog.hpp>
@@ -13,11 +13,8 @@
 #include <string>
 
 namespace tinytc {
+
 class core_info;
-}
-
-namespace tinytc::ir {
-
 class location;
 class data_type;
 class func;
@@ -50,6 +47,6 @@ TINYTC_EXPORT void set_work_group_size(func f, std::shared_ptr<core_info> info);
 //! Choose work group and subgroup size heuristically if not given explicitly
 TINYTC_EXPORT void set_work_group_size(prog p, std::shared_ptr<core_info> info);
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // PASSES_20240314_HPP

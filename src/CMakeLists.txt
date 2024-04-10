@@ -20,11 +20,11 @@ find_package(BISON 3.8.2 REQUIRED)
 set(SOURCES
     binary.cpp
     device_info.cpp
+    error.cpp
     internal/compiler_options.cpp
     ir/builder.cpp
     ir/codegen_tools.cpp
     ir/data_type.cpp
-    ir/error.cpp
     ir/gemm_generator.cpp
     ir/inst.cpp
     ir/location.cpp
@@ -49,8 +49,12 @@ set(SOURCES
     opencl_cc.cpp
     parser/parse_context.cpp
     parser.cpp
-    recipe/small_gemm_batched.cpp
-    recipe/tall_and_skinny.cpp
+    #recipe/small_gemm_batched.cpp
+    #recipe/tall_and_skinny.cpp
+    tinytc.h
+    tinytc.hpp
+    types.h
+    types.hpp
 )
 set(RE2C_SOURCES
     parser/lexer.re
@@ -100,7 +104,7 @@ target_compile_definitions(tinytc PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
 
 # Generate export header
-set(tinytc_export_header "${CMAKE_BINARY_DIR}/include/tinytc/export.hpp")
+set(tinytc_export_header "${CMAKE_BINARY_DIR}/include/tinytc/export.h")
 generate_export_header(tinytc BASE_NAME TINYTC EXPORT_FILE_NAME "${tinytc_export_header}")
 
 # Generate version header

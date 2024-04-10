@@ -20,7 +20,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 ir_dumper::ir_dumper(std::ostream &os) : os_(os) {}
 
@@ -375,4 +375,4 @@ void ir_dumper::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

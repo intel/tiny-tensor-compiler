@@ -8,7 +8,7 @@
 #ifndef ZE_ERROR_20240305_HPP
 #define ZE_ERROR_20240305_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <level_zero/ze_api.h>
 

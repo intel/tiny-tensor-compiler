@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/node/inst_node.hpp"
+#include "error.hpp"
 #include "ir/node/data_type_node.hpp"
 #include "ir/node/value_node.hpp"
 #include "ir/visitor/util.hpp"
-#include "tinytc/ir/error.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/handle.hpp>
@@ -16,12 +17,12 @@
 #include <memory>
 #include <sstream>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 scalar_data_type *get_scalar_type(location const &loc, value &v) {
     auto m = dynamic_cast<scalar_data_type *>(v->ty().get());
     if (m == nullptr) {
-        throw compilation_error(loc, "Expected scalar type");
+        throw compilation_error(loc, status::ir_expected_scalar);
     }
     return m;
 }
@@ -29,7 +30,7 @@ scalar_data_type *get_scalar_type(location const &loc, value &v) {
 memref_data_type *get_memref_type(location const &loc, value &v) {
     auto m = dynamic_cast<memref_data_type *>(v->ty().get());
     if (m == nullptr) {
-        throw compilation_error(loc, "Expected memref type");
+        throw compilation_error(loc, status::ir_expected_memref);
     }
     return m;
 }
@@ -61,7 +62,7 @@ loop_inst::loop_inst(value loop_var, value from, value to, value step, region bo
     }
 
     if (lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() || !step_ok) {
-        throw compilation_error(loc(), "loop variable and loop bounds must have the same type");
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 }
 
@@ -70,7 +71,7 @@ alloca_inst::alloca_inst(data_type ty, location const &lc)
     loc(lc);
     auto memref = dynamic_cast<memref_data_type *>(result_->ty().get());
     if (memref == nullptr) {
-        throw compilation_error(loc(), "Alloca expects memref type");
+        throw compilation_error(loc(), status::ir_expected_memref);
     }
     memref->addrspace(clir::address_space::local_t);
 }
@@ -90,11 +91,11 @@ axpby_inst::axpby_inst(transpose tA, value alpha, value A, value beta, value B, 
     }
 
     if (!shape_equal) {
-        throw compilation_error(loc(), "operands must have the same shape");
+        throw compilation_error(loc(), status::ir_incompatible_shapes);
     }
 
     if (b->dim() > 2) {
-        throw compilation_error(loc(), "axpby expects vector or matrix");
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix);
     }
 }
 
@@ -106,7 +107,7 @@ binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &l
     auto bt = get_scalar_type(loc(), b_);
 
     if (at->ty() != bt->ty()) {
-        throw compilation_error(loc(), "operands must have the same scalar type");
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
     result_->ty(at->ty());
 }
@@ -124,7 +125,7 @@ compare_inst::compare_inst(cmp_condition cond, value a, value b, location const 
     auto bt = get_scalar_type(loc(), b_);
 
     if (at->ty() != bt->ty()) {
-        throw compilation_error(loc(), "operands must have the same scalar type");
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
     result_->ty(scalar_type::bool_);
 }
@@ -139,7 +140,8 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, 
     auto c = get_memref_type(loc(), C_);
 
     if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
-        throw compilation_error(loc(), "gemm only supported for memref of order 2 (matrices)");
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "gemm only supported for memref of order 2 (matrices)");
     }
 
     auto ak = tA_ == transpose::T ? 0 : 1;
@@ -149,11 +151,11 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, 
     auto K = a->shape(ak);
     if (a->shape(1 - ak) != M || b->shape(bk) != K || b->shape(1 - bk) != N) {
         std::ostringstream oss;
-        oss << "gemm: Incompatible matrix sizes. Got ";
+        oss << "Got ";
         oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
         oss << "B=" << b->shape(0) << "x" << b->shape(1) << ", ";
         oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), oss.str());
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
     }
 }
 
@@ -167,7 +169,8 @@ gemv_inst::gemv_inst(transpose tA, value alpha, value A, value B, value beta, va
     auto c = get_memref_type(loc(), C_);
 
     if (a->dim() != 2 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(), "gemv only supports matrix-vector products");
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "gemv only supports matrix-vector products");
     }
 
     auto ak = tA_ == transpose::T ? 0 : 1;
@@ -175,11 +178,11 @@ gemv_inst::gemv_inst(transpose tA, value alpha, value A, value B, value beta, va
     auto K = a->shape(ak);
     if (a->shape(1 - ak) != M || b->shape(0) != K) {
         std::ostringstream oss;
-        oss << "gemv: Incompatible sizes. Got ";
+        oss << "Got ";
         oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), oss.str());
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
     }
 }
 
@@ -192,7 +195,7 @@ ger_inst::ger_inst(value alpha, value A, value B, value beta, value C, bool atom
     auto c = get_memref_type(loc(), C_);
 
     if (a->dim() != 1 || b->dim() != 1 || c->dim() != 2) {
-        throw compilation_error(loc(),
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
                                 "ger requires two vectors as input and one matrix as output");
     }
 
@@ -200,11 +203,11 @@ ger_inst::ger_inst(value alpha, value A, value B, value beta, value C, bool atom
     auto N = c->shape(1);
     if (a->shape(0) != M || b->shape(0) != N) {
         std::ostringstream oss;
-        oss << "ger: Incompatible sizes. Got ";
+        oss << "Got ";
         oss << "a=" << a->shape(0) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), oss.str());
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
     }
 }
 
@@ -217,18 +220,18 @@ hadamard_inst::hadamard_inst(value alpha, value A, value B, value beta, value C,
     auto c = get_memref_type(loc(), C_);
 
     if (a->dim() != 1 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(),
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
                                 "hadamard requires two vectors as input and one vector as output");
     }
 
     auto M = c->shape(0);
     if (a->shape(0) != M || b->shape(0) != M) {
         std::ostringstream oss;
-        oss << "hadamard: Incompatible sizes. Got ";
+        oss << "Got ";
         oss << "a=" << a->shape(0) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), oss.str());
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
     }
 }
 
@@ -240,11 +243,11 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
     auto m = get_memref_type(loc(), op_);
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
-        throw compilation_error(loc(), "Expand: mode out of bounds");
+        throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
     if (expand_shape_.size() < 2) {
-        throw compilation_error(loc(), "Expand shape must have at least 2 entries");
+        throw compilation_error(loc(), status::ir_expand_shape_order_too_small);
     }
 
     auto known_expand_shape = std::vector<std::int64_t>();
@@ -258,7 +261,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
                                  return;
                              }
                              if (i.value() < 0) {
-                                 throw compilation_error(loc(), "Mode size must be non-negative");
+                                 throw compilation_error(loc(), status::ir_invalid_shape);
                              }
                              known_expand_shape.push_back(i.value());
                          },
@@ -270,7 +273,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
     }
 
     if (dyn_count > 1) {
-        throw compilation_error(loc(), "Expand: at most one mode must be dynamic ('?')");
+        throw compilation_error(loc(), status::ir_multiple_dynamic_modes);
     }
 
     auto size = m->shape(mode_);
@@ -292,7 +295,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
             prod *= s;
         }
         if (prod != size) {
-            throw compilation_error(loc(), "Expand: Product of expand shape must equal mode size");
+            throw compilation_error(loc(), status::ir_expand_shape_mismatch);
         }
     }
 
@@ -317,10 +320,10 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
-    auto r = std::make_shared<memref_data_type>(m->element_ty(), shape, stride);
+    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(std::move(r)));
+    result_->ty(data_type(r.release()));
 }
 
 fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc)
@@ -329,7 +332,7 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
     auto m = get_memref_type(loc(), op_);
     bool const range_ok = 0 <= from_ && from_ < to_ && to_ < m->dim();
     if (!range_ok) {
-        throw compilation_error(loc(), "Fuse: mode range out of bounds");
+        throw compilation_error(loc(), status::ir_out_of_bounds);
     }
     auto shape = std::vector<std::int64_t>{};
     auto stride = std::vector<std::int64_t>{};
@@ -354,10 +357,10 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
-    auto r = std::make_shared<memref_data_type>(m->element_ty(), shape, stride);
+    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(std::move(r)));
+    result_->ty(data_type(r.release()));
 }
 
 if_inst::if_inst(value condition, region then, region otherwise,
@@ -374,18 +377,17 @@ load_inst::load_inst(value op, std::vector<value> index_list, location const &lc
     visit(overloaded{
               [&](group_data_type &g) {
                   if (static_cast<std::int64_t>(index_list_.size()) != 1) {
-                      throw compilation_error(loc(), "Length of index list must be 1");
+                      throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
                   result_->ty(g.ty());
               },
               [&](memref_data_type &m) {
                   if (m.dim() != static_cast<std::int64_t>(index_list_.size())) {
-                      throw compilation_error(loc(),
-                                              "Length of index list must match memref order");
+                      throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
                   result_->ty(m.element_ty());
               },
-              [&](auto &) { throw compilation_error(loc(), "Expected memref or group argument"); }},
+              [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *op_->ty());
 }
 
@@ -402,7 +404,7 @@ size_inst::size_inst(value op, std::int64_t mode, location const &lc)
     auto m = get_memref_type(loc(), op_);
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
-        throw compilation_error(loc(), "Size: mode out of bounds");
+        throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
     result_->ty(scalar_type::index);
@@ -413,7 +415,7 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
     loc(lc);
     auto m = get_memref_type(loc(), op_);
     if (m->dim() != static_cast<std::int64_t>(slices_.size())) {
-        throw compilation_error(loc(), "Number of indices must match memref order");
+        throw compilation_error(loc(), status::ir_invalid_number_of_indices);
     }
 
     auto shape = std::vector<std::int64_t>{};
@@ -424,8 +426,7 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
         auto &slice = slices_[i];
         visit(overloaded{[&](int_imm &i) {
                              if (i.value() < 0) {
-                                 throw compilation_error(
-                                     loc(), "Offset must be non-negative and must not be '?'");
+                                 throw compilation_error(loc(), status::ir_invalid_slice);
                              }
                          },
                          [](auto &) {}},
@@ -433,7 +434,7 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
         if (slice.second) { // if size is given
             visit(overloaded{[&](int_imm &i) {
                                  if (i.value() < 1 && !is_dynamic_value(i.value())) {
-                                     throw compilation_error(loc(), "Size must be positive");
+                                     throw compilation_error(loc(), status::ir_invalid_slice);
                                  }
                              },
                              [](auto &) {}},
@@ -458,10 +459,10 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
             stride.push_back(m->stride(i));
         }
     }
-    auto r = std::make_shared<memref_data_type>(m->element_ty(), shape, stride);
+    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(std::move(r)));
+    result_->ty(data_type(r.release()));
 }
 
 store_inst::store_inst(value val, value op, std::vector<value> index_list, location const &lc)
@@ -471,11 +472,11 @@ store_inst::store_inst(value val, value op, std::vector<value> index_list, locat
     auto o = get_memref_type(loc(), op_);
 
     if (v->ty() != o->element_ty()) {
-        throw compilation_error(loc(), "Scalar type mismatch");
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 
     if (o->dim() != static_cast<std::int64_t>(index_list_.size())) {
-        throw compilation_error(loc(), "Length of index list must match memref order");
+        throw compilation_error(loc(), status::ir_invalid_number_of_indices);
     }
 }
 
@@ -488,14 +489,14 @@ sum_inst::sum_inst(transpose tA, value alpha, value A, value beta, value B, bool
 
     bool const size_ok = (a->dim() == 2 && b->dim() == 1) || (a->dim() == 1 && b->dim() == 0);
     if (!size_ok) {
-        throw compilation_error(loc(), "Sum takes a matrix/vector or vector/scalar pair as input");
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix);
     }
 
     if (a->dim() == 2) {
         if (a->shape(tA_ == transpose::T ? 1 : 0) != b->shape(0)) {
-            throw compilation_error(loc(), "Sum: mode size mismatch");
+            throw compilation_error(loc(), status::ir_incompatible_shapes);
         }
     }
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

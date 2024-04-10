@@ -5,7 +5,7 @@
 #define SYCL_DEVICE_INFO_20240305_HPP
 
 #include "tinytc/device_info.hpp"
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <cstdint>
 #include <memory>

@@ -21,7 +21,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 /* Data type nodes */
 bool insert_barrier::operator()(void_data_type &) { return false; }
@@ -157,4 +157,4 @@ void insert_barrier::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

@@ -5,7 +5,7 @@
 #define CL_KERNEL_20240307_HPP
 
 #include "tinytc/bundle_format.hpp"
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <CL/cl.h>
 #include <array>

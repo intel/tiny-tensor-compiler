@@ -4,7 +4,7 @@
 #ifndef BINARY_20240308_HPP
 #define BINARY_20240308_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/prog.hpp"
 
@@ -83,9 +83,9 @@ class TINYTC_EXPORT binary {
  *
  * @return binary
  */
-TINYTC_EXPORT auto
-optimize_and_make_binary(ir::prog prog, bundle_format format, std::shared_ptr<core_info> info,
-                         ir::error_reporter_function err = ir::null_error_reporter())
+TINYTC_EXPORT auto optimize_and_make_binary(prog prog, bundle_format format,
+                                            std::shared_ptr<core_info> info,
+                                            error_reporter_function err = null_error_reporter())
     -> std::shared_ptr<binary>;
 
 } // namespace tinytc

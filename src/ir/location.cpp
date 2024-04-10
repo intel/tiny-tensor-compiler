@@ -7,11 +7,11 @@
 
 namespace std {
 
-ostream &operator<<(ostream &os, ::tinytc::ir::position const &p) {
+ostream &operator<<(ostream &os, ::tinytc::position const &p) {
     return os << p.line << '.' << p.column;
 }
 
-ostream &operator<<(ostream &os, ::tinytc::ir::location const &loc) {
+ostream &operator<<(ostream &os, ::tinytc::location const &loc) {
     auto end = std::max(0, loc.end.column - 1);
     os << loc.begin.filename << ':' << loc.begin;
     if (loc.begin.line < loc.end.line) {

@@ -7,7 +7,7 @@
 #include "tinytc/cl/kernel.hpp"
 #include "tinytc/cl/object_wrapper.hpp"
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/tensor_kernel.hpp"
 
 #include <CL/cl.h>
