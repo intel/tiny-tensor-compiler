@@ -1,14 +1,14 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-// Code COPIED from Double-Batched FFT Library 
+// Code COPIED from Double-Batched FFT Library
 // Copyright (C) 2022 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 #ifndef CL_ERROR_20240305_HPP
 #define CL_ERROR_20240305_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <CL/cl.h>
 

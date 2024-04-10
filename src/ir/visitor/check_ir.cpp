@@ -15,7 +15,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 ir_checker::ir_checker(error_reporter_function reporter) : reporter_(std::move(reporter)) {}
 
@@ -70,4 +70,4 @@ bool ir_checker::operator()(program &p) {
     return ok;
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

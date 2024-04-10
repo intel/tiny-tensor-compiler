@@ -6,7 +6,7 @@
 
 #include "tinytc/bundle_format.hpp"
 #include "tinytc/cl/kernel.hpp"
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ze/kernel.hpp"
 
 #include <array>

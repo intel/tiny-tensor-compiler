@@ -17,7 +17,7 @@ namespace tinytc {
 class core_info;
 }
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class work_group_size {
   public:
@@ -45,6 +45,6 @@ class work_group_size {
     std::unordered_set<blas_shape> shapes_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // WORK_GROUP_SIZE_20240311_HPP

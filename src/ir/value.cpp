@@ -8,7 +8,7 @@
 #include <memory>
 #include <utility>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 value::value(data_type ty, std::string prefix)
     : value(std::make_shared<val>(std::move(ty), std::move(prefix))) {}
@@ -23,4 +23,4 @@ value::value(std::int32_t imm, scalar_type ty) : value(std::make_shared<int_imm>
 value::value(std::int64_t imm, scalar_type ty) : value(std::make_shared<int_imm>(imm, ty)) {}
 value::value(std::uint32_t imm, scalar_type ty) : value(std::make_shared<int_imm>(imm, ty)) {}
 
-} // namespace tinytc::ir
+} // namespace tinytc

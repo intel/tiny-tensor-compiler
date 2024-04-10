@@ -4,7 +4,7 @@
 #ifndef TILING_20240306_HPP
 #define TILING_20240306_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <array>
 #include <cstddef>
@@ -17,10 +17,6 @@ namespace tinytc {
 
 class core_config;
 class core_info;
-
-} // namespace tinytc
-
-namespace tinytc::ir {
 enum class scalar_type;
 
 //! Size of 2D subgroup grid
@@ -51,7 +47,7 @@ class TINYTC_EXPORT local_tiling : public std::array<std::uint32_t, 2> {
  * Matrix shape and element type
  */
 struct TINYTC_EXPORT blas_shape {
-    ir::scalar_type ty;                                     ///< Element type
+    scalar_type ty;                                         ///< Element type
     std::array<std::int64_t, 2u> shape;                     ///< Matrix shape
     auto operator==(blas_shape const &other) const -> bool; ///< equal
     auto operator!=(blas_shape const &other) const -> bool; ///< not equal
@@ -100,11 +96,11 @@ TINYTC_EXPORT auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> cons
                                                     core_info const &dev_info)
     -> std::tuple<std::uint32_t, local_tiling>;
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 //! Hash function for blas_shape
-template <> struct TINYTC_EXPORT std::hash<tinytc::ir::blas_shape> {
-    std::size_t operator()(tinytc::ir::blas_shape const &x) const; ///< Compute hash
+template <> struct TINYTC_EXPORT std::hash<tinytc::blas_shape> {
+    std::size_t operator()(tinytc::blas_shape const &x) const; ///< Compute hash
 };
 
 #endif // TILING_20240306_HPP

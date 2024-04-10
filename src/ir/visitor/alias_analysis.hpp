@@ -12,7 +12,7 @@
 
 #include <unordered_map>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class alias_analyser {
   public:
@@ -37,6 +37,6 @@ class alias_analyser {
     std::unordered_map<value_node *, value_node *> alias_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // ALIAS_ANALYSIS_20230330_HPP

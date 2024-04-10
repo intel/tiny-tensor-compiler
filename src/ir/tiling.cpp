@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <limits>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 auto blas_shape::operator==(blas_shape const &other) const -> bool {
     return ty == other.ty && shape == other.shape;
@@ -35,8 +35,8 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
 
     auto max_shape0 = std::max_element(
         shapes.begin(), shapes.end(), [](blas_shape const &a, blas_shape const &b) {
-            auto const a0 = ir::is_dynamic_value(a.shape[0]) ? 0 : a.shape[0];
-            auto const b0 = ir::is_dynamic_value(b.shape[0]) ? 0 : b.shape[0];
+            auto const a0 = is_dynamic_value(a.shape[0]) ? 0 : a.shape[0];
+            auto const b0 = is_dynamic_value(b.shape[0]) ? 0 : b.shape[0];
             return a0 < b0;
         });
     if (max_shape0 != shapes.end()) {
@@ -66,8 +66,8 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
     auto const max_shapei = [](std::vector<blas_shape> const &shapes, std::size_t idx) {
         auto max_it = std::max_element(
             shapes.begin(), shapes.end(), [&idx](blas_shape const &a, blas_shape const &b) {
-                auto const a0 = ir::is_dynamic_value(a.shape[idx]) ? 0 : a.shape[idx];
-                auto const b0 = ir::is_dynamic_value(b.shape[idx]) ? 0 : b.shape[idx];
+                auto const a0 = is_dynamic_value(a.shape[idx]) ? 0 : a.shape[idx];
+                auto const b0 = is_dynamic_value(b.shape[idx]) ? 0 : b.shape[idx];
                 return a0 < b0;
             });
         return max_it->shape[idx];
@@ -80,11 +80,11 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
 }
 
 auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg) -> local_tiling {
-    auto [row_blocks, cols] = ir::max_register_block_gemm(size(bshape.ty), core_cfg.subgroup_size,
-                                                          core_cfg.register_space);
+    auto [row_blocks, cols] =
+        max_register_block_gemm(size(bshape.ty), core_cfg.subgroup_size, core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::uint32_t block_size) {
         auto limit = std::numeric_limits<std::uint32_t>::max();
-        if (!ir::is_dynamic_value(mode)) {
+        if (!is_dynamic_value(mode)) {
             limit = 1 + (mode - 1) / block_size;
         }
         return limit;
@@ -126,9 +126,9 @@ auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
     return std::make_tuple(sgs, tiling);
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
-std::size_t std::hash<tinytc::ir::blas_shape>::operator()(tinytc::ir::blas_shape const &x) const {
+std::size_t std::hash<tinytc::blas_shape>::operator()(tinytc::blas_shape const &x) const {
     constexpr std::int64_t fnv_prime = 0x100000001B3;
     constexpr std::int64_t fnv_offset = 0xCBF29CE484222325;
     auto hash = (fnv_offset ^ static_cast<std::int64_t>(x.ty)) * fnv_prime;

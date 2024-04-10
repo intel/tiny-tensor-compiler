@@ -4,7 +4,8 @@
 #ifndef SCALAR_TYPE_20230330_HPP
 #define SCALAR_TYPE_20230330_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/types.h"
+#include "tinytc/export.h"
 
 #include "clir/builtin_type.hpp"
 #include "clir/data_type.hpp"
@@ -12,22 +13,22 @@
 #include <cstddef>
 #include <cstdint>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 //! Scalar types
 enum class scalar_type {
-    bool_, ///< boolean
-    index, ///< Unsigned integer type for indices
-    i8,    ///< Signed 8 bit integer
-    i16,   ///< Signed 16 bit integer
-    i32,   ///< Signed 32 bit integer
-    i64,   ///< Signed 64 bit integer
-    u8,    ///< Unsigned 8 bit integer
-    u16,   ///< Unsigned 16 bit integer
-    u32,   ///< Unsigned 32 bit integer
-    u64,   ///< Unsigned 64 bit integer
-    f32,   ///< Single precision floating point (32 bit)
-    f64    ///< Double precision floating point (64 bit)
+    bool_ = tinytc_bool,  ///< boolean
+    index = tinytc_index, ///< Unsigned integer type for indices
+    i8 = tinytc_i8,       ///< Signed 8 bit integer
+    i16 = tinytc_i16,     ///< Signed 16 bit integer
+    i32 = tinytc_i32,     ///< Signed 32 bit integer
+    i64 = tinytc_i64,     ///< Signed 64 bit integer
+    u8 = tinytc_u8,       ///< Unsigned 8 bit integer
+    u16 = tinytc_u16,     ///< Unsigned 16 bit integer
+    u32 = tinytc_u32,     ///< Unsigned 32 bit integer
+    u64 = tinytc_u64,     ///< Unsigned 64 bit integer
+    f32 = tinytc_f32,     ///< Single precision floating point (32 bit)
+    f64 = tinytc_f64      ///< Double precision floating point (64 bit)
 };
 
 //! Convert scalar type to string
@@ -106,6 +107,6 @@ to_clir_atomic_ty(scalar_type ty, clir::address_space as = clir::address_space::
                   clir::type_qualifier q = clir::type_qualifier::none);
 } // namespace internal
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // SCALAR_TYPE_20230330_HPP

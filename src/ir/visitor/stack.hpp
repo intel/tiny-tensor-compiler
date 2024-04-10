@@ -13,7 +13,7 @@
 #include <cstddef>
 #include <list>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class stack_ptr {
   public:
@@ -41,6 +41,6 @@ class stack_ptr {
     std::list<allocation> allocs_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // STACK_20230413_HPP

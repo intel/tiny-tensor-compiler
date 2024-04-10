@@ -11,7 +11,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class program_node : public clir::virtual_type_list<class program> {};
 
@@ -24,6 +24,6 @@ class program : public clir::visitable<program, program_node> {
     std::vector<func> decls_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // PROGRAM_NODE_20240208_HPP

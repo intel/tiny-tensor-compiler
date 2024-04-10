@@ -4,7 +4,7 @@
 #ifndef SMALL_GEMM_BATCHED_20240307_HPP
 #define SMALL_GEMM_BATCHED_20240307_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/ir/location.hpp"
@@ -68,10 +68,10 @@ namespace tinytc::recipe {
  * @return Shared pointer to binary; nullptr in case of error
  */
 TINYTC_EXPORT auto generate_small_gemm_batched_binary(
-    ir::gemm_scalar_type ty, ir::transpose tA, ir::transpose tB, std::uint32_t M, std::uint32_t N,
+    gemm_scalar_type ty, transpose tA, transpose tB, std::uint32_t M, std::uint32_t N,
     std::uint32_t K, std::uint32_t ldA, std::uint32_t strideA, std::uint32_t ldB,
     std::uint32_t strideB, std::uint32_t ldC, std::uint32_t strideC,
-    std::shared_ptr<core_info> info, ir::error_reporter_function err = ir::null_error_reporter())
+    std::shared_ptr<core_info> info, error_reporter_function err = null_error_reporter())
     -> std::shared_ptr<binary>;
 
 /**
@@ -108,7 +108,7 @@ template <typename T, runtime R> class TINYTC_EXPORT small_gemm_batched {
      * @param ctx Context
      * @param dev Device
      */
-    small_gemm_batched(ir::transpose tA, ir::transpose tB, std::uint32_t M, std::uint32_t N,
+    small_gemm_batched(transpose tA, transpose tB, std::uint32_t M, std::uint32_t N,
                        std::uint32_t K, std::uint32_t ldA, std::uint32_t strideA, std::uint32_t ldB,
                        std::uint32_t strideB, std::uint32_t ldC, std::uint32_t strideC,
                        std::shared_ptr<core_info> info, context_t ctx, device_t dev)
@@ -169,20 +169,20 @@ template <typename T, runtime R> class TINYTC_EXPORT small_gemm_batched {
     }
 
   private:
-    auto make_binary(ir::transpose tA, ir::transpose tB, std::uint32_t M, std::uint32_t N,
-                     std::uint32_t K, std::uint32_t ldA, std::uint32_t strideA, std::uint32_t ldB,
+    auto make_binary(transpose tA, transpose tB, std::uint32_t M, std::uint32_t N, std::uint32_t K,
+                     std::uint32_t ldA, std::uint32_t strideA, std::uint32_t ldB,
                      std::uint32_t strideB, std::uint32_t ldC, std::uint32_t strideC,
                      std::shared_ptr<core_info> info) -> std::shared_ptr<binary> {
-        auto last_loc = ir::location{};
+        auto last_loc = location{};
         auto last_what = std::string{};
         auto bin = generate_small_gemm_batched_binary(
-            ir::to_scalar_type_v<T>, tA, tB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
-            std::move(info), [&](ir::location const &loc, std::string const &what) {
+            to_scalar_type_v<T>, tA, tB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
+            std::move(info), [&](location const &loc, std::string const &what) {
                 last_loc = loc;
                 last_what = what;
             });
         if (!bin) {
-            throw ir::compilation_error(std::move(last_loc), std::move(last_what));
+            throw compilation_error(std::move(last_loc), std::move(last_what));
         }
         return bin;
     }

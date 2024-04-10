@@ -16,7 +16,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 find_alloca::find_alloca(bool recursive) : recursive_(recursive) {}
 
@@ -153,4 +153,4 @@ void lifetime_inserter::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

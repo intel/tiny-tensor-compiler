@@ -10,13 +10,11 @@
 
 namespace tinytc {
 
-namespace ir {
 enum class scalar_type;
-}
 
 class precision_helper {
   public:
-    precision_helper(ir::scalar_type ty);
+    precision_helper(scalar_type ty);
     clir::builtin_type base_type() const;
     clir::builtin_type block_rw_base_type() const;
     clir::expr as_type(clir::builtin_type ty, clir::expr e) const;
@@ -31,7 +29,7 @@ class precision_helper {
                                      clir::address_space as = clir::address_space::generic_t) const;
 
   private:
-    ir::scalar_type ty_;
+    scalar_type ty_;
 };
 
 } // namespace tinytc

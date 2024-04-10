@@ -14,7 +14,7 @@
 #include <ostream>
 #include <string>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class ir_dumper {
   public:
@@ -86,6 +86,6 @@ class ir_dumper {
     int lvl_ = 0;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // DUMP_IR_20230330_HPP

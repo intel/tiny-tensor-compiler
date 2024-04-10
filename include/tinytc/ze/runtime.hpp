@@ -6,7 +6,7 @@
 
 #include "tinytc/ze/kernel.hpp"
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/tensor_kernel.hpp"
 #include "tinytc/ze/shared_handle.hpp"
 

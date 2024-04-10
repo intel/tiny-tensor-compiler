@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/node/data_type_node.hpp"
-#include "tinytc/ir/error.hpp"
+#include "error.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <utility>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 memref_data_type::memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, location const &lc)
@@ -17,7 +18,7 @@ memref_data_type::memref_data_type(scalar_type type, std::vector<std::int64_t> s
         stride_ = canonical_stride();
     }
     if (stride_.size() != shape_.size()) {
-        throw compilation_error(loc(), "dimension of shape and stride must match");
+        throw compilation_error(loc(), status::ir_shape_stride_mismatch);
     }
 }
 
@@ -33,4 +34,4 @@ auto memref_data_type::canonical_stride() const -> std::vector<std::int64_t> {
     return stride;
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

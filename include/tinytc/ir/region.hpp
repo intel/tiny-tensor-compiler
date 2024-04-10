@@ -4,11 +4,11 @@
 #ifndef REGION_20230908_HPP
 #define REGION_20230908_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include "clir/handle.hpp"
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class region_node;
 
@@ -18,6 +18,6 @@ class TINYTC_EXPORT region : public clir::handle<region_node> {
     using clir::handle<region_node>::handle;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // REGION_20230908_HPP

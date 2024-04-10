@@ -20,7 +20,7 @@
 
 using namespace clir;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 expr vload_helper(short vec_size, expr offset, expr ptr) {
     switch (vec_size) {
@@ -229,4 +229,4 @@ void tile_loop_uniformly_dynamic(block_builder &bb, expr loop_trip_count, unsign
                .get_product());
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

@@ -18,7 +18,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class function_node : public clir::virtual_type_list<class prototype, class function> {
   public:
@@ -67,6 +67,6 @@ class function : public clir::visitable<function, function_node> {
     std::uint32_t subgroup_size_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // FUNCTION_NODE_20230310_HPP

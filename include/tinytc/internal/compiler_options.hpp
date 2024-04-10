@@ -4,7 +4,7 @@
 #ifndef COMPILER_OPTIONS_20230621_HPP
 #define COMPILER_OPTIONS_20230621_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <string>
 #include <vector>

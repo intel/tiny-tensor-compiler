@@ -4,7 +4,7 @@
 #ifndef DEVICE_INFO_20240304_HPP
 #define DEVICE_INFO_20240304_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <cstdint>
 #include <memory>
@@ -81,7 +81,8 @@ class TINYTC_EXPORT core_info_intel : public core_info {
      * @brief ctor
      *
      * @param ip_version IP version of architecture
-     * @param num_eus_per_subslice Number of Execution Units (Xe Vector Engines) per subslice (Xe Core)
+     * @param num_eus_per_subslice Number of Execution Units (Xe Vector Engines) per subslice (Xe
+     * Core)
      * @param num_threads_per_eu Number of threads per Execution Unit (Xe Vector Engine)
      * @param local_memory_size Size of shared local memory
      * @param subgroup_sizes Allowed subgroup sizes

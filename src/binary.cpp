@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tinytc/binary.hpp"
+#include "error.hpp"
 #include "ir/node/function_node.hpp"
 #include "ir/node/program_node.hpp"
 #include "ir/visitor/util.hpp"
@@ -34,48 +35,49 @@ binary::binary(std::vector<std::uint8_t> data, bundle_format format,
     : data_(std::move(data)), format_(format), metadata_(std::move(metadata_map)),
       core_features_(core_features) {}
 
-auto optimize_and_make_binary(ir::prog prog, bundle_format format, std::shared_ptr<core_info> info,
-                              ir::error_reporter_function err) -> std::shared_ptr<binary> {
+auto optimize_and_make_binary(prog prog, bundle_format format, std::shared_ptr<core_info> info,
+                              error_reporter_function err) -> std::shared_ptr<binary> {
     auto result = std::shared_ptr<binary>{nullptr};
 
     // passes
-    if (!ir::check_ir(prog, err)) {
+    if (!check_ir(prog, err)) {
         return nullptr;
     }
     try {
-        ir::insert_barriers(prog);
-        ir::insert_lifetime_stop_inst(prog);
-        ir::set_stack_ptrs(prog);
-        ir::set_work_group_size(prog, info);
+        insert_barriers(prog);
+        insert_lifetime_stop_inst(prog);
+        set_stack_ptrs(prog);
+        set_work_group_size(prog, info);
 
         // Get work group sizes
         auto metadata = std::unordered_map<std::string, kernel_metadata>{};
-        auto *prog_node = dynamic_cast<ir::program *>(prog.get());
+        auto *prog_node = dynamic_cast<program *>(prog.get());
         if (prog_node == nullptr) {
-            throw ir::compilation_error(ir::location{}, "Expected program node");
+            throw compilation_error(location{}, status::internal_compiler_error,
+                                    "Expected program node");
         }
         for (auto &decl : prog_node->declarations()) {
-            visit(ir::overloaded{[&metadata](ir::function &f) {
-                                     auto const name = visit(
-                                         ir::overloaded{[](ir::prototype &p) -> std::string_view {
-                                                            return p.name();
-                                                        },
-                                                        [](auto &f) -> std::string {
-                                                            throw ir::compilation_error(
-                                                                f.loc(), "Expected prototype");
-                                                        }},
-                                         *f.prototype());
-                                     auto m = kernel_metadata{};
-                                     m.subgroup_size = f.subgroup_size();
-                                     m.work_group_size = f.work_group_size();
-                                     metadata[std::string(name)] = m;
-                                 },
-                                 [](auto &) {}},
+            visit(overloaded{[&metadata](function &f) {
+                                 auto const name = visit(
+                                     overloaded{
+                                         [](prototype &p) -> std::string_view { return p.name(); },
+                                         [](auto &f) -> std::string {
+                                             throw compilation_error(
+                                                 f.loc(), status::internal_compiler_error,
+                                                 "Expected prototype");
+                                         }},
+                                     *f.prototype());
+                                 auto m = kernel_metadata{};
+                                 m.subgroup_size = f.subgroup_size();
+                                 m.work_group_size = f.work_group_size();
+                                 metadata[std::string(name)] = m;
+                             },
+                             [](auto &) {}},
                   *decl);
         }
 
         // opencl
-        auto ast = ir::generate_opencl_ast(std::move(prog), info);
+        auto ast = generate_opencl_ast(std::move(prog), info);
         clir::make_names_unique(ast);
         auto oss = std::ostringstream{};
         clir::generate_opencl(oss, ast);
@@ -91,7 +93,7 @@ auto optimize_and_make_binary(ir::prog prog, bundle_format format, std::shared_p
         auto bin = compile_opencl_c(oss.str(), format, info->ip_version(), compiler_options, ext);
         result =
             std::make_shared<binary>(std::move(bin), format, std::move(metadata), core_features);
-    } catch (ir::compilation_error const &e) {
+    } catch (compilation_error const &e) {
         err(e.loc(), e.what());
     }
     return result;

@@ -6,7 +6,7 @@
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 char const *to_string(scalar_type ty) {
     switch (ty) {
@@ -135,4 +135,4 @@ clir::data_type internal::to_clir_atomic_ty(scalar_type ty, clir::address_space 
     return clir::data_type(to_clir_atomic_builtin_ty(ty), as, q);
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

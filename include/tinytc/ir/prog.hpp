@@ -4,14 +4,14 @@
 #ifndef PROG_20240208_HPP
 #define PROG_20240208_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <clir/handle.hpp>
 
 #include <memory>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class func;
 class program_node;
@@ -27,6 +27,6 @@ class TINYTC_EXPORT prog : public clir::handle<program_node> {
     prog(std::vector<func> funs);
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // PROG_20240208_HPP

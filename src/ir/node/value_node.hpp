@@ -15,7 +15,7 @@
 #include <string_view>
 #include <utility>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 class value_node : public clir::virtual_type_list<class float_imm, class int_imm, class val> {
   public:
@@ -78,6 +78,6 @@ class val : public clir::visitable<val, value_node> {
     std::string name_;
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // VALUE_NODE_20230309_HPP

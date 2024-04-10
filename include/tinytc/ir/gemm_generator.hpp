@@ -4,7 +4,7 @@
 #ifndef GEMM_GENERATOR_20240314_HPP
 #define GEMM_GENERATOR_20240314_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <clir/builtin_type.hpp>
 #include <clir/func.hpp>
@@ -17,12 +17,9 @@
 #include <utility>
 
 namespace tinytc {
+
 class core_config;
 class local_tiling;
-} // namespace tinytc
-
-namespace tinytc::ir {
-
 enum class scalar_type;
 enum class transpose;
 
@@ -119,6 +116,6 @@ max_register_block_gemm(std::uint32_t C_scalar_type_size_in_bytes, std::uint32_t
                         std::pair<std::uint32_t, std::uint32_t> max_fill_fraction = {1, 2})
     -> std::pair<std::uint32_t, std::uint32_t>;
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // GEMM_GENERATOR_20240314_HPP

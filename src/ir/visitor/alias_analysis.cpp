@@ -14,7 +14,7 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 /* Stmt nodes */
 void alias_analyser::operator()(inst_node &) {}
@@ -66,4 +66,4 @@ void alias_analyser::operator()(function &fn) {
 
 aa_results alias_analyser::get_result() const { return aa_results(alias_); }
 
-} // namespace tinytc::ir
+} // namespace tinytc

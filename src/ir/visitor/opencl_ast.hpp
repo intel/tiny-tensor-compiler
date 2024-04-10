@@ -33,7 +33,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 enum class scalar_type;
 
@@ -128,6 +128,6 @@ class opencl_ast {
     core_config core_cfg_ = {};
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // OPENCL_AST_20230309_HPP

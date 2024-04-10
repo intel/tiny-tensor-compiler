@@ -4,12 +4,12 @@
 #ifndef SLICE_20230327_HPP
 #define SLICE_20230327_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/value.hpp"
 
 #include <utility>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 //! Slice storing offset:size
 class TINYTC_EXPORT slice : public std::pair<value, value> {
@@ -21,6 +21,6 @@ class TINYTC_EXPORT slice : public std::pair<value, value> {
         : std::pair<value, value>{std::move(first), std::move(second)} {}
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // SLICE_20230327_HPP

@@ -4,13 +4,13 @@
 #ifndef LOCATION_20240209_HPP
 #define LOCATION_20240209_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <algorithm>
 #include <iosfwd>
 #include <string>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 //! Position in code string
 class TINYTC_EXPORT position {
@@ -66,14 +66,14 @@ class TINYTC_EXPORT location {
     inline void lines(int count = 1) { end.lines(count); }
 };
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 namespace std {
 
 //! Write position to ostream
-TINYTC_EXPORT ostream &operator<<(ostream &os, ::tinytc::ir::position const &p);
+TINYTC_EXPORT ostream &operator<<(ostream &os, ::tinytc::position const &p);
 //! Write location to ostream
-TINYTC_EXPORT ostream &operator<<(ostream &os, ::tinytc::ir::location const &loc);
+TINYTC_EXPORT ostream &operator<<(ostream &os, ::tinytc::location const &loc);
 
 } // namespace std
 

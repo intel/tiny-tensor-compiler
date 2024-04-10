@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/visitor/stack.hpp"
+#include "error.hpp"
 #include "ir/node/data_type_node.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/error.hpp"
@@ -9,6 +10,7 @@
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>
@@ -17,14 +19,14 @@
 
 using clir::visit;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 /* Inst nodes */
 void stack_ptr::operator()(inst_node &) {}
 void stack_ptr::operator()(alloca_inst &a) {
     auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
     if (t == nullptr) {
-        throw compilation_error(a.loc(), "Expected memref type");
+        throw compilation_error(a.loc(), status::ir_expected_memref);
     }
     auto size = t->size_in_bytes();
     std::size_t stack_ptr = 0;
@@ -50,7 +52,7 @@ void stack_ptr::operator()(lifetime_stop_inst &s) {
         }
     }
     if (num != 1) {
-        throw compilation_error(s.loc(),
+        throw compilation_error(s.loc(), status::internal_compiler_error,
                                 "Incorrect lifetime_stop: value not found in list of allocations");
     }
 }
@@ -78,4 +80,4 @@ void stack_ptr::operator()(program &p) {
     }
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

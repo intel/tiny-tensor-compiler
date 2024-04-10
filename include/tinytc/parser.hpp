@@ -4,7 +4,7 @@
 #ifndef PARSER_20230614_HPP
 #define PARSER_20230614_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/prog.hpp"
 
@@ -12,11 +12,9 @@
 #include <string>
 #include <unordered_map>
 
-namespace tinytc::ir {
-class location;
-}
-
 namespace tinytc {
+
+class location;
 
 /**
  * @brief Source manager
@@ -35,17 +33,17 @@ class TINYTC_EXPORT source_manager {
     source_manager(std::ostream *oerr = nullptr);
 
     //! Create abstract syntax tree from file
-    auto parse_file(std::string const &filename) -> ir::prog;
+    auto parse_file(std::string const &filename) -> prog;
     //! Create abstract syntax tree from stdin
-    auto parse_stdin() -> ir::prog;
+    auto parse_stdin() -> prog;
     //! Create abstract syntax tree from string
-    auto parse_string(std::string input) -> ir::prog;
+    auto parse_string(std::string input) -> prog;
 
     //! Report error with code context
-    void report_error(ir::location const &l, std::string const &what);
+    void report_error(location const &l, std::string const &what);
 
     //! Get error reporter
-    auto error_reporter() -> ir::error_reporter_function;
+    auto error_reporter() -> error_reporter_function;
 
   private:
     std::ostream *oerr_;
@@ -63,7 +61,7 @@ class TINYTC_EXPORT source_manager {
  * @return Abstract syntax tree on success; nullptr on error
  */
 TINYTC_EXPORT auto parse(std::string const &input, std::ostream *oerr = nullptr,
-                         std::string const &filename = "<memory>") -> ir::prog;
+                         std::string const &filename = "<memory>") -> prog;
 
 } // namespace tinytc
 

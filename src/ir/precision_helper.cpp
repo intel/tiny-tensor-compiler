@@ -15,8 +15,8 @@ using namespace clir;
 
 namespace tinytc {
 
-precision_helper::precision_helper(ir::scalar_type ty) : ty_(ty) {}
-builtin_type precision_helper::base_type() const { return ir::internal::to_clir_builtin_ty(ty_); }
+precision_helper::precision_helper(scalar_type ty) : ty_(ty) {}
+builtin_type precision_helper::base_type() const { return internal::to_clir_builtin_ty(ty_); }
 builtin_type precision_helper::block_rw_base_type() const {
     auto bt = base_type();
     switch (bt) {
@@ -60,7 +60,7 @@ clir::expr precision_helper::as_type(clir::builtin_type ty, clir::expr e) const 
     }
     return e;
 }
-short precision_helper::bits() const { return ir::size(ty_) * 8; }
+short precision_helper::bits() const { return size(ty_) * 8; }
 data_type precision_helper::type(address_space as) const { return data_type(base_type(), as); }
 data_type precision_helper::type(short size, address_space as) const {
     return data_type(base_type(), size, as);

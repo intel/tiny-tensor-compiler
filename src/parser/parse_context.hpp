@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc::ir {
+namespace tinytc {
 class location;
 }
 
@@ -24,20 +24,20 @@ class parse_context {
   public:
     inline parse_context() { id_map_.push_back({}); }
     inline auto program() { return program_; }
-    inline void program(ir::prog p) { program_ = std::move(p); }
+    inline void program(prog p) { program_ = std::move(p); }
 
     void push_scope();
     void pop_scope();
-    void val(std::string const &id, ir::value val, ir::location const &l);
-    ir::value val(std::string const &id, ir::location const &l);
+    void val(std::string const &id, value val, location const &l);
+    value val(std::string const &id, location const &l);
 
-    void prototype(std::string const &id, ir::func p, ir::location const &l);
-    ir::func prototype(std::string const &id, ir::location const &l);
+    void prototype(std::string const &id, func p, location const &l);
+    func prototype(std::string const &id, location const &l);
 
   private:
-    std::vector<std::unordered_map<std::string, ir::value>> id_map_;
-    std::unordered_map<std::string, ir::func> prototype_map_;
-    ir::prog program_;
+    std::vector<std::unordered_map<std::string, value>> id_map_;
+    std::unordered_map<std::string, func> prototype_map_;
+    prog program_;
 };
 
 } // namespace tinytc::parser

@@ -29,7 +29,7 @@
 
 using namespace clir;
 
-namespace tinytc::ir {
+namespace tinytc {
 
 gemm_scalar_type::gemm_scalar_type(scalar_type ty) : alpha(ty), A(ty), B(ty), beta(ty), C(ty) {}
 gemm_scalar_type::gemm_scalar_type(scalar_type alphaAB, scalar_type betaC)
@@ -487,4 +487,4 @@ func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tilin
     return generator{gemm_cfg, tiling, core_cfg, As, Bs, Cs}.function(name);
 }
 
-} // namespace tinytc::ir
+} // namespace tinytc

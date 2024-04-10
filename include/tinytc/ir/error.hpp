@@ -4,7 +4,7 @@
 #ifndef ERROR_20240221_HPP
 #define ERROR_20240221_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 #include "tinytc/ir/location.hpp"
 
 #include <cstddef>
@@ -13,30 +13,15 @@
 #include <iosfwd>
 #include <string>
 
-namespace tinytc::ir {
+namespace tinytc {
 
 constexpr static int additional_context_lines = 2;
 
 //! Type of error reporting functor required in some functions
-using error_reporter_function = std::function<void(ir::location const &, std::string const &)>;
+using error_reporter_function = std::function<void(location const &, std::string const &)>;
 inline auto null_error_reporter() -> error_reporter_function {
-    return [](ir::location const &, std::string const &) {};
+    return [](location const &, std::string const &) {};
 }
-
-//! Compilation error
-class TINYTC_EXPORT compilation_error : public std::exception {
-  public:
-    //! ctor; taking location and expanatory string
-    compilation_error(location const &loc, std::string const &what);
-    //! Get location
-    inline location loc() const noexcept { return loc_; }
-    //! Get explanatory string
-    inline char const *what() const noexcept override { return what_.c_str(); }
-
-  private:
-    location loc_;
-    std::string what_;
-};
 
 /**
  * @brief Report error and show code context
@@ -48,10 +33,10 @@ class TINYTC_EXPORT compilation_error : public std::exception {
  * @param what Explanatory string
  */
 TINYTC_EXPORT void report_error_with_context(std::ostream *oerr, char const *code,
-                                             std::size_t code_len, ir::location const &l,
+                                             std::size_t code_len, location const &l,
                                              std::string const &what);
 
-} // namespace tinytc::ir
+} // namespace tinytc
 
 #endif // ERROR_20240221_HPP
 

@@ -8,7 +8,7 @@
 #ifndef OPENCL_CC_20240307_HPP
 #define OPENCL_CC_20240307_HPP
 
-#include "tinytc/export.hpp"
+#include "tinytc/export.h"
 
 #include <cstdint>
 #include <string>
