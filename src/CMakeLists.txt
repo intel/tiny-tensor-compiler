@@ -51,10 +51,6 @@ set(SOURCES
     parser.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
-    tinytc.h
-    tinytc.hpp
-    types.h
-    types.hpp
 )
 set(RE2C_SOURCES
     parser/lexer.re
@@ -86,9 +82,12 @@ set(PUBLIC_HEADERS
     recipe/tall_and_skinny.hpp
     runtime.hpp
     tensor_kernel.hpp
+    tinytc.h
     tinytc.hpp
     tinytc-level-zero.hpp
     tinytc-opencl.hpp
+    types.h
+    types.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
