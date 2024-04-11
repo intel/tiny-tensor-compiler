@@ -3,11 +3,16 @@
 
 #include "error.hpp"
 #include "ir/node/data_type_node.hpp"
+#include "location.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
+#include "util.hpp"
 
 #include <memory>
+#include <type_traits>
 #include <utility>
+
+using namespace tinytc;
 
 extern "C" {
 tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_type_t type) {
@@ -15,10 +20,8 @@ tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_
         return tinytc_status_invalid_arguments;
     }
 
-    return tinytc::exception_to_status_code([&] {
-        auto st = tinytc::scalar_type{std::underlying_type_t<tinytc::scalar_type>(type)};
-        *dt = std::make_unique<tinytc::scalar_data_type>(st).release();
-    });
+    return exception_to_status_code(
+        [&] { *dt = std::make_unique<scalar_data_type>(enum_cast<scalar_type>(type)).release(); });
 }
 
 tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
@@ -30,16 +33,15 @@ tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
         return tinytc_status_invalid_arguments;
     }
 
-    return tinytc::exception_to_status_code([&] {
-        auto st = tinytc::scalar_type{std::underlying_type_t<tinytc::scalar_type>(scalar_ty)};
+    return exception_to_status_code([&] {
         auto shape_vec = std::vector<std::int64_t>(shape, shape + shape_size);
         auto stride_vec = std::vector<std::int64_t>();
         if (stride_size > 0) {
             stride_vec.insert(stride_vec.end(), stride, stride + stride_size);
         }
-        constexpr tinytc_location_t null_loc = {};
-        *dt = std::make_unique<tinytc::memref_data_type>(
-                  st, std::move(shape_vec), std::move(stride_vec), loc ? *loc : null_loc)
+        *dt = std::make_unique<memref_data_type>(enum_cast<scalar_type>(scalar_ty),
+                                                 std::move(shape_vec), std::move(stride_vec),
+                                                 get_optional(loc))
                   .release();
     });
 }
@@ -50,10 +52,8 @@ tinytc_status_t TINYTC_EXPORT tinytc_group_type_create(tinytc_data_type_t *dt,
         return tinytc_status_invalid_arguments;
     }
 
-    return tinytc::exception_to_status_code([&] {
-        *dt =
-            std::make_unique<tinytc::group_data_type>(tinytc::data_type(memref_ty, true)).release();
-    });
+    return exception_to_status_code(
+        [&] { *dt = std::make_unique<group_data_type>(data_type(memref_ty, true)).release(); });
 }
 
 tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt) {
@@ -61,7 +61,7 @@ tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt) {
         return tinytc_status_invalid_arguments;
     }
 
-    return tinytc::exception_to_status_code([&] {
+    return exception_to_status_code([&] {
         auto ref_count = dt->dec_ref();
         if (ref_count == 0) {
             delete dt;
@@ -73,6 +73,6 @@ tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt) {
     if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code([&] { dt->inc_ref(); });
+    return exception_to_status_code([&] { dt->inc_ref(); });
 }
 }

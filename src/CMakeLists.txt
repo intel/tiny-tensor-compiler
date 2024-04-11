@@ -22,11 +22,11 @@ set(SOURCES
     data_type.cpp
     device_info.cpp
     error.cpp
+    inst.cpp
     internal/compiler_options.cpp
     #ir/builder.cpp
     ir/codegen_tools.cpp
     ir/gemm_generator.cpp
-    ir/inst.cpp
     ir/node/data_type_node.cpp
     ir/node/inst_node.cpp
     ir/passes.cpp
@@ -66,7 +66,6 @@ set(PUBLIC_HEADERS
     ir/error.hpp
     ir/func.hpp
     ir/gemm_generator.hpp
-    ir/inst.hpp
     ir/passes.hpp
     ir/prog.hpp
     ir/region.hpp

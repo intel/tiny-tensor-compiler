@@ -4,7 +4,7 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
-#include "tinytc/ir/inst.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include "clir/virtual_type_list.hpp"
 

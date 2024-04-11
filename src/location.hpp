@@ -49,6 +49,11 @@ inline void columns(location &l, std::int32_t count = 1) { l.end += count; }
 //! Advance end by count lines
 inline void lines(location &l, std::int32_t count = 1) { lines(l.end, count); }
 
+inline auto get_optional(const tinytc_location_t *loc) -> tinytc_location_t {
+    constexpr tinytc_location_t null_loc = {};
+    return loc ? *loc : null_loc;
+}
+
 } // namespace tinytc
 
 namespace std {

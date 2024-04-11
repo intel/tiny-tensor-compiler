@@ -3,7 +3,6 @@
 
 #include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 
 #include <clir/handle.hpp>

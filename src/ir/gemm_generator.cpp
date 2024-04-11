@@ -6,7 +6,6 @@
 #include "precision_helper.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/tiling.hpp"
 #include "tinytc/tinytc.hpp"
 
