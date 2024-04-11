@@ -12,7 +12,7 @@
 extern "C" {
 tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_type_t type) {
     if (dt == nullptr) {
-        return tinytc_invalid_arguments;
+        return tinytc_status_invalid_arguments;
     }
 
     return tinytc::exception_to_status_code([&] {
@@ -27,7 +27,7 @@ tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
                                                         uint32_t stride_size, const int64_t *stride,
                                                         const tinytc_location_t *loc) {
     if (dt == nullptr) {
-        return tinytc_invalid_arguments;
+        return tinytc_status_invalid_arguments;
     }
 
     return tinytc::exception_to_status_code([&] {
@@ -47,7 +47,7 @@ tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
 tinytc_status_t TINYTC_EXPORT tinytc_group_type_create(tinytc_data_type_t *dt,
                                                        tinytc_data_type_t memref_ty) {
     if (dt == nullptr) {
-        return tinytc_invalid_arguments;
+        return tinytc_status_invalid_arguments;
     }
 
     return tinytc::exception_to_status_code([&] {
@@ -58,7 +58,7 @@ tinytc_status_t TINYTC_EXPORT tinytc_group_type_create(tinytc_data_type_t *dt,
 
 tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt) {
     if (dt == nullptr) {
-        return tinytc_invalid_arguments;
+        return tinytc_status_invalid_arguments;
     }
 
     return tinytc::exception_to_status_code([&] {
@@ -71,7 +71,7 @@ tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt) {
 
 tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt) {
     if (dt == nullptr) {
-        return tinytc_invalid_arguments;
+        return tinytc_status_invalid_arguments;
     }
     return tinytc::exception_to_status_code([&] { dt->inc_ref(); });
 }

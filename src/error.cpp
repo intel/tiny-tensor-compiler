@@ -66,55 +66,55 @@ void report_error_with_context(std::ostream *oerr, char const *code, std::size_t
 
 extern "C" char const *tinytc_error_string(tinytc_status_t status) {
     switch (status) {
-    case tinytc_success:
+    case tinytc_status_success:
         return "Success";
-    case tinytc_bad_alloc:
+    case tinytc_status_bad_alloc:
         return "Bad allocation";
-    case tinytc_invalid_arguments:
+    case tinytc_status_invalid_arguments:
         return "Invalid arguments passed to function";
-    case tinytc_out_of_range:
+    case tinytc_status_out_of_range:
         return "Out of range";
-    case tinytc_runtime_error:
+    case tinytc_status_runtime_error:
         return "General runtime error";
-    case tinytc_internal_compiler_error:
+    case tinytc_status_internal_compiler_error:
         return "Internal compiler error";
-    case tinytc_unsupported_subgroup_size:
+    case tinytc_status_unsupported_subgroup_size:
         return "Unsupported subgroup size";
-    case tinytc_unsupported_work_group_size:
+    case tinytc_status_unsupported_work_group_size:
         return "Work group size is larger than maximum work group size supported by device";
-    case tinytc_ir_out_of_bounds:
+    case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
-    case tinytc_ir_invalid_shape:
+    case tinytc_status_ir_invalid_shape:
         return "Mode size must be non-negative";
-    case tinytc_ir_incompatible_shapes:
+    case tinytc_status_ir_incompatible_shapes:
         return "Incompatible tensor shapes";
-    case tinytc_ir_shape_stride_mismatch:
+    case tinytc_status_ir_shape_stride_mismatch:
         return "Dimension of shape and stride must match";
-    case tinytc_ir_scalar_mismatch:
+    case tinytc_status_ir_scalar_mismatch:
         return "Scalar type mismatch";
-    case tinytc_ir_invalid_number_of_indices:
+    case tinytc_status_ir_invalid_number_of_indices:
         return "Number of indices must match memref order or must be 1 for group types";
-    case tinytc_ir_expected_scalar:
+    case tinytc_status_ir_expected_scalar:
         return "Expected scalar type";
-    case tinytc_ir_expected_memref:
+    case tinytc_status_ir_expected_memref:
         return "Expected memref type";
-    case tinytc_ir_expected_memref_or_scalar:
+    case tinytc_status_ir_expected_memref_or_scalar:
         return "Expected memref type or scalar type";
-    case tinytc_ir_expected_memref_or_group:
+    case tinytc_status_ir_expected_memref_or_group:
         return "Expected memref or group operand";
-    case tinytc_ir_expected_vector_or_matrix:
+    case tinytc_status_ir_expected_vector_or_matrix:
         return "Expected vector or matrix input";
-    case tinytc_ir_unexpected_yield:
+    case tinytc_status_ir_unexpected_yield:
         return "Yield encountered in non-yielding region";
-    case tinytc_ir_yield_mismatch:
+    case tinytc_status_ir_yield_mismatch:
         return "Number of yielded values does not match number of values yielded by region";
-    case tinytc_ir_multiple_dynamic_modes:
+    case tinytc_status_ir_multiple_dynamic_modes:
         return "At most one mode must be dynamic ('?')";
-    case tinytc_ir_invalid_slice:
+    case tinytc_status_ir_invalid_slice:
         return "Offset must be non-negative and must not be '?'; size must be positive or '?'";
-    case tinytc_ir_expand_shape_order_too_small:
+    case tinytc_status_ir_expand_shape_order_too_small:
         return "Expand shape must have at least 2 entries";
-    case tinytc_ir_expand_shape_mismatch:
+    case tinytc_status_ir_expand_shape_mismatch:
         return "Product of expand shape must equal mode size";
     }
     return "Unknown status code";

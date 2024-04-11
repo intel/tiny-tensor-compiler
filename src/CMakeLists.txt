@@ -32,7 +32,6 @@ set(SOURCES
     ir/passes.cpp
     ir/precision_helper.cpp
     ir/prog.cpp
-    ir/scalar_type.cpp
     ir/tiling.cpp
     ir/visitor/aa_results.cpp
     ir/visitor/alias_analysis.cpp
@@ -50,6 +49,7 @@ set(SOURCES
     parser.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
+    scalar_type.cpp
     value.cpp
 )
 set(RE2C_SOURCES
@@ -70,7 +70,6 @@ set(PUBLIC_HEADERS
     ir/passes.hpp
     ir/prog.hpp
     ir/region.hpp
-    ir/scalar_type.hpp
     ir/slice.hpp
     ir/tiling.hpp
     opencl_cc.hpp

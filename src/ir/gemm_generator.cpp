@@ -4,9 +4,9 @@
 #include "tinytc/ir/gemm_generator.hpp"
 #include "codegen_tools.hpp"
 #include "precision_helper.hpp"
+#include "scalar_type.hpp"
 #include "tinytc/device_info.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/tiling.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -334,8 +334,7 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                        .get_product());
         });
     auto write_C = [&](block_builder &bb) {
-        auto n_to =
-            is_N_constant ? n_bs : min(N, cast(internal::to_clir_ty(scalar_type::index), n_bs));
+        auto n_to = is_N_constant ? n_bs : min(N, cast(to_clir_ty(scalar_type::index), n_bs));
         auto n_unroll = is_N_constant ? n_bs : 1;
         bb.add(
             for_loop_builder(declaration_assignment(generic_short(), n, 0), n < std::move(n_to),
@@ -448,14 +447,14 @@ func generator::function(std::string_view name) {
     };
     auto const shape = [&](std::int64_t shape, expr &target, std::string const &prefix) {
         auto v = var{prefix};
-        fb.argument(internal::to_clir_ty(scalar_type::index), v);
+        fb.argument(to_clir_ty(scalar_type::index), v);
         target = is_dynamic_value(shape) ? expr{std::move(v)} : expr{shape};
     };
     auto const stride = [&](std::array<std::int64_t, 2> const &stride, std::array<expr, 2> &target,
                             std::string const &prefix) {
         for (std::size_t i = 0; i < stride.size(); ++i) {
             auto v = var{prefix};
-            fb.argument(internal::to_clir_ty(scalar_type::index), v);
+            fb.argument(to_clir_ty(scalar_type::index), v);
             target[i] = is_dynamic_value(stride[i]) ? expr{std::move(v)} : expr{stride[i]};
         }
     };

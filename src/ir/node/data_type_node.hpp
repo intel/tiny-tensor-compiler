@@ -5,7 +5,7 @@
 #define DATA_TYPE_NODE_20230309_HPP
 
 #include "reference_counted.hpp"
-#include "tinytc/ir/scalar_type.hpp"
+#include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/builtin_type.hpp>
@@ -53,11 +53,9 @@ class memref_data_type : public clir::visitable<memref_data_type, data_type_node
                      std::vector<std::int64_t> stride = {}, location const &lc = {});
 
     inline scalar_type element_ty() { return element_ty_; }
-    inline clir::data_type clir_element_ty() {
-        return internal::to_clir_ty(element_ty_, addrspace_);
-    }
+    inline clir::data_type clir_element_ty() { return to_clir_ty(element_ty_, addrspace_); }
     inline clir::data_type clir_atomic_element_ty() {
-        return internal::to_clir_atomic_ty(element_ty_, addrspace_);
+        return to_clir_atomic_ty(element_ty_, addrspace_);
     }
     inline std::int64_t dim() const { return shape_.size(); }
     inline auto const &shape() const { return shape_; }
@@ -92,7 +90,7 @@ class scalar_data_type : public clir::visitable<scalar_data_type, data_type_node
     inline scalar_data_type(scalar_type type) : ty_(type) {}
 
     inline scalar_type ty() { return ty_; }
-    inline clir::data_type clir_ty() { return internal::to_clir_ty(ty_); }
+    inline clir::data_type clir_ty() { return to_clir_ty(ty_); }
 
   private:
     scalar_type ty_;

@@ -11,7 +11,6 @@
     #include "tinytc/ir/func.hpp"
     #include "tinytc/ir/prog.hpp"
     #include "tinytc/ir/region.hpp"
-    #include "tinytc/ir/scalar_type.hpp"
     #include "tinytc/ir/slice.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>

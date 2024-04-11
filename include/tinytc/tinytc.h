@@ -24,6 +24,15 @@ extern "C" {
 TINYTC_EXPORT char const *tinytc_error_string(tinytc_status_t status);
 
 ////////////////////////////
+//////// Scalar type ///////
+////////////////////////////
+
+//! Convert scalar type to string
+TINYTC_EXPORT char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty);
+//! Size of scalar type in bytes
+TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
+
+////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
 

@@ -4,7 +4,7 @@
 #include "parser/lexer.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/scalar_type.hpp"
+#include "tinytc/types.hpp"
 
 #include <cerrno>
 #include <cstdlib>
