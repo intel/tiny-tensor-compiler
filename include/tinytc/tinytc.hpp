@@ -15,12 +15,11 @@
 // TODO: Remove
 #include "tinytc/ir/scalar_type.hpp"
 
-namespace tinytc {
+////////////////////////////
+////////// Macros //////////
+////////////////////////////
 
-inline char const *error_string(status code) {
-    return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
-}
-
+//! Capture error code and throw error code if unsuccessful
 #define TINYTC_CHECK(X)                                                                            \
     [](tinytc_status_t code) {                                                                     \
         if (code != tinytc_success) {                                                              \
@@ -29,8 +28,15 @@ inline char const *error_string(status code) {
         }                                                                                          \
     }(X)
 
+namespace tinytc {
+
+//! Convert error code to string
+inline char const *error_string(status code) {
+    return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
+}
+
 ////////////////////////////
-/// Abstract syntax tree ///
+// C++ reference counting //
 ////////////////////////////
 
 //! Wraps destroy calls for type T
@@ -113,6 +119,13 @@ template <typename T> class handle {
     T obj_;
 };
 
+////////////////////////////
+///////// Data type ////////
+////////////////////////////
+
+//! Check if mode i is dynamic ('?')
+inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
+
 template <> struct handle_traits<tinytc_data_type_t> {
     static auto retain(tinytc_data_type_t handle) -> tinytc_status_t {
         return tinytc_data_type_retain(handle);
@@ -130,11 +143,6 @@ class data_type : public handle<tinytc_data_type_t> {
     data_type(scalar_type type) {
         TINYTC_CHECK(tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type)));
     }
-
-    //! Create program containing single function
-    // inline prog(func fun) {}
-    //! Create program containting multiple functions
-    // prog(std::vector<func> funs);
 };
 
 inline data_type memref_type(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,

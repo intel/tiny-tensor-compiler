@@ -6,7 +6,6 @@
 #include "ir/node/data_type_node.hpp"
 #include "ir/node/value_node.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"

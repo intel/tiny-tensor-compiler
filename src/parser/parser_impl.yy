@@ -7,7 +7,6 @@
 %code requires {
     #include "ir/node/function_node.hpp"
     #include "location.hpp"
-    #include "tinytc/ir/data_type.hpp"
     #include "tinytc/ir/inst.hpp"
     #include "tinytc/ir/func.hpp"
     #include "tinytc/ir/prog.hpp"
@@ -15,6 +14,7 @@
     #include "tinytc/ir/scalar_type.hpp"
     #include "tinytc/ir/slice.hpp"
     #include "tinytc/ir/value.hpp"
+    #include "tinytc/tinytc.hpp"
     #include <algorithm>
     #include <cstdint>
     #include <functional>

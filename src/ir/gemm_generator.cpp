@@ -5,10 +5,10 @@
 #include "codegen_tools.hpp"
 #include "precision_helper.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/tiling.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <clir/attr_defs.hpp>
 #include <clir/builder.hpp>

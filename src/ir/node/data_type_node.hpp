@@ -4,10 +4,9 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
-#include "location.hpp"
 #include "reference_counted.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/scalar_type.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>
@@ -35,15 +34,6 @@ struct tinytc_data_type : tinytc::reference_counted, tinytc::data_type_nodes {
 namespace tinytc {
 
 using data_type_node = ::tinytc_data_type;
-
-// class data_type_node : public data_type_nodes {
-// public:
-// inline location const &loc() const { return loc_; }
-// inline void loc(location const &loc) { loc_ = loc; }
-
-// private:
-// location loc_;
-//};
 
 class group_data_type : public clir::visitable<group_data_type, data_type_node> {
   public:

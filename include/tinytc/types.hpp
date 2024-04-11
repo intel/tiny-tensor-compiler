@@ -6,7 +6,19 @@
 
 #include "tinytc/types.h"
 
+#include <cstdint>
+
 namespace tinytc {
+
+////////////////////////////
+///////// Constants ////////
+////////////////////////////
+
+constexpr static std::int64_t dynamic = TINYTC_DYNAMIC;
+
+////////////////////////////
+/////// Enumerations ///////
+////////////////////////////
 
 //! Status codes
 enum class status {
@@ -36,6 +48,10 @@ enum class status {
     ir_expand_shape_order_too_small = tinytc_ir_expand_shape_order_too_small,
     ir_expand_shape_mismatch = tinytc_ir_expand_shape_mismatch,
 };
+
+////////////////////////////
+/////// Type aliases ///////
+////////////////////////////
 
 //! @brief Alias for tinytc_position in namespace tinytc
 using position = ::tinytc_position;

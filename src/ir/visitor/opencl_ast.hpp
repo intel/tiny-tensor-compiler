@@ -11,7 +11,6 @@
 #include "ir/node/region_node.hpp"
 #include "ir/node/value_node.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/tiling.hpp"
 #include "tinytc/ir/value.hpp"
 
@@ -113,7 +112,7 @@ class opencl_ast {
     void set_dope_vector(value v, dope_vector dv);
     clir::var declare(value_node &v);
     memref_data_type *get_memref_type(value &v);
-    static scalar_type get_scalar_type(data_type ty);
+    static scalar_type get_scalar_type(data_type_node &ty);
 
     std::shared_ptr<core_info> info_;
     clir::program_builder prog_builder_;
