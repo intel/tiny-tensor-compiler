@@ -13,9 +13,6 @@
 #include <type_traits>
 #include <vector>
 
-// TODO: Remove
-#include "tinytc/ir/scalar_type.hpp"
-
 ////////////////////////////
 ////////// Macros //////////
 ////////////////////////////
@@ -23,7 +20,7 @@
 //! Capture error code and throw error code if unsuccessful
 #define TINYTC_CHECK(X)                                                                            \
     [](tinytc_status_t code) {                                                                     \
-        if (code != tinytc_success) {                                                              \
+        if (code != tinytc_status_success) {                                                       \
             auto code_ec = static_cast<status>(code);                                              \
             throw code_ec;                                                                         \
         }                                                                                          \
@@ -31,10 +28,85 @@
 
 namespace tinytc {
 
+////////////////////////////
+/////////// Error //////////
+////////////////////////////
+
 //! Convert error code to string
 inline char const *error_string(status code) {
     return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
 }
+
+////////////////////////////
+//////// Scalar type ///////
+////////////////////////////
+
+//! Convert scalar type to string
+inline char const *to_string(scalar_type ty) {
+    return ::tinytc_scalar_type_to_string(static_cast<tinytc_scalar_type_t>(ty));
+}
+//! Size of scalar type in bytes
+inline std::size_t size(scalar_type ty) {
+    return ::tinytc_scalar_type_size(static_cast<tinytc_scalar_type_t>(ty));
+}
+
+/**
+ * Returns the scalar type corresponding to C++ type T
+ *
+ * Specializations exist for bool, (u)int8_t, (u)int16_t, (u)int32_t, (u)int64_t, float, double.
+ * The scalar_type is stored in the static constexpr member "value".
+ */
+template <typename T> struct to_scalar_type;
+//! to_scalar_type specialization
+template <> struct to_scalar_type<bool> {
+    static constexpr scalar_type value = scalar_type::bool_; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<int8_t> {
+    static constexpr scalar_type value = scalar_type::i8; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<int16_t> {
+    static constexpr scalar_type value = scalar_type::i16; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<int32_t> {
+    static constexpr scalar_type value = scalar_type::i32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<int64_t> {
+    static constexpr scalar_type value = scalar_type::i64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<uint8_t> {
+    static constexpr scalar_type value = scalar_type::u8; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<uint16_t> {
+    static constexpr scalar_type value = scalar_type::u16; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<uint32_t> {
+    static constexpr scalar_type value = scalar_type::u32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<uint64_t> {
+    static constexpr scalar_type value = scalar_type::u64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<float> {
+    static constexpr scalar_type value = scalar_type::f32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<double> {
+    static constexpr scalar_type value = scalar_type::f64; ///< value
+};
+/**
+ * Convenience variable for to_scalar_type.
+ *
+ * Example: @code scalar_type ty = to_scalar_type_v<float>; @endcode
+ */
+template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_type<T>::value;
 
 ////////////////////////////
 // C++ reference counting //
@@ -105,13 +177,13 @@ template <typename T> class handle {
         if (obj_ != nullptr) {
             return traits::retain(obj_);
         }
-        return tinytc_success;
+        return tinytc_status_success;
     }
     auto release() -> tinytc_status_t {
         if (obj_ != nullptr) {
             return traits::release(obj_);
         }
-        return tinytc_success;
+        return tinytc_status_success;
     }
     T obj_;
 };
@@ -176,23 +248,31 @@ class value : public handle<tinytc_value_t> {
     //! Create value with data type ty
     value(data_type ty) { TINYTC_CHECK(tinytc_value_create(&obj_, ty.get())); }
     //! Create immediate value from float
-    value(float imm) { TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_f32)); }
+    value(float imm) { TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32)); }
     //! Create immediate value from double
     value(double imm, scalar_type type = scalar_type::f64) {
         TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
     }
     //! Create immediate value from int8_t
-    value(std::int8_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i8)); }
+    value(std::int8_t imm) {
+        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8));
+    }
     //! Create immediate value from int16_t
-    value(std::int16_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i16)); }
+    value(std::int16_t imm) {
+        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16));
+    }
     //! Create immediate value from int32_t
-    value(std::int32_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i32)); }
+    value(std::int32_t imm) {
+        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32));
+    }
     //! Create immediate value from int64_t
     value(std::int64_t imm, scalar_type type = scalar_type::i64) {
         TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
     }
     //! Create immediate value from uint32_t (index type)
-    value(std::uint32_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_index)); }
+    value(std::uint32_t imm) {
+        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index));
+    }
 
     inline auto get_name() const -> char const * {
         char const *name;

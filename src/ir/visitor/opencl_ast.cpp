@@ -4,11 +4,11 @@
 #include "ir/visitor/opencl_ast.hpp"
 #include "error.hpp"
 #include "ir/codegen_tools.hpp"
+#include "scalar_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/slice.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
@@ -51,12 +51,12 @@ dope_vector dope_vector::from_value(value_node &v, decl_fun_t declare) {
     auto dt = clir::data_type{};
     visit(overloaded{[&](memref_data_type &mr) {
                          m = &mr;
-                         dt = internal::to_clir_ty(scalar_type::index);
+                         dt = to_clir_ty(scalar_type::index);
                      },
                      [&](group_data_type &g) {
                          m = dynamic_cast<memref_data_type *>(g.ty().get());
-                         dt = clir::pointer_to(internal::to_clir_ty(scalar_type::index,
-                                                                    clir::address_space::global_t));
+                         dt = clir::pointer_to(
+                             to_clir_ty(scalar_type::index, clir::address_space::global_t));
                      },
                      [](auto &) {}},
           *v.ty());
@@ -390,9 +390,9 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst &e) {
                 }
             }
             auto inferred_size = clir::var("inferred_size");
-            clinst.emplace_back(
-                clir::declaration_assignment(internal::to_clir_ty(scalar_type::index),
-                                             inferred_size, std::move(prod) / dv.shape(e.mode())));
+            clinst.emplace_back(clir::declaration_assignment(to_clir_ty(scalar_type::index),
+                                                             inferred_size,
+                                                             std::move(prod) / dv.shape(e.mode())));
             return std::move(inferred_size);
         }
         return eshape_cl[j];
@@ -656,7 +656,7 @@ std::vector<clir::stmt> opencl_ast::operator()(ger_inst &g) {
             bb.add(clir::for_loop_builder(clir::declaration_assignment(clir::generic_int(), n, 0),
                                           n < std::move(trip_count), ++n)
                        .body([&](clir::block_builder &bb) {
-                           auto b = bb.declare_assign(internal::to_clir_ty(bt->element_ty()), "b",
+                           auto b = bb.declare_assign(to_clir_ty(bt->element_ty()), "b",
                                                       B + (block + n) * bdv.stride(0));
                            auto Cb = bb.declare_assign(this->operator()(*ct), "Cb",
                                                        C + (block + n) * cdv.stride(1));
@@ -875,7 +875,7 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
     auto A = visit(*this, *inst.A());
     auto B = visit(*this, *inst.B());
     auto bb = clir::block_builder{};
-    auto acc = bb.declare_assign(internal::to_clir_ty(at->element_ty()), "acc", std::move(zero));
+    auto acc = bb.declare_assign(to_clir_ty(at->element_ty()), "acc", std::move(zero));
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
     auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
     if (bt->dim() == 0) {
@@ -895,7 +895,7 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
                                  inner_loop(bb);
                              }
                          });
-        auto sum = bb.declare_assign(internal::to_clir_ty(bt->element_ty()), "sum",
+        auto sum = bb.declare_assign(to_clir_ty(bt->element_ty()), "sum",
                                      clir::work_group_reduce_add(acc));
         bb.add(clir::if_selection_builder(clir::get_sub_group_id() == 0 &&
                                           clir::get_sub_group_local_id() == 0)

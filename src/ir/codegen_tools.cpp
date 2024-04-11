@@ -3,7 +3,8 @@
 
 #include "codegen_tools.hpp"
 #include "ir/visitor/util.hpp"
-#include "tinytc/ir/scalar_type.hpp"
+#include "scalar_type.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/attr_defs.hpp>
 #include <clir/builder.hpp>
@@ -67,7 +68,7 @@ void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_sp
               [&](auto &) {},
           },
           *beta);
-    auto pointer_ty = pointer_to(internal::to_clir_atomic_ty(ty, as, type_qualifier::volatile_t));
+    auto pointer_ty = pointer_to(to_clir_atomic_ty(ty, as, type_qualifier::volatile_t));
     auto atomic_dst = cast(std::move(pointer_ty), dst);
     if (mode == 0) {
         bb.add(call_builtin(builtin_function::atomic_store,
@@ -76,8 +77,8 @@ void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_sp
         bb.add(call_builtin(builtin_function::atomic_fetch_add,
                             {std::move(atomic_dst), std::move(value)}));
     } else {
-        auto expected = bb.declare_assign(internal::to_clir_ty(ty), "expected", dereference(dst));
-        auto desired = bb.declare(internal::to_clir_ty(ty), "desired");
+        auto expected = bb.declare_assign(to_clir_ty(ty), "expected", dereference(dst));
+        auto desired = bb.declare(to_clir_ty(ty), "desired");
         auto cmpxchg =
             call_builtin(builtin_function::atomic_compare_exchange_strong,
                          {std::move(atomic_dst), address_of(std::move(expected)), desired});

@@ -22,48 +22,48 @@ extern "C" {
 
 //! Status codes
 typedef enum {
-    tinytc_success = 0x0,           ///< Operation was successful
-    tinytc_bad_alloc = 0x1,         ///< Failure to allocate storage
-    tinytc_invalid_arguments = 0x2, ///< Operation got invalid arguments
-    tinytc_out_of_range = 0x3,
-    tinytc_runtime_error = 0x4, ///< Runtime error
-    tinytc_internal_compiler_error = 0x5,
-    tinytc_unsupported_subgroup_size = 0x6,
-    tinytc_unsupported_work_group_size = 0x7,
+    tinytc_status_success = 0x0,           ///< Operation was successful
+    tinytc_status_bad_alloc = 0x1,         ///< Failure to allocate storage
+    tinytc_status_invalid_arguments = 0x2, ///< Operation got invalid arguments
+    tinytc_status_out_of_range = 0x3,
+    tinytc_status_runtime_error = 0x4, ///< Runtime error
+    tinytc_status_internal_compiler_error = 0x5,
+    tinytc_status_unsupported_subgroup_size = 0x6,
+    tinytc_status_unsupported_work_group_size = 0x7,
     // IR errors
-    tinytc_ir_out_of_bounds = 0x100,
-    tinytc_ir_invalid_shape = 0x101,
-    tinytc_ir_incompatible_shapes = 0x102,
-    tinytc_ir_shape_stride_mismatch = 0x103,
-    tinytc_ir_scalar_mismatch = 0x104,
-    tinytc_ir_invalid_number_of_indices = 0x105,
-    tinytc_ir_expected_scalar = 0x106,
-    tinytc_ir_expected_memref = 0x107,
-    tinytc_ir_expected_memref_or_scalar = 0x108,
-    tinytc_ir_expected_memref_or_group = 0x109,
-    tinytc_ir_expected_vector_or_matrix = 0x10a,
-    tinytc_ir_unexpected_yield = 0x10b,
-    tinytc_ir_yield_mismatch = 0x10c,
-    tinytc_ir_multiple_dynamic_modes = 0x10d,
-    tinytc_ir_invalid_slice = 0x10e,
-    tinytc_ir_expand_shape_order_too_small = 0x10f,
-    tinytc_ir_expand_shape_mismatch = 0x110,
+    tinytc_status_ir_out_of_bounds = 0x100,
+    tinytc_status_ir_invalid_shape = 0x101,
+    tinytc_status_ir_incompatible_shapes = 0x102,
+    tinytc_status_ir_shape_stride_mismatch = 0x103,
+    tinytc_status_ir_scalar_mismatch = 0x104,
+    tinytc_status_ir_invalid_number_of_indices = 0x105,
+    tinytc_status_ir_expected_scalar = 0x106,
+    tinytc_status_ir_expected_memref = 0x107,
+    tinytc_status_ir_expected_memref_or_scalar = 0x108,
+    tinytc_status_ir_expected_memref_or_group = 0x109,
+    tinytc_status_ir_expected_vector_or_matrix = 0x10a,
+    tinytc_status_ir_unexpected_yield = 0x10b,
+    tinytc_status_ir_yield_mismatch = 0x10c,
+    tinytc_status_ir_multiple_dynamic_modes = 0x10d,
+    tinytc_status_ir_invalid_slice = 0x10e,
+    tinytc_status_ir_expand_shape_order_too_small = 0x10f,
+    tinytc_status_ir_expand_shape_mismatch = 0x110,
 } tinytc_status_t;
 
 //! Scalar types
 typedef enum {
-    tinytc_bool = 0,  ///< boolean
-    tinytc_index = 1, ///< Unsigned integer type for indices
-    tinytc_i8 = 2,    ///< Signed 8 bit integer
-    tinytc_i16 = 3,   ///< Signed 16 bit integer
-    tinytc_i32 = 4,   ///< Signed 32 bit integer
-    tinytc_i64 = 5,   ///< Signed 64 bit integer
-    tinytc_u8 = 6,    ///< Unsigned 8 bit integer
-    tinytc_u16 = 7,   ///< Unsigned 16 bit integer
-    tinytc_u32 = 8,   ///< Unsigned 32 bit integer
-    tinytc_u64 = 9,   ///< Unsigned 64 bit integer
-    tinytc_f32 = 10,  ///< Single precision floating point (32 bit)
-    tinytc_f64 = 11   ///< Double precision floating point (64 bit)
+    tinytc_scalar_type_bool = 0,  ///< boolean
+    tinytc_scalar_type_index = 1, ///< Unsigned integer type for indices
+    tinytc_scalar_type_i8 = 2,    ///< Signed 8 bit integer
+    tinytc_scalar_type_i16 = 3,   ///< Signed 16 bit integer
+    tinytc_scalar_type_i32 = 4,   ///< Signed 32 bit integer
+    tinytc_scalar_type_i64 = 5,   ///< Signed 64 bit integer
+    tinytc_scalar_type_u8 = 6,    ///< Unsigned 8 bit integer
+    tinytc_scalar_type_u16 = 7,   ///< Unsigned 16 bit integer
+    tinytc_scalar_type_u32 = 8,   ///< Unsigned 32 bit integer
+    tinytc_scalar_type_u64 = 9,   ///< Unsigned 64 bit integer
+    tinytc_scalar_type_f32 = 10,  ///< Single precision floating point (32 bit)
+    tinytc_scalar_type_f64 = 11   ///< Double precision floating point (64 bit)
 } tinytc_scalar_type_t;
 
 ////////////////////////////

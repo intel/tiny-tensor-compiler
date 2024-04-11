@@ -5,7 +5,6 @@
 #define VALUE_NODE_20230309_HPP
 
 #include "reference_counted.hpp"
-#include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/virtual_type_list.hpp>

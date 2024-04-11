@@ -7,7 +7,6 @@
 #include "location.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/slice.hpp"
 #include "tinytc/tinytc.hpp"
 

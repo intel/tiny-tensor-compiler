@@ -37,13 +37,13 @@ template <typename F> auto exception_to_status_code(F &&f) -> tinytc_status_t {
     try {
         f();
     } catch (std::bad_alloc const &) {
-        return tinytc_bad_alloc;
+        return tinytc_status_bad_alloc;
     } catch (std::out_of_range const &) {
-        return tinytc_out_of_range;
+        return tinytc_status_out_of_range;
     } catch (...) {
-        return tinytc_runtime_error;
+        return tinytc_status_runtime_error;
     }
-    return tinytc_success;
+    return tinytc_status_success;
 }
 
 } // namespace tinytc
