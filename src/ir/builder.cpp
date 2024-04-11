@@ -22,7 +22,7 @@ namespace tinytc {
 
 location to_location(std::source_location const loc) {
     auto l = location{};
-    l.begin.filename = loc.file_name();
+    //l.begin.filename = loc.file_name();
     l.begin.line = loc.line();
     l.begin.column = loc.column();
     l.end = l.begin;

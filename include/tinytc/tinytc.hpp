@@ -13,7 +13,6 @@
 #include <vector>
 
 // TODO: Remove
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 
 namespace tinytc {
@@ -139,11 +138,12 @@ class data_type : public handle<tinytc_data_type_t> {
 };
 
 inline data_type memref_type(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,
-                             std::vector<std::int64_t> const &stride = {}, location const & = {}) {
+                             std::vector<std::int64_t> const &stride = {},
+                             location const &loc = {}) {
     tinytc_data_type_t mt;
     TINYTC_CHECK(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty),
-                                           shape.size(), shape.data(), stride.size(),
-                                           stride.data()));
+                                           shape.size(), shape.data(), stride.size(), stride.data(),
+                                           &loc));
     return data_type(mt);
 }
 inline data_type group_type(data_type memref_ty) {

@@ -4,9 +4,9 @@
 #ifndef INST_NODE_20230327_HPP
 #define INST_NODE_20230327_HPP
 
+#include "location.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/slice.hpp"

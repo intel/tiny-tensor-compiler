@@ -11,7 +11,7 @@ namespace tinytc {
 class equal {
   public:
     /* Data type nodes */
-    bool operator()(::tinytc_data_type &a, ::tinytc_data_type &b);
+    bool operator()(data_type_node &a, data_type_node &b);
     bool operator()(void_data_type &a, void_data_type &b);
     bool operator()(group_data_type &a, group_data_type &b);
     bool operator()(memref_data_type &a, memref_data_type &b);

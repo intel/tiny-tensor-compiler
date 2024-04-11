@@ -4,8 +4,8 @@
 #ifndef VALUE_NODE_20230309_HPP
 #define VALUE_NODE_20230309_HPP
 
+#include "location.hpp"
 #include "tinytc/ir/data_type.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 
 #include "clir/virtual_type_list.hpp"

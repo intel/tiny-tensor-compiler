@@ -8,9 +8,9 @@
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
+#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstdint>

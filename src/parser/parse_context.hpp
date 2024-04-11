@@ -7,6 +7,7 @@
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/prog.hpp"
 #include "tinytc/ir/value.hpp"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <string>
@@ -15,10 +16,6 @@
 #include <vector>
 
 namespace tinytc {
-class location;
-}
-
-namespace tinytc::parser {
 
 class parse_context {
   public:
@@ -40,6 +37,6 @@ class parse_context {
     prog program_;
 };
 
-} // namespace tinytc::parser
+} // namespace tinytc
 
 #endif // PARSE_CONTEXT_20231221_HPP

@@ -4,6 +4,7 @@
 #ifndef ERROR_20240410_HPP
 #define ERROR_20240410_HPP
 
+#include "location.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 

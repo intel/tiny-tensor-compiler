@@ -4,9 +4,9 @@
 #ifndef FUNCTION_NODE_20230310_HPP
 #define FUNCTION_NODE_20230310_HPP
 
+#include "location.hpp"
 #include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/value.hpp"
 

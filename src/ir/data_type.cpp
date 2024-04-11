@@ -23,9 +23,9 @@ tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_
 
 tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
                                                         tinytc_scalar_type_t scalar_ty,
-                                                        uint32_t shape_size, int64_t const *shape,
-                                                        uint32_t stride_size,
-                                                        int64_t const *stride) {
+                                                        uint32_t shape_size, const int64_t *shape,
+                                                        uint32_t stride_size, const int64_t *stride,
+                                                        const tinytc_location_t *loc) {
     if (dt == nullptr) {
         return tinytc_invalid_arguments;
     }
@@ -37,8 +37,9 @@ tinytc_status_t TINYTC_EXPORT tinytc_memref_type_create(tinytc_data_type_t *dt,
         if (stride_size > 0) {
             stride_vec.insert(stride_vec.end(), stride, stride + stride_size);
         }
-        *dt = std::make_unique<tinytc::memref_data_type>(st, std::move(shape_vec),
-                                                         std::move(stride_vec))
+        constexpr tinytc_location_t null_loc = {};
+        *dt = std::make_unique<tinytc::memref_data_type>(
+                  st, std::move(shape_vec), std::move(stride_vec), loc ? *loc : null_loc)
                   .release();
     });
 }

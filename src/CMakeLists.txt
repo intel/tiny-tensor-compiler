@@ -27,7 +27,6 @@ set(SOURCES
     ir/data_type.cpp
     ir/gemm_generator.cpp
     ir/inst.cpp
-    ir/location.cpp
     ir/node/data_type_node.cpp
     ir/node/inst_node.cpp
     ir/passes.cpp
@@ -46,6 +45,7 @@ set(SOURCES
     ir/visitor/opencl_ast.cpp
     ir/visitor/stack.cpp
     ir/visitor/work_group_size.cpp
+    location.cpp
     opencl_cc.cpp
     parser/parse_context.cpp
     parser.cpp
@@ -68,7 +68,6 @@ set(PUBLIC_HEADERS
     ir/func.hpp
     ir/gemm_generator.hpp
     ir/inst.hpp
-    ir/location.hpp
     ir/passes.hpp
     ir/prog.hpp
     ir/region.hpp

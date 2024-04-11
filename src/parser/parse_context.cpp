@@ -5,14 +5,13 @@
 #include "ir/node/function_node.hpp"
 #include "ir/node/value_node.hpp"
 #include "parser/parser_impl.hpp"
-#include "tinytc/ir/location.hpp"
 
 #include <clir/handle.hpp>
 
 #include <sstream>
 #include <utility>
 
-namespace tinytc::parser {
+namespace tinytc {
 
 void parse_context::push_scope() { id_map_.push_back({}); }
 void parse_context::pop_scope() { id_map_.pop_back(); }
@@ -55,4 +54,4 @@ func parse_context::prototype(std::string const &id, location const &l) {
     throw parser::syntax_error(l, "Undefined identifier @" + id);
 }
 
-} // namespace tinytc::parser
+} // namespace tinytc

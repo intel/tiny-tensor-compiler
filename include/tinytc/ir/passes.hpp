@@ -15,7 +15,6 @@
 namespace tinytc {
 
 class core_info;
-class location;
 class data_type;
 class func;
 class prog;

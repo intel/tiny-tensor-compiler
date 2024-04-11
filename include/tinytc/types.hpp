@@ -37,6 +37,11 @@ enum class status {
     ir_expand_shape_mismatch = tinytc_ir_expand_shape_mismatch,
 };
 
+//! @brief Alias for tinytc_position in namespace tinytc
+using position = ::tinytc_position;
+//! @brief Alias for tinytc_location in namespace tinytc
+using location = ::tinytc_location;
+
 } // namespace tinytc
 
 #endif // TYPES_20240410_HPP

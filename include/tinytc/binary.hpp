@@ -20,9 +20,6 @@ namespace tinytc {
 
 class core_info;
 enum class bundle_format;
-namespace ir {
-class location;
-}
 
 //! Kernel metadata
 struct TINYTC_EXPORT kernel_metadata {

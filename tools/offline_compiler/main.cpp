@@ -5,7 +5,6 @@
 
 #include "tinytc/device_info.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/passes.hpp"
 #include "tinytc/ir/prog.hpp"
 #include "tinytc/tinytc.hpp"

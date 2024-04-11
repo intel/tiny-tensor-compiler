@@ -5,7 +5,7 @@
 #define ERROR_20240221_HPP
 
 #include "tinytc/export.h"
-#include "tinytc/ir/location.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <exception>
