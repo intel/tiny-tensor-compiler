@@ -138,15 +138,15 @@ memref_data_type *opencl_ast::get_memref_type(value &v) {
     return t;
 }
 
-scalar_type opencl_ast::get_scalar_type(data_type ty) {
+scalar_type opencl_ast::get_scalar_type(data_type_node &ty) {
     return visit(overloaded{[](scalar_data_type &i) -> scalar_type { return i.ty(); },
                             [](memref_data_type &i) -> scalar_type { return i.element_ty(); },
-                            [&](auto &) -> scalar_type {
-                                throw compilation_error(ty->loc(),
+                            [&](auto &i) -> scalar_type {
+                                throw compilation_error(i.loc(),
                                                         status::ir_expected_memref_or_scalar);
                                 return scalar_type{};
                             }},
-                 *ty);
+                 ty);
 };
 
 /* Data type nodes */
@@ -172,11 +172,11 @@ clir::data_type opencl_ast::operator()(scalar_data_type &s) { return s.clir_ty()
 
 /* Value nodes */
 clir::expr opencl_ast::operator()(float_imm &v) {
-    auto ty = get_scalar_type(v.ty());
+    auto ty = get_scalar_type(*v.ty());
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
 clir::expr opencl_ast::operator()(int_imm &v) {
-    auto ty = get_scalar_type(v.ty());
+    auto ty = get_scalar_type(*v.ty());
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
 clir::expr opencl_ast::operator()(val &v) {
@@ -314,7 +314,7 @@ std::vector<clir::stmt> opencl_ast::operator()(binary_op_inst &b) {
         }
         return {};
     };
-    auto sty = get_scalar_type(b.a()->ty());
+    auto sty = get_scalar_type(*b.a()->ty());
     auto v = declare(*b.result());
     return {declaration_assignment(
         visit(*this, *b.result()->ty()), std::move(v),
@@ -545,8 +545,8 @@ std::vector<clir::stmt> opencl_ast::operator()(gemm_inst &g) {
     };
 
     auto gemm_ty =
-        gemm_scalar_type{get_scalar_type(g.alpha()->ty()), a->element_ty(), b->element_ty(),
-                         get_scalar_type(g.beta()->ty()), c->element_ty()};
+        gemm_scalar_type{get_scalar_type(*g.alpha()->ty()), a->element_ty(), b->element_ty(),
+                         get_scalar_type(*g.beta()->ty()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   g.tB(),
@@ -597,8 +597,8 @@ std::vector<clir::stmt> opencl_ast::operator()(gemv_inst &g) {
     };
 
     auto gemm_ty =
-        gemm_scalar_type{get_scalar_type(g.alpha()->ty()), a->element_ty(), b->element_ty(),
-                         get_scalar_type(g.beta()->ty()), c->element_ty()};
+        gemm_scalar_type{get_scalar_type(*g.alpha()->ty()), a->element_ty(), b->element_ty(),
+                         get_scalar_type(*g.beta()->ty()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   transpose::N,

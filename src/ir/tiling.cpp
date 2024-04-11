@@ -3,9 +3,9 @@
 
 #include "tinytc/ir/tiling.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/ir/scalar_type.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <algorithm>
 #include <limits>

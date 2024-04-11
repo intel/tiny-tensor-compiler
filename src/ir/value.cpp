@@ -3,7 +3,6 @@
 
 #include "tinytc/ir/value.hpp"
 #include "ir/node/value_node.hpp"
-#include "tinytc/ir/data_type.hpp"
 
 #include <memory>
 #include <utility>

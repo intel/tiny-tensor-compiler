@@ -22,7 +22,7 @@ set(SOURCES
     device_info.cpp
     error.cpp
     internal/compiler_options.cpp
-    ir/builder.cpp
+    #ir/builder.cpp
     ir/codegen_tools.cpp
     ir/data_type.cpp
     ir/gemm_generator.cpp
@@ -63,7 +63,6 @@ set(PUBLIC_HEADERS
     device_info.hpp
     internal/compiler_options.hpp
     ir/builder.hpp
-    ir/data_type.hpp
     ir/error.hpp
     ir/func.hpp
     ir/gemm_generator.hpp

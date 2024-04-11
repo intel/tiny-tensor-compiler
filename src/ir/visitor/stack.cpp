@@ -4,7 +4,6 @@
 #include "ir/visitor/stack.hpp"
 #include "error.hpp"
 #include "ir/node/data_type_node.hpp"
-#include "tinytc/ir/data_type.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
