@@ -4,9 +4,9 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
+#include "location.hpp"
 #include "reference_counted.hpp"
 #include "tinytc/ir/data_type.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 
 #include <clir/builtin_type.hpp>
@@ -34,6 +34,8 @@ struct tinytc_data_type : tinytc::reference_counted, tinytc::data_type_nodes {
 
 namespace tinytc {
 
+using data_type_node = ::tinytc_data_type;
+
 // class data_type_node : public data_type_nodes {
 // public:
 // inline location const &loc() const { return loc_; }
@@ -43,7 +45,7 @@ namespace tinytc {
 // location loc_;
 //};
 
-class group_data_type : public clir::visitable<group_data_type, ::tinytc_data_type> {
+class group_data_type : public clir::visitable<group_data_type, data_type_node> {
   public:
     inline group_data_type(data_type ty) : ty_(std::move(ty)) {}
 
@@ -53,9 +55,9 @@ class group_data_type : public clir::visitable<group_data_type, ::tinytc_data_ty
     data_type ty_;
 };
 
-class void_data_type : public clir::visitable<void_data_type, ::tinytc_data_type> {};
+class void_data_type : public clir::visitable<void_data_type, data_type_node> {};
 
-class memref_data_type : public clir::visitable<memref_data_type, ::tinytc_data_type> {
+class memref_data_type : public clir::visitable<memref_data_type, data_type_node> {
   public:
     memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                      std::vector<std::int64_t> stride = {}, location const &lc = {});
@@ -95,7 +97,7 @@ class memref_data_type : public clir::visitable<memref_data_type, ::tinytc_data_
     clir::address_space addrspace_ = clir::address_space::global_t;
 };
 
-class scalar_data_type : public clir::visitable<scalar_data_type, ::tinytc_data_type> {
+class scalar_data_type : public clir::visitable<scalar_data_type, data_type_node> {
   public:
     inline scalar_data_type(scalar_type type) : ty_(type) {}
 

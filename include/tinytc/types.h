@@ -4,9 +4,15 @@
 #ifndef TYPES_20240410_H
 #define TYPES_20240410_H
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+////////////////////////////
+/////// Enumerations ///////
+////////////////////////////
 
 //! Status codes
 typedef enum {
@@ -53,40 +59,61 @@ typedef enum {
     tinytc_f64 = 11   ///< Double precision floating point (64 bit)
 } tinytc_scalar_type_t;
 
-// @struct tinytc_prog
-// @brief Opaque struct for a program
+////////////////////////////
+////////// Structs /////////
+////////////////////////////
+
+/// @brief Source code position
+typedef struct tinytc_position {
+    int32_t source_id; ///< Source file identifier; 0 is "unknown source"
+    int32_t line;      ///< Line number; counting starts at 1
+    int32_t column;    ///< Column number; counting start at 1
+} tinytc_position_t;
+
+/// @brief Source code location
+typedef struct tinytc_location {
+    tinytc_position begin; ///< Starting position
+    tinytc_position end;   ///< End position
+} tinytc_location_t;
+
+////////////////////////////
+////////// Handles /////////
+////////////////////////////
+
+//! @struct tinytc_prog
+//! @brief Opaque struct for a program
 struct tinytc_prog;
-// @brief prog handle
+//! @brief prog handle
 typedef struct tinytc_prog *tinytc_prog_t;
 
-// @struct tinytc_func
-// @brief Opaque struct for a function
+//! @struct tinytc_func
+//! @brief Opaque struct for a function
 struct tinytc_func;
-// @brief func handle
+//! @brief func handle
 typedef struct tinytc_func *tinytc_func_t;
 
-// @struct tinytc_region
-// @brief Opaque struct for a region
+//! @struct tinytc_region
+//! @brief Opaque struct for a region
 struct tinytc_region;
-// @brief region handle
+//! @brief region handle
 typedef struct tinytc_region *tinytc_region_t;
 
-// @struct tinytc_inst
-// @brief Opaque struct for an instruction
+//! @struct tinytc_inst
+//! @brief Opaque struct for an instruction
 struct tinytc_inst;
-// @brief inst handle
+//! @brief inst handle
 typedef struct tinytc_inst *tinytc_inst_t;
 
-// @struct tinytc_value
-// @brief Opaque struct for a value
+//! @struct tinytc_value
+//! @brief Opaque struct for a value
 struct tinytc_value;
-// @brief value handle
+//! @brief value handle
 typedef struct tinytc_value *tinytc_value_t;
 
-// @struct tinytc_data_type
-// @brief Opaque struct for a data type
+//! @struct tinytc_data_type
+//! @brief Opaque struct for a data type
 struct tinytc_data_type;
-// @brief data_type handle
+//! @brief data_type handle
 typedef struct tinytc_data_type *tinytc_data_type_t;
 
 #ifdef __cplusplus

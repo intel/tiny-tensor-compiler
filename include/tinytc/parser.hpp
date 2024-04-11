@@ -7,14 +7,13 @@
 #include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/prog.hpp"
+#include "tinytc/types.hpp"
 
 #include <iosfwd>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace tinytc {
-
-class location;
 
 /**
  * @brief Source manager
@@ -46,9 +45,13 @@ class TINYTC_EXPORT source_manager {
     auto error_reporter() -> error_reporter_function;
 
   private:
+    struct source {
+        std::string name, text;
+    };
+    auto add_source(source src) -> location;
     std::ostream *oerr_;
     int stdin_counter_ = 0, memory_counter_ = 0;
-    std::unordered_map<std::string, std::string> sources_;
+    std::vector<source> sources_;
 };
 
 /**
@@ -60,8 +63,8 @@ class TINYTC_EXPORT source_manager {
  *
  * @return Abstract syntax tree on success; nullptr on error
  */
-TINYTC_EXPORT auto parse(std::string const &input, std::ostream *oerr = nullptr,
-                         std::string const &filename = "<memory>") -> prog;
+TINYTC_EXPORT auto parse(std::string const &input, location const &initial_loc,
+                         std::ostream *oerr = nullptr) -> prog;
 
 } // namespace tinytc
 

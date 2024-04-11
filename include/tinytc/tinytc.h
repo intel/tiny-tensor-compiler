@@ -69,14 +69,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
  * @param stride_size [in][optional] number of elements in stride array; must be either 0 for
  * automatic stride calculation or must match shape_size; must be 0 if stride == nullptr
  * @param stride [in][optional][range(0, stride_size)] stride array
+ * @param location [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
                                                         tinytc_scalar_type_t scalar_ty,
-                                                        uint32_t shape_size, int64_t const *shape,
-                                                        uint32_t stride_size,
-                                                        int64_t const *stride);
+                                                        uint32_t shape_size, const int64_t *shape,
+                                                        uint32_t stride_size, const int64_t *stride,
+                                                        const tinytc_location_t *loc);
 
 /**
  * @brief Create group data type

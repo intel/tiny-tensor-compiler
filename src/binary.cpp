@@ -10,9 +10,9 @@
 #include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/location.hpp"
 #include "tinytc/ir/passes.hpp"
 #include "tinytc/opencl_cc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>

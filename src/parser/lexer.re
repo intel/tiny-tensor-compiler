@@ -11,21 +11,19 @@
 #include <limits>
 #include <utility>
 
-namespace tinytc::parser {
+namespace tinytc {
 
-lexer::lexer(std::string const &input, std::ostream *oerr, std::string const &filename)
+lexer::lexer(std::string const &input, location const &initial_loc, std::ostream *oerr)
     : input_{input.c_str()},
-      len_(input.size()), YYCURSOR{input_}, YYLIMIT{input_ + len_}, oerr_{oerr} {
-    loc_.begin.filename = filename;
-    loc_.end.filename = filename;
+      len_(input.size()), YYCURSOR{input_}, YYLIMIT{input_ + len_}, loc_{initial_loc}, oerr_{oerr} {
 }
 
 parser::symbol_type lexer::operator()() {
     char const *YYMARKER;
 lex:
     char const *b = YYCURSOR;
-    loc_.step();
-    auto const adv_loc = [&]() { loc_.columns(YYCURSOR - b); };
+    step(loc_);
+    auto const adv_loc = [&]() { columns(loc_, YYCURSOR - b); };
     /*!re2c
         re2c:define:YYCTYPE = char;
         re2c:yyfill:enable = 0;
@@ -169,7 +167,7 @@ lex:
 
         whitespace          { adv_loc(); goto lex; }
         comment             { adv_loc(); goto lex; }
-        newline             { loc_.lines(1); goto lex; }
+        newline             { lines(loc_, 1); goto lex; }
         [\x00]              { adv_loc(); return parser::make_YYEOF(loc_); }
         $                   { adv_loc(); return parser::make_YYEOF(loc_); }
         *                   {
@@ -265,4 +263,4 @@ void lexer::error(location const &l, std::string const &m) {
     report_error_with_context(oerr_, input_, YYLIMIT - input_, l, m);
 }
 
-} // namespace tinytc::parser
+} // namespace tinytc

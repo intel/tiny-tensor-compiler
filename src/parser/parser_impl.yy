@@ -6,10 +6,10 @@
 
 %code requires {
     #include "ir/node/function_node.hpp"
+    #include "location.hpp"
     #include "tinytc/ir/data_type.hpp"
     #include "tinytc/ir/inst.hpp"
     #include "tinytc/ir/func.hpp"
-    #include "tinytc/ir/location.hpp"
     #include "tinytc/ir/prog.hpp"
     #include "tinytc/ir/region.hpp"
     #include "tinytc/ir/scalar_type.hpp"
@@ -22,7 +22,7 @@
     #include <string>
     #include <utility>
 
-    namespace tinytc::parser {
+    namespace tinytc {
         class parse_context;
         class lexer;
     }
@@ -49,7 +49,7 @@
     #include <vector>
     #include <utility>
 
-    namespace tinytc::parser {
+    namespace tinytc {
     void check_scalar_type(value & val, scalar_type const& sty, location & loc1,
                            location & loc2) {
         clir::visit(
@@ -86,7 +86,7 @@
 %define parse.assert
 %define parse.error detailed
 %define parse.lac full
-%define api.namespace {tinytc::parser}
+%define api.namespace {tinytc}
 %define api.token.raw
 %define api.token.constructor
 %define api.value.type variant
@@ -303,8 +303,7 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list RCHEV {
         try {
-            $$ = memref_type($scalar_type, std::move($mode_list), std::vector<std::int64_t>{},
-                                 @memref_type);
+            $$ = memref_type($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -446,7 +445,7 @@ gemm_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = inst {
+            $$ = inst{
                 std::make_shared<gemm_inst>(
                     $ta, $tb, std::move($alpha), std::move($a), std::move($b), std::move($beta),
                     std::move($c), $atomic, @gemm_inst)
@@ -932,7 +931,7 @@ slice_size:
 
 %%
 
-namespace tinytc::parser {
+namespace tinytc {
 void parser::error(location_type const& l, std::string const& m) {
     lex.error(l, m);
 }

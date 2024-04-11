@@ -5,7 +5,7 @@
 #define LEXER_20230614_HPP
 
 #include "parser/parser_impl.hpp"
-#include "tinytc/ir/location.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -13,14 +13,12 @@
 #include <string>
 
 namespace tinytc {
-enum class scalar_type;
-}
 
-namespace tinytc::parser {
+enum class scalar_type;
 
 class lexer {
   public:
-    lexer(std::string const &input, std::ostream *oerr = nullptr, std::string const &filename = "");
+    lexer(std::string const &input, location const &start_loc, std::ostream *oerr = nullptr);
     parser::symbol_type operator()();
 
     void error(location const &l, std::string const &m);
@@ -35,12 +33,12 @@ class lexer {
     char const *input_;
     std::size_t len_;
     char const *YYCURSOR, *YYLIMIT;
-    std::ostream *oerr_;
     location loc_;
+    std::ostream *oerr_;
 };
 
 inline parser::symbol_type yylex(lexer &lex) { return lex(); }
 
-} // namespace tinytc::parser
+} // namespace tinytc
 
 #endif // LEXER_20230614_HPP
