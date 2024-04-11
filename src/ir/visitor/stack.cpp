@@ -8,7 +8,6 @@
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/value.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>

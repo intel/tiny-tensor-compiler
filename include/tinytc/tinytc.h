@@ -24,28 +24,8 @@ extern "C" {
 TINYTC_EXPORT char const *tinytc_error_string(tinytc_status_t status);
 
 ////////////////////////////
-/// Abstract syntax tree ///
+///////// Data type ////////
 ////////////////////////////
-
-/**
- * @brief Create program
- *
- * @param program Pointer to program handle
- * @param function_count Number of function handles
- * @param functions Array of function handles
- *
- * @return tinytc_success on success and error otherwise
- */
-// tinytc_status_t TINYTC_EXPORT tinytc_prog_create(tinytc_prog_t *program, uint32_t function_count,
-// tinytc_func_t *functions);
-/**
- * @brief Destroy program
- *
- * @param program Program handle
- *
- * @return tinytc_success on success and error otherwise
- */
-// tinytc_status_t TINYTC_EXPORT tinytc_prog_destroy(tinytc_prog_t program);
 
 /**
  * @brief Create scalar data type
@@ -83,7 +63,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
  * @brief Create group data type
  *
  * @param dt [out] pointer to the data type object created
- * @param memref_ty [in] memref data type handle
+ * @param memref_ty [in] memref data type object
  *
  * @return tinytc_success on success and error otherwise
  */
@@ -91,24 +71,104 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt,
                                                        tinytc_data_type_t memref_ty);
 
 /**
- * @brief Release data type handle
+ * @brief Release data type object
  *
  * Decreases reference count by 1, free memory if reference count is 0.
  *
- * @param dt [inout] data type handle
+ * @param dt [inout] data type object
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt);
 
 /**
- * @brief Increase reference count of data type handle by 1
+ * @brief Increase reference count of data type object by 1
  *
- * @param dt [inout] data type handle
+ * @param dt [inout] data type object
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt);
+
+////////////////////////////
+/////////// Value //////////
+////////////////////////////
+
+/**
+ * @brief Create value
+ *
+ * @param val [out] pointer to the value object created
+ * @param type [in] data type object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *val, tinytc_data_type_t type);
+
+/**
+ * @brief Create floating point immediate value
+ *
+ * @param val [out] pointer to the value object created
+ * @param imm [in] immediate value
+ * @param type [in] type of immediate value
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *val, double imm,
+                                                      tinytc_scalar_type_t type);
+/**
+ * @brief Create integer immediate value
+ *
+ * @param val [out] pointer to the value object created
+ * @param imm [in] immediate value
+ * @param type [in] type of immediate value
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *val, int64_t imm,
+                                                    tinytc_scalar_type_t type);
+
+/**
+ * @brief Release value handle
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param val [inout] value object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_release(tinytc_value_t val);
+
+/**
+ * @brief Increase reference count of value handle by 1
+ *
+ * @param val [inout] value object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_retain(tinytc_value_t val);
+
+/**
+ * @brief Set name of value
+ *
+ * @param val [inout] value object
+ * @param name [in] name; null-terminated string
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t val, char const *name);
+
+/**
+ * @brief Get name of value
+ *
+ * The returned pointer may be invalidated if the value or any node in the abstract syntax
+ * tree referencing the value is modified.
+ *
+ * @param val [in] value object
+ * @param name [out] pointer to C string
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(tinytc_value_t val, char const **name);
 
 #ifdef __cplusplus
 }

@@ -19,12 +19,12 @@ find_package(BISON 3.8.2 REQUIRED)
 
 set(SOURCES
     binary.cpp
+    data_type.cpp
     device_info.cpp
     error.cpp
     internal/compiler_options.cpp
     #ir/builder.cpp
     ir/codegen_tools.cpp
-    ir/data_type.cpp
     ir/gemm_generator.cpp
     ir/inst.cpp
     ir/node/data_type_node.cpp
@@ -34,7 +34,6 @@ set(SOURCES
     ir/prog.cpp
     ir/scalar_type.cpp
     ir/tiling.cpp
-    ir/value.cpp
     ir/visitor/aa_results.cpp
     ir/visitor/alias_analysis.cpp
     ir/visitor/check_ir.cpp
@@ -51,6 +50,7 @@ set(SOURCES
     parser.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
+    value.cpp
 )
 set(RE2C_SOURCES
     parser/lexer.re
@@ -73,7 +73,6 @@ set(PUBLIC_HEADERS
     ir/scalar_type.hpp
     ir/slice.hpp
     ir/tiling.hpp
-    ir/value.hpp
     opencl_cc.hpp
     parser.hpp
     recipe/small_gemm_batched.hpp

@@ -7,7 +7,7 @@
 #include "location.hpp"
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/value.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include "clir/virtual_type_list.hpp"
 

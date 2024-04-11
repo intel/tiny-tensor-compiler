@@ -13,7 +13,6 @@
     #include "tinytc/ir/region.hpp"
     #include "tinytc/ir/scalar_type.hpp"
     #include "tinytc/ir/slice.hpp"
-    #include "tinytc/ir/value.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>
     #include <cstdint>
@@ -256,7 +255,8 @@ arguments:
 
 argument:
     LOCAL_IDENTIFIER COLON data_type {
-        auto v = value(std::move($data_type), $LOCAL_IDENTIFIER);
+        auto v = value(std::move($data_type));
+        v.name($LOCAL_IDENTIFIER);
         ctx.val($LOCAL_IDENTIFIER, v, @LOCAL_IDENTIFIER);
         $$ = std::move(v);
     }
@@ -514,7 +514,8 @@ for_inst:
         if ($optional_step) {
             check_scalar_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
-        auto v = value(data_type($for_loop_var_type), $loop_var);
+        auto v = value(data_type($for_loop_var_type));
+        v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
         try {
@@ -538,7 +539,8 @@ foreach_inst:
         EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] for_loop_var_type {
         check_scalar_type($from, $for_loop_var_type, @from, @for_loop_var_type);
         check_scalar_type($to, $for_loop_var_type, @to, @for_loop_var_type);
-        auto v = value(data_type($for_loop_var_type), $loop_var);
+        auto v = value(data_type($for_loop_var_type));
+        v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
         try {

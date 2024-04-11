@@ -5,7 +5,7 @@
 #define SLICE_20230327_HPP
 
 #include "tinytc/export.h"
-#include "tinytc/ir/value.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <utility>
 

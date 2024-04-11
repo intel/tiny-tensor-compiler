@@ -25,6 +25,7 @@ enum class status {
     success = tinytc_success,
     bad_alloc = tinytc_bad_alloc,
     invalid_arguments = tinytc_invalid_arguments,
+    out_of_range = tinytc_out_of_range,
     runtime_error = tinytc_runtime_error,
     internal_compiler_error = tinytc_internal_compiler_error,
     unsupported_subgroup_size = tinytc_unsupported_subgroup_size,
