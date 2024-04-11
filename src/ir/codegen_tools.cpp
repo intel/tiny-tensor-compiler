@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "codegen_tools.hpp"
-#include "ir/visitor/util.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/types.hpp"
+#include "util.hpp"
 
 #include <clir/attr_defs.hpp>
 #include <clir/builder.hpp>

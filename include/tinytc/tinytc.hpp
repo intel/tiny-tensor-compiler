@@ -11,6 +11,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 ////////////////////////////
@@ -130,28 +131,28 @@ template <typename T> class handle {
     //! Create handle from C handle
     handle(T obj, bool needs_retain = false) : obj_(obj) {
         if (needs_retain) {
-            TINYTC_CHECK(retain());
+            TINYTC_CHECK(c_retain());
         }
     }
     //! Decrease reference count
-    ~handle() { release(); }
+    ~handle() { c_release(); }
     //! Copy ctor
-    handle(handle const &other) : obj_(other.obj_) { TINYTC_CHECK(retain()); }
+    handle(handle const &other) : obj_(other.obj_) { TINYTC_CHECK(c_retain()); }
     //! Move ctor
     handle(handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
     //! Copy operator
     handle &operator=(handle const &other) {
         if (obj_ != other.obj_) {
-            TINYTC_CHECK(release());
+            TINYTC_CHECK(c_release());
             obj_ = other.obj_;
-            TINYTC_CHECK(retain());
+            TINYTC_CHECK(c_retain());
         }
         return *this;
     }
     //! Move operator
     handle &operator=(handle &&other) {
         if (obj_ != other.obj_) {
-            TINYTC_CHECK(release());
+            TINYTC_CHECK(c_release());
             obj_ = other.obj_;
             other.obj_ = nullptr;
         }
@@ -162,8 +163,15 @@ template <typename T> class handle {
     auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
     //! Convert handle to C handle
     auto operator->() const -> T { return obj_; }
-    //! Convert handle to C handle
+    //! Returns C handle
     auto get() const -> T { return obj_; }
+    //! Returns C handle and releases the ownership of the managed object
+    auto release() -> T {
+        auto tmp = obj_;
+        obj_ = nullptr;
+        return tmp;
+    }
+
     //! Check whether handle is non-empty (valid)
     explicit operator bool() const noexcept { return obj_ != nullptr; }
 
@@ -173,13 +181,13 @@ template <typename T> class handle {
     bool operator!=(handle<T> const &other) const { return !(*this == other); }
 
   protected:
-    auto retain() -> tinytc_status_t {
+    auto c_retain() -> tinytc_status_t {
         if (obj_ != nullptr) {
             return traits::retain(obj_);
         }
         return tinytc_status_success;
     }
-    auto release() -> tinytc_status_t {
+    auto c_release() -> tinytc_status_t {
         if (obj_ != nullptr) {
             return traits::release(obj_);
         }
@@ -282,6 +290,50 @@ class value : public handle<tinytc_value_t> {
     inline void name(std::string const &name) {
         TINYTC_CHECK(tinytc_value_set_name(obj_, name.c_str()));
     }
+};
+
+////////////////////////////
+//////// Slice ///////
+////////////////////////////
+
+//! Slice storing offset:size
+class slice : public std::pair<value, value> {
+  public:
+    //! ctor
+    inline slice(value offset = nullptr, value size = nullptr)
+        : std::pair<value, value>{std::move(offset), std::move(size)} {}
+};
+
+////////////////////////////
+//////// Instruction ///////
+////////////////////////////
+
+//! Convert binary op to string
+inline char const *to_string(binary_op op) {
+    return ::tinytc_binary_op_to_string(static_cast<::tinytc_binary_op_t>(op));
+}
+
+//! Convert cmp condition to string
+inline char const *to_string(cmp_condition cond) {
+    return ::tinytc_cmp_condition_to_string(static_cast<::tinytc_cmp_condition_t>(cond));
+}
+//! Convert transpose to string
+inline char const *to_string(transpose t) {
+    return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
+}
+
+template <> struct handle_traits<tinytc_inst_t> {
+    static auto retain(tinytc_inst_t handle) -> tinytc_status_t {
+        return tinytc_inst_retain(handle);
+    }
+    static auto release(tinytc_inst_t handle) -> tinytc_status_t {
+        return tinytc_inst_release(handle);
+    }
+};
+
+class inst : public handle<tinytc_inst_t> {
+  public:
+    using handle::handle;
 };
 
 } // namespace tinytc

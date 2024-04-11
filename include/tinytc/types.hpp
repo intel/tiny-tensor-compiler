@@ -66,6 +66,29 @@ enum class scalar_type {
     f64 = tinytc_scalar_type_f64      ///< Double precision floating point (64 bit)
 };
 
+//! Binary operations
+enum class binary_op {
+    add = tinytc_binary_op_add, ///< add
+    sub = tinytc_binary_op_sub, ///< subtract
+    mul = tinytc_binary_op_mul, ///< multiply
+    div = tinytc_binary_op_div, ///< divide
+    rem = tinytc_binary_op_rem  ///< division remainder
+};
+//! Compare operation
+enum class cmp_condition {
+    eq = tinytc_cmp_condition_eq, ///< equals
+    ne = tinytc_cmp_condition_ne, ///< not equal
+    gt = tinytc_cmp_condition_gt, ///< greater than
+    ge = tinytc_cmp_condition_ge, ///< greather or equal than
+    lt = tinytc_cmp_condition_lt, ///< less than
+    le = tinytc_cmp_condition_le  ///< less or equal than
+};
+//! Transpose
+enum class transpose {
+    N = tinytc_transpose_N, ///< no transpose
+    T = tinytc_transpose_T  ///< transpose
+};
+
 ////////////////////////////
 /////// Type aliases ///////
 ////////////////////////////

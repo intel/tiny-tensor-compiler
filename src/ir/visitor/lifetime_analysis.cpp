@@ -4,7 +4,6 @@
 #include "ir/visitor/lifetime_analysis.hpp"
 #include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 
 #include <clir/handle.hpp>
@@ -126,7 +125,7 @@ std::unordered_set<value_node *> lifetime_inserter::operator()(rgn &b) {
                        [this](auto &op) { return aa_.root(*op); });
         std::vector<value>::iterator aa;
         while ((aa = intersects(allocas, operands_root)) != allocas.end()) {
-            s = b.insts().insert(s, inst(std::make_shared<lifetime_stop_inst>(*aa)));
+            s = b.insts().insert(s, inst{std::make_unique<lifetime_stop_inst>(*aa).release()});
             allocas.erase(aa);
         }
         --s;

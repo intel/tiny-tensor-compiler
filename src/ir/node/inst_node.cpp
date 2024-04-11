@@ -5,8 +5,8 @@
 #include "error.hpp"
 #include "ir/node/data_type_node.hpp"
 #include "ir/node/value_node.hpp"
-#include "ir/visitor/util.hpp"
 #include "tinytc/types.hpp"
+#include "util.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/handle.hpp>

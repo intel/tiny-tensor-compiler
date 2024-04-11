@@ -66,26 +66,36 @@ typedef enum {
     tinytc_scalar_type_f64 = 11   ///< Double precision floating point (64 bit)
 } tinytc_scalar_type_t;
 
+//! Binary operations
+typedef enum {
+    tinytc_binary_op_add = 0, ///< add
+    tinytc_binary_op_sub = 1, ///< subtract
+    tinytc_binary_op_mul = 2, ///< multiply
+    tinytc_binary_op_div = 3, ///< divide
+    tinytc_binary_op_rem = 4  ///< division remainder
+} tinytc_binary_op_t;
+
+//! Compare operation
+typedef enum {
+    tinytc_cmp_condition_eq = 0, ///< equals
+    tinytc_cmp_condition_ne = 1, ///< not equal
+    tinytc_cmp_condition_gt = 2, ///< greater than
+    tinytc_cmp_condition_ge = 3, ///< greather or equal than
+    tinytc_cmp_condition_lt = 4, ///< less than
+    tinytc_cmp_condition_le = 5  ///< less or equal than
+} tinytc_cmp_condition_t;
+
+//! Transpose
+typedef enum {
+    tinytc_transpose_N = 0, ///< no transpose
+    tinytc_transpose_T = 1  ///< transpose
+} tinytc_transpose_t;
+
 ////////////////////////////
-////////// Structs /////////
+/////////// Types //////////
 ////////////////////////////
 
-/// @brief Source code position
-typedef struct tinytc_position {
-    int32_t source_id; ///< Source file identifier; 0 is "unknown source"
-    int32_t line;      ///< Line number; counting starts at 1
-    int32_t column;    ///< Column number; counting start at 1
-} tinytc_position_t;
-
-/// @brief Source code location
-typedef struct tinytc_location {
-    tinytc_position begin; ///< Starting position
-    tinytc_position end;   ///< End position
-} tinytc_location_t;
-
-////////////////////////////
-////////// Handles /////////
-////////////////////////////
+typedef uint8_t tinytc_bool_t;
 
 //! @struct tinytc_data_type
 //! @brief Opaque struct for a data type
@@ -122,6 +132,29 @@ typedef struct tinytc_func *tinytc_func_t;
 struct tinytc_prog;
 //! @brief prog handle
 typedef struct tinytc_prog *tinytc_prog_t;
+
+////////////////////////////
+////////// Structs /////////
+////////////////////////////
+
+//! @brief Source code position
+typedef struct tinytc_position {
+    int32_t source_id; ///< Source file identifier; 0 is "unknown source"
+    int32_t line;      ///< Line number; counting starts at 1
+    int32_t column;    ///< Column number; counting start at 1
+} tinytc_position_t;
+
+//! @brief Source code location
+typedef struct tinytc_location {
+    tinytc_position begin; ///< Starting position
+    tinytc_position end;   ///< End position
+} tinytc_location_t;
+
+//! @brief Slice
+typedef struct tinytc_slice {
+    tinytc_value_t offset; ///< Offset
+    tinytc_value_t size;   ///< Size; may be nullptr for a single index only
+} tinytc_slice_t;
 
 #ifdef __cplusplus
 }

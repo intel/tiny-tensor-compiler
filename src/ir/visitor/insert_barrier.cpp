@@ -4,7 +4,6 @@
 #include "ir/visitor/insert_barrier.hpp"
 #include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 
 #include <clir/builtin_type.hpp>
@@ -123,7 +122,7 @@ std::unordered_set<std::uintptr_t> insert_barrier::operator()(rgn &b) {
     for (auto &s : b.insts()) {
         auto my_rw = visit(*this, *s);
         if (intersects(my_rw, rw)) {
-            insts.emplace_back(inst(std::make_shared<barrier_inst>()));
+            insts.emplace_back(inst{std::make_unique<barrier_inst>().release()});
             rw.clear();
         }
         insts.emplace_back(s);

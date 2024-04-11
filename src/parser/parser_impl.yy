@@ -7,11 +7,9 @@
 %code requires {
     #include "ir/node/function_node.hpp"
     #include "location.hpp"
-    #include "tinytc/ir/inst.hpp"
     #include "tinytc/ir/func.hpp"
     #include "tinytc/ir/prog.hpp"
     #include "tinytc/ir/region.hpp"
-    #include "tinytc/ir/slice.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>
     #include <cstdint>
@@ -27,17 +25,17 @@
 }
 
 %code {
-    #include "ir/visitor/util.hpp"
+    #include "error.hpp"
     #include "ir/node/data_type_node.hpp"
     #include "ir/node/inst_node.hpp"
     #include "ir/node/program_node.hpp"
     #include "ir/node/region_node.hpp"
     #include "ir/node/value_node.hpp"
-    #include "parser/parse_context.hpp"
     #include "parser/lexer.hpp"
-    #include "error.hpp"
+    #include "parser/parse_context.hpp"
     #include "tinytc/ir/passes.hpp"
-    
+    #include "util.hpp"
+
     #include <clir/visit.hpp>
     #include <clir/handle.hpp>
 
@@ -400,9 +398,9 @@ axpby_inst:
         check_type($b, $mb, @b, @mb);
         try {
             $$ = inst {
-                std::make_shared<axpby_inst>($ta, std::move($alpha), std::move($a),
-                                                           std::move($beta), std::move($b), $atomic,
-                                                           @axpby_inst)
+                std::make_unique<axpby_inst>($ta, std::move($alpha), std::move($a),
+                                             std::move($beta), std::move($b), $atomic, @axpby_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -444,10 +442,11 @@ gemm_inst:
         check_scalar_type($beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
-            $$ = inst{
-                std::make_shared<gemm_inst>(
-                    $ta, $tb, std::move($alpha), std::move($a), std::move($b), std::move($beta),
-                    std::move($c), $atomic, @gemm_inst)
+            $$ = inst {
+                std::make_unique<gemm_inst>($ta, $tb, std::move($alpha), std::move($a),
+                                            std::move($b), std::move($beta), std::move($c), $atomic,
+                                            @gemm_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -467,9 +466,9 @@ gemv_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
-                std::make_shared<gemv_inst>($ta, std::move($alpha), std::move($a),
-                                                          std::move($b), std::move($beta),
-                                                          std::move($c), $atomic, @gemv_inst)
+                std::make_unique<gemv_inst>($ta, std::move($alpha), std::move($a), std::move($b),
+                                            std::move($beta), std::move($c), $atomic, @gemv_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -494,9 +493,9 @@ ger_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
-                std::make_shared<ger_inst>(std::move($alpha), std::move($a),
-                                                         std::move($b), std::move($beta),
-                                                         std::move($c), $atomic, @ger_inst)
+                std::make_unique<ger_inst>(std::move($alpha), std::move($a), std::move($b),
+                                           std::move($beta), std::move($c), $atomic, @ger_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -519,9 +518,9 @@ for_inst:
     } region {
         try {
             $$ = inst {
-                std::make_shared<for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
-                                                         $optional_step, std::move($region),
-                                                         @for_inst)
+                std::make_unique<for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
+                                           $optional_step, std::move($region), @for_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -544,8 +543,9 @@ foreach_inst:
     } region {
         try {
             $$ = inst {
-                std::make_shared<foreach_inst>(ctx.val($loop_var, @loop_var), $from,
-                                                             $to, std::move($region), @foreach_inst)
+                std::make_unique<foreach_inst>(ctx.val($loop_var, @loop_var), $from, $to,
+                                               std::move($region), @foreach_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -600,9 +600,10 @@ hadamard_inst:
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
-                std::make_shared<hadamard_inst>(
-                    std::move($alpha), std::move($a), std::move($b), std::move($beta),
-                    std::move($c), $atomic, @hadamard_inst)
+                std::make_unique<hadamard_inst>(std::move($alpha), std::move($a), std::move($b),
+                                                std::move($beta), std::move($c), $atomic,
+                                                @hadamard_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -620,9 +621,9 @@ sum_inst:
         check_type($b, $mb, @b, @mb);
         try {
             $$ = inst {
-                std::make_shared<sum_inst>($ta, std::move($alpha), std::move($a),
-                                                         std::move($beta), std::move($b), $atomic,
-                                                         @sum_inst)
+                std::make_unique<sum_inst>($ta, std::move($alpha), std::move($a), std::move($beta),
+                                           std::move($b), $atomic, @sum_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -640,7 +641,7 @@ yield_inst:
         for (std::size_t i = 0; i < $vals.size(); ++i) {
             check_scalar_type($vals[i], $tys[i], @vals, @tys);
         }
-        $$ = inst{std::make_shared<yield_inst>(std::move($vals))};
+        $$ = inst{std::make_unique<yield_inst>(std::move($vals)).release()};
     }
 ;
 
@@ -664,7 +665,7 @@ alloca_inst:
     ALLOCA RETURNS memref_type {
         try {
             $$ = inst {
-                std::make_shared<alloca_inst>(std::move($memref_type), @alloca_inst)
+                std::make_unique<alloca_inst>(std::move($memref_type), @alloca_inst).release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -678,8 +679,9 @@ binary_op_inst:
         check_scalar_type($b, $ty, @b, @ty);
         try {
             $$ = inst {
-                std::make_shared<binary_op_inst>($BINARY_OP, std::move($a),
-                                                               std::move($b), @binary_op_inst)
+                std::make_unique<binary_op_inst>($BINARY_OP, std::move($a), std::move($b),
+                                                 @binary_op_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -691,9 +693,7 @@ cast_inst:
     CAST identifier_or_constant[a] COLON scalar_type[from] RETURNS scalar_type[to] {
         check_scalar_type($a, $from, @a, @from);
         try {
-            $$ = inst {
-                std::make_shared<cast_inst>(std::move($a), $to, @cast_inst)
-            };
+            $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -706,8 +706,9 @@ compare_inst:
         check_scalar_type($b, $ty, @b, @ty);
         try {
             $$ = inst {
-                std::make_shared<compare_inst>($CMP_CONDITION, std::move($a),
-                                                             std::move($b), @compare_inst)
+                std::make_unique<compare_inst>($CMP_CONDITION, std::move($a), std::move($b),
+                                               @compare_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -724,8 +725,9 @@ expand_inst:
         }
         try {
             $$ = inst {
-                std::make_shared<expand_inst>(std::move($var), $mode,
-                                                            std::move($expand_shape), @expand_inst)
+                std::make_unique<expand_inst>(std::move($var), $mode, std::move($expand_shape),
+                                              @expand_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -758,7 +760,7 @@ fuse_inst:
         }
         try {
             $$ = inst {
-                std::make_shared<fuse_inst>(std::move($var), $from, $to, @fuse_inst)
+                std::make_unique<fuse_inst>(std::move($var), $from, $to, @fuse_inst).release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -775,8 +777,9 @@ load_inst:
         }
         try {
             $$ = inst {
-                std::make_shared<load_inst>(
-                    std::move($var), std::move($optional_index_list), @load_inst)
+                std::make_unique<load_inst>(std::move($var), std::move($optional_index_list),
+                                            @load_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -815,8 +818,9 @@ store_inst:
         }
         try {
             $$ = inst {
-                std::make_shared<store_inst>(
-                    std::move($a), std::move($b), std::move($optional_index_list), @store_inst)
+                std::make_unique<store_inst>(std::move($a), std::move($b),
+                                             std::move($optional_index_list), @store_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -825,19 +829,20 @@ store_inst:
 ;
 
 group_id_inst:
-    GROUP_ID { $$ = inst{std::make_shared<group_id_inst>()}; }
+    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>().release()}; }
 ;
 
 group_size_inst:
-    GROUP_SIZE { $$ = inst{std::make_shared<group_size_inst>()}; }
+    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>().release()}; }
 ;
 
 if_inst:
     IF identifier_or_constant[condition] optional_returned_values region else_region {
         check_scalar_type($condition, scalar_type::bool_, @condition, @condition);
-        $$ = inst{std::make_shared<if_inst>(
-            std::move($condition), std::move($region), std::move($else_region),
-            std::move($optional_returned_values))};
+        $$ = inst{std::make_unique<if_inst>(std::move($condition), std::move($region),
+                                            std::move($else_region),
+                                            std::move($optional_returned_values))
+                      .release()};
         $$->loc(@if_inst);
     }
 ;
@@ -867,7 +872,7 @@ neg_inst:
     NEG identifier_or_constant[a] COLON scalar_type[ty] {
         check_scalar_type($a, $ty, @a, @ty);
         try {
-            $$ = inst { std::make_shared<neg_inst>(std::move($a), @neg_inst) };
+            $$ = inst { std::make_unique<neg_inst>(std::move($a), @neg_inst).release() };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -882,9 +887,7 @@ size_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
-            $$ = inst {
-                std::make_shared<size_inst>(std::move($var), $mode, @size_inst)
-            };
+            $$ = inst { std::make_unique<size_inst>(std::move($var), $mode, @size_inst).release() };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -900,8 +903,9 @@ subview_inst:
         }
         try {
             $$ = inst {
-                std::make_shared<subview_inst>(
-                    std::move($var), std::move($optional_slice_list), @subview_inst)
+                std::make_unique<subview_inst>(std::move($var), std::move($optional_slice_list),
+                                               @subview_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());

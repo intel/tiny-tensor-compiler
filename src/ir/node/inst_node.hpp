@@ -5,9 +5,8 @@
 #define INST_NODE_20230327_HPP
 
 #include "location.hpp"
-#include "tinytc/ir/inst.hpp"
+#include "reference_counted.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/slice.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/virtual_type_list.hpp>
@@ -18,25 +17,38 @@
 
 namespace tinytc {
 
-class inst_node
-    : public clir::virtual_type_list<
-          class alloca_inst, class axpby_inst, class barrier_inst, class binary_op_inst,
-          class cast_inst, class compare_inst, class expand_inst, class fuse_inst, class load_inst,
-          class group_id_inst, class group_size_inst, class lifetime_stop_inst, class gemm_inst,
-          class gemv_inst, class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
-          class if_inst, class neg_inst, class size_inst, class subview_inst, class store_inst,
-          class sum_inst, class yield_inst> {
-  public:
-    inline location const &loc() const { return loc_; }
-    inline void loc(location const &loc) { loc_ = loc; }
+//! Instruction classification
+enum class inst_kind {
+    replicated, ///< replicated instruction executed in every work-item
+    collective  ///< collective instruction distributed among work-items
+};
 
-    virtual value result() = 0;
-    virtual auto results() -> std::vector<value> { return {}; }
-    virtual inst_kind kind() const = 0;
+using inst_nodes = clir::virtual_type_list<
+    class alloca_inst, class axpby_inst, class barrier_inst, class binary_op_inst, class cast_inst,
+    class compare_inst, class expand_inst, class fuse_inst, class load_inst, class group_id_inst,
+    class group_size_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
+    class ger_inst, class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
+    class neg_inst, class size_inst, class subview_inst, class store_inst, class sum_inst,
+    class yield_inst>;
+
+} // namespace tinytc
+
+struct tinytc_inst : tinytc::reference_counted, tinytc::inst_nodes {
+  public:
+    inline tinytc::location const &loc() const { return loc_; }
+    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+
+    virtual tinytc::value result() = 0;
+    virtual auto results() -> std::vector<tinytc::value> { return {}; }
+    virtual tinytc::inst_kind kind() const = 0;
 
   private:
-    location loc_;
+    tinytc::location loc_;
 };
+
+namespace tinytc {
+
+using inst_node = ::tinytc_inst;
 
 class scalar_inst : public inst_node {};
 
@@ -217,7 +229,9 @@ class load_inst : public clir::visitable<load_inst, inst_node> {
 
 class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
   public:
-    inline group_id_inst() : result_{data_type(scalar_type::index)} {}
+    inline group_id_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
+        loc(lc);
+    }
     inline value result() override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
@@ -227,7 +241,9 @@ class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
 
 class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
   public:
-    inline group_size_inst() : result_{data_type(scalar_type::index)} {}
+    inline group_size_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
+        loc(lc);
+    }
     inline value result() override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 

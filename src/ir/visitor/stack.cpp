@@ -6,7 +6,6 @@
 #include "ir/node/data_type_node.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
 #include "tinytc/types.hpp"
 

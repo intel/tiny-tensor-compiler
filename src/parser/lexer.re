@@ -3,7 +3,6 @@
 
 #include "parser/lexer.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/inst.hpp"
 #include "tinytc/types.hpp"
 
 #include <cerrno>

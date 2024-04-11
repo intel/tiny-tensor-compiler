@@ -5,7 +5,6 @@
 #include "error.hpp"
 #include "ir/node/function_node.hpp"
 #include "ir/node/program_node.hpp"
-#include "ir/visitor/util.hpp"
 #include "tinytc/device_info.hpp"
 #include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/ir/error.hpp"
@@ -13,6 +12,7 @@
 #include "tinytc/ir/passes.hpp"
 #include "tinytc/opencl_cc.hpp"
 #include "tinytc/types.hpp"
+#include "util.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>
