@@ -9,7 +9,6 @@
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/inst.hpp"
 #include "tinytc/ir/region.hpp"
-#include "tinytc/ir/value.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>
@@ -26,10 +25,10 @@ using clir::visit;
 
 namespace tinytc {
 
-auto get_memref_type(value &v) {
-    auto t = dynamic_cast<memref_data_type *>(v->ty().get());
+auto get_memref_type(value_node &v) {
+    auto t = dynamic_cast<memref_data_type *>(v.ty().get());
     if (t == nullptr) {
-        throw compilation_error(v->loc(), status::ir_expected_memref);
+        throw compilation_error(v.loc(), status::ir_expected_memref);
     }
     return t;
 }
@@ -40,7 +39,7 @@ work_group_size::work_group_size(std::shared_ptr<core_info> info) : info_(std::m
 void work_group_size::operator()(inst_node &) {}
 
 void work_group_size::operator()(blas_a2_inst &in) {
-    auto b = get_memref_type(in.B());
+    auto b = get_memref_type(*in.B());
     if (b->dim() == 1) {
         shapes_.insert({b->element_ty(), {b->shape(0), 0}});
     } else if (b->dim() >= 2) {
@@ -48,7 +47,7 @@ void work_group_size::operator()(blas_a2_inst &in) {
     }
 }
 void work_group_size::operator()(blas_a3_inst &in) {
-    auto c = get_memref_type(in.C());
+    auto c = get_memref_type(*in.C());
     if (c->dim() == 1) {
         shapes_.insert({c->element_ty(), {c->shape(0), 0}});
     } else if (c->dim() >= 2) {

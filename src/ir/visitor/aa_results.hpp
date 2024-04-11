@@ -6,20 +6,21 @@
 
 #include <unordered_map>
 
+struct tinytc_value;
+
 namespace tinytc {
 
 class alias_analyser;
-class value_node;
 
 class aa_results {
   public:
     aa_results() = default;
-    value_node *root(value_node &a);
-    bool alias(value_node &a, value_node &b);
+    ::tinytc_value *root(::tinytc_value &a);
+    bool alias(::tinytc_value &a, ::tinytc_value &b);
 
   private:
-    aa_results(std::unordered_map<value_node *, value_node *> alias);
-    std::unordered_map<value_node *, value_node *> alias_;
+    aa_results(std::unordered_map<::tinytc_value *, ::tinytc_value *> alias);
+    std::unordered_map<::tinytc_value *, ::tinytc_value *> alias_;
 
     friend class alias_analyser;
 };

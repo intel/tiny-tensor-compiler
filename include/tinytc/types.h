@@ -25,10 +25,11 @@ typedef enum {
     tinytc_success = 0x0,           ///< Operation was successful
     tinytc_bad_alloc = 0x1,         ///< Failure to allocate storage
     tinytc_invalid_arguments = 0x2, ///< Operation got invalid arguments
-    tinytc_runtime_error = 0x3,     ///< Runtime error
-    tinytc_internal_compiler_error = 0x4,
-    tinytc_unsupported_subgroup_size = 0x5,
-    tinytc_unsupported_work_group_size = 0x6,
+    tinytc_out_of_range = 0x3,
+    tinytc_runtime_error = 0x4, ///< Runtime error
+    tinytc_internal_compiler_error = 0x5,
+    tinytc_unsupported_subgroup_size = 0x6,
+    tinytc_unsupported_work_group_size = 0x7,
     // IR errors
     tinytc_ir_out_of_bounds = 0x100,
     tinytc_ir_invalid_shape = 0x101,
@@ -86,29 +87,11 @@ typedef struct tinytc_location {
 ////////// Handles /////////
 ////////////////////////////
 
-//! @struct tinytc_prog
-//! @brief Opaque struct for a program
-struct tinytc_prog;
-//! @brief prog handle
-typedef struct tinytc_prog *tinytc_prog_t;
-
-//! @struct tinytc_func
-//! @brief Opaque struct for a function
-struct tinytc_func;
-//! @brief func handle
-typedef struct tinytc_func *tinytc_func_t;
-
-//! @struct tinytc_region
-//! @brief Opaque struct for a region
-struct tinytc_region;
-//! @brief region handle
-typedef struct tinytc_region *tinytc_region_t;
-
-//! @struct tinytc_inst
-//! @brief Opaque struct for an instruction
-struct tinytc_inst;
-//! @brief inst handle
-typedef struct tinytc_inst *tinytc_inst_t;
+//! @struct tinytc_data_type
+//! @brief Opaque struct for a data type
+struct tinytc_data_type;
+//! @brief data_type handle
+typedef struct tinytc_data_type *tinytc_data_type_t;
 
 //! @struct tinytc_value
 //! @brief Opaque struct for a value
@@ -116,11 +99,29 @@ struct tinytc_value;
 //! @brief value handle
 typedef struct tinytc_value *tinytc_value_t;
 
-//! @struct tinytc_data_type
-//! @brief Opaque struct for a data type
-struct tinytc_data_type;
-//! @brief data_type handle
-typedef struct tinytc_data_type *tinytc_data_type_t;
+//! @struct tinytc_inst
+//! @brief Opaque struct for an instruction
+struct tinytc_inst;
+//! @brief inst handle
+typedef struct tinytc_inst *tinytc_inst_t;
+
+//! @struct tinytc_region
+//! @brief Opaque struct for a region
+struct tinytc_region;
+//! @brief region handle
+typedef struct tinytc_region *tinytc_region_t;
+
+//! @struct tinytc_func
+//! @brief Opaque struct for a function
+struct tinytc_func;
+//! @brief func handle
+typedef struct tinytc_func *tinytc_func_t;
+
+//! @struct tinytc_prog
+//! @brief Opaque struct for a program
+struct tinytc_prog;
+//! @brief prog handle
+typedef struct tinytc_prog *tinytc_prog_t;
 
 #ifdef __cplusplus
 }

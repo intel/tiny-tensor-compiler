@@ -20,7 +20,7 @@
 namespace tinytc {
 using data_type_nodes = clir::virtual_type_list<class void_data_type, class group_data_type,
                                                 class memref_data_type, class scalar_data_type>;
-};
+}
 
 struct tinytc_data_type : tinytc::reference_counted, tinytc::data_type_nodes {
   public:

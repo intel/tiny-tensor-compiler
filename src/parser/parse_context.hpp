@@ -6,8 +6,7 @@
 
 #include "tinytc/ir/func.hpp"
 #include "tinytc/ir/prog.hpp"
-#include "tinytc/ir/value.hpp"
-#include "tinytc/types.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <algorithm>
 #include <string>

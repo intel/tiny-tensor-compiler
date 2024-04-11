@@ -72,6 +72,8 @@ extern "C" char const *tinytc_error_string(tinytc_status_t status) {
         return "Bad allocation";
     case tinytc_invalid_arguments:
         return "Invalid arguments passed to function";
+    case tinytc_out_of_range:
+        return "Out of range";
     case tinytc_runtime_error:
         return "General runtime error";
     case tinytc_internal_compiler_error:

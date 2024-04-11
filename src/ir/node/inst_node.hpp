@@ -9,7 +9,6 @@
 #include "tinytc/ir/region.hpp"
 #include "tinytc/ir/scalar_type.hpp"
 #include "tinytc/ir/slice.hpp"
-#include "tinytc/ir/value.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/virtual_type_list.hpp>

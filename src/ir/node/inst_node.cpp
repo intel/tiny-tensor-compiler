@@ -109,12 +109,12 @@ binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &l
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-    result_->ty(at->ty());
+    result_ = value(at->ty());
 }
 
 cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc) : a_(std::move(a)) {
     loc(lc);
-    result_->ty(to_ty);
+    result_ = value(to_ty);
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a, value b, location const &lc)
@@ -127,7 +127,7 @@ compare_inst::compare_inst(cmp_condition cond, value a, value b, location const 
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-    result_->ty(scalar_type::bool_);
+    result_ = value(scalar_type::bool_);
 }
 
 gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
@@ -289,9 +289,9 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
             }
         }
         if (dyn_mode >= 0) {
-            auto const s = size / prod;
+            std::int64_t const s = size / prod;
             known_expand_shape[dyn_mode] = s;
-            expand_shape_[dyn_mode] = value(s, scalar_type::index);
+            expand_shape_[dyn_mode] = value(s);
             prod *= s;
         }
         if (prod != size) {
@@ -323,7 +323,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(r.release()));
+    result_ = value(data_type(r.release()));
 }
 
 fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc)
@@ -360,7 +360,7 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(r.release()));
+    result_ = value(data_type(r.release()));
 }
 
 if_inst::if_inst(value condition, region then, region otherwise,
@@ -379,13 +379,13 @@ load_inst::load_inst(value op, std::vector<value> index_list, location const &lc
                   if (static_cast<std::int64_t>(index_list_.size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_->ty(g.ty());
+                  result_ = value(g.ty());
               },
               [&](memref_data_type &m) {
                   if (m.dim() != static_cast<std::int64_t>(index_list_.size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_->ty(m.element_ty());
+                  result_ = value(m.element_ty());
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *op_->ty());
@@ -395,7 +395,7 @@ neg_inst::neg_inst(value a, location const &lc) : a_(std::move(a)) {
     loc(lc);
 
     auto at = get_scalar_type(loc(), a_);
-    result_->ty(at->ty());
+    result_ = value(at->ty());
 }
 
 size_inst::size_inst(value op, std::int64_t mode, location const &lc)
@@ -407,7 +407,7 @@ size_inst::size_inst(value op, std::int64_t mode, location const &lc)
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    result_->ty(scalar_type::index);
+    result_ = value(scalar_type::index);
 }
 
 subview_inst::subview_inst(value op, std::vector<slice> slices, location const &lc)
@@ -462,7 +462,7 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_->ty(data_type(r.release()));
+    result_ = value(data_type(r.release()));
 }
 
 store_inst::store_inst(value val, value op, std::vector<value> index_list, location const &lc)

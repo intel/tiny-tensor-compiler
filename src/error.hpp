@@ -10,6 +10,7 @@
 
 #include <exception>
 #include <new>
+#include <stdexcept>
 #include <string>
 
 namespace tinytc {
@@ -37,6 +38,8 @@ template <typename F> auto exception_to_status_code(F &&f) -> tinytc_status_t {
         f();
     } catch (std::bad_alloc const &) {
         return tinytc_bad_alloc;
+    } catch (std::out_of_range const &) {
+        return tinytc_out_of_range;
     } catch (...) {
         return tinytc_runtime_error;
     }

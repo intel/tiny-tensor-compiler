@@ -9,6 +9,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <type_traits>
 #include <vector>
 
@@ -61,11 +62,7 @@ template <typename T> class handle {
         }
     }
     //! Decrease reference count
-    ~handle() {
-        if (obj_) {
-            release();
-        }
-    }
+    ~handle() { release(); }
     //! Copy ctor
     handle(handle const &other) : obj_(other.obj_) { TINYTC_CHECK(retain()); }
     //! Move ctor
@@ -159,6 +156,53 @@ inline data_type group_type(data_type memref_ty) {
     TINYTC_CHECK(tinytc_group_type_create(&gt, memref_ty.get()));
     return data_type(gt);
 }
+
+////////////////////////////
+/////////// Value //////////
+////////////////////////////
+
+template <> struct handle_traits<tinytc_value_t> {
+    static auto retain(tinytc_value_t handle) -> tinytc_status_t {
+        return tinytc_value_retain(handle);
+    }
+    static auto release(tinytc_value_t handle) -> tinytc_status_t {
+        return tinytc_value_release(handle);
+    }
+};
+
+class value : public handle<tinytc_value_t> {
+  public:
+    using handle::handle;
+    //! Create value with data type ty
+    value(data_type ty) { TINYTC_CHECK(tinytc_value_create(&obj_, ty.get())); }
+    //! Create immediate value from float
+    value(float imm) { TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_f32)); }
+    //! Create immediate value from double
+    value(double imm, scalar_type type = scalar_type::f64) {
+        TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+    }
+    //! Create immediate value from int8_t
+    value(std::int8_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i8)); }
+    //! Create immediate value from int16_t
+    value(std::int16_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i16)); }
+    //! Create immediate value from int32_t
+    value(std::int32_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_i32)); }
+    //! Create immediate value from int64_t
+    value(std::int64_t imm, scalar_type type = scalar_type::i64) {
+        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+    }
+    //! Create immediate value from uint32_t (index type)
+    value(std::uint32_t imm) { TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_index)); }
+
+    inline auto get_name() const -> char const * {
+        char const *name;
+        TINYTC_CHECK(tinytc_value_get_name(obj_, &name));
+        return name;
+    }
+    inline void name(std::string const &name) {
+        TINYTC_CHECK(tinytc_value_set_name(obj_, name.c_str()));
+    }
+};
 
 } // namespace tinytc
 

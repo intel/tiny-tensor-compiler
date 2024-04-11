@@ -12,7 +12,6 @@
 #include "ir/node/value_node.hpp"
 #include "tinytc/device_info.hpp"
 #include "tinytc/ir/tiling.hpp"
-#include "tinytc/ir/value.hpp"
 
 #include <clir/builder.hpp>
 #include <clir/data_type.hpp>
@@ -40,7 +39,7 @@ class dope_vector {
   public:
     enum class type { shape, stride };
     using decl_fun_t = std::function<void(clir::data_type, clir::var, type, std::int64_t)>;
-    static dope_vector from_value(value v, decl_fun_t declare);
+    static dope_vector from_value(value_node &v, decl_fun_t declare);
 
     inline dope_vector() {}
     inline dope_vector(std::vector<clir::expr> shape, std::vector<clir::expr> stride)
@@ -108,10 +107,10 @@ class opencl_ast {
     clir::prog operator()(program &p);
 
   private:
-    auto get_dope_vector(value v) -> dope_vector &;
-    void set_dope_vector(value v, dope_vector dv);
+    auto get_dope_vector(value_node *v) -> dope_vector &;
+    void set_dope_vector(value_node *v, dope_vector dv);
     clir::var declare(value_node &v);
-    memref_data_type *get_memref_type(value &v);
+    memref_data_type *get_memref_type(value_node &v);
     static scalar_type get_scalar_type(data_type_node &ty);
 
     std::shared_ptr<core_info> info_;
