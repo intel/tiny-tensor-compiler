@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tiling.hpp"
-#include "tinytc/ir/gemm_generator.hpp"
+#include "gemm_generator.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <algorithm>

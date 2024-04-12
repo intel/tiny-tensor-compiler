@@ -6,7 +6,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tinytc/opencl_cc.hpp"
-#include "tinytc/bundle_format.hpp"
+#include "tinytc/types.hpp"
 
 #include "ocloc_api.h"
 

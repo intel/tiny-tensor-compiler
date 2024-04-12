@@ -1,17 +1,14 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/binary.hpp"
+#include "binary.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
-#include "ir/node/function_node.hpp"
-#include "ir/node/program_node.hpp"
+#include "passes.hpp"
 #include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/passes.hpp"
 #include "tinytc/opencl_cc.hpp"
 #include "tinytc/types.hpp"
-#include "util.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>
@@ -47,34 +44,7 @@ auto optimize_and_make_binary(prog prog, bundle_format format, tinytc_core_info 
         insert_lifetime_stop_inst(prog);
         set_stack_ptrs(prog);
         set_work_group_size(prog, info);
-
-        // Get work group sizes
-        auto metadata = std::unordered_map<std::string, kernel_metadata>{};
-        auto *prog_node = dynamic_cast<program *>(prog.get());
-        if (prog_node == nullptr) {
-            throw compilation_error(location{}, status::internal_compiler_error,
-                                    "Expected program node");
-        }
-        for (auto &decl : prog_node->declarations()) {
-            visit(overloaded{[&metadata](function &f) {
-                                 auto const name = visit(
-                                     overloaded{
-                                         [](prototype &p) -> std::string_view { return p.name(); },
-                                         [](auto &f) -> std::string {
-                                             throw compilation_error(
-                                                 f.loc(), status::internal_compiler_error,
-                                                 "Expected prototype");
-                                         }},
-                                     *f.prototype());
-                                 auto m = kernel_metadata{};
-                                 m.subgroup_size = f.subgroup_size();
-                                 m.work_group_size = f.work_group_size();
-                                 metadata[std::string(name)] = m;
-                             },
-                             [](auto &) {}},
-                  *decl);
-        }
-
+        auto metadata = get_metadata(prog);
         // opencl
         auto ast = generate_opencl_ast(std::move(prog), info);
         clir::make_names_unique(ast);

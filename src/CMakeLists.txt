@@ -19,33 +19,24 @@ find_package(BISON 3.8.2 REQUIRED)
 
 set(SOURCES
     binary.cpp
+    #builder.cpp
+    codegen_tools.cpp
+    compiler.cpp
     data_type.cpp
     device_info.cpp
     error.cpp
     func.cpp
+    gemm_generator.cpp
     inst.cpp
     internal/compiler_options.cpp
-    #ir/builder.cpp
-    ir/codegen_tools.cpp
-    ir/gemm_generator.cpp
-    ir/node/data_type_node.cpp
-    ir/node/inst_node.cpp
-    ir/passes.cpp
-    ir/precision_helper.cpp
-    ir/visitor/aa_results.cpp
-    ir/visitor/alias_analysis.cpp
-    ir/visitor/check_ir.cpp
-    ir/visitor/dump_ir.cpp
-    ir/visitor/equal.cpp
-    ir/visitor/insert_barrier.cpp
-    ir/visitor/lifetime_analysis.cpp
-    ir/visitor/opencl_ast.cpp
-    ir/visitor/stack.cpp
-    ir/visitor/work_group_size.cpp
     location.cpp
+    node/data_type_node.cpp
+    node/inst_node.cpp
     opencl_cc.cpp
     parser/parse_context.cpp
     parser.cpp
+    passes.cpp
+    precision_helper.cpp
     prog.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
@@ -53,6 +44,17 @@ set(SOURCES
     scalar_type.cpp
     tiling.cpp
     value.cpp
+    visitor/aa_results.cpp
+    visitor/alias_analysis.cpp
+    visitor/check_ir.cpp
+    visitor/dump_ir.cpp
+    visitor/equal.cpp
+    visitor/insert_barrier.cpp
+    visitor/lifetime_analysis.cpp
+    visitor/metadata.cpp
+    visitor/opencl_ast.cpp
+    visitor/stack.cpp
+    visitor/work_group_size.cpp
 )
 set(RE2C_SOURCES
     parser/lexer.re
@@ -60,13 +62,9 @@ set(RE2C_SOURCES
 BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
              DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
 set(PUBLIC_HEADERS
-    binary.hpp
-    bundle_format.hpp
     internal/compiler_options.hpp
     ir/builder.hpp
     ir/error.hpp
-    ir/gemm_generator.hpp
-    ir/passes.hpp
     opencl_cc.hpp
     parser.hpp
     recipe/small_gemm_batched.hpp

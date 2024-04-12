@@ -222,23 +222,24 @@ class data_type : public handle<tinytc_data_type_t> {
   public:
     using handle::handle;
 
-    data_type(scalar_type type) {
-        TINYTC_CHECK(tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type)));
+    data_type(scalar_type type, location const &loc = {}) {
+        TINYTC_CHECK(
+            tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc));
     }
 };
 
-inline data_type memref_type(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,
-                             std::vector<std::int64_t> const &stride = {},
-                             location const &loc = {}) {
+inline data_type create_memref(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,
+                               std::vector<std::int64_t> const &stride = {},
+                               location const &loc = {}) {
     tinytc_data_type_t mt;
     TINYTC_CHECK(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty),
                                            shape.size(), shape.data(), stride.size(), stride.data(),
                                            &loc));
     return data_type(mt);
 }
-inline data_type group_type(data_type memref_ty) {
+inline data_type create_group(data_type memref_ty, location const &loc = {}) {
     tinytc_data_type_t gt;
-    TINYTC_CHECK(tinytc_group_type_create(&gt, memref_ty.get()));
+    TINYTC_CHECK(tinytc_group_type_create(&gt, memref_ty.get(), &loc));
     return data_type(gt);
 }
 

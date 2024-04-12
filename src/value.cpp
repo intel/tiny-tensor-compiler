@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "ir/node/value_node.hpp"
+#include "node/value_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "util.hpp"

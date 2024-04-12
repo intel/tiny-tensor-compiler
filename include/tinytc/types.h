@@ -114,6 +114,12 @@ typedef enum {
     tinytc_intel_gpu_architecture_pvc = 0x030f0007 ///< PVC
 } tinytc_intel_gpu_architecture_t;
 
+//! Target binary format
+typedef enum {
+    tinytc_bundle_format_spirv = 0, ///< SPIR-V
+    tinytc_bundle_format_native = 1 ///< Native device binary
+} tinytc_bundle_format_t;
+
 ////////////////////////////
 /////////// Types //////////
 ////////////////////////////
@@ -161,6 +167,18 @@ typedef struct tinytc_prog *tinytc_prog_t;
 struct tinytc_core_info;
 //!@brief core_info handle
 typedef struct tinytc_core_info *tinytc_core_info_t;
+
+//! @struct tinytc_source;
+//! @brief Opaque struct for source text
+struct tinytc_source;
+//!@brief source handle
+typedef struct tinytc_source *tinytc_source_t;
+
+//! @struct tinytc_binary;
+//! @brief Opaque struct for a binary
+struct tinytc_binary;
+//!@brief binary handle
+typedef struct tinytc_binary *tinytc_binary_t;
 
 ////////////////////////////
 ////////// Structs /////////

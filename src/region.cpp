@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "ir/node/region_node.hpp"
 #include "location.hpp"
+#include "node/region_node.hpp"
 #include "tinytc/tinytc.h"
 
 #include <memory>
