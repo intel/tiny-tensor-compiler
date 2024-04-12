@@ -8,8 +8,6 @@
     #include "ir/node/function_node.hpp"
     #include "location.hpp"
     #include "slice.hpp"
-    #include "tinytc/ir/func.hpp"
-    #include "tinytc/ir/prog.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>
     #include <cstdint>
@@ -213,8 +211,8 @@
 
 %%
 prog:
-    func_list { 
-        auto p = prog{std::make_shared<program>(std::move($func_list))};
+    func_list {
+        auto p = prog { std::make_unique<program>(std::move($func_list), @prog).release() };
         ctx.program(p);
         $$ = std::move(p);
     }
@@ -228,18 +226,17 @@ func:
     FUNC {
         ctx.push_scope();
     } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
-        auto proto = func{
-            std::make_shared<prototype>($GLOBAL_IDENTIFIER, std::move($arguments))};
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
-        ctx.prototype($GLOBAL_IDENTIFIER, proto, loc);
+        auto proto = func{
+            std::make_unique<prototype>($GLOBAL_IDENTIFIER, std::move($arguments), loc).release()};
+        ctx.prototype($GLOBAL_IDENTIFIER, proto);
         auto func_node =
-            std::make_shared<function>(std::move(proto), std::move($region));
+            std::make_unique<function>(std::move(proto), std::move($region), @func).release();
         for (auto &attr : $attributes) {
             attr(*func_node);
         }
-        $func = func{std::move(func_node)};
-        $func->loc(@func);
+        $func = func{func_node};
         ctx.pop_scope();
     }
 ;

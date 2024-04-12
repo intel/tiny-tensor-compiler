@@ -132,7 +132,7 @@ class generator {
                          expr alpha, expr beta);
     void add_mloop(block_builder &bb, expr N, var A, var B, var C, expr alpha, expr beta);
     void add_function_body(block_builder &bb, var A, var B, var C, expr alpha, expr beta);
-    func function(std::string_view name);
+    clir::func function(std::string_view name);
 
   private:
     gemm_configuration const gemm_cfg;
@@ -432,7 +432,7 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
         });
 }
 
-func generator::function(std::string_view name) {
+clir::func generator::function(std::string_view name) {
     auto A = var("A");
     auto B = var("B");
     auto C = var("C");
@@ -479,9 +479,9 @@ func generator::function(std::string_view name) {
     return f;
 }
 
-func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
-                   core_config const &core_cfg, std::string_view name, address_space As,
-                   address_space Bs, address_space Cs) {
+clir::func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
+                         core_config const &core_cfg, std::string_view name, address_space As,
+                         address_space Bs, address_space Cs) {
     return generator{gemm_cfg, tiling, core_cfg, As, Bs, Cs}.function(name);
 }
 

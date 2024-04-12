@@ -5,10 +5,10 @@
 #define FUNCTION_NODE_20230310_HPP
 
 #include "location.hpp"
-#include "tinytc/ir/func.hpp"
+#include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include "clir/virtual_type_list.hpp"
+#include <clir/virtual_type_list.hpp>
 
 #include <array>
 #include <cstdint>
@@ -17,20 +17,28 @@
 #include <vector>
 
 namespace tinytc {
+using function_nodes = clir::virtual_type_list<class prototype, class function>;
+}
 
-class function_node : public clir::virtual_type_list<class prototype, class function> {
+struct tinytc_func : tinytc::reference_counted, tinytc::function_nodes {
   public:
-    inline location const &loc() const { return loc_; }
-    inline void loc(location const &loc) { loc_ = loc; }
+    inline auto loc() const -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) { loc_ = loc; }
 
   private:
-    location loc_;
+    tinytc::location loc_;
 };
+
+namespace tinytc {
+
+using function_node = ::tinytc_func;
 
 class prototype : public clir::visitable<prototype, function_node> {
   public:
-    inline prototype(std::string name, std::vector<value> args = {})
-        : name_(std::move(name)), args_(std::move(args)) {}
+    inline prototype(std::string name, std::vector<value> args = {}, location const &lc = {})
+        : name_(std::move(name)), args_(std::move(args)) {
+        loc(lc);
+    }
 
     inline std::string_view name() const { return name_; }
     inline std::vector<value> &args() { return args_; }
@@ -42,11 +50,11 @@ class prototype : public clir::visitable<prototype, function_node> {
 
 class function : public clir::visitable<function, function_node> {
   public:
-    inline function(func prototype, region body,
-                    std::array<std::uint32_t, 2> const &work_group_size = {0, 0},
-                    std::uint32_t subgroup_size = 0)
-        : prototype_(std::move(prototype)), body_(std::move(body)),
-          work_group_size_(work_group_size), subgroup_size_(subgroup_size) {}
+    inline function(func prototype, region body, location const &lc = {})
+        : prototype_(std::move(prototype)),
+          body_(std::move(body)), work_group_size_{0, 0}, subgroup_size_{0} {
+        loc(lc);
+    }
 
     inline func &prototype() { return prototype_; }
     inline region &body() { return body_; }

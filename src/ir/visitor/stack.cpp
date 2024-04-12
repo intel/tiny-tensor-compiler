@@ -5,7 +5,6 @@
 #include "error.hpp"
 #include "ir/node/data_type_node.hpp"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/func.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>

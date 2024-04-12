@@ -6,8 +6,7 @@
 
 #include "tinytc/export.h"
 #include "tinytc/ir/error.hpp"
-#include "tinytc/ir/prog.hpp"
-#include "tinytc/types.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <iosfwd>
 #include <string>

@@ -11,8 +11,6 @@
 #include "ir/visitor/stack.hpp"
 #include "ir/visitor/work_group_size.hpp"
 #include "tinytc/device_info.hpp"
-#include "tinytc/ir/func.hpp"
-#include "tinytc/ir/prog.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/handle.hpp>

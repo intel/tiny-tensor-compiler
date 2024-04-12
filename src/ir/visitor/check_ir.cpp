@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/visitor/check_ir.hpp"
-#include "tinytc/ir/func.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>

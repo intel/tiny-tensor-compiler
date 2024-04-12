@@ -5,7 +5,6 @@
 #include "error.hpp"
 #include "ir/codegen_tools.hpp"
 #include "scalar_type.hpp"
-#include "tinytc/ir/func.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
