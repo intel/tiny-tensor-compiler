@@ -49,6 +49,7 @@ set(SOURCES
     parser.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
+    region.cpp
     scalar_type.cpp
     value.cpp
 )
@@ -68,8 +69,6 @@ set(PUBLIC_HEADERS
     ir/gemm_generator.hpp
     ir/passes.hpp
     ir/prog.hpp
-    ir/region.hpp
-    ir/slice.hpp
     ir/tiling.hpp
     opencl_cc.hpp
     parser.hpp

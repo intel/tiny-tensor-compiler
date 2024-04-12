@@ -7,9 +7,9 @@
 %code requires {
     #include "ir/node/function_node.hpp"
     #include "location.hpp"
+    #include "slice.hpp"
     #include "tinytc/ir/func.hpp"
     #include "tinytc/ir/prog.hpp"
-    #include "tinytc/ir/region.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>
     #include <cstdint>
@@ -356,7 +356,7 @@ region:
     LBRACE {
         ctx.push_scope();
     } instructions RBRACE {
-        $$ = region{std::make_shared<rgn>(std::move($instructions))};
+        $$ = region{std::make_unique<rgn>(std::move($instructions), @region).release()};
         ctx.pop_scope();
     }
 ;

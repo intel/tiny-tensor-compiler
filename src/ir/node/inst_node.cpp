@@ -364,8 +364,9 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
 }
 
 if_inst::if_inst(value condition, region then, region otherwise,
-                 std::vector<scalar_type> const &return_types)
+                 std::vector<scalar_type> const &return_types, location const &lc)
     : condition_(std::move(condition)), then_(std::move(then)), otherwise_(std::move(otherwise)) {
+    loc(lc);
     for (auto &ty : return_types) {
         results_.push_back(value(ty));
     }

@@ -6,7 +6,7 @@
 
 #include "location.hpp"
 #include "reference_counted.hpp"
-#include "tinytc/ir/region.hpp"
+#include "slice.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/virtual_type_list.hpp>
@@ -39,7 +39,13 @@ struct tinytc_inst : tinytc::reference_counted, tinytc::inst_nodes {
     inline void loc(tinytc::location const &loc) { loc_ = loc; }
 
     virtual tinytc::value result() = 0;
-    virtual auto results() -> std::vector<tinytc::value> { return {}; }
+    inline virtual auto results() -> std::vector<tinytc::value> {
+        if (auto r = result(); r) {
+            return {std::move(r)};
+        }
+        return {};
+    }
+    inline virtual auto num_results() -> std::size_t { return result() ? 1u : 0u; }
     virtual tinytc::inst_kind kind() const = 0;
 
   private:
@@ -319,12 +325,13 @@ class hadamard_inst : public clir::visitable<hadamard_inst, blas_a3_inst> {
 class if_inst : public clir::visitable<if_inst, inst_node> {
   public:
     if_inst(value condition, region then, region otherwise = nullptr,
-            std::vector<scalar_type> const &return_types = {});
+            std::vector<scalar_type> const &return_types = {}, location const &lc = {});
     inline value &condition() { return condition_; }
     inline region &then() { return then_; }
     inline region &otherwise() { return otherwise_; }
     inline value result() override { return results_.size() > 0 ? results_.front() : value{}; }
     inline auto results() -> std::vector<value> override { return results_; }
+    inline auto num_results() -> std::size_t override { return results_.size(); }
     inline auto results_ref() -> std::vector<value> & { return results_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
@@ -404,7 +411,9 @@ class sum_inst : public clir::visitable<sum_inst, blas_a2_inst> {
 
 class yield_inst : public clir::visitable<yield_inst, inst_node> {
   public:
-    inline yield_inst(std::vector<value> vals) : vals_(std::move(vals)) {}
+    inline yield_inst(std::vector<value> vals, location const &lc = {}) : vals_(std::move(vals)) {
+        loc(lc);
+    }
     inline value result() override { return value{}; }
     inline auto vals() -> std::vector<value> & { return vals_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }

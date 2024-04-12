@@ -4,7 +4,6 @@
 #include "ir/visitor/insert_barrier.hpp"
 #include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/region.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/handle.hpp>

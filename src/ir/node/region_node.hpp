@@ -4,23 +4,36 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
+#include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include "clir/virtual_type_list.hpp"
+#include <clir/virtual_type_list.hpp>
 
-#include <string>
-#include <string_view>
 #include <utility>
+#include <vector>
+
+namespace tinytc {
+using region_nodes = clir::virtual_type_list<class rgn>;
+}
+
+struct tinytc_region : tinytc::reference_counted, tinytc::region_nodes {
+  public:
+    inline auto loc() const -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+
+  private:
+    tinytc::location loc_;
+};
 
 namespace tinytc {
 
-class region_node : public clir::virtual_type_list<class rgn> {
-  public:
-};
+using region_node = ::tinytc_region;
 
 class rgn : public clir::visitable<rgn, region_node> {
   public:
-    inline rgn(std::vector<inst> insts = {}) : insts_(std::move(insts)) {}
+    inline rgn(std::vector<inst> insts = {}, location const &lc = {}) : insts_(std::move(insts)) {
+        loc(lc);
+    }
 
     inline std::vector<inst> &insts() { return insts_; }
     inline void insts(std::vector<inst> insts) { insts_ = std::move(insts); }

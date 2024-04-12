@@ -8,7 +8,9 @@
 #include "tinytc/types.hpp"
 
 #include <cstdint>
+#include <limits>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -292,20 +294,12 @@ class value : public handle<tinytc_value_t> {
     }
 };
 
-////////////////////////////
-//////// Slice ///////
-////////////////////////////
-
-//! Slice storing offset:size
-class slice : public std::pair<value, value> {
-  public:
-    //! ctor
-    inline slice(value offset = nullptr, value size = nullptr)
-        : std::pair<value, value>{std::move(offset), std::move(size)} {}
-};
+//! Is reinterpret_cast<tinytc_value_t*>(&v) allowed, where v has type value
+constexpr bool value_reinterpret_allowed =
+    std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t);
 
 ////////////////////////////
-//////// Instruction ///////
+/////////// Inst ///////////
 ////////////////////////////
 
 //! Convert binary op to string
@@ -334,7 +328,272 @@ template <> struct handle_traits<tinytc_inst_t> {
 class inst : public handle<tinytc_inst_t> {
   public:
     using handle::handle;
+
+    inline auto get_value() const -> value {
+        tinytc_value_t result;
+        TINYTC_CHECK(tinytc_inst_get_value(obj_, &result));
+        return value(result);
+    }
+
+    inline auto get_values() const -> std::vector<value> {
+        static_assert(value_reinterpret_allowed);
+        uint32_t result_list_size = 0;
+        TINYTC_CHECK(tinytc_inst_get_values(obj_, &result_list_size, nullptr));
+        auto values = std::vector<value>(result_list_size);
+        tinytc_value_t *result_list = reinterpret_cast<tinytc_value_t *>(values.data());
+        TINYTC_CHECK(tinytc_inst_get_values(obj_, &result_list_size, result_list));
+        return values;
+    }
 };
+
+//! Is reinterpret_cast<tinytc_inst_t*>(&i) allowed, where i has type inst
+constexpr bool inst_reinterpret_allowed =
+    std::is_standard_layout_v<inst> && sizeof(inst) == sizeof(tinytc_inst_t);
+
+////////////////////////////
+////////// Region //////////
+////////////////////////////
+
+template <> struct handle_traits<tinytc_region_t> {
+    static auto retain(tinytc_region_t handle) -> tinytc_status_t {
+        return tinytc_region_retain(handle);
+    }
+    static auto release(tinytc_region_t handle) -> tinytc_status_t {
+        return tinytc_region_release(handle);
+    }
+};
+
+class region : public handle<tinytc_region_t> {
+  public:
+    using handle::handle;
+
+    region(std::vector<inst> &instructions, location const &loc = {}) {
+        static_assert(inst_reinterpret_allowed);
+        if (instructions.size() > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::out_of_range("Instruction list too long");
+        }
+        TINYTC_CHECK(tinytc_region_create(&obj_, instructions.size(),
+                                          reinterpret_cast<tinytc_inst_t *>(instructions.data()),
+                                          &loc));
+    }
+};
+
+////////////////////////////
+/////// Instructions ///////
+////////////////////////////
+
+inline inst create_binary_op(binary_op op, value const &a, value const &b,
+                             location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op), a.get(),
+                                              b.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_make_cast(value const &a, scalar_type to_ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(
+        tinytc_cast_inst_create(&instr, a.get(), static_cast<tinytc_scalar_type_t>(to_ty), &loc));
+    return inst(instr);
+}
+
+inline inst create_cmp(cmp_condition cond, value const &a, value const &b,
+                       location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a.get(),
+                                        b.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_neg(value const &a, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_neg_inst_create(&instr, a.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_alloca(data_type const &ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_alloca_inst_create(&instr, ty.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_axpby(transpose tA, bool atomic, value const &alpha, value const &A,
+                         value const &beta, value const &B, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                          alpha.get(), A.get(), beta.get(), B.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> &expand_shape,
+                          location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_inst_t instr;
+    auto len = expand_shape.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("expand shape too large");
+    }
+    tinytc_value_t *eshape = reinterpret_cast<tinytc_value_t *>(expand_shape.data());
+    TINYTC_CHECK(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc));
+    return inst(instr);
+}
+
+inline inst create_fuse(value const &a, std::int64_t from, std::int64_t to,
+                        location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_fuse_inst_create(&instr, a.get(), from, to, &loc));
+    return inst(instr);
+}
+
+inline inst create_load(value const &a, std::vector<value> &index_list, location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_inst_t instr;
+    auto len = index_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("index list too long");
+    }
+    tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
+    TINYTC_CHECK(tinytc_load_inst_create(&instr, a.get(), len, il, &loc));
+    return inst(instr);
+}
+
+inline inst create_group_id(location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_group_id_inst_create(&instr, &loc));
+    return inst(instr);
+}
+
+inline inst create_group_size(location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_group_size_inst_create(&instr, &loc));
+    return inst(instr);
+}
+
+inline inst create_gemm(transpose tA, transpose tB, bool atomic, value const &alpha, value const &A,
+                        value const &B, value const &beta, value const &C,
+                        location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
+                                         static_cast<tinytc_transpose_t>(tB), atomic, alpha.get(),
+                                         A.get(), B.get(), beta.get(), C.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_gemv(transpose tA, bool atomic, value const &alpha, value const &A,
+                        value const &B, value const &beta, value const &C,
+                        location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                         alpha.get(), A.get(), B.get(), beta.get(), C.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_ger(bool atomic, value const &alpha, value const &A, value const &B,
+                       value const &beta, value const &C, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_ger_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
+                                        C.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_hadamard(bool atomic, value const &alpha, value const &A, value const &B,
+                            value const &beta, value const &C, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_hadamard_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(),
+                                             beta.get(), C.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_size(value const &a, std::int64_t mode, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_size_inst_create(&instr, a.get(), mode, &loc));
+    return inst(instr);
+}
+
+inline inst create_subview(value const &a, std::vector<value> &offset_list,
+                           std::vector<value> &size_list, location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_inst_t instr;
+    if (offset_list.size() != size_list.size()) {
+        throw std::invalid_argument("offset list must have the same length as the size list");
+    }
+    auto len = offset_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("slice list too long");
+    }
+    tinytc_value_t *ol = reinterpret_cast<tinytc_value_t *>(offset_list.data());
+    tinytc_value_t *sl = reinterpret_cast<tinytc_value_t *>(size_list.data());
+    TINYTC_CHECK(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc));
+    return inst(instr);
+}
+
+inline inst create_store(value const &val, value const &a, std::vector<value> &index_list,
+                         location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_inst_t instr;
+    auto len = index_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("index list too long");
+    }
+    tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
+    TINYTC_CHECK(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc));
+    return inst(instr);
+}
+
+inline inst create_sum(transpose tA, bool atomic, value const &alpha, value const &A,
+                       value const &beta, value const &B, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                        alpha.get(), A.get(), beta.get(), B.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_for(value const &loop_var, value const &from, value const &to, value const &step,
+                       region const &body, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(), step.get(),
+                                        body.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_foreach(value const &loop_var, value const &from, value const &to,
+                           region const &body, location const &loc = {}) {
+    tinytc_inst_t instr;
+    TINYTC_CHECK(
+        tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(), body.get(), &loc));
+    return inst(instr);
+}
+
+inline inst create_if(value const &condition, region const &then,
+                      region const &otherwise = region{},
+                      std::vector<scalar_type> const &return_type_list = {},
+                      location const &loc = {}) {
+    tinytc_inst_t instr;
+    auto len = return_type_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("return type list too long");
+    }
+    auto rl_vec = std::vector<tinytc_scalar_type_t>();
+    rl_vec.resize(len);
+    for (auto const &rt : return_type_list) {
+        rl_vec.emplace_back(static_cast<tinytc_scalar_type_t>(rt));
+    }
+    TINYTC_CHECK(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(), len,
+                                       rl_vec.data(), &loc));
+    return inst(instr);
+}
+
+inline inst create_yield(std::vector<value> &yield_list, location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_inst_t instr;
+    auto len = yield_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("slice list too long");
+    }
+    tinytc_value_t *yl = reinterpret_cast<tinytc_value_t *>(yield_list.data());
+    TINYTC_CHECK(tinytc_yield_inst_create(&instr, len, yl, &loc));
+    return inst(instr);
+}
 
 } // namespace tinytc
 

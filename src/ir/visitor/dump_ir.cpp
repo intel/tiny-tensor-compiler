@@ -3,7 +3,6 @@
 
 #include "ir/visitor/dump_ir.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/region.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/handle.hpp>
