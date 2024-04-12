@@ -150,12 +150,6 @@ typedef struct tinytc_location {
     tinytc_position end;   ///< End position
 } tinytc_location_t;
 
-//! @brief Slice
-typedef struct tinytc_slice {
-    tinytc_value_t offset; ///< Offset
-    tinytc_value_t size;   ///< Size; may be nullptr for a single index only
-} tinytc_slice_t;
-
 #ifdef __cplusplus
 }
 #endif

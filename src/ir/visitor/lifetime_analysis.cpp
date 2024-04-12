@@ -4,7 +4,6 @@
 #include "ir/visitor/lifetime_analysis.hpp"
 #include "ir/visitor/alias_analysis.hpp"
 #include "tinytc/ir/func.hpp"
-#include "tinytc/ir/region.hpp"
 
 #include <clir/handle.hpp>
 #include <clir/visit.hpp>

@@ -20,6 +20,8 @@ class compilation_error : public std::exception {
   public:
     //! ctor; taking location, status code, and expanatory string
     compilation_error(location const &loc, status code, std::string const &extra_info = {});
+    //! Get status code
+    inline auto code() const noexcept { return code_; }
     //! Get location
     inline location loc() const noexcept { return loc_; }
     //! Get explanatory string
@@ -33,9 +35,18 @@ class compilation_error : public std::exception {
     std::string extra_info_;
 };
 
+class internal_compiler_error : public std::exception {
+  public:
+    inline char const *what() const noexcept override { return "Internal compiler error"; }
+};
+
 template <typename F> auto exception_to_status_code(F &&f) -> tinytc_status_t {
     try {
         f();
+    } catch (internal_compiler_error const &e) {
+        return tinytc_status_internal_compiler_error;
+    } catch (compilation_error const &e) {
+        return static_cast<tinytc_status_t>(e.code());
     } catch (std::bad_alloc const &) {
         return tinytc_status_bad_alloc;
     } catch (std::out_of_range const &) {
