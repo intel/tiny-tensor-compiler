@@ -91,6 +91,29 @@ typedef enum {
     tinytc_transpose_T = 1  ///< transpose
 } tinytc_transpose_t;
 
+//! Core features that may be optionally enabled
+typedef enum {
+    /**
+     * Request a large register file.
+     * On PVC this doubles the number of registers per vector engine
+     * but halves the number of available hardware threads.
+     * When this feature is activated, the kernel is compiled with
+     * the "-ze-opt-large-register-file" option.
+     */
+    tinytc_core_feature_flag_large_register_file = 0x1
+} tinytc_core_feature_flag_t;
+
+/**
+ * @brief IP versions for Intel GPUs
+ *
+ * Note: IP versions are extracted from
+ * * https://github.com/intel/compute-runtime/blob/4b5d5f235abf0ff67c9188f8096afd4da2e0574d/third_party/aot_config_headers/platforms.h
+ * * https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619
+ */
+typedef enum {
+    tinytc_intel_gpu_architecture_pvc = 0x030f0007 ///< PVC
+} tinytc_intel_gpu_architecture_t;
+
 ////////////////////////////
 /////////// Types //////////
 ////////////////////////////
@@ -132,6 +155,12 @@ typedef struct tinytc_func *tinytc_func_t;
 struct tinytc_prog;
 //! @brief prog handle
 typedef struct tinytc_prog *tinytc_prog_t;
+
+//! @struct tinytc_core_info;
+//! @brief Opaque struct for core information
+struct tinytc_core_info;
+//!@brief core_info handle
+typedef struct tinytc_core_info *tinytc_core_info_t;
 
 ////////////////////////////
 ////////// Structs /////////

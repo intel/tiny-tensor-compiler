@@ -8,20 +8,18 @@
 #include "ir/node/inst_node.hpp"
 #include "ir/node/program_node.hpp"
 #include "ir/node/region_node.hpp"
-#include "tinytc/ir/tiling.hpp"
+#include "tiling.hpp"
 
 #include <memory>
 #include <unordered_set>
 
-namespace tinytc {
-class core_info;
-}
+struct tinytc_core_info;
 
 namespace tinytc {
 
 class work_group_size {
   public:
-    work_group_size(std::shared_ptr<core_info> info);
+    work_group_size(tinytc_core_info const *info);
 
     /* Inst nodes */
     void operator()(inst_node &);
@@ -41,7 +39,7 @@ class work_group_size {
     void operator()(program &p);
 
   private:
-    std::shared_ptr<core_info> info_;
+    tinytc_core_info const *info_;
     std::unordered_set<blas_shape> shapes_;
 };
 

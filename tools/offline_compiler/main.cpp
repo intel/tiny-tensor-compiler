@@ -3,7 +3,6 @@
 
 #include "tinytc/parser.hpp"
 
-#include "tinytc/device_info.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/passes.hpp"
 #include "tinytc/tinytc.hpp"
@@ -43,8 +42,8 @@ int main(int argc, char **argv) {
         insert_barriers(p);
         insert_lifetime_stop_inst(p);
         set_stack_ptrs(p);
-        set_work_group_size(p, info);
-        auto ocl_prog = generate_opencl_ast(std::move(p), info);
+        set_work_group_size(p, *info);
+        auto ocl_prog = generate_opencl_ast(std::move(p), *info);
         clir::make_names_unique(ocl_prog);
         clir::generate_opencl(std::cout, std::move(ocl_prog));
     } catch (status const &st) {

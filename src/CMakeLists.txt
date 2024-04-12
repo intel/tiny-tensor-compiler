@@ -32,7 +32,6 @@ set(SOURCES
     ir/node/inst_node.cpp
     ir/passes.cpp
     ir/precision_helper.cpp
-    ir/tiling.cpp
     ir/visitor/aa_results.cpp
     ir/visitor/alias_analysis.cpp
     ir/visitor/check_ir.cpp
@@ -52,6 +51,7 @@ set(SOURCES
     #recipe/tall_and_skinny.cpp
     region.cpp
     scalar_type.cpp
+    tiling.cpp
     value.cpp
 )
 set(RE2C_SOURCES
@@ -62,13 +62,11 @@ BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/par
 set(PUBLIC_HEADERS
     binary.hpp
     bundle_format.hpp
-    device_info.hpp
     internal/compiler_options.hpp
     ir/builder.hpp
     ir/error.hpp
     ir/gemm_generator.hpp
     ir/passes.hpp
-    ir/tiling.hpp
     opencl_cc.hpp
     parser.hpp
     recipe/small_gemm_batched.hpp

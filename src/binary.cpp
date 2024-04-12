@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tinytc/binary.hpp"
+#include "device_info.hpp"
 #include "error.hpp"
 #include "ir/node/function_node.hpp"
 #include "ir/node/program_node.hpp"
-#include "tinytc/device_info.hpp"
 #include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/ir/error.hpp"
 #include "tinytc/ir/passes.hpp"
@@ -34,7 +34,7 @@ binary::binary(std::vector<std::uint8_t> data, bundle_format format,
     : data_(std::move(data)), format_(format), metadata_(std::move(metadata_map)),
       core_features_(core_features) {}
 
-auto optimize_and_make_binary(prog prog, bundle_format format, std::shared_ptr<core_info> info,
+auto optimize_and_make_binary(prog prog, bundle_format format, tinytc_core_info const &info,
                               error_reporter_function err) -> std::shared_ptr<binary> {
     auto result = std::shared_ptr<binary>{nullptr};
 
@@ -85,11 +85,11 @@ auto optimize_and_make_binary(prog prog, bundle_format format, std::shared_ptr<c
         auto ext = internal::required_extensions(std::move(ast));
         auto compiler_options = internal::default_compiler_options;
 
-        auto const core_features = info->core_features();
+        auto const core_features = info.core_features();
         if (core_features & static_cast<std::uint32_t>(core_feature_flag::large_register_file)) {
             compiler_options.push_back(internal::large_register_file_compiler_option_ze);
         }
-        auto bin = compile_opencl_c(oss.str(), format, info->ip_version(), compiler_options, ext);
+        auto bin = compile_opencl_c(oss.str(), format, info.ip_version(), compiler_options, ext);
         result =
             std::make_shared<binary>(std::move(bin), format, std::move(metadata), core_features);
     } catch (compilation_error const &e) {

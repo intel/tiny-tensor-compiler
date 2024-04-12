@@ -1,24 +1,17 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/device_info.hpp"
+#include "device_info.hpp"
+#include "error.hpp"
+#include "tinytc/tinytc.h"
 
 #include <algorithm>
 #include <stdexcept>
 #include <utility>
 
+tinytc_core_info::~tinytc_core_info() {}
+
 namespace tinytc {
-
-core_info::~core_info() {}
-
-auto get_core_info_intel_gpu(intel_gpu_architecture arch) -> std::shared_ptr<core_info> {
-    switch (arch) {
-    case intel_gpu_architecture::pvc:
-        return std::make_shared<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8, 128 * 1024,
-                                                 std::vector<std::uint32_t>{16, 32});
-    }
-    return nullptr;
-}
 
 core_info_intel::core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
                                  std::uint32_t num_threads_per_eu, std::uint32_t local_memory_size,
@@ -92,3 +85,32 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
 }
 
 } // namespace tinytc
+
+using namespace tinytc;
+
+extern "C" {
+tinytc_status_t tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info,
+                                                  tinytc_intel_gpu_architecture_t arch) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        switch (arch) {
+        case tinytc_intel_gpu_architecture_pvc:
+            *info =
+                std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
+                                                  128 * 1024, std::vector<std::uint32_t>{16, 32})
+                    .release();
+            break;
+        default:
+            *info = nullptr;
+            throw std::invalid_argument("Unknown architecture");
+            break;
+        }
+    });
+}
+
+tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info) {
+    return exception_to_status_code([&] { delete info; });
+}
+}

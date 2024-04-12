@@ -1,8 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ir/tiling.hpp"
-#include "tinytc/device_info.hpp"
+#include "tiling.hpp"
 #include "tinytc/ir/gemm_generator.hpp"
 #include "tinytc/tinytc.hpp"
 

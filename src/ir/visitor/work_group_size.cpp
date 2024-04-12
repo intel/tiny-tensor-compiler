@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "ir/visitor/work_group_size.hpp"
+#include "device_info.hpp"
 #include "error.hpp"
 #include "ir/node/data_type_node.hpp"
 #include "ir/node/value_node.hpp"
-#include "tinytc/device_info.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/handle.hpp>
@@ -30,7 +30,11 @@ auto get_memref_type(value_node &v) {
     return t;
 }
 
-work_group_size::work_group_size(std::shared_ptr<core_info> info) : info_(std::move(info)) {}
+work_group_size::work_group_size(core_info const *info) : info_(std::move(info)) {
+    if (info_ == nullptr) {
+        throw std::invalid_argument("info must not be nullptr");
+    }
+}
 
 /* Stmt nodes */
 void work_group_size::operator()(inst_node &) {}

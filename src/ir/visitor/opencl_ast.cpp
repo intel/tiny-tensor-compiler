@@ -94,7 +94,10 @@ dope_vector dope_vector::from_memref_type(std::string const &prefix, memref_data
     return dope_vector(std::move(shape), std::move(stride));
 }
 
-opencl_ast::opencl_ast(std::shared_ptr<core_info> info) : info_(std::move(info)) {
+opencl_ast::opencl_ast(core_info const *info) : info_(std::move(info)) {
+    if (info_ == nullptr) {
+        throw std::invalid_argument("info must not be nullptr");
+    }
     declared_vars_.push_back({});
 }
 
