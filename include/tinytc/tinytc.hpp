@@ -682,17 +682,62 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
 //////// Device info ///////
 ////////////////////////////
 
-template <> struct deleter<tinytc_core_info> {
+template <> struct deleter<tinytc_core_info_t> {
     inline void operator()(tinytc_core_info_t obj) const { tinytc_core_info_destroy(obj); }
 };
 
 inline auto get_core_info_intel_gpu(intel_gpu_architecture arch)
-    -> std::unique_ptr<tinytc_core_info, deleter<tinytc_core_info>> {
+    -> std::unique_ptr<core_info, deleter<tinytc_core_info_t>> {
     tinytc_core_info_t info;
     TINYTC_CHECK(tinytc_core_info_intel_gpu_create(
         &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
-    return std::unique_ptr<tinytc_core_info, deleter<tinytc_core_info>>(
-        info, deleter<tinytc_core_info>{});
+    return {info, deleter<tinytc_core_info_t>{}};
+}
+
+////////////////////////////
+///////// Compiler /////////
+////////////////////////////
+
+template <> struct deleter<tinytc_source_t> {
+    inline void operator()(tinytc_source_t obj) const { tinytc_source_destroy(obj); }
+};
+template <> struct deleter<tinytc_binary_t> {
+    inline void operator()(tinytc_binary_t obj) const { tinytc_binary_destroy(obj); }
+};
+
+inline auto compile_to_opencl(prog &prg, core_info const &info, error_handler err_handler = nullptr,
+                              void *err_handler_data = nullptr)
+    -> std::unique_ptr<source, deleter<tinytc_source_t>> {
+    tinytc_source_t src;
+    TINYTC_CHECK(
+        tinytc_prog_compile_to_opencl(&src, prg.get(), &info, err_handler, err_handler_data));
+    return {src, deleter<tinytc_source_t>{}};
+}
+
+inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
+                              error_handler err_handler = nullptr, void *err_handler_data = nullptr)
+    -> std::unique_ptr<binary, deleter<tinytc_binary_t>> {
+    tinytc_binary_t bin;
+    TINYTC_CHECK(tinytc_source_compile_to_binary(&bin, &src, &info,
+                                                 static_cast<tinytc_bundle_format_t>(format),
+                                                 err_handler, err_handler_data));
+    return {bin, deleter<tinytc_binary_t>{}};
+}
+
+inline auto compile_to_binary(prog &prg, core_info const &info, bundle_format format,
+                              error_handler err_handler = nullptr, void *err_handler_data = nullptr)
+    -> std::unique_ptr<binary, deleter<tinytc_binary_t>> {
+    tinytc_binary_t bin;
+    TINYTC_CHECK(tinytc_prog_compile_to_binary(&bin, prg.get(), &info,
+                                               static_cast<tinytc_bundle_format_t>(format),
+                                               err_handler, err_handler_data));
+    return {bin, deleter<tinytc_binary_t>{}};
+}
+
+inline auto get_code(source const &src) -> char const * {
+    char const *code;
+    TINYTC_CHECK(tinytc_source_get_code(&src, &code));
+    return code;
 }
 
 } // namespace tinytc

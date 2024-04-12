@@ -5,7 +5,7 @@
 // Copyright (C) 2022 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/opencl_cc.hpp"
+#include "opencl_cc.hpp"
 #include "tinytc/types.hpp"
 
 #include "ocloc_api.h"

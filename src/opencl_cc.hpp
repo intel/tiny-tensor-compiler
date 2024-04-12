@@ -8,8 +8,6 @@
 #ifndef OPENCL_CC_20240307_HPP
 #define OPENCL_CC_20240307_HPP
 
-#include "tinytc/export.h"
-
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -29,10 +27,10 @@ enum class bundle_format;
  *
  * @return binary
  */
-TINYTC_EXPORT std::vector<std::uint8_t>
-compile_opencl_c(std::string const &source, bundle_format format, std::uint32_t ip_version,
-                 std::vector<std::string> const &options = {},
-                 std::vector<std::string> const &extensions = {});
+std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_format format,
+                                           std::uint32_t ip_version,
+                                           std::vector<std::string> const &options = {},
+                                           std::vector<std::string> const &extensions = {});
 
 } // namespace tinytc
 

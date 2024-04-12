@@ -30,6 +30,7 @@ enum class status {
     internal_compiler_error = tinytc_status_internal_compiler_error,
     unsupported_subgroup_size = tinytc_status_unsupported_subgroup_size,
     unsupported_work_group_size = tinytc_status_unsupported_work_group_size,
+    compilation_error = tinytc_status_compilation_error,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,
@@ -48,6 +49,7 @@ enum class status {
     ir_invalid_slice = tinytc_status_ir_invalid_slice,
     ir_expand_shape_order_too_small = tinytc_status_ir_expand_shape_order_too_small,
     ir_expand_shape_mismatch = tinytc_status_ir_expand_shape_mismatch,
+    ir_collective_called_from_spmd = tinytc_status_ir_collective_called_from_spmd
 };
 
 //! Scalar types
@@ -107,6 +109,12 @@ enum class bundle_format {
 using position = ::tinytc_position;
 //! @brief Alias for tinytc_location in namespace tinytc
 using location = ::tinytc_location;
+
+using error_handler = ::tinytc_error_handler_t;
+
+using core_info = ::tinytc_core_info;
+using source = ::tinytc_source;
+using binary = ::tinytc_binary;
 
 } // namespace tinytc
 

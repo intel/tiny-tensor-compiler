@@ -23,9 +23,7 @@ using clir::visit;
 
 namespace tinytc {
 
-bool check_ir(prog p, error_reporter_function reporter) {
-    return visit(ir_checker{std::move(reporter)}, *p);
-}
+void check_ir(prog p) { return visit(ir_checker{}, *p); }
 
 void dump_ir(std::ostream &os, func f) { visit(ir_dumper{os}, *f); }
 void dump_ir(std::ostream &os, prog p) { visit(ir_dumper{os}, *p); }
