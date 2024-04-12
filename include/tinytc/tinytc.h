@@ -41,11 +41,13 @@ TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
  *
  * @param dt [out] pointer to the data type object created
  * @param type [in] scalar type
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
-                                                        tinytc_scalar_type_t type);
+                                                        tinytc_scalar_type_t type,
+                                                        const tinytc_location_t *loc);
 
 /**
  * @brief Create memref data type
@@ -73,11 +75,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
  *
  * @param dt [out] pointer to the data type object created
  * @param memref_ty [in] memref data type object
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt,
-                                                       tinytc_data_type_t memref_ty);
+                                                       tinytc_data_type_t memref_ty,
+                                                       const tinytc_location_t *loc);
 
 /**
  * @brief Release data type object
@@ -874,6 +878,78 @@ tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info, tinytc_intel_gpu_arc
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info);
+
+////////////////////////////
+///////// Compiler /////////
+////////////////////////////
+
+/**
+ * @brief Compile tensor language to OpenCL-C
+ *
+ * @param src [out] pointer to the source object created
+ * @param prg [inout] tensor program; modified as compiler passes are run
+ * @param info [in] core info object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
+                                                            tinytc_core_info_t info);
+
+/**
+ * @brief Compile tensor language to device binary
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param prg [inout] tensor program; modified as compiler passes are run
+ * @param info [in] core info object
+ * @param format [in] binary format (SPIR-V or native)
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
+                                                            tinytc_core_info_t info,
+                                                            tinytc_bundle_format_t format);
+/**
+ * @brief Compile source to device binary
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param src [in] source text
+ * @param info [in] core info object
+ * @param format [in] binary format (SPIR-V or native)
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin,
+                                                              tinytc_source_t src,
+                                                              tinytc_core_info_t info,
+                                                              tinytc_bundle_format_t format);
+
+/**
+ * @brief Get source text
+ *
+ * @param src [in] source object
+ * @param code [out] code contains a pointer to the source text; the pointer is only valid as long
+ * as the source object is alive
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(tinytc_source_t src, char const **code);
+/**
+ * @brief Delete source object
+ *
+ * @param src [in] source object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_destroy(tinytc_source_t src);
+
+/**
+ * @brief Delete binary object
+ *
+ * @param src [in] bin object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_destroy(tinytc_binary_t bin);
 
 #ifdef __cplusplus
 }

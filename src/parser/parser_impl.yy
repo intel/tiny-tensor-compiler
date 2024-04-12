@@ -5,8 +5,8 @@
 %language "c++"
 
 %code requires {
-    #include "ir/node/function_node.hpp"
     #include "location.hpp"
+    #include "node/function_node.hpp"
     #include "slice.hpp"
     #include "tinytc/tinytc.hpp"
     #include <algorithm>
@@ -24,14 +24,14 @@
 
 %code {
     #include "error.hpp"
-    #include "ir/node/data_type_node.hpp"
-    #include "ir/node/inst_node.hpp"
-    #include "ir/node/program_node.hpp"
-    #include "ir/node/region_node.hpp"
-    #include "ir/node/value_node.hpp"
+    #include "node/data_type_node.hpp"
+    #include "node/inst_node.hpp"
+    #include "node/program_node.hpp"
+    #include "node/region_node.hpp"
+    #include "node/value_node.hpp"
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
-    #include "tinytc/ir/passes.hpp"
+    #include "passes.hpp"
     #include "util.hpp"
 
     #include <clir/visit.hpp>
@@ -297,7 +297,7 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list RCHEV {
         try {
-            $$ = memref_type($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
+            $$ = create_memref($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
         }
@@ -309,7 +309,7 @@ memref_type:
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
         try {
-            $$ = memref_type($scalar_type, std::move($mode_list),
+            $$ = create_memref($scalar_type, std::move($mode_list),
                                  std::move($optional_stride_list), @memref_type);
         } catch (compilation_error const &e) {
             throw syntax_error(e.loc(), e.what());
@@ -339,7 +339,7 @@ constant_or_dynamic:
 
 group_type:
     GROUP LCHEV memref_type RCHEV {
-        $$ = group_type(std::move($memref_type));
+        $$ = create_group(std::move($memref_type));
         $$->loc(@group_type);
     }
 ;

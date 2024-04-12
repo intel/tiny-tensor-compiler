@@ -93,6 +93,12 @@ enum class core_feature_flag { large_register_file = tinytc_core_feature_flag_la
 
 enum class intel_gpu_architecture { pvc = tinytc_intel_gpu_architecture_pvc };
 
+//! Target binary format
+enum class bundle_format {
+    spirv = tinytc_bundle_format_spirv,  ///< SPIR-V
+    native = tinytc_bundle_format_native ///< Native device binary
+};
+
 ////////////////////////////
 /////// Type aliases ///////
 ////////////////////////////

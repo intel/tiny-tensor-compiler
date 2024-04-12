@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "parse_context.hpp"
-#include "ir/node/function_node.hpp"
-#include "ir/node/value_node.hpp"
+#include "node/function_node.hpp"
+#include "node/value_node.hpp"
 #include "parser/parser_impl.hpp"
 
 #include <clir/handle.hpp>
