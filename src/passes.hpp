@@ -5,7 +5,7 @@
 #define PASSES_20240314_HPP
 
 #include "kernel_metadata.hpp"
-#include "tinytc/ir/error.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/prog.hpp>
 #include <iosfwd>
@@ -22,7 +22,7 @@ class func;
 class prog;
 
 //! Check whether some IR rules are respected
-bool check_ir(prog p, error_reporter_function reporter = null_error_reporter());
+void check_ir(prog p);
 //! Dump IR to ostream
 void dump_ir(std::ostream &os, func f);
 //! Dump IR to ostream

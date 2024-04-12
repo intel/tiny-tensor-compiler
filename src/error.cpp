@@ -82,6 +82,8 @@ extern "C" char const *tinytc_error_string(tinytc_status_t status) {
         return "Unsupported subgroup size";
     case tinytc_status_unsupported_work_group_size:
         return "Work group size is larger than maximum work group size supported by device";
+    case tinytc_status_compilation_error:
+        return "Compilation error";
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
     case tinytc_status_ir_invalid_shape:
@@ -116,6 +118,8 @@ extern "C" char const *tinytc_error_string(tinytc_status_t status) {
         return "Expand shape must have at least 2 entries";
     case tinytc_status_ir_expand_shape_mismatch:
         return "Product of expand shape must equal mode size";
+    case tinytc_status_ir_collective_called_from_spmd:
+        return "Collective instruction must not be called from SPMD region";
     }
     return "Unknown status code";
 }

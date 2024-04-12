@@ -889,11 +889,34 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info);
  * @param src [out] pointer to the source object created
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param info [in] core info object
+ * @param err_handler [in][optional] error handler to process error codes with location; may be
+ * nullptr
+ * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
+ * nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                                            tinytc_core_info_t info);
+                                                            const_tinytc_core_info_t info,
+                                                            tinytc_error_handler_t err_handler,
+                                                            void *err_handler_data);
+/**
+ * @brief Compile source to device binary
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param src [in] source text
+ * @param info [in] core info object
+ * @param format [in] binary format (SPIR-V or native)
+ * @param err_handler [in][optional] error handler to process error codes with location; may be
+ * nullptr
+ * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
+ * nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(
+    tinytc_binary_t *bin, const_tinytc_source_t src, const_tinytc_core_info_t info,
+    tinytc_bundle_format_t format, tinytc_error_handler_t err_handler, void *err_handler_data);
 
 /**
  * @brief Compile tensor language to device binary
@@ -902,26 +925,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param info [in] core info object
  * @param format [in] binary format (SPIR-V or native)
+ * @param err_handler [in][optional] error handler to process error codes with location; may be
+ * nullptr
+ * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
+ * nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
-                                                            tinytc_core_info_t info,
-                                                            tinytc_bundle_format_t format);
-/**
- * @brief Compile source to device binary
- *
- * @param bin [out] pointer to the binary object created
- * @param src [in] source text
- * @param info [in] core info object
- * @param format [in] binary format (SPIR-V or native)
- *
- * @return tinytc_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin,
-                                                              tinytc_source_t src,
-                                                              tinytc_core_info_t info,
-                                                              tinytc_bundle_format_t format);
+                                                            const_tinytc_core_info_t info,
+                                                            tinytc_bundle_format_t format,
+                                                            tinytc_error_handler_t err_handler,
+                                                            void *err_handler_data);
 
 /**
  * @brief Get source text
@@ -932,7 +947,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *b
  *
  * @return tinytc_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(tinytc_source_t src, char const **code);
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **code);
 /**
  * @brief Delete source object
  *

@@ -23,7 +23,7 @@ class compilation_error : public std::exception {
     //! Get status code
     inline auto code() const noexcept { return code_; }
     //! Get location
-    inline location loc() const noexcept { return loc_; }
+    inline auto loc() const noexcept -> location const & { return loc_; }
     //! Get explanatory string
     inline char const *what() const noexcept override { return error_string(code_); }
     //! Get additional information
@@ -40,18 +40,41 @@ class internal_compiler_error : public std::exception {
     inline char const *what() const noexcept override { return "Internal compiler error"; }
 };
 
-template <typename F> auto exception_to_status_code(F &&f) -> tinytc_status_t {
+template <typename F>
+auto exception_to_status_code(F &&f, error_handler err = nullptr, void *err_handler_data = nullptr)
+    -> tinytc_status_t {
     try {
         f();
     } catch (internal_compiler_error const &e) {
+        if (err) {
+            (*err)(err_handler_data, tinytc_status_internal_compiler_error, nullptr, nullptr);
+        }
         return tinytc_status_internal_compiler_error;
     } catch (compilation_error const &e) {
+        if (err) {
+            (*err)(err_handler_data, static_cast<tinytc_status_t>(e.code()), &e.loc(),
+                   e.extra_info());
+        }
         return static_cast<tinytc_status_t>(e.code());
-    } catch (std::bad_alloc const &) {
+    } catch (std::bad_alloc const &e) {
+        if (err) {
+            (*err)(err_handler_data, tinytc_status_bad_alloc, nullptr, e.what());
+        }
         return tinytc_status_bad_alloc;
-    } catch (std::out_of_range const &) {
+    } catch (std::out_of_range const &e) {
+        if (err) {
+            (*err)(err_handler_data, tinytc_status_out_of_range, nullptr, e.what());
+        }
         return tinytc_status_out_of_range;
+    } catch (std::exception const &e) {
+        if (err) {
+            (*err)(err_handler_data, tinytc_status_runtime_error, nullptr, e.what());
+        }
+        return tinytc_status_runtime_error;
     } catch (...) {
+        if (err) {
+            (*err)(err_handler_data, tinytc_status_runtime_error, nullptr, nullptr);
+        }
         return tinytc_status_runtime_error;
     }
     return tinytc_status_success;

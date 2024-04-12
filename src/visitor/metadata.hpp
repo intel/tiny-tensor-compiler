@@ -22,7 +22,9 @@ class metadata {
     /* Program nodes */
     void operator()(program &p);
 
-    auto get_result() const -> std::unordered_map<std::string, kernel_metadata>;
+    inline auto get_result() const -> std::unordered_map<std::string, kernel_metadata> {
+        return metadata_;
+    }
 
   private:
     std::unordered_map<std::string, kernel_metadata> metadata_;

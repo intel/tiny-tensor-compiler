@@ -8,33 +8,29 @@
 #include "node/inst_node.hpp"
 #include "node/program_node.hpp"
 #include "node/region_node.hpp"
-#include "tinytc/ir/error.hpp"
 
 namespace tinytc {
 
 class ir_checker {
   public:
-    ir_checker(error_reporter_function reporter);
-
     /* Stmt nodes */
-    bool operator()(inst_node &in);
-    bool operator()(for_inst &p);
-    bool operator()(foreach_inst &p);
-    bool operator()(if_inst &in);
+    void operator()(inst_node &in);
+    void operator()(for_inst &p);
+    void operator()(foreach_inst &p);
+    void operator()(if_inst &in);
 
     /* Region nodes */
-    bool operator()(rgn &b);
+    void operator()(rgn &b);
 
     /* Func nodes */
-    bool operator()(prototype &);
-    bool operator()(function &fn);
+    void operator()(prototype &);
+    void operator()(function &fn);
 
     /* Program nodes */
-    bool operator()(program &p);
+    void operator()(program &p);
 
   private:
     bool inside_spmd_region_ = false;
-    error_reporter_function reporter_;
 };
 
 } // namespace tinytc
