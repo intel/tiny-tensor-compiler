@@ -595,6 +595,85 @@ inline inst create_yield(std::vector<value> &yield_list, location const &loc = {
     return inst(instr);
 }
 
+////////////////////////////
+/////////// Func ///////////
+////////////////////////////
+
+template <> struct handle_traits<tinytc_func_t> {
+    static auto retain(tinytc_func_t handle) -> tinytc_status_t {
+        return tinytc_func_retain(handle);
+    }
+    static auto release(tinytc_func_t handle) -> tinytc_status_t {
+        return tinytc_func_release(handle);
+    }
+};
+
+class func : public handle<tinytc_func_t> {
+  public:
+    using handle::handle;
+};
+
+//! Is reinterpret_cast<tinytc_func_t*>(&f) allowed, where f has type func
+constexpr bool func_reinterpret_allowed =
+    std::is_standard_layout_v<func> && sizeof(func) == sizeof(tinytc_func_t);
+
+inline func create_function_prototype(char const *name, std::vector<value> &arg_list,
+                                      location const &loc = {}) {
+    static_assert(value_reinterpret_allowed);
+    tinytc_func_t fun;
+    auto len = arg_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("argument list too long");
+    }
+    tinytc_value_t *al = reinterpret_cast<tinytc_value_t *>(arg_list.data());
+    TINYTC_CHECK(tinytc_function_prototype_create(&fun, name, len, al, &loc));
+    return func(fun);
+}
+
+inline func create_function(func const &prototype, region const &body, location const &loc = {}) {
+    tinytc_func_t fun;
+    TINYTC_CHECK(tinytc_function_create(&fun, prototype.get(), body.get(), &loc));
+    return func(fun);
+}
+
+inline void set_work_group_size(func &fun, uint32_t x, uint32_t y) {
+    TINYTC_CHECK(tinytc_function_set_work_group_size(fun.get(), x, y));
+}
+
+inline void set_subgroup_size(func &fun, uint32_t sgs) {
+    TINYTC_CHECK(tinytc_function_set_subgroup_size(fun.get(), sgs));
+}
+
+////////////////////////////
+/////////// Prog ///////////
+////////////////////////////
+///
+template <> struct handle_traits<tinytc_prog_t> {
+    static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
+        return tinytc_prog_retain(handle);
+    }
+    static auto release(tinytc_prog_t handle) -> tinytc_status_t {
+        return tinytc_prog_release(handle);
+    }
+};
+
+class prog : public handle<tinytc_prog_t> {
+  public:
+    using handle::handle;
+};
+
+inline prog create_program(std::vector<func> &fun_list, location const &loc = {}) {
+    static_assert(func_reinterpret_allowed);
+    tinytc_prog_t prg;
+    auto len = fun_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("function list too long");
+    }
+    tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
+    TINYTC_CHECK(tinytc_program_create(&prg, len, fl, &loc));
+    return prog(prg);
+}
+
 } // namespace tinytc
 
 #endif // TINYTC_20240403_HPP

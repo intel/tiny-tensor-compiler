@@ -4,8 +4,6 @@
 #ifndef PARSE_CONTEXT_20231221_HPP
 #define PARSE_CONTEXT_20231221_HPP
 
-#include "tinytc/ir/func.hpp"
-#include "tinytc/ir/prog.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <algorithm>
@@ -27,7 +25,7 @@ class parse_context {
     void val(std::string const &id, value val, location const &l);
     value val(std::string const &id, location const &l);
 
-    void prototype(std::string const &id, func p, location const &l);
+    void prototype(std::string const &id, func p);
     func prototype(std::string const &id, location const &l);
 
   private:

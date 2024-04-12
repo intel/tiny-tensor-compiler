@@ -180,7 +180,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char cons
 TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(tinytc_value_t vl, char const **name);
 
 ////////////////////////////
-//////// Instruction ///////
+/////// Instructions ///////
 ////////////////////////////
 
 //! Convert binary op to string
@@ -617,7 +617,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr,
  * @param condition [in] condition
  * @param then [in] region taken if condition is true
  * @param otherwise [in][optional] region taken if condition is false; can be nullptr
- * @param return_type_list_size [in] length if return type array
+ * @param return_type_list_size [in] length of return type array
  * @param return_type_list [in][range(0, return_type_list_size)] return type array; can be nullptr
  * if return_type_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
@@ -638,7 +638,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param yield_list_size [in] length if yielded values list; must be at least 1
+ * @param yield_list_size [in] length of yielded values list; must be at least 1
  * @param yield_list [in][range(1, yield_list_size)] yielded values array
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -705,7 +705,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
  * @brief Create region
  *
  * @param reg [out] pointer to the region object created
- * @param instruction_list_size [in] length if instruction array
+ * @param instruction_list_size [in] length of instruction array
  * @param instruction_list [in][range(0, instruction_list_size)] instruction array; can be nullptr
  * if instruction_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
@@ -735,6 +735,121 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_release(tinytc_region_t reg);
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
+
+////////////////////////////
+/////////// Func ///////////
+////////////////////////////
+
+/**
+ * @brief Create function prototype
+ *
+ * @param fun [out] pointer to the func object created
+ * @param arg_list_size [in] length of argument array
+ * @param arg_list [in][range(0, arg_list_size)] argument array; can be nullptr if arg_list_size is
+ * 0
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fun, char const *name,
+                                                               uint32_t arg_list_size,
+                                                               tinytc_value_t *arg_list,
+                                                               const tinytc_location_t *loc);
+
+/**
+ * @brief Create function
+ *
+ * @param fun [out] pointer to the func object created
+ * @param prototype [in] function prototype
+ * @param body [in] function body
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototype,
+                                                     tinytc_region_t body,
+                                                     const tinytc_location_t *loc);
+
+/**
+ * @brief Set work-group size
+ *
+ * @param fun [out] func object (must be the function definition, not the function prototype)
+ * @param x [in] number of rows in parallel grid; must be a multiple of the subgroup size
+ * @param y [in] number of columns in parallel grid
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t x,
+                                                                  uint32_t y);
+/**
+ * @brief Set subgroup size
+ *
+ * @param fun [out] func object (must be the function definition, not the function prototype)
+ * @param sgs [in] subgroup size; the supported values need to be queried from the compute device
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, uint32_t sgs);
+
+/**
+ * @brief Release function object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param fun [inout] function object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_release(tinytc_func_t fun);
+
+/**
+ * @brief Increase reference count of function object by 1
+ *
+ * @param fun [inout] function object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_retain(tinytc_func_t fun);
+
+////////////////////////////
+/////////// Prog ///////////
+////////////////////////////
+
+/**
+ * @brief Create program
+ *
+ * @param prg [out] pointer to the prog object created
+ * @param fun_list_size [in] length of func array
+ * @param fun_list [in][range(0, fun_list_size)] func array; can be nullptr if fun_list_size is 0
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t fun_list_size,
+                                                    tinytc_func_t *fun_list,
+                                                    const tinytc_location_t *loc);
+
+/**
+ * @brief Release program object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param prg [inout] program object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
+
+/**
+ * @brief Increase reference count of program object by 1
+ *
+ * @param prg [inout] program object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
 #ifdef __cplusplus
 }

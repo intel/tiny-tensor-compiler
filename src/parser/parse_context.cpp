@@ -37,13 +37,12 @@ value parse_context::val(std::string const &id, location const &l) {
     throw parser::syntax_error(l, "Undefined identifier %" + id);
 }
 
-void parse_context::prototype(std::string const &id, func p, location const &l) {
+void parse_context::prototype(std::string const &id, func p) {
     if (auto other = prototype_map_.find(id); other != prototype_map_.end()) {
         auto oss = std::ostringstream{};
         oss << "Identifier @" << id << " was already used at " << other->second->loc();
-        throw parser::syntax_error(l, oss.str());
+        throw parser::syntax_error(p->loc(), oss.str());
     }
-    p->loc(l);
     prototype_map_[id] = std::move(p);
 }
 

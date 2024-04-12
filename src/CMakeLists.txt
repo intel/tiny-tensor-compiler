@@ -22,6 +22,7 @@ set(SOURCES
     data_type.cpp
     device_info.cpp
     error.cpp
+    func.cpp
     inst.cpp
     internal/compiler_options.cpp
     #ir/builder.cpp
@@ -31,7 +32,6 @@ set(SOURCES
     ir/node/inst_node.cpp
     ir/passes.cpp
     ir/precision_helper.cpp
-    ir/prog.cpp
     ir/tiling.cpp
     ir/visitor/aa_results.cpp
     ir/visitor/alias_analysis.cpp
@@ -47,6 +47,7 @@ set(SOURCES
     opencl_cc.cpp
     parser/parse_context.cpp
     parser.cpp
+    prog.cpp
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
     region.cpp
@@ -65,10 +66,8 @@ set(PUBLIC_HEADERS
     internal/compiler_options.hpp
     ir/builder.hpp
     ir/error.hpp
-    ir/func.hpp
     ir/gemm_generator.hpp
     ir/passes.hpp
-    ir/prog.hpp
     ir/tiling.hpp
     opencl_cc.hpp
     parser.hpp
