@@ -115,8 +115,11 @@ template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_
 // C++ reference counting //
 ////////////////////////////
 
-//! Wraps destroy calls for type T
+//! Wraps retain / release calls for type T
 template <typename T> struct handle_traits {};
+
+//! Wraps destroy calls for type T
+template <typename T> struct deleter {};
 
 /**
  * @brief Wraps a C handle in a reference-counted object
@@ -647,7 +650,7 @@ inline void set_subgroup_size(func &fun, uint32_t sgs) {
 ////////////////////////////
 /////////// Prog ///////////
 ////////////////////////////
-///
+
 template <> struct handle_traits<tinytc_prog_t> {
     static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
         return tinytc_prog_retain(handle);
@@ -672,6 +675,23 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
     tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
     TINYTC_CHECK(tinytc_program_create(&prg, len, fl, &loc));
     return prog(prg);
+}
+
+////////////////////////////
+//////// Device info ///////
+////////////////////////////
+
+template <> struct deleter<tinytc_core_info> {
+    inline void operator()(tinytc_core_info_t obj) const { tinytc_core_info_destroy(obj); }
+};
+
+inline auto get_core_info_intel_gpu(intel_gpu_architecture arch)
+    -> std::unique_ptr<tinytc_core_info, deleter<tinytc_core_info>> {
+    tinytc_core_info_t info;
+    TINYTC_CHECK(tinytc_core_info_intel_gpu_create(
+        &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
+    return std::unique_ptr<tinytc_core_info, deleter<tinytc_core_info>>(
+        info, deleter<tinytc_core_info>{});
 }
 
 } // namespace tinytc

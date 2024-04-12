@@ -3,10 +3,10 @@
 
 #include "tinytc/ir/gemm_generator.hpp"
 #include "codegen_tools.hpp"
+#include "device_info.hpp"
 #include "precision_helper.hpp"
 #include "scalar_type.hpp"
-#include "tinytc/device_info.hpp"
-#include "tinytc/ir/tiling.hpp"
+#include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/attr_defs.hpp>

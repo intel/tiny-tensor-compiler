@@ -16,9 +16,10 @@
 #include <unordered_map>
 #include <vector>
 
+struct tinytc_core_info;
+
 namespace tinytc {
 
-class core_info;
 enum class bundle_format;
 
 //! Kernel metadata
@@ -81,7 +82,7 @@ class TINYTC_EXPORT binary {
  * @return binary
  */
 TINYTC_EXPORT auto optimize_and_make_binary(prog prog, bundle_format format,
-                                            std::shared_ptr<core_info> info,
+                                            tinytc_core_info const &info,
                                             error_reporter_function err = null_error_reporter())
     -> std::shared_ptr<binary>;
 

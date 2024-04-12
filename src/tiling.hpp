@@ -4,6 +4,7 @@
 #ifndef TILING_20240306_HPP
 #define TILING_20240306_HPP
 
+#include "device_info.hpp"
 #include "tinytc/export.h"
 
 #include <array>
@@ -15,8 +16,6 @@
 
 namespace tinytc {
 
-class core_config;
-class core_info;
 enum class scalar_type;
 
 //! Size of 2D subgroup grid

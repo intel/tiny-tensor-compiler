@@ -851,6 +851,30 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
+////////////////////////////
+//////// Device info ///////
+////////////////////////////
+
+/**
+ * @brief Look up core info for Intel GPU architecture
+ *
+ * @param info [out] pointer to the core_info object created
+ * @param arch [in] IP version
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info, tinytc_intel_gpu_architecture_t arch);
+
+/**
+ * @brief Delete core_info object
+ *
+ * @param info [in] core info object
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info);
+
 #ifdef __cplusplus
 }
 #endif

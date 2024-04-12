@@ -89,6 +89,10 @@ enum class transpose {
     T = tinytc_transpose_T  ///< transpose
 };
 
+enum class core_feature_flag { large_register_file = tinytc_core_feature_flag_large_register_file };
+
+enum class intel_gpu_architecture { pvc = tinytc_intel_gpu_architecture_pvc };
+
 ////////////////////////////
 /////// Type aliases ///////
 ////////////////////////////
