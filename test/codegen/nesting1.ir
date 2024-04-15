@@ -5,7 +5,7 @@
 func @illegal_nesting() {
     foreach %i=1,16 {
         foreach %j=1,16 {
-    }
-; CHECK: 7.9-8.5: Collective instruction must not be called from SPMD region
+        }
+; CHECK: 7.9-8.9: Collective instruction must not be called from SPMD region
     }
 }

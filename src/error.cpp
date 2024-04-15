@@ -27,32 +27,44 @@ auto report_error_with_context(char const *code, std::size_t code_len, std::stri
     }
     auto oerr = std::ostringstream{};
     char const *end = begin;
-    int start_col = 0;
+    int start_col = -1;
     while (cur_line <= l.end.line && *end != '\0' && end <= limit) {
-        if (!std::isspace(*end) && start_col == 0) {
+        if (!std::isspace(*end) && start_col < 0) {
             start_col = static_cast<int>(end - begin);
         }
         if (*end == '\n') {
+            // start_col < 0 => only white-space
+            if (start_col < 0) {
+                start_col = static_cast<int>(end - begin);
+            }
             oerr << std::string(begin, end) << std::endl;
             if (cur_line >= l.begin.line) {
-                int col_begin = l.begin.column > 1 ? l.begin.column - 1 : 0;
-                int num_col = l.end.column > l.begin.column ? l.end.column - l.begin.column : 1;
+                int col_begin = 0;
+                int num_col = 0;
                 if (l.begin.line != l.end.line) {
                     if (cur_line == l.begin.line) {
+                        col_begin = l.begin.column > 1 ? l.begin.column - 1 : 0;
                         num_col = static_cast<int>(end - begin) - col_begin;
                     } else if (cur_line == l.end.line) {
-                        int const delta = start_col - col_begin;
-                        col_begin = start_col;
-                        num_col = num_col >= delta ? num_col - delta : 0;
+                        num_col = l.end.column > 1 ? l.end.column - 1 : 0;
+                        if (num_col >= start_col) {
+                            num_col -= start_col;
+                            col_begin = start_col;
+                        } else {
+                            col_begin = 0;
+                        }
                     } else {
                         col_begin = start_col;
                         num_col = static_cast<int>(end - begin) - col_begin;
                     }
+                } else {
+                    col_begin = l.begin.column > 1 ? l.begin.column - 1 : 0;
+                    num_col = l.end.column > l.begin.column ? l.end.column - l.begin.column : 1;
                 }
                 oerr << std::string(col_begin, ' ') << std::string(num_col, '~') << std::endl;
             }
             ++cur_line;
-            start_col = 0;
+            start_col = -1;
             begin = end + 1;
         }
         ++end;
