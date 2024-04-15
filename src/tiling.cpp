@@ -116,7 +116,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
 }
 
 auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
-                                      core_info const &dev_info)
+                                      ::tinytc_core_info const &dev_info)
     -> std::tuple<std::uint32_t, local_tiling> {
     auto const sgs = suggest_subgroup_size(shapes, dev_info.subgroup_sizes());
     auto const core_cfg = dev_info.get_core_config(sgs);

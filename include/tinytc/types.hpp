@@ -112,10 +112,6 @@ using location = ::tinytc_location;
 
 using error_handler = ::tinytc_error_handler_t;
 
-using core_info = ::tinytc_core_info;
-using source = ::tinytc_source;
-using binary = ::tinytc_binary;
-
 } // namespace tinytc
 
 #endif // TYPES_20240410_HPP

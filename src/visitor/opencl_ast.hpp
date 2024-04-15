@@ -56,7 +56,7 @@ class dope_vector {
 
 class opencl_ast {
   public:
-    opencl_ast(core_info const *info);
+    opencl_ast(::tinytc_core_info const *info);
 
     /* Data type nodes */
     clir::data_type operator()(void_data_type &);
@@ -113,7 +113,7 @@ class opencl_ast {
     memref_data_type *get_memref_type(value_node &v);
     static scalar_type get_scalar_type(data_type_node &ty);
 
-    core_info const *info_;
+    ::tinytc_core_info const *info_;
     clir::program_builder prog_builder_;
     std::vector<std::unordered_map<uintptr_t, clir::var>> declared_vars_;
     std::vector<std::vector<clir::var>> yielded_vars_;

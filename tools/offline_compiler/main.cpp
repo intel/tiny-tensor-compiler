@@ -31,8 +31,8 @@ int main(int argc, char **argv) {
     }
     try {
         auto info = get_core_info_intel_gpu(intel_gpu_architecture::pvc);
-        auto src = compile_to_opencl(p, *info, nullptr, nullptr);
-        std::cout << get_code(*src);
+        auto src = compile_to_opencl(p, info, nullptr, nullptr);
+        std::cout << src.get_code();
     } catch (status const &st) {
         std::cerr << error_string(st) << std::endl;
     } catch (std::exception const &e) {
