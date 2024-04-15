@@ -53,4 +53,8 @@ func parse_context::prototype(std::string const &id, location const &l) {
     throw parser::syntax_error(l, "Undefined identifier @" + id);
 }
 
+void parse_context::add_error(location const &loc, std::string const &what) {
+    errors_.emplace_back(std::make_pair(loc, what));
+}
+
 } // namespace tinytc

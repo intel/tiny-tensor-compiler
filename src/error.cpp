@@ -2,23 +2,20 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "tinytc/ir/error.hpp"
 
 #include <cctype>
-#include <ostream>
+#include <sstream>
 #include <utility>
 
 namespace tinytc {
 
-compilation_error::compilation_error(location const &loc, status code,
-                                     std::string const &extra_info)
+compilation_error::compilation_error(location const &loc, status code, std::string extra_info)
     : loc_(loc), code_(code), extra_info_(std::move(extra_info)) {}
 
-void report_error_with_context(std::ostream *oerr, char const *code, std::size_t code_len,
-                               location const &l, std::string const &what) {
-    if (!oerr) {
-        return;
-    }
+auto report_error_with_context(char const *code, std::size_t code_len, std::string const &file_name,
+                               location const &l, std::string const &what) -> std::string {
+    constexpr int additional_context_lines = 2;
+
     int cur_line = 1;
     const char *begin = code;
     const char *limit = begin + code_len;
@@ -28,6 +25,7 @@ void report_error_with_context(std::ostream *oerr, char const *code, std::size_t
         }
         ++begin;
     }
+    auto oerr = std::ostringstream{};
     char const *end = begin;
     int start_col = 0;
     while (cur_line <= l.end.line && *end != '\0' && end <= limit) {
@@ -35,7 +33,7 @@ void report_error_with_context(std::ostream *oerr, char const *code, std::size_t
             start_col = static_cast<int>(end - begin);
         }
         if (*end == '\n') {
-            *oerr << std::string(begin, end) << std::endl;
+            oerr << std::string(begin, end) << std::endl;
             if (cur_line >= l.begin.line) {
                 int col_begin = l.begin.column > 1 ? l.begin.column - 1 : 0;
                 int num_col = l.end.column > l.begin.column ? l.end.column - l.begin.column : 1;
@@ -51,7 +49,7 @@ void report_error_with_context(std::ostream *oerr, char const *code, std::size_t
                         num_col = static_cast<int>(end - begin) - col_begin;
                     }
                 }
-                *oerr << std::string(col_begin, ' ') << std::string(num_col, '~') << std::endl;
+                oerr << std::string(col_begin, ' ') << std::string(num_col, '~') << std::endl;
             }
             ++cur_line;
             start_col = 0;
@@ -59,12 +57,16 @@ void report_error_with_context(std::ostream *oerr, char const *code, std::size_t
         }
         ++end;
     }
-    *oerr << l << ": " << what << std::endl;
+    oerr << file_name << ":";
+    print_range(oerr, l.begin, l.end);
+    oerr << ": " << what;
+    return oerr.str();
 }
 
 } // namespace tinytc
 
-extern "C" char const *tinytc_error_string(tinytc_status_t status) {
+extern "C" {
+char const *tinytc_error_string(tinytc_status_t status) {
     switch (status) {
     case tinytc_status_success:
         return "Success";
@@ -84,6 +86,10 @@ extern "C" char const *tinytc_error_string(tinytc_status_t status) {
         return "Work group size is larger than maximum work group size supported by device";
     case tinytc_status_compilation_error:
         return "Compilation error";
+    case tinytc_status_file_io_error:
+        return "I/O error occured in file operation";
+    case tinytc_status_parse_error:
+        return "Parse error";
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
     case tinytc_status_ir_invalid_shape:
@@ -123,4 +129,4 @@ extern "C" char const *tinytc_error_string(tinytc_status_t status) {
     }
     return "Unknown status code";
 }
-
+}

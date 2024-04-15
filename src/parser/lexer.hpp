@@ -9,7 +9,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <iosfwd>
 #include <string>
 
 namespace tinytc {
@@ -18,10 +17,12 @@ enum class scalar_type;
 
 class lexer {
   public:
-    lexer(std::string const &input, location const &start_loc, std::ostream *oerr = nullptr);
+    lexer(std::string const &input, location const &start_loc);
     parser::symbol_type operator()();
 
     void error(location const &l, std::string const &m);
+    auto input() const -> char const * { return input_; }
+    auto input_size() const -> std::size_t { return YYLIMIT >= input_ ? YYLIMIT - input_ : 0u; }
 
   private:
     std::uint64_t lex_number(char const *s, char const *e);
@@ -34,7 +35,6 @@ class lexer {
     std::size_t len_;
     char const *YYCURSOR, *YYLIMIT;
     location loc_;
-    std::ostream *oerr_;
 };
 
 inline parser::symbol_type yylex(lexer &lex) { return lex(); }

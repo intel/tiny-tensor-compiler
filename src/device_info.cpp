@@ -110,7 +110,5 @@ tinytc_status_t tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info,
     });
 }
 
-tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info) {
-    return exception_to_status_code([&] { delete info; });
-}
+void tinytc_core_info_destroy(tinytc_core_info_t info) { delete info; }
 }

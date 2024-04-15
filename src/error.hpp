@@ -5,21 +5,27 @@
 #define ERROR_20240410_HPP
 
 #include "location.hpp"
+#include "opencl_cc.hpp"
+#include "parser.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <exception>
 #include <new>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
 namespace tinytc {
 
+auto report_error_with_context(char const *code, std::size_t code_len, std::string const &file_name,
+                               location const &l, std::string const &what) -> std::string;
+
 //! Compilation error
 class compilation_error : public std::exception {
   public:
     //! ctor; taking location, status code, and expanatory string
-    compilation_error(location const &loc, status code, std::string const &extra_info = {});
+    compilation_error(location const &loc, status code, std::string extra_info = {});
     //! Get status code
     inline auto code() const noexcept { return code_; }
     //! Get location
@@ -41,40 +47,34 @@ class internal_compiler_error : public std::exception {
 };
 
 template <typename F>
-auto exception_to_status_code(F &&f, error_handler err = nullptr, void *err_handler_data = nullptr)
-    -> tinytc_status_t {
+auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
+                              location const &loc = {}) -> tinytc_status_t {
     try {
         f();
     } catch (internal_compiler_error const &e) {
-        if (err) {
-            (*err)(err_handler_data, tinytc_status_internal_compiler_error, nullptr, nullptr);
-        }
         return tinytc_status_internal_compiler_error;
+    } catch (status const &e) {
+        return static_cast<tinytc_status_t>(e);
     } catch (compilation_error const &e) {
-        if (err) {
-            (*err)(err_handler_data, static_cast<tinytc_status_t>(e.code()), &e.loc(),
-                   e.extra_info());
+        if (context) {
+            auto const what = [](compilation_error const &e) {
+                return (std::ostringstream{} << e.what() << ". " << e.extra_info()).str();
+            };
+            context->report_error(e.loc(), what(e));
         }
         return static_cast<tinytc_status_t>(e.code());
-    } catch (std::bad_alloc const &e) {
-        if (err) {
-            (*err)(err_handler_data, tinytc_status_bad_alloc, nullptr, e.what());
+    } catch (opencl_c_compilation_error const &e) {
+        if (context) {
+            context->report_error(loc, e.what());
         }
+        return tinytc_status_compilation_error;
+    } catch (std::bad_alloc const &e) {
         return tinytc_status_bad_alloc;
     } catch (std::out_of_range const &e) {
-        if (err) {
-            (*err)(err_handler_data, tinytc_status_out_of_range, nullptr, e.what());
-        }
         return tinytc_status_out_of_range;
     } catch (std::exception const &e) {
-        if (err) {
-            (*err)(err_handler_data, tinytc_status_runtime_error, nullptr, e.what());
-        }
         return tinytc_status_runtime_error;
     } catch (...) {
-        if (err) {
-            (*err)(err_handler_data, tinytc_status_runtime_error, nullptr, nullptr);
-        }
         return tinytc_status_runtime_error;
     }
     return tinytc_status_success;

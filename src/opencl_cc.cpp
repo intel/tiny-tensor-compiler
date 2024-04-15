@@ -104,9 +104,9 @@ std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_for
         if (log_file != invalid_index) {
             char *log_ptr = reinterpret_cast<char *>(data_outputs[log_file]);
             auto log = std::string(log_ptr, len_outputs[log_file]);
-            throw std::runtime_error("source compilation failed\n" + log);
+            throw opencl_c_compilation_error(std::move(log));
         }
-        throw std::runtime_error("source compilation failed (no log available)");
+        throw opencl_c_compilation_error("OpenCL-C compilation failed (no log available)");
     }
 
     auto result = std::vector<std::uint8_t>(data_outputs[bin_file],
