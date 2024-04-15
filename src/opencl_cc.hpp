@@ -9,12 +9,23 @@
 #define OPENCL_CC_20240307_HPP
 
 #include <cstdint>
+#include <exception>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace tinytc {
 
 enum class bundle_format;
+
+class opencl_c_compilation_error : public std::exception {
+  public:
+    opencl_c_compilation_error(std::string build_log) : build_log_(std::move(build_log)) {}
+    inline char const *what() const noexcept override { return build_log_.c_str(); }
+
+  private:
+    std::string build_log_;
+};
 
 /**
  * @brief Takes OpenCL-C code and outputs a SPIR-V or native device binary

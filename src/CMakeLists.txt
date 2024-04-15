@@ -65,7 +65,6 @@ set(PUBLIC_HEADERS
     internal/compiler_options.hpp
     ir/builder.hpp
     ir/error.hpp
-    parser.hpp
     recipe/small_gemm_batched.hpp
     recipe/tall_and_skinny.hpp
     runtime.hpp

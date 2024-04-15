@@ -31,6 +31,8 @@ enum class status {
     unsupported_subgroup_size = tinytc_status_unsupported_subgroup_size,
     unsupported_work_group_size = tinytc_status_unsupported_work_group_size,
     compilation_error = tinytc_status_compilation_error,
+    file_io_error = tinytc_status_file_io_error,
+    parse_error = tinytc_status_parse_error,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,
@@ -109,8 +111,6 @@ enum class bundle_format {
 using position = ::tinytc_position;
 //! @brief Alias for tinytc_location in namespace tinytc
 using location = ::tinytc_location;
-
-using error_handler = ::tinytc_error_handler_t;
 
 } // namespace tinytc
 

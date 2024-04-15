@@ -28,10 +28,17 @@ class parse_context {
     void prototype(std::string const &id, func p);
     func prototype(std::string const &id, location const &l);
 
+    void add_error(location const &loc, std::string const &what);
+
+    inline auto errors() const -> std::vector<std::pair<location, std::string>> const & {
+        return errors_;
+    }
+
   private:
     std::vector<std::unordered_map<std::string, value>> id_map_;
     std::unordered_map<std::string, func> prototype_map_;
     prog program_;
+    std::vector<std::pair<location, std::string>> errors_;
 };
 
 } // namespace tinytc

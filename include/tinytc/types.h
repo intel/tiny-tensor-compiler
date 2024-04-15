@@ -31,6 +31,8 @@ typedef enum {
     tinytc_status_unsupported_subgroup_size = 0x6,
     tinytc_status_unsupported_work_group_size = 0x7,
     tinytc_status_compilation_error = 0x8,
+    tinytc_status_file_io_error = 0x9,
+    tinytc_status_parse_error = 0xa,
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,
     tinytc_status_ir_invalid_shape = 0x101,
@@ -167,21 +169,28 @@ typedef struct tinytc_prog *tinytc_prog_t;
 //! @struct tinytc_core_info;
 //! @brief Opaque struct for core information
 struct tinytc_core_info;
-//!@brief core_info handle
+//! @brief core_info handle
 typedef struct tinytc_core_info *tinytc_core_info_t;
 typedef const struct tinytc_core_info *const_tinytc_core_info_t;
 
 //! @struct tinytc_source;
 //! @brief Opaque struct for source text
 struct tinytc_source;
-//!@brief source handle
+//! @brief source handle
 typedef struct tinytc_source *tinytc_source_t;
 typedef const struct tinytc_source *const_tinytc_source_t;
+
+//! @struct tintyc_source_context
+//! @brief Opaque struct for source context
+struct tinytc_source_context;
+//! @brief source context handle
+typedef struct tinytc_source_context *tinytc_source_context_t;
+typedef const struct tinytc_source_context *const_tinytc_source_context_t;
 
 //! @struct tinytc_binary;
 //! @brief Opaque struct for a binary
 struct tinytc_binary;
-//!@brief binary handle
+//! @brief binary handle
 typedef struct tinytc_binary *tinytc_binary_t;
 
 ////////////////////////////
@@ -200,21 +209,6 @@ typedef struct tinytc_location {
     tinytc_position begin; ///< Starting position
     tinytc_position end;   ///< End position
 } tinytc_location_t;
-
-////////////////////////////
-///////// Callbacks ////////
-////////////////////////////
-
-/**
- * @brief Callback to report error messages with location
- *
- * @param user_data pointer to arbitrary client data
- * @param status error code
- * @param location pointer to location; may be nullptr
- * @param extra_info extra error text; may be nullptr
- */
-typedef void (*tinytc_error_handler_t)(void *user_data, tinytc_status_t status,
-                                       const tinytc_location_t *location, char const *extra_info);
 
 #ifdef __cplusplus
 }

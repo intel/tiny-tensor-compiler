@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "parser/lexer.hpp"
-#include "tinytc/ir/error.hpp"
 #include "tinytc/types.hpp"
 
 #include <cerrno>
@@ -12,10 +11,9 @@
 
 namespace tinytc {
 
-lexer::lexer(std::string const &input, location const &initial_loc, std::ostream *oerr)
+lexer::lexer(std::string const &input, location const &initial_loc)
     : input_{input.c_str()},
-      len_(input.size()), YYCURSOR{input_}, YYLIMIT{input_ + len_}, loc_{initial_loc}, oerr_{oerr} {
-}
+      len_(input.size()), YYCURSOR{input_}, YYLIMIT{input_ + len_}, loc_{initial_loc} {}
 
 parser::symbol_type lexer::operator()() {
     char const *YYMARKER;
@@ -256,10 +254,6 @@ scalar_type lexer::lex_floating_type(char const *s, char const *) {
         *      { return {}; }
     */
     return scalar_type{};
-}
-
-void lexer::error(location const &l, std::string const &m) {
-    report_error_with_context(oerr_, input_, YYLIMIT - input_, l, m);
 }
 
 } // namespace tinytc

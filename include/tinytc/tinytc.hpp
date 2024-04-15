@@ -756,6 +756,42 @@ inline auto get_core_info_intel_gpu(intel_gpu_architecture arch) -> core_info {
 }
 
 ////////////////////////////
+////////// Parser //////////
+////////////////////////////
+
+template <> struct unique_handle_traits<tinytc_source_context_t> {
+    static void destroy(tinytc_source_context_t obj) { tinytc_source_context_destroy(obj); }
+};
+
+class source_context : public unique_handle<tinytc_source_context_t> {
+  public:
+    using unique_handle::unique_handle;
+
+    source_context() { TINYTC_CHECK(tinytc_source_context_create(&obj_)); }
+
+    auto parse_file(char const *filename) -> prog {
+        tinytc_prog_t prg;
+        TINYTC_CHECK(tinytc_source_context_parse_file(&prg, obj_, filename));
+        return prog(prg);
+    }
+    auto parse_stdin() -> prog {
+        tinytc_prog_t prg;
+        TINYTC_CHECK(tinytc_source_context_parse_stdin(&prg, obj_));
+        return prog(prg);
+    }
+    auto parse_string(std::string const &src) -> prog {
+        tinytc_prog_t prg;
+        TINYTC_CHECK(tinytc_source_context_parse_string(&prg, obj_, src.size(), src.c_str()));
+        return prog(prg);
+    }
+    auto get_error_log() const -> char const * {
+        char const *log;
+        TINYTC_CHECK(tinytc_source_context_get_error_log(obj_, &log));
+        return log;
+    }
+};
+
+////////////////////////////
 ///////// Compiler /////////
 ////////////////////////////
 
@@ -782,31 +818,26 @@ class binary : public unique_handle<tinytc_binary_t> {
     using unique_handle::unique_handle;
 };
 
-inline auto compile_to_opencl(prog &prg, core_info const &info, error_handler err_handler = nullptr,
-                              void *err_handler_data = nullptr) -> source {
+inline auto compile_to_opencl(prog &prg, core_info const &info,
+                              source_context const &ctx = source_context{nullptr}) -> source {
     tinytc_source_t src;
-    TINYTC_CHECK(
-        tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), err_handler, err_handler_data));
+    TINYTC_CHECK(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
     return source{src};
 }
 
 inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
-                              error_handler err_handler = nullptr, void *err_handler_data = nullptr)
-    -> binary {
+                              source_context const &ctx = source_context{nullptr}) -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_source_compile_to_binary(&bin, src.get(), info.get(),
-                                                 static_cast<tinytc_bundle_format_t>(format),
-                                                 err_handler, err_handler_data));
+    TINYTC_CHECK(tinytc_source_compile_to_binary(
+        &bin, src.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 
 inline auto compile_to_binary(prog &prg, core_info const &info, bundle_format format,
-                              error_handler err_handler = nullptr, void *err_handler_data = nullptr)
-    -> binary {
+                              source_context const &ctx = source_context{nullptr}) -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_prog_compile_to_binary(&bin, prg.get(), info.get(),
-                                               static_cast<tinytc_bundle_format_t>(format),
-                                               err_handler, err_handler_data));
+    TINYTC_CHECK(tinytc_prog_compile_to_binary(
+        &bin, prg.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 

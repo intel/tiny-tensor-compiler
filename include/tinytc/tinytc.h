@@ -874,10 +874,85 @@ tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info, tinytc_intel_gpu_arc
  * @brief Delete core_info object
  *
  * @param info [in] core info object
+ */
+TINYTC_EXPORT void tinytc_core_info_destroy(tinytc_core_info_t info);
+
+////////////////////////////
+////////// Parser //////////
+////////////////////////////
+
+/**
+ * @brief Create source context
+ *
+ * The source context provides parsing functions and stores the tensor language source
+ * text to provide source context in error messages.
+ *
+ * @param ctx [out] pointer to the source context object created
  *
  * @return tinytc_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info);
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_create(tinytc_source_context_t *ctx);
+
+/**
+ * @brief Parser tensor language source file and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param ctx [inout] source context object; source text is added to manager
+ * @param filename [in] path to source file
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_file(tinytc_prog_t *prg,
+                                                               tinytc_source_context_t ctx,
+                                                               char const *filename);
+
+/**
+ * @brief Parser tensor language source from stdin and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param ctx [inout] source context object; source text is added to manager
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_stdin(tinytc_prog_t *prg,
+                                                                tinytc_source_context_t ctx);
+
+/**
+ * @brief Parser tensor language source from string and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param ctx [inout] source context object; source text is added to manager
+ * @param source_size [in] length of source string
+ * @param source [in] source string
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *prg,
+                                                                 tinytc_source_context_t ctx,
+                                                                 uint64_t source_size,
+                                                                 char const *source);
+
+/**
+ * @brief Get error log
+ *
+ * The string's memory is owned by source context.
+ * Note that the pointer may invalidated by any function call involving the source context object,
+ * so the string should be copied or printed right after a call to this function.
+ *
+ * @param ctx [inout] source context object
+ * @param log [out] pointer to string
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx,
+                                                                  char const **log);
+
+/**
+ * @brief Delete source context object
+ *
+ * @param ctx [in] source context object
+ */
+TINYTC_EXPORT void tinytc_source_context_destroy(tinytc_source_context_t ctx);
 
 ////////////////////////////
 ///////// Compiler /////////
@@ -889,34 +964,31 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_destroy(tinytc_core_info_t info);
  * @param src [out] pointer to the source object created
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param info [in] core info object
- * @param err_handler [in][optional] error handler to process error codes with location; may be
- * nullptr
- * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
- * nullptr
+ * @param ctx [inout][optional] source context object to save extended error messages that are
+ * enhanced with source code context; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
                                                             const_tinytc_core_info_t info,
-                                                            tinytc_error_handler_t err_handler,
-                                                            void *err_handler_data);
+                                                            tinytc_source_context_t ctx);
 /**
- * @brief Compile source to device binary
+ * @brief Compile OpenCL-C source to device binary
  *
  * @param bin [out] pointer to the binary object created
  * @param src [in] source text
  * @param info [in] core info object
  * @param format [in] binary format (SPIR-V or native)
- * @param err_handler [in][optional] error handler to process error codes with location; may be
- * nullptr
- * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
- * nullptr
+ * @param ctx [inout][optional] source context object to save extended error messages that are
+ * enhanced with source code context; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(
-    tinytc_binary_t *bin, const_tinytc_source_t src, const_tinytc_core_info_t info,
-    tinytc_bundle_format_t format, tinytc_error_handler_t err_handler, void *err_handler_data);
+TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin,
+                                                              const_tinytc_source_t src,
+                                                              const_tinytc_core_info_t info,
+                                                              tinytc_bundle_format_t format,
+                                                              tinytc_source_context_t ctx);
 
 /**
  * @brief Compile tensor language to device binary
@@ -925,18 +997,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param info [in] core info object
  * @param format [in] binary format (SPIR-V or native)
- * @param err_handler [in][optional] error handler to process error codes with location; may be
- * nullptr
- * @param err_handler_data [in][optional] arbitrary user data passed to error handler; may be
- * nullptr
+ * @param ctx [inout][optional] source context object to save extended error messages that are
+ * enhanced with source code context; can be nullptr
  *
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
                                                             const_tinytc_core_info_t info,
                                                             tinytc_bundle_format_t format,
-                                                            tinytc_error_handler_t err_handler,
-                                                            void *err_handler_data);
+                                                            tinytc_source_context_t ctx);
 
 /**
  * @brief Get source text
@@ -952,19 +1021,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, 
  * @brief Delete source object
  *
  * @param src [in] source object
- *
- * @return tinytc_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_destroy(tinytc_source_t src);
+TINYTC_EXPORT void tinytc_source_destroy(tinytc_source_t src);
 
 /**
  * @brief Delete binary object
  *
  * @param src [in] bin object
- *
- * @return tinytc_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_binary_destroy(tinytc_binary_t bin);
+TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
 
 #ifdef __cplusplus
 }

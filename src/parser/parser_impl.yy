@@ -299,7 +299,8 @@ memref_type:
         try {
             $$ = create_memref($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
   | MEMREF LCHEV scalar_type mode_list COMMA STRIDED LCHEV optional_stride_list RCHEV RCHEV {
@@ -312,7 +313,8 @@ memref_type:
             $$ = create_memref($scalar_type, std::move($mode_list),
                                  std::move($optional_stride_list), @memref_type);
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -400,7 +402,8 @@ axpby_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -446,7 +449,8 @@ gemm_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -468,7 +472,8 @@ gemv_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -495,7 +500,8 @@ ger_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -520,7 +526,8 @@ for_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -545,7 +552,8 @@ foreach_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -603,7 +611,8 @@ hadamard_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -623,7 +632,8 @@ sum_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -665,7 +675,8 @@ alloca_inst:
                 std::make_unique<alloca_inst>(std::move($memref_type), @alloca_inst).release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -681,7 +692,8 @@ binary_op_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -692,7 +704,8 @@ cast_inst:
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -708,7 +721,8 @@ compare_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -727,7 +741,8 @@ expand_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -760,7 +775,8 @@ fuse_inst:
                 std::make_unique<fuse_inst>(std::move($var), $from, $to, @fuse_inst).release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -779,7 +795,8 @@ load_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -820,7 +837,8 @@ store_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -871,7 +889,8 @@ neg_inst:
         try {
             $$ = inst { std::make_unique<neg_inst>(std::move($a), @neg_inst).release() };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -886,7 +905,8 @@ size_inst:
         try {
             $$ = inst { std::make_unique<size_inst>(std::move($var), $mode, @size_inst).release() };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -905,7 +925,8 @@ subview_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            throw syntax_error(e.loc(), e.what());
+            error(e.loc(), e.what());
+            YYERROR;
         }
     }
 ;
@@ -935,6 +956,6 @@ slice_size:
 
 namespace tinytc {
 void parser::error(location_type const& l, std::string const& m) {
-    lex.error(l, m);
+    ctx.add_error(l, m);
 }
 }

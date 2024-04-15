@@ -4,6 +4,7 @@
 #include "binary.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
+#include "node/program_node.hpp"
 #include "opencl_cc.hpp"
 #include "passes.hpp"
 #include "source.hpp"
@@ -24,8 +25,7 @@ extern "C" {
 
 tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
                                               const_tinytc_core_info_t info,
-                                              tinytc_error_handler_t err_handler,
-                                              void *err_handler_data) {
+                                              tinytc_source_context_t ctx) {
     if (src == nullptr || prg == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -49,17 +49,17 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             auto ext = internal::required_extensions(std::move(ast));
             auto compiler_options = internal::default_compiler_options;
 
-            *src = std::make_unique<::tinytc_source>(oss.str(), std::move(metadata), std::move(ext))
+            *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(metadata),
+                                                     std::move(ext))
                        .release();
         },
-        err_handler, err_handler_data);
+        ctx, prg->loc());
 }
 
 tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin, const_tinytc_source_t src,
                                                 const_tinytc_core_info_t info,
                                                 tinytc_bundle_format_t format,
-                                                tinytc_error_handler_t err_handler,
-                                                void *err_handler_data) {
+                                                tinytc_source_context_t ctx) {
 
     if (bin == nullptr || src == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -79,24 +79,22 @@ tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin, const_tiny
                                                      core_features)
                        .release();
         },
-        err_handler, err_handler_data);
+        ctx, src->code_loc());
 }
 
 tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
                                               const_tinytc_core_info_t info,
                                               tinytc_bundle_format_t format,
-                                              tinytc_error_handler_t err_handler,
-                                              void *err_handler_data) {
+                                              tinytc_source_context_t ctx) {
     if (bin == nullptr || prg == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     tinytc_source_t src;
-    if (auto status = tinytc_prog_compile_to_opencl(&src, prg, info, err_handler, err_handler_data);
+    if (auto status = tinytc_prog_compile_to_opencl(&src, prg, info, ctx);
         status != tinytc_status_success) {
         return status;
     }
-    if (auto status =
-            tinytc_source_compile_to_binary(bin, src, info, format, err_handler, err_handler_data);
+    if (auto status = tinytc_source_compile_to_binary(bin, src, info, format, ctx);
         status != tinytc_status_success) {
         tinytc_source_destroy(src);
         return status;
@@ -111,11 +109,6 @@ tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **c
     return exception_to_status_code([&] { *code = src->code(); });
 }
 
-tinytc_status_t tinytc_source_destroy(tinytc_source_t src) {
-    return exception_to_status_code([&] { delete src; });
-}
-
-tinytc_status_t tinytc_binary_destroy(tinytc_binary_t bin) {
-    return exception_to_status_code([&] { delete bin; });
-}
+void tinytc_source_destroy(tinytc_source_t src) { delete src; }
+void tinytc_binary_destroy(tinytc_binary_t bin) { delete bin; }
 }
