@@ -90,7 +90,7 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
  * @return {subgroup size, local tiling}
  */
 auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
-                                      core_info const &dev_info)
+                                      ::tinytc_core_info const &dev_info)
     -> std::tuple<std::uint32_t, local_tiling>;
 
 } // namespace tinytc

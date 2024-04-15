@@ -28,7 +28,7 @@ void check_ir(prog p) { return visit(ir_checker{}, *p); }
 void dump_ir(std::ostream &os, func f) { visit(ir_dumper{os}, *f); }
 void dump_ir(std::ostream &os, prog p) { visit(ir_dumper{os}, *p); }
 
-clir::prog generate_opencl_ast(prog p, core_info const &info) {
+clir::prog generate_opencl_ast(prog p, ::tinytc_core_info const &info) {
     return visit(opencl_ast{&info}, *p);
 }
 
@@ -49,8 +49,12 @@ bool is_equal(data_type a, data_type b) { return visit(equal{}, *a, *b); }
 void set_stack_ptrs(func f) { visit(stack_ptr{}, *f); }
 void set_stack_ptrs(prog p) { visit(stack_ptr{}, *p); }
 
-void set_work_group_size(func f, core_info const &info) { visit(work_group_size{&info}, *f); }
-void set_work_group_size(prog p, core_info const &info) { visit(work_group_size{&info}, *p); }
+void set_work_group_size(func f, ::tinytc_core_info const &info) {
+    visit(work_group_size{&info}, *f);
+}
+void set_work_group_size(prog p, ::tinytc_core_info const &info) {
+    visit(work_group_size{&info}, *p);
+}
 
 } // namespace tinytc
 

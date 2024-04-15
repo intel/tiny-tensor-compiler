@@ -30,7 +30,7 @@ auto get_memref_type(value_node &v) {
     return t;
 }
 
-work_group_size::work_group_size(core_info const *info) : info_(std::move(info)) {
+work_group_size::work_group_size(::tinytc_core_info const *info) : info_(std::move(info)) {
     if (info_ == nullptr) {
         throw std::invalid_argument("info must not be nullptr");
     }

@@ -49,11 +49,8 @@ struct tinytc_core_info {
 
 namespace tinytc {
 
-//! Set of core configurations
-using core_info = ::tinytc_core_info;
-
 //! Set of core configurations for Intel GPUs
-class core_info_intel : public core_info {
+class core_info_intel : public ::tinytc_core_info {
   public:
     /**
      * @brief ctor
@@ -69,21 +66,21 @@ class core_info_intel : public core_info {
                     std::uint32_t num_threads_per_eu, std::uint32_t local_memory_size,
                     std::vector<std::uint32_t> subgroup_sizes);
 
-    //! @copydoc core_info::ip_version
+    //! @copydoc ::tinytc_core_info::ip_version
     auto ip_version() const -> std::uint32_t override;
-    //! @copydoc core_info::subgroup_sizes
+    //! @copydoc ::tinytc_core_info::subgroup_sizes
     auto subgroup_sizes() const -> std::vector<std::uint32_t> const & override;
-    //! @copydoc core_info::register_size
+    //! @copydoc ::tinytc_core_info::register_size
     auto register_size() const -> std::uint32_t override;
-    //! @copydoc core_info::num_registers_per_thread
+    //! @copydoc ::tinytc_core_info::num_registers_per_thread
     auto num_registers_per_thread() const -> std::uint32_t override;
-    //! @copydoc core_info::set_core_feature
+    //! @copydoc ::tinytc_core_info::set_core_feature
     void set_core_feature(core_feature_flag flag) override;
-    //! @copydoc core_info::clear_core_feature
+    //! @copydoc ::tinytc_core_info::clear_core_feature
     void clear_core_feature(core_feature_flag flag) override;
-    //! @copydoc core_info::core_features
+    //! @copydoc ::tinytc_core_info::core_features
     auto core_features() const -> std::uint32_t override;
-    //! @copydoc core_info::get_core_config
+    //! @copydoc ::tinytc_core_info::get_core_config
     auto get_core_config(std::uint32_t subgroup_size) const -> core_config override;
 
   private:

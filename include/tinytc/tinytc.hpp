@@ -112,41 +112,41 @@ template <> struct to_scalar_type<double> {
 template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_type<T>::value;
 
 ////////////////////////////
-// C++ reference counting //
+// Shared / unique handle //
 ////////////////////////////
 
 //! Wraps retain / release calls for type T
-template <typename T> struct handle_traits {};
+template <typename T> struct shared_handle_traits {};
 
 //! Wraps destroy calls for type T
-template <typename T> struct deleter {};
+template <typename T> struct unique_handle_traits {};
 
 /**
  * @brief Wraps a C handle in a reference-counted object
  *
  * @tparam T C handle type (handle type = pointer to opaque struct)
  */
-template <typename T> class handle {
+template <typename T> class shared_handle {
   public:
     //! Traits shortcut
-    using traits = handle_traits<T>;
+    using traits = shared_handle_traits<T>;
 
     //! Create empty (invalid) handle
-    handle() : obj_{nullptr} {}
+    shared_handle() : obj_{nullptr} {}
     //! Create handle from C handle
-    handle(T obj, bool needs_retain = false) : obj_(obj) {
+    shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
         if (needs_retain) {
             TINYTC_CHECK(c_retain());
         }
     }
     //! Decrease reference count
-    ~handle() { c_release(); }
+    ~shared_handle() { c_release(); }
     //! Copy ctor
-    handle(handle const &other) : obj_(other.obj_) { TINYTC_CHECK(c_retain()); }
+    shared_handle(shared_handle const &other) : obj_(other.obj_) { TINYTC_CHECK(c_retain()); }
     //! Move ctor
-    handle(handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
+    shared_handle(shared_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
     //! Copy operator
-    handle &operator=(handle const &other) {
+    shared_handle &operator=(shared_handle const &other) {
         if (obj_ != other.obj_) {
             TINYTC_CHECK(c_release());
             obj_ = other.obj_;
@@ -155,7 +155,7 @@ template <typename T> class handle {
         return *this;
     }
     //! Move operator
-    handle &operator=(handle &&other) {
+    shared_handle &operator=(shared_handle &&other) {
         if (obj_ != other.obj_) {
             TINYTC_CHECK(c_release());
             obj_ = other.obj_;
@@ -181,9 +181,9 @@ template <typename T> class handle {
     explicit operator bool() const noexcept { return obj_ != nullptr; }
 
     //! Check equality
-    bool operator==(handle<T> const &other) const { return obj_ == other.obj_; }
+    bool operator==(shared_handle<T> const &other) const { return obj_ == other.obj_; }
     //! Check inequality
-    bool operator!=(handle<T> const &other) const { return !(*this == other); }
+    bool operator!=(shared_handle<T> const &other) const { return !(*this == other); }
 
   protected:
     auto c_retain() -> tinytc_status_t {
@@ -201,6 +201,63 @@ template <typename T> class handle {
     T obj_;
 };
 
+/**
+ * @brief Wraps a C handle in a unique_ptr-alike object
+ *
+ * @tparam T C handle type (handle type = pointer to opaque struct)
+ */
+template <typename T> class unique_handle {
+  public:
+    //! Traits shortcut
+    using traits = unique_handle_traits<T>;
+
+    //! Create empty (invalid) handle
+    unique_handle() : obj_{nullptr} {}
+    //! Create handle from C handle
+    unique_handle(T obj) : obj_(obj) {}
+    //! Destroy object
+    ~unique_handle() {
+        if (obj_) {
+            traits::destroy(obj_);
+        }
+    }
+    //! Copy ctor
+    unique_handle(unique_handle const &other) = delete;
+    //! Move ctor
+    unique_handle(unique_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
+    //! Copy operator
+    unique_handle &operator=(unique_handle const &other) = delete;
+    unique_handle &operator=(unique_handle &&other) {
+        obj_ = other.obj_;
+        other.obj_ = nullptr;
+        return *this;
+    }
+
+    //! Dereference C handle and get reference to underlying type
+    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
+    //! Convert handle to C handle
+    auto operator->() const -> T { return obj_; }
+    //! Returns C handle
+    auto get() const -> T { return obj_; }
+    //! Returns C handle and releases the ownership of the managed object
+    auto release() -> T {
+        auto tmp = obj_;
+        obj_ = nullptr;
+        return tmp;
+    }
+
+    //! Check whether handle is non-empty (valid)
+    explicit operator bool() const noexcept { return obj_ != nullptr; }
+
+    //! Check equality
+    bool operator==(unique_handle<T> const &other) const { return obj_ == other.obj_; }
+    //! Check inequality
+    bool operator!=(unique_handle<T> const &other) const { return !(*this == other); }
+
+  protected:
+    T obj_;
+};
+
 ////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
@@ -208,7 +265,7 @@ template <typename T> class handle {
 //! Check if mode i is dynamic ('?')
 inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
 
-template <> struct handle_traits<tinytc_data_type_t> {
+template <> struct shared_handle_traits<tinytc_data_type_t> {
     static auto retain(tinytc_data_type_t handle) -> tinytc_status_t {
         return tinytc_data_type_retain(handle);
     }
@@ -218,9 +275,9 @@ template <> struct handle_traits<tinytc_data_type_t> {
 };
 
 //! Reference-counted program handle
-class data_type : public handle<tinytc_data_type_t> {
+class data_type : public shared_handle<tinytc_data_type_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
 
     data_type(scalar_type type, location const &loc = {}) {
         TINYTC_CHECK(
@@ -247,7 +304,7 @@ inline data_type create_group(data_type memref_ty, location const &loc = {}) {
 /////////// Value //////////
 ////////////////////////////
 
-template <> struct handle_traits<tinytc_value_t> {
+template <> struct shared_handle_traits<tinytc_value_t> {
     static auto retain(tinytc_value_t handle) -> tinytc_status_t {
         return tinytc_value_retain(handle);
     }
@@ -256,9 +313,9 @@ template <> struct handle_traits<tinytc_value_t> {
     }
 };
 
-class value : public handle<tinytc_value_t> {
+class value : public shared_handle<tinytc_value_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
     //! Create value with data type ty
     value(data_type ty) { TINYTC_CHECK(tinytc_value_create(&obj_, ty.get())); }
     //! Create immediate value from float
@@ -320,7 +377,7 @@ inline char const *to_string(transpose t) {
     return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
 }
 
-template <> struct handle_traits<tinytc_inst_t> {
+template <> struct shared_handle_traits<tinytc_inst_t> {
     static auto retain(tinytc_inst_t handle) -> tinytc_status_t {
         return tinytc_inst_retain(handle);
     }
@@ -329,9 +386,9 @@ template <> struct handle_traits<tinytc_inst_t> {
     }
 };
 
-class inst : public handle<tinytc_inst_t> {
+class inst : public shared_handle<tinytc_inst_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
 
     inline auto get_value() const -> value {
         tinytc_value_t result;
@@ -358,7 +415,7 @@ constexpr bool inst_reinterpret_allowed =
 ////////// Region //////////
 ////////////////////////////
 
-template <> struct handle_traits<tinytc_region_t> {
+template <> struct shared_handle_traits<tinytc_region_t> {
     static auto retain(tinytc_region_t handle) -> tinytc_status_t {
         return tinytc_region_retain(handle);
     }
@@ -367,9 +424,9 @@ template <> struct handle_traits<tinytc_region_t> {
     }
 };
 
-class region : public handle<tinytc_region_t> {
+class region : public shared_handle<tinytc_region_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
 
     region(std::vector<inst> &instructions, location const &loc = {}) {
         static_assert(inst_reinterpret_allowed);
@@ -603,7 +660,7 @@ inline inst create_yield(std::vector<value> &yield_list, location const &loc = {
 /////////// Func ///////////
 ////////////////////////////
 
-template <> struct handle_traits<tinytc_func_t> {
+template <> struct shared_handle_traits<tinytc_func_t> {
     static auto retain(tinytc_func_t handle) -> tinytc_status_t {
         return tinytc_func_retain(handle);
     }
@@ -612,9 +669,9 @@ template <> struct handle_traits<tinytc_func_t> {
     }
 };
 
-class func : public handle<tinytc_func_t> {
+class func : public shared_handle<tinytc_func_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
 };
 
 //! Is reinterpret_cast<tinytc_func_t*>(&f) allowed, where f has type func
@@ -652,7 +709,7 @@ inline void set_subgroup_size(func &fun, uint32_t sgs) {
 /////////// Prog ///////////
 ////////////////////////////
 
-template <> struct handle_traits<tinytc_prog_t> {
+template <> struct shared_handle_traits<tinytc_prog_t> {
     static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
         return tinytc_prog_retain(handle);
     }
@@ -661,9 +718,9 @@ template <> struct handle_traits<tinytc_prog_t> {
     }
 };
 
-class prog : public handle<tinytc_prog_t> {
+class prog : public shared_handle<tinytc_prog_t> {
   public:
-    using handle::handle;
+    using shared_handle::shared_handle;
 };
 
 inline prog create_program(std::vector<func> &fun_list, location const &loc = {}) {
@@ -682,62 +739,75 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
 //////// Device info ///////
 ////////////////////////////
 
-template <> struct deleter<tinytc_core_info_t> {
-    inline void operator()(tinytc_core_info_t obj) const { tinytc_core_info_destroy(obj); }
+template <> struct unique_handle_traits<tinytc_core_info_t> {
+    static void destroy(tinytc_core_info_t obj) { tinytc_core_info_destroy(obj); }
 };
 
-inline auto get_core_info_intel_gpu(intel_gpu_architecture arch)
-    -> std::unique_ptr<core_info, deleter<tinytc_core_info_t>> {
+class core_info : public unique_handle<tinytc_core_info_t> {
+  public:
+    using unique_handle::unique_handle;
+};
+
+inline auto get_core_info_intel_gpu(intel_gpu_architecture arch) -> core_info {
     tinytc_core_info_t info;
     TINYTC_CHECK(tinytc_core_info_intel_gpu_create(
         &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
-    return {info, deleter<tinytc_core_info_t>{}};
+    return core_info{info};
 }
 
 ////////////////////////////
 ///////// Compiler /////////
 ////////////////////////////
 
-template <> struct deleter<tinytc_source_t> {
-    inline void operator()(tinytc_source_t obj) const { tinytc_source_destroy(obj); }
+template <> struct unique_handle_traits<tinytc_source_t> {
+    static void destroy(tinytc_source_t obj) { tinytc_source_destroy(obj); }
 };
-template <> struct deleter<tinytc_binary_t> {
-    inline void operator()(tinytc_binary_t obj) const { tinytc_binary_destroy(obj); }
+template <> struct unique_handle_traits<tinytc_binary_t> {
+    static void destroy(tinytc_binary_t obj) { tinytc_binary_destroy(obj); }
+};
+
+class source : public unique_handle<tinytc_source_t> {
+  public:
+    using unique_handle::unique_handle;
+
+    inline auto get_code() -> char const * {
+        char const *code = nullptr;
+        TINYTC_CHECK(tinytc_source_get_code(obj_, &code));
+        return code;
+    }
+};
+
+class binary : public unique_handle<tinytc_binary_t> {
+  public:
+    using unique_handle::unique_handle;
 };
 
 inline auto compile_to_opencl(prog &prg, core_info const &info, error_handler err_handler = nullptr,
-                              void *err_handler_data = nullptr)
-    -> std::unique_ptr<source, deleter<tinytc_source_t>> {
+                              void *err_handler_data = nullptr) -> source {
     tinytc_source_t src;
     TINYTC_CHECK(
-        tinytc_prog_compile_to_opencl(&src, prg.get(), &info, err_handler, err_handler_data));
-    return {src, deleter<tinytc_source_t>{}};
+        tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), err_handler, err_handler_data));
+    return source{src};
 }
 
 inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
                               error_handler err_handler = nullptr, void *err_handler_data = nullptr)
-    -> std::unique_ptr<binary, deleter<tinytc_binary_t>> {
+    -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_source_compile_to_binary(&bin, &src, &info,
+    TINYTC_CHECK(tinytc_source_compile_to_binary(&bin, src.get(), info.get(),
                                                  static_cast<tinytc_bundle_format_t>(format),
                                                  err_handler, err_handler_data));
-    return {bin, deleter<tinytc_binary_t>{}};
+    return binary{bin};
 }
 
 inline auto compile_to_binary(prog &prg, core_info const &info, bundle_format format,
                               error_handler err_handler = nullptr, void *err_handler_data = nullptr)
-    -> std::unique_ptr<binary, deleter<tinytc_binary_t>> {
+    -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_prog_compile_to_binary(&bin, prg.get(), &info,
+    TINYTC_CHECK(tinytc_prog_compile_to_binary(&bin, prg.get(), info.get(),
                                                static_cast<tinytc_bundle_format_t>(format),
                                                err_handler, err_handler_data));
-    return {bin, deleter<tinytc_binary_t>{}};
-}
-
-inline auto get_code(source const &src) -> char const * {
-    char const *code;
-    TINYTC_CHECK(tinytc_source_get_code(&src, &code));
-    return code;
+    return binary{bin};
 }
 
 } // namespace tinytc
