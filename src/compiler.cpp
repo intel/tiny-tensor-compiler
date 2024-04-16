@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "binary.hpp"
+#include "compiler_options.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
 #include "node/program_node.hpp"
 #include "opencl_cc.hpp"
 #include "passes.hpp"
+#include "required_extensions.hpp"
 #include "source.hpp"
-#include "tinytc/internal/compiler_options.hpp"
 #include "tinytc/tinytc.h"
 #include "util.hpp"
 
@@ -38,20 +39,15 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             insert_lifetime_stop_inst(p);
             set_stack_ptrs(p);
             set_work_group_size(p, *info);
-            auto metadata = get_metadata(p);
             // opencl
             auto ast = generate_opencl_ast(std::move(p), *info);
             clir::make_names_unique(ast);
             auto oss = std::ostringstream{};
             clir::generate_opencl(oss, ast);
 
-            // Compile
-            auto ext = internal::required_extensions(std::move(ast));
-            auto compiler_options = internal::default_compiler_options;
-
-            *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(metadata),
-                                                     std::move(ext))
-                       .release();
+            auto ext = required_extensions(std::move(ast));
+            *src =
+                std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(ext)).release();
         },
         ctx, prg->loc());
 }
@@ -66,17 +62,17 @@ tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin, const_tiny
     }
     return exception_to_status_code(
         [&] {
-            auto compiler_options = internal::default_compiler_options;
+            auto compiler_options =
+                std::vector(default_compiler_options.begin(), default_compiler_options.end());
             auto const core_features = info->core_features();
             if (core_features &
                 static_cast<std::uint32_t>(core_feature_flag::large_register_file)) {
-                compiler_options.push_back(internal::large_register_file_compiler_option_ze);
+                compiler_options.push_back(large_register_file_compiler_option_ze);
             }
             auto fmt = enum_cast<bundle_format>(format);
             auto bin_data = compile_opencl_c(src->code(), fmt, info->ip_version(), compiler_options,
                                              src->required_extensions());
-            *bin = std::make_unique<::tinytc_binary>(std::move(bin_data), fmt, src->metadata(),
-                                                     core_features)
+            *bin = std::make_unique<::tinytc_binary>(std::move(bin_data), fmt, core_features)
                        .release();
         },
         ctx, src->code_loc());
@@ -110,5 +106,4 @@ tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **c
 }
 
 void tinytc_source_destroy(tinytc_source_t src) { delete src; }
-void tinytc_binary_destroy(tinytc_binary_t bin) { delete bin; }
 }

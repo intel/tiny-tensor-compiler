@@ -20,8 +20,8 @@ namespace tinytc {
 
 std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_format format,
                                            std::uint32_t ip_version,
-                                           std::vector<std::string> const &options,
-                                           std::vector<std::string> const &extensions) {
+                                           std::vector<char const *> const &options,
+                                           std::vector<char const *> const &extensions) {
     auto const format_ext_list = [](auto const &extensions) -> std::string {
         if (extensions.empty()) {
             return {};

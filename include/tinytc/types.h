@@ -192,6 +192,7 @@ typedef const struct tinytc_source_context *const_tinytc_source_context_t;
 struct tinytc_binary;
 //! @brief binary handle
 typedef struct tinytc_binary *tinytc_binary_t;
+typedef const struct tinytc_binary *const_tinytc_binary_t;
 
 ////////////////////////////
 ////////// Structs /////////

@@ -5,20 +5,11 @@
 // Copyright (C) 2022 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "tinytc/ze/error.hpp"
+#include "tinytc/tinytc_ze.h"
 
-#include <utility>
+extern "C" {
 
-namespace tinytc {
-
-level_zero_error::level_zero_error(std::string what, ze_result_t status)
-    : what_(std::move(what)), status_(status) {}
-level_zero_error::level_zero_error(char const *what, ze_result_t status)
-    : what_(what), status_(status) {}
-char const *level_zero_error::what() const noexcept { return what_.c_str(); }
-ze_result_t level_zero_error::status_code() const noexcept { return status_; }
-
-char const *ze_result_to_string(ze_result_t status) {
+char const *tinytc_ze_result_string(ze_result_t status) {
     switch (status) {
     case ZE_RESULT_SUCCESS:
         return "ZE_RESULT_SUCCESS";
@@ -102,5 +93,4 @@ char const *ze_result_to_string(ze_result_t status) {
         return "unknown status code";
     }
 }
-
-} // namespace tinytc
+}

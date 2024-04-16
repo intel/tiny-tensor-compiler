@@ -28,7 +28,6 @@ set(SOURCES
     func.cpp
     gemm_generator.cpp
     inst.cpp
-    internal/compiler_options.cpp
     location.cpp
     node/data_type_node.cpp
     node/inst_node.cpp
@@ -41,6 +40,7 @@ set(SOURCES
     #recipe/small_gemm_batched.cpp
     #recipe/tall_and_skinny.cpp
     region.cpp
+    required_extensions.cpp
     scalar_type.cpp
     tiling.cpp
     value.cpp
@@ -62,17 +62,11 @@ set(RE2C_SOURCES
 BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
              DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
 set(PUBLIC_HEADERS
-    internal/compiler_options.hpp
     ir/builder.hpp
-    ir/error.hpp
     recipe/small_gemm_batched.hpp
     recipe/tall_and_skinny.hpp
-    runtime.hpp
-    tensor_kernel.hpp
     tinytc.h
     tinytc.hpp
-    tinytc-level-zero.hpp
-    tinytc-opencl.hpp
     types.h
     types.hpp
 )
