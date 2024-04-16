@@ -40,8 +40,8 @@ class opencl_c_compilation_error : public std::exception {
  */
 std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_format format,
                                            std::uint32_t ip_version,
-                                           std::vector<std::string> const &options = {},
-                                           std::vector<std::string> const &extensions = {});
+                                           std::vector<char const *> const &options = {},
+                                           std::vector<char const *> const &extensions = {});
 
 } // namespace tinytc
 

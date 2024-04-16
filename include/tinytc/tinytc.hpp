@@ -130,6 +130,8 @@ template <typename T> class shared_handle {
   public:
     //! Traits shortcut
     using traits = shared_handle_traits<T>;
+    //! Typedef for native C handle
+    using native_type = T;
 
     //! Create empty (invalid) handle
     shared_handle() : obj_{nullptr} {}
@@ -210,6 +212,8 @@ template <typename T> class unique_handle {
   public:
     //! Traits shortcut
     using traits = unique_handle_traits<T>;
+    //! Typedef for native C handle
+    using native_type = T;
 
     //! Create empty (invalid) handle
     unique_handle() : obj_{nullptr} {}
@@ -816,6 +820,25 @@ class source : public unique_handle<tinytc_source_t> {
 class binary : public unique_handle<tinytc_binary_t> {
   public:
     using unique_handle::unique_handle;
+
+    struct raw {
+        bundle_format format;
+        std::uint64_t data_size;
+        std::uint8_t const *data;
+    };
+
+    inline auto get_raw() -> raw {
+        raw r;
+        tinytc_bundle_format_t f;
+        TINYTC_CHECK(tinytc_binary_get_raw(obj_, &f, &r.data_size, &r.data));
+        r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
+        return r;
+    }
+    inline auto get_core_features() -> std::uint32_t {
+        std::uint32_t cf;
+        TINYTC_CHECK(tinytc_binary_get_core_features(obj_, &cf));
+        return cf;
+    }
 };
 
 inline auto compile_to_opencl(prog &prg, core_info const &info,
@@ -840,6 +863,232 @@ inline auto compile_to_binary(prog &prg, core_info const &info, bundle_format fo
         &bin, prg.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
+
+////////////////////////////
+////////// Runtime /////////
+////////////////////////////
+
+namespace internal {
+template <typename T>
+concept has_make_kernel_bundle =
+    requires(typename T::context_t ctx, typename T::device_t dev, binary const &bin) {
+        { T::make_kernel_bundle(ctx, dev, bin) } -> std::same_as<typename T::kernel_bundle_t>;
+    };
+
+template <typename T>
+concept has_make_kernel = requires(typename T::native_kernel_bundle_t bundle, char const *name) {
+                              {
+                                  T::make_kernel(bundle, name)
+                                  } -> std::same_as<typename T::kernel_t>;
+                          };
+
+template <typename T>
+concept has_make_argument_handler = requires(T t, typename T::device_t dev) {
+                                        {
+                                            T::make_argument_handler(dev)
+                                            } -> std::same_as<typename T::argument_handler_t>;
+                                    };
+
+template <typename T>
+concept has_work_group_size = requires(T t, typename T::native_kernel_t kernel) {
+                                  {
+                                      T::work_group_size(kernel)
+                                      } -> std::same_as<typename T::work_group_size_t>;
+                              };
+
+template <typename T, typename Wrapped, typename Native>
+concept has_get = requires(Wrapped w) {
+                      { T::get(w) } -> std::convertible_to<Native>;
+                  };
+
+template <typename T>
+concept has_submit_managed =
+    requires(typename T::work_group_size_t const &work_group_size, std::size_t howmany,
+             typename T::native_kernel_t kernel, typename T::command_list_t q,
+             std::vector<typename T::native_event_t> const &dep_events) {
+        {
+            T::submit(work_group_size, howmany, kernel, q, dep_events)
+            } -> std::same_as<typename T::event_t>;
+    };
+
+template <typename T>
+concept has_submit_unmanaged =
+    requires(typename T::work_group_size_t const &work_group_size, std::size_t howmany,
+             typename T::native_kernel_t kernel, typename T::command_list_t q,
+             typename T::native_event_t signal_event, std::uint32_t num_wait_events,
+             typename T::native_event_t *wait_events) {
+        T::submit(work_group_size, howmany, kernel, q, signal_event, num_wait_events, wait_events);
+    };
+} // namespace internal
+
+/**
+ * @brief Defines functions and members a runtime class has to provide
+ */
+template <typename T>
+concept runtime =
+    requires(T rt, std::uint8_t const *binary, std::size_t binary_size, bundle_format format,
+             std::uint32_t core_features) {
+        typename T::context_t;
+        typename T::device_t;
+        typename T::kernel_bundle_t;
+        typename T::kernel_t;
+        typename T::native_kernel_bundle_t;
+        typename T::native_kernel_t;
+        typename T::argument_handler_t;
+        typename T::command_list_t;
+        typename T::event_t;
+        typename T::native_event_t;
+        typename T::work_group_size_t;
+        { T::is_event_managed } -> std::convertible_to<bool>;
+        requires std::movable<typename T::kernel_bundle_t>;
+        requires std::movable<typename T::kernel_t>;
+        requires internal::has_make_kernel_bundle<T>;
+        requires internal::has_make_kernel<T>;
+        requires internal::has_make_argument_handler<T>;
+        requires internal::has_work_group_size<T>;
+        requires internal::has_get<T, typename T::kernel_bundle_t,
+                                   typename T::native_kernel_bundle_t>;
+        requires internal::has_get<T, typename T::kernel_t, typename T::native_kernel_t>;
+        requires(T::is_event_managed && internal::has_submit_managed<T>) ||
+                    (!T::is_event_managed && internal::has_submit_unmanaged<T>);
+    };
+
+/**
+ * @brief Encapsulates a tensor compute kernel for a runtime of type T
+ */
+template <runtime T> class tensor_kernel {
+  public:
+    using kernel_t = typename T::kernel_t;                     ///< Kernel type
+    using argument_handler_t = typename T::argument_handler_t; ///< Argument handler type
+    using command_list_t = typename T::command_list_t;         ///< Command list / queue type
+    using event_t = typename T::event_t;                       ///< Event type
+    using native_event_t = typename T::native_event_t;         ///< Native event type
+    using work_group_size_t = typename T::work_group_size_t;   ///< Work group size type
+
+    /**
+     * @brief ctor
+     *
+     * The constructor is usally not invoked directly but a tensor_kernel<T> object
+     * is obtained via the tensor_kernel_bundle<T>::get function.
+     *
+     * @param kernel Wrapped kernel object
+     * @param arg_handler Runtime-specific argument handler
+     * @param metadata Kernel attributes like work-group size and subgroup size
+     */
+    tensor_kernel(kernel_t kernel, argument_handler_t arg_handler,
+                  work_group_size_t work_group_size)
+        : kernel_(std::move(kernel)), arg_handler_(std::move(arg_handler)),
+          work_group_size_(std::move(work_group_size)) {}
+
+    /**
+     * @brief Set kernel argument
+     *
+     * Calls the runtime's argument setter function, e.g. zeKernelSetArgumentValue
+     * or clSetKernelArg.
+     *
+     * @tparam Arg Type of argument
+     * @param arg_index Argument position in kernel prototype
+     * @param arg Argument value
+     */
+    template <typename Arg> void set_arg(std::uint32_t arg_index, Arg const &arg) {
+        arg_handler_.set_arg(T::get(kernel_), arg_index, arg);
+    }
+    /**
+     * @brief Convenience wrapper for set_arg
+     *
+     * set_args forwards each argument to set_arg.
+     * The argument index increases from left to right, that is, for
+     * @code set_args(arg_0, ..., arg_N) @endcode
+     * arg_0 has argument index 0 and arg_N has argument index N.
+     *
+     * @tparam Arg Argument types
+     * @param ...args arguments
+     */
+    template <typename... Arg> void set_args(Arg const &...args) {
+        arg_handler_.set_args(T::get(kernel_), args...);
+    }
+
+    /**
+     * @brief Submits a kernel to the runtime for execution on the device.
+     *
+     * This submit prototype is only available if the runtime's native event
+     * type supports reference counting, such as the sycl::event or cl_event type.
+     *
+     * @param howmany Group size
+     * @param q Runtime's queue type
+     * @param dep_events Vector of events that need to be waited on before execution
+     */
+    auto submit(std::size_t howmany, command_list_t q,
+                std::vector<native_event_t> const &dep_events = {}) -> event_t
+    requires(T::is_event_managed)
+    {
+        return T::submit(work_group_size_, howmany, T::get(kernel_), std::move(q), dep_events);
+    }
+
+    /**
+     * @brief Submits a kernel to the runtime for execution on the device.
+     *
+     * This submit prototype is only available if the lifetime of the runtime's native event type
+     * is user-managed, such as the ze_event_handle_t type.
+     *
+     * @param howmany Group size
+     * @param q Runtime's command list type
+     * @param signal_event Event that is signalled on kernel completion
+     * @param num_wait_events Number of events that need to be waited on before execution
+     * @param wait_events Pointer to num_wait_events event handles
+     */
+    void submit(std::size_t howmany, command_list_t q, native_event_t signal_event = nullptr,
+                std::uint32_t num_wait_events = 0, native_event_t *wait_events = nullptr)
+    requires(!T::is_event_managed)
+    {
+        T::submit(work_group_size_, howmany, T::get(kernel_), q, signal_event, num_wait_events,
+                  wait_events);
+    }
+
+  private:
+    kernel_t kernel_;
+    argument_handler_t arg_handler_;
+    work_group_size_t work_group_size_;
+};
+
+/**
+ * @brief Encapsulates a compiled tensor program for a runtime of type T
+ */
+template <runtime T> class tensor_kernel_bundle {
+  public:
+    using context_t = typename T::context_t;                   ///< Context type
+    using device_t = typename T::device_t;                     ///< Device type
+    using kernel_bundle_t = typename T::kernel_bundle_t;       ///< Kernel bundle type
+    using argument_handler_t = typename T::argument_handler_t; ///< Argument handler type
+
+    /**
+     * @brief ctor
+     *
+     * @param bin Binary
+     * @param ctx Context
+     * @param dev Device
+     */
+    tensor_kernel_bundle(binary const &bin, context_t ctx, device_t dev)
+        : bundle_(T::make_kernel_bundle(std::move(ctx), dev, bin)),
+          arg_handler_(T::make_argument_handler(std::move(dev))) {}
+
+    /**
+     * @brief Get a kernel by name from the kernel bundle
+     *
+     * @param name Kernel name
+     *
+     * @return Tensor kernel object
+     */
+    auto get(char const *name) -> tensor_kernel<T> {
+        auto krnl = T::make_kernel(T::get(bundle_), name);
+        auto wgs = T::work_group_size(krnl);
+        return {std::move(krnl), arg_handler_, wgs};
+    }
+
+  private:
+    kernel_bundle_t bundle_;
+    argument_handler_t arg_handler_;
+};
 
 } // namespace tinytc
 

@@ -1017,6 +1017,31 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin
  * @return tinytc_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **code);
+
+/**
+ * @brief Get raw binary data
+ *
+ * @param bin [in] binary object
+ * @param format [out] binary format
+ * @param data_size [out] size of data
+ * @param data [out] data array; returned pointer is invalidated if the binary object is deleted
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
+                                                    tinytc_bundle_format_t *format,
+                                                    uint64_t *data_size, uint8_t const **data);
+/**
+ * @brief Get requested core features
+ *
+ * @param bin [in] binary object
+ * @param core_features [out] core features
+ *
+ * @return tinytc_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,
+                                                              uint32_t *core_features);
+
 /**
  * @brief Delete source object
  *

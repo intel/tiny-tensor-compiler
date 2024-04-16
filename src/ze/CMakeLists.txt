@@ -10,14 +10,10 @@ set(SOURCES
     device_info.cpp
     error.cpp
     kernel.cpp
-    runtime.cpp
 )
 set(PUBLIC_HEADERS
-    ze/device_info.hpp
-    ze/error.hpp
-    ze/kernel.hpp
-    ze/runtime.hpp
-    ze/shared_handle.hpp
+    tinytc_ze.h
+    tinytc_ze.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 

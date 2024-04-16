@@ -18,6 +18,7 @@ set(PUBLIC_HEADERS
     cl/kernel.hpp
     cl/object_wrapper.hpp
     cl/runtime.hpp
+    tinytc_cl.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
