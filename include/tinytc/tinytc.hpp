@@ -16,24 +16,18 @@
 #include <utility>
 #include <vector>
 
-////////////////////////////
-////////// Macros //////////
-////////////////////////////
-
-//! Capture error code and throw error code if unsuccessful
-#define TINYTC_CHECK(X)                                                                            \
-    [](tinytc_status_t code) {                                                                     \
-        if (code != tinytc_status_success) {                                                       \
-            auto code_ec = static_cast<status>(code);                                              \
-            throw code_ec;                                                                         \
-        }                                                                                          \
-    }(X)
-
 namespace tinytc {
 
 ////////////////////////////
 /////////// Error //////////
 ////////////////////////////
+
+//! Throw exception for unsuccessful call to C-API
+inline void CHECK(tinytc_status_t code) {
+    if (code != tinytc_status_success) {
+        throw status{std::underlying_type_t<status>(code)};
+    }
+}
 
 //! Convert error code to string
 inline char const *error_string(status code) {
@@ -138,28 +132,28 @@ template <typename T> class shared_handle {
     //! Create handle from C handle
     shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
         if (needs_retain) {
-            TINYTC_CHECK(c_retain());
+            CHECK(c_retain());
         }
     }
     //! Decrease reference count
     ~shared_handle() { c_release(); }
     //! Copy ctor
-    shared_handle(shared_handle const &other) : obj_(other.obj_) { TINYTC_CHECK(c_retain()); }
+    shared_handle(shared_handle const &other) : obj_(other.obj_) { CHECK(c_retain()); }
     //! Move ctor
     shared_handle(shared_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
     //! Copy operator
     shared_handle &operator=(shared_handle const &other) {
         if (obj_ != other.obj_) {
-            TINYTC_CHECK(c_release());
+            CHECK(c_release());
             obj_ = other.obj_;
-            TINYTC_CHECK(c_retain());
+            CHECK(c_retain());
         }
         return *this;
     }
     //! Move operator
     shared_handle &operator=(shared_handle &&other) {
         if (obj_ != other.obj_) {
-            TINYTC_CHECK(c_release());
+            CHECK(c_release());
             obj_ = other.obj_;
             other.obj_ = nullptr;
         }
@@ -284,8 +278,7 @@ class data_type : public shared_handle<tinytc_data_type_t> {
     using shared_handle::shared_handle;
 
     data_type(scalar_type type, location const &loc = {}) {
-        TINYTC_CHECK(
-            tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc));
+        CHECK(tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc));
     }
 };
 
@@ -293,14 +286,13 @@ inline data_type create_memref(scalar_type scalar_ty, std::vector<std::int64_t> 
                                std::vector<std::int64_t> const &stride = {},
                                location const &loc = {}) {
     tinytc_data_type_t mt;
-    TINYTC_CHECK(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty),
-                                           shape.size(), shape.data(), stride.size(), stride.data(),
-                                           &loc));
+    CHECK(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty), shape.size(),
+                                    shape.data(), stride.size(), stride.data(), &loc));
     return data_type(mt);
 }
 inline data_type create_group(data_type memref_ty, location const &loc = {}) {
     tinytc_data_type_t gt;
-    TINYTC_CHECK(tinytc_group_type_create(&gt, memref_ty.get(), &loc));
+    CHECK(tinytc_group_type_create(&gt, memref_ty.get(), &loc));
     return data_type(gt);
 }
 
@@ -321,42 +313,32 @@ class value : public shared_handle<tinytc_value_t> {
   public:
     using shared_handle::shared_handle;
     //! Create value with data type ty
-    value(data_type ty) { TINYTC_CHECK(tinytc_value_create(&obj_, ty.get())); }
+    value(data_type ty) { CHECK(tinytc_value_create(&obj_, ty.get())); }
     //! Create immediate value from float
-    value(float imm) { TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32)); }
+    value(float imm) { CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32)); }
     //! Create immediate value from double
     value(double imm, scalar_type type = scalar_type::f64) {
-        TINYTC_CHECK(tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+        CHECK(tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
     }
     //! Create immediate value from int8_t
-    value(std::int8_t imm) {
-        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8));
-    }
+    value(std::int8_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8)); }
     //! Create immediate value from int16_t
-    value(std::int16_t imm) {
-        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16));
-    }
+    value(std::int16_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16)); }
     //! Create immediate value from int32_t
-    value(std::int32_t imm) {
-        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32));
-    }
+    value(std::int32_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32)); }
     //! Create immediate value from int64_t
     value(std::int64_t imm, scalar_type type = scalar_type::i64) {
-        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+        CHECK(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
     }
     //! Create immediate value from uint32_t (index type)
-    value(std::uint32_t imm) {
-        TINYTC_CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index));
-    }
+    value(std::uint32_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index)); }
 
     inline auto get_name() const -> char const * {
         char const *name;
-        TINYTC_CHECK(tinytc_value_get_name(obj_, &name));
+        CHECK(tinytc_value_get_name(obj_, &name));
         return name;
     }
-    inline void name(std::string const &name) {
-        TINYTC_CHECK(tinytc_value_set_name(obj_, name.c_str()));
-    }
+    inline void name(std::string const &name) { CHECK(tinytc_value_set_name(obj_, name.c_str())); }
 };
 
 //! Is reinterpret_cast<tinytc_value_t*>(&v) allowed, where v has type value
@@ -396,17 +378,17 @@ class inst : public shared_handle<tinytc_inst_t> {
 
     inline auto get_value() const -> value {
         tinytc_value_t result;
-        TINYTC_CHECK(tinytc_inst_get_value(obj_, &result));
+        CHECK(tinytc_inst_get_value(obj_, &result));
         return value(result);
     }
 
     inline auto get_values() const -> std::vector<value> {
         static_assert(value_reinterpret_allowed);
         uint32_t result_list_size = 0;
-        TINYTC_CHECK(tinytc_inst_get_values(obj_, &result_list_size, nullptr));
+        CHECK(tinytc_inst_get_values(obj_, &result_list_size, nullptr));
         auto values = std::vector<value>(result_list_size);
         tinytc_value_t *result_list = reinterpret_cast<tinytc_value_t *>(values.data());
-        TINYTC_CHECK(tinytc_inst_get_values(obj_, &result_list_size, result_list));
+        CHECK(tinytc_inst_get_values(obj_, &result_list_size, result_list));
         return values;
     }
 };
@@ -437,9 +419,8 @@ class region : public shared_handle<tinytc_region_t> {
         if (instructions.size() > std::numeric_limits<std::uint32_t>::max()) {
             throw std::out_of_range("Instruction list too long");
         }
-        TINYTC_CHECK(tinytc_region_create(&obj_, instructions.size(),
-                                          reinterpret_cast<tinytc_inst_t *>(instructions.data()),
-                                          &loc));
+        CHECK(tinytc_region_create(&obj_, instructions.size(),
+                                   reinterpret_cast<tinytc_inst_t *>(instructions.data()), &loc));
     }
 };
 
@@ -450,43 +431,42 @@ class region : public shared_handle<tinytc_region_t> {
 inline inst create_binary_op(binary_op op, value const &a, value const &b,
                              location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op), a.get(),
-                                              b.get(), &loc));
+    CHECK(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op), a.get(),
+                                       b.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_make_cast(value const &a, scalar_type to_ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(
-        tinytc_cast_inst_create(&instr, a.get(), static_cast<tinytc_scalar_type_t>(to_ty), &loc));
+    CHECK(tinytc_cast_inst_create(&instr, a.get(), static_cast<tinytc_scalar_type_t>(to_ty), &loc));
     return inst(instr);
 }
 
 inline inst create_cmp(cmp_condition cond, value const &a, value const &b,
                        location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a.get(),
-                                        b.get(), &loc));
+    CHECK(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a.get(),
+                                 b.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_neg(value const &a, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_neg_inst_create(&instr, a.get(), &loc));
+    CHECK(tinytc_neg_inst_create(&instr, a.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_alloca(data_type const &ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_alloca_inst_create(&instr, ty.get(), &loc));
+    CHECK(tinytc_alloca_inst_create(&instr, ty.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_axpby(transpose tA, bool atomic, value const &alpha, value const &A,
                          value const &beta, value const &B, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
-                                          alpha.get(), A.get(), beta.get(), B.get(), &loc));
+    CHECK(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
+                                   A.get(), beta.get(), B.get(), &loc));
     return inst(instr);
 }
 
@@ -499,14 +479,14 @@ inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> 
         throw std::out_of_range("expand shape too large");
     }
     tinytc_value_t *eshape = reinterpret_cast<tinytc_value_t *>(expand_shape.data());
-    TINYTC_CHECK(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc));
+    CHECK(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc));
     return inst(instr);
 }
 
 inline inst create_fuse(value const &a, std::int64_t from, std::int64_t to,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_fuse_inst_create(&instr, a.get(), from, to, &loc));
+    CHECK(tinytc_fuse_inst_create(&instr, a.get(), from, to, &loc));
     return inst(instr);
 }
 
@@ -518,19 +498,19 @@ inline inst create_load(value const &a, std::vector<value> &index_list, location
         throw std::out_of_range("index list too long");
     }
     tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
-    TINYTC_CHECK(tinytc_load_inst_create(&instr, a.get(), len, il, &loc));
+    CHECK(tinytc_load_inst_create(&instr, a.get(), len, il, &loc));
     return inst(instr);
 }
 
 inline inst create_group_id(location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_group_id_inst_create(&instr, &loc));
+    CHECK(tinytc_group_id_inst_create(&instr, &loc));
     return inst(instr);
 }
 
 inline inst create_group_size(location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_group_size_inst_create(&instr, &loc));
+    CHECK(tinytc_group_size_inst_create(&instr, &loc));
     return inst(instr);
 }
 
@@ -538,9 +518,9 @@ inline inst create_gemm(transpose tA, transpose tB, bool atomic, value const &al
                         value const &B, value const &beta, value const &C,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
-                                         static_cast<tinytc_transpose_t>(tB), atomic, alpha.get(),
-                                         A.get(), B.get(), beta.get(), C.get(), &loc));
+    CHECK(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
+                                  static_cast<tinytc_transpose_t>(tB), atomic, alpha.get(), A.get(),
+                                  B.get(), beta.get(), C.get(), &loc));
     return inst(instr);
 }
 
@@ -548,30 +528,30 @@ inline inst create_gemv(transpose tA, bool atomic, value const &alpha, value con
                         value const &B, value const &beta, value const &C,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
-                                         alpha.get(), A.get(), B.get(), beta.get(), C.get(), &loc));
+    CHECK(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
+                                  A.get(), B.get(), beta.get(), C.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_ger(bool atomic, value const &alpha, value const &A, value const &B,
                        value const &beta, value const &C, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_ger_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
-                                        C.get(), &loc));
+    CHECK(tinytc_ger_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(), C.get(),
+                                 &loc));
     return inst(instr);
 }
 
 inline inst create_hadamard(bool atomic, value const &alpha, value const &A, value const &B,
                             value const &beta, value const &C, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_hadamard_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(),
-                                             beta.get(), C.get(), &loc));
+    CHECK(tinytc_hadamard_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
+                                      C.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_size(value const &a, std::int64_t mode, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_size_inst_create(&instr, a.get(), mode, &loc));
+    CHECK(tinytc_size_inst_create(&instr, a.get(), mode, &loc));
     return inst(instr);
 }
 
@@ -588,7 +568,7 @@ inline inst create_subview(value const &a, std::vector<value> &offset_list,
     }
     tinytc_value_t *ol = reinterpret_cast<tinytc_value_t *>(offset_list.data());
     tinytc_value_t *sl = reinterpret_cast<tinytc_value_t *>(size_list.data());
-    TINYTC_CHECK(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc));
+    CHECK(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc));
     return inst(instr);
 }
 
@@ -601,30 +581,30 @@ inline inst create_store(value const &val, value const &a, std::vector<value> &i
         throw std::out_of_range("index list too long");
     }
     tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
-    TINYTC_CHECK(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc));
+    CHECK(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc));
     return inst(instr);
 }
 
 inline inst create_sum(transpose tA, bool atomic, value const &alpha, value const &A,
                        value const &beta, value const &B, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
-                                        alpha.get(), A.get(), beta.get(), B.get(), &loc));
+    CHECK(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
+                                 A.get(), beta.get(), B.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_for(value const &loop_var, value const &from, value const &to, value const &step,
                        region const &body, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(), step.get(),
-                                        body.get(), &loc));
+    CHECK(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(), step.get(),
+                                 body.get(), &loc));
     return inst(instr);
 }
 
 inline inst create_foreach(value const &loop_var, value const &from, value const &to,
                            region const &body, location const &loc = {}) {
     tinytc_inst_t instr;
-    TINYTC_CHECK(
+    CHECK(
         tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(), body.get(), &loc));
     return inst(instr);
 }
@@ -643,8 +623,8 @@ inline inst create_if(value const &condition, region const &then,
     for (auto const &rt : return_type_list) {
         rl_vec.emplace_back(static_cast<tinytc_scalar_type_t>(rt));
     }
-    TINYTC_CHECK(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(), len,
-                                       rl_vec.data(), &loc));
+    CHECK(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(), len,
+                                rl_vec.data(), &loc));
     return inst(instr);
 }
 
@@ -656,7 +636,7 @@ inline inst create_yield(std::vector<value> &yield_list, location const &loc = {
         throw std::out_of_range("slice list too long");
     }
     tinytc_value_t *yl = reinterpret_cast<tinytc_value_t *>(yield_list.data());
-    TINYTC_CHECK(tinytc_yield_inst_create(&instr, len, yl, &loc));
+    CHECK(tinytc_yield_inst_create(&instr, len, yl, &loc));
     return inst(instr);
 }
 
@@ -691,22 +671,22 @@ inline func create_function_prototype(char const *name, std::vector<value> &arg_
         throw std::out_of_range("argument list too long");
     }
     tinytc_value_t *al = reinterpret_cast<tinytc_value_t *>(arg_list.data());
-    TINYTC_CHECK(tinytc_function_prototype_create(&fun, name, len, al, &loc));
+    CHECK(tinytc_function_prototype_create(&fun, name, len, al, &loc));
     return func(fun);
 }
 
 inline func create_function(func const &prototype, region const &body, location const &loc = {}) {
     tinytc_func_t fun;
-    TINYTC_CHECK(tinytc_function_create(&fun, prototype.get(), body.get(), &loc));
+    CHECK(tinytc_function_create(&fun, prototype.get(), body.get(), &loc));
     return func(fun);
 }
 
 inline void set_work_group_size(func &fun, uint32_t x, uint32_t y) {
-    TINYTC_CHECK(tinytc_function_set_work_group_size(fun.get(), x, y));
+    CHECK(tinytc_function_set_work_group_size(fun.get(), x, y));
 }
 
 inline void set_subgroup_size(func &fun, uint32_t sgs) {
-    TINYTC_CHECK(tinytc_function_set_subgroup_size(fun.get(), sgs));
+    CHECK(tinytc_function_set_subgroup_size(fun.get(), sgs));
 }
 
 ////////////////////////////
@@ -735,7 +715,7 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
         throw std::out_of_range("function list too long");
     }
     tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
-    TINYTC_CHECK(tinytc_program_create(&prg, len, fl, &loc));
+    CHECK(tinytc_program_create(&prg, len, fl, &loc));
     return prog(prg);
 }
 
@@ -754,8 +734,8 @@ class core_info : public unique_handle<tinytc_core_info_t> {
 
 inline auto get_core_info_intel_gpu(intel_gpu_architecture arch) -> core_info {
     tinytc_core_info_t info;
-    TINYTC_CHECK(tinytc_core_info_intel_gpu_create(
-        &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
+    CHECK(tinytc_core_info_intel_gpu_create(&info,
+                                            static_cast<tinytc_intel_gpu_architecture_t>(arch)));
     return core_info{info};
 }
 
@@ -771,26 +751,26 @@ class source_context : public unique_handle<tinytc_source_context_t> {
   public:
     using unique_handle::unique_handle;
 
-    source_context() { TINYTC_CHECK(tinytc_source_context_create(&obj_)); }
+    source_context() { CHECK(tinytc_source_context_create(&obj_)); }
 
     auto parse_file(char const *filename) -> prog {
         tinytc_prog_t prg;
-        TINYTC_CHECK(tinytc_source_context_parse_file(&prg, obj_, filename));
+        CHECK(tinytc_source_context_parse_file(&prg, obj_, filename));
         return prog(prg);
     }
     auto parse_stdin() -> prog {
         tinytc_prog_t prg;
-        TINYTC_CHECK(tinytc_source_context_parse_stdin(&prg, obj_));
+        CHECK(tinytc_source_context_parse_stdin(&prg, obj_));
         return prog(prg);
     }
     auto parse_string(std::string const &src) -> prog {
         tinytc_prog_t prg;
-        TINYTC_CHECK(tinytc_source_context_parse_string(&prg, obj_, src.size(), src.c_str()));
+        CHECK(tinytc_source_context_parse_string(&prg, obj_, src.size(), src.c_str()));
         return prog(prg);
     }
     auto get_error_log() const -> char const * {
         char const *log;
-        TINYTC_CHECK(tinytc_source_context_get_error_log(obj_, &log));
+        CHECK(tinytc_source_context_get_error_log(obj_, &log));
         return log;
     }
 };
@@ -812,7 +792,7 @@ class source : public unique_handle<tinytc_source_t> {
 
     inline auto get_code() -> char const * {
         char const *code = nullptr;
-        TINYTC_CHECK(tinytc_source_get_code(obj_, &code));
+        CHECK(tinytc_source_get_code(obj_, &code));
         return code;
     }
 };
@@ -830,13 +810,13 @@ class binary : public unique_handle<tinytc_binary_t> {
     inline auto get_raw() -> raw {
         raw r;
         tinytc_bundle_format_t f;
-        TINYTC_CHECK(tinytc_binary_get_raw(obj_, &f, &r.data_size, &r.data));
+        CHECK(tinytc_binary_get_raw(obj_, &f, &r.data_size, &r.data));
         r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
         return r;
     }
     inline auto get_core_features() -> std::uint32_t {
         std::uint32_t cf;
-        TINYTC_CHECK(tinytc_binary_get_core_features(obj_, &cf));
+        CHECK(tinytc_binary_get_core_features(obj_, &cf));
         return cf;
     }
 };
@@ -844,23 +824,23 @@ class binary : public unique_handle<tinytc_binary_t> {
 inline auto compile_to_opencl(prog &prg, core_info const &info,
                               source_context const &ctx = source_context{nullptr}) -> source {
     tinytc_source_t src;
-    TINYTC_CHECK(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
+    CHECK(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
     return source{src};
 }
 
 inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
                               source_context const &ctx = source_context{nullptr}) -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_source_compile_to_binary(
-        &bin, src.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
+    CHECK(tinytc_source_compile_to_binary(&bin, src.get(), info.get(),
+                                          static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 
 inline auto compile_to_binary(prog &prg, core_info const &info, bundle_format format,
                               source_context const &ctx = source_context{nullptr}) -> binary {
     tinytc_binary_t bin;
-    TINYTC_CHECK(tinytc_prog_compile_to_binary(
-        &bin, prg.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
+    CHECK(tinytc_prog_compile_to_binary(&bin, prg.get(), info.get(),
+                                        static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 

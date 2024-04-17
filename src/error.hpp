@@ -75,7 +75,7 @@ auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
     } catch (std::exception const &e) {
         return tinytc_status_runtime_error;
     } catch (...) {
-        return tinytc_status_runtime_error;
+        return tinytc_status_unknown;
     }
     return tinytc_status_success;
 }

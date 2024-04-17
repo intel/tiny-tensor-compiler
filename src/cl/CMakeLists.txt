@@ -10,14 +10,9 @@ set(SOURCES
     device_info.cpp
     error.cpp
     kernel.cpp
-    runtime.cpp
 )
 set(PUBLIC_HEADERS
-    cl/device_info.hpp
-    cl/error.hpp
-    cl/kernel.hpp
-    cl/object_wrapper.hpp
-    cl/runtime.hpp
+    tinytc_cl.h
     tinytc_cl.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")

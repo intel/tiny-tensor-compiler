@@ -7,20 +7,8 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.h"
 
-#include <exception>
 #include <level_zero/ze_api.h>
-
-////////////////////////////
-////////// Macros //////////
-////////////////////////////
-
-//! Capture ze result and throw error if unsuccessful
-#define TINYTC_ZE_CHECK(X)                                                                         \
-    [](ze_result_t result) {                                                                       \
-        if (result != ZE_RESULT_SUCCESS) {                                                         \
-            throw ::tinytc::level_zero_error(result);                                              \
-        }                                                                                          \
-    }(X)
+#include <type_traits>
 
 namespace tinytc {
 
@@ -28,15 +16,12 @@ namespace tinytc {
 /////////// Error //////////
 ////////////////////////////
 
-class level_zero_error : public std::exception {
-  public:
-    inline level_zero_error(ze_result_t result) : result_(result) {}
-
-    inline char const *what() const noexcept override { return ::tinytc_ze_result_string(result_); }
-
-  private:
-    ze_result_t result_;
-};
+//! Throw exception for unsuccessful call to C-API and convert result code to tinytc status
+inline void ZE_CHECK(ze_result_t result) {
+    if (result != ZE_RESULT_SUCCESS) {
+        throw status{std::underlying_type_t<status>(::tinytc_ze_convert_status(result))};
+    }
+}
 
 ////////////////////////////
 //////// Device info ///////
@@ -45,14 +30,13 @@ class level_zero_error : public std::exception {
 /**
  * @brief Query core info from level zero runtime
  *
- * @param info [out] pointer to the core_info object created
  * @param device [in] device handle
  *
- * @return ZE_RESULT_SUCCESS on success and error otherwise
+ * @return core info
  */
 inline auto get_core_info(ze_device_handle_t device) -> core_info {
     tinytc_core_info_t info;
-    TINYTC_ZE_CHECK(::tinytc_ze_core_info_create(&info, device));
+    CHECK(::tinytc_ze_core_info_create(&info, device));
     return core_info{info};
 }
 
@@ -82,7 +66,7 @@ class level_zero_argument_handler {
      */
     inline void set_arg(ze_kernel_handle_t kernel, std::uint32_t arg_index, std::size_t arg_size,
                         void const *arg_value) {
-        TINYTC_ZE_CHECK(zeKernelSetArgumentValue(kernel, arg_index, arg_size, arg_value));
+        ZE_CHECK(zeKernelSetArgumentValue(kernel, arg_index, arg_size, arg_value));
     }
 
     /**
@@ -170,7 +154,7 @@ class level_zero_runtime {
     inline static auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device,
                                           binary const &bin) -> kernel_bundle_t {
         ze_module_handle_t mod;
-        TINYTC_ZE_CHECK(::tinytc_ze_module_create(&mod, context, device, bin.get(), nullptr));
+        CHECK(::tinytc_ze_module_create(&mod, context, device, bin.get(), nullptr));
         return {mod};
     }
     /**
@@ -185,9 +169,9 @@ class level_zero_runtime {
         ze_kernel_handle_t kernel;
         std::uint32_t x, y, z;
         ze_kernel_desc_t kernel_desc = {ZE_STRUCTURE_TYPE_KERNEL_DESC, nullptr, 0, name};
-        TINYTC_ZE_CHECK(zeKernelCreate(mod, &kernel_desc, &kernel));
-        TINYTC_ZE_CHECK(::tinytc_ze_get_group_size(kernel, &x, &y, &z));
-        TINYTC_ZE_CHECK(zeKernelSetGroupSize(kernel, x, y, z));
+        ZE_CHECK(zeKernelCreate(mod, &kernel_desc, &kernel));
+        CHECK(::tinytc_ze_get_group_size(kernel, &x, &y, &z));
+        ZE_CHECK(zeKernelSetGroupSize(kernel, x, y, z));
         return {kernel};
     }
 
@@ -215,8 +199,8 @@ class level_zero_runtime {
                               std::uint32_t num_wait_events = 0,
                               native_event_t *wait_events = nullptr) {
         auto group_count = ::tinytc_ze_get_group_count(howmany);
-        TINYTC_ZE_CHECK(zeCommandListAppendLaunchKernel(q, krnl, &group_count, signal_event,
-                                                        num_wait_events, wait_events));
+        ZE_CHECK(zeCommandListAppendLaunchKernel(q, krnl, &group_count, signal_event,
+                                                 num_wait_events, wait_events));
     }
 };
 
