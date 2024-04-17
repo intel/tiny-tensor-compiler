@@ -62,7 +62,6 @@ BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/par
              DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
 set(PUBLIC_HEADERS
     recipe/small_gemm_batched.hpp
-    recipe/tall_and_skinny.hpp
     tinytc.h
     tinytc.hpp
     types.h
