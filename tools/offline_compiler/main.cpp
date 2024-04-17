@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
             p = ctx.parse_file(argv[1]);
         }
 
-        auto info = get_core_info_intel_gpu(intel_gpu_architecture::pvc);
+        auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
         auto src = compile_to_opencl(p, info, ctx);
         std::cout << src.get_code();
     } catch (status const &st) {
