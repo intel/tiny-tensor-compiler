@@ -1358,10 +1358,10 @@ namespace recipe {
 
 inline auto create_tall_and_skinny(core_info const &info, scalar_type ty,
                                    std::uint32_t M_block_size, std::uint32_t N, std::uint32_t K,
-                                   source_context const &ctx = source_context{nullptr}) -> binary {
+                                   tinytc_source_context_t ctx = nullptr) -> binary {
     tinytc_binary_t bin;
     CHECK(tinytc_recipe_tall_and_skinny_create(
-        &bin, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx.get()));
+        &bin, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
     return {bin};
 }
 
@@ -1400,7 +1400,7 @@ template <typename T, runtime R> class tall_and_skinny {
      * @param dev Device
      */
     tall_and_skinny(core_info const &info, std::uint32_t N, std::uint32_t K, context_t ctx,
-                    device_t dev, source_context const &source_ctx = source_context{nullptr},
+                    device_t dev, tinytc_source_context_t source_ctx = nullptr,
                     std::uint32_t M_block_size = 128)
         : M_block_size_(M_block_size),
           bundle_(
