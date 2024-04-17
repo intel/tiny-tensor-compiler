@@ -37,7 +37,7 @@ set(SOURCES
     precision_helper.cpp
     prog.cpp
     #recipe/small_gemm_batched.cpp
-    #recipe/tall_and_skinny.cpp
+    recipe/tall_and_skinny.cpp
     region.cpp
     required_extensions.cpp
     scalar_type.cpp

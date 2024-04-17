@@ -170,6 +170,8 @@ class sycl_runtime {
     using command_list_t = ::sycl::queue;                        ///< Queue type
     using event_t = ::sycl::event;                               ///< Event type
     using native_event_t = event_t;                              ///< Event type
+    using mem_t = void *;                                        ///< Memory object type
+    using const_mem_t = const void *;                            ///< Const memory object type
     using work_group_size_t = ::sycl::range<3u>;                 ///< Work group size type
     constexpr static bool is_event_managed = true; ///< Determines submit function signature
 

@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
         }
 
         auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
-        auto src = compile_to_opencl(p, info, ctx);
+        auto src = compile_to_opencl(p, info, ctx.get());
         std::cout << src.get_code();
     } catch (status const &st) {
         std::cerr << ctx.get_error_log() << std::endl;

@@ -203,6 +203,8 @@ class opencl_runtime {
     using command_list_t = cl_command_queue;               ///< Queue type
     using event_t = shared_handle<cl_event>;               ///< Wrapped event handle type
     using native_event_t = cl_event;                       ///< Native event handle type
+    using mem_t = cl_mem;                                  ///< Memory object type
+    using const_mem_t = const cl_mem;                      ///< Const memory object type
     using work_group_size_t = std::array<std::size_t, 3u>; ///< Work group size type
     constexpr static bool is_event_managed = true;         ///< Determines submit function signature
 

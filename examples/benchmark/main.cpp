@@ -68,19 +68,21 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
             create_group(create_memref(
                 ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()), my_loc())),
             "C", my_loc());
-        fb.body([&](region_builder &bb) {
-            auto gid = bb.add(create_group_id(my_loc()));
-            auto a = bb.add(create_load(A, {gid}, my_loc()));
-            auto b = bb.add(create_load(B, {gid}, my_loc()));
-            auto c = bb.add(create_load(C, {gid}, my_loc()));
-            bb.create_for(
-                scalar_type::index, value(0u, my_loc()), value(repetitions, my_loc()),
-                [&](region_builder &bb) {
-                    bb.add(create_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
-                                       value(0.0, ty, my_loc()), c, my_loc()));
-                },
-                "r", my_loc());
-        });
+        fb.body(
+            [&](region_builder &bb) {
+                auto gid = bb.add(create_group_id(my_loc()));
+                auto a = bb.add(create_load(A, {gid}, my_loc()));
+                auto b = bb.add(create_load(B, {gid}, my_loc()));
+                auto c = bb.add(create_load(C, {gid}, my_loc()));
+                bb.create_for(
+                    scalar_type::index, value(0u, my_loc()), value(repetitions, my_loc()),
+                    [&](region_builder &bb) {
+                        bb.add(create_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
+                                           value(0.0, ty, my_loc()), c, my_loc()));
+                    },
+                    "r", my_loc());
+            },
+            my_loc());
     };
 
     try {
@@ -90,7 +92,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 
         auto info = create_core_info(q.get_device());
         info.set_core_feature(core_feature_flag::large_register_file);
-        return compile_to_binary(p, info, bundle_format::native, ctx);
+        return compile_to_binary(p, info, bundle_format::native, ctx.get());
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
         std::cerr << ctx.get_error_log() << " (" << static_cast<int>(e.code()) << ") " << std::endl;

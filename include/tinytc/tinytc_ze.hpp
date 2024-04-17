@@ -121,6 +121,8 @@ class level_zero_runtime {
     using command_list_t = ze_command_list_handle_t;        ///< Command list type
     using native_event_t = ze_event_handle_t;               ///< Event type
     using event_t = native_event_t;                         ///< Event type
+    using mem_t = void *;                                   ///< Memory object type
+    using const_mem_t = const void *;                       ///< Const memory object type
     using work_group_size_t = work_group_size_dummy;        ///< Work group size type
     constexpr static bool is_event_managed = false; ///< Determines submit function signature
 

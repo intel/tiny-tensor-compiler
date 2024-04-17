@@ -1196,6 +1196,48 @@ TINYTC_EXPORT void tinytc_source_destroy(tinytc_source_t src);
  */
 TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
 
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+/**
+ * @brief Returns a binary for the tall and skinny recipe
+ *
+ * The binary contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0 called
+ * "gemm". M (= number of rows of A, C) and strides are dynamic.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x?x{K},strided<1,?>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,?>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x?x{N},strided<1,?>>)
+ * @endcode
+ *
+ * meaning that one has to set arguments to the kernel in the following order:
+ *
+ * @code
+ * alpha, A_ptr, M, ldA, B_ptr, ldB, beta, C_ptr, M, ldC
+ * @endcode
+ *
+ * where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param info [in] core info object created
+ * @param ty [in] Scalar type of alpha, A, B, beta, C
+ * @param [in] M_block_size Size of M block that each work group gets
+ * @param [in] N Number of columns of B, C
+ * @param [in] K Number columns of A, number of rows of B
+ * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
+    tinytc_binary_t *bin, tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t M_block_size,
+    uint32_t N, uint32_t K, tinytc_source_context_t ctx);
+
 #ifdef __cplusplus
 }
 #endif
