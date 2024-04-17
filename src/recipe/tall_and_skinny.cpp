@@ -24,7 +24,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_binary_t *bin, tinyt
     std::int32_t source_id = 0;
     if (ctx) {
         TINYTC_CHECK(
-            tinytc_source_context_add_source(ctx, "tall and skinny receipe", "", &source_id));
+            tinytc_source_context_add_source(ctx, "tall and skinny recipe", "", &source_id));
     }
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
