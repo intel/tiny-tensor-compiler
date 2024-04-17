@@ -22,6 +22,11 @@ namespace tinytc {
 /////////// Error //////////
 ////////////////////////////
 
+//! Convert error code to string
+inline char const *error_string(status code) {
+    return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
+}
+
 //! Throw exception for unsuccessful call to C-API
 inline void CHECK(tinytc_status_t code) {
     if (code != tinytc_status_success) {
@@ -29,9 +34,28 @@ inline void CHECK(tinytc_status_t code) {
     }
 }
 
-//! Convert error code to string
-inline char const *error_string(status code) {
-    return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
+//! Builder exception enhanced with location
+class builder_error : public std::exception {
+  public:
+    //! ctor; taking location and status code
+    inline builder_error(status code, location const &loc) : code_(code), loc_(loc) {}
+    //! Get status code
+    inline auto code() const noexcept { return code_; }
+    //! Get location
+    inline auto loc() const noexcept -> location const & { return loc_; }
+    //! Get explanatory string
+    inline char const *what() const noexcept override { return error_string(code_); }
+
+  private:
+    status code_;
+    location loc_;
+};
+
+//! Throw exception for unsuccessful call to C-API
+inline void CHECK_LOC(tinytc_status_t code, location const &loc) {
+    if (code != tinytc_status_success) {
+        throw builder_error(status{std::underlying_type_t<status>(code)}, loc);
+    }
 }
 
 ////////////////////////////
@@ -278,7 +302,8 @@ class data_type : public shared_handle<tinytc_data_type_t> {
     using shared_handle::shared_handle;
 
     data_type(scalar_type type, location const &loc = {}) {
-        CHECK(tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc));
+        CHECK_LOC(tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc),
+                  loc);
     }
 };
 
@@ -286,13 +311,15 @@ inline data_type create_memref(scalar_type scalar_ty, std::vector<std::int64_t> 
                                std::vector<std::int64_t> const &stride = {},
                                location const &loc = {}) {
     tinytc_data_type_t mt;
-    CHECK(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty), shape.size(),
-                                    shape.data(), stride.size(), stride.data(), &loc));
+    CHECK_LOC(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty),
+                                        shape.size(), shape.data(), stride.size(), stride.data(),
+                                        &loc),
+              loc);
     return data_type(mt);
 }
 inline data_type create_group(data_type memref_ty, location const &loc = {}) {
     tinytc_data_type_t gt;
-    CHECK(tinytc_group_type_create(&gt, memref_ty.get(), &loc));
+    CHECK_LOC(tinytc_group_type_create(&gt, memref_ty.get(), &loc), loc);
     return data_type(gt);
 }
 
@@ -313,25 +340,40 @@ class value : public shared_handle<tinytc_value_t> {
   public:
     using shared_handle::shared_handle;
     //! Create value with data type ty
-    value(data_type const &ty) { CHECK(tinytc_value_create(&obj_, ty.get())); }
+    value(data_type const &ty, location const &loc = {}) {
+        CHECK_LOC(tinytc_value_create(&obj_, ty.get(), &loc), loc);
+    }
     //! Create immediate value from float
-    value(float imm) { CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32)); }
+    value(float imm, location const &loc = {}) {
+        CHECK_LOC(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32, &loc), loc);
+    }
     //! Create immediate value from double
-    value(double imm, scalar_type type = scalar_type::f64) {
-        CHECK(tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+    value(double imm, scalar_type type = scalar_type::f64, location const &loc = {}) {
+        CHECK_LOC(
+            tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type), &loc),
+            loc);
     }
     //! Create immediate value from int8_t
-    value(std::int8_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8)); }
+    value(std::int8_t imm, location const &loc = {}) {
+        CHECK_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8, &loc), loc);
+    }
     //! Create immediate value from int16_t
-    value(std::int16_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16)); }
+    value(std::int16_t imm, location const &loc = {}) {
+        CHECK_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16, &loc), loc);
+    }
     //! Create immediate value from int32_t
-    value(std::int32_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32)); }
+    value(std::int32_t imm, location const &loc = {}) {
+        CHECK_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32, &loc), loc);
+    }
     //! Create immediate value from int64_t
-    value(std::int64_t imm, scalar_type type = scalar_type::i64) {
-        CHECK(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type)));
+    value(std::int64_t imm, scalar_type type = scalar_type::i64, location const &loc = {}) {
+        CHECK_LOC(tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type), &loc),
+                  loc);
     }
     //! Create immediate value from uint32_t (index type)
-    value(std::uint32_t imm) { CHECK(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index)); }
+    value(std::uint32_t imm, location const &loc = {}) {
+        CHECK_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index, &loc), loc);
+    }
 
     inline auto get_name() const -> char const * {
         char const *name;
@@ -419,8 +461,10 @@ class region : public shared_handle<tinytc_region_t> {
         if (instructions.size() > std::numeric_limits<std::uint32_t>::max()) {
             throw std::out_of_range("Instruction list too long");
         }
-        CHECK(tinytc_region_create(&obj_, instructions.size(),
-                                   reinterpret_cast<tinytc_inst_t *>(instructions.data()), &loc));
+        CHECK_LOC(tinytc_region_create(&obj_, instructions.size(),
+                                       reinterpret_cast<tinytc_inst_t *>(instructions.data()),
+                                       &loc),
+                  loc);
     }
 };
 
@@ -431,42 +475,47 @@ class region : public shared_handle<tinytc_region_t> {
 inline inst create_binary_op(binary_op op, value const &a, value const &b,
                              location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op), a.get(),
-                                       b.get(), &loc));
+    CHECK_LOC(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op), a.get(),
+                                           b.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_make_cast(value const &a, scalar_type to_ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_cast_inst_create(&instr, a.get(), static_cast<tinytc_scalar_type_t>(to_ty), &loc));
+    CHECK_LOC(
+        tinytc_cast_inst_create(&instr, a.get(), static_cast<tinytc_scalar_type_t>(to_ty), &loc),
+        loc);
     return inst(instr);
 }
 
 inline inst create_cmp(cmp_condition cond, value const &a, value const &b,
                        location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a.get(),
-                                 b.get(), &loc));
+    CHECK_LOC(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a.get(),
+                                     b.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_neg(value const &a, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_neg_inst_create(&instr, a.get(), &loc));
+    CHECK_LOC(tinytc_neg_inst_create(&instr, a.get(), &loc), loc);
     return inst(instr);
 }
 
 inline inst create_alloca(data_type const &ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_alloca_inst_create(&instr, ty.get(), &loc));
+    CHECK_LOC(tinytc_alloca_inst_create(&instr, ty.get(), &loc), loc);
     return inst(instr);
 }
 
 inline inst create_axpby(transpose tA, bool atomic, value const &alpha, value const &A,
                          value const &beta, value const &B, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
-                                   A.get(), beta.get(), B.get(), &loc));
+    CHECK_LOC(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                       alpha.get(), A.get(), beta.get(), B.get(), &loc),
+              loc);
     return inst(instr);
 }
 
@@ -480,14 +529,14 @@ inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> 
     }
     tinytc_value_t *eshape =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(expand_shape.data()));
-    CHECK(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc));
+    CHECK_LOC(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc), loc);
     return inst(instr);
 }
 
 inline inst create_fuse(value const &a, std::int64_t from, std::int64_t to,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_fuse_inst_create(&instr, a.get(), from, to, &loc));
+    CHECK_LOC(tinytc_fuse_inst_create(&instr, a.get(), from, to, &loc), loc);
     return inst(instr);
 }
 
@@ -501,19 +550,19 @@ inline inst create_load(value const &a, std::vector<value> const &index_list,
     }
     tinytc_value_t *il =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(index_list.data()));
-    CHECK(tinytc_load_inst_create(&instr, a.get(), len, il, &loc));
+    CHECK_LOC(tinytc_load_inst_create(&instr, a.get(), len, il, &loc), loc);
     return inst(instr);
 }
 
 inline inst create_group_id(location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_group_id_inst_create(&instr, &loc));
+    CHECK_LOC(tinytc_group_id_inst_create(&instr, &loc), loc);
     return inst(instr);
 }
 
 inline inst create_group_size(location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_group_size_inst_create(&instr, &loc));
+    CHECK_LOC(tinytc_group_size_inst_create(&instr, &loc), loc);
     return inst(instr);
 }
 
@@ -521,9 +570,10 @@ inline inst create_gemm(transpose tA, transpose tB, bool atomic, value const &al
                         value const &B, value const &beta, value const &C,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
-                                  static_cast<tinytc_transpose_t>(tB), atomic, alpha.get(), A.get(),
-                                  B.get(), beta.get(), C.get(), &loc));
+    CHECK_LOC(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
+                                      static_cast<tinytc_transpose_t>(tB), atomic, alpha.get(),
+                                      A.get(), B.get(), beta.get(), C.get(), &loc),
+              loc);
     return inst(instr);
 }
 
@@ -531,30 +581,33 @@ inline inst create_gemv(transpose tA, bool atomic, value const &alpha, value con
                         value const &B, value const &beta, value const &C,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
-                                  A.get(), B.get(), beta.get(), C.get(), &loc));
+    CHECK_LOC(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                      alpha.get(), A.get(), B.get(), beta.get(), C.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_ger(bool atomic, value const &alpha, value const &A, value const &B,
                        value const &beta, value const &C, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_ger_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(), C.get(),
-                                 &loc));
+    CHECK_LOC(tinytc_ger_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
+                                     C.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_hadamard(bool atomic, value const &alpha, value const &A, value const &B,
                             value const &beta, value const &C, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_hadamard_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
-                                      C.get(), &loc));
+    CHECK_LOC(tinytc_hadamard_inst_create(&instr, atomic, alpha.get(), A.get(), B.get(), beta.get(),
+                                          C.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_size(value const &a, std::int64_t mode, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_size_inst_create(&instr, a.get(), mode, &loc));
+    CHECK_LOC(tinytc_size_inst_create(&instr, a.get(), mode, &loc), loc);
     return inst(instr);
 }
 
@@ -573,7 +626,7 @@ inline inst create_subview(value const &a, std::vector<value> const &offset_list
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(offset_list.data()));
     tinytc_value_t *sl =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(size_list.data()));
-    CHECK(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc));
+    CHECK_LOC(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc), loc);
     return inst(instr);
 }
 
@@ -587,31 +640,34 @@ inline inst create_store(value const &val, value const &a, std::vector<value> co
     }
     tinytc_value_t *il =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(index_list.data()));
-    CHECK(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc));
+    CHECK_LOC(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc), loc);
     return inst(instr);
 }
 
 inline inst create_sum(transpose tA, bool atomic, value const &alpha, value const &A,
                        value const &beta, value const &B, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic, alpha.get(),
-                                 A.get(), beta.get(), B.get(), &loc));
+    CHECK_LOC(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+                                     alpha.get(), A.get(), beta.get(), B.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_for(value const &loop_var, value const &from, value const &to, value const &step,
                        region const &body, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(), step.get(),
-                                 body.get(), &loc));
+    CHECK_LOC(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(), step.get(),
+                                     body.get(), &loc),
+              loc);
     return inst(instr);
 }
 
 inline inst create_foreach(value const &loop_var, value const &from, value const &to,
                            region const &body, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK(
-        tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(), body.get(), &loc));
+    CHECK_LOC(
+        tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(), body.get(), &loc),
+        loc);
     return inst(instr);
 }
 
@@ -629,8 +685,9 @@ inline inst create_if(value const &condition, region const &then,
     for (auto const &rt : return_type_list) {
         rl_vec.emplace_back(static_cast<tinytc_scalar_type_t>(rt));
     }
-    CHECK(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(), len,
-                                rl_vec.data(), &loc));
+    CHECK_LOC(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(), len,
+                                    rl_vec.data(), &loc),
+              loc);
     return inst(instr);
 }
 
@@ -643,7 +700,7 @@ inline inst create_yield(std::vector<value> const &yield_list, location const &l
     }
     tinytc_value_t *yl =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(yield_list.data()));
-    CHECK(tinytc_yield_inst_create(&instr, len, yl, &loc));
+    CHECK_LOC(tinytc_yield_inst_create(&instr, len, yl, &loc), loc);
     return inst(instr);
 }
 
@@ -678,13 +735,13 @@ inline func create_function_prototype(char const *name, std::vector<value> &arg_
         throw std::out_of_range("argument list too long");
     }
     tinytc_value_t *al = reinterpret_cast<tinytc_value_t *>(arg_list.data());
-    CHECK(tinytc_function_prototype_create(&fun, name, len, al, &loc));
+    CHECK_LOC(tinytc_function_prototype_create(&fun, name, len, al, &loc), loc);
     return func(fun);
 }
 
 inline func create_function(func const &prototype, region const &body, location const &loc = {}) {
     tinytc_func_t fun;
-    CHECK(tinytc_function_create(&fun, prototype.get(), body.get(), &loc));
+    CHECK_LOC(tinytc_function_create(&fun, prototype.get(), body.get(), &loc), loc);
     return func(fun);
 }
 
@@ -722,7 +779,7 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
         throw std::out_of_range("function list too long");
     }
     tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
-    CHECK(tinytc_program_create(&prg, len, fl, &loc));
+    CHECK_LOC(tinytc_program_create(&prg, len, fl, &loc), loc);
     return prog(prg);
 }
 
@@ -734,7 +791,9 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
 class region_builder {
   public:
     //! Returns built product
-    inline auto get_product() -> region { return region(instructions_); }
+    inline auto get_product(location const &loc = {}) -> region {
+        return region(instructions_, loc);
+    }
 
     [[maybe_unused]] inline auto add(inst i, std::string const &name = "") -> value {
         auto result = i.get_value();
@@ -760,56 +819,58 @@ class region_builder {
     //! Build for-loop with functor f(region_builder&) -> void
     template <typename F>
     void create_for(data_type const &loop_var_ty, value const &from, value const &to, F &&f,
-                    std::string const &name = "") {
+                    std::string const &name = "", location const &loc = {}) {
         create_for<F>(std::move(loop_var_ty), std::move(from), std::move(to), nullptr,
-                      std::forward<F>(f), name);
+                      std::forward<F>(f), name, loc);
     }
     //! Build for-loop with functor f(region_builder&) -> void
     template <typename F>
     void create_for(data_type const &loop_var_ty, value const &from, value const &to,
-                    value const &step, F &&f, std::string const &name = "") {
+                    value const &step, F &&f, std::string const &name = "",
+                    location const &loc = {}) {
         auto loop_var = value(loop_var_ty);
         if (name.size() > 0) {
             loop_var.name(name);
         }
         auto bb = region_builder{};
         f(bb);
-        add(::tinytc::create_for(std::move(loop_var), from, to, step, bb.get_product()));
+        add(::tinytc::create_for(std::move(loop_var), from, to, step, bb.get_product(), loc));
     }
     //! Build foreach-loop with functor f(region_builder&) -> void
     template <typename F>
     void create_foreach(data_type const &loop_var_ty, value const &from, value const &to, F &&f,
-                        std::string const &name = "") {
+                        std::string const &name = "", location const &loc = {}) {
         auto loop_var = value(loop_var_ty);
         if (name.size() > 0) {
             loop_var.name(name);
         }
         auto bb = region_builder{};
         f(bb);
-        add(::tinytc::create_foreach(std::move(loop_var), from, to, bb.get_product()));
+        add(::tinytc::create_foreach(std::move(loop_var), from, to, bb.get_product(), loc));
     }
 
     //! Build if with functor then(region_builder&) -> void
     template <typename F>
     auto create_if(value const &condition, F &&then,
-                   std::vector<scalar_type> const &return_type_list = {}) -> std::vector<value> {
+                   std::vector<scalar_type> const &return_type_list = {}, location const &loc = {})
+        -> std::vector<value> {
         auto bb = region_builder{};
         then(bb);
         return add_multivalued(::tinytc::create_if(std::move(condition), bb.get_product(), region{},
-                                                   return_type_list));
+                                                   return_type_list, loc));
     }
     //! Build if/else with functors then(region_builder&) -> void and otherwise(region_builder&) ->
     //! void
     template <typename F, typename G>
     auto create_ifelse(value const &condition, F &&then, G &&otherwise,
-                       std::vector<scalar_type> const &return_type_list = {})
-        -> std::vector<value> {
+                       std::vector<scalar_type> const &return_type_list = {},
+                       location const &loc = {}) -> std::vector<value> {
         auto bb1 = region_builder{};
         then(bb1);
         auto bb2 = region_builder{};
         otherwise(bb2);
         return add_multivalued(::tinytc::create_if(std::move(condition), bb1.get_product(),
-                                                   bb2.get_product(), return_type_list));
+                                                   bb2.get_product(), return_type_list, loc));
     }
 
   private:
@@ -823,8 +884,8 @@ class function_builder {
     inline function_builder(std::string name) : name_(std::move(name)), body_{nullptr} {}
 
     //! Returns built product
-    inline func get_product() {
-        auto proto = create_function_prototype(name_.c_str(), arguments_);
+    inline func get_product(location const &loc = {}) {
+        auto proto = create_function_prototype(name_.c_str(), arguments_, loc);
         auto fun = create_function(proto, body_);
         if (x_ > 0 && y_ > 0) {
             set_work_group_size(fun, x_, y_);
@@ -836,8 +897,9 @@ class function_builder {
     }
 
     //! @code %name: %ty @endcode
-    inline value argument(data_type const &ty, std::string const &name = "") {
-        auto v = value(ty);
+    inline value argument(data_type const &ty, std::string const &name = "",
+                          location const &loc = {}) {
+        auto v = value(ty, loc);
         if (name.size() > 0) {
             v.name(name);
         }
@@ -854,10 +916,10 @@ class function_builder {
     inline void subgroup_size(std::uint32_t subgroup_size) { sgs_ = subgroup_size; }
 
     //! Build function body with functor f(region_builder&) -> void
-    template <typename F> void body(F &&f) {
+    template <typename F> void body(F &&f, location const &loc = {}) {
         auto bb = region_builder{};
         f(bb);
-        body_ = bb.get_product();
+        body_ = bb.get_product(loc);
     }
 
   private:
@@ -871,15 +933,15 @@ class function_builder {
 class program_builder {
   public:
     //! create function \@name with functor f(function_builder&) -> void
-    template <typename F> void create(std::string name, F &&f) {
+    template <typename F> void create(std::string name, F &&f, location const &loc = {}) {
         auto fb = function_builder(std::move(name));
         f(fb);
-        add(fb.get_product());
+        add(fb.get_product(loc));
     }
     //! Add function
     inline void add(func f) { functions_.emplace_back(std::move(f)); }
     //! Returns built product
-    inline prog get_product() { return create_program(functions_); }
+    inline prog get_product(location const &loc = {}) { return create_program(functions_, loc); }
 
   private:
     std::vector<func> functions_;
@@ -975,10 +1037,19 @@ class source_context : public unique_handle<tinytc_source_context_t> {
         CHECK(tinytc_source_context_parse_string(&prg, obj_, src.size(), src.c_str()));
         return prog(prg);
     }
+    auto add_source(char const *name, char const *text) -> std::int32_t {
+        std::int32_t source_id;
+        CHECK(tinytc_source_context_add_source(obj_, name, text, &source_id));
+        return source_id;
+    }
     auto get_error_log() const -> char const * {
         char const *log;
         CHECK(tinytc_source_context_get_error_log(obj_, &log));
         return log;
+    }
+    void report_error(location const &loc, char const *what, bool append = true) {
+        CHECK(tinytc_source_context_report_error(obj_, &loc, what,
+                                                 static_cast<tinytc_bool_t>(append)));
     }
 };
 

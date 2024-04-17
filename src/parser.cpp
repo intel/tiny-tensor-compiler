@@ -70,17 +70,21 @@ auto tinytc_source_context::parse(source_input const &input, location const &ini
     return nullptr;
 }
 
-void tinytc_source_context::report_error(location const &l, std::string const &what) {
+void tinytc_source_context::report_error(location const &l, char const *what, bool append) {
+    auto err = std::string{};
     if (l.begin.source_id >= 1 && static_cast<std::size_t>(l.begin.source_id) <= sources_.size()) {
         auto const &src = sources_[l.begin.source_id - 1];
-        last_error_log_ =
-            report_error_with_context(src.text.c_str(), src.text.size(), src.name, l, what);
+        err = report_error_with_context(src.text.c_str(), src.text.size(), src.name, l, what);
     } else {
-        last_error_log_ =
-            (std::ostringstream{} << "<Source context unavailable for unknown source id: "
-                                  << l.begin.source_id << ">\n"
-                                  << l << ": " << what)
-                .str();
+        err = (std::ostringstream{} << "<Source context unavailable for unknown source id: "
+                                    << l.begin.source_id << ">\n"
+                                    << l << ": " << what)
+                  .str();
+    }
+    if (append) {
+        last_error_log_ += std::move(err);
+    } else {
+        last_error_log_ = std::move(err);
     }
 }
 
@@ -133,11 +137,28 @@ tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *prg, tinytc_so
     });
 }
 
+tinytc_status_t tinytc_source_context_add_source(tinytc_source_context_t ctx, char const *name,
+                                                 char const *text, int32_t *source_id) {
+    if (ctx == nullptr || name == nullptr || text == nullptr || source_id == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *source_id = ctx->add_source(name, text); });
+}
+
 tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx, char const **log) {
     if (ctx == nullptr || log == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { *log = ctx->last_error_log().c_str(); });
+}
+
+tinytc_status_t tinytc_source_context_report_error(tinytc_source_context_t ctx,
+                                                   const tinytc_location_t *location,
+                                                   char const *what, tinytc_bool_t append) {
+    if (ctx == nullptr || location == nullptr || what == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { ctx->report_error(*location, what, bool(append)); });
 }
 
 void tinytc_source_context_destroy(tinytc_source_context_t ctx) { delete ctx; }

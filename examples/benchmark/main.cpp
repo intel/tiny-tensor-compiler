@@ -14,6 +14,7 @@
 #include <iostream>
 #include <limits>
 #include <memory>
+#include <source_location>
 #include <sstream>
 #include <stdexcept>
 
@@ -40,43 +41,61 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> B_stride,
                                        std::array<std::int64_t, 2> C_stride,
                                        std::uint32_t repetitions, queue q) -> binary {
+    auto ctx = source_context{};
+    char const *file_name = std::source_location::current().file_name();
+    auto const source_id = ctx.add_source(file_name, "");
+
+    auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
+        auto l = location{};
+        l.begin.source_id = source_id;
+        l.begin.line = loc.line();
+        l.begin.column = loc.column();
+        l.end = l.begin;
+        ++l.end.column;
+        return l;
+    };
+
     auto kernel = [&](function_builder &fb) {
         auto A = fb.argument(
             create_group(create_memref(
-                ty, {M, K}, std::vector<std::int64_t>(A_stride.begin(), A_stride.end()))),
-            "A");
+                ty, {M, K}, std::vector<std::int64_t>(A_stride.begin(), A_stride.end()), my_loc())),
+            "A", my_loc());
         auto B = fb.argument(
             create_group(create_memref(
-                ty, {K, N}, std::vector<std::int64_t>(B_stride.begin(), B_stride.end()))),
-            "B");
+                ty, {K, N}, std::vector<std::int64_t>(B_stride.begin(), B_stride.end()), my_loc())),
+            "B", my_loc());
         auto C = fb.argument(
             create_group(create_memref(
-                ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()))),
-            "C");
+                ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()), my_loc())),
+            "C", my_loc());
         fb.body([&](region_builder &bb) {
-            auto gid = bb.add(create_group_id());
-            auto a = bb.add(create_load(A, {gid}));
-            auto b = bb.add(create_load(B, {gid}));
-            auto c = bb.add(create_load(C, {gid}));
+            auto gid = bb.add(create_group_id(my_loc()));
+            auto a = bb.add(create_load(A, {gid}, my_loc()));
+            auto b = bb.add(create_load(B, {gid}, my_loc()));
+            auto c = bb.add(create_load(C, {gid}, my_loc()));
             bb.create_for(
-                scalar_type::index, value(0u), value(repetitions), [&](region_builder &bb) {
-                    bb.add(create_gemm(tA, tB, false, value(1.0, ty), a, b, value(0.0, ty), c));
-                });
+                scalar_type::index, value(0u, my_loc()), value(repetitions, my_loc()),
+                [&](region_builder &bb) {
+                    bb.add(create_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
+                                       value(0.0, ty, my_loc()), c, my_loc()));
+                },
+                "r", my_loc());
         });
     };
 
-    auto ctx = source_context{};
     try {
         auto pb = program_builder{};
-        pb.create("gemm", kernel);
-        auto p = pb.get_product();
+        pb.create("gemm", kernel, my_loc());
+        auto p = pb.get_product(my_loc());
 
         auto info = create_core_info(q.get_device());
         info.set_core_feature(core_feature_flag::large_register_file);
         return compile_to_binary(p, info, bundle_format::native, ctx);
+    } catch (builder_error const &e) {
+        ctx.report_error(e.loc(), e.what());
+        std::cerr << ctx.get_error_log() << " (" << static_cast<int>(e.code()) << ") " << std::endl;
     } catch (status const &st) {
-        std::cerr << "Error: " << error_string(st) << std::endl;
-        std::cerr << ctx.get_error_log() << std::endl;
+        std::cerr << ctx.get_error_log() << " (" << static_cast<int>(st) << ") " << std::endl;
     }
     return nullptr;
 }

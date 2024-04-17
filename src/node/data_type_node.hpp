@@ -24,8 +24,8 @@ using data_type_nodes = clir::virtual_type_list<class void_data_type, class grou
 
 struct tinytc_data_type : tinytc::reference_counted, tinytc::data_type_nodes {
   public:
-    inline auto loc() const -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
     tinytc::location loc_;

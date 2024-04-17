@@ -20,7 +20,7 @@ using program_nodes = clir::virtual_type_list<class program>;
 struct tinytc_prog : tinytc::reference_counted, tinytc::program_nodes {
   public:
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
     tinytc::location loc_;
