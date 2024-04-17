@@ -18,8 +18,8 @@ using region_nodes = clir::virtual_type_list<class rgn>;
 
 struct tinytc_region : tinytc::reference_counted, tinytc::region_nodes {
   public:
-    inline auto loc() const -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
     tinytc::location loc_;

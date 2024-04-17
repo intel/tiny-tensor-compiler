@@ -125,10 +125,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt);
  *
  * @param vl [out] pointer to the value object created
  * @param type [in] data type object
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type);
+TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
+                                                  const tinytc_location_t *loc);
 
 /**
  * @brief Create floating point immediate value
@@ -136,22 +138,26 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_dat
  * @param vl [out] pointer to the value object created
  * @param imm [in] immediate value
  * @param type [in] type of immediate value
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm,
-                                                      tinytc_scalar_type_t type);
+                                                      tinytc_scalar_type_t type,
+                                                      const tinytc_location_t *loc);
 /**
  * @brief Create integer immediate value
  *
  * @param vl [out] pointer to the value object created
  * @param imm [in] immediate value
  * @param type [in] type of immediate value
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm,
-                                                    tinytc_scalar_type_t type);
+                                                    tinytc_scalar_type_t type,
+                                                    const tinytc_location_t *loc);
 
 /**
  * @brief Release value object
@@ -1035,19 +1041,51 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *
                                                                  char const *source);
 
 /**
+ * @brief Add source context
+ *
+ * Manually add a source file to the source context that can be referenced in a tinytc_location.
+ * Useful to enhance error messages when using the builder methods and classes.
+ *
+ * @param ctx [in] source context object
+ * @param name [in] source name
+ * @param text [in] source text
+ * @param source_id [out] pointer to source id
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_add_source(tinytc_source_context_t ctx,
+                                                               char const *name, char const *text,
+                                                               int32_t *source_id);
+
+/**
  * @brief Get error log
  *
  * The string's memory is owned by source context.
  * Note that the pointer may invalidated by any function call involving the source context object,
  * so the string should be copied or printed right after a call to this function.
  *
- * @param ctx [inout] source context object
+ * @param ctx [in] source context object
  * @param log [out] pointer to string
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx,
                                                                   char const **log);
+
+/**
+ * @brief Report an error and augment the error with source context
+ *
+ * @param ctx [in] source context object
+ * @param location [in] source location
+ * @param what [in] error description
+ * @param append [in] true: append to error log, false: clear error log
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_report_error(tinytc_source_context_t ctx,
+                                                                 const tinytc_location_t *location,
+                                                                 char const *what,
+                                                                 tinytc_bool_t append);
 
 /**
  * @brief Delete source context object

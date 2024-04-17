@@ -33,7 +33,7 @@ class compilation_error : public std::exception {
     //! Get explanatory string
     inline char const *what() const noexcept override { return error_string(code_); }
     //! Get additional information
-    inline char const *extra_info() const { return extra_info_.c_str(); }
+    inline auto extra_info() const -> std::string const & { return extra_info_; }
 
   private:
     location loc_;
@@ -57,10 +57,12 @@ auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
         return static_cast<tinytc_status_t>(e);
     } catch (compilation_error const &e) {
         if (context) {
-            auto const what = [](compilation_error const &e) {
-                return (std::ostringstream{} << e.what() << ". " << e.extra_info()).str();
-            };
-            context->report_error(e.loc(), what(e));
+            if (e.extra_info().size() > 0) {
+                auto what =
+                    (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
+            } else {
+                context->report_error(e.loc(), e.what());
+            }
         }
         return static_cast<tinytc_status_t>(e.code());
     } catch (opencl_c_compilation_error const &e) {

@@ -35,8 +35,8 @@ using inst_nodes = clir::virtual_type_list<
 
 struct tinytc_inst : tinytc::reference_counted, tinytc::inst_nodes {
   public:
-    inline auto loc() const -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     virtual tinytc::value result() = 0;
     inline virtual auto results() -> std::vector<tinytc::value> {

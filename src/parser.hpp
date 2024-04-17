@@ -29,8 +29,13 @@ struct tinytc_source_context {
     //! Create abstract syntax tree from string
     auto parse_string(std::uint64_t size, char const *src) -> tinytc::prog;
 
+    inline auto add_source(char const *name, char const *text) -> std::int32_t {
+        sources_.emplace_back(source_input{std::string(name), std::string(text)});
+        return static_cast<std::int32_t>(sources_.size());
+    }
+
     //! Annotate context to error message
-    void report_error(tinytc_location const &l, std::string const &what);
+    void report_error(tinytc_location const &l, char const *what, bool append = false);
     //! Return error log of last parse call
     inline auto last_error_log() -> std::string const & { return last_error_log_; }
 

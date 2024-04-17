@@ -22,8 +22,8 @@ using function_nodes = clir::virtual_type_list<class prototype, class function>;
 
 struct tinytc_func : tinytc::reference_counted, tinytc::function_nodes {
   public:
-    inline auto loc() const -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     virtual auto name() const -> std::string_view = 0;
 

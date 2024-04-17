@@ -19,8 +19,8 @@ using value_nodes = clir::virtual_type_list<class float_imm, class int_imm, clas
 
 struct tinytc_value : tinytc::reference_counted, tinytc::value_nodes {
   public:
-    inline tinytc::location const &loc() const { return loc_; }
-    inline void loc(tinytc::location const &loc) { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
+    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     virtual tinytc::data_type ty() = 0;
     virtual void ty(tinytc::data_type ty) = 0;

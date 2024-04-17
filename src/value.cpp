@@ -14,29 +14,41 @@ using namespace tinytc;
 
 namespace {
 template <typename ImmT, typename T>
-tinytc_status_t create_imm(tinytc_value_t *vl, T imm, tinytc_scalar_type_t type) {
+tinytc_status_t create_imm(tinytc_value_t *vl, T imm, tinytc_scalar_type_t type,
+                           const tinytc_location_t *lc) {
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *vl = std::make_unique<ImmT>(imm, enum_cast<scalar_type>(type)).release(); });
+    return exception_to_status_code([&] {
+        *vl = std::make_unique<ImmT>(imm, enum_cast<scalar_type>(type)).release();
+        if (lc) {
+            (*vl)->loc(*lc);
+        }
+    });
 }
 } // namespace
 
 extern "C" {
-tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type) {
+tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
+                                    const tinytc_location_t *lc) {
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *vl = std::make_unique<val>(data_type(type, true)).release(); });
+    return exception_to_status_code([&] {
+        *vl = std::make_unique<val>(data_type(type, true)).release();
+        if (lc) {
+            (*vl)->loc(*lc);
+        }
+    });
 }
 
-tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm, tinytc_scalar_type_t type) {
-    return create_imm<float_imm>(vl, imm, type);
+tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm, tinytc_scalar_type_t type,
+                                        const tinytc_location_t *loc) {
+    return create_imm<float_imm>(vl, imm, type, loc);
 }
-tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm, tinytc_scalar_type_t type) {
-    return create_imm<int_imm>(vl, imm, type);
+tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm, tinytc_scalar_type_t type,
+                                      const tinytc_location_t *loc) {
+    return create_imm<int_imm>(vl, imm, type, loc);
 }
 
 tinytc_status_t tinytc_value_release(tinytc_value_t vl) {
