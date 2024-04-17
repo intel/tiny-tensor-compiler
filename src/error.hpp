@@ -55,6 +55,11 @@ auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
         return tinytc_status_internal_compiler_error;
     } catch (status const &e) {
         return static_cast<tinytc_status_t>(e);
+    } catch (builder_error const &e) {
+        if (context) {
+            context->report_error(e.loc(), e.what());
+        }
+        return static_cast<tinytc_status_t>(e.code());
     } catch (compilation_error const &e) {
         if (context) {
             if (e.extra_info().size() > 0) {
