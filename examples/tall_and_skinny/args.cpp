@@ -66,7 +66,7 @@ void arg_parser::show_help(std::ostream &os) {
     os << "usage: tall_and_skinny test-case1 test-case2 ..." << std::endl
        << R"HELP(
 positional arguments:
-    test-caseN          MxNxK triplet (e.g. 64x64x64)
+    test-caseN          MxNxK triplet (e.g. 300000x64x64)
 
 optional arguments:
     -h, --help          Show help and quit

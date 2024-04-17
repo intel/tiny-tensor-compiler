@@ -4,8 +4,8 @@
 #include "args.hpp"
 
 #include <sycl/sycl.hpp>
-#include <tinytc/tinytc-sycl.hpp>
 #include <tinytc/tinytc.hpp>
+#include <tinytc/tinytc_sycl.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -100,12 +100,13 @@ template <typename T> void test(queue q, args &a) {
             });
         }
 
-        auto info = get_core_info(q.get_device());
-        info->set_core_feature(core_feature_flag::large_register_file);
-
+        auto source_ctx = source_context{};
         try {
-            auto tas = recipe::tall_and_skinny<T, sycl_runtime>(c.n, c.k, std::move(info),
-                                                                q.get_context(), q.get_device());
+            auto info = create_core_info(q.get_device());
+            info.set_core_feature(core_feature_flag::large_register_file);
+
+            auto tas = recipe::tall_and_skinny<T, sycl_runtime>(info, c.n, c.k, q.get_context(),
+                                                                q.get_device(), source_ctx.get());
             tas(c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m, q).wait();
             if (a.verify) {
                 check(c.m, c.n);
@@ -119,9 +120,11 @@ template <typename T> void test(queue q, args &a) {
             auto gflops = 2 * c.m * c.n * c.k / min_exec_time_ns;
             std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << a.beta
                       << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops << std::endl;
-
-        } catch (ir::compilation_error const &e) {
-            std::cerr << e.loc() << ": " << e.what() << std::endl;
+        } catch (status const &st) {
+            std::cerr << source_ctx.get_error_log() << " (" << static_cast<int>(st) << ") "
+                      << std::endl;
+        } catch (std::exception const &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
         }
     }
 
