@@ -6,6 +6,7 @@
 
 #include "tinytc/export.h"
 #include "tinytc/types.h"
+#include "tinytc/version.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -879,8 +880,97 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t
-tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info, tinytc_intel_gpu_architecture_t arch);
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create_from_arch(
+    tinytc_core_info_t *info, tinytc_intel_gpu_architecture_t arch);
+
+/**
+ * @brief Create core_info for Intel GPUs
+ *
+ * @param info [out] pointer to the core_info object created
+ * @param ip_version [in] IP version of architecture
+ * @param num_eus_per_subslice [in] Number of Execution Units (Xe Vector Engines) per subslice (Xe
+ * Core)
+ * @param num_threads_per_eu [in] Number of threads per Execution Unit (Xe Vector Engine)
+ * @param local_memory_size [in] Size of shared local memory
+ * @param sgs_size [in] Length of sgs array
+ * @param sgs [in] Allowed subgroup sizes
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info,
+                                                            uint32_t ip_version,
+                                                            uint32_t num_eus_per_subslice,
+                                                            uint32_t num_threads_per_eu,
+                                                            uint32_t local_memory_size,
+                                                            uint32_t sgs_size, uint32_t const *sgs);
+
+/**
+ * @brief Returns IP version
+ *
+ * @param info [in] core info object
+ * @param ip_version [out] pointer to IP version
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_ip_version(tinytc_core_info_t info,
+                                                              uint32_t *ip_version);
+
+/**
+ * @brief Returns available subgroup sizes
+ *
+ * @param info [in] core info object
+ * @param sgs_size [out] pointer to number of subgroup sizes
+ * @param sgs [out] pointer to subgroup size array; pointer is invalidated when core info is deleted
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_info_t info,
+                                                                  uint32_t *sgs_size,
+                                                                  uint32_t const **sgs);
+
+/**
+ * @brief Returns size of one register size in bytes
+ *
+ * @param info [in] core info object
+ * @param size [out] pointer to register size
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_info_t info,
+                                                                 uint32_t *size);
+
+/**
+ * @brief Returns available number of registers per subgroup
+ *
+ * @param info [in] core info object
+ * @param size [out] pointer to number of registers
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_num_registers_per_thread(tinytc_core_info_t info,
+                                                                            uint32_t *num);
+
+/**
+ * @brief Request core feature
+ *
+ * @param info [in] core info object
+ * @param flag [in] feature flag
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_core_feature(tinytc_core_info_t info,
+                                                                tinytc_core_feature_flag_t flag);
+
+/**
+ * @brief Clear core feature request
+ *
+ * @param info [in] core info object
+ * @param flag [in] feature flag
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_info_t info,
+                                                                  tinytc_core_feature_flag_t flag);
 
 /**
  * @brief Delete core_info object

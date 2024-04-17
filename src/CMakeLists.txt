@@ -19,7 +19,6 @@ find_package(BISON 3.8.2 REQUIRED)
 
 set(SOURCES
     binary.cpp
-    #builder.cpp
     codegen_tools.cpp
     compiler.cpp
     data_type.cpp
@@ -62,7 +61,6 @@ set(RE2C_SOURCES
 BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
              DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
 set(PUBLIC_HEADERS
-    ir/builder.hpp
     recipe/small_gemm_batched.hpp
     recipe/tall_and_skinny.hpp
     tinytc.h

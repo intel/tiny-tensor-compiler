@@ -35,7 +35,7 @@ inline void CL_CHECK(cl_int stat) {
  *
  * @return core info
  */
-inline auto get_core_info(cl_device_id device) -> core_info {
+inline auto create_core_info(cl_device_id device) -> core_info {
     tinytc_core_info_t info;
     CHECK(::tinytc_cl_core_info_create(&info, device));
     return core_info{info};
@@ -258,7 +258,7 @@ class opencl_runtime {
     }
 
     //! @brief Get work group size
-    inline static auto work_group_size(cl_kernel kernel, cl_device_id dev) -> work_group_size_t {
+    inline static auto work_group_size(native_kernel_t kernel, device_t dev) -> work_group_size_t {
         std::size_t x, y, z;
         CHECK(tinytc_cl_get_group_size(kernel, dev, &x, &y, &z));
         return {x, y, z};
@@ -281,7 +281,7 @@ class opencl_runtime {
         std::array<std::size_t, 3u> gws;
         tinytc_cl_get_global_size(howmany, lws[0], lws[1], lws[2], &gws[0], &gws[1], &gws[2]);
         cl_event ev;
-        CL_CHECK(clEnqueueNDRangeKernel(q, krnl, range.dim, nullptr, gws.data(), lws.data(),
+        CL_CHECK(clEnqueueNDRangeKernel(q, krnl, 3, nullptr, gws.data(), lws.data(),
                                         dep_events.size(), dep_events.data(), &ev));
         return {ev};
     }

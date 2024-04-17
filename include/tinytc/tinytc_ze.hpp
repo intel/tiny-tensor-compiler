@@ -34,7 +34,7 @@ inline void ZE_CHECK(ze_result_t result) {
  *
  * @return core info
  */
-inline auto get_core_info(ze_device_handle_t device) -> core_info {
+inline auto create_core_info(ze_device_handle_t device) -> core_info {
     tinytc_core_info_t info;
     CHECK(::tinytc_ze_core_info_create(&info, device));
     return core_info{info};
@@ -180,7 +180,10 @@ class level_zero_runtime {
      *
      * @return work group size dummy
      */
-    inline static auto work_group_size(ze_kernel_handle_t) -> work_group_size_t { return {}; }
+    inline static auto work_group_size(ze_kernel_handle_t, ze_device_handle_t)
+        -> work_group_size_t {
+        return {};
+    }
 
     /**
      * @brief Submits a kernel to the runtime for execution on the device.

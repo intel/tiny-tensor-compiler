@@ -34,6 +34,7 @@ typedef enum {
     tinytc_status_file_io_error = 0x9,
     tinytc_status_parse_error = 0xa,
     tinytc_status_unavailable_extension = 0xb,
+    tinytc_status_unsupported_backend = 0xc,
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,
     tinytc_status_ir_invalid_shape = 0x101,

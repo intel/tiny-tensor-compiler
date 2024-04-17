@@ -4,6 +4,7 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
+#include "util.hpp"
 
 #include <algorithm>
 #include <stdexcept>
@@ -89,8 +90,8 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info,
-                                                  tinytc_intel_gpu_architecture_t arch) {
+tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info,
+                                                        tinytc_intel_gpu_architecture_t arch) {
     if (info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -104,10 +105,84 @@ tinytc_status_t tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info,
             break;
         default:
             *info = nullptr;
-            throw std::invalid_argument("Unknown architecture");
-            break;
+            throw status::invalid_arguments;
         }
     });
+}
+
+tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info, uint32_t ip_version,
+                                              uint32_t num_eus_per_subslice,
+                                              uint32_t num_threads_per_eu,
+                                              uint32_t local_memory_size, uint32_t sgs_size,
+                                              uint32_t const *sgs) {
+    if (info == nullptr || sgs == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *info = std::make_unique<core_info_intel>(ip_version, num_eus_per_subslice,
+                                                  num_threads_per_eu, local_memory_size,
+                                                  std::vector<std::uint32_t>(sgs, sgs + sgs_size))
+                    .release();
+    });
+}
+
+tinytc_status_t tinytc_core_info_get_ip_version(tinytc_core_info_t info, uint32_t *ip_version) {
+    if (info == nullptr || ip_version == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *ip_version = info->ip_version(); });
+}
+
+tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_info_t info, uint32_t *sgs_size,
+                                                    uint32_t const **sgs) {
+
+    if (info == nullptr || sgs_size == nullptr || sgs == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto const &sgs_sizes = info->subgroup_sizes();
+        if (sgs_sizes.size() > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::out_of_range("too many subgroup sizes");
+        }
+        *sgs_size = sgs_sizes.size();
+        *sgs = sgs_sizes.data();
+    });
+}
+
+tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_info_t info, uint32_t *size) {
+
+    if (info == nullptr || size == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *size = info->register_size(); });
+}
+
+tinytc_status_t tinytc_core_info_get_num_registers_per_thread(tinytc_core_info_t info,
+                                                              uint32_t *num) {
+
+    if (info == nullptr || num == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *num = info->num_registers_per_thread(); });
+}
+
+tinytc_status_t tinytc_core_info_set_core_feature(tinytc_core_info_t info,
+                                                  tinytc_core_feature_flag_t flag) {
+
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { info->set_core_feature(enum_cast<core_feature_flag>(flag)); });
+}
+
+tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_info_t info,
+                                                    tinytc_core_feature_flag_t flag) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { info->clear_core_feature(enum_cast<core_feature_flag>(flag)); });
 }
 
 void tinytc_core_info_destroy(tinytc_core_info_t info) { delete info; }
