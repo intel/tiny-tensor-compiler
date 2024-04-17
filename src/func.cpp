@@ -35,8 +35,11 @@ tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototy
     if (fun == nullptr || prototype == nullptr || body == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *fun = std::make_unique<function>(prototype, body, get_optional(loc)).release(); });
+    return exception_to_status_code([&] {
+        CHECK(tinytc_func_retain(prototype));
+        CHECK(tinytc_region_retain(body));
+        *fun = std::make_unique<function>(prototype, body, get_optional(loc)).release();
+    });
 }
 
 tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t x, uint32_t y) {
