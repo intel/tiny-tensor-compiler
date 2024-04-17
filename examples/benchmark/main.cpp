@@ -4,8 +4,8 @@
 #include "args.hpp"
 
 #include <sycl/sycl.hpp>
-#include <tinytc/tinytc-sycl.hpp>
 #include <tinytc/tinytc.hpp>
+#include <tinytc/tinytc_sycl.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -34,54 +34,51 @@ template <typename F> double bench(F f, int nrepeat = 10) {
     return min_exec_time_ns;
 }
 
-auto gemm_kernel_with_inner_repetition(ir::gemm_configuration const &cfg, int repetitions, queue q)
-    -> std::shared_ptr<binary> {
-    auto kernel = [&](ir::function_builder &fb) {
-        auto A =
-            fb.argument(ir::group_type(ir::memref_type(
-                            cfg.ty.A, {cfg.M, cfg.K},
-                            std::vector<std::int64_t>(cfg.A_stride.begin(), cfg.A_stride.end()))),
-                        "A");
-        auto B =
-            fb.argument(ir::group_type(ir::memref_type(
-                            cfg.ty.B, {cfg.K, cfg.N},
-                            std::vector<std::int64_t>(cfg.B_stride.begin(), cfg.B_stride.end()))),
-                        "B");
-        auto C =
-            fb.argument(ir::group_type(ir::memref_type(
-                            cfg.ty.B, {cfg.M, cfg.N},
-                            std::vector<std::int64_t>(cfg.C_stride.begin(), cfg.C_stride.end()))),
-                        "C");
-        fb.body([&](ir::region_builder &bb) {
-            auto gid = bb.create_group_id();
-            auto a = bb.create_load(A, {gid});
-            auto b = bb.create_load(B, {gid});
-            auto c = bb.create_load(C, {std::move(gid)});
-            bb.create_for(ir::scalar_type::index, ir::value(0, ir::scalar_type::index),
-                          ir::value(repetitions, ir::scalar_type::index),
-                          [&](ir::region_builder &bb) {
-                              bb.create_gemm(cfg.transA, cfg.transB, ir::value(1.0, cfg.ty.alpha),
-                                             a, b, ir::value(0.0, cfg.ty.beta), c);
-                          });
+auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose tB, std::int64_t M,
+                                       std::int64_t N, std::int64_t K,
+                                       std::array<std::int64_t, 2> A_stride,
+                                       std::array<std::int64_t, 2> B_stride,
+                                       std::array<std::int64_t, 2> C_stride,
+                                       std::uint32_t repetitions, queue q) -> binary {
+    auto kernel = [&](function_builder &fb) {
+        auto A = fb.argument(
+            create_group(create_memref(
+                ty, {M, K}, std::vector<std::int64_t>(A_stride.begin(), A_stride.end()))),
+            "A");
+        auto B = fb.argument(
+            create_group(create_memref(
+                ty, {K, N}, std::vector<std::int64_t>(B_stride.begin(), B_stride.end()))),
+            "B");
+        auto C = fb.argument(
+            create_group(create_memref(
+                ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()))),
+            "C");
+        fb.body([&](region_builder &bb) {
+            auto gid = bb.add(create_group_id());
+            auto a = bb.add(create_load(A, {gid}));
+            auto b = bb.add(create_load(B, {gid}));
+            auto c = bb.add(create_load(C, {gid}));
+            bb.create_for(
+                scalar_type::index, value(0u), value(repetitions), [&](region_builder &bb) {
+                    bb.add(create_gemm(tA, tB, false, value(1.0, ty), a, b, value(0.0, ty), c));
+                });
         });
     };
-    auto const err = [](ir::location const &loc, std::string const &what) {
-        std::cerr << loc << ": " << what << std::endl;
-    };
 
-    auto pb = ir::program_builder{};
+    auto ctx = source_context{};
     try {
+        auto pb = program_builder{};
         pb.create("gemm", kernel);
-    } catch (ir::compilation_error const &e) {
-        err(e.loc(), e.what());
-        return nullptr;
+        auto p = pb.get_product();
+
+        auto info = create_core_info(q.get_device());
+        info.set_core_feature(core_feature_flag::large_register_file);
+        return compile_to_binary(p, info, bundle_format::native, ctx);
+    } catch (status const &st) {
+        std::cerr << "Error: " << error_string(st) << std::endl;
+        std::cerr << ctx.get_error_log() << std::endl;
     }
-
-    auto info = get_core_info(q.get_device());
-    info->set_core_feature(core_feature_flag::large_register_file);
-
-    return optimize_and_make_binary(pb.get_product(), bundle_format::native, std::move(info),
-                                    std::move(err));
+    return nullptr;
 }
 
 template <typename T> void test(queue q, args &a) {
@@ -133,8 +130,8 @@ template <typename T> void test(queue q, args &a) {
 
         if (a.verify && a.internal_repetitions == 1) {
             q.submit([&](auto &h) {
-                bool transa = a.transA == ir::transpose::T;
-                bool transb = a.transB == ir::transpose::T;
+                bool transa = a.transA == transpose::T;
+                bool transb = a.transB == transpose::T;
                 h.parallel_for(range{howmany, 32}, [=](id<2> it) {
                     auto batch = it[0];
                     auto m = it[1];
@@ -163,41 +160,38 @@ template <typename T> void test(queue q, args &a) {
             BB[i] = B + i * nb;
             CC[i] = C + i * nc;
         }
-        ir::gemm_configuration cfg = {ir::to_scalar_type_v<T>,
-                                      a.transA,
-                                      a.transB,
-                                      c.m,
-                                      c.n,
-                                      c.k,
-                                      {1, a.transA == ir::transpose::T ? c.k : c.m},
-                                      {1, a.transB == ir::transpose::T ? c.n : c.k},
-                                      {1, c.m},
-                                      std::nullopt,
-                                      std::nullopt};
 
         double min_exec_time_ns = 0.0;
-        auto bin = gemm_kernel_with_inner_repetition(cfg, a.internal_repetitions, q);
-        if (bin) {
-            auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
-            auto kernel = bundle.get("gemm");
-            kernel.set_args(AA, BB, CC);
-            kernel.submit(howmany, q).wait();
-            if (a.internal_repetitions == 1 && a.verify) {
-                check(c.m, c.n, howmany);
-            }
-            min_exec_time_ns = bench([&]() { kernel.submit(howmany, q).wait(); });
+        try {
+            auto bin = gemm_kernel_with_inner_repetition(
+                to_scalar_type_v<T>, a.transA, a.transB, c.m, c.n, c.k,
+                {1, a.transA == transpose::T ? c.k : c.m},
+                {1, a.transB == transpose::T ? c.n : c.k}, {1, c.m}, a.internal_repetitions, q);
+            if (bin) {
+                auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
+                auto kernel = bundle.get("gemm");
+                kernel.set_args(AA, BB, CC);
+                kernel.submit(howmany, q).wait();
+                if (a.internal_repetitions == 1 && a.verify) {
+                    check(c.m, c.n, howmany);
+                }
+                min_exec_time_ns = bench([&]() { kernel.submit(howmany, q).wait(); });
 
-            auto gflops = a.internal_repetitions * 2 * c.m * c.n * c.k * howmany / min_exec_time_ns;
-            auto roofline_gflops =
-                std::min(512 * 32 * 1.6e9, a.internal_repetitions * 2 * c.m * c.n * c.k /
-                                               (sizeof(T) * (na + nb + nc) / 1.1e12)) /
-                1e9;
-            std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << howmany
-                      << "," << min_exec_time_ns / 1e9 << "," << gflops << "," << roofline_gflops
-                      << "," << std::round(gflops / roofline_gflops * 100) << "%,"
-                      << a.internal_repetitions << std::endl;
-        } else {
-            std::cerr << "Kernel compilation failed" << std::endl;
+                auto gflops =
+                    a.internal_repetitions * 2 * c.m * c.n * c.k * howmany / min_exec_time_ns;
+                auto roofline_gflops =
+                    std::min(512 * 32 * 1.6e9, a.internal_repetitions * 2 * c.m * c.n * c.k /
+                                                   (sizeof(T) * (na + nb + nc) / 1.1e12)) /
+                    1e9;
+                std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << howmany
+                          << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
+                          << roofline_gflops << "," << std::round(gflops / roofline_gflops * 100)
+                          << "%," << a.internal_repetitions << std::endl;
+            }
+        } catch (status const &st) {
+            std::cerr << "Error: " << error_string(st) << std::endl;
+        } catch (std::exception const &e) {
+            std::cerr << "Error: " << e.what() << std::endl;
         }
 
         free(AA, q);
@@ -230,9 +224,9 @@ int main(int argc, char **argv) {
 
     auto q = queue{};
 
-    std::cout
-        << "precision,m,n,k,howmany,time,gflops,roofline_gflops,roofline_perc,internal_repetitions"
-        << std::endl;
+    std::cout << "precision,m,n,k,howmany,time,gflops,roofline_gflops,roofline_perc,internal_"
+                 "repetitions"
+              << std::endl;
     try {
         if (a.double_precision) {
             test<double>(std::move(q), a);

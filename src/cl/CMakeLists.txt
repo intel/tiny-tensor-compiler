@@ -21,7 +21,8 @@ add_library(tinytc-opencl ${SOURCES})
 add_library(tinytc::tinytc-opencl ALIAS tinytc-opencl)
 
 set_common_options(tinytc-opencl)
-target_link_libraries(tinytc-opencl PRIVATE tinytc OpenCL::OpenCL)
+target_link_libraries(tinytc-opencl PRIVATE tinytc)
+target_link_libraries(tinytc-opencl PUBLIC OpenCL::OpenCL)
 
 # include directories
 

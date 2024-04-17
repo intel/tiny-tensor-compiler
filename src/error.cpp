@@ -104,6 +104,9 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Parse error";
     case tinytc_status_unavailable_extension:
         return "Required vendor extension is unavailable";
+    case tinytc_status_unsupported_backend:
+        return "Unsupport backend";
+    // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
     case tinytc_status_ir_invalid_shape:

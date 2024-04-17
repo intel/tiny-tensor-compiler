@@ -91,11 +91,11 @@ struct gemm_configuration {
  *
  * @return OpenCL-C AST
  */
-clir::func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
-                         core_config const &core_cfg, std::string_view name,
-                         clir::address_space As = clir::address_space::global_t,
-                         clir::address_space Bs = clir::address_space::global_t,
-                         clir::address_space Cs = clir::address_space::global_t);
+::clir::func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
+                           core_config const &core_cfg, std::string_view name,
+                           ::clir::address_space As = ::clir::address_space::global_t,
+                           ::clir::address_space Bs = ::clir::address_space::global_t,
+                           ::clir::address_space Cs = ::clir::address_space::global_t);
 
 /**
  * @brief Calculate maximum register blocking size of GEMM

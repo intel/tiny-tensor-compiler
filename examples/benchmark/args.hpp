@@ -4,7 +4,7 @@
 #ifndef ARGS_20230417_HPP
 #define ARGS_20230417_HPP
 
-#include <tinytc/tinytc.hpp>
+#include <tinytc/types.hpp>
 
 #include <cstdint>
 #include <iosfwd>
@@ -21,8 +21,8 @@ struct args {
     int internal_repetitions;
     bool double_precision;
     bool help;
-    tinytc::ir::transpose transA;
-    tinytc::ir::transpose transB;
+    tinytc::transpose transA;
+    tinytc::transpose transB;
     bool verify;
 };
 

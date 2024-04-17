@@ -34,6 +34,7 @@ enum class status {
     file_io_error = tinytc_status_file_io_error,
     parse_error = tinytc_status_parse_error,
     unavailable_extension = tinytc_status_unavailable_extension,
+    unsupported_backend = tinytc_status_unsupported_backend,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,

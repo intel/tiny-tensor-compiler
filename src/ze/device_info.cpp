@@ -2,13 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../device_info.hpp"
+#include "tinytc/tinytc.h"
 #include "tinytc/tinytc_ze.h"
-#include "tinytc/types.h"
 
 #include <level_zero/ze_api.h>
-#include <memory>
-#include <new>
-#include <utility>
 #include <vector>
 
 extern "C" {
@@ -32,16 +29,9 @@ tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *info, ze_device_h
     auto subgroup_sizes = std::vector<std::uint32_t>(
         compute_props.subGroupSizes, compute_props.subGroupSizes + compute_props.numSubGroupSizes);
 
-    try {
-        *info = std::make_unique<tinytc::core_info_intel>(
-                    dev_ip_ver.ipVersion, dev_props.numEUsPerSubslice, dev_props.numThreadsPerEU,
-                    compute_props.maxSharedLocalMemory, std::move(subgroup_sizes))
-                    .release();
-    } catch (std::bad_alloc const &e) {
-        return tinytc_status_bad_alloc;
-    } catch (...) {
-        return tinytc_status_unknown;
-    }
+    TINYTC_CHECK(tinytc_core_info_intel_create(
+        info, dev_ip_ver.ipVersion, dev_props.numEUsPerSubslice, dev_props.numThreadsPerEU,
+        compute_props.maxSharedLocalMemory, subgroup_sizes.size(), subgroup_sizes.data()));
     return tinytc_status_success;
 }
 }

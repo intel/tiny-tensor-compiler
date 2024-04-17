@@ -313,7 +313,7 @@ class value : public shared_handle<tinytc_value_t> {
   public:
     using shared_handle::shared_handle;
     //! Create value with data type ty
-    value(data_type ty) { CHECK(tinytc_value_create(&obj_, ty.get())); }
+    value(data_type const &ty) { CHECK(tinytc_value_create(&obj_, ty.get())); }
     //! Create immediate value from float
     value(float imm) { CHECK(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32)); }
     //! Create immediate value from double
@@ -470,7 +470,7 @@ inline inst create_axpby(transpose tA, bool atomic, value const &alpha, value co
     return inst(instr);
 }
 
-inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> &expand_shape,
+inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> const &expand_shape,
                           location const &loc = {}) {
     static_assert(value_reinterpret_allowed);
     tinytc_inst_t instr;
@@ -478,7 +478,8 @@ inline inst create_expand(value const &a, std::int64_t mode, std::vector<value> 
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("expand shape too large");
     }
-    tinytc_value_t *eshape = reinterpret_cast<tinytc_value_t *>(expand_shape.data());
+    tinytc_value_t *eshape =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(expand_shape.data()));
     CHECK(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc));
     return inst(instr);
 }
@@ -490,14 +491,16 @@ inline inst create_fuse(value const &a, std::int64_t from, std::int64_t to,
     return inst(instr);
 }
 
-inline inst create_load(value const &a, std::vector<value> &index_list, location const &loc = {}) {
+inline inst create_load(value const &a, std::vector<value> const &index_list,
+                        location const &loc = {}) {
     static_assert(value_reinterpret_allowed);
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
-    tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
+    tinytc_value_t *il =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(index_list.data()));
     CHECK(tinytc_load_inst_create(&instr, a.get(), len, il, &loc));
     return inst(instr);
 }
@@ -555,8 +558,8 @@ inline inst create_size(value const &a, std::int64_t mode, location const &loc =
     return inst(instr);
 }
 
-inline inst create_subview(value const &a, std::vector<value> &offset_list,
-                           std::vector<value> &size_list, location const &loc = {}) {
+inline inst create_subview(value const &a, std::vector<value> const &offset_list,
+                           std::vector<value> const &size_list, location const &loc = {}) {
     static_assert(value_reinterpret_allowed);
     tinytc_inst_t instr;
     if (offset_list.size() != size_list.size()) {
@@ -566,13 +569,15 @@ inline inst create_subview(value const &a, std::vector<value> &offset_list,
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("slice list too long");
     }
-    tinytc_value_t *ol = reinterpret_cast<tinytc_value_t *>(offset_list.data());
-    tinytc_value_t *sl = reinterpret_cast<tinytc_value_t *>(size_list.data());
+    tinytc_value_t *ol =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(offset_list.data()));
+    tinytc_value_t *sl =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(size_list.data()));
     CHECK(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc));
     return inst(instr);
 }
 
-inline inst create_store(value const &val, value const &a, std::vector<value> &index_list,
+inline inst create_store(value const &val, value const &a, std::vector<value> const &index_list,
                          location const &loc = {}) {
     static_assert(value_reinterpret_allowed);
     tinytc_inst_t instr;
@@ -580,7 +585,8 @@ inline inst create_store(value const &val, value const &a, std::vector<value> &i
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
-    tinytc_value_t *il = reinterpret_cast<tinytc_value_t *>(index_list.data());
+    tinytc_value_t *il =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(index_list.data()));
     CHECK(tinytc_store_inst_create(&instr, val.get(), a.get(), len, il, &loc));
     return inst(instr);
 }
@@ -628,14 +634,15 @@ inline inst create_if(value const &condition, region const &then,
     return inst(instr);
 }
 
-inline inst create_yield(std::vector<value> &yield_list, location const &loc = {}) {
+inline inst create_yield(std::vector<value> const &yield_list, location const &loc = {}) {
     static_assert(value_reinterpret_allowed);
     tinytc_inst_t instr;
     auto len = yield_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("slice list too long");
     }
-    tinytc_value_t *yl = reinterpret_cast<tinytc_value_t *>(yield_list.data());
+    tinytc_value_t *yl =
+        const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(yield_list.data()));
     CHECK(tinytc_yield_inst_create(&instr, len, yl, &loc));
     return inst(instr);
 }
@@ -720,6 +727,165 @@ inline prog create_program(std::vector<func> &fun_list, location const &loc = {}
 }
 
 ////////////////////////////
+////////// Builder /////////
+////////////////////////////
+
+//! Builder for regions
+class region_builder {
+  public:
+    //! Returns built product
+    inline auto get_product() -> region { return region(instructions_); }
+
+    [[maybe_unused]] inline auto add(inst i, std::string const &name = "") -> value {
+        auto result = i.get_value();
+        if (result && name.size() > 0) {
+            result.name(name);
+        }
+        instructions_.emplace_back(std::move(i));
+        return result;
+    }
+
+    [[maybe_unused]] inline auto add_multivalued(inst i, std::string const &name = "")
+        -> std::vector<value> {
+        auto results = i.get_values();
+        if (name.size() > 0) {
+            for (auto &result : results) {
+                result.name(name);
+            }
+        }
+        instructions_.emplace_back(std::move(i));
+        return results;
+    }
+
+    //! Build for-loop with functor f(region_builder&) -> void
+    template <typename F>
+    void create_for(data_type const &loop_var_ty, value const &from, value const &to, F &&f,
+                    std::string const &name = "") {
+        create_for<F>(std::move(loop_var_ty), std::move(from), std::move(to), nullptr,
+                      std::forward<F>(f), name);
+    }
+    //! Build for-loop with functor f(region_builder&) -> void
+    template <typename F>
+    void create_for(data_type const &loop_var_ty, value const &from, value const &to,
+                    value const &step, F &&f, std::string const &name = "") {
+        auto loop_var = value(loop_var_ty);
+        if (name.size() > 0) {
+            loop_var.name(name);
+        }
+        auto bb = region_builder{};
+        f(bb);
+        add(::tinytc::create_for(std::move(loop_var), from, to, step, bb.get_product()));
+    }
+    //! Build foreach-loop with functor f(region_builder&) -> void
+    template <typename F>
+    void create_foreach(data_type const &loop_var_ty, value const &from, value const &to, F &&f,
+                        std::string const &name = "") {
+        auto loop_var = value(loop_var_ty);
+        if (name.size() > 0) {
+            loop_var.name(name);
+        }
+        auto bb = region_builder{};
+        f(bb);
+        add(::tinytc::create_foreach(std::move(loop_var), from, to, bb.get_product()));
+    }
+
+    //! Build if with functor then(region_builder&) -> void
+    template <typename F>
+    auto create_if(value const &condition, F &&then,
+                   std::vector<scalar_type> const &return_type_list = {}) -> std::vector<value> {
+        auto bb = region_builder{};
+        then(bb);
+        return add_multivalued(::tinytc::create_if(std::move(condition), bb.get_product(), region{},
+                                                   return_type_list));
+    }
+    //! Build if/else with functors then(region_builder&) -> void and otherwise(region_builder&) ->
+    //! void
+    template <typename F, typename G>
+    auto create_ifelse(value const &condition, F &&then, G &&otherwise,
+                       std::vector<scalar_type> const &return_type_list = {})
+        -> std::vector<value> {
+        auto bb1 = region_builder{};
+        then(bb1);
+        auto bb2 = region_builder{};
+        otherwise(bb2);
+        return add_multivalued(::tinytc::create_if(std::move(condition), bb1.get_product(),
+                                                   bb2.get_product(), return_type_list));
+    }
+
+  private:
+    std::vector<inst> instructions_;
+};
+
+//! Builder for functions
+class function_builder {
+  public:
+    //! ctor; creates function \@name
+    inline function_builder(std::string name) : name_(std::move(name)), body_{nullptr} {}
+
+    //! Returns built product
+    inline func get_product() {
+        auto proto = create_function_prototype(name_.c_str(), arguments_);
+        auto fun = create_function(proto, body_);
+        if (x_ > 0 && y_ > 0) {
+            set_work_group_size(fun, x_, y_);
+        }
+        if (sgs_ > 0) {
+            set_subgroup_size(fun, sgs_);
+        }
+        return fun;
+    }
+
+    //! @code %name: %ty @endcode
+    inline value argument(data_type const &ty, std::string const &name = "") {
+        auto v = value(ty);
+        if (name.size() > 0) {
+            v.name(name);
+        }
+        arguments_.emplace_back(std::move(v));
+        return arguments_.back();
+    }
+
+    //! @code work_group_size(%m, %n) @endcode
+    inline void work_group_size(std::uint32_t x, std::uint32_t y) {
+        x_ = x;
+        y_ = y;
+    }
+    //! @code subgroup_size(%subgroup_size) @endcode
+    inline void subgroup_size(std::uint32_t subgroup_size) { sgs_ = subgroup_size; }
+
+    //! Build function body with functor f(region_builder&) -> void
+    template <typename F> void body(F &&f) {
+        auto bb = region_builder{};
+        f(bb);
+        body_ = bb.get_product();
+    }
+
+  private:
+    std::string name_;
+    region body_;
+    std::vector<value> arguments_;
+    std::uint32_t x_ = 0, y_ = 0, sgs_ = 0;
+};
+
+//! Builder for programs
+class program_builder {
+  public:
+    //! create function \@name with functor f(function_builder&) -> void
+    template <typename F> void create(std::string name, F &&f) {
+        auto fb = function_builder(std::move(name));
+        f(fb);
+        add(fb.get_product());
+    }
+    //! Add function
+    inline void add(func f) { functions_.emplace_back(std::move(f)); }
+    //! Returns built product
+    inline prog get_product() { return create_program(functions_); }
+
+  private:
+    std::vector<func> functions_;
+};
+
+////////////////////////////
 //////// Device info ///////
 ////////////////////////////
 
@@ -730,12 +896,53 @@ template <> struct unique_handle_traits<tinytc_core_info_t> {
 class core_info : public unique_handle<tinytc_core_info_t> {
   public:
     using unique_handle::unique_handle;
+
+    auto get_ip_version() -> std::uint32_t {
+        std::uint32_t ip_version;
+        CHECK(tinytc_core_info_get_ip_version(obj_, &ip_version));
+        return ip_version;
+    }
+
+    void get_subgroup_sizes(uint32_t *sgs_size, uint32_t const **sgs) {
+        CHECK(tinytc_core_info_get_subgroup_sizes(obj_, sgs_size, sgs));
+    }
+
+    auto get_register_size() -> std::uint32_t {
+        std::uint32_t size;
+        CHECK(tinytc_core_info_get_register_size(obj_, &size));
+        return size;
+    }
+    auto get_num_registers_per_thread() -> std::uint32_t {
+        std::uint32_t num;
+        CHECK(tinytc_core_info_get_num_registers_per_thread(obj_, &num));
+        return num;
+    }
+
+    void set_core_feature(core_feature_flag flag) {
+        CHECK(tinytc_core_info_set_core_feature(obj_,
+                                                static_cast<::tinytc_core_feature_flag_t>(flag)));
+    }
+
+    void clear_core_feature(core_feature_flag flag) {
+        CHECK(tinytc_core_info_clear_core_feature(obj_,
+                                                  static_cast<::tinytc_core_feature_flag_t>(flag)));
+    }
 };
 
-inline auto get_core_info_intel_gpu(intel_gpu_architecture arch) -> core_info {
+inline auto create_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_info {
     tinytc_core_info_t info;
-    CHECK(tinytc_core_info_intel_gpu_create(&info,
-                                            static_cast<tinytc_intel_gpu_architecture_t>(arch)));
+    CHECK(tinytc_core_info_intel_create_from_arch(
+        &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
+    return core_info{info};
+}
+
+inline auto create_core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
+                                   std::uint32_t num_threads_per_eu,
+                                   std::uint32_t local_memory_size, std::vector<std::uint32_t> sgs)
+    -> core_info {
+    tinytc_core_info_t info;
+    CHECK(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice, num_threads_per_eu,
+                                        local_memory_size, sgs.size(), sgs.data()));
     return core_info{info};
 }
 
@@ -870,11 +1077,10 @@ concept has_make_argument_handler = requires(T t, typename T::device_t dev) {
                                     };
 
 template <typename T>
-concept has_work_group_size = requires(T t, typename T::native_kernel_t kernel) {
-                                  {
-                                      T::work_group_size(kernel)
-                                      } -> std::same_as<typename T::work_group_size_t>;
-                              };
+concept has_work_group_size =
+    requires(T t, typename T::native_kernel_t kernel, typename T::device_t dev) {
+        { T::work_group_size(kernel, dev) } -> std::same_as<typename T::work_group_size_t>;
+    };
 
 template <typename T, typename Wrapped, typename Native>
 concept has_get = requires(Wrapped w) {
@@ -1050,7 +1256,7 @@ template <runtime T> class tensor_kernel_bundle {
      */
     tensor_kernel_bundle(binary const &bin, context_t ctx, device_t dev)
         : bundle_(T::make_kernel_bundle(std::move(ctx), dev, bin)),
-          arg_handler_(T::make_argument_handler(std::move(dev))) {}
+          arg_handler_(T::make_argument_handler(std::move(dev))), dev_{dev} {}
 
     /**
      * @brief Get a kernel by name from the kernel bundle
@@ -1061,13 +1267,14 @@ template <runtime T> class tensor_kernel_bundle {
      */
     auto get(char const *name) -> tensor_kernel<T> {
         auto krnl = T::make_kernel(T::get(bundle_), name);
-        auto wgs = T::work_group_size(krnl);
+        auto wgs = T::work_group_size(T::get(krnl), dev_);
         return {std::move(krnl), arg_handler_, wgs};
     }
 
   private:
     kernel_bundle_t bundle_;
     argument_handler_t arg_handler_;
+    device_t dev_;
 };
 
 } // namespace tinytc

@@ -12,8 +12,8 @@
 args arg_parser::parse_args(int argc, char **argv) {
     args a = {};
     a.internal_repetitions = 1;
-    a.transA = tinytc::ir::transpose::N;
-    a.transB = tinytc::ir::transpose::N;
+    a.transA = tinytc::transpose::N;
+    a.transB = tinytc::transpose::N;
     auto num = std::vector<std::int64_t>(3);
     for (int i = 1; i < argc; ++i) {
         if (argv[i][0] == '-') {
@@ -24,9 +24,9 @@ args arg_parser::parse_args(int argc, char **argv) {
             if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
                 a.help = true;
             } else if (std::strcmp(argv[i], "--trans-a") == 0) {
-                a.transA = tinytc::ir::transpose::T;
+                a.transA = tinytc::transpose::T;
             } else if (std::strcmp(argv[i], "--trans-b") == 0) {
-                a.transB = tinytc::ir::transpose::T;
+                a.transB = tinytc::transpose::T;
             } else if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--verify") == 0) {
                 a.verify = true;
             } else if (i + 1 < argc) {
