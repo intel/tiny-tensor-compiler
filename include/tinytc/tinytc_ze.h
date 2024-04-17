@@ -17,7 +17,15 @@ extern "C" {
 /////////// Error //////////
 ////////////////////////////
 
-TINYTC_EXPORT char const *tinytc_ze_result_string(ze_result_t status);
+TINYTC_EXPORT tinytc_status_t tinytc_ze_convert_status(ze_result_t result);
+
+#define TINYTC_ZE_CHECK(X)                                                                         \
+    do {                                                                                           \
+        ze_result_t result = X;                                                                    \
+        if (result != ZE_RESULT_SUCCESS) {                                                         \
+            return tinytc_ze_convert_status(result);                                               \
+        }                                                                                          \
+    } while (0)
 
 ////////////////////////////
 //////// Device info ///////
@@ -29,10 +37,10 @@ TINYTC_EXPORT char const *tinytc_ze_result_string(ze_result_t status);
  * @param info [out] pointer to the core_info object created
  * @param device [in] device handle
  *
- * @return ZE_RESULT_SUCCESS on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT ze_result_t tinytc_ze_core_info_create(tinytc_core_info_t *info,
-                                                     ze_device_handle_t device);
+TINYTC_EXPORT tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *info,
+                                                         ze_device_handle_t device);
 
 ////////////////////////////
 ////////// Kernel //////////
@@ -48,12 +56,13 @@ TINYTC_EXPORT ze_result_t tinytc_ze_core_info_create(tinytc_core_info_t *info,
  * @param build_log [out][optional] handle to store build log; caller needs to clean up the build
  * log with zeModuleBuildLogDestroy; can be nullptr
  *
- * @return ZE_RESULT_SUCCESS on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT ze_result_t tinytc_ze_module_create(ze_module_handle_t *mod,
-                                                  ze_context_handle_t context,
-                                                  ze_device_handle_t device, tinytc_binary_t bin,
-                                                  ze_module_build_log_handle_t *build_log);
+TINYTC_EXPORT tinytc_status_t tinytc_ze_module_create(ze_module_handle_t *mod,
+                                                      ze_context_handle_t context,
+                                                      ze_device_handle_t device,
+                                                      tinytc_binary_t bin,
+                                                      ze_module_build_log_handle_t *build_log);
 
 /**
  * @brief Get work group size for kernel
@@ -65,8 +74,8 @@ TINYTC_EXPORT ze_result_t tinytc_ze_module_create(ze_module_handle_t *mod,
  *
  * @return group count
  */
-TINYTC_EXPORT ze_result_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
-                                                   uint32_t *y, uint32_t *z);
+TINYTC_EXPORT tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
+                                                       uint32_t *y, uint32_t *z);
 
 /**
  * @brief Convert group size to level zero group count

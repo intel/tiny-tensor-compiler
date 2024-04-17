@@ -14,6 +14,18 @@
 extern "C" {
 #endif
 
+////////////////////////////
+/////////// Error //////////
+////////////////////////////
+
+#define TINYTC_CHECK(X)                                                                            \
+    do {                                                                                           \
+        tinytc_status_t status = X;                                                                \
+        if (status != tinytc_status_success) {                                                     \
+            return status;                                                                         \
+        }                                                                                          \
+    } while (0)
+
 /**
  * @brief Translate status code to textual description
  *
@@ -43,7 +55,7 @@ TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
  * @param type [in] scalar type
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
                                                         tinytc_scalar_type_t type,
@@ -62,7 +74,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
  * @param stride [in][optional][range(0, stride_size)] stride array
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
                                                         tinytc_scalar_type_t scalar_ty,
@@ -77,7 +89,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
  * @param memref_ty [in] memref data type object
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt,
                                                        tinytc_data_type_t memref_ty,
@@ -90,7 +102,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt,
  *
  * @param dt [inout] data type object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt);
 
@@ -99,7 +111,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt);
  *
  * @param dt [inout] data type object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt);
 
@@ -113,7 +125,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt);
  * @param vl [out] pointer to the value object created
  * @param type [in] data type object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type);
 
@@ -124,7 +136,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_dat
  * @param imm [in] immediate value
  * @param type [in] type of immediate value
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm,
                                                       tinytc_scalar_type_t type);
@@ -135,7 +147,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double
  * @param imm [in] immediate value
  * @param type [in] type of immediate value
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm,
                                                     tinytc_scalar_type_t type);
@@ -147,7 +159,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t 
  *
  * @param vl [inout] value object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_release(tinytc_value_t vl);
 
@@ -156,7 +168,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_release(tinytc_value_t vl);
  *
  * @param vl [inout] value object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_retain(tinytc_value_t vl);
 
@@ -166,7 +178,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_retain(tinytc_value_t vl);
  * @param vl [inout] value object
  * @param name [in] name; null-terminated string
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char const *name);
 
@@ -179,7 +191,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char cons
  * @param vl [in] value object
  * @param name [out] pointer to C string
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(tinytc_value_t vl, char const **name);
 
@@ -205,7 +217,7 @@ TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
  * @param b [in] right-hand operand
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_op_inst_create(tinytc_inst_t *instr,
                                                            tinytc_binary_op_t op, tinytc_value_t a,
@@ -222,7 +234,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_op_inst_create(tinytc_inst_t *instr,
  * @param to_ty [in] target type
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       tinytc_scalar_type_t to_ty,
@@ -239,7 +251,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tiny
  * @param b [in] right-hand operand
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr,
                                                      tinytc_cmp_condition_t cond, tinytc_value_t a,
@@ -255,7 +267,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr,
  * @param a [in] operand
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_neg_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                      const tinytc_location_t *loc);
@@ -269,7 +281,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_neg_inst_create(tinytc_inst_t *instr, tinyt
  * @param ty [in] type that is allocated
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type_t ty,
                                                         const tinytc_location_t *loc);
@@ -290,7 +302,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, ti
  * @param B [in] B
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
                                                        tinytc_bool_t atomic, tinytc_value_t alpha,
@@ -310,7 +322,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  * @param expand_shape [in][range(2, expand_shape_size)] expand shape array
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                         int64_t mode, uint32_t expand_shape_size,
@@ -328,7 +340,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, ti
  * @param to [in] last mode to fuse
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       int64_t from, int64_t to,
@@ -346,7 +358,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
  * index_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       uint32_t index_list_size,
@@ -360,7 +372,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tiny
  * @param instr [out] pointer to the inst object created
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr,
                                                           const tinytc_location_t *loc);
@@ -373,7 +385,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr,
  * @param instr [out] pointer to the inst object created
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr,
                                                             const tinytc_location_t *loc);
@@ -397,7 +409,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
                                                       tinytc_transpose_t tB, tinytc_bool_t atomic,
@@ -424,7 +436,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tiny
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
                                                       tinytc_bool_t atomic, tinytc_value_t alpha,
@@ -449,7 +461,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tiny
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
                                                      tinytc_value_t alpha, tinytc_value_t A,
@@ -474,7 +486,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinyt
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
     tinytc_inst_t *instr, tinytc_bool_t atomic, tinytc_value_t alpha, tinytc_value_t A,
@@ -490,7 +502,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
  * @param mode [in] mode for that the size is queried
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       int64_t mode, const tinytc_location_t *loc);
@@ -509,7 +521,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
  * is 0; size_list[i] may be nullptr if a single offset shall be passed instead of a range for the
  * i-th mode
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                          uint32_t slice_list_size,
@@ -530,7 +542,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, t
  * index_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_value_t val,
                                                        tinytc_value_t a, uint32_t index_list_size,
@@ -553,7 +565,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tin
  * @param B [in] B
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
                                                      tinytc_bool_t atomic, tinytc_value_t alpha,
@@ -579,7 +591,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @param body [in] loop body
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t loop_var,
                                                      tinytc_value_t from, tinytc_value_t to,
@@ -602,7 +614,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
  * @param body [in] loop body
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr,
                                                          tinytc_value_t loop_var,
@@ -626,7 +638,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr,
  * if return_type_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
                                                     tinytc_region_t then, tinytc_region_t otherwise,
@@ -646,7 +658,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
  * @param yield_list [in][range(1, yield_list_size)] yielded values array
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
                                                        uint32_t yield_list_size,
@@ -660,7 +672,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
  *
  * @param instr [inout] inst object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_inst_release(tinytc_inst_t instr);
 
@@ -669,7 +681,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_release(tinytc_inst_t instr);
  *
  * @param instr [inout] inst object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_inst_retain(tinytc_inst_t instr);
 
@@ -679,7 +691,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_retain(tinytc_inst_t instr);
  * @param instr [in] inst object
  * @param result [out] result value; may be set to nullptr if instruction does not return a value
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result);
 
@@ -695,7 +707,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_
  * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
  * @param result [out] result value; may be set to nullptr if instruction does not return a value
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      uint32_t *result_list_size,
@@ -714,7 +726,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
  * if instruction_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_create(tinytc_region_t *reg,
                                                    uint32_t instruction_list_size,
@@ -727,7 +739,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_create(tinytc_region_t *reg,
  *
  * @param reg [inout] region object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_release(tinytc_region_t reg);
 
@@ -736,7 +748,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_release(tinytc_region_t reg);
  *
  * @param reg [inout] region object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
 
@@ -753,7 +765,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
  * 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fun, char const *name,
                                                                uint32_t arg_list_size,
@@ -768,7 +780,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fu
  * @param body [in] function body
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototype,
                                                      tinytc_region_t body,
@@ -782,7 +794,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_
  * @param y [in] number of columns in parallel grid
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t x,
                                                                   uint32_t y);
@@ -793,7 +805,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t 
  * @param sgs [in] subgroup size; the supported values need to be queried from the compute device
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, uint32_t sgs);
 
@@ -804,7 +816,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fu
  *
  * @param fun [inout] function object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_func_release(tinytc_func_t fun);
 
@@ -813,7 +825,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_release(tinytc_func_t fun);
  *
  * @param fun [inout] function object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_func_retain(tinytc_func_t fun);
 
@@ -829,7 +841,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_retain(tinytc_func_t fun);
  * @param fun_list [in][range(0, fun_list_size)] func array; can be nullptr if fun_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t fun_list_size,
                                                     tinytc_func_t *fun_list,
@@ -842,7 +854,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t
  *
  * @param prg [inout] program object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
 
@@ -851,7 +863,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
  *
  * @param prg [inout] program object
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
@@ -865,7 +877,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
  * @param info [out] pointer to the core_info object created
  * @param arch [in] IP version
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t
 tinytc_core_info_intel_gpu_create(tinytc_core_info_t *info, tinytc_intel_gpu_architecture_t arch);
@@ -889,7 +901,7 @@ TINYTC_EXPORT void tinytc_core_info_destroy(tinytc_core_info_t info);
  *
  * @param ctx [out] pointer to the source context object created
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_create(tinytc_source_context_t *ctx);
 
@@ -900,7 +912,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_create(tinytc_source_context
  * @param ctx [inout] source context object; source text is added to manager
  * @param filename [in] path to source file
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_file(tinytc_prog_t *prg,
                                                                tinytc_source_context_t ctx,
@@ -912,7 +924,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_file(tinytc_prog_t *pr
  * @param prg [out] pointer to prog object created
  * @param ctx [inout] source context object; source text is added to manager
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_stdin(tinytc_prog_t *prg,
                                                                 tinytc_source_context_t ctx);
@@ -925,7 +937,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_stdin(tinytc_prog_t *p
  * @param source_size [in] length of source string
  * @param source [in] source string
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *prg,
                                                                  tinytc_source_context_t ctx,
@@ -942,7 +954,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *
  * @param ctx [inout] source context object
  * @param log [out] pointer to string
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx,
                                                                   char const **log);
@@ -967,7 +979,7 @@ TINYTC_EXPORT void tinytc_source_context_destroy(tinytc_source_context_t ctx);
  * @param ctx [inout][optional] source context object to save extended error messages that are
  * enhanced with source code context; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
                                                             const_tinytc_core_info_t info,
@@ -982,7 +994,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src
  * @param ctx [inout][optional] source context object to save extended error messages that are
  * enhanced with source code context; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin,
                                                               const_tinytc_source_t src,
@@ -1000,7 +1012,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *b
  * @param ctx [inout][optional] source context object to save extended error messages that are
  * enhanced with source code context; can be nullptr
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
                                                             const_tinytc_core_info_t info,
@@ -1014,7 +1026,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin
  * @param code [out] code contains a pointer to the source text; the pointer is only valid as long
  * as the source object is alive
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **code);
 
@@ -1026,7 +1038,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, 
  * @param data_size [out] size of data
  * @param data [out] data array; returned pointer is invalidated if the binary object is deleted
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
                                                     tinytc_bundle_format_t *format,
@@ -1037,7 +1049,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
  * @param bin [in] binary object
  * @param core_features [out] core features
  *
- * @return tinytc_success on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,
                                                               uint32_t *core_features);

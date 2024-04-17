@@ -1,149 +1,133 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-// Code COPIED from Double-Batched FFT Library
-// Copyright (C) 2022 Intel Corporation
-// SPDX-License-Identifier: BSD-3-Clause
+#include "tinytc/tinytc_cl.h"
+#include "tinytc/types.h"
 
-#include "tinytc/cl/error.hpp"
-
-#include <utility>
-
-namespace tinytc {
-
-opencl_error::opencl_error(std::string what, cl_int status)
-    : what_(std::move(what)), status_(status) {}
-opencl_error::opencl_error(char const *what, cl_int status) : what_(what), status_(status) {}
-char const *opencl_error::what() const noexcept { return what_.c_str(); }
-cl_int opencl_error::status_code() const noexcept { return status_; }
-
-char const *cl_status_to_string(cl_int status) {
+extern "C" {
+tinytc_status_t tinytc_cl_convert_status(cl_int status) {
     switch (status) {
-    case CL_SUCCESS:
-        return "CL_SUCCESS";
     case CL_BUILD_PROGRAM_FAILURE:
-        return "CL_BUILD_PROGRAM_FAILURE";
+        return tinytc_status_cl_build_program_failure;
     case CL_COMPILE_PROGRAM_FAILURE:
-        return "CL_COMPILE_PROGRAM_FAILURE";
+        return tinytc_status_cl_compile_program_failure;
     case CL_COMPILER_NOT_AVAILABLE:
-        return "CL_COMPILER_NOT_AVAILABLE";
+        return tinytc_status_cl_compiler_not_available;
     case CL_DEVICE_NOT_FOUND:
-        return "CL_DEVICE_NOT_FOUND";
+        return tinytc_status_cl_device_not_found;
     case CL_DEVICE_NOT_AVAILABLE:
-        return "CL_DEVICE_NOT_AVAILABLE";
+        return tinytc_status_cl_device_not_available;
     case CL_DEVICE_PARTITION_FAILED:
-        return "CL_DEVICE_PARTITION_FAILED";
+        return tinytc_status_cl_device_partition_failed;
     case CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST:
-        return "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST";
+        return tinytc_status_cl_exec_status_error_for_events_in_wait_list;
     case CL_IMAGE_FORMAT_MISMATCH:
-        return "CL_IMAGE_FORMAT_MISMATCH";
+        return tinytc_status_cl_image_format_mismatch;
     case CL_IMAGE_FORMAT_NOT_SUPPORTED:
-        return "CL_IMAGE_FORMAT_NOT_SUPPORTED";
+        return tinytc_status_cl_image_format_not_supported;
     case CL_INVALID_ARG_INDEX:
-        return "CL_INVALID_ARG_INDEX";
+        return tinytc_status_cl_invalid_arg_index;
     case CL_INVALID_ARG_SIZE:
-        return "CL_INVALID_ARG_SIZE";
+        return tinytc_status_cl_invalid_arg_size;
     case CL_INVALID_ARG_VALUE:
-        return "CL_INVALID_ARG_VALUE";
+        return tinytc_status_cl_invalid_arg_value;
     case CL_INVALID_BINARY:
-        return "CL_INVALID_BINARY";
+        return tinytc_status_cl_invalid_binary;
     case CL_INVALID_BUFFER_SIZE:
-        return "CL_INVALID_BUFFER_SIZE";
+        return tinytc_status_cl_invalid_buffer_size;
     case CL_INVALID_BUILD_OPTIONS:
-        return "CL_INVALID_BUILD_OPTIONS";
+        return tinytc_status_cl_invalid_build_options;
     case CL_INVALID_COMMAND_QUEUE:
-        return "CL_INVALID_COMMAND_QUEUE";
+        return tinytc_status_cl_invalid_command_queue;
     case CL_INVALID_COMPILER_OPTIONS:
-        return "CL_INVALID_COMPILER_OPTIONS";
+        return tinytc_status_cl_invalid_compiler_options;
     case CL_INVALID_CONTEXT:
-        return "CL_INVALID_CONTEXT";
+        return tinytc_status_cl_invalid_context;
     case CL_INVALID_DEVICE:
-        return "CL_INVALID_DEVICE";
+        return tinytc_status_cl_invalid_device;
     case CL_INVALID_DEVICE_PARTITION_COUNT:
-        return "CL_INVALID_DEVICE_PARTITION_COUNT";
+        return tinytc_status_cl_invalid_device_partition_count;
     case CL_INVALID_DEVICE_QUEUE:
-        return "CL_INVALID_DEVICE_QUEUE";
+        return tinytc_status_cl_invalid_device_queue;
     case CL_INVALID_DEVICE_TYPE:
-        return "CL_INVALID_DEVICE_TYPE";
+        return tinytc_status_cl_invalid_device_type;
     case CL_INVALID_EVENT:
-        return "CL_INVALID_EVENT";
+        return tinytc_status_cl_invalid_event;
     case CL_INVALID_EVENT_WAIT_LIST:
-        return "CL_INVALID_EVENT_WAIT_LIST";
+        return tinytc_status_cl_invalid_event_wait_list;
     case CL_INVALID_GLOBAL_OFFSET:
-        return "CL_INVALID_GLOBAL_OFFSET";
+        return tinytc_status_cl_invalid_global_offset;
     case CL_INVALID_GLOBAL_WORK_SIZE:
-        return "CL_INVALID_GLOBAL_WORK_SIZE";
+        return tinytc_status_cl_invalid_global_work_size;
     case CL_INVALID_HOST_PTR:
-        return "CL_INVALID_HOST_PTR";
+        return tinytc_status_cl_invalid_host_ptr;
     case CL_INVALID_IMAGE_DESCRIPTOR:
-        return "CL_INVALID_IMAGE_DESCRIPTOR";
+        return tinytc_status_cl_invalid_image_descriptor;
     case CL_INVALID_IMAGE_FORMAT_DESCRIPTOR:
-        return "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR";
+        return tinytc_status_cl_invalid_image_format_descriptor;
     case CL_INVALID_IMAGE_SIZE:
-        return "CL_INVALID_IMAGE_SIZE";
+        return tinytc_status_cl_invalid_image_size;
     case CL_INVALID_KERNEL:
-        return "CL_INVALID_KERNEL";
+        return tinytc_status_cl_invalid_kernel;
     case CL_INVALID_KERNEL_ARGS:
-        return "CL_INVALID_KERNEL_ARGS";
+        return tinytc_status_cl_invalid_kernel_args;
     case CL_INVALID_KERNEL_DEFINITION:
-        return "CL_INVALID_KERNEL_DEFINITION";
+        return tinytc_status_cl_invalid_kernel_definition;
     case CL_INVALID_KERNEL_NAME:
-        return "CL_INVALID_KERNEL_NAME";
+        return tinytc_status_cl_invalid_kernel_name;
     case CL_INVALID_LINKER_OPTIONS:
-        return "CL_INVALID_LINKER_OPTIONS";
+        return tinytc_status_cl_invalid_linker_options;
     case CL_INVALID_MEM_OBJECT:
-        return "CL_INVALID_MEM_OBJECT";
+        return tinytc_status_cl_invalid_mem_object;
     case CL_INVALID_OPERATION:
-        return "CL_INVALID_OPERATION";
+        return tinytc_status_cl_invalid_operation;
     case CL_INVALID_PIPE_SIZE:
-        return "CL_INVALID_PIPE_SIZE";
+        return tinytc_status_cl_invalid_pipe_size;
     case CL_INVALID_PLATFORM:
-        return "CL_INVALID_PLATFORM";
+        return tinytc_status_cl_invalid_platform;
     case CL_INVALID_PROGRAM:
-        return "CL_INVALID_PROGRAM";
+        return tinytc_status_cl_invalid_program;
     case CL_INVALID_PROGRAM_EXECUTABLE:
-        return "CL_INVALID_PROGRAM_EXECUTABLE";
+        return tinytc_status_cl_invalid_program_executable;
     case CL_INVALID_PROPERTY:
-        return "CL_INVALID_PROPERTY";
+        return tinytc_status_cl_invalid_property;
     case CL_INVALID_QUEUE_PROPERTIES:
-        return "CL_INVALID_QUEUE_PROPERTIES";
+        return tinytc_status_cl_invalid_queue_properties;
     case CL_INVALID_SAMPLER:
-        return "CL_INVALID_SAMPLER";
+        return tinytc_status_cl_invalid_sampler;
     case CL_INVALID_SPEC_ID:
-        return "CL_INVALID_SPEC_ID";
+        return tinytc_status_cl_invalid_spec_id;
     case CL_INVALID_VALUE:
-        return "CL_INVALID_VALUE";
+        return tinytc_status_cl_invalid_value;
     case CL_INVALID_WORK_DIMENSION:
-        return "CL_INVALID_WORK_DIMENSION";
+        return tinytc_status_cl_invalid_work_dimension;
     case CL_INVALID_WORK_GROUP_SIZE:
-        return "CL_INVALID_WORK_GROUP_SIZE";
+        return tinytc_status_cl_invalid_work_group_size;
     case CL_INVALID_WORK_ITEM_SIZE:
-        return "CL_INVALID_WORK_ITEM_SIZE";
+        return tinytc_status_cl_invalid_work_item_size;
     case CL_KERNEL_ARG_INFO_NOT_AVAILABLE:
-        return "CL_KERNEL_ARG_INFO_NOT_AVAILABLE";
+        return tinytc_status_cl_kernel_arg_info_not_available;
     case CL_LINK_PROGRAM_FAILURE:
-        return "CL_LINK_PROGRAM_FAILURE";
+        return tinytc_status_cl_link_program_failure;
     case CL_LINKER_NOT_AVAILABLE:
-        return "CL_LINKER_NOT_AVAILABLE";
+        return tinytc_status_cl_linker_not_available;
     case CL_MAP_FAILURE:
-        return "CL_MAP_FAILURE";
+        return tinytc_status_cl_map_failure;
     case CL_MEM_COPY_OVERLAP:
-        return "CL_MEM_COPY_OVERLAP";
+        return tinytc_status_cl_mem_copy_overlap;
     case CL_MEM_OBJECT_ALLOCATION_FAILURE:
-        return "CL_MEM_OBJECT_ALLOCATION_FAILURE";
+        return tinytc_status_cl_mem_object_allocation_failure;
     case CL_MISALIGNED_SUB_BUFFER_OFFSET:
-        return "CL_MISALIGNED_SUB_BUFFER_OFFSET";
+        return tinytc_status_cl_misaligned_sub_buffer_offset;
     case CL_OUT_OF_HOST_MEMORY:
-        return "CL_OUT_OF_HOST_MEMORY";
+        return tinytc_status_cl_out_of_host_memory;
     case CL_OUT_OF_RESOURCES:
-        return "CL_OUT_OF_RESOURCES";
+        return tinytc_status_cl_out_of_resources;
     case CL_MAX_SIZE_RESTRICTION_EXCEEDED:
-        return "CL_MAX_SIZE_RESTRICTION_EXCEEDED";
+        return tinytc_status_cl_max_size_restriction_exceeded;
     case CL_PROFILING_INFO_NOT_AVAILABLE:
-        return "CL_PROFILING_INFO_NOT_AVAILABLE";
-    default:
-        return "unknown status code";
+        return tinytc_status_cl_profiling_info_not_available;
     }
+    return tinytc_status_unknown;
 }
-
-} // namespace tinytc
+}

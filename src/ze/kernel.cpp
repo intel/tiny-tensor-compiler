@@ -2,21 +2,22 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "tinytc/tinytc.hpp"
-#include "tinytc/tinytc_ze.hpp"
+#include "tinytc/tinytc.h"
+#include "tinytc/tinytc_ze.h"
 
 #include <cstdint>
 #include <cstdio>
+#include <level_zero/ze_api.h>
 #include <stdexcept>
 #include <string>
 
 extern "C" {
 
-ze_result_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_handle_t context,
-                                    ze_device_handle_t device, tinytc_binary_t bin,
-                                    ze_module_build_log_handle_t *build_log) {
+tinytc_status_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_handle_t context,
+                                        ze_device_handle_t device, tinytc_binary_t bin,
+                                        ze_module_build_log_handle_t *build_log) {
     if (bin == nullptr) {
-        return ZE_RESULT_ERROR_INVALID_NULL_HANDLE;
+        return tinytc_status_invalid_arguments;
     }
     auto const zformat = [](tinytc_bundle_format_t format) -> ze_module_format_t {
         if (format == tinytc_bundle_format_native) {
@@ -28,29 +29,24 @@ ze_result_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_handle_t
     tinytc_bundle_format_t format;
     uint64_t data_size;
     uint8_t const *data;
-    if (auto status = tinytc_binary_get_raw(bin, &format, &data_size, &data);
-        status != tinytc_status_success) {
-        return ZE_RESULT_ERROR_INVALID_ARGUMENT;
-    }
+    TINYTC_CHECK(tinytc_binary_get_raw(bin, &format, &data_size, &data));
     ze_module_desc_t module_desc = {
         ZE_STRUCTURE_TYPE_MODULE_DESC, nullptr, zformat(format), data_size, data, nullptr, nullptr};
 
     uint32_t core_features;
-    if (auto status = tinytc_binary_get_core_features(bin, &core_features);
-        status != tinytc_status_success) {
-        return ZE_RESULT_ERROR_INVALID_ARGUMENT;
-    }
+    TINYTC_CHECK(tinytc_binary_get_core_features(bin, &core_features));
 
     if (core_features & static_cast<std::uint32_t>(tinytc_core_feature_flag_large_register_file)) {
         module_desc.pBuildFlags = tinytc::large_register_file_compiler_option_ze;
     }
-    return zeModuleCreate(context, device, &module_desc, mod, build_log);
+    TINYTC_ZE_CHECK(zeModuleCreate(context, device, &module_desc, mod, build_log));
+    return tinytc_status_success;
 }
 
-ze_result_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x, uint32_t *y,
-                                     uint32_t *z) {
+tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x, uint32_t *y,
+                                         uint32_t *z) {
     if (x == nullptr || y == nullptr || z == nullptr) {
-        return ZE_RESULT_ERROR_INVALID_NULL_POINTER;
+        return tinytc_status_invalid_arguments;
     }
     auto props = ze_kernel_properties_t{};
     props.stype = ZE_STRUCTURE_TYPE_KERNEL_PROPERTIES;
@@ -59,7 +55,7 @@ ze_result_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x, uin
     *x = props.requiredGroupSizeX;
     *y = props.requiredGroupSizeY;
     *z = props.requiredGroupSizeZ;
-    return status;
+    return tinytc_ze_convert_status(status);
 }
 
 ze_group_count_t tinytc_ze_get_group_count(uint32_t howmany) {
