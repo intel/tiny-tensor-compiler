@@ -53,8 +53,8 @@ class prototype : public clir::visitable<prototype, function_node> {
 class function : public clir::visitable<function, function_node> {
   public:
     inline function(func prototype, region body, location const &lc = {})
-        : prototype_(std::move(prototype)),
-          body_(std::move(body)), work_group_size_{0, 0}, subgroup_size_{0} {
+        : prototype_(std::move(prototype)), body_(std::move(body)), work_group_size_{0, 0},
+          subgroup_size_{0} {
         loc(lc);
     }
 

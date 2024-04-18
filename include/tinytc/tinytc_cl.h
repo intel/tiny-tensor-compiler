@@ -19,7 +19,7 @@ extern "C" {
 
 TINYTC_EXPORT tinytc_status_t tinytc_cl_convert_status(cl_int status);
 
-#define TINYTC_CL_CHECK_STATUS(X)                                                                         \
+#define TINYTC_CL_CHECK_STATUS(X)                                                                  \
     do {                                                                                           \
         cl_int stat = X;                                                                           \
         if (stat != CL_SUCCESS) {                                                                  \

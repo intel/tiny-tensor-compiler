@@ -159,8 +159,8 @@ class sycl_argument_handler {
  */
 class sycl_runtime {
   public:
-    using context_t = ::sycl::context; ///< Context type
-    using device_t = ::sycl::device;   ///< Device type
+    using context_t = ::sycl::context;                           ///< Context type
+    using device_t = ::sycl::device;                             ///< Device type
     using kernel_bundle_t =
         ::sycl::kernel_bundle<::sycl::bundle_state::executable>; ///< Kernel bundle type
     using kernel_t = ::sycl::kernel;                             ///< Kernel type
@@ -302,7 +302,7 @@ class sycl_runtime {
 };
 
 tensor_kernel_bundle(binary const &bin, sycl::context ctx, sycl::device dev)
-    ->tensor_kernel_bundle<sycl_runtime>;
+    -> tensor_kernel_bundle<sycl_runtime>;
 
 } // namespace tinytc
 

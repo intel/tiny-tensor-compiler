@@ -110,8 +110,8 @@ class level_zero_argument_handler {
 class level_zero_runtime {
   public:
     struct work_group_size_dummy {};
-    using context_t = ze_context_handle_t; ///< Context handle type
-    using device_t = ze_device_handle_t;   ///< Device handle type
+    using context_t = ze_context_handle_t;                  ///< Context handle type
+    using device_t = ze_device_handle_t;                    ///< Device handle type
     using kernel_bundle_t =
         unique_handle<ze_module_handle_t>;                  ///< Wrapped kernel bundle handle type
     using kernel_t = unique_handle<ze_kernel_handle_t>;     ///< Wrapped kernel handle type
@@ -210,7 +210,7 @@ class level_zero_runtime {
 };
 
 tensor_kernel_bundle(binary const &bin, ze_context_handle_t ctx, ze_device_handle_t dev)
-    ->tensor_kernel_bundle<level_zero_runtime>;
+    -> tensor_kernel_bundle<level_zero_runtime>;
 
 } // namespace tinytc
 

@@ -78,8 +78,8 @@ template <> struct shared_handle_traits<cl_event> {
  * @tparam T value type
  */
 template <typename T>
-concept pointer_kernel_argument = std::is_pointer_v<std::decay_t<T>> && !
-std::is_same_v<std::decay_t<T>, cl_mem>;
+concept pointer_kernel_argument =
+    std::is_pointer_v<std::decay_t<T>> && !std::is_same_v<std::decay_t<T>, cl_mem>;
 
 /**
  * @brief Check whether T is a regular (non-pointer) argument
@@ -87,8 +87,7 @@ std::is_same_v<std::decay_t<T>, cl_mem>;
  * @tparam T value type
  */
 template <typename T>
-concept regular_kernel_argument = !
-pointer_kernel_argument<T>;
+concept regular_kernel_argument = !pointer_kernel_argument<T>;
 
 /**
  * @brief Wrapper for setting kernel arguments
@@ -290,7 +289,7 @@ class opencl_runtime {
 };
 
 tensor_kernel_bundle(binary const &bin, cl_context ctx, cl_device_id dev)
-    ->tensor_kernel_bundle<opencl_runtime>;
+    -> tensor_kernel_bundle<opencl_runtime>;
 
 } // namespace tinytc
 
