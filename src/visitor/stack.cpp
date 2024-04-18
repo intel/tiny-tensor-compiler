@@ -6,7 +6,6 @@
 #include "node/data_type_node.hpp"
 #include "tinytc/types.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <vector>

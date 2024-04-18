@@ -35,7 +35,6 @@
     #include "util.hpp"
 
     #include <clir/visit.hpp>
-    #include <clir/handle.hpp>
 
     #include <array>
     #include <cstdint>

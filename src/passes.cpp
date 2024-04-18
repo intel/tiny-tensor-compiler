@@ -18,7 +18,6 @@
 #include "visitor/stack.hpp"
 #include "visitor/work_group_size.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 using clir::visit;

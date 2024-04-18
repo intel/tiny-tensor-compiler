@@ -4,7 +4,6 @@
 #include "visitor/dump_ir.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <array>
@@ -59,7 +58,13 @@ void ir_dumper::operator()(int_imm const &v) {
         os_ << v.value();
     }
 }
-void ir_dumper::operator()(val const &v) { os_ << "%" << v.name(); }
+void ir_dumper::operator()(val const &v) {
+    os_ << "%" << v.name();
+    auto const slot = tracker_.get_slot(v);
+    if (slot >= 0) {
+        os_ << slot;
+    }
+}
 
 /* Inst nodes */
 void ir_dumper::dump_blas_a2(blas_a2_inst const &g) {
@@ -340,7 +345,7 @@ void ir_dumper::operator()(prototype const &p) {
     do_with_infix(
         p.args().begin(), p.args().end(),
         [this](auto const &a) {
-            os_ << "%" << a->name();
+            visit(*this, *a);
             os_ << ": ";
             visit(*this, *a->ty());
         },
@@ -365,6 +370,7 @@ void ir_dumper::operator()(function const &fn) {
 
 /* Program nodes */
 void ir_dumper::operator()(program const &p) {
+    visit(tracker_, p);
     for (auto const &decl : p.declarations()) {
         visit(*this, *decl);
     }
