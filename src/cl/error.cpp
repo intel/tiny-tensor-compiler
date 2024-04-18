@@ -7,6 +7,8 @@
 extern "C" {
 tinytc_status_t tinytc_cl_convert_status(cl_int status) {
     switch (status) {
+    case CL_SUCCESS:
+        return tinytc_status_success;
     case CL_BUILD_PROGRAM_FAILURE:
         return tinytc_status_cl_build_program_failure;
     case CL_COMPILE_PROGRAM_FAILURE:
