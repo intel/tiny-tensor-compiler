@@ -23,7 +23,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_prog_t *prg, tinytc_
 
     std::int32_t source_id = 0;
     if (ctx) {
-        TINYTC_CHECK(
+        TINYTC_CHECK_STATUS(
             tinytc_source_context_add_source(ctx, "tall and skinny recipe", "", &source_id));
     }
 
@@ -77,11 +77,14 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_prog_t *prg, tinytc_
             };
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(ty_, "alpha");
-                auto A = fb.argument(create_memref(ty_, {dynamic, K}, {1, dynamic}), "A");
-                auto B = fb.argument(create_memref(ty_, {K, N}, {1, dynamic}), "B");
-                auto beta_arg = fb.argument(ty_, "beta");
-                auto C = fb.argument(create_memref(ty_, {dynamic, N}, {1, dynamic}), "C");
+                auto alpha = fb.argument(ty_, "alpha", my_loc());
+                auto A = fb.argument(create_memref(ty_, {dynamic, K}, {1, dynamic}, my_loc()), "A",
+                                     my_loc());
+                auto B =
+                    fb.argument(create_memref(ty_, {K, N}, {1, dynamic}, my_loc()), "B", my_loc());
+                auto beta_arg = fb.argument(ty_, "beta", my_loc());
+                auto C = fb.argument(create_memref(ty_, {dynamic, N}, {1, dynamic}, my_loc()), "C",
+                                     my_loc());
                 fb.subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);

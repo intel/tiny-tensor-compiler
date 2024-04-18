@@ -19,7 +19,7 @@ extern "C" {
 
 TINYTC_EXPORT tinytc_status_t tinytc_ze_convert_status(ze_result_t result);
 
-#define TINYTC_ZE_CHECK(X)                                                                         \
+#define TINYTC_ZE_CHECK_STATUS(X)                                                                  \
     do {                                                                                           \
         ze_result_t result = X;                                                                    \
         if (result != ZE_RESULT_SUCCESS) {                                                         \

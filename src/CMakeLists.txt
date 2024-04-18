@@ -36,7 +36,7 @@ set(SOURCES
     passes.cpp
     precision_helper.cpp
     prog.cpp
-    #recipe/small_gemm_batched.cpp
+    recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
     region.cpp
     required_extensions.cpp
@@ -62,7 +62,6 @@ set(RE2C_SOURCES
 BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
              DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
 set(PUBLIC_HEADERS
-    recipe/small_gemm_batched.hpp
     tinytc.h
     tinytc.hpp
     types.h
@@ -72,14 +71,17 @@ list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
 add_flag_if_available_to_source_files("${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
 
-add_library(tinytc ${SOURCES} ${BISON_parser_OUTPUTS})
-add_library(tinytc::tinytc ALIAS tinytc)
-add_re2c_to_target(TARGET tinytc SOURCES ${RE2C_SOURCES})
-
-set_common_options(tinytc)
-target_link_libraries(tinytc PUBLIC clir::clir ocloc::ocloc)
-target_compile_definitions(tinytc PUBLIC
+add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
+add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
+set_common_options(tinytc-objects)
+target_link_libraries(tinytc-objects PUBLIC clir::clir ocloc::ocloc)
+target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
+
+add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
+add_library(tinytc::tinytc ALIAS tinytc)
+target_link_libraries(tinytc PUBLIC clir::clir ocloc::ocloc)
+set_common_options(tinytc)
 
 # Generate export header
 set(tinytc_export_header "${CMAKE_BINARY_DIR}/include/tinytc/export.h")
@@ -93,11 +95,11 @@ configure_file(${tinytc_version_header_in} ${tinytc_version_header})
 
 # include directories
 
-target_include_directories(tinytc PRIVATE
+target_include_directories(tinytc-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
 )
-target_include_directories(tinytc PUBLIC
+target_include_directories(tinytc-objects PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
     "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/include>"
 )

@@ -4,8 +4,8 @@
 #ifndef CL_TEST_RUNTIME_20240314_HPP
 #define CL_TEST_RUNTIME_20240314_HPP
 
-#include <tinytc/tinytc-opencl.hpp>
 #include <tinytc/tinytc.hpp>
+#include <tinytc/tinytc_cl.hpp>
 
 #include <CL/cl.h>
 #include <memory>
@@ -33,7 +33,7 @@ class opencl_test_runtime {
     void memcpy_h2d(mem_t dst, void const *src, std::size_t bytes);
     void memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes);
 
-    auto get_core_info() const -> std::shared_ptr<tinytc::core_info>;
+    auto get_core_info() const -> tinytc::core_info;
     auto get_device() -> device_t;
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;

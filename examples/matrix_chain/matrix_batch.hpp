@@ -29,13 +29,13 @@ template <typename T> class matrix_batch {
     inline void fill(T const &v) { data_.fill(v); }
     inline void random() { data_.random(); }
 
-    inline tinytc::ir::data_type type(bool include_batch_dim = true) {
-        constexpr auto real_t = tinytc::ir::to_scalar_type_v<T>;
+    inline tinytc::data_type type(bool include_batch_dim = true) {
+        constexpr auto real_t = tinytc::to_scalar_type_v<T>;
         if (include_batch_dim && howmany() > 1) {
-            return tinytc::ir::memref_type(real_t, {nrows(), ncols(), tinytc::ir::dynamic},
-                                           {1, ld(), stride()});
+            return tinytc::create_memref(real_t, {nrows(), ncols(), tinytc::dynamic},
+                                         {1, ld(), stride()});
         }
-        return tinytc::ir::memref_type(real_t, {nrows(), ncols()}, {1, ld()});
+        return tinytc::create_memref(real_t, {nrows(), ncols()}, {1, ld()});
     }
 
   private:

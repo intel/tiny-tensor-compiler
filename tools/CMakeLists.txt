@@ -2,4 +2,3 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 add_subdirectory(offline_compiler)
-add_subdirectory(optimizer)

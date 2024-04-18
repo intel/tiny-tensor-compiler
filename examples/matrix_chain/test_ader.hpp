@@ -9,7 +9,7 @@
 #include "util.hpp"
 
 #include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc-sycl.hpp>
+#include <tinytc/tinytc_sycl.hpp>
 
 #include <sycl/sycl.hpp>
 
@@ -20,7 +20,7 @@
 template <typename T> class test_ader : public test {
   public:
     test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
-              ::sycl::queue q);
+              sycl::queue q);
     ~test_ader() = default;
     test_ader(test_ader<T> const &other) = delete;
     test_ader(test_ader<T> &&other) = default;
@@ -40,15 +40,14 @@ template <typename T> class test_ader : public test {
     inline std::int64_t Bd(std::int64_t N) { return num_basis(N, dim); }
     inline std::int64_t Bd_aligned() { return aligned<T>(Bd(N_), alignment_); }
     inline std::int64_t Bd_aligned(std::int64_t N) { return aligned<T>(Bd(N), alignment_); }
-    auto get_core_info() -> std::shared_ptr<tinytc::core_info>;
     std::vector<matrix_batch<T>> make_dQ();
     auto make_optimized_kernel() -> tinytc::tensor_kernel_bundle<tinytc::sycl_runtime>;
     sycl::event taylor_sum(matrix_batch<T> &I, matrix_batch<T> &dQ, T factor,
                            std::vector<sycl::event> const &dep_events = {});
 
     std::int64_t N_, P_, howmany_, alignment_;
-    ::sycl::queue q_;
-    std::shared_ptr<tinytc::core_info> dev_info_;
+    sycl::queue q_;
+    tinytc::core_info dev_info_;
     matrix_batch<T> I_ref_, I_opt_, tmp_;
     std::vector<matrix_batch<T>> A_, K_, dQ_;
     std::vector<tinytc::recipe::small_gemm_batched<T, tinytc::sycl_runtime>> g_;

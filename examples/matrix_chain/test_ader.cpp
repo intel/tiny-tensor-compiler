@@ -16,7 +16,7 @@ template <typename T>
 test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
                         queue q)
     : N_(N), P_(P), howmany_(howmany), alignment_(alignment), q_(std::move(q)),
-      dev_info_(get_core_info()), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
+      dev_info_(create_core_info(q_.get_device())), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
       I_opt_(Bd(), P_, Bd_aligned(), howmany_, q_),
       tmp_(Bd(), P_, Bd_aligned(N_ - 1), howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
@@ -39,19 +39,12 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
         g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-            ir::transpose::N, ir::transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
-            dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_, dev_info_, q_.get_context(),
-            q_.get_device()));
+            dev_info_, transpose::N, transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
+            dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_, q_.get_context(), q_.get_device()));
         g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-            ir::transpose::N, ir::transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(), A_[0].stride(),
-            dQ_[n].ld(), dQ_[n].stride(), dev_info_, q_.get_context(), q_.get_device()));
+            dev_info_, transpose::N, transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
+            A_[0].stride(), dQ_[n].ld(), dQ_[n].stride(), q_.get_context(), q_.get_device()));
     }
-}
-
-template <typename T> auto test_ader<T>::get_core_info() -> std::shared_ptr<tinytc::core_info> {
-    auto dev_info = ::tinytc::get_core_info(q_.get_device());
-    // dev_info->set_core_feature(core_feature_flag::large_register_file);
-    return dev_info;
 }
 
 template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
@@ -64,13 +57,13 @@ template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
 
 template <typename T>
 auto test_ader<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtime> {
-    constexpr auto real_t = ir::to_scalar_type_v<T>;
-    auto opt_kernel = [&](ir::function_builder &fb) {
+    constexpr auto real_t = to_scalar_type_v<T>;
+    auto opt_kernel = [&](function_builder &fb) {
         T dt = 1.01;
         T num = T(1.0);
         int denom = 1;
-        std::array<ir::value, dim> A;
-        std::array<ir::value, dim> K;
+        std::array<value, dim> A;
+        std::array<value, dim> K;
         for (std::size_t i = 0; i < dim; ++i) {
             A[i] = fb.argument(A_[i].type(), "A");
         }
@@ -79,48 +72,40 @@ auto test_ader<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtime>
         }
         auto Q = fb.argument(dQ_[0].type(), "dQ");
         auto I = fb.argument(I_opt_.type(), "I");
-        fb.body([&](ir::region_builder &bb) {
-            auto gid = bb.create_group_id();
-            auto dq =
-                bb.create_subview(Q, {ir::slice{0, ir::dynamic}, ir::slice{0, ir::dynamic}, gid});
+        fb.body([&](region_builder &bb) {
+            auto gid = bb.add(create_group_id());
+            auto dq = bb.add(create_subview(Q, {0, 0, gid}, {dynamic, dynamic, nullptr}));
             for (std::size_t d = 0; d < dim; ++d) {
-                A[d] = bb.create_subview(
-                    A[d], {ir::slice{0, ir::dynamic}, ir::slice{0, ir::dynamic}, gid});
+                A[d] = bb.add(create_subview(A[d], {0, 0, gid}, {dynamic, dynamic, nullptr}));
             }
-            auto i =
-                bb.create_subview(I, {ir::slice{0, ir::dynamic}, ir::slice{0, ir::dynamic}, gid});
-            bb.create_axpby(ir::transpose::N, num / denom, dq, T(1.0), i);
+            auto i = bb.add(create_subview(I, {0, 0, gid}, {dynamic, dynamic, nullptr}));
+            bb.add(create_axpby(transpose::N, false, num / denom, dq, T(1.0), i));
             for (std::int64_t n = 1; n <= N_; ++n) {
                 num *= dt;
                 denom *= n + 1;
                 auto bn = Bd_aligned(N_ - n);
-                auto dq_next = bb.create_alloca(dQ_[n].type(false), "dQ");
-                auto dq_nextv = bb.create_subview(dq_next, {ir::slice{0, bn}, ir::slice{0, P_}});
-                auto tmp = bb.create_alloca(ir::memref_type(real_t, {bn, P_}, {1, bn}), "tmp");
+                auto dq_next = bb.add(create_alloca(dQ_[n].type(false)));
+                auto dq_nextv = bb.add(create_subview(dq_next, {0, 0}, {bn, P_}));
+                auto tmp = bb.add(create_alloca(create_memref(real_t, {bn, P_}, {1, bn})));
                 for (std::size_t d = 0; d < dim; ++d) {
-                    auto Kv =
-                        bb.create_subview(K[d], {ir::slice{0, bn}, ir::slice{0, Bd(N_ - n + 1)}});
-                    bb.create_gemm(ir::transpose::N, ir::transpose::N, T(1.0), Kv, dq, T(0.0), tmp);
-                    bb.create_gemm(ir::transpose::N, ir::transpose::N, T(1.0), tmp, A[d],
-                                   T(d > 0 ? 1.0 : 0.0), dq_nextv);
+                    auto Kv = bb.add(create_subview(K[d], {0, 0}, {bn, Bd(N_ - n + 1)}));
+                    bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), Kv, dq, T(0.0),
+                                       tmp));
+                    bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), tmp, A[d],
+                                       T(d > 0 ? 1.0 : 0.0), dq_nextv));
                 }
-                auto iv = bb.create_subview(i, {ir::slice{0, Bd(N_ - n)}, ir::slice{0, P_}});
-                bb.create_axpby(ir::transpose::N, num / denom, dq_next, T(1.0), iv);
+                auto iv = bb.add(create_subview(i, {0, 0}, {Bd(N_ - n), P_}));
+                bb.add(create_axpby(transpose::N, false, num / denom, dq_next, T(1.0), iv));
                 dq = dq_next;
             }
         });
     };
-    auto pb = ir::program_builder{};
+    auto pb = program_builder{};
     pb.create("ader_kernel", opt_kernel);
 
-    auto bin = optimize_and_make_binary(pb.get_product(), bundle_format::native, dev_info_,
-                                        [](ir::location const &loc, std::string const &what) {
-                                            std::cerr << loc << ": " << what << std::endl;
-                                        });
-    if (!bin) {
-        throw std::runtime_error("Could not compile ader kernel");
-    }
-    return tensor_kernel_bundle(std::move(bin), q_.get_context(), q_.get_device());
+    return tensor_kernel_bundle(
+        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native), q_.get_context(),
+        q_.get_device());
 }
 
 template <typename T>
