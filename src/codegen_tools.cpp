@@ -11,7 +11,6 @@
 #include <clir/builtin_function.hpp>
 #include <clir/data_type.hpp>
 #include <clir/expr.hpp>
-#include <clir/handle.hpp>
 #include <clir/internal/expr_node.hpp>
 #include <clir/var.hpp>
 #include <clir/visit.hpp>

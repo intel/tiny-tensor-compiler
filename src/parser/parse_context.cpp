@@ -6,8 +6,6 @@
 #include "node/value_node.hpp"
 #include "parser/parser_impl.hpp"
 
-#include <clir/handle.hpp>
-
 #include <sstream>
 #include <utility>
 

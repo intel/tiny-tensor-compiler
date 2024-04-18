@@ -3,7 +3,6 @@
 
 #include "visitor/alias_analysis.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <vector>

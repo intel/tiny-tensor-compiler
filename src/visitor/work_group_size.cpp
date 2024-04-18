@@ -8,7 +8,6 @@
 #include "node/value_node.hpp"
 #include "tinytc/types.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <algorithm>

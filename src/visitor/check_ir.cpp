@@ -4,7 +4,6 @@
 #include "visitor/check_ir.hpp"
 #include "error.hpp"
 
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <functional>

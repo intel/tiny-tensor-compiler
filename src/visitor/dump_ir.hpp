@@ -10,10 +10,12 @@
 #include "node/program_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "visitor/slot_tracker.hpp"
 
 #include <cstdint>
 #include <ostream>
 #include <string>
+#include <unordered_map>
 
 namespace tinytc {
 
@@ -85,6 +87,8 @@ class ir_dumper {
     inline auto indent() { return std::string(2 * lvl_, ' '); }
     std::ostream &os_;
     int lvl_ = 0;
+
+    slot_tracker tracker_;
 };
 
 } // namespace tinytc

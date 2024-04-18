@@ -52,6 +52,7 @@ set(SOURCES
     visitor/lifetime_analysis.cpp
     visitor/metadata.cpp
     visitor/opencl_ast.cpp
+    visitor/slot_tracker.cpp
     visitor/stack.cpp
     visitor/work_group_size.cpp
 )

@@ -9,7 +9,6 @@
 #include "util.hpp"
 
 #include <clir/builtin_type.hpp>
-#include <clir/handle.hpp>
 #include <clir/visit.hpp>
 
 #include <algorithm>
