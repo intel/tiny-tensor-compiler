@@ -9,7 +9,6 @@
 
 #include <clir/prog.hpp>
 #include <iosfwd>
-#include <memory>
 #include <string>
 #include <unordered_map>
 
@@ -17,38 +16,34 @@ struct tinytc_core_info;
 
 namespace tinytc {
 
-class data_type;
-class func;
-class prog;
-
 //! Check whether some IR rules are respected
-void check_ir(prog p);
+void check_ir(tinytc_prog const &p);
 //! Dump IR to ostream
-void dump_ir(std::ostream &os, func f);
+void dump_ir(std::ostream &os, tinytc_func const &f);
 //! Dump IR to ostream
-void dump_ir(std::ostream &os, prog p);
+void dump_ir(std::ostream &os, tinytc_prog const &p);
 //! Generate OpenCL AST
-clir::prog generate_opencl_ast(prog p, tinytc_core_info const &info);
+clir::prog generate_opencl_ast(tinytc_prog const &p, tinytc_core_info const &info);
 //! Get kernel metadata
-auto get_metadata(prog p) -> std::unordered_map<std::string, kernel_metadata>;
+auto get_metadata(tinytc_prog const &p) -> std::unordered_map<std::string, kernel_metadata>;
 //! Insert barriers where necessary
-void insert_barriers(func f);
+void insert_barriers(tinytc_func &f);
 //! Insert barriers where necessary
-void insert_barriers(prog p);
+void insert_barriers(tinytc_prog &p);
 //! Insert lifetime stop instructions for set_stack_ptrs pass
-void insert_lifetime_stop_inst(func f);
+void insert_lifetime_stop_inst(tinytc_func &f);
 //! Insert lifetime stop instructions for set_stack_ptrs pass
-void insert_lifetime_stop_inst(prog p);
+void insert_lifetime_stop_inst(tinytc_prog &p);
 //! Check whether data types a and b are equal
-bool is_equal(data_type a, data_type b);
+bool is_equal(tinytc_data_type const &a, tinytc_data_type const &b);
 //! Manage temporary memory requested by alloca
-void set_stack_ptrs(func f);
+void set_stack_ptrs(tinytc_func &f);
 //! Manage temporary memory requested by alloca
-void set_stack_ptrs(prog p);
+void set_stack_ptrs(tinytc_prog &p);
 //! Choose work group and subgroup size heuristically if not given explicitly
-void set_work_group_size(func f, tinytc_core_info const &info);
+void set_work_group_size(tinytc_func &f, tinytc_core_info const &info);
 //! Choose work group and subgroup size heuristically if not given explicitly
-void set_work_group_size(prog p, tinytc_core_info const &info);
+void set_work_group_size(tinytc_prog &p, tinytc_core_info const &info);
 
 } // namespace tinytc
 

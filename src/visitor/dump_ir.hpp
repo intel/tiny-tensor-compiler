@@ -11,6 +11,7 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 
+#include <cstdint>
 #include <ostream>
 #include <string>
 
@@ -21,56 +22,56 @@ class ir_dumper {
     ir_dumper(std::ostream &os);
 
     /* Data type nodes */
-    void operator()(void_data_type &);
-    void operator()(group_data_type &g);
-    void operator()(memref_data_type &m);
-    void operator()(scalar_data_type &s);
+    void operator()(void_data_type const &);
+    void operator()(group_data_type const &g);
+    void operator()(memref_data_type const &m);
+    void operator()(scalar_data_type const &s);
 
     /* Var nodes */
-    void operator()(float_imm &v);
-    void operator()(int_imm &v);
-    void operator()(val &v);
+    void operator()(float_imm const &v);
+    void operator()(int_imm const &v);
+    void operator()(val const &v);
 
     /* Inst nodes */
-    void operator()(alloca_inst &a);
-    void operator()(axpby_inst &a);
-    void operator()(barrier_inst &b);
-    void operator()(binary_op_inst &b);
-    void operator()(cast_inst &c);
-    void operator()(compare_inst &c);
-    void operator()(expand_inst &e);
-    void operator()(fuse_inst &f);
-    void operator()(load_inst &e);
-    void operator()(group_id_inst &g);
-    void operator()(group_size_inst &g);
-    void operator()(lifetime_stop_inst &l);
-    void operator()(gemm_inst &g);
-    void operator()(gemv_inst &g);
-    void operator()(ger_inst &g);
-    void operator()(for_inst &p);
-    void operator()(foreach_inst &p);
-    void operator()(hadamard_inst &g);
-    void operator()(if_inst &in);
-    void operator()(neg_inst &n);
-    void operator()(size_inst &s);
-    void operator()(subview_inst &s);
-    void operator()(store_inst &s);
-    void operator()(sum_inst &s);
-    void operator()(yield_inst &y);
+    void operator()(alloca_inst const &a);
+    void operator()(axpby_inst const &a);
+    void operator()(barrier_inst const &b);
+    void operator()(binary_op_inst const &b);
+    void operator()(cast_inst const &c);
+    void operator()(compare_inst const &c);
+    void operator()(expand_inst const &e);
+    void operator()(fuse_inst const &f);
+    void operator()(load_inst const &e);
+    void operator()(group_id_inst const &g);
+    void operator()(group_size_inst const &g);
+    void operator()(lifetime_stop_inst const &l);
+    void operator()(gemm_inst const &g);
+    void operator()(gemv_inst const &g);
+    void operator()(ger_inst const &g);
+    void operator()(for_inst const &p);
+    void operator()(foreach_inst const &p);
+    void operator()(hadamard_inst const &g);
+    void operator()(if_inst const &in);
+    void operator()(neg_inst const &n);
+    void operator()(size_inst const &s);
+    void operator()(subview_inst const &s);
+    void operator()(store_inst const &s);
+    void operator()(sum_inst const &s);
+    void operator()(yield_inst const &y);
 
     /* Region nodes */
-    void operator()(rgn &b);
+    void operator()(rgn const &b);
 
     /* Func nodes */
-    void operator()(prototype &p);
-    void operator()(function &fn);
+    void operator()(prototype const &p);
+    void operator()(function const &fn);
 
     /* Program nodes */
-    void operator()(program &p);
+    void operator()(program const &p);
 
   private:
-    void dump_blas_a2(blas_a2_inst &g);
-    void dump_blas_a3(blas_a3_inst &g);
+    void dump_blas_a2(blas_a2_inst const &g);
+    void dump_blas_a3(blas_a3_inst const &g);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

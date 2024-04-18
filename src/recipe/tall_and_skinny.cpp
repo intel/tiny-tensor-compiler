@@ -13,11 +13,11 @@
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_binary_t *bin, tinytc_core_info_t info,
+tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_prog_t *prg, tinytc_core_info_t info,
                                                      tinytc_scalar_type_t ty, uint32_t M_block_size,
                                                      uint32_t N, uint32_t K,
                                                      tinytc_source_context_t ctx) {
-    if (bin == nullptr || info == nullptr) {
+    if (prg == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
@@ -97,8 +97,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_binary_t *bin, tinyt
                 "gemm_beta0", [&](function_builder &fb) { kernel(fb, false); }, my_loc());
 
             auto p = pb.get_product(my_loc());
-            CHECK(
-                tinytc_prog_compile_to_binary(bin, p.get(), info, tinytc_bundle_format_spirv, ctx));
+            *prg = p.release();
         },
         ctx, my_loc());
 }

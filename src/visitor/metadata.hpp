@@ -16,11 +16,11 @@ namespace tinytc {
 class metadata {
   public:
     /* Func nodes */
-    void operator()(prototype &p);
-    void operator()(function &fn);
+    void operator()(prototype const &p);
+    void operator()(function const &fn);
 
     /* Program nodes */
-    void operator()(program &p);
+    void operator()(program const &p);
 
     inline auto get_result() const -> std::unordered_map<std::string, kernel_metadata> {
         return metadata_;

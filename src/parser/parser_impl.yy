@@ -50,7 +50,7 @@
             overloaded{[&](int_imm &i) { i.ty(sty); },
                            [&](float_imm &i) { i.ty(sty); },
                            [&](auto &) {
-                               if (!val->ty() || !is_equal(val->ty(), data_type(sty))) {
+                               if (!val->ty() || !is_equal(*val->ty(), *data_type(sty))) {
                                    auto loc = loc1;
                                    loc.end = loc2.end;
                                    throw parser::syntax_error(
@@ -61,7 +61,7 @@
     }
     void check_type(value & val, data_type & ty, location & loc1,
                     location & loc2) {
-        if (!val->ty() || !is_equal(val->ty(), ty)) {
+        if (!val->ty() || !is_equal(*val->ty(), *ty)) {
             auto loc = loc1;
             loc.end = loc2.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -729,7 +729,7 @@ compare_inst:
 
 expand_inst:
     EXPAND var LSQBR INTEGER_CONSTANT[mode] RETURNS expand_shape RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal($var->ty(), $memref_type)) {
+        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -765,7 +765,7 @@ constant_or_dynamic_or_identifier:
 
 fuse_inst:
     FUSE var LSQBR INTEGER_CONSTANT[from] COMMA INTEGER_CONSTANT[to] RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal($var->ty(), $memref_type)) {
+        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -783,7 +783,7 @@ fuse_inst:
 
 load_inst:
     LOAD var LSQBR optional_index_list RSQBR COLON memref_or_group_type {
-        if (!$var->ty() || !is_equal($var->ty(), $memref_or_group_type)) {
+        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_or_group_type)) {
             auto loc = @var;
             loc.end = @memref_or_group_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -825,7 +825,7 @@ index_identifier_or_const:
 
 store_inst:
     STORE var[a] COMMA var[b] LSQBR optional_index_list RSQBR COLON memref_type {
-        if (!$b->ty() || !is_equal($b->ty(), $memref_type)) {
+        if (!$b->ty() || !is_equal(*$b->ty(), *$memref_type)) {
             auto loc = @b;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -897,7 +897,7 @@ neg_inst:
 
 size_inst:
     SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal($var->ty(), $memref_type)) {
+        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -913,7 +913,7 @@ size_inst:
 
 subview_inst:
     SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal($var->ty(), $memref_type)) {
+        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");

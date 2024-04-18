@@ -39,7 +39,7 @@ class dope_vector {
   public:
     enum class type { shape, stride };
     using decl_fun_t = std::function<void(clir::data_type, clir::var, type, std::int64_t)>;
-    static dope_vector from_value(value_node &v, decl_fun_t declare);
+    static dope_vector from_value(value_node const &v, decl_fun_t declare);
 
     inline dope_vector() {}
     inline dope_vector(std::vector<clir::expr> shape, std::vector<clir::expr> stride)
@@ -49,7 +49,7 @@ class dope_vector {
     inline auto stride(std::int64_t i) { return stride_[i]; }
 
   private:
-    static dope_vector from_memref_type(std::string const &prefix, memref_data_type &m,
+    static dope_vector from_memref_type(std::string const &prefix, memref_data_type const &m,
                                         clir::data_type dt, decl_fun_t declare);
     std::vector<clir::expr> shape_, stride_;
 };
@@ -59,59 +59,59 @@ class opencl_ast {
     opencl_ast(::tinytc_core_info const *info);
 
     /* Data type nodes */
-    clir::data_type operator()(void_data_type &);
-    clir::data_type operator()(group_data_type &g);
-    clir::data_type operator()(memref_data_type &m);
-    clir::data_type operator()(scalar_data_type &s);
+    clir::data_type operator()(void_data_type const &);
+    clir::data_type operator()(group_data_type const &g);
+    clir::data_type operator()(memref_data_type const &m);
+    clir::data_type operator()(scalar_data_type const &s);
 
     /* Var nodes */
-    clir::expr operator()(float_imm &v);
-    clir::expr operator()(int_imm &v);
-    clir::expr operator()(val &v);
+    clir::expr operator()(float_imm const &v);
+    clir::expr operator()(int_imm const &v);
+    clir::expr operator()(val const &v);
 
     /* Inst nodes */
-    std::vector<clir::stmt> operator()(alloca_inst &a);
-    std::vector<clir::stmt> operator()(axpby_inst &a);
-    std::vector<clir::stmt> operator()(barrier_inst &b);
-    std::vector<clir::stmt> operator()(binary_op_inst &b);
-    std::vector<clir::stmt> operator()(cast_inst &c);
-    std::vector<clir::stmt> operator()(compare_inst &c);
-    std::vector<clir::stmt> operator()(expand_inst &e);
-    std::vector<clir::stmt> operator()(fuse_inst &f);
-    std::vector<clir::stmt> operator()(load_inst &e);
-    std::vector<clir::stmt> operator()(group_id_inst &g);
-    std::vector<clir::stmt> operator()(group_size_inst &g);
-    std::vector<clir::stmt> operator()(lifetime_stop_inst &l);
-    std::vector<clir::stmt> operator()(gemm_inst &g);
-    std::vector<clir::stmt> operator()(gemv_inst &g);
-    std::vector<clir::stmt> operator()(ger_inst &g);
-    std::vector<clir::stmt> operator()(for_inst &p);
-    std::vector<clir::stmt> operator()(foreach_inst &in);
-    std::vector<clir::stmt> operator()(hadamard_inst &g);
-    std::vector<clir::stmt> operator()(if_inst &in);
-    std::vector<clir::stmt> operator()(neg_inst &n);
-    std::vector<clir::stmt> operator()(size_inst &s);
-    std::vector<clir::stmt> operator()(subview_inst &s);
-    std::vector<clir::stmt> operator()(store_inst &s);
-    std::vector<clir::stmt> operator()(sum_inst &s);
-    std::vector<clir::stmt> operator()(yield_inst &in);
+    std::vector<clir::stmt> operator()(alloca_inst const &a);
+    std::vector<clir::stmt> operator()(axpby_inst const &a);
+    std::vector<clir::stmt> operator()(barrier_inst const &b);
+    std::vector<clir::stmt> operator()(binary_op_inst const &b);
+    std::vector<clir::stmt> operator()(cast_inst const &c);
+    std::vector<clir::stmt> operator()(compare_inst const &c);
+    std::vector<clir::stmt> operator()(expand_inst const &e);
+    std::vector<clir::stmt> operator()(fuse_inst const &f);
+    std::vector<clir::stmt> operator()(load_inst const &e);
+    std::vector<clir::stmt> operator()(group_id_inst const &g);
+    std::vector<clir::stmt> operator()(group_size_inst const &g);
+    std::vector<clir::stmt> operator()(lifetime_stop_inst const &l);
+    std::vector<clir::stmt> operator()(gemm_inst const &g);
+    std::vector<clir::stmt> operator()(gemv_inst const &g);
+    std::vector<clir::stmt> operator()(ger_inst const &g);
+    std::vector<clir::stmt> operator()(for_inst const &p);
+    std::vector<clir::stmt> operator()(foreach_inst const &in);
+    std::vector<clir::stmt> operator()(hadamard_inst const &g);
+    std::vector<clir::stmt> operator()(if_inst const &in);
+    std::vector<clir::stmt> operator()(neg_inst const &n);
+    std::vector<clir::stmt> operator()(size_inst const &s);
+    std::vector<clir::stmt> operator()(subview_inst const &s);
+    std::vector<clir::stmt> operator()(store_inst const &s);
+    std::vector<clir::stmt> operator()(sum_inst const &s);
+    std::vector<clir::stmt> operator()(yield_inst const &in);
 
     /* Region nodes */
-    clir::stmt operator()(rgn &b);
+    clir::stmt operator()(rgn const &b);
 
     /* Func nodes */
-    clir::func operator()(prototype &p);
-    clir::func operator()(function &fn);
+    clir::func operator()(prototype const &p);
+    clir::func operator()(function const &fn);
 
     /* Program nodes */
-    clir::prog operator()(program &p);
+    clir::prog operator()(program const &p);
 
   private:
     auto get_dope_vector(value_node *v) -> dope_vector &;
     void set_dope_vector(value_node *v, dope_vector dv);
-    clir::var declare(value_node &v);
-    memref_data_type *get_memref_type(value_node &v);
-    static scalar_type get_scalar_type(data_type_node &ty);
+    clir::var declare(value_node const &v);
+    auto get_memref_type(value_node const &v) const -> const memref_data_type *;
+    static auto get_scalar_type(data_type_node const &ty) -> scalar_type;
 
     ::tinytc_core_info const *info_;
     clir::program_builder prog_builder_;

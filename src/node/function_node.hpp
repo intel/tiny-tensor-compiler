@@ -43,7 +43,7 @@ class prototype : public clir::visitable<prototype, function_node> {
     }
 
     inline auto name() const -> std::string_view override { return name_; }
-    inline std::vector<value> &args() { return args_; }
+    inline auto args() const -> std::vector<value> const & { return args_; }
 
   private:
     std::string name_;
@@ -60,8 +60,8 @@ class function : public clir::visitable<function, function_node> {
 
     inline auto name() const -> std::string_view override { return prototype_->name(); }
 
-    inline func &prototype() { return prototype_; }
-    inline region &body() { return body_; }
+    inline auto prototype() const -> func const & { return prototype_; }
+    inline auto body() const -> region const & { return body_; }
     inline auto work_group_size() const -> std::array<std::uint32_t, 2> { return work_group_size_; }
 
     inline void work_group_size(std::array<std::uint32_t, 2> const &work_group_size) {

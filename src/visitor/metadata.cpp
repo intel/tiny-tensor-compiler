@@ -10,9 +10,9 @@ using clir::visit;
 namespace tinytc {
 
 /* Function nodes */
-void metadata::operator()(prototype &) {}
+void metadata::operator()(prototype const &) {}
 
-void metadata::operator()(function &fn) {
+void metadata::operator()(function const &fn) {
     auto m = kernel_metadata{};
     m.subgroup_size = fn.subgroup_size();
     m.work_group_size = fn.work_group_size();
@@ -20,7 +20,7 @@ void metadata::operator()(function &fn) {
 }
 
 /* Program nodes */
-void metadata::operator()(program &p) {
+void metadata::operator()(program const &p) {
     for (auto &decl : p.declarations()) {
         visit(*this, *decl);
     }
