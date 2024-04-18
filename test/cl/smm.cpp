@@ -9,7 +9,7 @@
 
 using namespace tinytc;
 
-TEST_CASE_TEMPLATE("level zero packed alpha=1 beta=0", T, TEST_PRECISIONS) {
+TEST_CASE_TEMPLATE("opencl packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto KK = std::vector<std::uint32_t>{71};
     auto MM = std::vector<std::uint32_t>{27, 43};
     auto NN = std::vector<std::uint32_t>{3, 33};

@@ -1162,17 +1162,13 @@ concept has_make_kernel_bundle =
 
 template <typename T>
 concept has_make_kernel = requires(typename T::native_kernel_bundle_t bundle, char const *name) {
-                              {
-                                  T::make_kernel(bundle, name)
-                                  } -> std::same_as<typename T::kernel_t>;
-                          };
+    { T::make_kernel(bundle, name) } -> std::same_as<typename T::kernel_t>;
+};
 
 template <typename T>
 concept has_make_argument_handler = requires(T t, typename T::device_t dev) {
-                                        {
-                                            T::make_argument_handler(dev)
-                                            } -> std::same_as<typename T::argument_handler_t>;
-                                    };
+    { T::make_argument_handler(dev) } -> std::same_as<typename T::argument_handler_t>;
+};
 
 template <typename T>
 concept has_work_group_size =
@@ -1182,8 +1178,8 @@ concept has_work_group_size =
 
 template <typename T, typename Wrapped, typename Native>
 concept has_get = requires(Wrapped w) {
-                      { T::get(w) } -> std::convertible_to<Native>;
-                  };
+    { T::get(w) } -> std::convertible_to<Native>;
+};
 
 template <typename T>
 concept has_submit_managed =
@@ -1192,7 +1188,7 @@ concept has_submit_managed =
              std::vector<typename T::native_event_t> const &dep_events) {
         {
             T::submit(work_group_size, howmany, kernel, q, dep_events)
-            } -> std::same_as<typename T::event_t>;
+        } -> std::same_as<typename T::event_t>;
     };
 
 template <typename T>
@@ -1209,35 +1205,33 @@ concept has_submit_unmanaged =
  * @brief Defines functions and members a runtime class has to provide
  */
 template <typename T>
-concept runtime =
-    requires(T rt, std::uint8_t const *binary, std::size_t binary_size, bundle_format format,
-             std::uint32_t core_features) {
-        typename T::context_t;
-        typename T::device_t;
-        typename T::kernel_bundle_t;
-        typename T::kernel_t;
-        typename T::native_kernel_bundle_t;
-        typename T::native_kernel_t;
-        typename T::argument_handler_t;
-        typename T::command_list_t;
-        typename T::event_t;
-        typename T::native_event_t;
-        typename T::mem_t;
-        typename T::const_mem_t;
-        typename T::work_group_size_t;
-        { T::is_event_managed } -> std::convertible_to<bool>;
-        requires std::movable<typename T::kernel_bundle_t>;
-        requires std::movable<typename T::kernel_t>;
-        requires internal::has_make_kernel_bundle<T>;
-        requires internal::has_make_kernel<T>;
-        requires internal::has_make_argument_handler<T>;
-        requires internal::has_work_group_size<T>;
-        requires internal::has_get<T, typename T::kernel_bundle_t,
-                                   typename T::native_kernel_bundle_t>;
-        requires internal::has_get<T, typename T::kernel_t, typename T::native_kernel_t>;
-        requires(T::is_event_managed && internal::has_submit_managed<T>) ||
-                    (!T::is_event_managed && internal::has_submit_unmanaged<T>);
-    };
+concept runtime = requires(T rt, std::uint8_t const *binary, std::size_t binary_size,
+                           bundle_format format, std::uint32_t core_features) {
+    typename T::context_t;
+    typename T::device_t;
+    typename T::kernel_bundle_t;
+    typename T::kernel_t;
+    typename T::native_kernel_bundle_t;
+    typename T::native_kernel_t;
+    typename T::argument_handler_t;
+    typename T::command_list_t;
+    typename T::event_t;
+    typename T::native_event_t;
+    typename T::mem_t;
+    typename T::const_mem_t;
+    typename T::work_group_size_t;
+    { T::is_event_managed } -> std::convertible_to<bool>;
+    requires std::movable<typename T::kernel_bundle_t>;
+    requires std::movable<typename T::kernel_t>;
+    requires internal::has_make_kernel_bundle<T>;
+    requires internal::has_make_kernel<T>;
+    requires internal::has_make_argument_handler<T>;
+    requires internal::has_work_group_size<T>;
+    requires internal::has_get<T, typename T::kernel_bundle_t, typename T::native_kernel_bundle_t>;
+    requires internal::has_get<T, typename T::kernel_t, typename T::native_kernel_t>;
+    requires(T::is_event_managed && internal::has_submit_managed<T>) ||
+                (!T::is_event_managed && internal::has_submit_unmanaged<T>);
+};
 
 /**
  * @brief Encapsulates a tensor compute kernel for a runtime of type T
@@ -1411,7 +1405,7 @@ inline auto create_tall_and_skinny(core_info const &info, scalar_type ty,
  * @tparam T Floating point type
  * @tparam R Runtime
  */
-template <typename T, runtime R> class TINYTC_EXPORT small_gemm_batched {
+template <typename T, runtime R> class small_gemm_batched {
   public:
     using context_t = typename R::context_t;           ///< Context type
     using device_t = typename R::device_t;             ///< Device type
