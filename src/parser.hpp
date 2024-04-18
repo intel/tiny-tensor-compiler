@@ -10,6 +10,10 @@
 #include <string>
 #include <vector>
 
+namespace tinytc {
+auto parse(std::uint64_t size, char const *input) -> prog;
+}
+
 /**
  * @brief Source manager
  *
@@ -22,12 +26,7 @@ struct tinytc_source_context {
     //! @brief ctor
     tinytc_source_context();
 
-    //! Create abstract syntax tree from file
-    auto parse_file(char const *filename) -> tinytc::prog;
-    //! Create abstract syntax tree from stdin
-    auto parse_stdin() -> tinytc::prog;
-    //! Create abstract syntax tree from string
-    auto parse_string(std::uint64_t size, char const *src) -> tinytc::prog;
+    auto parse(std::string name, std::string text) -> tinytc::prog;
 
     inline auto add_source(char const *name, char const *text) -> std::int32_t {
         sources_.emplace_back(source_input{std::string(name), std::string(text)});
@@ -43,11 +42,6 @@ struct tinytc_source_context {
     struct source_input {
         std::string name, text;
     };
-
-    auto parse(source_input const &input, tinytc_location const &initial_loc) -> tinytc::prog;
-
-    auto add_source_input(source_input src) -> tinytc_location;
-    int stdin_counter_ = 0, memory_counter_ = 0;
     std::vector<source_input> sources_;
     std::string last_error_log_;
 };

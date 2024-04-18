@@ -990,55 +990,50 @@ TINYTC_EXPORT void tinytc_core_info_destroy(tinytc_core_info_t info);
 ////////////////////////////
 
 /**
+ * @brief Parser tensor language source file and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param filename [in] path to source file
+ * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_parse_file(tinytc_prog_t *prg, char const *filename,
+                                                tinytc_source_context_t ctx);
+
+/**
+ * @brief Parser tensor language source from stdin and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_source_context_t ctx);
+
+/**
+ * @brief Parser tensor language source from string and create prog
+ *
+ * @param prg [out] pointer to prog object created
+ * @param source_size [in] length of source string
+ * @param source [in] source string
+ * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_parse_string(tinytc_prog_t *prg, uint64_t source_size,
+                                                  char const *source, tinytc_source_context_t ctx);
+/**
  * @brief Create source context
  *
- * The source context provides parsing functions and stores the tensor language source
- * text to provide source context in error messages.
+ * The source context stores the tensor language source and enhaces error messages with
+ * source code context.
  *
  * @param ctx [out] pointer to the source context object created
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_source_context_create(tinytc_source_context_t *ctx);
-
-/**
- * @brief Parser tensor language source file and create prog
- *
- * @param prg [out] pointer to prog object created
- * @param ctx [inout] source context object; source text is added to manager
- * @param filename [in] path to source file
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_file(tinytc_prog_t *prg,
-                                                               tinytc_source_context_t ctx,
-                                                               char const *filename);
-
-/**
- * @brief Parser tensor language source from stdin and create prog
- *
- * @param prg [out] pointer to prog object created
- * @param ctx [inout] source context object; source text is added to manager
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_stdin(tinytc_prog_t *prg,
-                                                                tinytc_source_context_t ctx);
-
-/**
- * @brief Parser tensor language source from string and create prog
- *
- * @param prg [out] pointer to prog object created
- * @param ctx [inout] source context object; source text is added to manager
- * @param source_size [in] length of source string
- * @param source [in] source string
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *prg,
-                                                                 tinytc_source_context_t ctx,
-                                                                 uint64_t source_size,
-                                                                 char const *source);
 
 /**
  * @brief Add source context

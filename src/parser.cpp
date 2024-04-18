@@ -17,46 +17,32 @@
 #include <sstream>
 #include <utility>
 
+namespace tinytc {
+auto parse(std::uint64_t size, char const *input) -> prog {
+    auto const initial_loc = location{position{0, 1, 1}, position{0, 1, 1}};
+    auto lex = lexer(size, input, initial_loc);
+    auto ctx = parse_context{};
+    auto p = parser(lex, ctx);
+    if (p() == 0) {
+        return ctx.program();
+    }
+    return nullptr;
+}
+} // namespace tinytc
+
 using namespace tinytc;
 
 extern "C" {
 
 tinytc_source_context::tinytc_source_context() {}
 
-auto tinytc_source_context::add_source_input(source_input src) -> location {
-    sources_.emplace_back(std::move(src));
-    std::int32_t sid = static_cast<std::int32_t>(sources_.size());
-    return location{position{sid, 1, 1}, position{sid, 1, 1}};
-}
+auto tinytc_source_context::parse(std::string name, std::string text) -> prog {
+    sources_.emplace_back(source_input{std::move(name), std::move(text)});
+    std::int32_t source_id = static_cast<std::int32_t>(sources_.size());
+    auto const initial_loc = location{position{source_id, 1, 1}, position{source_id, 1, 1}};
 
-auto tinytc_source_context::parse_file(char const *filename) -> prog {
-    auto ir_stream = std::ifstream(filename);
-    if (!ir_stream.good()) {
-        throw status::file_io_error;
-    }
-    auto ir = std::string(std::istreambuf_iterator<char>{ir_stream}, {});
-    auto initial_loc = add_source_input(source_input{filename, std::move(ir)});
-    auto p = parse(sources_.back(), initial_loc);
-    return p;
-}
-
-auto tinytc_source_context::parse_stdin() -> prog {
-    auto ir = std::string(std::istreambuf_iterator<char>{std::cin}, {});
-    auto filename = "<stdin:" + std::to_string(stdin_counter_++) + ">";
-    auto initial_loc = add_source_input(source_input{std::move(filename), std::move(ir)});
-    auto p = parse(sources_.back(), initial_loc);
-    return p;
-}
-
-auto tinytc_source_context::parse_string(std::uint64_t size, char const *src) -> prog {
-    auto filename = "<memory:" + std::to_string(memory_counter_++) + ">";
-    auto initial_loc = add_source_input(source_input{std::move(filename), std::string(src, size)});
-    auto p = parse(sources_.back(), initial_loc);
-    return p;
-}
-
-auto tinytc_source_context::parse(source_input const &input, location const &initial_loc) -> prog {
-    auto lex = lexer(input.text, initial_loc);
+    auto const &input = sources_.back();
+    auto lex = lexer(input.text.size(), input.text.c_str(), initial_loc);
     auto ctx = parse_context{};
     auto p = parser(lex, ctx);
     if (p() == 0) {
@@ -88,53 +74,67 @@ void tinytc_source_context::report_error(location const &l, char const *what, bo
     }
 }
 
+tinytc_status_t tinytc_parse_file(tinytc_prog_t *prg, char const *filename,
+                                  tinytc_source_context_t source_ctx) {
+    if (prg == nullptr || filename == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto ir_stream = std::ifstream(filename);
+        if (!ir_stream.good()) {
+            throw status::file_io_error;
+        }
+        auto ir = std::string(std::istreambuf_iterator<char>{ir_stream}, {});
+
+        auto prog = source_ctx ? source_ctx->parse(std::string(filename), std::move(ir))
+                               : parse(ir.size(), ir.c_str());
+        if (!prog) {
+            throw status::parse_error;
+        }
+        *prg = prog.release();
+    });
+}
+
+tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_source_context_t source_ctx) {
+    if (prg == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto ir = std::string(std::istreambuf_iterator<char>{std::cin}, {});
+        auto prog =
+            source_ctx ? source_ctx->parse("<stdin>", std::move(ir)) : parse(ir.size(), ir.c_str());
+        if (!prog) {
+            throw status::parse_error;
+        }
+        *prg = prog.release();
+    });
+}
+
+tinytc_status_t tinytc_parse_string(tinytc_prog_t *prg, uint64_t source_size, char const *source,
+                                    tinytc_source_context_t source_ctx) {
+    if (prg == nullptr || source_size == 0 || source == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto const filename = [](char const *source) {
+            return (std::stringstream{} << "<memory:" << source << ">").str();
+        };
+        auto prog = source_ctx ? source_ctx->parse(filename(source),
+                                                   std::string(source, source + source_size))
+                               : parse(source_size, source);
+        if (!prog) {
+            throw status::parse_error;
+        }
+        *prg = prog.release();
+    });
+}
+
 tinytc_status_t tinytc_source_context_create(tinytc_source_context_t *ctx) {
     if (ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
         [&] { *ctx = std::make_unique<tinytc_source_context>().release(); });
-}
-
-tinytc_status_t tinytc_source_context_parse_file(tinytc_prog_t *prg, tinytc_source_context_t ctx,
-                                                 char const *filename) {
-    if (prg == nullptr || ctx == nullptr || filename == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        auto prog = ctx->parse_file(filename);
-        if (!prog) {
-            throw status::parse_error;
-        }
-        *prg = prog.release();
-    });
-}
-
-tinytc_status_t tinytc_source_context_parse_stdin(tinytc_prog_t *prg, tinytc_source_context_t ctx) {
-    if (prg == nullptr || ctx == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        auto prog = ctx->parse_stdin();
-        if (!prog) {
-            throw status::parse_error;
-        }
-        *prg = prog.release();
-    });
-}
-
-tinytc_status_t tinytc_source_context_parse_string(tinytc_prog_t *prg, tinytc_source_context_t ctx,
-                                                   uint64_t source_size, char const *source) {
-    if (prg == nullptr || ctx == nullptr || source_size == 0 || source == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        auto prog = ctx->parse_string(source_size, source);
-        if (!prog) {
-            throw status::parse_error;
-        }
-        *prg = prog.release();
-    });
 }
 
 tinytc_status_t tinytc_source_context_add_source(tinytc_source_context_t ctx, char const *name,
