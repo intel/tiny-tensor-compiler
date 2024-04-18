@@ -17,10 +17,6 @@
 #include <string>
 #include <vector>
 
-namespace tinytc {
-class core_info;
-}
-
 #define DOCTEST_TENSOR4_TEST(MM, NN, KK, HH)                                                       \
     do {                                                                                           \
         for (auto hh : HH) {                                                                       \
@@ -44,17 +40,17 @@ class core_info;
 #define TEST_PRECISIONS float, double
 
 template <typename T>
-void small_gemm_batched_ref(tinytc::ir::transpose transA, tinytc::ir::transpose transB, T alpha,
+void small_gemm_batched_ref(tinytc::transpose transA, tinytc::transpose transB, T alpha,
                             tensor3<T> const &A, tensor3<T> const &B, T beta, tensor3<T> &C) {
     bool compatible = A.shape(2) == B.shape(2) && B.shape(2) == C.shape(2);
     auto Arows = A.shape(0);
     auto Acols = A.shape(1);
-    if (transA == tinytc::ir::transpose::T) {
+    if (transA == tinytc::transpose::T) {
         std::swap(Arows, Acols);
     }
     auto Brows = B.shape(0);
     auto Bcols = B.shape(1);
-    if (transB == tinytc::ir::transpose::T) {
+    if (transB == tinytc::transpose::T) {
         std::swap(Brows, Bcols);
     }
     compatible = compatible && Arows == C.shape(0) && Bcols == C.shape(1) && Acols == Brows;
@@ -66,8 +62,8 @@ void small_gemm_batched_ref(tinytc::ir::transpose transA, tinytc::ir::transpose 
             for (std::uint32_t m = 0; m < C.shape(0); ++m) {
                 T c_acc = T(0.0);
                 for (std::uint32_t k = 0; k < Acols; ++k) {
-                    auto const a = transA == tinytc::ir::transpose::T ? A(k, m, j) : A(m, k, j);
-                    auto const b = transB == tinytc::ir::transpose::T ? B(n, k, j) : B(k, n, j);
+                    auto const a = transA == tinytc::transpose::T ? A(k, m, j) : A(m, k, j);
+                    auto const b = transB == tinytc::transpose::T ? B(n, k, j) : B(k, n, j);
                     c_acc += a * b;
                 }
                 C(m, n, j) = alpha * c_acc + beta * C(m, n, j);
@@ -91,7 +87,7 @@ concept test_runtime_gpu =
         rt.fill_buffer(buf, value, bytes);
         rt.memcpy_h2d(buf, src, bytes);
         rt.memcpy_d2h(dst, const_buf, bytes);
-        { rt.get_core_info() } -> std::same_as<std::shared_ptr<tinytc::core_info>>;
+        { rt.get_core_info() } -> std::same_as<tinytc::core_info>;
         { rt.get_device() } -> std::same_as<typename T::device_t>;
         { rt.get_context() } -> std::same_as<typename T::context_t>;
         { rt.get_command_list() } -> std::same_as<typename T::command_list_t>;
@@ -99,16 +95,16 @@ concept test_runtime_gpu =
     };
 
 template <typename T, test_runtime_gpu R>
-void check_small_gemm_batched(tinytc::ir::transpose transA, tinytc::ir::transpose transB,
-                              std::uint32_t M, std::uint32_t N, std::uint32_t K, std::uint32_t ldA,
+void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB, std::uint32_t M,
+                              std::uint32_t N, std::uint32_t K, std::uint32_t ldA,
                               std::uint32_t strideA, std::uint32_t ldB, std::uint32_t strideB,
                               std::uint32_t ldC, std::uint32_t strideC, double alpha, double beta,
                               std::uint32_t howmany) {
     auto const selA = [&](std::uint32_t N1, std::uint32_t N2) {
-        return transA == tinytc::ir::transpose::T ? N2 : N1;
+        return transA == tinytc::transpose::T ? N2 : N1;
     };
     auto const selB = [&](std::uint32_t N1, std::uint32_t N2) {
-        return transB == tinytc::ir::transpose::T ? N2 : N1;
+        return transB == tinytc::transpose::T ? N2 : N1;
     };
 
     auto gpu_rt = std::make_shared<R>();
@@ -140,7 +136,7 @@ void check_small_gemm_batched(tinytc::ir::transpose transA, tinytc::ir::transpos
     auto info = gpu_rt->get_core_info();
 
     auto g = tinytc::recipe::small_gemm_batched<T, typename R::runtime_t>(
-        transA, transB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC, std::move(info),
+        info, transA, transB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
         gpu_rt->get_context(), gpu_rt->get_device());
     g(howmany, alpha, A, B, beta, C, gpu_rt->get_command_list());
     gpu_rt->synchronize();

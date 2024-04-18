@@ -21,8 +21,8 @@ void sycl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes
     this->memcpy(dst, src, bytes);
 }
 
-auto sycl_test_runtime::get_core_info() const -> std::shared_ptr<tinytc::core_info> {
-    return ::tinytc::get_core_info(q_.get_device());
+auto sycl_test_runtime::get_core_info() const -> tinytc::core_info {
+    return ::tinytc::create_core_info(q_.get_device());
 }
 auto sycl_test_runtime::get_device() -> device_t { return q_.get_device(); }
 auto sycl_test_runtime::get_context() -> context_t { return q_.get_context(); }

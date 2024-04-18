@@ -19,7 +19,7 @@ extern "C" {
 /////////// Error //////////
 ////////////////////////////
 
-#define TINYTC_CHECK(X)                                                                            \
+#define TINYTC_CHECK_STATUS(X)                                                                     \
     do {                                                                                           \
         tinytc_status_t status = X;                                                                \
         if (status != tinytc_status_success) {                                                     \
@@ -1240,6 +1240,51 @@ TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
 ////////////////////////////
 
 /**
+ * @brief Returns a program for the small batched GEMM recipe
+ *
+ * The program contains a kernel for @f$\beta=0@f$ called "gemm_beta0" and a kernel for @f$\beta\neq
+ * 0@f$ called "gemm". All matrix shapes and strides are known at compile-time.
+ *
+ * The signature of the generated kernels gemm and gemm_beta0 is (if A and B are not transposed)
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K}x?,strided<1,{ldA},{strideA}>>,
+ *              %B: memref<{ty.B}x{K}x{N}x?,strided<1,{ldB},{strideB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N}x?,strided<1,{ldC},{strideC}>>)
+ * @endcode
+ *
+ * meaning that one has to set arguments to the kernel in the following order:
+ *
+ * @code
+ * alpha, A_ptr, howmany, B_ptr, howmany, beta, C_ptr, howmany
+ * @endcode
+ *
+ * @param prg [out] pointer to the program object created
+ * @param info [in] core info object
+ * @param ty [in] Scalar types of alpha, A, B, beta, C
+ * @param tA [in] Transpose A
+ * @param tB [in] Transpose B
+ * @param M [in] Number of rows of A, C
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A
+ * @param strideA [in] Number of elements between A-matrices
+ * @param ldB [in] Leading dimension of B
+ * @param strideB [in] Number of elements between B-matrices
+ * @param ldC [in] Leading dimension of C
+ * @param strideC [in] Number of elements between C-matrices
+ * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
+    tinytc_prog_t *prg, tinytc_core_info_t info, tinytc_scalar_type_t ty, tinytc_transpose_t tA,
+    tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA, uint32_t strideA,
+    uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC, tinytc_source_context_t ctx);
+
+/**
  * @brief Returns a program for the tall and skinny recipe
  *
  * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0 called
@@ -1264,7 +1309,7 @@ TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
  * where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.
  *
  * @param prg [out] pointer to the program object created
- * @param info [in] core info object created
+ * @param info [in] core info object
  * @param ty [in] Scalar type of alpha, A, B, beta, C
  * @param [in] M_block_size Size of M block that each work group gets
  * @param [in] N Number of columns of B, C

@@ -18,7 +18,7 @@ namespace tinytc {
 ////////////////////////////
 
 //! Throw exception for unsuccessful call to C-API and convert result code to tinytc status
-inline void CL_CHECK(cl_int stat) {
+inline void CL_CHECK_STATUS(cl_int stat) {
     if (stat != CL_SUCCESS) {
         throw status{std::underlying_type_t<status>(::tinytc_cl_convert_status(stat))};
     }
@@ -37,7 +37,7 @@ inline void CL_CHECK(cl_int stat) {
  */
 inline auto create_core_info(cl_device_id device) -> core_info {
     tinytc_core_info_t info;
-    CHECK(::tinytc_cl_core_info_create(&info, device));
+    CHECK_STATUS(::tinytc_cl_core_info_create(&info, device));
     return core_info{info};
 }
 
@@ -122,7 +122,7 @@ class opencl_argument_handler {
         if (clSetKernelArgMemPointerINTEL_ == nullptr) {
             throw status::unavailable_extension;
         }
-        CL_CHECK(clSetKernelArgMemPointerINTEL_(kernel, arg_index, arg_value));
+        CL_CHECK_STATUS(clSetKernelArgMemPointerINTEL_(kernel, arg_index, arg_value));
     }
     /**
      * @brief Set single kernel argument
@@ -134,7 +134,7 @@ class opencl_argument_handler {
      */
     inline void set_arg(cl_kernel kernel, std::uint32_t arg_index, std::size_t arg_size,
                         void const *arg_value) {
-        CL_CHECK(clSetKernelArg(kernel, arg_index, arg_size, arg_value));
+        CL_CHECK_STATUS(clSetKernelArg(kernel, arg_index, arg_size, arg_value));
     }
 
     /**
@@ -222,7 +222,7 @@ class opencl_runtime {
     //! Create argument handler
     inline static auto make_argument_handler(device_t dev) -> argument_handler_t {
         cl_platform_id plat;
-        CL_CHECK(clGetDeviceInfo(dev, CL_DEVICE_PLATFORM, sizeof(plat), &plat, nullptr));
+        CL_CHECK_STATUS(clGetDeviceInfo(dev, CL_DEVICE_PLATFORM, sizeof(plat), &plat, nullptr));
         return {plat};
     }
 
@@ -241,7 +241,7 @@ class opencl_runtime {
     inline static auto make_kernel_bundle(context_t ctx, device_t dev, binary const &bin)
         -> kernel_bundle_t {
         cl_program mod;
-        CHECK(::tinytc_cl_program_create(&mod, ctx, dev, bin.get()));
+        CHECK_STATUS(::tinytc_cl_program_create(&mod, ctx, dev, bin.get()));
         return {mod};
     }
     /**
@@ -255,14 +255,14 @@ class opencl_runtime {
     inline static auto make_kernel(native_kernel_bundle_t mod, char const *name) -> kernel_t {
         cl_int err;
         cl_kernel kernel = clCreateKernel(mod, name, &err);
-        CL_CHECK(err);
+        CL_CHECK_STATUS(err);
         return {kernel};
     }
 
     //! @brief Get work group size
     inline static auto work_group_size(native_kernel_t kernel, device_t dev) -> work_group_size_t {
         std::size_t x, y, z;
-        CHECK(tinytc_cl_get_group_size(kernel, dev, &x, &y, &z));
+        CHECK_STATUS(tinytc_cl_get_group_size(kernel, dev, &x, &y, &z));
         return {x, y, z};
     }
 
@@ -283,8 +283,8 @@ class opencl_runtime {
         std::array<std::size_t, 3u> gws;
         tinytc_cl_get_global_size(howmany, lws[0], lws[1], lws[2], &gws[0], &gws[1], &gws[2]);
         cl_event ev;
-        CL_CHECK(clEnqueueNDRangeKernel(q, krnl, 3, nullptr, gws.data(), lws.data(),
-                                        dep_events.size(), dep_events.data(), &ev));
+        CL_CHECK_STATUS(clEnqueueNDRangeKernel(q, krnl, 3, nullptr, gws.data(), lws.data(),
+                                               dep_events.size(), dep_events.data(), &ev));
         return {ev};
     }
 };

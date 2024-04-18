@@ -37,7 +37,7 @@ inline auto create_core_info(::sycl::device dev) -> core_info {
     case backend::opencl: {
         auto native_device = get_native<backend::opencl, device>(dev);
         auto info = create_core_info(native_device);
-        CL_CHECK(clReleaseDevice(native_device));
+        CL_CHECK_STATUS(clReleaseDevice(native_device));
         return info;
     }
     default:
@@ -106,7 +106,7 @@ class sycl_argument_handler {
         case backend::opencl: {
             auto native_krnl = get_native<backend::opencl, kernel>(std::move(krnl));
             cl_arg_.set_arg(native_krnl, arg_index, arg_size, arg_value);
-            CL_CHECK(clReleaseKernel(native_krnl));
+            CL_CHECK_STATUS(clReleaseKernel(native_krnl));
             return;
         }
         default:
@@ -212,8 +212,8 @@ class sycl_runtime {
             auto mod = opencl_runtime::make_kernel_bundle(native_context, native_device, bin);
             auto bundle =
                 make_kernel_bundle<backend::opencl, bundle_state::executable>(mod.get(), ctx);
-            CL_CHECK(clReleaseDevice(native_device));
-            CL_CHECK(clReleaseContext(native_context));
+            CL_CHECK_STATUS(clReleaseDevice(native_device));
+            CL_CHECK_STATUS(clReleaseContext(native_context));
             return bundle;
         }
         default:
@@ -245,7 +245,7 @@ class sycl_runtime {
             auto native_kernel = opencl_runtime::make_kernel(native_mod.front(), name);
             auto kernel = make_kernel<backend::opencl>(native_kernel.get(), mod.get_context());
             for (auto &m : native_mod) {
-                CL_CHECK(clReleaseProgram(m));
+                CL_CHECK_STATUS(clReleaseProgram(m));
             }
             return kernel;
         }
@@ -262,16 +262,16 @@ class sycl_runtime {
         case backend::ext_oneapi_level_zero: {
             auto native_krnl = get_native<backend::ext_oneapi_level_zero, kernel>(std::move(krnl));
             uint32_t x, y, z;
-            CHECK(tinytc_ze_get_group_size(native_krnl, &x, &y, &z));
+            CHECK_STATUS(tinytc_ze_get_group_size(native_krnl, &x, &y, &z));
             return range{z, y, x};
         }
         case backend::opencl: {
             auto native_dev = get_native<backend::opencl, device>(std::move(dev));
             auto native_krnl = get_native<backend::opencl, kernel>(std::move(krnl));
             std::size_t x, y, z;
-            CHECK(tinytc_cl_get_group_size(native_krnl, native_dev, &x, &y, &z));
-            CL_CHECK(clReleaseKernel(native_krnl));
-            CL_CHECK(clReleaseDevice(native_dev));
+            CHECK_STATUS(tinytc_cl_get_group_size(native_krnl, native_dev, &x, &y, &z));
+            CL_CHECK_STATUS(clReleaseKernel(native_krnl));
+            CL_CHECK_STATUS(clReleaseDevice(native_dev));
             return range{z, y, x};
         }
         default:

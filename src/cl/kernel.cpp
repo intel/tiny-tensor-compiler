@@ -27,16 +27,16 @@ tinytc_status_t tinytc_cl_program_create(cl_program *mod, cl_context context, cl
     } else {
         *mod = clCreateProgramWithIL(context, data, data_size, &err);
     }
-    TINYTC_CL_CHECK(err);
+    TINYTC_CL_CHECK_STATUS(err);
 
     uint32_t core_features;
-    TINYTC_CHECK(tinytc_binary_get_core_features(bin, &core_features));
+    TINYTC_CHECK_STATUS(tinytc_binary_get_core_features(bin, &core_features));
 
     char const *options = "";
     if (core_features & static_cast<std::uint32_t>(tinytc_core_feature_flag_large_register_file)) {
         options = tinytc::large_register_file_compiler_option_cl;
     }
-    TINYTC_CL_CHECK(clBuildProgram(*mod, 1, &device, options, nullptr, nullptr));
+    TINYTC_CL_CHECK_STATUS(clBuildProgram(*mod, 1, &device, options, nullptr, nullptr));
     return tinytc_status_success;
 }
 

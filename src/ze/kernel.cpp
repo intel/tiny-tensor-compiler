@@ -29,17 +29,17 @@ tinytc_status_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_hand
     tinytc_bundle_format_t format;
     uint64_t data_size;
     uint8_t const *data;
-    TINYTC_CHECK(tinytc_binary_get_raw(bin, &format, &data_size, &data));
+    TINYTC_CHECK_STATUS(tinytc_binary_get_raw(bin, &format, &data_size, &data));
     ze_module_desc_t module_desc = {
         ZE_STRUCTURE_TYPE_MODULE_DESC, nullptr, zformat(format), data_size, data, nullptr, nullptr};
 
     uint32_t core_features;
-    TINYTC_CHECK(tinytc_binary_get_core_features(bin, &core_features));
+    TINYTC_CHECK_STATUS(tinytc_binary_get_core_features(bin, &core_features));
 
     if (core_features & static_cast<std::uint32_t>(tinytc_core_feature_flag_large_register_file)) {
         module_desc.pBuildFlags = tinytc::large_register_file_compiler_option_ze;
     }
-    TINYTC_ZE_CHECK(zeModuleCreate(context, device, &module_desc, mod, build_log));
+    TINYTC_ZE_CHECK_STATUS(zeModuleCreate(context, device, &module_desc, mod, build_log));
     return tinytc_status_success;
 }
 
