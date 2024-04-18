@@ -8,7 +8,7 @@ include(${PROJECT_SOURCE_DIR}/external/doctest/cmake/doctest.cmake)
 find_package(LevelZero REQUIRED)
 
 add_library(test-ze-lib STATIC test_runtime.cpp)
-target_link_libraries(test-ze-lib PUBLIC test-lib tinytc-level-zero LevelZero::LevelZero)
+target_link_libraries(test-ze-lib PUBLIC test-lib tinytc_ze LevelZero::LevelZero)
 set_common_options(test-ze-lib)
 
 add_executable(test-ze-device device.cpp)

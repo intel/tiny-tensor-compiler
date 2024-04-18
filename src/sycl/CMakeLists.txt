@@ -11,18 +11,18 @@ set(PUBLIC_HEADERS
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
-add_library(tinytc-sycl INTERFACE)
-add_library(tinytc::tinytc-sycl ALIAS tinytc-sycl)
+add_library(tinytc_sycl INTERFACE)
+add_library(tinytc::tinytc_sycl ALIAS tinytc_sycl)
 
-target_link_libraries(tinytc-sycl INTERFACE tinytc tinytc-level-zero tinytc-opencl)
+target_link_libraries(tinytc_sycl INTERFACE tinytc tinytc_ze tinytc_cl)
 
 # include directories
 
-target_sources(tinytc-sycl PUBLIC FILE_SET HEADERS
+target_sources(tinytc_sycl PUBLIC FILE_SET HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/include
     FILES ${PUBLIC_HEADERS})
 
 
 # install
 
-install_lib(tinytc-sycl tinytc)
+install_lib(tinytc_sycl tinytc)

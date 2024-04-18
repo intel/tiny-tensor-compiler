@@ -14,5 +14,5 @@ set(SOURCES
 
 add_executable(matrix_chain ${SOURCES})
 add_sycl_to_target(TARGET matrix_chain SOURCES ${SOURCES})
-target_link_libraries(matrix_chain PRIVATE tinytc tinytc-sycl)
+target_link_libraries(matrix_chain PRIVATE tinytc tinytc_sycl)
 set_common_options(matrix_chain)
