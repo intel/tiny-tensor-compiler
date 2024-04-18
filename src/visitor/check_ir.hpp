@@ -14,20 +14,20 @@ namespace tinytc {
 class ir_checker {
   public:
     /* Stmt nodes */
-    void operator()(inst_node &in);
-    void operator()(for_inst &p);
-    void operator()(foreach_inst &p);
-    void operator()(if_inst &in);
+    void operator()(inst_node const &in);
+    void operator()(for_inst const &p);
+    void operator()(foreach_inst const &p);
+    void operator()(if_inst const &in);
 
     /* Region nodes */
-    void operator()(rgn &b);
+    void operator()(rgn const &b);
 
     /* Func nodes */
-    void operator()(prototype &);
-    void operator()(function &fn);
+    void operator()(prototype const &);
+    void operator()(function const &fn);
 
     /* Program nodes */
-    void operator()(program &p);
+    void operator()(program const &p);
 
   private:
     bool inside_spmd_region_ = false;

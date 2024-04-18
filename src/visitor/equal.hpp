@@ -11,11 +11,11 @@ namespace tinytc {
 class equal {
   public:
     /* Data type nodes */
-    bool operator()(data_type_node &a, data_type_node &b);
-    bool operator()(void_data_type &a, void_data_type &b);
-    bool operator()(group_data_type &a, group_data_type &b);
-    bool operator()(memref_data_type &a, memref_data_type &b);
-    bool operator()(scalar_data_type &a, scalar_data_type &b);
+    bool operator()(data_type_node const &a, data_type_node const &b);
+    bool operator()(void_data_type const &a, void_data_type const &b);
+    bool operator()(group_data_type const &a, group_data_type const &b);
+    bool operator()(memref_data_type const &a, memref_data_type const &b);
+    bool operator()(scalar_data_type const &a, scalar_data_type const &b);
 };
 
 } // namespace tinytc

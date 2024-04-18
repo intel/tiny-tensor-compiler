@@ -19,13 +19,13 @@ namespace tinytc {
 ir_dumper::ir_dumper(std::ostream &os) : os_(os) {}
 
 /* Data type nodes */
-void ir_dumper::operator()(void_data_type &) { os_ << "void"; }
-void ir_dumper::operator()(group_data_type &g) {
+void ir_dumper::operator()(void_data_type const &) { os_ << "void"; }
+void ir_dumper::operator()(group_data_type const &g) {
     os_ << "group<";
     visit(*this, *g.ty());
     os_ << ">";
 }
-void ir_dumper::operator()(memref_data_type &d) {
+void ir_dumper::operator()(memref_data_type const &d) {
     auto const val = [&](std::int64_t v) -> std::ostream & {
         if (is_dynamic_value(v)) {
             return os_ << "?";
@@ -39,30 +39,30 @@ void ir_dumper::operator()(memref_data_type &d) {
     }
     if (!d.is_canonical_stride()) {
         os_ << ",strided<";
-        do_with_infix(d.stride().begin(), d.stride().end(), [&](auto &a) { val(a); });
+        do_with_infix(d.stride().begin(), d.stride().end(), [&](auto const &a) { val(a); });
         os_ << ">";
     }
     os_ << ">";
 }
-void ir_dumper::operator()(scalar_data_type &s) { os_ << to_string(s.ty()); }
+void ir_dumper::operator()(scalar_data_type const &s) { os_ << to_string(s.ty()); }
 
 /* Value nodes */
-void ir_dumper::operator()(float_imm &v) {
+void ir_dumper::operator()(float_imm const &v) {
     auto flags = os_.flags();
     os_ << std::hexfloat << v.value();
     os_.flags(flags);
 }
-void ir_dumper::operator()(int_imm &v) {
+void ir_dumper::operator()(int_imm const &v) {
     if (is_dynamic_value(v.value())) {
         os_ << "?";
     } else {
         os_ << v.value();
     }
 }
-void ir_dumper::operator()(val &v) { os_ << "%" << v.name(); }
+void ir_dumper::operator()(val const &v) { os_ << "%" << v.name(); }
 
 /* Inst nodes */
-void ir_dumper::dump_blas_a2(blas_a2_inst &g) {
+void ir_dumper::dump_blas_a2(blas_a2_inst const &g) {
     visit(*this, *g.alpha());
     os_ << ", ";
     visit(*this, *g.A());
@@ -80,7 +80,7 @@ void ir_dumper::dump_blas_a2(blas_a2_inst &g) {
     visit(*this, *g.B()->ty());
 }
 
-void ir_dumper::dump_blas_a3(blas_a3_inst &g) {
+void ir_dumper::dump_blas_a3(blas_a3_inst const &g) {
     visit(*this, *g.alpha());
     os_ << ", ";
     visit(*this, *g.A());
@@ -102,21 +102,21 @@ void ir_dumper::dump_blas_a3(blas_a3_inst &g) {
     visit(*this, *g.C()->ty());
 }
 
-void ir_dumper::operator()(alloca_inst &a) {
+void ir_dumper::operator()(alloca_inst const &a) {
     visit(*this, *a.result());
     os_ << " = alloca -> ";
     visit(*this, *a.result()->ty());
 }
 
-void ir_dumper::operator()(axpby_inst &a) {
+void ir_dumper::operator()(axpby_inst const &a) {
     os_ << "axpby";
     os_ << "." << to_string(a.tA()) << " ";
-    dump_blas_a2(static_cast<blas_a2_inst &>(a));
+    dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 
-void ir_dumper::operator()(barrier_inst &) { os_ << "barrier"; }
+void ir_dumper::operator()(barrier_inst const &) { os_ << "barrier"; }
 
-void ir_dumper::operator()(binary_op_inst &a) {
+void ir_dumper::operator()(binary_op_inst const &a) {
     visit(*this, *a.result());
     os_ << " = " << to_string(a.op()) << " ";
     visit(*this, *a.a());
@@ -126,7 +126,7 @@ void ir_dumper::operator()(binary_op_inst &a) {
     visit(*this, *a.a()->ty());
 }
 
-void ir_dumper::operator()(cast_inst &c) {
+void ir_dumper::operator()(cast_inst const &c) {
     visit(*this, *c.result());
     os_ << " = cast ";
     visit(*this, *c.a());
@@ -136,7 +136,7 @@ void ir_dumper::operator()(cast_inst &c) {
     visit(*this, *c.result()->ty());
 }
 
-void ir_dumper::operator()(compare_inst &a) {
+void ir_dumper::operator()(compare_inst const &a) {
     visit(*this, *a.result());
     os_ << " = cmp." << to_string(a.cond()) << " ";
     visit(*this, *a.a());
@@ -146,19 +146,19 @@ void ir_dumper::operator()(compare_inst &a) {
     visit(*this, *a.a()->ty());
 }
 
-void ir_dumper::operator()(expand_inst &e) {
+void ir_dumper::operator()(expand_inst const &e) {
     visit(*this, *e.result());
     os_ << " = expand ";
     visit(*this, *e.operand());
     os_ << "[" << e.mode() << "->";
     do_with_infix(
-        e.expand_shape().begin(), e.expand_shape().end(), [this](auto &i) { visit(*this, *i); },
-        "x");
+        e.expand_shape().begin(), e.expand_shape().end(),
+        [this](auto const &i) { visit(*this, *i); }, "x");
     os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
 
-void ir_dumper::operator()(fuse_inst &f) {
+void ir_dumper::operator()(fuse_inst const &f) {
     visit(*this, *f.result());
     os_ << " = fuse ";
     visit(*this, *f.operand());
@@ -167,51 +167,51 @@ void ir_dumper::operator()(fuse_inst &f) {
     visit(*this, *f.operand()->ty());
 }
 
-void ir_dumper::operator()(load_inst &e) {
+void ir_dumper::operator()(load_inst const &e) {
     visit(*this, *e.result());
     os_ << " = load ";
     visit(*this, *e.operand());
     os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto &i) { visit(*this, *i); });
+                  [this](auto const &i) { visit(*this, *i); });
     os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
 
-void ir_dumper::operator()(group_id_inst &g) {
+void ir_dumper::operator()(group_id_inst const &g) {
     visit(*this, *g.result());
     os_ << " = group_id";
 }
 
-void ir_dumper::operator()(group_size_inst &g) {
+void ir_dumper::operator()(group_size_inst const &g) {
     visit(*this, *g.result());
     os_ << " = group_size";
 }
 
-void ir_dumper::operator()(lifetime_stop_inst &l) {
+void ir_dumper::operator()(lifetime_stop_inst const &l) {
     os_ << "lifetime_stop ";
     visit(*this, *l.object());
 }
 
-void ir_dumper::operator()(gemm_inst &g) {
+void ir_dumper::operator()(gemm_inst const &g) {
     os_ << "gemm";
     os_ << "." << to_string(g.tA());
     os_ << "." << to_string(g.tB()) << " ";
-    dump_blas_a3(static_cast<blas_a3_inst &>(g));
+    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
-void ir_dumper::operator()(gemv_inst &g) {
+void ir_dumper::operator()(gemv_inst const &g) {
     os_ << "gemv";
     os_ << "." << to_string(g.tA()) << " ";
-    dump_blas_a3(static_cast<blas_a3_inst &>(g));
+    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
-void ir_dumper::operator()(ger_inst &g) {
+void ir_dumper::operator()(ger_inst const &g) {
     os_ << "ger ";
-    dump_blas_a3(static_cast<blas_a3_inst &>(g));
+    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
-void ir_dumper::operator()(for_inst &p) {
+void ir_dumper::operator()(for_inst const &p) {
     os_ << "for ";
     visit(*this, *p.loop_var());
     os_ << "=";
@@ -228,7 +228,7 @@ void ir_dumper::operator()(for_inst &p) {
     visit(*this, *p.body());
 }
 
-void ir_dumper::operator()(foreach_inst &p) {
+void ir_dumper::operator()(foreach_inst const &p) {
     os_ << "foreach ";
     visit(*this, *p.loop_var());
     os_ << "=";
@@ -241,12 +241,12 @@ void ir_dumper::operator()(foreach_inst &p) {
     visit(*this, *p.body());
 }
 
-void ir_dumper::operator()(hadamard_inst &g) {
+void ir_dumper::operator()(hadamard_inst const &g) {
     os_ << "hadamard ";
-    dump_blas_a3(static_cast<blas_a3_inst &>(g));
+    dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
-void ir_dumper::operator()(if_inst &in) {
+void ir_dumper::operator()(if_inst const &in) {
     os_ << "if ";
     visit(*this, *in.condition());
     os_ << " ";
@@ -257,14 +257,14 @@ void ir_dumper::operator()(if_inst &in) {
     }
 }
 
-void ir_dumper::operator()(neg_inst &a) {
+void ir_dumper::operator()(neg_inst const &a) {
     os_ << "neg ";
     visit(*this, *a.a());
     os_ << " : ";
     visit(*this, *a.a()->ty());
 }
 
-void ir_dumper::operator()(size_inst &s) {
+void ir_dumper::operator()(size_inst const &s) {
     visit(*this, *s.result());
     os_ << " = size ";
     visit(*this, *s.operand());
@@ -273,12 +273,12 @@ void ir_dumper::operator()(size_inst &s) {
     visit(*this, *s.operand()->ty());
 }
 
-void ir_dumper::operator()(subview_inst &s) {
+void ir_dumper::operator()(subview_inst const &s) {
     visit(*this, *s.result());
     os_ << " = subview ";
     visit(*this, *s.operand());
     os_ << "[";
-    do_with_infix(s.slices().begin(), s.slices().end(), [this](auto &i) {
+    do_with_infix(s.slices().begin(), s.slices().end(), [this](auto const &i) {
         visit(*this, *i.first);
         if (i.second) {
             os_ << ":";
@@ -292,37 +292,38 @@ void ir_dumper::operator()(subview_inst &s) {
     visit(*this, *s.result()->ty());
 }
 
-void ir_dumper::operator()(store_inst &e) {
+void ir_dumper::operator()(store_inst const &e) {
     os_ << "store ";
     visit(*this, *e.val());
     os_ << ", ";
     visit(*this, *e.operand());
     os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto &i) { visit(*this, *i); });
+                  [this](auto const &i) { visit(*this, *i); });
     os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
 
-void ir_dumper::operator()(sum_inst &a) {
+void ir_dumper::operator()(sum_inst const &a) {
     os_ << "sum";
     os_ << "." << to_string(a.tA()) << " ";
-    dump_blas_a2(static_cast<blas_a2_inst &>(a));
+    dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 
-void ir_dumper::operator()(yield_inst &y) {
+void ir_dumper::operator()(yield_inst const &y) {
     os_ << "yield ";
-    do_with_infix(y.vals().begin(), y.vals().end(), [this](auto &i) { visit(*this, *i); });
+    do_with_infix(y.vals().begin(), y.vals().end(), [this](auto const &i) { visit(*this, *i); });
     os_ << " : ";
-    do_with_infix(y.vals().begin(), y.vals().end(), [this](auto &i) { visit(*this, *i->ty()); });
+    do_with_infix(y.vals().begin(), y.vals().end(),
+                  [this](auto const &i) { visit(*this, *i->ty()); });
 }
 
 /* Region nodes */
-void ir_dumper::operator()(rgn &b) {
+void ir_dumper::operator()(rgn const &b) {
     os_ << "{" << std::endl;
     ++lvl_;
     auto ind = indent();
-    for (auto &s : b.insts()) {
+    for (auto const &s : b.insts()) {
         os_ << ind;
         visit(*this, *s);
         os_ << std::endl;
@@ -332,13 +333,13 @@ void ir_dumper::operator()(rgn &b) {
 }
 
 /* Function nodes */
-void ir_dumper::operator()(prototype &p) {
+void ir_dumper::operator()(prototype const &p) {
     os_ << "func @" << p.name() << "(";
     std::string infix = ",\n       ";
     infix += std::string(p.name().size(), ' ');
     do_with_infix(
         p.args().begin(), p.args().end(),
-        [this](auto &a) {
+        [this](auto const &a) {
             os_ << "%" << a->name();
             os_ << ": ";
             visit(*this, *a->ty());
@@ -347,7 +348,7 @@ void ir_dumper::operator()(prototype &p) {
     os_ << ")";
 }
 
-void ir_dumper::operator()(function &fn) {
+void ir_dumper::operator()(function const &fn) {
     visit(*this, *fn.prototype());
     os_ << " ";
     auto const sgs = fn.subgroup_size();
@@ -363,8 +364,8 @@ void ir_dumper::operator()(function &fn) {
 }
 
 /* Program nodes */
-void ir_dumper::operator()(program &p) {
-    for (auto &decl : p.declarations()) {
+void ir_dumper::operator()(program const &p) {
+    for (auto const &decl : p.declarations()) {
         visit(*this, *decl);
     }
 }

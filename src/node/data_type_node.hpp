@@ -39,7 +39,7 @@ class group_data_type : public clir::visitable<group_data_type, data_type_node> 
   public:
     inline group_data_type(data_type ty, location const &lc = {}) : ty_(std::move(ty)) { loc(lc); }
 
-    inline data_type &ty() { return ty_; }
+    inline auto ty() const -> data_type const & { return ty_; }
 
   private:
     data_type ty_;
@@ -52,9 +52,9 @@ class memref_data_type : public clir::visitable<memref_data_type, data_type_node
     memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                      std::vector<std::int64_t> stride = {}, location const &lc = {});
 
-    inline scalar_type element_ty() { return element_ty_; }
-    inline clir::data_type clir_element_ty() { return to_clir_ty(element_ty_, addrspace_); }
-    inline clir::data_type clir_atomic_element_ty() {
+    inline scalar_type element_ty() const { return element_ty_; }
+    inline clir::data_type clir_element_ty() const { return to_clir_ty(element_ty_, addrspace_); }
+    inline clir::data_type clir_atomic_element_ty() const {
         return to_clir_atomic_ty(element_ty_, addrspace_);
     }
     inline std::int64_t dim() const { return shape_.size(); }
@@ -89,8 +89,8 @@ class scalar_data_type : public clir::visitable<scalar_data_type, data_type_node
   public:
     inline scalar_data_type(scalar_type type, location const &lc) : ty_(type) { loc(lc); }
 
-    inline scalar_type ty() { return ty_; }
-    inline clir::data_type clir_ty() { return to_clir_ty(ty_); }
+    inline scalar_type ty() const { return ty_; }
+    inline clir::data_type clir_ty() const { return to_clir_ty(ty_); }
 
   private:
     scalar_type ty_;

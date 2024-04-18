@@ -126,15 +126,16 @@ tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info, uint32_t
     });
 }
 
-tinytc_status_t tinytc_core_info_get_ip_version(tinytc_core_info_t info, uint32_t *ip_version) {
+tinytc_status_t tinytc_core_info_get_ip_version(const_tinytc_core_info_t info,
+                                                uint32_t *ip_version) {
     if (info == nullptr || ip_version == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { *ip_version = info->ip_version(); });
 }
 
-tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_info_t info, uint32_t *sgs_size,
-                                                    uint32_t const **sgs) {
+tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
+                                                    uint32_t *sgs_size, uint32_t const **sgs) {
 
     if (info == nullptr || sgs_size == nullptr || sgs == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -149,7 +150,7 @@ tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_info_t info, uin
     });
 }
 
-tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_info_t info, uint32_t *size) {
+tinytc_status_t tinytc_core_info_get_register_size(const_tinytc_core_info_t info, uint32_t *size) {
 
     if (info == nullptr || size == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -157,7 +158,7 @@ tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_info_t info, uint
     return exception_to_status_code([&] { *size = info->register_size(); });
 }
 
-tinytc_status_t tinytc_core_info_get_num_registers_per_thread(tinytc_core_info_t info,
+tinytc_status_t tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_info_t info,
                                                               uint32_t *num) {
 
     if (info == nullptr || num == nullptr) {

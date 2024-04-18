@@ -38,14 +38,14 @@ struct tinytc_inst : tinytc::reference_counted, tinytc::inst_nodes {
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
-    virtual tinytc::value result() = 0;
-    inline virtual auto results() -> std::vector<tinytc::value> {
+    virtual tinytc::value result() const = 0;
+    inline virtual auto results() const -> std::vector<tinytc::value> {
         if (auto r = result(); r) {
             return {std::move(r)};
         }
         return {};
     }
-    inline virtual auto num_results() -> std::size_t { return result() ? 1u : 0u; }
+    inline virtual auto num_results() const -> std::size_t { return result() ? 1u : 0u; }
     virtual tinytc::inst_kind kind() const = 0;
 
   private:
@@ -64,11 +64,11 @@ class blas_a2_inst : public inst_node {
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
-    inline value &alpha() { return alpha_; }
-    inline value &A() { return A_; }
-    inline value &beta() { return beta_; }
-    inline value &B() { return B_; }
-    inline value result() override { return value{}; }
+    inline auto alpha() const -> value const & { return alpha_; }
+    inline auto A() const -> value const & { return A_; }
+    inline auto beta() const -> value const & { return beta_; }
+    inline auto B() const -> value const & { return B_; }
+    inline value result() const override { return value{}; }
     inline inst_kind kind() const override { return inst_kind::collective; }
 
   protected:
@@ -82,12 +82,12 @@ class blas_a3_inst : public inst_node {
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
-    inline value &alpha() { return alpha_; }
-    inline value &A() { return A_; }
-    inline value &B() { return B_; }
-    inline value &beta() { return beta_; }
-    inline value &C() { return C_; }
-    inline value result() override { return value{}; }
+    inline auto alpha() const -> value const & { return alpha_; }
+    inline auto A() const -> value const & { return A_; }
+    inline auto B() const -> value const & { return B_; }
+    inline auto beta() const -> value const & { return beta_; }
+    inline auto C() const -> value const & { return C_; }
+    inline value result() const override { return value{}; }
     inline inst_kind kind() const override { return inst_kind::collective; }
 
   protected:
@@ -100,12 +100,12 @@ class loop_inst : public inst_node {
     loop_inst(value loop_var, value from, value to, region body, location const &loc = {});
     loop_inst(value loop_var, value from, value to, value step, region body,
               location const &loc = {});
-    inline value &loop_var() { return loop_var_; }
-    inline value &from() { return from_; }
-    inline value &to() { return to_; }
-    inline value &step() { return step_; }
-    inline region &body() { return body_; }
-    inline value result() override { return value{}; }
+    inline auto loop_var() const -> value const & { return loop_var_; }
+    inline auto from() const -> value const & { return from_; }
+    inline auto to() const -> value const & { return to_; }
+    inline auto step() const -> value const & { return step_; }
+    inline auto body() const -> region const & { return body_; }
+    inline value result() const override { return value{}; }
 
   private:
     value loop_var_, from_, to_, step_;
@@ -116,7 +116,7 @@ class alloca_inst : public clir::visitable<alloca_inst, inst_node> {
   public:
     alloca_inst(data_type ty, location const &loc = {});
 
-    inline value result() override { return result_; }
+    inline value result() const override { return result_; }
     inline std::int64_t stack_ptr() const { return stack_ptr_; }
     inline void stack_ptr(std::int64_t ptr) { stack_ptr_ = ptr; }
     inline inst_kind kind() const override { return inst_kind::collective; }
@@ -132,7 +132,7 @@ class axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst> {
     axpby_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
                location const &lc = {});
 
-    inline transpose tA() { return tA_; }
+    inline transpose tA() const { return tA_; }
 
   private:
     transpose tA_;
@@ -140,7 +140,7 @@ class axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst> {
 
 class barrier_inst : public clir::visitable<barrier_inst, inst_node> {
   public:
-    inline value result() override { return value{}; }
+    inline value result() const override { return value{}; }
     inline inst_kind kind() const override { return inst_kind::collective; }
 };
 
@@ -148,10 +148,10 @@ class binary_op_inst : public clir::visitable<binary_op_inst, scalar_inst> {
   public:
     binary_op_inst(binary_op op, value a, value b, location const &lc = {});
 
-    inline binary_op op() { return op_; }
-    inline value &a() { return a_; }
-    inline value &b() { return b_; }
-    inline value result() override { return result_; }
+    inline binary_op op() const { return op_; }
+    inline auto a() const -> value const & { return a_; }
+    inline auto b() const -> value const & { return b_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -162,8 +162,8 @@ class binary_op_inst : public clir::visitable<binary_op_inst, scalar_inst> {
 class cast_inst : public clir::visitable<cast_inst, scalar_inst> {
   public:
     cast_inst(value a, scalar_type to_ty, location const &lc = {});
-    inline value &a() { return a_; }
-    inline value result() override { return result_; }
+    inline auto a() const -> value const & { return a_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -174,10 +174,10 @@ class compare_inst : public clir::visitable<compare_inst, scalar_inst> {
   public:
     compare_inst(cmp_condition cond, value a, value b, location const &lc = {});
 
-    inline cmp_condition cond() { return cond_; }
-    inline value &a() { return a_; }
-    inline value &b() { return b_; }
-    inline value result() override { return result_; }
+    inline cmp_condition cond() const { return cond_; }
+    inline auto a() const -> value const & { return a_; }
+    inline auto b() const -> value const & { return b_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -190,11 +190,11 @@ class expand_inst : public clir::visitable<expand_inst, inst_node> {
     expand_inst(value op, std::int64_t mode, std::vector<value> expand_shape,
                 location const &lc = {});
 
-    inline value &operand() { return op_; }
+    inline auto operand() const -> value const & { return op_; }
     inline std::int64_t mode() const { return mode_; }
-    inline auto &expand_shape() { return expand_shape_; }
-    inline value &expand_shape(std::int64_t i) { return expand_shape_[i]; }
-    inline value result() override { return result_; }
+    inline auto expand_shape() const -> std::vector<value> const & { return expand_shape_; }
+    inline auto expand_shape(std::int64_t i) const -> value const & { return expand_shape_[i]; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -207,10 +207,10 @@ class fuse_inst : public clir::visitable<fuse_inst, inst_node> {
   public:
     fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc = {});
 
-    inline value &operand() { return op_; }
+    inline auto operand() const -> value const & { return op_; }
     inline std::int64_t from() const { return from_; }
     inline std::int64_t to() const { return to_; }
-    inline value result() override { return result_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -222,9 +222,9 @@ class load_inst : public clir::visitable<load_inst, inst_node> {
   public:
     load_inst(value op, std::vector<value> index_list, location const &lc = {});
 
-    inline value &operand() { return op_; }
-    inline std::vector<value> &index_list() { return index_list_; }
-    inline value result() override { return result_; }
+    inline auto operand() const -> value const & { return op_; }
+    inline auto index_list() const -> std::vector<value> const & { return index_list_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -238,7 +238,7 @@ class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
     inline group_id_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
         loc(lc);
     }
-    inline value result() override { return result_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -250,7 +250,7 @@ class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
     inline group_size_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
         loc(lc);
     }
-    inline value result() override { return result_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -260,8 +260,8 @@ class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
 class lifetime_stop_inst : public clir::visitable<lifetime_stop_inst, inst_node> {
   public:
     inline lifetime_stop_inst(value obj) : obj_(std::move(obj)) {}
-    inline value &object() { return obj_; }
-    inline value result() override { return value{}; }
+    inline auto object() const -> value const & { return obj_; }
+    inline value result() const override { return value{}; }
     inline inst_kind kind() const override { return inst_kind::collective; }
 
   private:
@@ -274,8 +274,8 @@ class gemm_inst : public clir::visitable<gemm_inst, blas_a3_inst> {
     gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
               bool atomic = false, location const &lc = {});
 
-    inline transpose tA() { return tA_; }
-    inline transpose tB() { return tB_; }
+    inline transpose tA() const { return tA_; }
+    inline transpose tB() const { return tB_; }
 
   private:
     transpose tA_, tB_;
@@ -287,7 +287,7 @@ class gemv_inst : public clir::visitable<gemv_inst, blas_a3_inst> {
     gemv_inst(transpose tA, value alpha, value A, value B, value beta, value C, bool atomic = false,
               location const &lc = {});
 
-    inline transpose tA() { return tA_; }
+    inline transpose tA() const { return tA_; }
 
   private:
     transpose tA_;
@@ -326,13 +326,16 @@ class if_inst : public clir::visitable<if_inst, inst_node> {
   public:
     if_inst(value condition, region then, region otherwise = nullptr,
             std::vector<scalar_type> const &return_types = {}, location const &lc = {});
-    inline value &condition() { return condition_; }
-    inline region &then() { return then_; }
-    inline region &otherwise() { return otherwise_; }
-    inline value result() override { return results_.size() > 0 ? results_.front() : value{}; }
-    inline auto results() -> std::vector<value> override { return results_; }
-    inline auto num_results() -> std::size_t override { return results_.size(); }
+    inline auto condition() const -> value const & { return condition_; }
+    inline auto then() const -> region const & { return then_; }
+    inline auto otherwise() const -> region const & { return otherwise_; }
+    inline value result() const override {
+        return results_.size() > 0 ? results_.front() : value{};
+    }
+    inline auto results() const -> std::vector<value> override { return results_; }
+    inline auto num_results() const -> std::size_t override { return results_.size(); }
     inline auto results_ref() -> std::vector<value> & { return results_; }
+    inline auto results_ref() const -> std::vector<value> const & { return results_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -345,8 +348,8 @@ class neg_inst : public clir::visitable<neg_inst, scalar_inst> {
   public:
     neg_inst(value a, location const &lc = {});
 
-    inline value &a() { return a_; }
-    inline value result() override { return result_; }
+    inline auto a() const -> value const & { return a_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -357,9 +360,9 @@ class size_inst : public clir::visitable<size_inst, inst_node> {
   public:
     size_inst(value op, std::int64_t mode, location const &lc = {});
 
-    inline value &operand() { return op_; }
+    inline auto operand() const -> value const & { return op_; }
     inline std::int64_t mode() const { return mode_; }
-    inline value result() override { return result_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -371,9 +374,9 @@ class subview_inst : public clir::visitable<subview_inst, inst_node> {
   public:
     subview_inst(value op, std::vector<slice> slices, location const &lc = {});
 
-    inline std::vector<slice> &slices() { return slices_; }
-    inline value &operand() { return op_; }
-    inline value result() override { return result_; }
+    inline auto slices() const -> std::vector<slice> const & { return slices_; }
+    inline auto operand() const -> value const & { return op_; }
+    inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -386,10 +389,10 @@ class store_inst : public clir::visitable<store_inst, inst_node> {
   public:
     store_inst(value val, value op, std::vector<value> index_list, location const &lc = {});
 
-    inline value &val() { return val_; }
-    inline value &operand() { return op_; }
-    inline std::vector<value> &index_list() { return index_list_; }
-    inline value result() override { return {}; }
+    inline auto val() const -> value const & { return val_; }
+    inline auto operand() const -> value const & { return op_; }
+    inline auto index_list() const -> std::vector<value> const & { return index_list_; }
+    inline value result() const override { return {}; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
@@ -414,8 +417,8 @@ class yield_inst : public clir::visitable<yield_inst, inst_node> {
     inline yield_inst(std::vector<value> vals, location const &lc = {}) : vals_(std::move(vals)) {
         loc(lc);
     }
-    inline value result() override { return value{}; }
-    inline auto vals() -> std::vector<value> & { return vals_; }
+    inline value result() const override { return value{}; }
+    inline auto vals() const -> std::vector<value> const & { return vals_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:

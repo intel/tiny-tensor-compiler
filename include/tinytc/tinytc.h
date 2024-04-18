@@ -200,7 +200,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char cons
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(tinytc_value_t vl, char const **name);
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name);
 
 ////////////////////////////
 /////// Instructions ///////
@@ -700,7 +700,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_retain(tinytc_inst_t instr);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result);
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr,
+                                                    tinytc_value_t *result);
 
 /**
  * @brief Get values produced by instruction
@@ -716,7 +717,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr,
                                                      uint32_t *result_list_size,
                                                      tinytc_value_t *result_list);
 
@@ -875,6 +876,49 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
 TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
 ////////////////////////////
+// Visitors and transforms /
+////////////////////////////
+
+/**
+ * @brief Dump program to stderr
+ *
+ * @param prg [in] program object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg);
+
+/**
+ * @brief Print program to file
+ *
+ * @param prg [in] program object
+ * @param filename [in] filename
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg,
+                                                        char const *filename);
+
+/**
+ * @brief Print program to string
+ *
+ * The user is responsible to dispose the string with tinytc_string_destroy.
+ *
+ * @param prg [in] program object
+ * @param str [out] pointer to string
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str);
+
+/**
+ * @brief Delete a string returned from tinytc API
+ *
+ * @param str [in] string
+ */
+TINYTC_EXPORT void tinytc_string_destroy(char *str);
+
+////////////////////////////
 //////// Device info ///////
 ////////////////////////////
 
@@ -918,7 +962,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_ip_version(tinytc_core_info_t info,
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_ip_version(const_tinytc_core_info_t info,
                                                               uint32_t *ip_version);
 
 /**
@@ -930,7 +974,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_ip_version(tinytc_core_info_t
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_info_t info,
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
                                                                   uint32_t *sgs_size,
                                                                   uint32_t const **sgs);
 
@@ -942,7 +986,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(tinytc_core_in
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_info_t info,
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(const_tinytc_core_info_t info,
                                                                  uint32_t *size);
 
 /**
@@ -953,8 +997,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(tinytc_core_inf
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_num_registers_per_thread(tinytc_core_info_t info,
-                                                                            uint32_t *num);
+TINYTC_EXPORT tinytc_status_t
+tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_info_t info, uint32_t *num);
 
 /**
  * @brief Request core feature
@@ -1196,9 +1240,9 @@ TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
 ////////////////////////////
 
 /**
- * @brief Returns a binary for the tall and skinny recipe
+ * @brief Returns a program for the tall and skinny recipe
  *
- * The binary contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0 called
+ * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0 called
  * "gemm". M (= number of rows of A, C) and strides are dynamic.
  *
  * The signature of the generated kernels gemm and gemm_beta0 is
@@ -1219,7 +1263,7 @@ TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
  *
  * where ldA, ldB, ldC is the size of stride[1] of A, B, C, respectively.
  *
- * @param bin [out] pointer to the binary object created
+ * @param prg [out] pointer to the program object created
  * @param info [in] core info object created
  * @param ty [in] Scalar type of alpha, A, B, beta, C
  * @param [in] M_block_size Size of M block that each work group gets
@@ -1230,7 +1274,7 @@ TINYTC_EXPORT void tinytc_binary_destroy(tinytc_binary_t bin);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_binary_t *bin, tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t M_block_size,
+    tinytc_prog_t *prg, tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t M_block_size,
     uint32_t N, uint32_t K, tinytc_source_context_t ctx);
 
 #ifdef __cplusplus

@@ -317,7 +317,7 @@ inline data_type create_memref(scalar_type scalar_ty, std::vector<std::int64_t> 
               loc);
     return data_type(mt);
 }
-inline data_type create_group(data_type memref_ty, location const &loc = {}) {
+inline data_type create_group(data_type const &memref_ty, location const &loc = {}) {
     tinytc_data_type_t gt;
     CHECK_LOC(tinytc_group_type_create(&gt, memref_ty.get(), &loc), loc);
     return data_type(gt);
@@ -766,22 +766,34 @@ template <> struct shared_handle_traits<tinytc_prog_t> {
     }
 };
 
+template <> struct unique_handle_traits<char *> {
+    static void destroy(char *obj) { tinytc_string_destroy(obj); }
+};
+
 class prog : public shared_handle<tinytc_prog_t> {
   public:
     using shared_handle::shared_handle;
-};
 
-inline prog create_program(std::vector<func> &fun_list, location const &loc = {}) {
-    static_assert(func_reinterpret_allowed);
-    tinytc_prog_t prg;
-    auto len = fun_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("function list too long");
+    inline prog(std::vector<func> &fun_list, location const &loc = {}) {
+        static_assert(func_reinterpret_allowed);
+        auto len = fun_list.size();
+        if (len > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::out_of_range("function list too long");
+        }
+        tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
+        CHECK_LOC(tinytc_program_create(&obj_, len, fl, &loc), loc);
     }
-    tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
-    CHECK_LOC(tinytc_program_create(&prg, len, fl, &loc), loc);
-    return prog(prg);
-}
+
+    void dump() const { CHECK(tinytc_prog_dump(obj_)); }
+    void print_to_file(char const *filename) const {
+        CHECK(tinytc_prog_print_to_file(obj_, filename));
+    }
+    auto print_to_string() const -> unique_handle<char *> {
+        char *str;
+        CHECK(tinytc_prog_print_to_string(obj_, &str));
+        return {str};
+    }
+};
 
 ////////////////////////////
 ////////// Builder /////////
@@ -941,7 +953,7 @@ class program_builder {
     //! Add function
     inline void add(func f) { functions_.emplace_back(std::move(f)); }
     //! Returns built product
-    inline prog get_product(location const &loc = {}) { return create_program(functions_, loc); }
+    inline prog get_product(location const &loc = {}) { return prog(functions_, loc); }
 
   private:
     std::vector<func> functions_;
@@ -1368,11 +1380,11 @@ namespace recipe {
 
 inline auto create_tall_and_skinny(core_info const &info, scalar_type ty,
                                    std::uint32_t M_block_size, std::uint32_t N, std::uint32_t K,
-                                   tinytc_source_context_t ctx = nullptr) -> binary {
-    tinytc_binary_t bin;
+                                   tinytc_source_context_t ctx = nullptr) -> prog {
+    tinytc_prog_t prg;
     CHECK(tinytc_recipe_tall_and_skinny_create(
-        &bin, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
-    return {bin};
+        &prg, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
+    return {prg};
 }
 
 /**
@@ -1412,10 +1424,7 @@ template <typename T, runtime R> class tall_and_skinny {
     tall_and_skinny(core_info const &info, std::uint32_t N, std::uint32_t K, context_t ctx,
                     device_t dev, tinytc_source_context_t source_ctx = nullptr,
                     std::uint32_t M_block_size = 128)
-        : M_block_size_(M_block_size),
-          bundle_(
-              create_tall_and_skinny(info, to_scalar_type_v<T>, M_block_size_, N, K, source_ctx),
-              ctx, dev),
+        : M_block_size_(M_block_size), bundle_(make_binary(info, N, K, source_ctx), ctx, dev),
           gemm_(bundle_.get("gemm")), gemm_beta0_(bundle_.get("gemm_beta0")) {}
 
     /**
@@ -1449,8 +1458,8 @@ template <typename T, runtime R> class tall_and_skinny {
     /**
      * @brief Submits a kernel to the runtime for execution on the device
      *
-     * This submit prototype is only available if the lifetime of the runtime's native event type
-     * is user-managed.
+     * This submit prototype is only available if the lifetime of the runtime's native event
+     * type is user-managed.
      *
      * @param M Number of rows of A and C
      * @param alpha @f$\alpha@f$
@@ -1478,6 +1487,12 @@ template <typename T, runtime R> class tall_and_skinny {
     }
 
   private:
+    auto make_binary(core_info const &info, std::uint32_t N, std::uint32_t K,
+                     tinytc_source_context_t source_ctx = nullptr) -> binary {
+        auto prg =
+            create_tall_and_skinny(info, to_scalar_type_v<T>, M_block_size_, N, K, source_ctx);
+        return compile_to_binary(prg, info, bundle_format::spirv, source_ctx);
+    }
     auto get_kernel(T beta) -> tensor_kernel<R> & { return beta == T(0.0) ? gemm_beta0_ : gemm_; }
 
     std::uint32_t M_block_size_;

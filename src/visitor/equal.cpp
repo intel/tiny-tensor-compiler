@@ -13,14 +13,16 @@ using clir::visit;
 
 namespace tinytc {
 
-bool equal::operator()(data_type_node &, data_type_node &) { return false; }
-bool equal::operator()(void_data_type &, void_data_type &) { return true; }
-bool equal::operator()(group_data_type &a, group_data_type &b) {
+bool equal::operator()(data_type_node const &, data_type_node const &) { return false; }
+bool equal::operator()(void_data_type const &, void_data_type const &) { return true; }
+bool equal::operator()(group_data_type const &a, group_data_type const &b) {
     return visit(*this, *a.ty(), *b.ty());
 }
-bool equal::operator()(memref_data_type &a, memref_data_type &b) {
+bool equal::operator()(memref_data_type const &a, memref_data_type const &b) {
     return a.element_ty() == b.element_ty() && a.shape() == b.shape() && a.stride() == b.stride();
 }
-bool equal::operator()(scalar_data_type &a, scalar_data_type &b) { return a.ty() == b.ty(); }
+bool equal::operator()(scalar_data_type const &a, scalar_data_type const &b) {
+    return a.ty() == b.ty();
+}
 
 } // namespace tinytc

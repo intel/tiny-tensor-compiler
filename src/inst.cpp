@@ -403,14 +403,14 @@ tinytc_status_t tinytc_inst_retain(tinytc_inst_t instr) {
     return exception_to_status_code([&] { instr->inc_ref(); });
 }
 
-tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result) {
+tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr, tinytc_value_t *result) {
     if (instr == nullptr || result == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { *result = instr->result().release(); });
 }
 
-tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_list_size,
+tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr, uint32_t *result_list_size,
                                        tinytc_value_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||
         (*result_list_size > 0 && result_list == nullptr)) {

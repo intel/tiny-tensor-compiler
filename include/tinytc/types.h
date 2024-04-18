@@ -247,36 +247,42 @@ typedef uint8_t tinytc_bool_t;
 struct tinytc_data_type;
 //! @brief data_type handle
 typedef struct tinytc_data_type *tinytc_data_type_t;
+typedef const struct tinytc_data_type *const_tinytc_data_type_t;
 
 //! @struct tinytc_value
 //! @brief Opaque struct for a value
 struct tinytc_value;
 //! @brief value handle
 typedef struct tinytc_value *tinytc_value_t;
+typedef const struct tinytc_value *const_tinytc_value_t;
 
 //! @struct tinytc_inst
 //! @brief Opaque struct for an instruction
 struct tinytc_inst;
 //! @brief inst handle
 typedef struct tinytc_inst *tinytc_inst_t;
+typedef const struct tinytc_inst *const_tinytc_inst_t;
 
 //! @struct tinytc_region
 //! @brief Opaque struct for a region
 struct tinytc_region;
 //! @brief region handle
 typedef struct tinytc_region *tinytc_region_t;
+typedef const struct tinytc_region *const_tinytc_region_t;
 
 //! @struct tinytc_func
 //! @brief Opaque struct for a function
 struct tinytc_func;
 //! @brief func handle
 typedef struct tinytc_func *tinytc_func_t;
+typedef const struct tinytc_func *const_tinytc_func_t;
 
 //! @struct tinytc_prog
 //! @brief Opaque struct for a program
 struct tinytc_prog;
 //! @brief prog handle
 typedef struct tinytc_prog *tinytc_prog_t;
+typedef const struct tinytc_prog *const_tinytc_prog_t;
 
 //! @struct tinytc_core_info;
 //! @brief Opaque struct for core information

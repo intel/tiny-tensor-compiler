@@ -42,19 +42,19 @@ std::string var_name(std::string name) {
     return name;
 }
 
-dope_vector dope_vector::from_value(value_node &v, decl_fun_t declare) {
-    memref_data_type *m = nullptr;
+dope_vector dope_vector::from_value(value_node const &v, decl_fun_t declare) {
+    memref_data_type const *m = nullptr;
     auto dt = clir::data_type{};
-    visit(overloaded{[&](memref_data_type &mr) {
+    visit(overloaded{[&](memref_data_type const &mr) {
                          m = &mr;
                          dt = to_clir_ty(scalar_type::index);
                      },
-                     [&](group_data_type &g) {
+                     [&](group_data_type const &g) {
                          m = dynamic_cast<memref_data_type *>(g.ty().get());
                          dt = clir::pointer_to(
                              to_clir_ty(scalar_type::index, clir::address_space::global_t));
                      },
-                     [](auto &) {}},
+                     [](auto const &) {}},
           *v.ty());
     if (m == nullptr) {
         throw compilation_error(
@@ -65,7 +65,7 @@ dope_vector dope_vector::from_value(value_node &v, decl_fun_t declare) {
                                          std::move(declare));
 }
 
-dope_vector dope_vector::from_memref_type(std::string const &prefix, memref_data_type &m,
+dope_vector dope_vector::from_memref_type(std::string const &prefix, memref_data_type const &m,
                                           clir::data_type dt, decl_fun_t declare) {
     auto shape = std::vector<clir::expr>{};
     auto stride = std::vector<clir::expr>{};
@@ -115,7 +115,7 @@ void opencl_ast::set_dope_vector(value_node *v, dope_vector dv) {
     dope_vector_[u] = std::move(dv);
 }
 
-clir::var opencl_ast::declare(value_node &v) {
+clir::var opencl_ast::declare(value_node const &v) {
     uintptr_t u = std::bit_cast<uintptr_t>(&v);
     for (auto it = declared_vars_.rbegin(); it != declared_vars_.rend(); ++it) {
         if (it->find(u) != it->end()) {
@@ -129,7 +129,7 @@ clir::var opencl_ast::declare(value_node &v) {
     return declared_vars_.back()[u];
 }
 
-memref_data_type *opencl_ast::get_memref_type(value_node &v) {
+auto opencl_ast::get_memref_type(value_node const &v) const -> const memref_data_type * {
     auto t = dynamic_cast<memref_data_type *>(v.ty().get());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
@@ -137,10 +137,10 @@ memref_data_type *opencl_ast::get_memref_type(value_node &v) {
     return t;
 }
 
-scalar_type opencl_ast::get_scalar_type(data_type_node &ty) {
-    return visit(overloaded{[](scalar_data_type &i) -> scalar_type { return i.ty(); },
-                            [](memref_data_type &i) -> scalar_type { return i.element_ty(); },
-                            [&](auto &i) -> scalar_type {
+auto opencl_ast::get_scalar_type(data_type_node const &ty) -> scalar_type {
+    return visit(overloaded{[](scalar_data_type const &i) -> scalar_type { return i.ty(); },
+                            [](memref_data_type const &i) -> scalar_type { return i.element_ty(); },
+                            [&](auto const &i) -> scalar_type {
                                 throw compilation_error(i.loc(),
                                                         status::ir_expected_memref_or_scalar);
                                 return scalar_type{};
@@ -149,8 +149,10 @@ scalar_type opencl_ast::get_scalar_type(data_type_node &ty) {
 };
 
 /* Data type nodes */
-clir::data_type opencl_ast::operator()(void_data_type &) { return clir::builtin_type::void_t; }
-clir::data_type opencl_ast::operator()(group_data_type &g) {
+clir::data_type opencl_ast::operator()(void_data_type const &) {
+    return clir::builtin_type::void_t;
+}
+clir::data_type opencl_ast::operator()(group_data_type const &g) {
     auto ptr_ty = visit(*this, *g.ty());
     ptr_ty = visit(overloaded{[](clir::internal::pointer &t) {
                                   return clir::pointer_to(
@@ -164,21 +166,21 @@ clir::data_type opencl_ast::operator()(group_data_type &g) {
     }
     return ptr_ty;
 }
-clir::data_type opencl_ast::operator()(memref_data_type &d) {
+clir::data_type opencl_ast::operator()(memref_data_type const &d) {
     return clir::pointer_to(d.clir_element_ty());
 }
-clir::data_type opencl_ast::operator()(scalar_data_type &s) { return s.clir_ty(); }
+clir::data_type opencl_ast::operator()(scalar_data_type const &s) { return s.clir_ty(); }
 
 /* Value nodes */
-clir::expr opencl_ast::operator()(float_imm &v) {
+clir::expr opencl_ast::operator()(float_imm const &v) {
     auto ty = get_scalar_type(*v.ty());
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
-clir::expr opencl_ast::operator()(int_imm &v) {
+clir::expr opencl_ast::operator()(int_imm const &v) {
     auto ty = get_scalar_type(*v.ty());
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
-clir::expr opencl_ast::operator()(val &v) {
+clir::expr opencl_ast::operator()(val const &v) {
     uintptr_t u = std::bit_cast<uintptr_t>(&v);
     for (auto it = declared_vars_.rbegin(); it != declared_vars_.rend(); ++it) {
         if (auto j = it->find(u); j != it->end()) {
@@ -191,7 +193,7 @@ clir::expr opencl_ast::operator()(val &v) {
 }
 
 /* Stmt nodes */
-std::vector<clir::stmt> opencl_ast::operator()(alloca_inst &a) {
+std::vector<clir::stmt> opencl_ast::operator()(alloca_inst const &a) {
     if (a.stack_ptr() < 0) {
         throw compilation_error(a.loc(), status::internal_compiler_error,
                                 "Invalid stack_ptr in alloca. Did you run set_stack_ptrs?");
@@ -214,7 +216,7 @@ std::vector<clir::stmt> opencl_ast::operator()(alloca_inst &a) {
     return {std::move(result)};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(axpby_inst &inst) {
+std::vector<clir::stmt> opencl_ast::operator()(axpby_inst const &inst) {
     auto at = get_memref_type(*inst.A());
     auto bt = get_memref_type(*inst.B());
     auto &adv = get_dope_vector(inst.A().get());
@@ -289,12 +291,12 @@ std::vector<clir::stmt> opencl_ast::operator()(axpby_inst &inst) {
     throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(barrier_inst &) {
+std::vector<clir::stmt> opencl_ast::operator()(barrier_inst const &) {
     return {clir::expression_statement(clir::call_builtin(
         clir::builtin_function::barrier, {clir::cl_mem_fence_flags::CLK_LOCAL_MEM_FENCE}))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(binary_op_inst &b) {
+std::vector<clir::stmt> opencl_ast::operator()(binary_op_inst const &b) {
     auto const make = [](binary_op op, clir::expr a, clir::expr b, bool floating) -> clir::expr {
         switch (op) {
         case binary_op::add:
@@ -320,14 +322,14 @@ std::vector<clir::stmt> opencl_ast::operator()(binary_op_inst &b) {
         make(b.op(), visit(*this, *b.a()), visit(*this, *b.b()), is_floating_type(sty)))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(cast_inst &c) {
+std::vector<clir::stmt> opencl_ast::operator()(cast_inst const &c) {
     auto v = declare(*c.result());
     auto result_ty = visit(*this, *c.result()->ty());
     auto cst = cast(result_ty, visit(*this, *c.a()));
     return {declaration_assignment(std::move(result_ty), std::move(v), std::move(cst))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(compare_inst &c) {
+std::vector<clir::stmt> opencl_ast::operator()(compare_inst const &c) {
     auto const make = [](cmp_condition cond, clir::expr a, clir::expr b) -> clir::expr {
         switch (cond) {
         case cmp_condition::eq:
@@ -350,7 +352,7 @@ std::vector<clir::stmt> opencl_ast::operator()(compare_inst &c) {
                                    make(c.cond(), visit(*this, *c.a()), visit(*this, *c.b())))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(expand_inst &e) {
+std::vector<clir::stmt> opencl_ast::operator()(expand_inst const &e) {
     auto result_var = declare(*e.result());
     auto m = get_memref_type(*e.operand());
     auto &dv = get_dope_vector(e.operand().get());
@@ -378,9 +380,10 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst &e) {
     }
 
     auto const get_shape = [&](std::size_t j) -> clir::expr {
-        auto is_dynamic = visit(overloaded{[&](int_imm &i) { return is_dynamic_value(i.value()); },
-                                           [](auto &) { return false; }},
-                                *eshape[j]);
+        auto is_dynamic =
+            visit(overloaded{[&](int_imm const &i) { return is_dynamic_value(i.value()); },
+                             [](auto const &) { return false; }},
+                  *eshape[j]);
         if (is_dynamic) {
             clir::expr prod = 1;
             for (std::size_t k = 0; k < eshape_cl.size(); ++k) {
@@ -417,7 +420,7 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst &e) {
                     }));
     return clinst;
 }
-std::vector<clir::stmt> opencl_ast::operator()(fuse_inst &f) {
+std::vector<clir::stmt> opencl_ast::operator()(fuse_inst const &f) {
     auto result_var = declare(*f.result());
     auto m = get_memref_type(*f.operand());
     auto &dv = get_dope_vector(f.operand().get());
@@ -457,13 +460,13 @@ std::vector<clir::stmt> opencl_ast::operator()(fuse_inst &f) {
     return clinst;
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
+std::vector<clir::stmt> opencl_ast::operator()(load_inst const &e) {
     auto op_val = e.operand();
     auto rhs = visit(*this, *op_val);
 
     auto clinst = std::vector<clir::stmt>{};
 
-    visit(overloaded{[&](group_data_type &) {
+    visit(overloaded{[&](group_data_type const &) {
                          if (e.index_list().size() != 1) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
@@ -482,7 +485,7 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
                                          std::move(a), std::move(b), std::move(init)[idx]));
                                  }));
                      },
-                     [&](memref_data_type &m) {
+                     [&](memref_data_type const &m) {
                          if (static_cast<std::int64_t>(e.index_list().size()) != m.dim()) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
@@ -491,7 +494,7 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
                              rhs = rhs + visit(*this, *e.index_list()[i]) * dv.stride(i);
                          }
                      },
-                     [&e](auto &) {
+                     [&e](auto const &) {
                          throw compilation_error(e.loc(), status::ir_expected_memref_or_group);
                      }},
           *e.operand()->ty());
@@ -508,23 +511,23 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst &e) {
     return clinst;
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(group_id_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(group_id_inst const &g) {
     auto rhs = clir::get_global_id(2);
     auto lhs = declare(*g.result());
     return {
         declaration_assignment(visit(*this, *g.result()->ty()), std::move(lhs), std::move(rhs))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(group_size_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(group_size_inst const &g) {
     auto rhs = clir::get_global_size(2);
     auto lhs = declare(*g.result());
     return {
         declaration_assignment(visit(*this, *g.result()->ty()), std::move(lhs), std::move(rhs))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(lifetime_stop_inst &) { return {}; }
+std::vector<clir::stmt> opencl_ast::operator()(lifetime_stop_inst const &) { return {}; }
 
-std::vector<clir::stmt> opencl_ast::operator()(gemm_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(gemm_inst const &g) {
     auto a = get_memref_type(*g.A());
     auto b = get_memref_type(*g.B());
     auto c = get_memref_type(*g.C());
@@ -537,11 +540,12 @@ std::vector<clir::stmt> opencl_ast::operator()(gemm_inst &g) {
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
 
-    auto const get_fixed = [](value &v) {
-        return visit(overloaded{[&](int_imm &i) -> std::optional<double> { return i.value(); },
-                                [&](float_imm &i) -> std::optional<double> { return i.value(); },
-                                [](auto &) -> std::optional<double> { return std::nullopt; }},
-                     *v);
+    auto const get_fixed = [](value const &v) {
+        return visit(
+            overloaded{[&](int_imm const &i) -> std::optional<double> { return i.value(); },
+                       [&](float_imm const &i) -> std::optional<double> { return i.value(); },
+                       [](auto const &) -> std::optional<double> { return std::nullopt; }},
+            *v);
     };
 
     auto gemm_ty =
@@ -577,7 +581,7 @@ std::vector<clir::stmt> opencl_ast::operator()(gemm_inst &g) {
          visit(*this, *g.beta()), visit(*this, *g.C()), cdv.stride(0), cdv.stride(1)}))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(gemv_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(gemv_inst const &g) {
     auto a = get_memref_type(*g.A());
     auto b = get_memref_type(*g.B());
     auto c = get_memref_type(*g.C());
@@ -589,11 +593,12 @@ std::vector<clir::stmt> opencl_ast::operator()(gemv_inst &g) {
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
     auto const N = 1;
-    auto const get_fixed = [](value &v) {
-        return visit(overloaded{[&](int_imm &i) -> std::optional<double> { return i.value(); },
-                                [&](float_imm &i) -> std::optional<double> { return i.value(); },
-                                [](auto &) -> std::optional<double> { return std::nullopt; }},
-                     *v);
+    auto const get_fixed = [](value const &v) {
+        return visit(
+            overloaded{[&](int_imm const &i) -> std::optional<double> { return i.value(); },
+                       [&](float_imm const &i) -> std::optional<double> { return i.value(); },
+                       [](auto const &) -> std::optional<double> { return std::nullopt; }},
+            *v);
     };
 
     auto gemm_ty =
@@ -629,7 +634,7 @@ std::vector<clir::stmt> opencl_ast::operator()(gemv_inst &g) {
                     visit(*this, *g.beta()), visit(*this, *g.C()), cdv.stride(0), 0}))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(ger_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(ger_inst const &g) {
     auto bt = get_memref_type(*g.B());
     auto ct = get_memref_type(*g.C());
     auto &adv = get_dope_vector(g.A().get());
@@ -688,7 +693,7 @@ std::vector<clir::stmt> opencl_ast::operator()(ger_inst &g) {
     return {bb.get_product()};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(for_inst &p) {
+std::vector<clir::stmt> opencl_ast::operator()(for_inst const &p) {
     auto clinst = std::vector<clir::stmt>{};
 
     auto lv = declare(*p.loop_var());
@@ -703,7 +708,7 @@ std::vector<clir::stmt> opencl_ast::operator()(for_inst &p) {
     return clinst;
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(foreach_inst &p) {
+std::vector<clir::stmt> opencl_ast::operator()(foreach_inst const &p) {
     auto lv = declare(*p.loop_var());
     auto lv_ty = visit(*this, *p.loop_var()->ty());
     auto from = visit(*this, *p.from());
@@ -721,7 +726,7 @@ std::vector<clir::stmt> opencl_ast::operator()(foreach_inst &p) {
     return {bb.get_product()};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst &g) {
+std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst const &g) {
     auto ct = get_memref_type(*g.C());
     auto &adv = get_dope_vector(g.A().get());
     auto &bdv = get_dope_vector(g.B().get());
@@ -760,10 +765,10 @@ std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst &g) {
     return {bb.get_product()};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(if_inst &in) {
+std::vector<clir::stmt> opencl_ast::operator()(if_inst const &in) {
     auto clinst = std::vector<clir::stmt>{};
     yielded_vars_.push_back(std::vector<clir::var>{});
-    for (auto &r : in.results_ref()) {
+    for (auto const &r : in.results_ref()) {
         auto v = declare(*r);
         clinst.emplace_back(clir::declaration(visit(*this, *r->ty()), v));
         yielded_vars_.back().emplace_back(std::move(v));
@@ -778,13 +783,13 @@ std::vector<clir::stmt> opencl_ast::operator()(if_inst &in) {
     return clinst;
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(neg_inst &n) {
+std::vector<clir::stmt> opencl_ast::operator()(neg_inst const &n) {
     auto v = declare(*n.result());
     return {declaration_assignment(visit(*this, *n.result()->ty()), std::move(v),
                                    -visit(*this, *n.a()))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(size_inst &s) {
+std::vector<clir::stmt> opencl_ast::operator()(size_inst const &s) {
     auto v = declare(*s.result());
     auto &dv = get_dope_vector(s.operand().get());
 
@@ -792,7 +797,7 @@ std::vector<clir::stmt> opencl_ast::operator()(size_inst &s) {
                                          dv.shape(s.mode()))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(subview_inst &s) {
+std::vector<clir::stmt> opencl_ast::operator()(subview_inst const &s) {
     auto result_var = declare(*s.result());
     auto t = get_memref_type(*s.operand());
     if (t->dim() != static_cast<std::int64_t>(s.slices().size())) {
@@ -812,10 +817,11 @@ std::vector<clir::stmt> opencl_ast::operator()(subview_inst &s) {
         auto offset = visit(*this, *slice.first);
         rhs = rhs + std::move(offset) * dv.stride(j);
         if (slice.second) {
-            bool is_size_unknown = visit(
-                overloaded{[&](int_imm &size) -> bool { return is_dynamic_value(size.value()); },
-                           [](auto &) -> bool { return false; }},
-                *slice.second);
+            bool is_size_unknown = visit(overloaded{[&](int_imm const &size) -> bool {
+                                                        return is_dynamic_value(size.value());
+                                                    },
+                                                    [](auto const &) -> bool { return false; }},
+                                         *slice.second);
             auto size = clir::expr{};
             if (is_size_unknown) {
                 size = dv.shape(j) - visit(*this, *slice.first);
@@ -842,7 +848,7 @@ std::vector<clir::stmt> opencl_ast::operator()(subview_inst &s) {
     return clinst;
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(store_inst &s) {
+std::vector<clir::stmt> opencl_ast::operator()(store_inst const &s) {
     auto ot = get_memref_type(*s.operand());
 
     if (static_cast<std::int64_t>(s.index_list().size()) != ot->dim()) {
@@ -860,7 +866,7 @@ std::vector<clir::stmt> opencl_ast::operator()(store_inst &s) {
     return {expression_statement(std::move(st))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
+std::vector<clir::stmt> opencl_ast::operator()(sum_inst const &inst) {
     auto at = get_memref_type(*inst.A());
     auto bt = get_memref_type(*inst.B());
     auto &adv = get_dope_vector(inst.A().get());
@@ -939,7 +945,7 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst &inst) {
     return {bb.get_product()};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(yield_inst &in) {
+std::vector<clir::stmt> opencl_ast::operator()(yield_inst const &in) {
     if (yielded_vars_.empty()) {
         throw compilation_error(in.loc(), status::ir_unexpected_yield);
     }
@@ -955,7 +961,7 @@ std::vector<clir::stmt> opencl_ast::operator()(yield_inst &in) {
 }
 
 /* Region nodes */
-clir::stmt opencl_ast::operator()(rgn &b) {
+clir::stmt opencl_ast::operator()(rgn const &b) {
     declared_vars_.push_back({});
     auto bb = clir::block_builder{};
     for (auto &s : b.insts()) {
@@ -968,22 +974,22 @@ clir::stmt opencl_ast::operator()(rgn &b) {
 }
 
 /* Function nodes */
-clir::func opencl_ast::operator()(prototype &p) {
+clir::func opencl_ast::operator()(prototype const &p) {
     auto fb = clir::kernel_builder(std::string(p.name()));
-    for (auto &v : p.args()) {
+    for (auto const &v : p.args()) {
         fb.argument(visit(*this, *v->ty()), declare(*v));
         auto dv = visit(
-            overloaded{[&fb, &v](memref_data_type &) -> std::optional<dope_vector> {
+            overloaded{[&fb, &v](memref_data_type const &) -> std::optional<dope_vector> {
                            return std::make_optional(dope_vector::from_value(
                                *v, [&](clir::data_type a, clir::var b, dope_vector::type,
                                        std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
                        },
-                       [&fb, &v](group_data_type &) -> std::optional<dope_vector> {
+                       [&fb, &v](group_data_type const &) -> std::optional<dope_vector> {
                            return std::make_optional(dope_vector::from_value(
                                *v, [&](clir::data_type a, clir::var b, dope_vector::type,
                                        std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
                        },
-                       [](auto &) { return std::nullopt; }},
+                       [](auto const &) { return std::nullopt; }},
             *v->ty());
         if (dv) {
             set_dope_vector(v.get(), std::move(*dv));
@@ -996,7 +1002,7 @@ clir::func opencl_ast::operator()(prototype &p) {
     return fb.get_product();
 }
 
-clir::func opencl_ast::operator()(function &fn) {
+clir::func opencl_ast::operator()(function const &fn) {
     auto const subgroup_size = fn.subgroup_size();
     try {
         core_cfg_ = info_->get_core_config(subgroup_size);
@@ -1026,18 +1032,20 @@ clir::func opencl_ast::operator()(function &fn) {
 }
 
 /* Program nodes */
-clir::prog opencl_ast::operator()(program &p) {
+clir::prog opencl_ast::operator()(program const &p) {
     struct name_visitor {
-        auto operator()(function &f) -> std::string_view { return visit(*this, *f.prototype()); }
-        auto operator()(prototype &p) -> std::string_view { return p.name(); }
+        auto operator()(function const &f) -> std::string_view {
+            return visit(*this, *f.prototype());
+        }
+        auto operator()(prototype const &p) -> std::string_view { return p.name(); }
     };
     reserved_names_.clear();
-    for (auto &decl : p.declarations()) {
+    for (auto const &decl : p.declarations()) {
         reserved_names_.insert(std::string(visit(name_visitor{}, *decl)));
     }
 
     prog_builder_ = clir::program_builder{};
-    for (auto &decl : p.declarations()) {
+    for (auto const &decl : p.declarations()) {
         stack_high_water_mark_ = 0;
         prog_builder_.add(visit(*this, *decl));
     }

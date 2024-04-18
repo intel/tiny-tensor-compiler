@@ -32,15 +32,14 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
     }
     return exception_to_status_code(
         [&] {
-            auto p = prog(prg, true);
             // passes
-            check_ir(p);
-            insert_barriers(p);
-            insert_lifetime_stop_inst(p);
-            set_stack_ptrs(p);
-            set_work_group_size(p, *info);
+            check_ir(*prg);
+            insert_barriers(*prg);
+            insert_lifetime_stop_inst(*prg);
+            set_stack_ptrs(*prg);
+            set_work_group_size(*prg, *info);
             // opencl
-            auto ast = generate_opencl_ast(std::move(p), *info);
+            auto ast = generate_opencl_ast(*prg, *info);
             clir::make_names_unique(ast);
             auto oss = std::ostringstream{};
             clir::generate_opencl(oss, ast);

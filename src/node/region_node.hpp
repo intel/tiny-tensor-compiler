@@ -35,7 +35,8 @@ class rgn : public clir::visitable<rgn, region_node> {
         loc(lc);
     }
 
-    inline std::vector<inst> &insts() { return insts_; }
+    inline auto insts() -> std::vector<inst> & { return insts_; }
+    inline auto insts() const -> std::vector<inst> const & { return insts_; }
     inline void insts(std::vector<inst> insts) { insts_ = std::move(insts); }
 
   private:

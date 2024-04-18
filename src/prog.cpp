@@ -4,9 +4,15 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/program_node.hpp"
+#include "passes.hpp"
 #include "tinytc/tinytc.h"
 
+#include <cstdlib>
+#include <cstring>
+#include <fstream>
+#include <iostream>
 #include <memory>
+#include <sstream>
 #include <utility>
 
 using namespace tinytc;
@@ -46,4 +52,45 @@ tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg) {
     }
     return exception_to_status_code([&] { prg->inc_ref(); });
 }
+
+tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg) {
+    if (prg == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { dump_ir(std::cerr, *prg); });
+}
+
+tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *filename) {
+    if (prg == nullptr || filename == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto stream = std::ofstream(filename);
+        if (!stream.good()) {
+            throw status::file_io_error;
+        }
+        dump_ir(stream, *prg);
+    });
+}
+
+tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str) {
+    if (prg == nullptr || str == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto const text = [&] {
+            auto oss = std::ostringstream{};
+            dump_ir(oss, *prg);
+            return std::move(oss).str();
+        }();
+        auto const length = text.size() + 1; // Need to include terminating null character
+        *str = (char *)malloc(length * sizeof(char));
+        if (!str) {
+            throw status::bad_alloc;
+        }
+        std::strncpy(*str, text.c_str(), length);
+    });
+}
+
+void tinytc_string_destroy(char *str) { free(str); }
 }

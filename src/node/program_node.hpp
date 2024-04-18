@@ -35,7 +35,8 @@ class program : public clir::visitable<program, program_node> {
     inline program(std::vector<func> decls, location const &lc = {}) : decls_(std::move(decls)) {
         loc(lc);
     }
-    inline std::vector<func> &declarations() { return decls_; }
+    inline auto declarations() -> std::vector<func> & { return decls_; }
+    inline auto declarations() const -> std::vector<func> const & { return decls_; }
 
   private:
     std::vector<func> decls_;
