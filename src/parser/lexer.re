@@ -11,9 +11,9 @@
 
 namespace tinytc {
 
-lexer::lexer(std::string const &input, location const &initial_loc)
-    : input_{input.c_str()},
-      len_(input.size()), YYCURSOR{input_}, YYLIMIT{input_ + len_}, loc_{initial_loc} {}
+lexer::lexer(std::uint64_t input_size, char const *input, location const &initial_loc)
+    : input_{input}, len_(input_size), YYCURSOR{input_}, YYLIMIT{input_ + len_}, loc_{initial_loc} {
+}
 
 parser::symbol_type lexer::operator()() {
     char const *YYMARKER;

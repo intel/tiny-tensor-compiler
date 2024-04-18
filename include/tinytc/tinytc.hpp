@@ -1012,6 +1012,23 @@ inline auto create_core_info_intel(std::uint32_t ip_version, std::uint32_t num_e
 ////////// Parser //////////
 ////////////////////////////
 
+inline auto parse_file(char const *filename, tinytc_source_context_t source_ctx = nullptr) -> prog {
+    tinytc_prog_t prg;
+    CHECK(tinytc_parse_file(&prg, filename, source_ctx));
+    return prog(prg);
+}
+inline auto parse_stdin(tinytc_source_context_t source_ctx = nullptr) -> prog {
+    tinytc_prog_t prg;
+    CHECK(tinytc_parse_stdin(&prg, source_ctx));
+    return prog(prg);
+}
+inline auto parse_string(std::string const &src, tinytc_source_context_t source_ctx = nullptr)
+    -> prog {
+    tinytc_prog_t prg;
+    CHECK(tinytc_parse_string(&prg, src.size(), src.c_str(), source_ctx));
+    return prog(prg);
+}
+
 template <> struct unique_handle_traits<tinytc_source_context_t> {
     static void destroy(tinytc_source_context_t obj) { tinytc_source_context_destroy(obj); }
 };
@@ -1022,32 +1039,25 @@ class source_context : public unique_handle<tinytc_source_context_t> {
 
     source_context() { CHECK(tinytc_source_context_create(&obj_)); }
 
-    auto parse_file(char const *filename) -> prog {
-        tinytc_prog_t prg;
-        CHECK(tinytc_source_context_parse_file(&prg, obj_, filename));
-        return prog(prg);
+    inline auto parse_file(const char *filename) -> prog {
+        return ::tinytc::parse_file(filename, obj_);
     }
-    auto parse_stdin() -> prog {
-        tinytc_prog_t prg;
-        CHECK(tinytc_source_context_parse_stdin(&prg, obj_));
-        return prog(prg);
+    inline auto parse_stdin() -> prog { return ::tinytc::parse_stdin(obj_); }
+    inline auto parse_string(std::string const &src) -> prog {
+        return ::tinytc::parse_string(src, obj_);
     }
-    auto parse_string(std::string const &src) -> prog {
-        tinytc_prog_t prg;
-        CHECK(tinytc_source_context_parse_string(&prg, obj_, src.size(), src.c_str()));
-        return prog(prg);
-    }
-    auto add_source(char const *name, char const *text) -> std::int32_t {
+
+    inline auto add_source(char const *name, char const *text) -> std::int32_t {
         std::int32_t source_id;
         CHECK(tinytc_source_context_add_source(obj_, name, text, &source_id));
         return source_id;
     }
-    auto get_error_log() const -> char const * {
+    inline auto get_error_log() const -> char const * {
         char const *log;
         CHECK(tinytc_source_context_get_error_log(obj_, &log));
         return log;
     }
-    void report_error(location const &loc, char const *what, bool append = true) {
+    inline void report_error(location const &loc, char const *what, bool append = true) {
         CHECK(tinytc_source_context_report_error(obj_, &loc, what,
                                                  static_cast<tinytc_bool_t>(append)));
     }

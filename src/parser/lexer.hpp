@@ -17,7 +17,7 @@ enum class scalar_type;
 
 class lexer {
   public:
-    lexer(std::string const &input, location const &start_loc);
+    lexer(std::uint64_t input_size, char const *input, location const &start_loc);
     parser::symbol_type operator()();
 
     void error(location const &l, std::string const &m);
