@@ -8,7 +8,7 @@ include(${PROJECT_SOURCE_DIR}/external/doctest/cmake/doctest.cmake)
 find_package(OpenCL REQUIRED)
 
 add_library(test-cl-lib STATIC test_runtime.cpp)
-target_link_libraries(test-cl-lib PUBLIC test-lib tinytc-opencl OpenCL::OpenCL)
+target_link_libraries(test-cl-lib PUBLIC test-lib tinytc_cl OpenCL::OpenCL)
 set_common_options(test-cl-lib)
 
 add_executable(test-cl-device device.cpp)

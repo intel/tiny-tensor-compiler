@@ -17,20 +17,20 @@ set(PUBLIC_HEADERS
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
-add_library(tinytc-level-zero ${SOURCES})
-add_library(tinytc::tinytc-level-zero ALIAS tinytc-level-zero)
+add_library(tinytc_ze ${SOURCES})
+add_library(tinytc::tinytc_ze ALIAS tinytc_ze)
 
-set_common_options(tinytc-level-zero)
-target_link_libraries(tinytc-level-zero PRIVATE tinytc)
-target_link_libraries(tinytc-level-zero PUBLIC LevelZero::LevelZero)
+set_common_options(tinytc_ze)
+target_link_libraries(tinytc_ze PRIVATE tinytc)
+target_link_libraries(tinytc_ze PUBLIC LevelZero::LevelZero)
 
 # include directories
 
-target_sources(tinytc-level-zero PUBLIC FILE_SET HEADERS
+target_sources(tinytc_ze PUBLIC FILE_SET HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/include
     FILES ${PUBLIC_HEADERS})
 
 
 # install
 
-install_lib(tinytc-level-zero tinytc)
+install_lib(tinytc_ze tinytc)

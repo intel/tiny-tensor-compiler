@@ -17,20 +17,20 @@ set(PUBLIC_HEADERS
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
-add_library(tinytc-opencl ${SOURCES})
-add_library(tinytc::tinytc-opencl ALIAS tinytc-opencl)
+add_library(tinytc_cl ${SOURCES})
+add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
 
-set_common_options(tinytc-opencl)
-target_link_libraries(tinytc-opencl PRIVATE tinytc)
-target_link_libraries(tinytc-opencl PUBLIC OpenCL::OpenCL)
+set_common_options(tinytc_cl)
+target_link_libraries(tinytc_cl PRIVATE tinytc)
+target_link_libraries(tinytc_cl PUBLIC OpenCL::OpenCL)
 
 # include directories
 
-target_sources(tinytc-opencl PUBLIC FILE_SET HEADERS
+target_sources(tinytc_cl PUBLIC FILE_SET HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/include
     FILES ${PUBLIC_HEADERS})
 
 
 # install
 
-install_lib(tinytc-opencl tinytc)
+install_lib(tinytc_cl tinytc)
