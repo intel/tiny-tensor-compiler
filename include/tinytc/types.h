@@ -26,7 +26,7 @@ typedef enum {
     tinytc_status_bad_alloc = 0x1,         ///< Failure to allocate storage
     tinytc_status_invalid_arguments = 0x2, ///< Operation got invalid arguments
     tinytc_status_out_of_range = 0x3,
-    tinytc_status_runtime_error = 0x4,     ///< Runtime error
+    tinytc_status_runtime_error = 0x4, ///< Runtime error
     tinytc_status_internal_compiler_error = 0x5,
     tinytc_status_unsupported_subgroup_size = 0x6,
     tinytc_status_unsupported_work_group_size = 0x7,
@@ -325,8 +325,8 @@ typedef struct tinytc_position {
 
 //! @brief Source code location
 typedef struct tinytc_location {
-    tinytc_position begin; ///< Starting position
-    tinytc_position end;   ///< End position
+    tinytc_position_t begin; ///< Starting position
+    tinytc_position_t end;   ///< End position
 } tinytc_location_t;
 
 #ifdef __cplusplus

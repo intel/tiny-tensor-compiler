@@ -69,11 +69,11 @@ set(PUBLIC_HEADERS
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
-add_flag_if_available_to_source_files("${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
+add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
 
 add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
 add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
-set_common_options(tinytc-objects)
+set_cxx_common_options(tinytc-objects)
 target_link_libraries(tinytc-objects PUBLIC clir::clir ocloc::ocloc)
 target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
@@ -81,7 +81,7 @@ target_compile_definitions(tinytc-objects PUBLIC
 add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
 add_library(tinytc::tinytc ALIAS tinytc)
 target_link_libraries(tinytc PUBLIC clir::clir ocloc::ocloc)
-set_common_options(tinytc)
+set_cxx_common_options(tinytc)
 
 # Generate export header
 set(tinytc_export_header "${CMAKE_BINARY_DIR}/include/tinytc/export.h")

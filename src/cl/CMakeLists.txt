@@ -20,7 +20,7 @@ list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 add_library(tinytc_cl ${SOURCES})
 add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
 
-set_common_options(tinytc_cl)
+set_cxx_common_options(tinytc_cl)
 target_link_libraries(tinytc_cl PRIVATE tinytc)
 target_link_libraries(tinytc_cl PUBLIC OpenCL::OpenCL)
 
