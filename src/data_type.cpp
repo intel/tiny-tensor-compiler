@@ -60,23 +60,22 @@ tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt, tinytc_data_typ
     });
 }
 
-tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt) {
-    if (dt == nullptr) {
+tinytc_status_t tinytc_data_type_release(tinytc_data_type_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-
-    return exception_to_status_code([&] {
-        auto ref_count = dt->dec_ref();
-        if (ref_count == 0) {
-            delete dt;
-        }
-    });
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt) {
-    if (dt == nullptr) {
+tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { dt->inc_ref(); });
+    obj->inc_ref();
+    return tinytc_status_success;
 }
 }

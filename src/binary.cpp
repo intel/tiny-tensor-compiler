@@ -35,5 +35,22 @@ tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,
     return tinytc_status_success;
 }
 
-void tinytc_binary_destroy(tinytc_binary_t bin) { delete bin; }
+tinytc_status_t tinytc_binary_release(tinytc_binary_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_binary_retain(tinytc_binary_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    obj->inc_ref();
+    return tinytc_status_success;
+}
 }

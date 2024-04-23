@@ -95,9 +95,12 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         return compile_to_binary(p, info, bundle_format::native, ctx.get());
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
-        std::cerr << ctx.get_error_log() << " (" << static_cast<int>(e.code()) << ") " << std::endl;
+        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << std::endl
+                  << ctx.get_error_log() << std::endl;
     } catch (status const &st) {
-        std::cerr << ctx.get_error_log() << " (" << static_cast<int>(st) << ") " << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl
+                  << "Error log:" << std::endl
+                  << ctx.get_error_log() << std::endl;
     }
     return nullptr;
 }
@@ -189,14 +192,26 @@ template <typename T> void test(queue q, args &a) {
                 {1, a.transA == transpose::T ? c.k : c.m},
                 {1, a.transB == transpose::T ? c.n : c.k}, {1, c.m}, a.internal_repetitions, q);
             if (bin) {
-                auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
-                auto kernel = bundle.get("gemm");
-                kernel.set_args(AA, BB, CC);
-                kernel.submit(howmany, q).wait();
+                //auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
+                //auto kernel = bundle.get("gemm");
+                //kernel.set_args(AA, BB, CC);
+                //kernel.submit(howmany, q).wait();
+                auto bundle = create_kernel_bundle(q.get_context(), q.get_device(), bin);
+                auto kernel = create_kernel(bundle, "gemm");
+                auto exe_range = get_execution_range(kernel, howmany);
+                q.submit([&](handler &h) {
+                     h.set_args(AA, BB, CC);
+                     h.parallel_for(exe_range, kernel);
+                 }).wait();
                 if (a.internal_repetitions == 1 && a.verify) {
                     check(c.m, c.n, howmany);
                 }
-                min_exec_time_ns = bench([&]() { kernel.submit(howmany, q).wait(); });
+                min_exec_time_ns = bench([&]() {
+                    q.submit([&](handler &h) {
+                         h.set_args(AA, BB, CC);
+                         h.parallel_for(exe_range, kernel);
+                     }).wait();
+                });
 
                 auto gflops =
                     a.internal_repetitions * 2 * c.m * c.n * c.k * howmany / min_exec_time_ns;

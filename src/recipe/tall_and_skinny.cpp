@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "tall_and_skinny.hpp"
 #include "error.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.h"
@@ -10,14 +11,40 @@
 #include <cstdint>
 #include <source_location>
 
+namespace tinytc {
+
+auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
+    switch (k) {
+    case tall_and_skinny_kernel::gemm:
+        return "gemm";
+    case tall_and_skinny_kernel::gemm_beta0:
+        return "gemm_beta0";
+    case tall_and_skinny_kernel::num_kernels:
+        break;
+    }
+    throw status::invalid_arguments;
+}
+tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, binary bin, scalar_type ty,
+                                               std::uint32_t M_block_size)
+    : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty), M_block_size_(M_block_size) {}
+auto tall_and_skinny_recipe::num_kernels() const -> std::uint32_t {
+    return static_cast<std::uint32_t>(tall_and_skinny_kernel::num_kernels);
+}
+auto tall_and_skinny_recipe::kernel_name(std::uint32_t kernel_num) const -> char const * {
+    return tall_and_skinny_kernel_name(static_cast<tall_and_skinny_kernel>(kernel_num));
+}
+
+} // namespace tinytc
+
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_prog_t *prg, tinytc_core_info_t info,
+tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
+                                                     tinytc_core_info_t info,
                                                      tinytc_scalar_type_t ty, uint32_t M_block_size,
                                                      uint32_t N, uint32_t K,
                                                      tinytc_source_context_t ctx) {
-    if (prg == nullptr || info == nullptr) {
+    if (recipe == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
@@ -95,13 +122,55 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_prog_t *prg, tinytc_
 
             auto pb = program_builder{};
             pb.create(
-                "gemm", [&](function_builder &fb) { kernel(fb, true); }, my_loc());
+                tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm),
+                [&](function_builder &fb) { kernel(fb, true); }, my_loc());
             pb.create(
-                "gemm_beta0", [&](function_builder &fb) { kernel(fb, false); }, my_loc());
+                tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0),
+                [&](function_builder &fb) { kernel(fb, false); }, my_loc());
 
             auto p = pb.get_product(my_loc());
-            *prg = p.release();
+            tinytc_binary_t bin;
+            CHECK_STATUS(tinytc_prog_compile_to_binary(&bin, p.get(), info,
+                                                       tinytc_bundle_format_native, ctx));
+            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), binary(bin), ty_,
+                                                               M_block_size)
+                          .release();
         },
         ctx, my_loc());
+}
+
+tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(tinytc_recipe_handler_t handler, uint32_t M,
+                                                       size_t alpha_size, const void *alpha_value,
+                                                       tinytc_mem_t A, uint32_t ldA, tinytc_mem_t B,
+                                                       uint32_t ldB, size_t beta_size,
+                                                       const void *beta_value, tinytc_mem_t C,
+                                                       uint32_t ldC) {
+    if (handler == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    auto recipe = dynamic_cast<tall_and_skinny_recipe const *>(handler->get_recipe().get());
+    if (recipe == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return tinytc::exception_to_status_code([&] {
+        if (tinytc::is_argument_zero(recipe->ty(), beta_size, beta_value)) {
+            handler->active_kernel(static_cast<std::uint32_t>(tall_and_skinny_kernel::gemm_beta0));
+        } else {
+            handler->active_kernel(static_cast<std::uint32_t>(tall_and_skinny_kernel::gemm));
+        }
+        handler->arg(0, alpha_size, alpha_value);
+        handler->mem_arg(1, A);
+        handler->arg(2, sizeof(uint32_t), &M);
+        handler->arg(3, sizeof(uint32_t), &ldA);
+        handler->mem_arg(4, B);
+        handler->arg(5, sizeof(uint32_t), &ldB);
+        handler->arg(6, beta_size, beta_value);
+        handler->mem_arg(7, C);
+        handler->arg(8, sizeof(uint32_t), &M);
+        handler->arg(9, sizeof(uint32_t), &ldC);
+
+        std::uint32_t howmany = 1 + (M - 1) / recipe->M_block_size();
+        handler->howmany(howmany);
+    });
 }
 }

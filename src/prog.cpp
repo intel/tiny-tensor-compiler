@@ -34,23 +34,23 @@ tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t fun_list_size
     });
 }
 
-tinytc_status_t tinytc_prog_release(tinytc_prog_t prg) {
-    if (prg == nullptr) {
+tinytc_status_t tinytc_prog_release(tinytc_prog_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        auto ref_count = prg->dec_ref();
-        if (ref_count == 0) {
-            delete prg;
-        }
-    });
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg) {
-    if (prg == nullptr) {
+tinytc_status_t tinytc_prog_retain(tinytc_prog_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { prg->inc_ref(); });
+    obj->inc_ref();
+    return tinytc_status_success;
 }
 
 tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg) {

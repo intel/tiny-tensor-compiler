@@ -5,9 +5,8 @@
 #define TINYTC_SYCL_20240403_HPP
 
 #include "tinytc.hpp"
-#include "tinytc_cl.h"
 #include "tinytc_cl.hpp"
-#include "tinytc_ze.h"
+#include "tinytc_sycl.h"
 #include "tinytc_ze.hpp"
 
 #include <cstdint>
@@ -28,17 +27,35 @@ namespace tinytc {
  * @return core info
  */
 inline auto create_core_info(::sycl::device dev) -> core_info {
+    tinytc_core_info_t info;
+    CHECK_STATUS(::tinytc_sycl_core_info_create(&info, &dev));
+    return core_info{info};
+}
+
+////////////////////////////
+////////// Kernel //////////
+////////////////////////////
+
+inline auto create_kernel_bundle(::sycl::context ctx, sycl::device dev, binary const &bin)
+    -> ::sycl::kernel_bundle<::sycl::bundle_state::executable> {
     using namespace ::sycl;
     switch (dev.get_backend()) {
     case backend::ext_oneapi_level_zero: {
+        auto native_context = get_native<backend::ext_oneapi_level_zero, context>(ctx);
         auto native_device = get_native<backend::ext_oneapi_level_zero, device>(dev);
-        return create_core_info(native_device);
+        auto native_mod = create_module(native_context, native_device, bin, nullptr);
+        return make_kernel_bundle<backend::ext_oneapi_level_zero, bundle_state::executable>(
+            {native_mod.release(), ext::oneapi::level_zero::ownership::transfer}, ctx);
     }
     case backend::opencl: {
+        auto native_context = get_native<backend::opencl, context>(ctx);
         auto native_device = get_native<backend::opencl, device>(dev);
-        auto info = create_core_info(native_device);
+        auto native_mod = create_program(native_context, native_device, bin);
+        auto bundle =
+            make_kernel_bundle<backend::opencl, bundle_state::executable>(native_mod.get(), ctx);
         CL_CHECK_STATUS(clReleaseDevice(native_device));
-        return info;
+        CL_CHECK_STATUS(clReleaseContext(native_context));
+        return bundle;
     }
     default:
         break;
@@ -46,21 +63,63 @@ inline auto create_core_info(::sycl::device dev) -> core_info {
     throw status::unsupported_backend;
 }
 
-////////////////////////////
-////////// Kernel //////////
-////////////////////////////
+inline auto create_kernel(::sycl::kernel_bundle<::sycl::bundle_state::executable> bundle,
+                          char const *name) -> ::sycl::kernel {
+    using namespace ::sycl;
+    switch (bundle.get_backend()) {
+    case backend::ext_oneapi_level_zero: {
+        auto native_bundle =
+            get_native<backend::ext_oneapi_level_zero, bundle_state::executable>(bundle);
+        auto native_kernel = create_kernel(native_bundle.front(), name);
+        return make_kernel<backend::ext_oneapi_level_zero>(
+            {bundle, native_kernel.release(), ext::oneapi::level_zero::ownership::transfer},
+            bundle.get_context());
+    }
+    case backend::opencl: {
+        auto native_bundle = get_native<backend::opencl, bundle_state::executable>(bundle);
+        auto native_kernel = opencl_runtime::make_kernel(native_bundle.front(), name);
+        auto kernel = make_kernel<backend::opencl>(native_kernel.get(), bundle.get_context());
+        for (auto &m : native_bundle) {
+            CL_CHECK_STATUS(clReleaseProgram(m));
+        }
+        return kernel;
+    }
+    default:
+        break;
+    }
+    throw status::unsupported_backend;
+}
 
-/**
- * @brief Convert group size to SYCL ND range
- *
- * @param howmany group size
- * @param local_size work group size
- *
- * @return ND range
- */
-inline auto sycl_nd_range(std::size_t howmany, ::sycl::range<3u> local_size)
+inline auto get_group_size(::sycl::kernel const &krnl) -> ::sycl::range<3u> {
+    using namespace ::sycl;
+    switch (krnl.get_backend()) {
+    case backend::ext_oneapi_level_zero: {
+        auto native_krnl = get_native<backend::ext_oneapi_level_zero>(krnl);
+        auto gs = get_group_size(native_krnl);
+        return {static_cast<std::size_t>(gs[2]), static_cast<std::size_t>(gs[1]),
+                static_cast<std::size_t>(gs[0])};
+    }
+    case backend::opencl: {
+        auto native_krnl = get_native<backend::opencl>(krnl);
+        auto gs = get_group_size(native_krnl);
+        CL_CHECK_STATUS(clReleaseKernel(native_krnl));
+        return {gs[2], gs[1], gs[0]};
+    }
+    default:
+        break;
+    }
+    throw status::unsupported_backend;
+}
+
+inline auto get_global_size(std::uint32_t howmany, ::sycl::range<3u> const &local_size)
+    -> ::sycl::range<3u> {
+    return {howmany * local_size[0], local_size[1], local_size[2]};
+}
+
+inline auto get_execution_range(::sycl::kernel const &krnl, std::uint32_t howmany)
     -> ::sycl::nd_range<3u> {
-    return {::sycl::range{howmany * local_size[0], local_size[1], local_size[2]}, local_size};
+    auto local_size = get_group_size(krnl);
+    return {get_global_size(howmany, local_size), local_size};
 }
 
 ////////////////////////////
@@ -159,8 +218,8 @@ class sycl_argument_handler {
  */
 class sycl_runtime {
   public:
-    using context_t = ::sycl::context;                           ///< Context type
-    using device_t = ::sycl::device;                             ///< Device type
+    using context_t = ::sycl::context; ///< Context type
+    using device_t = ::sycl::device;   ///< Device type
     using kernel_bundle_t =
         ::sycl::kernel_bundle<::sycl::bundle_state::executable>; ///< Kernel bundle type
     using kernel_t = ::sycl::kernel;                             ///< Kernel type
@@ -256,7 +315,7 @@ class sycl_runtime {
     }
 
     //! @brief Get work group size
-    inline static auto work_group_size(native_kernel_t krnl, device_t dev) -> work_group_size_t {
+    inline static auto work_group_size(native_kernel_t krnl, device_t) -> work_group_size_t {
         using namespace ::sycl;
         switch (krnl.get_backend()) {
         case backend::ext_oneapi_level_zero: {
@@ -266,13 +325,10 @@ class sycl_runtime {
             return range{z, y, x};
         }
         case backend::opencl: {
-            auto native_dev = get_native<backend::opencl, device>(std::move(dev));
             auto native_krnl = get_native<backend::opencl, kernel>(std::move(krnl));
-            std::size_t x, y, z;
-            CHECK_STATUS(tinytc_cl_get_group_size(native_krnl, native_dev, &x, &y, &z));
+            auto group_size = get_group_size(native_krnl);
             CL_CHECK_STATUS(clReleaseKernel(native_krnl));
-            CL_CHECK_STATUS(clReleaseDevice(native_dev));
-            return range{z, y, x};
+            return range{group_size[2], group_size[1], group_size[0]};
         }
         default:
             break;
@@ -296,13 +352,35 @@ class sycl_runtime {
         -> event_t {
         return q.submit([&](::sycl::handler &h) {
             h.depends_on(dep_events);
-            h.parallel_for(sycl_nd_range(howmany, lws), std::move(krnl));
+            h.parallel_for(get_global_size(howmany, lws), std::move(krnl));
         });
     }
 };
 
 tensor_kernel_bundle(binary const &bin, sycl::context ctx, sycl::device dev)
     -> tensor_kernel_bundle<sycl_runtime>;
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+class sycl_recipe_handler : public recipe_handler {
+  public:
+    using recipe_handler::recipe_handler;
+
+    inline sycl_recipe_handler(recipe const &rec, ::sycl::context const &ctx,
+                               ::sycl::device const &dev) {
+        CHECK_STATUS(tinytc_sycl_recipe_handler_create(&obj_, rec.get(), &ctx, &dev));
+    }
+
+    // inline auto submit(::sycl::queue q, std::vector<::sycl::queue> const &dep_events)
+    //-> ::sycl::event {
+    // return q.submit([&](::sycl::handler &h) {
+    // h.depends_on(dep_events);
+    // h.parallel_for(get_execution_range(howmany, lws), std::move(krnl));
+    //});
+    //}
+};
 
 } // namespace tinytc
 

@@ -357,6 +357,35 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "CL_MAX_SIZE_RESTRICTION_EXCEEDED";
     case tinytc_status_cl_profiling_info_not_available:
         return "CL_PROFILING_INFO_NOT_AVAILABLE";
+        // SYCL
+    case tinytc_status_sycl_runtime:
+        return "SYCL_RUNTIME";
+    case tinytc_status_sycl_kernel:
+        return "SYCL_KERNEL";
+    case tinytc_status_sycl_accessor:
+        return "SYCL_ACCESSOR";
+    case tinytc_status_sycl_nd_range:
+        return "SYCL_ND_RANGE";
+    case tinytc_status_sycl_event:
+        return "SYCL_EVENT";
+    case tinytc_status_sycl_kernel_argument:
+        return "SYCL_KERNEL_ARGUMENT";
+    case tinytc_status_sycl_build:
+        return "SYCL_BUILD";
+    case tinytc_status_sycl_invalid:
+        return "SYCL_INVALID";
+    case tinytc_status_sycl_memory_allocation:
+        return "SYCL_MEMORY_ALLOCATION";
+    case tinytc_status_sycl_platform:
+        return "SYCL_PLATFORM";
+    case tinytc_status_sycl_profiling:
+        return "SYCL_PROFILING";
+    case tinytc_status_sycl_feature_not_supported:
+        return "SYCL_FEATURE_NOT_SUPPORTED";
+    case tinytc_status_sycl_kernel_not_supported:
+        return "SYCL_KERNEL_NOT_SUPPORTED";
+    case tinytc_status_sycl_backend_mismatch:
+        return "SYCL_BACKEND_MISMATCH";
     case tinytc_status_unknown:
         return "Unknown error";
     }

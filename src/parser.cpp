@@ -110,18 +110,15 @@ tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_source_context_t s
     });
 }
 
-tinytc_status_t tinytc_parse_string(tinytc_prog_t *prg, uint64_t source_size, char const *source,
+tinytc_status_t tinytc_parse_string(tinytc_prog_t *prg, size_t source_size, char const *source,
                                     tinytc_source_context_t source_ctx) {
     if (prg == nullptr || source_size == 0 || source == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto const filename = [](char const *source) {
-            return (std::stringstream{} << "<memory:" << source << ">").str();
-        };
-        auto prog = source_ctx ? source_ctx->parse(filename(source),
-                                                   std::string(source, source + source_size))
-                               : parse(source_size, source);
+        auto prog = source_ctx
+                        ? source_ctx->parse("<memory>", std::string(source, source + source_size))
+                        : parse(source_size, source);
         if (!prog) {
             throw status::parse_error;
         }

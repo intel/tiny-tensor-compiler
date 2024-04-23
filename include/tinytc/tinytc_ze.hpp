@@ -7,6 +7,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.h"
 
+#include <array>
 #include <level_zero/ze_api.h>
 #include <type_traits>
 
@@ -41,7 +42,7 @@ inline auto create_core_info(ze_device_handle_t device) -> core_info {
 }
 
 ////////////////////////////
-////////// Runtime /////////
+////////// Kernel //////////
 ////////////////////////////
 
 template <> struct unique_handle_traits<ze_kernel_handle_t> {
@@ -50,6 +51,35 @@ template <> struct unique_handle_traits<ze_kernel_handle_t> {
 template <> struct unique_handle_traits<ze_module_handle_t> {
     static void destroy(ze_module_handle_t obj) { zeModuleDestroy(obj); }
 };
+
+inline auto create_module(ze_context_handle_t context, ze_device_handle_t device, binary const &bin,
+                          ze_module_build_log_handle_t *build_log = nullptr)
+    -> unique_handle<ze_module_handle_t> {
+    ze_module_handle_t obj;
+    CHECK_STATUS(tinytc_ze_module_create(&obj, context, device, bin.get(), build_log));
+    return {obj};
+}
+
+inline auto create_kernel(ze_module_handle_t mod, char const *name)
+    -> unique_handle<ze_kernel_handle_t> {
+    ze_kernel_handle_t obj;
+    CHECK_STATUS(tinytc_ze_kernel_create(&obj, mod, name));
+    return {obj};
+}
+
+inline auto get_group_size(ze_kernel_handle_t kernel) -> std::array<std::uint32_t, 3u> {
+    std::array<std::uint32_t, 3u> group_size;
+    CHECK_STATUS(tinytc_ze_get_group_size(kernel, &group_size[0], &group_size[1], &group_size[2]));
+    return group_size;
+}
+
+inline auto get_group_count(std::uint32_t howmany) -> ze_group_count_t {
+    return tinytc_ze_get_group_count(howmany);
+}
+
+////////////////////////////
+////////// Runtime /////////
+////////////////////////////
 
 /**
  * @brief Wrapper for setting kernel arguments
@@ -110,8 +140,8 @@ class level_zero_argument_handler {
 class level_zero_runtime {
   public:
     struct work_group_size_dummy {};
-    using context_t = ze_context_handle_t;                  ///< Context handle type
-    using device_t = ze_device_handle_t;                    ///< Device handle type
+    using context_t = ze_context_handle_t; ///< Context handle type
+    using device_t = ze_device_handle_t;   ///< Device handle type
     using kernel_bundle_t =
         unique_handle<ze_module_handle_t>;                  ///< Wrapped kernel bundle handle type
     using kernel_t = unique_handle<ze_kernel_handle_t>;     ///< Wrapped kernel handle type
@@ -168,13 +198,9 @@ class level_zero_runtime {
      * @return Kernel
      */
     inline static auto make_kernel(ze_module_handle_t mod, char const *name) -> kernel_t {
-        ze_kernel_handle_t kernel;
-        std::uint32_t x, y, z;
-        ze_kernel_desc_t kernel_desc = {ZE_STRUCTURE_TYPE_KERNEL_DESC, nullptr, 0, name};
-        ZE_CHECK_STATUS(zeKernelCreate(mod, &kernel_desc, &kernel));
-        CHECK_STATUS(::tinytc_ze_get_group_size(kernel, &x, &y, &z));
-        ZE_CHECK_STATUS(zeKernelSetGroupSize(kernel, x, y, z));
-        return {kernel};
+        ze_kernel_handle_t krnl;
+        CHECK_STATUS(::tinytc_ze_kernel_create(&krnl, mod, name));
+        return {krnl};
     }
 
     /**
@@ -211,6 +237,26 @@ class level_zero_runtime {
 
 tensor_kernel_bundle(binary const &bin, ze_context_handle_t ctx, ze_device_handle_t dev)
     -> tensor_kernel_bundle<level_zero_runtime>;
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+class level_zero_recipe_handler : public recipe_handler {
+  public:
+    using recipe_handler::recipe_handler;
+
+    inline level_zero_recipe_handler(recipe const &rec, ze_context_handle_t context,
+                                     ze_device_handle_t device) {
+        CHECK_STATUS(tinytc_ze_recipe_handler_create(&obj_, rec.get(), context, device));
+    }
+
+    inline void submit(ze_command_list_handle_t list, ze_event_handle_t signal_event,
+                       uint32_t num_wait_events, ze_event_handle_t *wait_events) {
+        CHECK_STATUS(tinytc_ze_recipe_handler_submit(obj_, list, signal_event, num_wait_events,
+                                                     wait_events));
+    }
+};
 
 } // namespace tinytc
 

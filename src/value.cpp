@@ -51,23 +51,23 @@ tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm, tinytc_sc
     return create_imm<int_imm>(vl, imm, type, loc);
 }
 
-tinytc_status_t tinytc_value_release(tinytc_value_t vl) {
-    if (vl == nullptr) {
+tinytc_status_t tinytc_value_release(tinytc_value_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        auto ref_count = vl->dec_ref();
-        if (ref_count == 0) {
-            delete vl;
-        }
-    });
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_value_retain(tinytc_value_t vl) {
-    if (vl == nullptr) {
+tinytc_status_t tinytc_value_retain(tinytc_value_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { vl->inc_ref(); });
+    obj->inc_ref();
+    return tinytc_status_success;
 }
 
 tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char const *name) {

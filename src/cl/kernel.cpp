@@ -40,26 +40,19 @@ tinytc_status_t tinytc_cl_program_create(cl_program *mod, cl_context context, cl
     return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, cl_device_id dev, std::size_t *x,
-                                         std::size_t *y, std::size_t *z) {
-    if (x == nullptr || y == nullptr || z == nullptr) {
+tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
+    if (local_size == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    std::size_t wgs[3];
-    auto status = clGetKernelWorkGroupInfo(kernel, dev, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
-                                           sizeof(wgs), wgs, nullptr);
-    *x = wgs[0];
-    *y = wgs[1];
-    *z = wgs[2];
-    return tinytc_cl_convert_status(status);
+    return tinytc_cl_convert_status(
+        clGetKernelWorkGroupInfo(kernel, NULL, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+                                 3 * sizeof(std::size_t), local_size, nullptr));
 }
 
-void tinytc_cl_get_global_size(std::size_t howmany, std::size_t local_size_x,
-                               std::size_t local_size_y, std::size_t local_size_z,
-                               std::size_t *global_size_x, std::size_t *global_size_y,
-                               std::size_t *global_size_z) {
-    *global_size_x = local_size_x;
-    *global_size_y = local_size_y;
-    *global_size_z = local_size_z * howmany;
+void tinytc_cl_get_global_size(size_t howmany, const size_t *local_size, size_t *global_size) {
+    for (size_t i = 0; i < 3; ++i) {
+        global_size[i] = local_size[i];
+    }
+    global_size[2] *= howmany;
 }
 }
