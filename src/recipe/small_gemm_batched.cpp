@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "small_gemm_batched.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
@@ -9,14 +10,39 @@
 #include <cstdint>
 #include <source_location>
 
+namespace tinytc {
+
+auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const * {
+    switch (k) {
+    case small_gemm_batched_kernel::gemm:
+        return "gemm";
+    case small_gemm_batched_kernel::gemm_beta0:
+        return "gemm_beta0";
+    case small_gemm_batched_kernel::num_kernels:
+        break;
+    }
+    throw status::invalid_arguments;
+}
+small_gemm_batched_recipe::small_gemm_batched_recipe(prog prg, binary bin, scalar_type ty)
+    : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty) {}
+auto small_gemm_batched_recipe::num_kernels() const -> std::uint32_t {
+    return static_cast<std::uint32_t>(small_gemm_batched_kernel::num_kernels);
+}
+auto small_gemm_batched_recipe::kernel_name(std::uint32_t kernel_num) const -> char const * {
+    return small_gemm_batched_kernel_name(static_cast<small_gemm_batched_kernel>(kernel_num));
+}
+
+} // namespace tinytc
+
 using namespace tinytc;
 
 extern "C" {
 tinytc_status_t tinytc_recipe_small_gemm_batched_create(
-    tinytc_prog_t *prg, tinytc_core_info_t info, tinytc_scalar_type_t ty, tinytc_transpose_t tA,
-    tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA, uint32_t strideA,
-    uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC, tinytc_source_context_t ctx) {
-    if (prg == nullptr || info == nullptr) {
+    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty,
+    tinytc_transpose_t tA, tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
+    uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
+    tinytc_source_context_t ctx) {
+    if (recipe == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
@@ -77,12 +103,49 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             };
             auto pb = program_builder{};
             pb.create(
-                "gemm", [&](function_builder &fb) { kernel(fb, true); }, my_loc());
+                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm),
+                [&](function_builder &fb) { kernel(fb, true); }, my_loc());
             pb.create(
-                "gemm_beta0", [&](function_builder &fb) { kernel(fb, false); }, my_loc());
+                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0),
+                [&](function_builder &fb) { kernel(fb, false); }, my_loc());
             auto p = pb.get_product(my_loc());
-            *prg = p.release();
+            tinytc_binary_t bin;
+            CHECK_STATUS(tinytc_prog_compile_to_binary(&bin, p.get(), info,
+                                                       tinytc_bundle_format_native, ctx));
+            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), binary(bin), ty_)
+                          .release();
         },
         ctx, my_loc());
+}
+
+tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(tinytc_recipe_handler_t handler,
+                                                          uint32_t howmany, size_t alpha_size,
+                                                          const void *alpha_value, tinytc_mem_t A,
+                                                          tinytc_mem_t B, size_t beta_size,
+                                                          const void *beta_value, tinytc_mem_t C) {
+    if (handler == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    auto recipe = dynamic_cast<small_gemm_batched_recipe const *>(handler->get_recipe().get());
+    if (recipe == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return tinytc::exception_to_status_code([&] {
+        if (tinytc::is_argument_zero(recipe->ty(), beta_size, beta_value)) {
+            handler->active_kernel(
+                static_cast<std::uint32_t>(small_gemm_batched_kernel::gemm_beta0));
+        } else {
+            handler->active_kernel(static_cast<std::uint32_t>(small_gemm_batched_kernel::gemm));
+        }
+        handler->arg(0, alpha_size, alpha_value);
+        handler->mem_arg(1, A);
+        handler->arg(2, sizeof(uint32_t), &howmany);
+        handler->mem_arg(3, B);
+        handler->arg(4, sizeof(uint32_t), &howmany);
+        handler->arg(5, beta_size, beta_value);
+        handler->mem_arg(6, C);
+        handler->arg(7, sizeof(uint32_t), &howmany);
+        handler->howmany(howmany);
+    });
 }
 }

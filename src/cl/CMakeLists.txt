@@ -10,6 +10,7 @@ set(SOURCES
     device_info.cpp
     error.cpp
     kernel.cpp
+    recipe_handler.cpp
 )
 set(PUBLIC_HEADERS
     tinytc_cl.h

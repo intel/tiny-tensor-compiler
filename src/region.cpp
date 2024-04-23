@@ -29,22 +29,22 @@ tinytc_status_t tinytc_region_create(tinytc_region_t *reg, uint32_t instruction_
     });
 }
 
-tinytc_status_t tinytc_region_release(tinytc_region_t reg) {
-    if (reg == nullptr) {
+tinytc_status_t tinytc_region_release(tinytc_region_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        auto ref_count = reg->dec_ref();
-        if (ref_count == 0) {
-            delete reg;
-        }
-    });
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_region_retain(tinytc_region_t reg) {
-    if (reg == nullptr) {
+tinytc_status_t tinytc_region_retain(tinytc_region_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { reg->inc_ref(); });
+    obj->inc_ref();
+    return tinytc_status_success;
 }
 }

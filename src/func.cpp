@@ -58,22 +58,22 @@ tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, uint32_t sg
     return exception_to_status_code([&] { f->subgroup_size(sgs); });
 }
 
-tinytc_status_t tinytc_func_release(tinytc_func_t fun) {
-    if (fun == nullptr) {
+tinytc_status_t tinytc_func_release(tinytc_func_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        auto ref_count = fun->dec_ref();
-        if (ref_count == 0) {
-            delete fun;
-        }
-    });
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_func_retain(tinytc_func_t fun) {
-    if (fun == nullptr) {
+tinytc_status_t tinytc_func_retain(tinytc_func_t obj) {
+    if (obj == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { fun->inc_ref(); });
+    obj->inc_ref();
+    return tinytc_status_success;
 }
 }

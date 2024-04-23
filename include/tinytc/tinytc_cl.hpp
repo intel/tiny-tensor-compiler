@@ -42,7 +42,7 @@ inline auto create_core_info(cl_device_id device) -> core_info {
 }
 
 ////////////////////////////
-////////// Runtime /////////
+////////// Kernel //////////
 ////////////////////////////
 
 template <> struct shared_handle_traits<cl_program> {
@@ -62,6 +62,37 @@ template <> struct shared_handle_traits<cl_kernel> {
         return ::tinytc_cl_convert_status(clReleaseKernel(handle));
     }
 };
+
+inline auto create_program(cl_context context, cl_device_id device, binary const &bin)
+    -> shared_handle<cl_program> {
+    cl_program obj;
+    CHECK_STATUS(tinytc_cl_program_create(&obj, context, device, bin.get()));
+    return {obj};
+}
+
+inline auto create_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
+    cl_int err;
+    cl_kernel obj = clCreateKernel(mod, name, &err);
+    CL_CHECK_STATUS(err);
+    return {obj};
+}
+
+inline auto get_group_size(cl_kernel kernel) -> std::array<std::size_t, 3u> {
+    auto group_size = std::array<std::size_t, 3u>{};
+    CHECK_STATUS(tinytc_cl_get_group_size(kernel, group_size.data()));
+    return group_size;
+}
+
+inline auto get_global_size(std::uint32_t howmany, std::array<std::size_t, 3u> const &local_size)
+    -> std::array<std::size_t, 3u> {
+    auto global_size = std::array<std::size_t, 3u>{};
+    tinytc_cl_get_global_size(howmany, local_size.data(), global_size.data());
+    return global_size;
+}
+
+////////////////////////////
+////////// Runtime /////////
+////////////////////////////
 
 template <> struct shared_handle_traits<cl_event> {
     static auto retain(cl_event handle) -> tinytc_status_t {
@@ -259,10 +290,8 @@ class opencl_runtime {
     }
 
     //! @brief Get work group size
-    inline static auto work_group_size(native_kernel_t kernel, device_t dev) -> work_group_size_t {
-        std::size_t x, y, z;
-        CHECK_STATUS(tinytc_cl_get_group_size(kernel, dev, &x, &y, &z));
-        return {x, y, z};
+    inline static auto work_group_size(native_kernel_t kernel, device_t) -> work_group_size_t {
+        return get_group_size(kernel);
     }
 
     /**
@@ -276,20 +305,50 @@ class opencl_runtime {
      *
      * @return Event
      */
-    inline static auto submit(work_group_size_t const &lws, std::size_t howmany,
+    inline static auto submit(work_group_size_t const &local_size, std::size_t howmany,
                               native_kernel_t krnl, command_list_t q,
                               std::vector<native_event_t> const &dep_events = {}) -> event_t {
-        std::array<std::size_t, 3u> gws;
-        tinytc_cl_get_global_size(howmany, lws[0], lws[1], lws[2], &gws[0], &gws[1], &gws[2]);
+        auto global_size = get_global_size(howmany, local_size);
         cl_event ev;
-        CL_CHECK_STATUS(clEnqueueNDRangeKernel(q, krnl, 3, nullptr, gws.data(), lws.data(),
-                                               dep_events.size(), dep_events.data(), &ev));
+        CL_CHECK_STATUS(clEnqueueNDRangeKernel(q, krnl, 3, nullptr, global_size.data(),
+                                               local_size.data(), dep_events.size(),
+                                               dep_events.data(), &ev));
         return {ev};
     }
 };
 
 tensor_kernel_bundle(binary const &bin, cl_context ctx, cl_device_id dev)
     -> tensor_kernel_bundle<opencl_runtime>;
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+template <> struct auto_mem_type<cl_mem> {
+    constexpr static mem_type value = mem_type::buffer;
+};
+
+class opencl_recipe_handler : public recipe_handler {
+  public:
+    using recipe_handler::recipe_handler;
+
+    inline opencl_recipe_handler(recipe const &rec, cl_context context, cl_device_id device) {
+        CHECK_STATUS(tinytc_cl_recipe_handler_create(&obj_, rec.get(), context, device));
+    }
+
+    inline auto submit(cl_command_queue queue, uint32_t num_wait_events, cl_event *wait_events)
+        -> shared_handle<cl_event> {
+        cl_event evt;
+        CHECK_STATUS(
+            tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, &evt));
+        return {evt};
+    }
+    inline void submit_no_event(cl_command_queue queue, uint32_t num_wait_events,
+                                cl_event *wait_events) {
+        CHECK_STATUS(
+            tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, NULL));
+    }
+};
 
 } // namespace tinytc
 

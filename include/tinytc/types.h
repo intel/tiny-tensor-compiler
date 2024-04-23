@@ -162,6 +162,21 @@ typedef enum {
     tinytc_status_cl_out_of_resources = 0x20039,
     tinytc_status_cl_max_size_restriction_exceeded = 0x2003A,
     tinytc_status_cl_profiling_info_not_available = 0x2003B,
+    // SYCL errors
+    tinytc_status_sycl_runtime = 0x30000,
+    tinytc_status_sycl_kernel = 0x30001,
+    tinytc_status_sycl_accessor = 0x30002,
+    tinytc_status_sycl_nd_range = 0x30003,
+    tinytc_status_sycl_event = 0x30004,
+    tinytc_status_sycl_kernel_argument = 0x30005,
+    tinytc_status_sycl_build = 0x30006,
+    tinytc_status_sycl_invalid = 0x30007,
+    tinytc_status_sycl_memory_allocation = 0x30008,
+    tinytc_status_sycl_platform = 0x30009,
+    tinytc_status_sycl_profiling = 0x3000A,
+    tinytc_status_sycl_feature_not_supported = 0x3000B,
+    tinytc_status_sycl_kernel_not_supported = 0x3000C,
+    tinytc_status_sycl_backend_mismatch = 0x3000D,
     // The unknown error comes last
     tinytc_status_unknown = 0x7fffffff
 } tinytc_status_t;
@@ -235,6 +250,13 @@ typedef enum {
     tinytc_bundle_format_spirv = 0, ///< SPIR-V
     tinytc_bundle_format_native = 1 ///< Native device binary
 } tinytc_bundle_format_t;
+
+//! Memory object type
+typedef enum {
+    tinytc_mem_type_buffer = 0x0,      ///< Buffer object (e.g. cl_mem)
+    tinytc_mem_type_usm_pointer = 0x1, ///< Unified shared memory pointer
+    tinytc_mem_type_svm_pointer = 0x2, ///< Shared virtual memory pointer
+} tinytc_mem_type_t;
 
 ////////////////////////////
 /////////// Types //////////
@@ -312,6 +334,20 @@ struct tinytc_binary;
 typedef struct tinytc_binary *tinytc_binary_t;
 typedef const struct tinytc_binary *const_tinytc_binary_t;
 
+//! @struct tinytc_recipe;
+//! @brief Opaque struct for a recipe
+struct tinytc_recipe;
+//! @brief recipe handle
+typedef struct tinytc_recipe *tinytc_recipe_t;
+typedef const struct tinytc_recipe *const_tinytc_recipe_t;
+
+//! @struct tinytc_recipe_handler;
+//! @brief Opaque struct for a recipe handler
+struct tinytc_recipe_handler;
+//! @brief recipe_handler handle
+typedef struct tinytc_recipe_handler *tinytc_recipe_handler_t;
+typedef const struct tinytc_recipe_handler *const_tinytc_recipe_handler_t;
+
 ////////////////////////////
 ////////// Structs /////////
 ////////////////////////////
@@ -328,6 +364,12 @@ typedef struct tinytc_location {
     tinytc_position_t begin; ///< Starting position
     tinytc_position_t end;   ///< End position
 } tinytc_location_t;
+
+//! @brief Memory object
+typedef struct tinytc_mem {
+    const void *value;      ///< Pointer value or pointer to buffer object
+    tinytc_mem_type_t type; ///< Memory object type
+} tinytc_mem_t;
 
 #ifdef __cplusplus
 }

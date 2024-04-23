@@ -176,6 +176,21 @@ enum class status {
     cl_out_of_resources = tinytc_status_cl_out_of_resources,
     cl_max_size_restriction_exceeded = tinytc_status_cl_max_size_restriction_exceeded,
     cl_profiling_info_not_available = tinytc_status_cl_profiling_info_not_available,
+    // SYCL errors
+    sycl_runtime = tinytc_status_sycl_runtime,
+    sycl_kernel = tinytc_status_sycl_kernel,
+    sycl_accessor = tinytc_status_sycl_accessor,
+    sycl_nd_range = tinytc_status_sycl_nd_range,
+    sycl_event = tinytc_status_sycl_event,
+    sycl_kernel_argument = tinytc_status_sycl_kernel_argument,
+    sycl_build = tinytc_status_sycl_build,
+    sycl_invalid = tinytc_status_sycl_invalid,
+    sycl_memory_allocation = tinytc_status_sycl_memory_allocation,
+    sycl_platform = tinytc_status_sycl_platform,
+    sycl_profiling = tinytc_status_sycl_profiling,
+    sycl_feature_not_supported = tinytc_status_sycl_feature_not_supported,
+    sycl_kernel_not_supported = tinytc_status_sycl_kernel_not_supported,
+    sycl_backend_mismatch = tinytc_status_sycl_backend_mismatch,
     // The unknown error comes last
     unknown = tinytc_status_unknown
 };
@@ -227,6 +242,13 @@ enum class intel_gpu_architecture { pvc = tinytc_intel_gpu_architecture_pvc };
 enum class bundle_format {
     spirv = tinytc_bundle_format_spirv,  ///< SPIR-V
     native = tinytc_bundle_format_native ///< Native device binary
+};
+
+//! Memory object type
+enum class mem_type {
+    buffer = tinytc_mem_type_buffer,           ///< Buffer object (e.g. cl_mem)
+    usm_pointer = tinytc_mem_type_usm_pointer, ///< Unified shared memory pointer
+    svm_pointer = tinytc_mem_type_svm_pointer, ///< Shared virtual memory pointer
 };
 
 ////////////////////////////

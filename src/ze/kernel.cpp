@@ -14,7 +14,7 @@
 extern "C" {
 
 tinytc_status_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_handle_t context,
-                                        ze_device_handle_t device, tinytc_binary_t bin,
+                                        ze_device_handle_t device, const_tinytc_binary_t bin,
                                         ze_module_build_log_handle_t *build_log) {
     if (bin == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -43,6 +43,19 @@ tinytc_status_t tinytc_ze_module_create(ze_module_handle_t *mod, ze_context_hand
     return tinytc_status_success;
 }
 
+tinytc_status_t tinytc_ze_kernel_create(ze_kernel_handle_t *krnl, ze_module_handle_t mod,
+                                        char const *name) {
+    if (krnl == nullptr || name == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    uint32_t x, y, z;
+    ze_kernel_desc_t kernel_desc = {ZE_STRUCTURE_TYPE_KERNEL_DESC, nullptr, 0, name};
+    TINYTC_ZE_CHECK_STATUS(zeKernelCreate(mod, &kernel_desc, krnl));
+    TINYTC_CHECK_STATUS(tinytc_ze_get_group_size(*krnl, &x, &y, &z));
+    TINYTC_ZE_CHECK_STATUS(zeKernelSetGroupSize(*krnl, x, y, z));
+    return tinytc_status_success;
+}
+
 tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x, uint32_t *y,
                                          uint32_t *z) {
     if (x == nullptr || y == nullptr || z == nullptr) {
@@ -61,5 +74,4 @@ tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
 ze_group_count_t tinytc_ze_get_group_count(uint32_t howmany) {
     return ze_group_count_t{1u, 1u, howmany};
 }
-
-} // namespace tinytc
+}

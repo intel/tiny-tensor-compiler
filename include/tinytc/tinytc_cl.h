@@ -37,7 +37,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_convert_status(cl_int status);
  * @param info [out] pointer to the core_info object created
  * @param device [in] device handle
  *
- * @return CL_SUCCESS on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info,
                                                          cl_device_id device);
@@ -54,7 +54,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *inf
  * @param device [in] device handle
  * @param bin [in] binary object
  *
- * @return CL_SUCCESS on success and error otherwise
+ * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cl_program_create(cl_program *mod, cl_context context,
                                                        cl_device_id device, tinytc_binary_t bin);
@@ -64,30 +64,59 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_program_create(cl_program *mod, cl_conte
  *
  * @param kernel [in] kernel handle
  * @param dev [in] device handle
- * @param x [out] pointer to group size in x dimension
- * @param y [out] pointer to group size in y dimension
- * @param z [out] pointer to group size in z dimension
+ * @param local_size [out][range(0,3)] pointer to local size array of size >= 3
+ * entries
  *
- * @return group count
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, cl_device_id dev,
-                                                       size_t *x, size_t *y, size_t *z);
+TINYTC_EXPORT tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size);
 
 /**
  * @brief Convert group size to opencl global range
  *
  * @param howmany group size
- * @param local_size_x [in] group size in x dimension
- * @param local_size_y [in] group size in y dimension
- * @param local_size_z [in] group size in z dimension
- * @param global_size_x [out] pointer to global size in x dimension
- * @param global_size_y [out] pointer to globap size in y dimension
- * @param global_size_z [out] pointer to globap size in z dimension
+ * @param local_size [in][range(0,3)] pointer to local size array of size >= 3
+ * @param global_size [out][range(0,3)] pointer to global size array of size >= 3
  */
-TINYTC_EXPORT void tinytc_cl_get_global_size(size_t howmany, size_t local_size_x,
-                                             size_t local_size_y, size_t local_size_z,
-                                             size_t *global_size_x, size_t *global_size_y,
-                                             size_t *global_size_z);
+TINYTC_EXPORT void tinytc_cl_get_global_size(size_t howmany, const size_t *local_size,
+                                             size_t *global_size);
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+/**
+ * @brief Create kernel object for recipe
+ *
+ * @param handler [out] pointer to recipe handler object
+ * @param recipe [in] recipe object
+ * @param context [in] context handle
+ * @param device [in] device handle
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cl_recipe_handler_create(tinytc_recipe_handler_t *handler,
+                                                              tinytc_recipe_t recipe,
+                                                              cl_context context,
+                                                              cl_device_id device);
+
+/**
+ * @brief Submit recipe to device
+ *
+ * @param handler [in] recipe handler object
+ * @param queue [in] command queue handle
+ * @param num_wait_events [in][optional] number of events the kernel depends on
+ * @param wait_events [in][optional][range(0,num_wait_events)] array of events to wait on; can be
+ * nullptr if num_wait_events is 0
+ * @param event [out][optional] pointer to event object created; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cl_recipe_handler_submit(tinytc_recipe_handler_t handler,
+                                                              cl_command_queue queue,
+                                                              cl_uint num_wait_events,
+                                                              const cl_event *wait_events,
+                                                              cl_event *event);
 
 #ifdef __cplusplus
 }

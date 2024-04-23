@@ -36,6 +36,7 @@ set(SOURCES
     passes.cpp
     precision_helper.cpp
     prog.cpp
+    recipe.cpp
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
     region.cpp

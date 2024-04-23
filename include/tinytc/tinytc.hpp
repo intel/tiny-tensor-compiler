@@ -249,6 +249,7 @@ template <typename T> class unique_handle {
     unique_handle(unique_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
     //! Copy operator
     unique_handle &operator=(unique_handle const &other) = delete;
+    //! Move operator
     unique_handle &operator=(unique_handle &&other) {
         obj_ = other.obj_;
         other.obj_ = nullptr;
@@ -1087,8 +1088,13 @@ class source_context : public unique_handle<tinytc_source_context_t> {
 template <> struct unique_handle_traits<tinytc_source_t> {
     static void destroy(tinytc_source_t obj) { tinytc_source_destroy(obj); }
 };
-template <> struct unique_handle_traits<tinytc_binary_t> {
-    static void destroy(tinytc_binary_t obj) { tinytc_binary_destroy(obj); }
+template <> struct shared_handle_traits<tinytc_binary_t> {
+    static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
+        return tinytc_binary_retain(handle);
+    }
+    static auto release(tinytc_binary_t handle) -> tinytc_status_t {
+        return tinytc_binary_release(handle);
+    }
 };
 
 class source : public unique_handle<tinytc_source_t> {
@@ -1102,9 +1108,9 @@ class source : public unique_handle<tinytc_source_t> {
     }
 };
 
-class binary : public unique_handle<tinytc_binary_t> {
+class binary : public shared_handle<tinytc_binary_t> {
   public:
-    using unique_handle::unique_handle;
+    using shared_handle::shared_handle;
 
     struct raw {
         bundle_format format;
@@ -1375,260 +1381,103 @@ template <runtime T> class tensor_kernel_bundle {
 ////////// Recipe //////////
 ////////////////////////////
 
-namespace recipe {
+template <typename T> struct auto_mem_type;
 
-inline auto create_small_gemm_batched(core_info const &info, scalar_type ty, transpose tA,
-                                      transpose tB, uint32_t M, uint32_t N, uint32_t K,
-                                      uint32_t ldA, uint32_t strideA, uint32_t ldB,
-                                      uint32_t strideB, uint32_t ldC, uint32_t strideC,
-                                      tinytc_source_context_t ctx = nullptr) -> prog {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
-        &prg, info.get(), static_cast<tinytc_scalar_type_t>(ty),
-        static_cast<tinytc_transpose_t>(tA), static_cast<tinytc_transpose_t>(tB), M, N, K, ldA,
-        strideA, ldB, strideB, ldC, strideC, ctx));
-    return {prg};
-}
+template <typename T>
+concept pointer_to_scalar = std::is_pointer_v<T> && !std::is_class_v<std::remove_pointer_t<T>>;
 
-inline auto create_tall_and_skinny(core_info const &info, scalar_type ty,
-                                   std::uint32_t M_block_size, std::uint32_t N, std::uint32_t K,
-                                   tinytc_source_context_t ctx = nullptr) -> prog {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
-        &prg, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
-    return {prg};
-}
-
-/**
- * @brief Creates a batched small GEMM functor
- *
- * @tparam T Floating point type
- * @tparam R Runtime
- */
-template <typename T, runtime R> class small_gemm_batched {
-  public:
-    using context_t = typename R::context_t;           ///< Context type
-    using device_t = typename R::device_t;             ///< Device type
-    using command_list_t = typename R::command_list_t; ///< Command list / queue type
-    using event_t = typename R::event_t;               ///< Event type
-    using native_event_t = typename R::native_event_t; ///< Native event type
-    using mem_t = typename R::mem_t;                   ///< Memory object type
-    using const_mem_t = typename R::const_mem_t;       ///< Const memory object type
-
-    /**
-     * @brief ctor
-     *
-     * @param info Core info
-     * @param tA Transpose A
-     * @param tB Transpose B
-     * @param M Number of rows of op_(A) and C
-     * @param N Number of columns of op_(B) and C
-     * @param K Number of columns of op_A(A), number of rows of op_B(B)
-     * @param ldA Number of elements between columns of A
-     * @param strideA Number of elements between A matrices
-     * @param ldB Number of elements between columns of B
-     * @param strideB Number of elements between B matrices
-     * @param ldC Number of elements between columns of C
-     * @param strideC Number of elements between C matrices
-     * @param ctx Context
-     * @param dev Device
-     * @param source_ctx Source context for error log
-     */
-    small_gemm_batched(core_info const &info, transpose tA, transpose tB, std::uint32_t M,
-                       std::uint32_t N, std::uint32_t K, std::uint32_t ldA, std::uint32_t strideA,
-                       std::uint32_t ldB, std::uint32_t strideB, std::uint32_t ldC,
-                       std::uint32_t strideC, context_t ctx, device_t dev,
-                       tinytc_source_context_t source_ctx = nullptr)
-        : bundle_(make_binary(info, tA, tB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
-                              source_ctx),
-                  std::move(ctx), std::move(dev)),
-          gemm_(bundle_.get("gemm")), gemm_beta0_(bundle_.get("gemm_beta0")) {}
-
-    /**
-     * @brief Submits a kernel to the runtime for execution on the device.
-     *
-     * This submit prototype is only available if the runtime's native event
-     * type supports reference counting.
-     *
-     * @param howmany Group size
-     * @param alpha @f$\alpha@f$
-     * @param A Pointer to A batch
-     * @param B Pointer to B batch
-     * @param beta @f$\beta@f$
-     * @param C Pointer to C batch
-     * @param q Queue
-     * @param dep_events Vector of events that need to be waited on before execution
-     */
-    auto operator()(std::uint32_t howmany, T alpha, const_mem_t A, const_mem_t B, T beta, mem_t C,
-                    command_list_t q, std::vector<native_event_t> const &dep_events = {}) -> event_t
-    requires(R::is_event_managed)
-    {
-        auto &k = get_kernel(beta);
-        k.set_args(alpha, A, howmany, B, howmany, beta, C, howmany);
-        return k.submit(howmany, std::move(q), dep_events);
-    }
-
-    /**
-     * @brief Submits a kernel to the runtime for execution on the device.
-     *
-     * This submit prototype is only available if the lifetime of the runtime's native event type
-     * is user-managed.
-     *
-     * @param howmany Group size
-     * @param alpha @f$\alpha@f$
-     * @param A Pointer to A batch
-     * @param B Pointer to B batch
-     * @param beta @f$\beta@f$
-     * @param C Pointer to C batch
-     * @param q Command list
-     * @param signal_event Event that is signalled on kernel completion
-     * @param num_wait_events Number of events that need to be waited on before execution
-     * @param wait_events Pointer to num_wait_events event handles
-     */
-    void operator()(std::uint32_t howmany, T alpha, const_mem_t A, const_mem_t B, T beta, mem_t C,
-                    command_list_t q, native_event_t signal_event = nullptr,
-                    std::uint32_t num_wait_events = 0, native_event_t *wait_events = nullptr)
-    requires(!R::is_event_managed)
-    {
-        auto &k = get_kernel(beta);
-        k.set_args(alpha, A, howmany, B, howmany, beta, C, howmany);
-        k.submit(howmany, q, signal_event, num_wait_events, wait_events);
-    }
-
-  private:
-    auto make_binary(core_info const &info, transpose tA, transpose tB, std::uint32_t M,
-                     std::uint32_t N, std::uint32_t K, std::uint32_t ldA, std::uint32_t strideA,
-                     std::uint32_t ldB, std::uint32_t strideB, std::uint32_t ldC,
-                     std::uint32_t strideC, tinytc_source_context_t source_ctx = nullptr)
-        -> binary {
-        auto prg = create_small_gemm_batched(info, to_scalar_type_v<T>, tA, tB, M, N, K, ldA,
-                                             strideA, ldB, strideB, ldC, strideC, source_ctx);
-        return compile_to_binary(prg, info, bundle_format::spirv, source_ctx);
-    }
-
-    auto get_kernel(T beta) -> tensor_kernel<R> & { return beta == T(0.0) ? gemm_beta0_ : gemm_; }
-
-    tensor_kernel_bundle<R> bundle_;
-    tensor_kernel<R> gemm_, gemm_beta0_;
+template <pointer_to_scalar T> struct auto_mem_type<T> {
+    constexpr static mem_type value = mem_type::usm_pointer;
 };
 
-/**
- * @brief Creates a tall and skinny GEMM functor
- *
- * @tparam T Floating point type
- * @tparam R Runtime
- */
-template <typename T, runtime R> class tall_and_skinny {
-  public:
-    using context_t = typename R::context_t;           ///< Context type
-    using device_t = typename R::device_t;             ///< Device type
-    using command_list_t = typename R::command_list_t; ///< Command list / queue type
-    using event_t = typename R::event_t;               ///< Event type
-    using native_event_t = typename R::native_event_t; ///< Native event type
-    using mem_t = typename R::mem_t;                   ///< Memory object type
-    using const_mem_t = typename R::const_mem_t;       ///< Const memory object type
+template <typename T> inline constexpr auto auto_mem_type_v = auto_mem_type<T>::value;
 
-    /**
-     * @brief Compute group size
-     *
-     * @param M Number of rows of A and C
-     *
-     * @return Group size
-     */
-    auto howmany(std::uint32_t M) const -> std::size_t { return 1 + (M - 1) / M_block_size_; }
-
-    /**
-     * @brief ctor
-     *
-     * @param info Core info
-     * @param N Number of columns of B and C
-     * @param K Number of columns of A, number of rows B
-     * @param ctx Context
-     * @param dev Device
-     * @param source_ctx Source context for error log
-     * @param M_block_size M-mode block size
-     */
-    tall_and_skinny(core_info const &info, std::uint32_t N, std::uint32_t K, context_t ctx,
-                    device_t dev, tinytc_source_context_t source_ctx = nullptr,
-                    std::uint32_t M_block_size = 128)
-        : M_block_size_(M_block_size),
-          bundle_(make_binary(info, N, K, source_ctx), std::move(ctx), std::move(dev)),
-          gemm_(bundle_.get("gemm")), gemm_beta0_(bundle_.get("gemm_beta0")) {}
-
-    /**
-     * @brief Submits a kernel to the runtime for execution on the device
-     *
-     * This submit prototype is only available if the runtime's native event
-     * type supports reference counting.
-     *
-     * @param M Number of rows of A and C
-     * @param alpha @f$\alpha@f$
-     * @param A Pointer to A
-     * @param ldA Number of elements between columns of A
-     * @param B Pointer to B
-     * @param ldB Number of elements between columns of B
-     * @param beta @f$\beta@f$
-     * @param C Pointer to C
-     * @param ldC Number of elements between columns of C
-     * @param q Queue
-     * @param dep_events Vector of events that need to be waited on before execution
-     */
-    auto operator()(std::uint32_t M, T alpha, const_mem_t A, std::uint32_t ldA, const_mem_t B,
-                    std::uint32_t ldB, T beta, mem_t C, std::uint32_t ldC, command_list_t q,
-                    std::vector<native_event_t> const &dep_events = {}) -> event_t
-    requires(R::is_event_managed)
-    {
-        auto &k = get_kernel(beta);
-        k.set_args(alpha, A, M, ldA, B, ldB, beta, C, M, ldC);
-        return k.submit(howmany(M), std::move(q), dep_events);
-    }
-
-    /**
-     * @brief Submits a kernel to the runtime for execution on the device
-     *
-     * This submit prototype is only available if the lifetime of the runtime's native event
-     * type is user-managed.
-     *
-     * @param M Number of rows of A and C
-     * @param alpha @f$\alpha@f$
-     * @param A Pointer to A
-     * @param ldA Number of elements between columns of A
-     * @param B Pointer to B
-     * @param ldB Number of elements between columns of B
-     * @param beta @f$\beta@f$
-     * @param C Pointer to C
-     * @param ldC Number of elements between columns of C
-     * @param q Command list
-     * @param signal_event Event that is signalled on kernel completion
-     * @param num_wait_events Number of events that need to be waited on before exuection
-     * @param wait_events Pointer to num_wait_events event handles
-     */
-    void operator()(std::uint32_t M, T alpha, const_mem_t A, std::uint32_t ldA, const_mem_t B,
-                    std::uint32_t ldB, T beta, mem_t C, std::uint32_t ldC, command_list_t q,
-                    native_event_t signal_event = nullptr, std::uint32_t num_wait_events = 0,
-                    native_event_t *wait_events = nullptr)
-    requires(!R::is_event_managed)
-    {
-        auto &k = get_kernel(beta);
-        k.set_args(alpha, A, M, ldA, B, ldB, beta, C, M, ldC);
-        k.submit(howmany(M), q, signal_event, num_wait_events, wait_events);
-    }
-
-  private:
-    auto make_binary(core_info const &info, std::uint32_t N, std::uint32_t K,
-                     tinytc_source_context_t source_ctx = nullptr) -> binary {
-        auto prg =
-            create_tall_and_skinny(info, to_scalar_type_v<T>, M_block_size_, N, K, source_ctx);
-        return compile_to_binary(prg, info, bundle_format::spirv, source_ctx);
-    }
-    auto get_kernel(T beta) -> tensor_kernel<R> & { return beta == T(0.0) ? gemm_beta0_ : gemm_; }
-
-    std::uint32_t M_block_size_;
-    tensor_kernel_bundle<R> bundle_;
-    tensor_kernel<R> gemm_, gemm_beta0_;
+struct mem : ::tinytc_mem {
+    template <typename T>
+    inline mem(T value, mem_type type = auto_mem_type_v<T>)
+        : ::tinytc_mem{value, static_cast<tinytc_mem_type_t>(type)} {}
 };
 
-} // namespace recipe
+template <> struct shared_handle_traits<tinytc_recipe_t> {
+    static auto retain(tinytc_recipe_t handle) -> tinytc_status_t {
+        return tinytc_recipe_retain(handle);
+    }
+    static auto release(tinytc_recipe_t handle) -> tinytc_status_t {
+        return tinytc_recipe_release(handle);
+    }
+};
+
+template <> struct shared_handle_traits<tinytc_recipe_handler_t> {
+    static auto retain(tinytc_recipe_handler_t handle) -> tinytc_status_t {
+        return tinytc_recipe_handler_retain(handle);
+    }
+    static auto release(tinytc_recipe_handler_t handle) -> tinytc_status_t {
+        return tinytc_recipe_handler_release(handle);
+    }
+};
+
+class recipe : public shared_handle<tinytc_recipe_t> {
+  public:
+    using shared_handle::shared_handle;
+
+    auto get_prog() const -> prog {
+        tinytc_prog_t prg;
+        CHECK_STATUS(tinytc_recipe_get_prog(obj_, &prg));
+        return {prg};
+    }
+
+    auto get_binary() const -> binary {
+        tinytc_binary_t bin;
+        CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
+        return {bin};
+    }
+};
+
+class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+class small_gemm_batched : public recipe {
+  public:
+    using recipe::recipe;
+
+    inline small_gemm_batched(core_info const &info, scalar_type ty, transpose tA, transpose tB,
+                              uint32_t M, uint32_t N, uint32_t K, uint32_t ldA, uint32_t strideA,
+                              uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
+                              tinytc_source_context_t ctx = nullptr) {
+        CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
+            &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty),
+            static_cast<tinytc_transpose_t>(tA), static_cast<tinytc_transpose_t>(tB), M, N, K, ldA,
+            strideA, ldB, strideB, ldC, strideC, ctx));
+    }
+
+    template <typename T>
+    static void set_args(recipe_handler &handler, uint32_t howmany, T alpha, mem A, mem B, T beta,
+                         mem C) {
+        CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
+            handler.get(), howmany, sizeof(alpha), &alpha, A, B, sizeof(beta), &beta, C));
+    }
+};
+
+class tall_and_skinny : public recipe {
+    using recipe::recipe;
+
+    inline tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t M_block_size,
+                           std::uint32_t N, std::uint32_t K,
+                           tinytc_source_context_t ctx = nullptr) {
+        CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
+            &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
+    }
+
+    template <typename T>
+    static void set_args(recipe_handler &handler, std::uint32_t M, T alpha, mem A,
+                         std::uint32_t ldA, mem B, std::uint32_t ldB, T beta, mem C,
+                         std::uint32_t ldC) {
+        CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
+            handler.get(), M, sizeof(alpha), &alpha, A, ldA, B, ldB, sizeof(beta), &beta, C, ldC));
+    }
+};
 
 } // namespace tinytc
 
