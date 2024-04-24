@@ -17,7 +17,7 @@ namespace tinytc {
 
 struct ze_recipe_handler : ::tinytc_recipe_handler {
   public:
-    ze_recipe_handler(recipe rec, ze_context_handle_t context, ze_device_handle_t device);
+    ze_recipe_handler(ze_context_handle_t context, ze_device_handle_t device, recipe rec);
 
     void active_kernel(std::uint32_t kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;

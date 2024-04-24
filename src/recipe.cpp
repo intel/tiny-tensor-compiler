@@ -83,6 +83,15 @@ tinytc_status_t tinytc_recipe_retain(tinytc_recipe_t obj) {
     return tinytc_status_success;
 }
 
+tinytc_status_t tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t handler,
+                                                 tinytc_recipe_t *recipe) {
+    if (handler == nullptr || recipe == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return tinytc::exception_to_status_code(
+        [&] { *recipe = tinytc::recipe(handler->get_recipe()).release(); });
+}
+
 tinytc_status_t tinytc_recipe_handler_release(tinytc_recipe_handler_t obj) {
     if (obj == nullptr) {
         return tinytc_status_invalid_arguments;

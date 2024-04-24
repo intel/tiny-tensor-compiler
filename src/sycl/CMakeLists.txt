@@ -8,11 +8,10 @@ find_package(SYCL REQUIRED)
 
 set(SOURCES
     device_info.cpp
-    error.cpp
+    kernel.cpp
     recipe_handler.cpp
 )
 set(PUBLIC_HEADERS
-    tinytc_sycl.h
     tinytc_sycl.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")

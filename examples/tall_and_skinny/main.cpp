@@ -105,14 +105,15 @@ template <typename T> void test(queue q, args &a) {
             auto info = create_core_info(q.get_device());
             info.set_core_feature(core_feature_flag::large_register_file);
 
-            auto tas = recipe::tall_and_skinny<T, sycl_runtime>(info, c.n, c.k, q.get_context(),
-                                                                q.get_device(), source_ctx.get());
-            tas(c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m, q).wait();
+            auto tas = sycl_recipe_handler(
+                q, tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx.get()));
+
+            tall_and_skinny::set_args(tas, c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m);
+            tas.submit(q).wait();
             if (a.verify) {
                 check(c.m, c.n);
             }
-            double min_exec_time_ns =
-                bench([&]() { tas(c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m, q).wait(); });
+            double min_exec_time_ns = bench([&]() { tas.submit(q).wait(); });
 
             auto bw_C_factor = a.beta != 0.0 ? 2 : 1;
             auto bw =

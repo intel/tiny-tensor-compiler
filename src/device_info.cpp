@@ -7,6 +7,7 @@
 #include "util.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <utility>
 
@@ -65,12 +66,7 @@ void core_info_intel::clear_core_feature(core_feature_flag flag) {
 
 auto core_info_intel::core_features() const -> std::uint32_t { return core_features_; }
 
-auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core_config {
-    if (std::find(subgroup_sizes_.begin(), subgroup_sizes_.end(), subgroup_size) ==
-        subgroup_sizes_.end()) {
-        throw std::out_of_range("Requested subgroup size not available");
-    }
-
+auto core_info_intel::max_number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t {
     auto const num_threads_per_eu_due_to_register_use =
         num_threads_per_eu_ * num_reg_small_grf() / num_registers_per_thread_;
     auto const num_threads_per_eu_due_to_subgroup_size =
@@ -78,9 +74,24 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
     auto const num_threads_per_eu =
         std::min(num_threads_per_eu_due_to_register_use, num_threads_per_eu_due_to_subgroup_size);
 
-    auto max_number_of_work_items = num_threads_per_eu * num_eus_per_subslice_ * subgroup_size;
+    return num_threads_per_eu * num_eus_per_subslice_ * subgroup_size;
+}
 
-    return core_config{subgroup_size,      max_number_of_work_items,
+auto core_info_intel::minmax_number_of_work_items() const -> std::uint32_t {
+    std::uint32_t minmax = std::numeric_limits<std::uint32_t>::max();
+    for (auto const &sgs : subgroup_sizes_) {
+        minmax = std::min(minmax, max_number_of_work_items(sgs));
+    }
+    return minmax;
+}
+
+auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core_config {
+    if (std::find(subgroup_sizes_.begin(), subgroup_sizes_.end(), subgroup_size) ==
+        subgroup_sizes_.end()) {
+        throw std::out_of_range("Requested subgroup size not available");
+    }
+
+    return core_config{subgroup_size,      max_number_of_work_items(subgroup_size),
                        local_memory_size_, register_size_ * num_registers_per_thread_,
                        ip_version_,        core_features_};
 }

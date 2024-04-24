@@ -1436,6 +1436,12 @@ class recipe : public shared_handle<tinytc_recipe_t> {
 class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
   public:
     using shared_handle::shared_handle;
+
+    auto get_recipe() const -> recipe {
+        tinytc_recipe_t rec;
+        CHECK_STATUS(tinytc_recipe_handler_get_recipe(obj_, &rec));
+        return {rec};
+    }
 };
 
 class small_gemm_batched : public recipe {
@@ -1461,13 +1467,13 @@ class small_gemm_batched : public recipe {
 };
 
 class tall_and_skinny : public recipe {
+  public:
     using recipe::recipe;
 
-    inline tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t M_block_size,
-                           std::uint32_t N, std::uint32_t K,
-                           tinytc_source_context_t ctx = nullptr) {
+    inline tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t N, std::uint32_t K,
+                           std::uint32_t M_block_size = 0, tinytc_source_context_t ctx = nullptr) {
         CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
-            &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty), M_block_size, N, K, ctx));
+            &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty), N, K, M_block_size, ctx));
     }
 
     template <typename T>

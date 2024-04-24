@@ -16,7 +16,7 @@ class level_zero_test_runtime {
     using device_t = ze_device_handle_t;
     using context_t = ze_context_handle_t;
     using command_list_t = ze_command_list_handle_t;
-    using runtime_t = tinytc::level_zero_runtime;
+    using recipe_handler_t = tinytc::level_zero_recipe_handler;
     using mem_t = void *;
     using const_mem_t = const void *;
 

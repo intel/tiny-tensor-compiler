@@ -23,7 +23,7 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), opt_bundle_(make_optimized_kernel()),
-      opt_kernel_(opt_bundle_.get("volume_kernel")) {
+      opt_kernel_(create_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
     Q_opt_.random();
     I_.random();
@@ -35,16 +35,19 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
         k.random();
     }
 
-    g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-        dev_info_, transpose::N, transpose::N, B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_,
-        P_, P_ * P_, B2_aligned_, B2_aligned_ * P_, q_.get_context(), q_.get_device()));
-    g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-        dev_info_, transpose::N, transpose::N, B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-        B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_, q_.get_context(), q_.get_device()));
+    g_.emplace_back(sycl_recipe_handler(
+        q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+                               B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
+                               B2_aligned_, B2_aligned_ * P_)));
+    g_.emplace_back(sycl_recipe_handler(
+        q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+                               B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_, B2_aligned_ * P_,
+                               B3_aligned_, B3_aligned_ * P_)));
 }
 
 template <typename T>
-auto test_volume<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtime> {
+auto test_volume<T>::make_optimized_kernel()
+    -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
     /**
      * With B3_ = 56, B3_aligned_ = 64, B2_ = 35, B2_aligned_ = 48, P_ = 9
@@ -110,28 +113,33 @@ auto test_volume<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtim
     auto pb = program_builder{};
     pb.create("volume_kernel", opt_kernel);
 
-    return tensor_kernel_bundle(
-        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native), q_.get_context(),
-        q_.get_device());
+    return create_kernel_bundle(
+        q_.get_context(), q_.get_device(),
+        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native));
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {
     auto e = std::vector<event>{};
     for (std::size_t d = 0; d < dim; ++d) {
-        e.emplace_back(g_[0](howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0), tmp_.get(), q_, {e}));
+        small_gemm_batched::set_args(g_[0], howmany_, T(1.0), I_.get(), A_[d].get(), T(0.0),
+                                     tmp_.get());
+        e.emplace_back(g_[0].submit(q_, e));
         e.front() = e.back();
         e.pop_back();
-        e.emplace_back(
-            g_[1](howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0), Q_ref_.get(), q_, {e}));
+        small_gemm_batched::set_args(g_[1], howmany_, T(1.0), K_[d].get(), tmp_.get(), T(1.0),
+                                     Q_ref_.get());
+        e.emplace_back(g_[1].submit(q_, e));
     }
     return e;
 }
 
 template <typename T> std::vector<event> test_volume<T>::optimized() {
-    opt_kernel_.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_,
-                         K_[0].get(), K_[1].get(), K_[2].get(), Q_opt_.get(), howmany_, I_.get(),
-                         howmany_);
-    return {opt_kernel_.submit(howmany_, q_)};
+    auto exe_range = get_execution_range(opt_kernel_, howmany_);
+    return {q_.submit([&](handler &h) {
+        h.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_, K_[0].get(),
+                   K_[1].get(), K_[2].get(), Q_opt_.get(), howmany_, I_.get(), howmany_);
+        h.parallel_for(exe_range, opt_kernel_);
+    })};
 }
 
 template <typename T> bool test_volume<T>::check() {

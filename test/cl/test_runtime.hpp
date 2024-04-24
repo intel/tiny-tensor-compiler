@@ -15,7 +15,7 @@ class opencl_test_runtime {
     using device_t = cl_device_id;
     using context_t = cl_context;
     using command_list_t = cl_command_queue;
-    using runtime_t = tinytc::opencl_runtime;
+    using recipe_handler_t = tinytc::opencl_recipe_handler;
     using mem_t = cl_mem;
     using const_mem_t = const cl_mem;
 

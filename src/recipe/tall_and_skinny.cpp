@@ -8,6 +8,7 @@
 #include "tinytc/tinytc.hpp"
 #include "util.hpp"
 
+#include <algorithm>
 #include <cstdint>
 #include <source_location>
 
@@ -41,8 +42,8 @@ using namespace tinytc;
 extern "C" {
 tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      tinytc_core_info_t info,
-                                                     tinytc_scalar_type_t ty, uint32_t M_block_size,
-                                                     uint32_t N, uint32_t K,
+                                                     tinytc_scalar_type_t ty, uint32_t N,
+                                                     uint32_t K, uint32_t M_block_size,
                                                      tinytc_source_context_t ctx) {
     if (recipe == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -64,6 +65,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
         return l;
     };
 
+    if (M_block_size == 0u) {
+        TINYTC_CHECK_STATUS(tinytc_recipe_tall_and_skinny_suggest_block_size(info, &M_block_size));
+    }
+
     return exception_to_status_code(
         [&] {
             auto const ty_ = enum_cast<scalar_type>(ty);
@@ -71,8 +76,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
             auto const shapes = std::vector{blas_shape{ty_, {M_block_size, N}}};
             auto [sgs, tiling] = suggest_subgroup_size_and_tiling(shapes, *info);
 
-            // We want to avoid working on too many columns in parallel as there is a high chance
-            // to trash the cache due to the large pitch
+            // We want to avoid working on too many columns in parallel as there is a high
+            // chance to trash the cache due to the large pitch
             while (tiling[0] < tiling[1] && tiling[1] > 1) {
                 tiling[1] /= 2;
             }
@@ -137,6 +142,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                           .release();
         },
         ctx, my_loc());
+}
+
+tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(tinytc_core_info_t info,
+                                                                 uint32_t *M_block_size) {
+    if (info == nullptr || M_block_size == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    return tinytc::exception_to_status_code(
+        [&] { *M_block_size = std::min(128u, info->minmax_number_of_work_items()); });
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(tinytc_recipe_handler_t handler, uint32_t M,

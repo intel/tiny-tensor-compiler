@@ -21,7 +21,7 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
       tmp_(Bd(), P_, Bd_aligned(N_ - 1), howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(Bd(), Bd(), Bd_aligned(N_ - 1), 1, q_)), dQ_(make_dQ()),
-      opt_bundle_(make_optimized_kernel()), opt_kernel_(opt_bundle_.get("ader_kernel")) {
+      opt_bundle_(make_optimized_kernel()), opt_kernel_(create_kernel(opt_bundle_, "ader_kernel")) {
     I_ref_.random();
     I_opt_.random();
     for (auto &a : A_) {
@@ -38,12 +38,14 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
 
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
-        g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-            dev_info_, transpose::N, transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
-            dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_, q_.get_context(), q_.get_device()));
-        g_.emplace_back(recipe::small_gemm_batched<T, sycl_runtime>(
-            dev_info_, transpose::N, transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
-            A_[0].stride(), dQ_[n].ld(), dQ_[n].stride(), q_.get_context(), q_.get_device()));
+        g_.emplace_back(sycl_recipe_handler(
+            q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N, bn,
+                                   P_, Bd(N_ - n + 1), K_[0].ld(), 0, dQ_[n - 1].ld(),
+                                   dQ_[n - 1].stride(), bn, bn * P_)));
+        g_.emplace_back(sycl_recipe_handler(
+            q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N, bn,
+                                   P_, P_, bn, bn * P_, A_[0].ld(), A_[0].stride(), dQ_[n].ld(),
+                                   dQ_[n].stride())));
     }
 }
 
@@ -56,7 +58,7 @@ template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
 }
 
 template <typename T>
-auto test_ader<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtime> {
+auto test_ader<T>::make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
     auto opt_kernel = [&](function_builder &fb) {
         T dt = 1.01;
@@ -103,9 +105,9 @@ auto test_ader<T>::make_optimized_kernel() -> tensor_kernel_bundle<sycl_runtime>
     auto pb = program_builder{};
     pb.create("ader_kernel", opt_kernel);
 
-    return tensor_kernel_bundle(
-        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native), q_.get_context(),
-        q_.get_device());
+    return create_kernel_bundle(
+        q_.get_context(), q_.get_device(),
+        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native));
 }
 
 template <typename T>
@@ -135,10 +137,12 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
         num *= dt;
         denom *= n + 1;
         for (std::size_t d = 0; d < dim; ++d) {
-            e[0] = g_[2 * (n - 1)](howmany_, T(1.0), K_[d].get(), dQ_[n - 1].get(), T(0.0),
-                                   tmp_.get(), q_, {e});
-            e[0] = g_[2 * n - 1](howmany_, T(1.0), tmp_.get(), A_[d].get(), T(1.0), dQ_[n].get(),
-                                 q_, {e});
+            small_gemm_batched::set_args(g_[2 * (n - 1)], howmany_, T(1.0), K_[d].get(),
+                                         dQ_[n - 1].get(), T(0.0), tmp_.get());
+            e[0] = g_[2 * (n - 1)].submit(q_, e);
+            small_gemm_batched::set_args(g_[2 * n - 1], howmany_, T(1.0), tmp_.get(), A_[d].get(),
+                                         T(1.0), dQ_[n].get());
+            e[0] = g_[2 * n - 1].submit(q_, e);
         }
         e[0] = taylor_sum(I_ref_, dQ_[n], num / denom, e);
     }
@@ -146,10 +150,12 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
 }
 
 template <typename T> std::vector<event> test_ader<T>::optimized() {
-    opt_kernel_.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_,
-                         K_[0].get(), K_[1].get(), K_[2].get(), dQ_[0].get(), howmany_,
-                         I_opt_.get(), howmany_);
-    return {opt_kernel_.submit(howmany_, q_)};
+    auto exe_range = get_execution_range(opt_kernel_, howmany_);
+    return {q_.submit([&](handler &h) {
+        h.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_, K_[0].get(),
+                   K_[1].get(), K_[2].get(), dQ_[0].get(), howmany_, I_opt_.get(), howmany_);
+        h.parallel_for(exe_range, opt_kernel_);
+    })};
 }
 
 template <typename T> bool test_ader<T>::check() {

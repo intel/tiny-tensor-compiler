@@ -106,16 +106,16 @@ TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(uint32_t howmany);
  * @brief Create kernel object for recipe
  *
  * @param handler [out] pointer to recipe handler object
- * @param recipe [in] recipe object
  * @param context [in] context handle
  * @param device [in] device handle
+ * @param recipe [in] recipe object
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_ze_recipe_handler_create(tinytc_recipe_handler_t *handler,
-                                                              tinytc_recipe_t recipe,
                                                               ze_context_handle_t context,
-                                                              ze_device_handle_t device);
+                                                              ze_device_handle_t device,
+                                                              tinytc_recipe_t recipe);
 
 /**
  * @brief Submit recipe to device
