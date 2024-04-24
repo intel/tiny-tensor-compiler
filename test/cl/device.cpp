@@ -1,11 +1,13 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_cl.hpp>
+#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_cl.hpp"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
+#include <CL/cl_platform.h>
 #include <cstdint>
 #include <doctest/doctest.h>
 

@@ -5,15 +5,14 @@
 %language "c++"
 
 %code requires {
-    #include "location.hpp"
     #include "node/function_node.hpp"
     #include "slice.hpp"
     #include "tinytc/tinytc.hpp"
+    #include "tinytc/types.hpp"
     #include <algorithm>
     #include <cstdint>
     #include <functional>
     #include <new>
-    #include <string>
     #include <utility>
 
     namespace tinytc {
@@ -38,6 +37,7 @@
 
     #include <array>
     #include <cstdint>
+    #include <cstdlib>
     #include <memory>
     #include <vector>
     #include <utility>

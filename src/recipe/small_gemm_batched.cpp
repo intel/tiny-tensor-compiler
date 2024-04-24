@@ -3,12 +3,21 @@
 
 #include "small_gemm_batched.hpp"
 #include "error.hpp"
+#include "parser.hpp"
+#include "recipe.hpp"
+#include "reference_counted.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 #include "util.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <source_location>
+#include <utility>
+#include <vector>
 
 namespace tinytc {
 

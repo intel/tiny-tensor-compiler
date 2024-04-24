@@ -2,17 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
-#include "clir/visitor/codegen_opencl.hpp"
-#include "clir/visitor/unique_names.hpp"
-
-#include <cstdint>
 #include <cstring>
 #include <exception>
 #include <iostream>
-#include <memory>
-#include <string>
-#include <utility>
 
 using namespace tinytc;
 

@@ -6,12 +6,12 @@
 
 #include "../recipe.hpp"
 #include "argument_handler.hpp"
-#include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_cl.hpp>
-#include <tinytc/types.h>
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 
 #include <CL/cl.h>
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <vector>
 

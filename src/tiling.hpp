@@ -5,6 +5,7 @@
 #define TILING_20240306_HPP
 
 #include "device_info.hpp"
+#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstddef>
@@ -14,8 +15,6 @@
 #include <vector>
 
 namespace tinytc {
-
-enum class scalar_type;
 
 //! Size of 2D subgroup grid
 class local_tiling : public std::array<std::uint32_t, 2> {

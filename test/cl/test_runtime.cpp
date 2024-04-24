@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "test_runtime.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_cl.hpp"
 
-#include <cstdint>
+#include <CL/cl_platform.h>
 
 using tinytc::CL_CHECK_STATUS;
 

@@ -4,16 +4,14 @@
 #ifndef WORK_GROUP_SIZE_20240311_HPP
 #define WORK_GROUP_SIZE_20240311_HPP
 
+#include "device_info.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/program_node.hpp"
 #include "node/region_node.hpp"
 #include "tiling.hpp"
 
-#include <memory>
 #include <unordered_set>
-
-struct tinytc_core_info;
 
 namespace tinytc {
 

@@ -6,6 +6,7 @@
 
 #include "../recipe.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstdint>
 

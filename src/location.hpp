@@ -4,12 +4,12 @@
 #ifndef LOCATION_20240209_HPP
 #define LOCATION_20240209_HPP
 
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <cstdint>
 #include <iosfwd>
-#include <string>
 
 namespace tinytc {
 

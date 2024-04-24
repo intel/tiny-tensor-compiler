@@ -1,14 +1,14 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_ze.hpp"
+#include "tinytc/types.hpp"
+
 #include <doctest/doctest.h>
 #include <level_zero/ze_api.h>
-#include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_ze.hpp>
 
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 using namespace tinytc;
 

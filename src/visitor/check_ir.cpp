@@ -3,11 +3,11 @@
 
 #include "visitor/check_ir.hpp"
 #include "error.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/visit.hpp>
 
-#include <functional>
-#include <utility>
 #include <vector>
 
 using clir::visit;

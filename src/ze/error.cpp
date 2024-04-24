@@ -4,6 +4,8 @@
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/types.h"
 
+#include <level_zero/ze_api.h>
+
 extern "C" {
 tinytc_status_t tinytc_ze_convert_status(ze_result_t result) {
     switch (result) {

@@ -6,8 +6,8 @@
 #include "error.hpp"
 #include "gemm_generator.hpp"
 #include "scalar_type.hpp"
+#include "slice.hpp"
 #include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
 #include "util.hpp"
 
 #include <clir/attr.hpp>

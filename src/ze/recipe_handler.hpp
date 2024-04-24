@@ -6,9 +6,9 @@
 
 #include "../recipe.hpp"
 #include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_ze.hpp>
 #include <tinytc/types.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <level_zero/ze_api.h>
 #include <vector>

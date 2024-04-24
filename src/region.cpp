@@ -5,9 +5,14 @@
 #include "location.hpp"
 #include "node/region_node.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <utility>
+#include <vector>
 
 using namespace tinytc;
 

@@ -8,7 +8,7 @@
 #include "node/function_node.hpp"
 #include "node/program_node.hpp"
 
-#include <cstdint>
+#include <string>
 #include <unordered_map>
 
 namespace tinytc {

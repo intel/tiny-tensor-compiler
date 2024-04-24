@@ -2,9 +2,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "recipe_handler.hpp"
+#include "../recipe.hpp"
+#include "../reference_counted.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_ze.h"
+#include "tinytc/tinytc_ze.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <memory>
 #include <utility>
 
 namespace tinytc {

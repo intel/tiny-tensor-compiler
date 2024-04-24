@@ -4,6 +4,7 @@
 #include "../device_info.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc_ze.h"
+#include "tinytc/types.h"
 
 #include <level_zero/ze_api.h>
 #include <vector>

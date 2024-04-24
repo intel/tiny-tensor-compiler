@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/insert_barrier.hpp"
+#include "tinytc/tinytc.hpp"
 #include "visitor/alias_analysis.hpp"
 
 #include <clir/builtin_type.hpp>
@@ -9,7 +10,6 @@
 
 #include <bit>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 

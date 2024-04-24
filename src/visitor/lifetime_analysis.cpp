@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/lifetime_analysis.hpp"
+#include "node/value_node.hpp"
 #include "visitor/alias_analysis.hpp"
 
 #include <clir/visit.hpp>

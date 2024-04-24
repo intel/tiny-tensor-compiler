@@ -4,10 +4,12 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/types.h"
 #include "util.hpp"
 
 #include <algorithm>
 #include <limits>
+#include <memory>
 #include <stdexcept>
 #include <utility>
 

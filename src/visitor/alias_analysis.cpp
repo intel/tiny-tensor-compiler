@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/alias_analysis.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <clir/visit.hpp>
 

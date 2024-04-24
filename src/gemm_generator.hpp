@@ -4,6 +4,10 @@
 #ifndef GEMM_GENERATOR_20240314_HPP
 #define GEMM_GENERATOR_20240314_HPP
 
+#include "device_info.hpp"
+#include "tiling.hpp"
+#include "tinytc/types.hpp"
+
 #include <clir/builtin_type.hpp>
 #include <clir/func.hpp>
 
@@ -15,11 +19,6 @@
 #include <utility>
 
 namespace tinytc {
-
-class core_config;
-class local_tiling;
-enum class scalar_type;
-enum class transpose;
 
 //! Struct to handle mixed precision GEMMs
 struct gemm_scalar_type {

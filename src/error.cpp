@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
+#include "location.hpp"
+#include "tinytc/tinytc.h"
 
 #include <cctype>
 #include <sstream>

@@ -4,8 +4,6 @@
 #include "required_extensions.hpp"
 
 #include <clir/builtin_function.hpp>
-#include <clir/func.hpp>
-#include <clir/prog.hpp>
 #include <clir/visitor/required_extensions.hpp>
 
 #include <utility>

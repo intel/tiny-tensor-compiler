@@ -3,6 +3,10 @@
 
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
+
+#include <cstddef>
 
 namespace tinytc {
 

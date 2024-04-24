@@ -6,12 +6,8 @@
 
 #include <vector>
 
-namespace clir {
-class func;
-}
-namespace clir {
-class prog;
-}
+#include <clir/func.hpp>
+#include <clir/prog.hpp>
 
 namespace tinytc {
 

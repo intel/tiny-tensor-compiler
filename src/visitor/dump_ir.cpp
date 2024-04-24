@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/dump_ir.hpp"
+#include "slice.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/visit.hpp>

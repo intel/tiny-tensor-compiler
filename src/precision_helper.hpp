@@ -4,13 +4,13 @@
 #ifndef PRECISION_HELPER_20230214_HPP
 #define PRECISION_HELPER_20230214_HPP
 
+#include "tinytc/types.hpp"
+
 #include "clir/builtin_type.hpp"
 #include "clir/data_type.hpp"
 #include "clir/expr.hpp"
 
 namespace tinytc {
-
-enum class scalar_type;
 
 class precision_helper {
   public:

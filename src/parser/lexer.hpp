@@ -13,8 +13,6 @@
 
 namespace tinytc {
 
-enum class scalar_type;
-
 class lexer {
   public:
     lexer(std::uint64_t input_size, char const *input, location const &start_loc);
