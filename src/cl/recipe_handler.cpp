@@ -9,14 +9,14 @@
 
 namespace tinytc {
 
-cl_recipe_handler::cl_recipe_handler(recipe rec, cl_context context, cl_device_id device)
+cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device, recipe rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
     module_ = create_program(context, device, get_recipe().get_binary());
 
     auto const num_kernels = get_recipe()->num_kernels();
-    local_size_.reserve(num_kernels);
     kernels_.reserve(num_kernels);
+    local_size_.reserve(num_kernels);
     for (std::uint32_t num = 0; num < num_kernels; ++num) {
         kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back().get()));
@@ -25,9 +25,7 @@ cl_recipe_handler::cl_recipe_handler(recipe rec, cl_context context, cl_device_i
     cl_platform_id platform;
     CL_CHECK_STATUS(
         clGetDeviceInfo(device, CL_DEVICE_PLATFORM, sizeof(platform), &platform, nullptr));
-    clSetKernelArgMemPointerINTEL_ =
-        (clSetKernelArgMemPointerINTEL_t)clGetExtensionFunctionAddressForPlatform(
-            platform, "clSetKernelArgMemPointerINTEL");
+    arg_handler_ = opencl_argument_handler(platform);
 }
 
 void cl_recipe_handler::active_kernel(std::uint32_t kernel_num) {
@@ -37,27 +35,10 @@ void cl_recipe_handler::active_kernel(std::uint32_t kernel_num) {
     active_kernel_ = kernel_num;
 }
 void cl_recipe_handler::arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) {
-    CL_CHECK_STATUS(clSetKernelArg(kernel(), arg_index, arg_size, arg_value));
+    arg_handler_.set_arg(kernel(), arg_index, arg_size, arg_value);
 }
 void cl_recipe_handler::mem_arg(std::uint32_t arg_index, tinytc_mem_t const &mem) {
-    switch (mem.type) {
-    case tinytc_mem_type_buffer:
-        arg(arg_index, sizeof(mem.value), &mem.value);
-        break;
-    case tinytc_mem_type_usm_pointer:
-        if (clSetKernelArgMemPointerINTEL_ == nullptr) {
-            throw status::unavailable_extension;
-        }
-        CL_CHECK_STATUS(clSetKernelArgMemPointerINTEL_(kernel(), arg_index, mem.value));
-        arg(arg_index, sizeof(mem.value), &mem.value);
-        break;
-    case tinytc_mem_type_svm_pointer:
-        CL_CHECK_STATUS(clSetKernelArgSVMPointer(kernel(), arg_index, mem.value));
-        break;
-    default:
-        break;
-    }
-    throw status::invalid_arguments;
+    arg_handler_.set_mem_arg(kernel(), arg_index, mem);
 }
 
 void cl_recipe_handler::howmany(std::uint32_t num) {
@@ -77,13 +58,13 @@ using namespace tinytc;
 extern "C" {
 
 tinytc_status_t tinytc_cl_recipe_handler_create(tinytc_recipe_handler_t *handler,
-                                                tinytc_recipe_t rec, cl_context context,
-                                                cl_device_id device) {
+                                                cl_context context, cl_device_id device,
+                                                tinytc_recipe_t rec) {
     if (handler == nullptr || rec == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code_cl([&] {
-        *handler = std::make_unique<tinytc::cl_recipe_handler>(recipe(rec, true), context, device)
+        *handler = std::make_unique<tinytc::cl_recipe_handler>(context, device, recipe(rec, true))
                        .release();
     });
 }

@@ -89,16 +89,16 @@ TINYTC_EXPORT void tinytc_cl_get_global_size(size_t howmany, const size_t *local
  * @brief Create kernel object for recipe
  *
  * @param handler [out] pointer to recipe handler object
- * @param recipe [in] recipe object
  * @param context [in] context handle
  * @param device [in] device handle
+ * @param recipe [in] recipe object
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cl_recipe_handler_create(tinytc_recipe_handler_t *handler,
-                                                              tinytc_recipe_t recipe,
                                                               cl_context context,
-                                                              cl_device_id device);
+                                                              cl_device_id device,
+                                                              tinytc_recipe_t recipe);
 
 /**
  * @brief Submit recipe to device

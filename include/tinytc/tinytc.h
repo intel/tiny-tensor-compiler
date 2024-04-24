@@ -1344,16 +1344,28 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @param recipe [out] pointer to the recipe object created
  * @param info [in] core info object
  * @param ty [in] Scalar type of alpha, A, B, beta, C
- * @param [in] M_block_size Size of M block that each work group gets
  * @param [in] N Number of columns of B, C
  * @param [in] K Number columns of A, number of rows of B
+ * @param [in][optional] M_block_size Size of M block that each work group gets; pass 0 to have the
+ * parameter auto-selected
  * @param ctx [inout][optional] source context object; saves error log; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty,
-    uint32_t M_block_size, uint32_t N, uint32_t K, tinytc_source_context_t ctx);
+    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t N,
+    uint32_t K, uint32_t M_block_size, tinytc_source_context_t ctx);
+
+/**
+ * @brief Suggest an M block size for tall and skinny recipe
+ *
+ * @param info [in] core info object
+ * @param M_block_size [out] pointer to block size
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_recipe_tall_and_skinny_suggest_block_size(tinytc_core_info_t info, uint32_t *M_block_size);
 
 /**
  * @brief Set kernel arguments for tall and skinny GEMM recipe
@@ -1421,6 +1433,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_release(tinytc_recipe_t obj);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_retain(tinytc_recipe_t obj);
+
+/**
+ * @brief Get recipe object
+ *
+ * @param recipe_handler [in] recipe handler object
+ * @param bin [out] pointer to recipe object; reference count is increased so the user needs to call
+ * tinytc_recipe_release to clean up
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_recipe_handler_get_recipe(const_tinytc_recipe_handler_t handler, tinytc_recipe_t *recipe);
 
 /**
  * @brief Release recipe handler object

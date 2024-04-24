@@ -246,13 +246,13 @@ class level_zero_recipe_handler : public recipe_handler {
   public:
     using recipe_handler::recipe_handler;
 
-    inline level_zero_recipe_handler(recipe const &rec, ze_context_handle_t context,
-                                     ze_device_handle_t device) {
-        CHECK_STATUS(tinytc_ze_recipe_handler_create(&obj_, rec.get(), context, device));
+    inline level_zero_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
+                                     recipe const &rec) {
+        CHECK_STATUS(tinytc_ze_recipe_handler_create(&obj_, context, device, rec.get()));
     }
 
-    inline void submit(ze_command_list_handle_t list, ze_event_handle_t signal_event,
-                       uint32_t num_wait_events, ze_event_handle_t *wait_events) {
+    inline void submit(ze_command_list_handle_t list, ze_event_handle_t signal_event = nullptr,
+                       uint32_t num_wait_events = 0, ze_event_handle_t *wait_events = nullptr) {
         CHECK_STATUS(tinytc_ze_recipe_handler_submit(obj_, list, signal_event, num_wait_events,
                                                      wait_events));
     }

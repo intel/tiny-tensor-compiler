@@ -15,7 +15,7 @@ class sycl_test_runtime {
     using device_t = sycl::device;
     using context_t = sycl::context;
     using command_list_t = sycl::queue;
-    using runtime_t = tinytc::sycl_runtime;
+    using recipe_handler_t = tinytc::sycl_recipe_handler;
     using mem_t = void *;
     using const_mem_t = const void *;
 

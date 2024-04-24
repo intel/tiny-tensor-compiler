@@ -15,7 +15,7 @@ namespace tinytc {
 //! Core parameters for a specific choice of subgroup size and core feature flags
 class core_config {
   public:
-    std::uint32_t subgroup_size;     ///< Smallest unit of execution
+    std::uint32_t subgroup_size; ///< Smallest unit of execution
     std::uint32_t
         max_number_of_work_items;    ///< Maximum size of local work group in number of works items
     std::uint32_t local_memory_size; ///< Maximum size of shared local memory in byte
@@ -43,6 +43,9 @@ struct tinytc_core_info {
     virtual void clear_core_feature(tinytc::core_feature_flag flag) = 0;
     //! Get core features
     virtual auto core_features() const -> std::uint32_t = 0;
+    //! Returns the minimum of the maximum work group size over all subgroup sizes; selected core
+    //! features are respected
+    virtual auto minmax_number_of_work_items() const -> std::uint32_t = 0;
     //! Return core config for specific subgroup size and number of registers per tile
     virtual auto get_core_config(std::uint32_t subgroup_size) const -> tinytc::core_config = 0;
 };
@@ -80,12 +83,15 @@ class core_info_intel : public ::tinytc_core_info {
     void clear_core_feature(core_feature_flag flag) override;
     //! @copydoc ::tinytc_core_info::core_features
     auto core_features() const -> std::uint32_t override;
+    //! @copydoc ::tinytc_core_info::minmax_number_of_work_items
+    auto minmax_number_of_work_items() const -> std::uint32_t override;
     //! @copydoc ::tinytc_core_info::get_core_config
     auto get_core_config(std::uint32_t subgroup_size) const -> core_config override;
 
   private:
     auto num_reg_small_grf() const -> std::uint32_t;
     auto num_reg_large_grf() const -> std::uint32_t;
+    auto max_number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t;
 
     std::uint32_t ip_version_;
     std::uint32_t num_eus_per_subslice_;

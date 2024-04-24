@@ -5,12 +5,12 @@
 #define CL_RECIPE_HANDLER_20240423_HPP
 
 #include "../recipe.hpp"
+#include "argument_handler.hpp"
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_cl.hpp>
 #include <tinytc/types.h>
 
 #include <CL/cl.h>
-#include <CL/cl_ext.h>
 #include <array>
 #include <cstdint>
 #include <vector>
@@ -19,11 +19,7 @@ namespace tinytc {
 
 struct cl_recipe_handler : ::tinytc_recipe_handler {
   public:
-    //! Signature of clSetKernelArgMemPointerINTEL function
-    using clSetKernelArgMemPointerINTEL_t = cl_int (*)(cl_kernel kernel, cl_uint arg_index,
-                                                       const void *arg_value);
-
-    cl_recipe_handler(recipe rec, cl_context context, cl_device_id device);
+    cl_recipe_handler(cl_context context, cl_device_id device, recipe rec);
 
     void active_kernel(std::uint32_t kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;
@@ -40,7 +36,7 @@ struct cl_recipe_handler : ::tinytc_recipe_handler {
     std::vector<shared_handle<cl_kernel>> kernels_;
     std::uint32_t active_kernel_ = 0;
     std::array<std::size_t, 3u> global_size_;
-    clSetKernelArgMemPointerINTEL_t clSetKernelArgMemPointerINTEL_ = nullptr;
+    opencl_argument_handler arg_handler_;
 };
 
 } // namespace tinytc

@@ -79,7 +79,7 @@ concept test_runtime_gpu =
         typename T::device_t;
         typename T::context_t;
         typename T::command_list_t;
-        typename T::runtime_t;
+        typename T::recipe_handler_t;
         typename T::mem_t;
         typename T::const_mem_t;
         { rt.create_buffer(bytes) } -> std::same_as<typename T::mem_t>;
@@ -98,7 +98,7 @@ template <typename T, test_runtime_gpu R>
 void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB, std::uint32_t M,
                               std::uint32_t N, std::uint32_t K, std::uint32_t ldA,
                               std::uint32_t strideA, std::uint32_t ldB, std::uint32_t strideB,
-                              std::uint32_t ldC, std::uint32_t strideC, double alpha, double beta,
+                              std::uint32_t ldC, std::uint32_t strideC, T alpha, T beta,
                               std::uint32_t howmany) {
     auto const selA = [&](std::uint32_t N1, std::uint32_t N2) {
         return transA == tinytc::transpose::T ? N2 : N1;
@@ -135,10 +135,12 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
 
     auto info = gpu_rt->get_core_info();
 
-    auto g = tinytc::recipe::small_gemm_batched<T, typename R::runtime_t>(
-        info, transA, transB, M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
-        gpu_rt->get_context(), gpu_rt->get_device());
-    g(howmany, alpha, A, B, beta, C, gpu_rt->get_command_list());
+    auto g = typename R::recipe_handler_t(
+        gpu_rt->get_context(), gpu_rt->get_device(),
+        tinytc::small_gemm_batched(info, tinytc::to_scalar_type_v<T>, transA, transB, M, N, K, ldA,
+                                   strideA, ldB, strideB, ldC, strideC));
+    tinytc::small_gemm_batched::set_args(g, howmany, alpha, A, B, beta, C);
+    g.submit(gpu_rt->get_command_list());
     gpu_rt->synchronize();
 
     auto C_host = tensor3<T>({M, N, howmany}, {1, ldC, strideC});

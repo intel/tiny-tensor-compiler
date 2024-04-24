@@ -35,16 +35,16 @@ template <typename T> class test_volume : public test {
 
   private:
     constexpr static std::size_t dim = 3;
-    auto make_optimized_kernel() -> tinytc::tensor_kernel_bundle<tinytc::sycl_runtime>;
+    auto make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
     std::int64_t B3_, B2_, P_, howmany_, B3_aligned_, B2_aligned_;
     sycl::queue q_;
     tinytc::core_info dev_info_;
     matrix_batch<T> Q_ref_, Q_opt_, I_, tmp_;
     std::vector<matrix_batch<T>> A_, K_;
-    tinytc::tensor_kernel_bundle<tinytc::sycl_runtime> opt_bundle_;
-    tinytc::tensor_kernel<tinytc::sycl_runtime> opt_kernel_;
-    std::vector<tinytc::recipe::small_gemm_batched<T, tinytc::sycl_runtime>> g_;
+    sycl::kernel_bundle<sycl::bundle_state::executable> opt_bundle_;
+    sycl::kernel opt_kernel_;
+    std::vector<tinytc::sycl_recipe_handler> g_;
 };
 
 extern template class test_volume<float>;

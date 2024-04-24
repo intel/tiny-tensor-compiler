@@ -52,7 +52,7 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
     CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
                                                   tinytc_transpose_N, tinytc_transpose_N, M, N, K,
                                                   M, M * K, K, K * N, M, M * N, NULL));
-    CHECK(tinytc_ze_recipe_handler_create(&handler, recipe, context, device));
+    CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
     const size_t Bbytes = K * N * howmany * sizeof(float);

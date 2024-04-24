@@ -41,7 +41,7 @@ template <typename T> class test_ader : public test {
     inline std::int64_t Bd_aligned() { return aligned<T>(Bd(N_), alignment_); }
     inline std::int64_t Bd_aligned(std::int64_t N) { return aligned<T>(Bd(N), alignment_); }
     std::vector<matrix_batch<T>> make_dQ();
-    auto make_optimized_kernel() -> tinytc::tensor_kernel_bundle<tinytc::sycl_runtime>;
+    auto make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable>;
     sycl::event taylor_sum(matrix_batch<T> &I, matrix_batch<T> &dQ, T factor,
                            std::vector<sycl::event> const &dep_events = {});
 
@@ -50,9 +50,9 @@ template <typename T> class test_ader : public test {
     tinytc::core_info dev_info_;
     matrix_batch<T> I_ref_, I_opt_, tmp_;
     std::vector<matrix_batch<T>> A_, K_, dQ_;
-    std::vector<tinytc::recipe::small_gemm_batched<T, tinytc::sycl_runtime>> g_;
-    tinytc::tensor_kernel_bundle<tinytc::sycl_runtime> opt_bundle_;
-    tinytc::tensor_kernel<tinytc::sycl_runtime> opt_kernel_;
+    std::vector<tinytc::sycl_recipe_handler> g_;
+    sycl::kernel_bundle<sycl::bundle_state::executable> opt_bundle_;
+    sycl::kernel opt_kernel_;
 };
 
 extern template class test_ader<float>;
