@@ -162,21 +162,6 @@ typedef enum {
     tinytc_status_cl_out_of_resources = 0x20039,
     tinytc_status_cl_max_size_restriction_exceeded = 0x2003A,
     tinytc_status_cl_profiling_info_not_available = 0x2003B,
-    // SYCL errors
-    tinytc_status_sycl_runtime = 0x30000,
-    tinytc_status_sycl_kernel = 0x30001,
-    tinytc_status_sycl_accessor = 0x30002,
-    tinytc_status_sycl_nd_range = 0x30003,
-    tinytc_status_sycl_event = 0x30004,
-    tinytc_status_sycl_kernel_argument = 0x30005,
-    tinytc_status_sycl_build = 0x30006,
-    tinytc_status_sycl_invalid = 0x30007,
-    tinytc_status_sycl_memory_allocation = 0x30008,
-    tinytc_status_sycl_platform = 0x30009,
-    tinytc_status_sycl_profiling = 0x3000A,
-    tinytc_status_sycl_feature_not_supported = 0x3000B,
-    tinytc_status_sycl_kernel_not_supported = 0x3000C,
-    tinytc_status_sycl_backend_mismatch = 0x3000D,
     // The unknown error comes last
     tinytc_status_unknown = 0x7fffffff
 } tinytc_status_t;
