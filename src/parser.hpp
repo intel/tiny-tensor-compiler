@@ -5,6 +5,7 @@
 #define PARSER_20230614_HPP
 
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <string>

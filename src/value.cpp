@@ -5,10 +5,13 @@
 #include "node/value_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 #include "util.hpp"
 
+#include <cstdint>
 #include <memory>
-#include <utility>
+#include <string>
 
 using namespace tinytc;
 

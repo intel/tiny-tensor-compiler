@@ -1,12 +1,16 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "location.hpp"
 #include "parser/lexer.hpp"
+#include "parser/parser_impl.hpp"
 #include "tinytc/types.hpp"
 
 #include <cerrno>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
+#include <string>
 #include <utility>
 
 namespace tinytc {

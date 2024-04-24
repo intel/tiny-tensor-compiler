@@ -4,8 +4,12 @@
 #include "../device_info.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc_cl.h"
+#include "tinytc/types.h"
 
+#include <CL/cl.h>
 #include <CL/cl_ext.h>
+#include <CL/cl_platform.h>
+#include <cstddef>
 #include <vector>
 
 extern "C" {

@@ -4,11 +4,11 @@
 #ifndef CL_TEST_RUNTIME_20240314_HPP
 #define CL_TEST_RUNTIME_20240314_HPP
 
-#include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_cl.hpp>
+#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_cl.hpp"
 
 #include <CL/cl.h>
-#include <memory>
+#include <cstddef>
 
 class opencl_test_runtime {
   public:

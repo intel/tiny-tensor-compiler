@@ -4,13 +4,11 @@
 #ifndef AA_RESULTS_20240314_HPP
 #define AA_RESULTS_20240314_HPP
 
+#include "tinytc/types.h"
+
 #include <unordered_map>
 
-struct tinytc_value;
-
 namespace tinytc {
-
-class alias_analyser;
 
 class aa_results {
   public:

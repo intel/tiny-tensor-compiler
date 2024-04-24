@@ -2,10 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../smm.hpp"
-#include "../tensor3.hpp"
 #include "test_runtime.hpp"
 
 #include "doctest/doctest.h"
+
+#include <algorithm>
 
 using namespace tinytc;
 

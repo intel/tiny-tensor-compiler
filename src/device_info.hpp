@@ -7,7 +7,6 @@
 #include "tinytc/types.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace tinytc {
@@ -15,7 +14,7 @@ namespace tinytc {
 //! Core parameters for a specific choice of subgroup size and core feature flags
 class core_config {
   public:
-    std::uint32_t subgroup_size; ///< Smallest unit of execution
+    std::uint32_t subgroup_size;     ///< Smallest unit of execution
     std::uint32_t
         max_number_of_work_items;    ///< Maximum size of local work group in number of works items
     std::uint32_t local_memory_size; ///< Maximum size of shared local memory in byte

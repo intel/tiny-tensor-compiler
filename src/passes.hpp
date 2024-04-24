@@ -5,14 +5,12 @@
 #define PASSES_20240314_HPP
 
 #include "kernel_metadata.hpp"
-#include "tinytc/types.hpp"
+#include "tinytc/types.h"
 
 #include <clir/prog.hpp>
 #include <iosfwd>
 #include <string>
 #include <unordered_map>
-
-struct tinytc_core_info;
 
 namespace tinytc {
 

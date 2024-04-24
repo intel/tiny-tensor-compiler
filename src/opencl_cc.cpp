@@ -6,7 +6,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "opencl_cc.hpp"
-#include "tinytc/types.hpp"
 
 #include "ocloc_api.h"
 
@@ -14,7 +13,6 @@
 #include <cstring>
 #include <limits>
 #include <sstream>
-#include <stdexcept>
 
 namespace tinytc {
 

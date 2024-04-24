@@ -4,19 +4,17 @@
 #ifndef CODEGEN_TOOLS_20240229_HPP
 #define CODEGEN_TOOLS_20240229_HPP
 
+#include "tinytc/types.hpp"
+
 #include <cstdint>
 #include <functional>
 
-namespace clir {
-enum class address_space;
-class block_builder;
-class expr;
-class var;
-}; // namespace clir
+#include <clir/builder.hpp>
+#include <clir/builtin_type.hpp>
+#include <clir/expr.hpp>
+#include <clir/var.hpp>
 
 namespace tinytc {
-
-enum class scalar_type;
 
 clir::expr vload_helper(short vec_size, clir::expr offset, clir::expr ptr);
 

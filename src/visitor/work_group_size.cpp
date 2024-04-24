@@ -6,14 +6,13 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/visit.hpp>
 
-#include <algorithm>
 #include <array>
 #include <stdexcept>
-#include <string>
 #include <utility>
 #include <vector>
 

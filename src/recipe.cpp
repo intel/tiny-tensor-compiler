@@ -3,6 +3,8 @@
 
 #include "recipe.hpp"
 #include "error.hpp"
+#include "tinytc/tinytc.h"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <cstring>

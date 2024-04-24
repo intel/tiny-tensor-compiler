@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tiling.hpp"
+#include "device_info.hpp"
 #include "gemm_generator.hpp"
 #include "tinytc/tinytc.hpp"
 

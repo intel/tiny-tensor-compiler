@@ -3,11 +3,10 @@
 
 #include "passes.hpp"
 #include "device_info.hpp"
-#include "error.hpp"
+#include "kernel_metadata.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/program_node.hpp"
-#include "tinytc/tinytc.hpp"
 #include "visitor/check_ir.hpp"
 #include "visitor/dump_ir.hpp"
 #include "visitor/equal.hpp"

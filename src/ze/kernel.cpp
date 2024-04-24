@@ -4,12 +4,10 @@
 #include "../compiler_options.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc_ze.h"
+#include "tinytc/types.h"
 
 #include <cstdint>
-#include <cstdio>
 #include <level_zero/ze_api.h>
-#include <stdexcept>
-#include <string>
 
 extern "C" {
 

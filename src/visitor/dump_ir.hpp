@@ -12,10 +12,8 @@
 #include "node/value_node.hpp"
 #include "visitor/slot_tracker.hpp"
 
-#include <cstdint>
 #include <ostream>
 #include <string>
-#include <unordered_map>
 
 namespace tinytc {
 

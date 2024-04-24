@@ -8,6 +8,7 @@
 #include "scalar_type.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/attr_defs.hpp>
 #include <clir/builder.hpp>

@@ -7,13 +7,14 @@
 #include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 
 namespace tinytc {
 auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool;
-
 } // namespace tinytc
 
 struct tinytc_recipe : tinytc::reference_counted {

@@ -8,6 +8,8 @@
 #ifndef OPENCL_CC_20240307_HPP
 #define OPENCL_CC_20240307_HPP
 
+#include "tinytc/types.hpp"
+
 #include <cstdint>
 #include <exception>
 #include <string>
@@ -15,8 +17,6 @@
 #include <vector>
 
 namespace tinytc {
-
-enum class bundle_format;
 
 class opencl_c_compilation_error : public std::exception {
   public:

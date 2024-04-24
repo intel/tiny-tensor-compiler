@@ -4,13 +4,20 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/inst_node.hpp"
+#include "slice.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 #include "util.hpp"
 
 #include <algorithm>
+#include <cstdint>
+#include <limits>
 #include <memory>
-#include <type_traits>
+#include <stdexcept>
 #include <utility>
+#include <vector>
 
 using namespace tinytc;
 

@@ -11,7 +11,6 @@
 #include <clir/builtin_type.hpp>
 #include <clir/visit.hpp>
 
-#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <sstream>

@@ -6,7 +6,11 @@
 #include "node/program_node.hpp"
 #include "passes.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -14,6 +18,7 @@
 #include <memory>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 using namespace tinytc;
 

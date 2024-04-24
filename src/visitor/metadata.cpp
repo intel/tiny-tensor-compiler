@@ -2,8 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/metadata.hpp"
+#include "node/function_node.hpp"
+#include "node/program_node.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <clir/visit.hpp>
+
+#include <array>
+#include <vector>
 
 using clir::visit;
 

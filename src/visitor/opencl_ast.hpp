@@ -12,6 +12,7 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "tiling.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/builder.hpp>
 #include <clir/data_type.hpp>
@@ -24,7 +25,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -32,8 +32,6 @@
 #include <vector>
 
 namespace tinytc {
-
-enum class scalar_type;
 
 class dope_vector {
   public:

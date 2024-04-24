@@ -4,6 +4,9 @@
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
 
+#include <CL/cl.h>
+#include <CL/cl_platform.h>
+
 extern "C" {
 tinytc_status_t tinytc_cl_convert_status(cl_int status) {
     switch (status) {

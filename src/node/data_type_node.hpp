@@ -7,6 +7,7 @@
 #include "reference_counted.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>

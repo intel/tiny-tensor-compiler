@@ -8,11 +8,16 @@
 #include "parser/lexer.hpp"
 #include "parser/parse_context.hpp"
 #include "parser/parser_impl.hpp"
+#include "tinytc/tinytc.h"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 #include <iterator>
+#include <memory>
 #include <sstream>
 #include <utility>
 

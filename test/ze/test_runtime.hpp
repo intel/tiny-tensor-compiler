@@ -4,12 +4,11 @@
 #ifndef ZE_TEST_RUNTIME_20240314_HPP
 #define ZE_TEST_RUNTIME_20240314_HPP
 
-#include <tinytc/tinytc.hpp>
-#include <tinytc/tinytc_ze.hpp>
+#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc_ze.hpp"
 
 #include <cstddef>
 #include <level_zero/ze_api.h>
-#include <memory>
 
 class level_zero_test_runtime {
   public:

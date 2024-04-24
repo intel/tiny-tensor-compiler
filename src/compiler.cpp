@@ -7,18 +7,25 @@
 #include "error.hpp"
 #include "node/program_node.hpp"
 #include "opencl_cc.hpp"
+#include "parser.hpp"
 #include "passes.hpp"
+#include "reference_counted.hpp"
 #include "required_extensions.hpp"
 #include "source.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 #include "util.hpp"
 
 #include <clir/visitor/codegen_opencl.hpp>
 #include <clir/visitor/unique_names.hpp>
 
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <sstream>
 #include <utility>
+#include <vector>
 
 using namespace tinytc;
 

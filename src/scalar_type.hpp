@@ -4,7 +4,7 @@
 #ifndef SCALAR_TYPE_20240411_HPP
 #define SCALAR_TYPE_20240411_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>

@@ -9,6 +9,7 @@
 #include "node/program_node.hpp"
 #include "node/region_node.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "visitor/aa_results.hpp"
 
 #include <unordered_set>

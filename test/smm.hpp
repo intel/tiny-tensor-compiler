@@ -5,9 +5,10 @@
 #define SMM_20240314_HPP
 
 #include "tensor3.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <doctest/doctest.h>
-#include <tinytc/tinytc.hpp>
 
 #include <concepts>
 #include <cstddef>

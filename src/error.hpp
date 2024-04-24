@@ -4,12 +4,13 @@
 #ifndef ERROR_20240410_HPP
 #define ERROR_20240410_HPP
 
-#include "location.hpp"
 #include "opencl_cc.hpp"
 #include "parser.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <exception>
 #include <new>
 #include <sstream>

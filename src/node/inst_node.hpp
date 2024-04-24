@@ -4,13 +4,14 @@
 #ifndef INST_NODE_20230327_HPP
 #define INST_NODE_20230327_HPP
 
-#include "location.hpp"
 #include "reference_counted.hpp"
 #include "slice.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <clir/virtual_type_list.hpp>
 
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>

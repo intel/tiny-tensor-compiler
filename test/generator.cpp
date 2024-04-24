@@ -1,18 +1,19 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "device_info.hpp"
+#include "gemm_generator.hpp"
+#include "tiling.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
+
 #include <doctest/doctest.h>
-#include <gemm_generator.hpp>
-#include <tiling.hpp>
-#include <tinytc/tinytc.hpp>
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
-#include <vector>
 
 using namespace tinytc;
 
