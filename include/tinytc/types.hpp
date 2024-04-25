@@ -20,7 +20,19 @@ constexpr static std::int64_t dynamic = TINYTC_DYNAMIC;
 /////// Enumerations ///////
 ////////////////////////////
 
-//! Status codes
+/**
+ * @brief Cf. @ref tinytc_status_t
+ *
+ * A status is typically thrown as exception, hence one should wrap calls as following:
+ *
+ * @code{.cpp}
+ * try {
+ *   ...
+ * } catch (tinytc::status const& st) {
+ *   ...
+ * }
+ * @endcode
+ */
 enum class status {
     success = tinytc_status_success,
     bad_alloc = tinytc_status_bad_alloc,

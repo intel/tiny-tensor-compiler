@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Core C++-API:
   Common:
+    enum:
+      - tinytc::status
     function:
       - tinytc::error_string
       - tinytc::CHECK_STATUS

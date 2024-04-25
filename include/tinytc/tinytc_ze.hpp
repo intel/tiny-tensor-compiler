@@ -45,12 +45,14 @@ inline auto create_core_info(ze_device_handle_t device) -> core_info {
 ////////// Kernel //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct unique_handle_traits<ze_kernel_handle_t> {
     static void destroy(ze_kernel_handle_t obj) { zeKernelDestroy(obj); }
 };
 template <> struct unique_handle_traits<ze_module_handle_t> {
     static void destroy(ze_module_handle_t obj) { zeModuleDestroy(obj); }
 };
+} // namespace internal
 
 inline auto create_module(ze_context_handle_t context, ze_device_handle_t device, binary const &bin,
                           ze_module_build_log_handle_t *build_log = nullptr)

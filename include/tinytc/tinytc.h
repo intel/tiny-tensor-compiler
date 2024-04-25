@@ -303,9 +303,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, ti
  * @param instr [out] pointer to the inst object created
  * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of B
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param B [in] B
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -409,10 +409,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr
  * @param tA [in] operation applied on A
  * @param tB [in] operation applied on B
  * @param atomic [in] true for atomic updates of C
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -436,10 +436,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tiny
  * @param instr [out] pointer to the inst object created
  * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of C
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -461,10 +461,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tiny
  *
  * @param instr [out] pointer to the inst object created
  * @param atomic [in] true for atomic updates of C
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -486,10 +486,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinyt
  *
  * @param instr [out] pointer to the inst object created
  * @param atomic [in] true for atomic updates of C
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param C [in] C
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -527,6 +527,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
  * @param size_list [in][range(0, slice_list_size)] size array; may be nullptr if slice_list_size
  * is 0; size_list[i] may be nullptr if a single offset shall be passed instead of a range for the
  * i-th mode
+ * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -566,9 +567,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tin
  * @param instr [out] pointer to the inst object created
  * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of C
- * @param alpha [in] @$\alpha@$
+ * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
- * @param beta [in] @$\beta@$
+ * @param beta [in] @f$\beta@f$
  * @param B [in] B
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -713,7 +714,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr,
  * @param result_list_size [inout] number of results to fetch; is updated with the actual value
  * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
  * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
- * @param result [out] result value; may be set to nullptr if instruction does not return a value
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -768,6 +768,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
  * @brief Create function prototype
  *
  * @param fun [out] pointer to the func object created
+ * @param name [in] function name
  * @param arg_list_size [in] length of argument array
  * @param arg_list [in][range(0, arg_list_size)] argument array; can be nullptr if arg_list_size is
  * 0
@@ -800,7 +801,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_
  * @param fun [out] func object (must be the function definition, not the function prototype)
  * @param x [in] number of rows in parallel grid; must be a multiple of the subgroup size
  * @param y [in] number of columns in parallel grid
- * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -811,7 +811,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t 
  *
  * @param fun [out] func object (must be the function definition, not the function prototype)
  * @param sgs [in] subgroup size; the supported values need to be queried from the compute device
- * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -993,7 +992,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(const_tinytc_co
  * @brief Returns available number of registers per subgroup
  *
  * @param info [in] core info object
- * @param size [out] pointer to number of registers
+ * @param num [out] pointer to number of registers
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1476,9 +1475,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_retain(tinytc_recipe_t obj);
 /**
  * @brief Get recipe object
  *
- * @param recipe_handler [in] recipe handler object
- * @param bin [out] pointer to recipe object; reference count is increased so the user needs to call
- * tinytc_recipe_release to clean up
+ * @param handler [in] recipe handler object
+ * @param recipe [out] pointer to recipe object; reference count is increased so the user needs to
+ * call tinytc_recipe_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */
