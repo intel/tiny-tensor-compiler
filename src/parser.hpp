@@ -4,6 +4,7 @@
 #ifndef PARSER_20230614_HPP
 #define PARSER_20230614_HPP
 
+#include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
@@ -22,7 +23,7 @@ auto parse(std::uint64_t size, char const *input) -> prog;
  * Source code is stored in the manager such that error messages can be enhanced
  * with code context.
  */
-struct tinytc_source_context {
+struct tinytc_source_context : tinytc::reference_counted {
   public:
     //! @brief ctor
     tinytc_source_context();
@@ -37,7 +38,7 @@ struct tinytc_source_context {
     //! Annotate context to error message
     void report_error(tinytc_location const &l, char const *what, bool append = false);
     //! Return error log of last parse call
-    inline auto last_error_log() -> std::string const & { return last_error_log_; }
+    inline auto last_error_log() const -> std::string const & { return last_error_log_; }
 
   private:
     struct source_input {

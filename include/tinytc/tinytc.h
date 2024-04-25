@@ -1023,11 +1023,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_in
                                                                   tinytc_core_feature_flag_t flag);
 
 /**
- * @brief Delete core_info object
+ * @brief Release core info object
  *
- * @param info [in] core info object
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT void tinytc_core_info_destroy(tinytc_core_info_t info);
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj);
+
+/**
+ * @brief Increase reference count of core info object by 1
+ *
+ * @param obj [inout] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj);
 
 ////////////////////////////
 ////////// Parser //////////
@@ -1108,7 +1121,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_add_source(tinytc_source_con
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx,
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(const_tinytc_source_context_t ctx,
                                                                   char const **log);
 
 /**
@@ -1127,11 +1140,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_report_error(tinytc_source_c
                                                                  tinytc_bool_t append);
 
 /**
- * @brief Delete source context object
+ * @brief Release source context object
  *
- * @param ctx [in] source context object
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] source context object
+ *
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT void tinytc_source_context_destroy(tinytc_source_context_t ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_release(tinytc_source_context_t obj);
+
+/**
+ * @brief Increase reference count of source context object by 1
+ *
+ * @param obj [inout] source context object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_context_retain(tinytc_source_context_t obj);
 
 ////////////////////////////
 ///////// Compiler /////////
@@ -1222,11 +1248,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binar
                                                               uint32_t *core_features);
 
 /**
- * @brief Delete source object
+ * @brief Release source object
  *
- * @param src [in] source object
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] source object
+ *
+ * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT void tinytc_source_destroy(tinytc_source_t src);
+TINYTC_EXPORT tinytc_status_t tinytc_source_release(tinytc_source_t obj);
+
+/**
+ * @brief Increase reference count of source object by 1
+ *
+ * @param obj [inout] source object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_retain(tinytc_source_t obj);
 
 /**
  * @brief Release binary object
@@ -1293,7 +1332,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_retain(tinytc_binary_t bin);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
-    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
     tinytc_transpose_t tA, tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
     uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
     tinytc_source_context_t ctx);
@@ -1353,7 +1392,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t N,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t N,
     uint32_t K, uint32_t M_block_size, tinytc_source_context_t ctx);
 
 /**
@@ -1364,8 +1403,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t
-tinytc_recipe_tall_and_skinny_suggest_block_size(tinytc_core_info_t info, uint32_t *M_block_size);
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
+    const_tinytc_core_info_t info, uint32_t *M_block_size);
 
 /**
  * @brief Set kernel arguments for tall and skinny GEMM recipe

@@ -42,6 +42,7 @@ set(SOURCES
     region.cpp
     required_extensions.cpp
     scalar_type.cpp
+    source.cpp
     tiling.cpp
     value.cpp
     visitor/aa_results.cpp

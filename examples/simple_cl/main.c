@@ -107,7 +107,7 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
-    tinytc_core_info_destroy(info);
+    tinytc_core_info_release(info);
 
     return status;
 }
@@ -198,9 +198,9 @@ err:
         if (error_log[0] != '\0') {
             printf("\nError log:\n%s\n", error_log);
         }
-        tinytc_source_context_destroy(source_ctx);
+        tinytc_source_context_release(source_ctx);
     }
-    tinytc_core_info_destroy(info);
+    tinytc_core_info_release(info);
     if (B) {
         clReleaseMemObject(B);
     }

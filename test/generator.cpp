@@ -3,6 +3,7 @@
 
 #include "device_info.hpp"
 #include "gemm_generator.hpp"
+#include "reference_counted.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"

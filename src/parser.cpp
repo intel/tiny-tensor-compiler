@@ -146,7 +146,8 @@ tinytc_status_t tinytc_source_context_add_source(tinytc_source_context_t ctx, ch
     return exception_to_status_code([&] { *source_id = ctx->add_source(name, text); });
 }
 
-tinytc_status_t tinytc_source_context_get_error_log(tinytc_source_context_t ctx, char const **log) {
+tinytc_status_t tinytc_source_context_get_error_log(const_tinytc_source_context_t ctx,
+                                                    char const **log) {
     if (ctx == nullptr || log == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -162,5 +163,22 @@ tinytc_status_t tinytc_source_context_report_error(tinytc_source_context_t ctx,
     return exception_to_status_code([&] { ctx->report_error(*location, what, bool(append)); });
 }
 
-void tinytc_source_context_destroy(tinytc_source_context_t ctx) { delete ctx; }
+tinytc_status_t tinytc_source_context_release(tinytc_source_context_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_source_context_retain(tinytc_source_context_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    obj->inc_ref();
+    return tinytc_status_success;
+}
 }

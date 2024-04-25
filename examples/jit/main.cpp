@@ -15,14 +15,14 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    auto ctx = source_context{};
+    auto ctx = create_source_context();
     try {
         auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
-        auto prog = ctx.parse_file(argv[1]);
+        auto prog = parse_file(argv[1], ctx);
         if (!prog) {
             return -1;
         }
-        compile_to_binary(std::move(prog), info, bundle_format::spirv, ctx.get());
+        compile_to_binary(std::move(prog), info, bundle_format::spirv, ctx);
     } catch (status const &st) {
         std::cerr << ctx.get_error_log() << std::endl;
         return 1;

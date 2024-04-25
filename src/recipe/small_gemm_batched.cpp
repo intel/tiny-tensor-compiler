@@ -47,7 +47,7 @@ using namespace tinytc;
 
 extern "C" {
 tinytc_status_t tinytc_recipe_small_gemm_batched_create(
-    tinytc_recipe_t *recipe, tinytc_core_info_t info, tinytc_scalar_type_t ty,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
     tinytc_transpose_t tA, tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
     uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
     tinytc_source_context_t ctx) {

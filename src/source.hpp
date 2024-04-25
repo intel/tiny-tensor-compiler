@@ -4,14 +4,15 @@
 #ifndef SOURCE_20240412_HPP
 #define SOURCE_20240412_HPP
 
-#include "kernel_metadata.hpp"
+#include "reference_counted.hpp"
 #include "tinytc/types.h"
 
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
-struct tinytc_source {
+struct tinytc_source : tinytc::reference_counted {
   public:
     inline tinytc_source(std::string code, tinytc_location const &code_loc,
                          std::vector<char const *> required_extensions)
