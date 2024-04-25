@@ -11,15 +11,15 @@ set(DOXYFILE ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
 get_target_property(DOC_HEADERS tinytc HEADER_SET)
 if(BUILD_LEVEL_ZERO)
-    get_target_property(DOC_ZE_HEADERS tinytc-level-zero HEADER_SET)
+    get_target_property(DOC_ZE_HEADERS tinytc_ze HEADER_SET)
     list(APPEND DOC_HEADERS ${DOC_ZE_HEADERS})
 endif()
 if(BUILD_OPENCL)
-    get_target_property(DOC_CL_HEADERS tinytc-opencl HEADER_SET)
+    get_target_property(DOC_CL_HEADERS tinytc_cl HEADER_SET)
     list(APPEND DOC_HEADERS ${DOC_CL_HEADERS})
 endif()
 if(BUILD_SYCL)
-    get_target_property(DOC_SYCL_HEADERS tinytc-sycl HEADER_SET)
+    get_target_property(DOC_SYCL_HEADERS tinytc_sycl HEADER_SET)
     list(APPEND DOC_HEADERS ${DOC_SYCL_HEADERS})
 endif()
 
@@ -38,7 +38,10 @@ add_custom_target(doc-doxygen ALL DEPENDS ${DOXYGEN_XML_INDEX})
 
 set(DOC_FILES
     index.rst
-    api/introduction.rst
+    api/builder_capi.rst
+    api/builder_cxxapi.rst
+    api/core_capi.rst
+    api/core_cxxapi.rst
     api/index.rst
     api/jit.rst
     api/parser.rst

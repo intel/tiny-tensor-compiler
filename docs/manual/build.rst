@@ -35,7 +35,7 @@ Clone the Double-Batched FFT library to your filesystem.
 
    git clone https://github.com/intel/double-batched-fft-library.git
 
-We only need libclir.so, which we build and install using the following steps.
+We only need libclir.so that we build and install using the following steps.
 
 .. code:: console
 
@@ -70,9 +70,9 @@ Option                 Description
 ====================== ============
 BUILD_DOCUMENTATION    Build the documentation
 BUILD_TESTING          Build unit tests
-BUILD_SYCL             Build libtinytc-sycl for SYCL support
-BUILD_LEVEL_ZERO       Build libtinytc-level-zero for Level Zero support (enforced if BUILD_SYCL=ON)
-BUILD_OPENCL           Build libtinytc-opencl for OpenCL support (enforced if BUILD_SYCL=ON)
+BUILD_LEVEL_ZERO       Build libtinytc_ze for Level Zero support (enforced if BUILD_SYCL=ON)
+BUILD_OPENCL           Build libtinytc_cl for OpenCL support (enforced if BUILD_SYCL=ON)
+BUILD_SYCL             Build libtinytc_sycl for SYCL support
 ====================== ============
 
 Linking in a CMake project
@@ -91,8 +91,8 @@ in your CMakeLists.txt to find the Tiny Tensor Compiler.
    For non-standard installation directories add -DCMAKE_PREFIX_PATH=/path/to/installation
    when invoking cmake.
 
-Runtime support is split in the three library tinytc-level-zero, tinytc-opencl, and tinytc-sycl.
-The BUILD_(SYCL, LEVEL_ZERO, OPENCL) options control which libraries are built.
+Runtime support is split in the three library libtinytc_ze, libtinytc_cl, and libtinytc_sycl.
+The BUILD_(LEVEL_ZERO, OPENCL, SYCL) options control which libraries are built, respectively.
 For example, when using OpenCL only, you can set BUILD_SYCL=OFF such that you do
 not need a C++ compiler with SYCL support.
 
@@ -100,11 +100,12 @@ For runtime support you have to add one of the following `find_package` calls to
 
 .. code:: cmake
 
-    find_package(tinytc-sycl REQUIRED)
-    # or
-    find_package(tinytc-level-zero REQUIRED)
-    # or
-    find_package(tinytc-opencl REQUIRED)
+    # For SYCL
+    find_package(tinytc_sycl REQUIRED)
+    # For Level Zero
+    find_package(tinytc_ze REQUIRED)
+    # For OpenCL
+    find_package(tinytc_cl REQUIRED)
 
 .. note::
 
@@ -114,8 +115,8 @@ For linking and setting up include directories you only need
 
 .. code:: cmake
 
-    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::tinytc-sycl)
+    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::tinytc_sycl)
     # or
-    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::tinytc-level-zero)
+    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::tinytc_ze)
     # or
-    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::opencl)
+    target_link_libraries(your-target PRIVATE tinytc::tinytc tinytc::tinytc_cl)

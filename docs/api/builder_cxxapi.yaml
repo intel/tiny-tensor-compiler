@@ -1,0 +1,70 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+Builder C++-API:
+  Common:
+    function:
+      - tinytc::is_dynamic_value
+      - tinytc::to_string(binary_op)
+      - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(scalar_type)
+      - tinytc::to_string(transpose)
+      - tinytc::size
+    class:
+      - tinytc::builder_error
+  Data Type:
+    function:
+      - tinytc::create_memref
+      - tinytc::create_group
+    class:
+      - tinytc::data_type
+    struct:
+      - tinytc::to_scalar_type
+    variable:
+      - tinytc::to_scalar_type_v
+  Function:
+    function:
+      - tinytc::create_function
+      - tinytc::create_function_prototype
+      - tinytc::set_work_group_size
+      - tinytc::set_subgroup_size
+    class:
+      - tinytc::func
+      - tinytc::function_builder
+  Instruction:
+    function:
+      - tinytc::create_alloca
+      - tinytc::create_axpby
+      - tinytc::create_binary_op
+      - tinytc::create_cast
+      - tinytc::create_cmp
+      - tinytc::create_expand
+      - tinytc::create_for
+      - tinytc::create_foreach
+      - tinytc::create_fuse
+      - tinytc::create_gemm
+      - tinytc::create_gemv
+      - tinytc::create_ger
+      - tinytc::create_group_id
+      - tinytc::create_group_size
+      - tinytc::create_hadamard
+      - tinytc::create_if
+      - tinytc::create_load
+      - tinytc::create_neg
+      - tinytc::create_size
+      - tinytc::create_store
+      - tinytc::create_subview
+      - tinytc::create_sum
+      - tinytc::create_yield
+    class:
+      - tinytc::inst
+  Program:
+    class:
+      - tinytc::prog
+      - tinytc::program_builder
+  Region:
+    class:
+      - tinytc::region
+      - tinytc::region_builder
+  Value:
+    class:
+      - tinytc::value

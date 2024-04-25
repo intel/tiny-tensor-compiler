@@ -1,0 +1,51 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+Core C++-API:
+  Common:
+    function:
+      - tinytc::error_string
+      - tinytc::CHECK_STATUS
+      - tinytc::CHECK_STATUS_LOC
+    class:
+      - tinytc::shared_handle
+      - tinytc::unique_handle
+  Binary:
+    class:
+      - tinytc::binary
+  Compiler:
+    function:
+      - tinytc::compile_to_opencl
+      - tinytc::compile_to_binary
+      - tinytc::compile_to_binary
+  Device Info:
+    function:
+      - tinytc::create_core_info_intel
+      - tinytc::create_core_info_intel_from_arch
+    class:
+      - tinytc::core_info
+  Parser:
+    function:
+      - tinytc::parse_file
+      - tinytc::parse_stdin
+      - tinytc::parse_string
+  Recipe:
+    class:
+      - tinytc::recipe
+      - tinytc::recipe_handler
+      - tinytc::small_gemm_batched
+      - tinytc::tall_and_skinny
+    struct:
+      - tinytc::auto_mem_type
+      - tinytc::mem
+    variable:
+      - tinytc::auto_mem_type_v
+    concept:
+      - tinytc::pointer_to_scalar
+  Source:
+    class:
+      - tinytc::source
+  Source Context:
+    function:
+      - tinytc::create_source_context
+    class:
+      - tinytc::source_context

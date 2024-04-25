@@ -1,0 +1,100 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+Builder C-API:
+  Common:
+    enum:
+      - tinytc_binary_op_t
+      - tinytc_cmp_condition_t
+      - tinytc_scalar_type_t
+      - tinytc_transpose_t
+    define:
+      - TINYTC_DYNAMIC
+    function:
+      - tinytc_binary_op_to_string
+      - tinytc_cmp_condition_to_string
+      - tinytc_scalar_type_size
+      - tinytc_scalar_type_to_string
+      - tinytc_transpose_to_string
+    struct:
+      - tinytc_position
+      - tinytc_location
+    typedef:
+      - tinytc_data_type_t
+      - tinytc_func_t
+      - tinytc_location_t
+      - tinytc_position_t
+      - tinytc_prog_t
+      - tinytc_inst_t
+      - tinytc_region_t
+      - tinytc_value_t
+      - const_tinytc_data_type_t
+      - const_tinytc_func_t
+      - const_tinytc_inst_t
+      - const_tinytc_prog_t
+      - const_tinytc_region_t
+  Data Type:
+    function:
+      - tinytc_group_type_create
+      - tinytc_memref_type_create
+      - tinytc_scalar_type_create
+      - tinytc_data_type_release
+      - tinytc_data_type_retain
+  Function:
+    function:
+      - tinytc_function_create
+      - tinytc_function_prototype_create
+      - tinytc_function_set_subgroup_size
+      - tinytc_function_set_work_group_size
+      - tinytc_func_release
+      - tinytc_func_retain
+  Instruction:
+    function:
+      - tinytc_alloca_inst_create
+      - tinytc_axpby_inst_create
+      - tinytc_binary_op_inst_create
+      - tinytc_cast_inst_create
+      - tinytc_cmp_inst_create
+      - tinytc_expand_inst_create
+      - tinytc_for_inst_create
+      - tinytc_foreach_inst_create
+      - tinytc_fuse_inst_create
+      - tinytc_gemm_inst_create
+      - tinytc_gemv_inst_create
+      - tinytc_ger_inst_create
+      - tinytc_group_id_inst_create
+      - tinytc_group_size_inst_create
+      - tinytc_hadamard_inst_create
+      - tinytc_if_inst_create
+      - tinytc_load_inst_create
+      - tinytc_neg_inst_create
+      - tinytc_store_inst_create
+      - tinytc_subview_inst_create
+      - tinytc_sum_inst_create
+      - tinytc_yield_inst_create
+      - tinytc_inst_get_value
+      - tinytc_inst_get_values
+      - tinytc_inst_release
+      - tinytc_inst_retain
+  Program:
+    function:
+      - tinytc_program_create
+      - tinytc_prog_dump
+      - tinytc_prog_print_to_file
+      - tinytc_prog_print_to_string
+      - tinytc_prog_release
+      - tinytc_prog_retain
+  Region:
+    function:
+      - tinytc_region_create
+      - tinytc_region_release
+      - tinytc_region_retain
+      - tinytc_size_inst_create
+  Value:
+    function:
+      - tinytc_float_imm_create
+      - tinytc_int_imm_create
+      - tinytc_value_create
+      - tinytc_value_get_name
+      - tinytc_value_set_name
+      - tinytc_value_release
+      - tinytc_value_retain

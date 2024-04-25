@@ -912,7 +912,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg,
 TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str);
 
 /**
- * @brief Delete a string returned from tinytc API
+ * @brief Delete a (non-const) string returned from tinytc API
  *
  * @param str [in] string
  */
@@ -1383,9 +1383,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @param recipe [out] pointer to the recipe object created
  * @param info [in] core info object
  * @param ty [in] Scalar type of alpha, A, B, beta, C
- * @param [in] N Number of columns of B, C
- * @param [in] K Number columns of A, number of rows of B
- * @param [in][optional] M_block_size Size of M block that each work group gets; pass 0 to have the
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
  * parameter auto-selected
  * @param ctx [inout][optional] source context object; saves error log; can be nullptr
  *

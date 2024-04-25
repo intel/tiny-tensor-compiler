@@ -1,8 +1,8 @@
 .. Copyright (C) 2024 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
-tinytc-opencl
-=============
+tinytc_cl
+=========
 
 .. toctree::
    :maxdepth: 1
