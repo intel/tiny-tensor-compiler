@@ -63,7 +63,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_program_create(cl_program *mod, cl_conte
  * @brief Get work group size for kernel
  *
  * @param kernel [in] kernel handle
- * @param dev [in] device handle
  * @param local_size [out][range(0,3)] pointer to local size array of size >= 3
  * entries
  *

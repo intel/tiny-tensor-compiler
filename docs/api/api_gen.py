@@ -44,7 +44,7 @@ with open(args.output_rst, 'w') as f:
                 for symbol in symbol_list:
                     f.write(f'  * :ref:`{strip_symbol_name(symbol)}`\n\n')
             for symbol_type, symbol_list in category.items():
-                write_underline(f, f'{category_name} {symbol_type.title()}s', '-')
+                write_underline(f, f'{category_name} {title(symbol_type).title()}s', '-')
                 for symbol in symbol_list:
                     write_underline(f, strip_symbol_name(symbol), '.')
                     f.write(f'.. doxygen{symbol_type}:: {symbol}\n\n')

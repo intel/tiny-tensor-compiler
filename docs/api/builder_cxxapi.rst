@@ -59,8 +59,8 @@ size
 
 .. doxygenfunction:: tinytc::size
 
-Common Classs
--------------
+Common Classes
+--------------
 
 builder_error
 .............
@@ -101,16 +101,16 @@ create_group
 
 .. doxygenfunction:: tinytc::create_group
 
-Data Type Classs
-----------------
+Data Type Classes
+-----------------
 
 data_type
 .........
 
 .. doxygenclass:: tinytc::data_type
 
-Data Type Structs
------------------
+Data Type Structures
+--------------------
 
 to_scalar_type
 ..............
@@ -167,8 +167,8 @@ set_subgroup_size
 
 .. doxygenfunction:: tinytc::set_subgroup_size
 
-Function Classs
----------------
+Function Classes
+----------------
 
 func
 ....
@@ -353,8 +353,8 @@ create_yield
 
 .. doxygenfunction:: tinytc::create_yield
 
-Instruction Classs
-------------------
+Instruction Classes
+-------------------
 
 inst
 ....
@@ -370,8 +370,8 @@ Program
 
   * :ref:`program_builder`
 
-Program Classs
---------------
+Program Classes
+---------------
 
 prog
 ....
@@ -392,8 +392,8 @@ Region
 
   * :ref:`region_builder`
 
-Region Classs
--------------
+Region Classes
+--------------
 
 region
 ......
@@ -412,8 +412,8 @@ Value
 
   * :ref:`value`
 
-Value Classs
-------------
+Value Classes
+-------------
 
 value
 .....

@@ -8,6 +8,10 @@ Core C++-API
 Common
 ======
 
+* Enumerations
+
+  * :ref:`status`
+
 * Functions
 
   * :ref:`error_string`
@@ -21,6 +25,14 @@ Common
   * :ref:`shared_handle`
 
   * :ref:`unique_handle`
+
+Common Enumerations
+-------------------
+
+status
+......
+
+.. doxygenenum:: tinytc::status
 
 Common Functions
 ----------------
@@ -40,8 +52,8 @@ CHECK_STATUS_LOC
 
 .. doxygenfunction:: tinytc::CHECK_STATUS_LOC
 
-Common Classs
--------------
+Common Classes
+--------------
 
 shared_handle
 .............
@@ -60,8 +72,8 @@ Binary
 
   * :ref:`binary`
 
-Binary Classs
--------------
+Binary Classes
+--------------
 
 binary
 ......
@@ -123,8 +135,8 @@ create_core_info_intel_from_arch
 
 .. doxygenfunction:: tinytc::create_core_info_intel_from_arch
 
-Device Info Classs
-------------------
+Device Info Classes
+-------------------
 
 core_info
 .........
@@ -187,8 +199,8 @@ Recipe
 
   * :ref:`pointer_to_scalar`
 
-Recipe Classs
--------------
+Recipe Classes
+--------------
 
 recipe
 ......
@@ -210,8 +222,8 @@ tall_and_skinny
 
 .. doxygenclass:: tinytc::tall_and_skinny
 
-Recipe Structs
---------------
+Recipe Structures
+-----------------
 
 auto_mem_type
 .............
@@ -246,8 +258,8 @@ Source
 
   * :ref:`source`
 
-Source Classs
--------------
+Source Classes
+--------------
 
 source
 ......
@@ -273,8 +285,8 @@ create_source_context
 
 .. doxygenfunction:: tinytc::create_source_context
 
-Source Context Classs
----------------------
+Source Context Classes
+----------------------
 
 source_context
 ..............

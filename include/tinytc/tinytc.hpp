@@ -133,11 +133,13 @@ template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_
 // Shared / unique handle //
 ////////////////////////////
 
+namespace internal {
 //! Wraps retain / release calls for type T
 template <typename T> struct shared_handle_traits {};
 
 //! Wraps destroy calls for type T
 template <typename T> struct unique_handle_traits {};
+} // namespace internal
 
 /**
  * @brief Wraps a C handle in a reference-counted object
@@ -147,7 +149,7 @@ template <typename T> struct unique_handle_traits {};
 template <typename T> class shared_handle {
   public:
     //! Traits shortcut
-    using traits = shared_handle_traits<T>;
+    using traits = internal::shared_handle_traits<T>;
     //! Typedef for native C handle
     using native_type = T;
 
@@ -206,18 +208,21 @@ template <typename T> class shared_handle {
     bool operator!=(shared_handle<T> const &other) const { return !(*this == other); }
 
   protected:
+    //! Call retain in C-API if C handle is not NULL
     auto c_retain() -> tinytc_status_t {
         if (obj_ != nullptr) {
             return traits::retain(obj_);
         }
         return tinytc_status_success;
     }
+    //! Call release in C-API if C handle is not NULL
     auto c_release() -> tinytc_status_t {
         if (obj_ != nullptr) {
             return traits::release(obj_);
         }
         return tinytc_status_success;
     }
+    //! The C handle
     T obj_;
 };
 
@@ -229,7 +234,7 @@ template <typename T> class shared_handle {
 template <typename T> class unique_handle {
   public:
     //! Traits shortcut
-    using traits = unique_handle_traits<T>;
+    using traits = internal::unique_handle_traits<T>;
     //! Typedef for native C handle
     using native_type = T;
 
@@ -278,6 +283,7 @@ template <typename T> class unique_handle {
     bool operator!=(unique_handle<T> const &other) const { return !(*this == other); }
 
   protected:
+    //! The C handle
     T obj_;
 };
 
@@ -288,6 +294,7 @@ template <typename T> class unique_handle {
 //! Check if mode i is dynamic ('?')
 inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_data_type_t> {
     static auto retain(tinytc_data_type_t handle) -> tinytc_status_t {
         return tinytc_data_type_retain(handle);
@@ -296,8 +303,9 @@ template <> struct shared_handle_traits<tinytc_data_type_t> {
         return tinytc_data_type_release(handle);
     }
 };
+} // namespace internal
 
-//! Reference-counted program handle
+//! @brief Reference-counting wrapper for tinytc_data_type_t
 class data_type : public shared_handle<tinytc_data_type_t> {
   public:
     using shared_handle::shared_handle;
@@ -328,6 +336,7 @@ inline data_type create_group(data_type const &memref_ty, location const &loc = 
 /////////// Value //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_value_t> {
     static auto retain(tinytc_value_t handle) -> tinytc_status_t {
         return tinytc_value_retain(handle);
@@ -336,7 +345,9 @@ template <> struct shared_handle_traits<tinytc_value_t> {
         return tinytc_value_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_value_t
 class value : public shared_handle<tinytc_value_t> {
   public:
     using shared_handle::shared_handle;
@@ -376,11 +387,21 @@ class value : public shared_handle<tinytc_value_t> {
         CHECK_STATUS_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index, &loc), loc);
     }
 
+    /**
+     * @brief Get name
+     *
+     * @return Name
+     */
     inline auto get_name() const -> char const * {
         char const *name;
         CHECK_STATUS(tinytc_value_get_name(obj_, &name));
         return name;
     }
+    /**
+     * @brief Set name
+     *
+     * @param name Name
+     */
     inline void name(std::string const &name) {
         CHECK_STATUS(tinytc_value_set_name(obj_, name.c_str()));
     }
@@ -408,6 +429,7 @@ inline char const *to_string(transpose t) {
     return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
 }
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_inst_t> {
     static auto retain(tinytc_inst_t handle) -> tinytc_status_t {
         return tinytc_inst_retain(handle);
@@ -416,7 +438,9 @@ template <> struct shared_handle_traits<tinytc_inst_t> {
         return tinytc_inst_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_inst_t
 class inst : public shared_handle<tinytc_inst_t> {
   public:
     using shared_handle::shared_handle;
@@ -446,6 +470,7 @@ constexpr bool inst_reinterpret_allowed =
 ////////// Region //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_region_t> {
     static auto retain(tinytc_region_t handle) -> tinytc_status_t {
         return tinytc_region_retain(handle);
@@ -454,7 +479,9 @@ template <> struct shared_handle_traits<tinytc_region_t> {
         return tinytc_region_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_region_t
 class region : public shared_handle<tinytc_region_t> {
   public:
     using shared_handle::shared_handle;
@@ -713,6 +740,7 @@ inline inst create_yield(std::vector<value> const &yield_list, location const &l
 /////////// Func ///////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_func_t> {
     static auto retain(tinytc_func_t handle) -> tinytc_status_t {
         return tinytc_func_retain(handle);
@@ -721,7 +749,9 @@ template <> struct shared_handle_traits<tinytc_func_t> {
         return tinytc_func_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_func_t
 class func : public shared_handle<tinytc_func_t> {
   public:
     using shared_handle::shared_handle;
@@ -762,6 +792,7 @@ inline void set_subgroup_size(func &fun, uint32_t sgs) {
 /////////// Prog ///////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_prog_t> {
     static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
         return tinytc_prog_retain(handle);
@@ -770,11 +801,12 @@ template <> struct shared_handle_traits<tinytc_prog_t> {
         return tinytc_prog_release(handle);
     }
 };
-
 template <> struct unique_handle_traits<char *> {
     static void destroy(char *obj) { tinytc_string_destroy(obj); }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_prog_t
 class prog : public shared_handle<tinytc_prog_t> {
   public:
     using shared_handle::shared_handle;
@@ -876,8 +908,20 @@ class region_builder {
         return add_multivalued(::tinytc::create_if(std::move(condition), bb.get_product(), region{},
                                                    return_type_list, loc));
     }
-    //! Build if/else with functors then(region_builder&) -> void and otherwise(region_builder&) ->
-    //! void
+    /**
+     * @brief Build if/else with functors then(region_builder&) -> void and
+     * otherwise(region_builder&) -> void
+     *
+     * @tparam F "if" functor type
+     * @tparam G "else" functor type
+     * @param condition If condition
+     * @param then "if" functor
+     * @param otherwise "else" functor
+     * @param return_type_list List of types of returned values
+     * @param loc Source code location
+     *
+     * @return Returned values
+     */
     template <typename F, typename G>
     auto create_ifelse(value const &condition, F &&then, G &&otherwise,
                        std::vector<scalar_type> const &return_type_list = {},
@@ -897,10 +941,20 @@ class region_builder {
 //! Builder for functions
 class function_builder {
   public:
-    //! ctor; creates function \@name
+    /**
+     * @brief creates function \@name
+     *
+     * @param name Function name
+     */
     inline function_builder(std::string name) : name_(std::move(name)), body_{nullptr} {}
 
-    //! Returns built product
+    /**
+     * @brief Returns built product
+     *
+     * @param loc Source code location
+     *
+     * @return Function
+     */
     inline func get_product(location const &loc = {}) {
         auto proto = create_function_prototype(name_.c_str(), arguments_, loc);
         auto fun = create_function(proto, body_);
@@ -913,7 +967,15 @@ class function_builder {
         return fun;
     }
 
-    //! @code %name: %ty @endcode
+    /**
+     * @brief @code %name: %ty @endcode
+     *
+     * @param ty Argument type
+     * @param name Argument name
+     * @param loc Source code location
+     *
+     * @return Value
+     */
     inline value argument(data_type const &ty, std::string const &name = "",
                           location const &loc = {}) {
         auto v = value(ty, loc);
@@ -924,15 +986,30 @@ class function_builder {
         return arguments_.back();
     }
 
-    //! @code work_group_size(%m, %n) @endcode
+    /**
+     * @brief @code work_group_size(%x, %y) @endcode
+     *
+     * @param x x
+     * @param y y
+     */
     inline void work_group_size(std::uint32_t x, std::uint32_t y) {
         x_ = x;
         y_ = y;
     }
-    //! @code subgroup_size(%subgroup_size) @endcode
+    /**
+     * @brief @code subgroup_size(%subgroup_size) @endcode
+     *
+     * @param subgroup_size Subgroup size
+     */
     inline void subgroup_size(std::uint32_t subgroup_size) { sgs_ = subgroup_size; }
 
-    //! Build function body with functor f(region_builder&) -> void
+    /**
+     * @brief Build function body with functor f(region_builder&) -> void
+     *
+     * @tparam F Functor type
+     * @param f Functor
+     * @param loc Source code location
+     */
     template <typename F> void body(F &&f, location const &loc = {}) {
         auto bb = region_builder{};
         f(bb);
@@ -949,15 +1026,32 @@ class function_builder {
 //! Builder for programs
 class program_builder {
   public:
-    //! create function \@name with functor f(function_builder&) -> void
+    /**
+     * @brief create function \@name with functor f(function_builder&) -> void
+     *
+     * @tparam F Functor type
+     * @param name Function name
+     * @param f Functor
+     * @param loc Source code location
+     */
     template <typename F> void create(std::string name, F &&f, location const &loc = {}) {
         auto fb = function_builder(std::move(name));
         f(fb);
         add(fb.get_product(loc));
     }
-    //! Add function
+    /**
+     * @brief Add function
+     *
+     * @param f function
+     */
     inline void add(func f) { functions_.emplace_back(std::move(f)); }
-    //! Returns built product
+    /**
+     * @brief Returns built product
+     *
+     * @param loc Source code location
+     *
+     * @return Program
+     */
     inline prog get_product(location const &loc = {}) { return prog(functions_, loc); }
 
   private:
@@ -968,6 +1062,7 @@ class program_builder {
 //////// Device info ///////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_core_info_t> {
     static auto retain(tinytc_core_info_t handle) -> tinytc_status_t {
         return tinytc_core_info_retain(handle);
@@ -976,43 +1071,86 @@ template <> struct shared_handle_traits<tinytc_core_info_t> {
         return tinytc_core_info_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_core_info_t
 class core_info : public shared_handle<tinytc_core_info_t> {
   public:
     using shared_handle::shared_handle;
 
+    /**
+     * @brief Get IP version
+     *
+     * @return IP version
+     */
     auto get_ip_version() -> std::uint32_t {
         std::uint32_t ip_version;
         CHECK_STATUS(tinytc_core_info_get_ip_version(obj_, &ip_version));
         return ip_version;
     }
 
+    /**
+     * @brief Get subgroup sizes
+     *
+     * Cf. @ref tinytc_core_info_get_subgroup_sizes
+     *
+     * @param sgs_size Pointer to size of subgroup size array
+     * @param sgs Pointer ot subgroup size array
+     */
     void get_subgroup_sizes(uint32_t *sgs_size, uint32_t const **sgs) {
         CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(obj_, sgs_size, sgs));
     }
 
+    /**
+     * @brief Get single register size
+     *
+     * @return Register size
+     */
     auto get_register_size() -> std::uint32_t {
         std::uint32_t size;
         CHECK_STATUS(tinytc_core_info_get_register_size(obj_, &size));
         return size;
     }
+
+    /**
+     * @brief Get number of registers per thread
+     *
+     * @return
+     */
     auto get_num_registers_per_thread() -> std::uint32_t {
         std::uint32_t num;
         CHECK_STATUS(tinytc_core_info_get_num_registers_per_thread(obj_, &num));
         return num;
     }
 
+    /**
+     * @brief Set core feature
+     *
+     * @param flag core feature flag
+     */
     void set_core_feature(core_feature_flag flag) {
         CHECK_STATUS(tinytc_core_info_set_core_feature(
             obj_, static_cast<::tinytc_core_feature_flag_t>(flag)));
     }
 
+    /**
+     * @brief Clear core feature
+     *
+     * @param flag core feature flag
+     */
     void clear_core_feature(core_feature_flag flag) {
         CHECK_STATUS(tinytc_core_info_clear_core_feature(
             obj_, static_cast<::tinytc_core_feature_flag_t>(flag)));
     }
 };
 
+/**
+ * @brief Get core info for Intel GPUs from lookup table
+ *
+ * @param arch IP version
+ *
+ * @return Core info
+ */
 inline auto create_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
@@ -1020,6 +1158,17 @@ inline auto create_core_info_intel_from_arch(intel_gpu_architecture arch) -> cor
     return core_info{info};
 }
 
+/**
+ * @brief Create core info for Intel GPUs manually
+ *
+ * @param ip_version IP version
+ * @param num_eus_per_subslice Number of EUs (XVEs) per subslice (XeCore)
+ * @param num_threads_per_eu Number of hardware threads per EU (XVE)
+ * @param local_memory_size Size of local memory in bytes
+ * @param sgs Subgrouip sizes
+ *
+ * @return Core info
+ */
 inline auto create_core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
                                    std::uint32_t num_threads_per_eu,
                                    std::uint32_t local_memory_size, std::vector<std::uint32_t> sgs)
@@ -1035,6 +1184,7 @@ inline auto create_core_info_intel(std::uint32_t ip_version, std::uint32_t num_e
 ////////// Parser //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_source_context_t> {
     static auto retain(tinytc_source_context_t handle) -> tinytc_status_t {
         return tinytc_source_context_retain(handle);
@@ -1043,43 +1193,94 @@ template <> struct shared_handle_traits<tinytc_source_context_t> {
         return tinytc_source_context_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_source_context_t
 class source_context : public shared_handle<tinytc_source_context_t> {
   public:
     using shared_handle::shared_handle;
 
+    /**
+     * @brief Add source to context
+     *
+     * @param name File name
+     * @param text Source text
+     *
+     * @return Source id (should be set in position.source_id)
+     */
     inline auto add_source(char const *name, char const *text) -> std::int32_t {
         std::int32_t source_id;
         CHECK_STATUS(tinytc_source_context_add_source(obj_, name, text, &source_id));
         return source_id;
     }
+    /**
+     * @brief Get error log
+     *
+     * @return C-string that is valid as long as source_context is not modified
+     */
     inline auto get_error_log() const -> char const * {
         char const *log;
         CHECK_STATUS(tinytc_source_context_get_error_log(obj_, &log));
         return log;
     }
+    /**
+     * @brief Enhance error message with source context; useful when builder is used
+     *
+     * @param loc Source location
+     * @param what Error description
+     * @param append True: append to error log; false: clear error log
+     */
     inline void report_error(location const &loc, char const *what, bool append = true) {
         CHECK_STATUS(tinytc_source_context_report_error(obj_, &loc, what,
                                                         static_cast<tinytc_bool_t>(append)));
     }
 };
 
+/**
+ * @brief Create source context
+ *
+ * @return Source context
+ */
 inline auto create_source_context() -> source_context {
     tinytc_source_context_t ctx;
     CHECK_STATUS(tinytc_source_context_create(&ctx));
     return {ctx};
 }
 
+/**
+ * @brief Parse source text from file
+ *
+ * @param filename Filename
+ * @param source_ctx Source context for improved error reporting
+ *
+ * @return Program
+ */
 inline auto parse_file(char const *filename, source_context source_ctx = {}) -> prog {
     tinytc_prog_t prg;
     CHECK_STATUS(tinytc_parse_file(&prg, filename, source_ctx.get()));
     return prog(prg);
 }
+
+/**
+ * @brief Parse source text from stdin
+ *
+ * @param source_ctx Source context for improved error reporting
+ *
+ * @return Program
+ */
 inline auto parse_stdin(source_context source_ctx = {}) -> prog {
     tinytc_prog_t prg;
     CHECK_STATUS(tinytc_parse_stdin(&prg, source_ctx.get()));
     return prog(prg);
 }
+/**
+ * @brief Parse source text from string
+ *
+ * @param src Source text
+ * @param source_ctx Source context for improved error reporting
+ *
+ * @return Porgram
+ */
 inline auto parse_string(std::string const &src, source_context source_ctx = {}) -> prog {
     tinytc_prog_t prg;
     CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), source_ctx.get()));
@@ -1090,6 +1291,7 @@ inline auto parse_string(std::string const &src, source_context source_ctx = {})
 ///////// Compiler /////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_source_t> {
     static auto retain(tinytc_source_t handle) -> tinytc_status_t {
         return tinytc_source_retain(handle);
@@ -1098,11 +1300,18 @@ template <> struct shared_handle_traits<tinytc_source_t> {
         return tinytc_source_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_source_t
 class source : public shared_handle<tinytc_source_t> {
   public:
     using shared_handle::shared_handle;
 
+    /**
+     * @brief Get code
+     *
+     * @return Pointer to C-string that is bound to the lifetime of the source object
+     */
     inline auto get_code() -> char const * {
         char const *code = nullptr;
         CHECK_STATUS(tinytc_source_get_code(obj_, &code));
@@ -1110,6 +1319,7 @@ class source : public shared_handle<tinytc_source_t> {
     }
 };
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_binary_t> {
     static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
         return tinytc_binary_retain(handle);
@@ -1118,17 +1328,25 @@ template <> struct shared_handle_traits<tinytc_binary_t> {
         return tinytc_binary_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_binary_t
 class binary : public shared_handle<tinytc_binary_t> {
   public:
     using shared_handle::shared_handle;
 
+    //! Container for raw data
     struct raw {
-        bundle_format format;
-        std::uint64_t data_size;
-        std::uint8_t const *data;
+        bundle_format format;     ///< Bundle format
+        std::uint64_t data_size;  ///< Size of binary data in bytes
+        std::uint8_t const *data; ///< Pointer to binary data
     };
 
+    /**
+     * @brief Get raw data
+     *
+     * @return Raw data
+     */
     inline auto get_raw() -> raw {
         raw r;
         tinytc_bundle_format_t f;
@@ -1136,6 +1354,11 @@ class binary : public shared_handle<tinytc_binary_t> {
         r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
         return r;
     }
+    /**
+     * @brief Get core features
+     *
+     * @return Core features
+     */
     inline auto get_core_features() -> std::uint32_t {
         std::uint32_t cf;
         CHECK_STATUS(tinytc_binary_get_core_features(obj_, &cf));
@@ -1143,12 +1366,31 @@ class binary : public shared_handle<tinytc_binary_t> {
     }
 };
 
+/**
+ * @brief Compile program to OpenCL-C
+ *
+ * @param prg Program
+ * @param info Core info
+ * @param ctx Source context for improved error reporting
+ *
+ * @return Source
+ */
 inline auto compile_to_opencl(prog prg, core_info const &info, source_context ctx = {}) -> source {
     tinytc_source_t src;
     CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
     return source{src};
 }
 
+/**
+ * @brief Compile source to binary
+ *
+ * @param src Source object
+ * @param info Core info
+ * @param format Bundle format (SPIR-V or Native)
+ * @param ctx Source context for improved error reporting
+ *
+ * @return Binary
+ */
 inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
                               source_context ctx = {}) -> binary {
     tinytc_binary_t bin;
@@ -1157,6 +1399,16 @@ inline auto compile_to_binary(source const &src, core_info const &info, bundle_f
     return binary{bin};
 }
 
+/**
+ * @brief Compile a program to a binary
+ *
+ * @param prg Program
+ * @param info Core info
+ * @param format Bundle format (SPIR-V or Native)
+ * @param ctx Source context for improved error reporting
+ *
+ * @return Binary
+ */
 inline auto compile_to_binary(prog prg, core_info const &info, bundle_format format,
                               source_context ctx = {}) -> binary {
     tinytc_binary_t bin;
@@ -1169,23 +1421,55 @@ inline auto compile_to_binary(prog prg, core_info const &info, bundle_format for
 ////////// Recipe //////////
 ////////////////////////////
 
+/**
+ * @brief Guess memory type of memory object
+ *
+ * @tparam T memory object type
+ */
 template <typename T> struct auto_mem_type;
 
+/**
+ * @brief Identify pointer to non-classes
+ *
+ * @tparam T memory object type
+ */
 template <typename T>
 concept pointer_to_scalar = std::is_pointer_v<T> && !std::is_class_v<std::remove_pointer_t<T>>;
 
+/**
+ * @brief Specialize auto_mem_type for pointer to non-class types
+ *
+ * All pointers to scalars are assumed to be Unified Shared Memory pointers.
+ * (Automatic guessing for Shared Virtual Memory pointers not implemented.)
+ *
+ * @tparam T memory object type
+ */
 template <pointer_to_scalar T> struct auto_mem_type<T> {
     constexpr static mem_type value = mem_type::usm_pointer;
 };
 
+/**
+ * @brief Convenience wrapper for auto_mem_type
+ *
+ * @tparam T memory object type
+ */
 template <typename T> inline constexpr auto auto_mem_type_v = auto_mem_type<T>::value;
 
+//! Constructor for tinytc_mem with automatic type deduction
 struct mem : ::tinytc_mem {
+    /**
+     * @brief ctor
+     *
+     * @tparam T pointer, scalar, or buffer type
+     * @param value memory object
+     * @param type memory object type
+     */
     template <typename T>
     inline mem(T value, mem_type type = auto_mem_type_v<T>)
         : ::tinytc_mem{value, static_cast<tinytc_mem_type_t>(type)} {}
 };
 
+namespace internal {
 template <> struct shared_handle_traits<tinytc_recipe_t> {
     static auto retain(tinytc_recipe_t handle) -> tinytc_status_t {
         return tinytc_recipe_retain(handle);
@@ -1194,7 +1478,6 @@ template <> struct shared_handle_traits<tinytc_recipe_t> {
         return tinytc_recipe_release(handle);
     }
 };
-
 template <> struct shared_handle_traits<tinytc_recipe_handler_t> {
     static auto retain(tinytc_recipe_handler_t handle) -> tinytc_status_t {
         return tinytc_recipe_handler_retain(handle);
@@ -1203,17 +1486,29 @@ template <> struct shared_handle_traits<tinytc_recipe_handler_t> {
         return tinytc_recipe_handler_release(handle);
     }
 };
+} // namespace internal
 
+//! @brief Reference-counting wrapper for tinytc_recipe_t
 class recipe : public shared_handle<tinytc_recipe_t> {
   public:
     using shared_handle::shared_handle;
 
+    /**
+     * @brief Get program
+     *
+     * @return Program
+     */
     auto get_prog() const -> prog {
         tinytc_prog_t prg;
         CHECK_STATUS(tinytc_recipe_get_prog(obj_, &prg));
         return {prg};
     }
 
+    /**
+     * @brief Get binary
+     *
+     * @return Binary
+     */
     auto get_binary() const -> binary {
         tinytc_binary_t bin;
         CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
@@ -1221,10 +1516,16 @@ class recipe : public shared_handle<tinytc_recipe_t> {
     }
 };
 
+//! @brief Reference-counting wrapper for tinytc_recipe_handler_t
 class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
   public:
     using shared_handle::shared_handle;
 
+    /**
+     * @brief Get recipe
+     *
+     * @return Recipe
+     */
     auto get_recipe() const -> recipe {
         tinytc_recipe_t rec;
         CHECK_STATUS(tinytc_recipe_handler_get_recipe(obj_, &rec));
@@ -1232,10 +1533,29 @@ class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
     }
 };
 
+//! @brief Cf. @ref tinytc_recipe_small_gemm_batched_create
 class small_gemm_batched : public recipe {
   public:
     using recipe::recipe;
 
+    /**
+     * @brief Construct tall and skinny recipe
+     *
+     * @param info Core info
+     * @param ty Scalar type of @f$\alpha@f$, A, B, @f$\beta@f$, C
+     * @param tA Operation applied on A
+     * @param tB Operation applied on B
+     * @param M Number of rows of A and C
+     * @param N Number of columns of B and C
+     * @param K Number of columns of A, number of rows of B
+     * @param ldA Leading dimension of an A matrix
+     * @param strideA Stride of A-matrices
+     * @param ldB Leading dimension of an B matrix
+     * @param strideB Stride of B-matrices
+     * @param ldC Leading dimension of an C matrix
+     * @param strideC Stride of C-matrices
+     * @param ctx Source context for improved error reporting
+     */
     inline small_gemm_batched(core_info const &info, scalar_type ty, transpose tA, transpose tB,
                               uint32_t M, uint32_t N, uint32_t K, uint32_t ldA, uint32_t strideA,
                               uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
@@ -1246,6 +1566,18 @@ class small_gemm_batched : public recipe {
             strideA, ldB, strideB, ldC, strideC, ctx.get()));
     }
 
+    /**
+     * @brief Set kernel arguments
+     *
+     * @tparam T Scalar type; must match scalar_type passed to constructor
+     * @param handler Recipe handler
+     * @param howmany Batch size
+     * @param alpha @f$\alpha@f$
+     * @param A Memory object used for A-matrix
+     * @param B Memory object used for B-matrix
+     * @param beta @f$\beta@f$
+     * @param C Memory object used for C-matrix
+     */
     template <typename T>
     static void set_args(recipe_handler &handler, uint32_t howmany, T alpha, mem A, mem B, T beta,
                          mem C) {
@@ -1254,10 +1586,21 @@ class small_gemm_batched : public recipe {
     }
 };
 
+//! @brief Cf. @ref tinytc_recipe_tall_and_skinny_create
 class tall_and_skinny : public recipe {
   public:
     using recipe::recipe;
 
+    /**
+     * @brief Construct tall and skinny recipe
+     *
+     * @param info Core info
+     * @param ty Scalar type of @f$\alpha@f$, A, B, @f$\beta@f$, C
+     * @param N Number of columns of B and C
+     * @param K Number of columns of A, number of rows of B
+     * @param M_block_size Chunk size for M-mode
+     * @param ctx Source context for improved error reporting
+     */
     inline tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t N, std::uint32_t K,
                            std::uint32_t M_block_size = 0, source_context ctx = {}) {
         CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&obj_, info.get(),
@@ -1265,6 +1608,21 @@ class tall_and_skinny : public recipe {
                                                           K, M_block_size, ctx.get()));
     }
 
+    /**
+     * @brief Set kernel arguments
+     *
+     * @tparam T Scalar type; must match scalar_type passed to constructor
+     * @param handler Recipe handler
+     * @param M Number of rows of A and C
+     * @param alpha @f$\alpha@f$
+     * @param A Memory object used for A-matrix
+     * @param ldA Leading dimension of A
+     * @param B Memory object used for B-matrix
+     * @param ldB Leading dimension of B
+     * @param beta @f$\beta@f$
+     * @param C Memory object used for C-matrix
+     * @param ldC Leading dimension of C
+     */
     template <typename T>
     static void set_args(recipe_handler &handler, std::uint32_t M, T alpha, mem A,
                          std::uint32_t ldA, mem B, std::uint32_t ldB, T beta, mem C,

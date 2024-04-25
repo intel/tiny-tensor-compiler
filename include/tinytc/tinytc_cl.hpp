@@ -45,6 +45,7 @@ inline auto create_core_info(cl_device_id device) -> core_info {
 ////////// Kernel //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<cl_program> {
     static auto retain(cl_program handle) -> tinytc_status_t {
         return ::tinytc_cl_convert_status(clRetainProgram(handle));
@@ -53,7 +54,6 @@ template <> struct shared_handle_traits<cl_program> {
         return ::tinytc_cl_convert_status(clReleaseProgram(handle));
     }
 };
-
 template <> struct shared_handle_traits<cl_kernel> {
     static auto retain(cl_kernel handle) -> tinytc_status_t {
         return ::tinytc_cl_convert_status(clRetainKernel(handle));
@@ -62,6 +62,7 @@ template <> struct shared_handle_traits<cl_kernel> {
         return ::tinytc_cl_convert_status(clReleaseKernel(handle));
     }
 };
+} // namespace internal
 
 inline auto create_program(cl_context context, cl_device_id device, binary const &bin)
     -> shared_handle<cl_program> {
@@ -94,6 +95,7 @@ inline auto get_global_size(std::uint32_t howmany, std::array<std::size_t, 3u> c
 ////////// Recipe //////////
 ////////////////////////////
 
+namespace internal {
 template <> struct shared_handle_traits<cl_event> {
     static auto retain(cl_event handle) -> tinytc_status_t {
         return ::tinytc_cl_convert_status(clRetainEvent(handle));
@@ -102,6 +104,7 @@ template <> struct shared_handle_traits<cl_event> {
         return ::tinytc_cl_convert_status(clReleaseEvent(handle));
     }
 };
+} // namespace internal
 
 template <> struct auto_mem_type<cl_mem> {
     constexpr static mem_type value = mem_type::buffer;

@@ -22,7 +22,7 @@ namespace tinytc {
 /**
  * @brief Query core info from SYCL runtime
  *
- * @param device [in] device handle
+ * @param dev [in] device handle
  *
  * @return core info
  */
