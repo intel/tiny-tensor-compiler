@@ -968,13 +968,18 @@ class program_builder {
 //////// Device info ///////
 ////////////////////////////
 
-template <> struct unique_handle_traits<tinytc_core_info_t> {
-    static void destroy(tinytc_core_info_t obj) { tinytc_core_info_destroy(obj); }
+template <> struct shared_handle_traits<tinytc_core_info_t> {
+    static auto retain(tinytc_core_info_t handle) -> tinytc_status_t {
+        return tinytc_core_info_retain(handle);
+    }
+    static auto release(tinytc_core_info_t handle) -> tinytc_status_t {
+        return tinytc_core_info_release(handle);
+    }
 };
 
-class core_info : public unique_handle<tinytc_core_info_t> {
+class core_info : public shared_handle<tinytc_core_info_t> {
   public:
-    using unique_handle::unique_handle;
+    using shared_handle::shared_handle;
 
     auto get_ip_version() -> std::uint32_t {
         std::uint32_t ip_version;
@@ -1030,40 +1035,18 @@ inline auto create_core_info_intel(std::uint32_t ip_version, std::uint32_t num_e
 ////////// Parser //////////
 ////////////////////////////
 
-inline auto parse_file(char const *filename, tinytc_source_context_t source_ctx = nullptr) -> prog {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_file(&prg, filename, source_ctx));
-    return prog(prg);
-}
-inline auto parse_stdin(tinytc_source_context_t source_ctx = nullptr) -> prog {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_stdin(&prg, source_ctx));
-    return prog(prg);
-}
-inline auto parse_string(std::string const &src, tinytc_source_context_t source_ctx = nullptr)
-    -> prog {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), source_ctx));
-    return prog(prg);
-}
-
-template <> struct unique_handle_traits<tinytc_source_context_t> {
-    static void destroy(tinytc_source_context_t obj) { tinytc_source_context_destroy(obj); }
+template <> struct shared_handle_traits<tinytc_source_context_t> {
+    static auto retain(tinytc_source_context_t handle) -> tinytc_status_t {
+        return tinytc_source_context_retain(handle);
+    }
+    static auto release(tinytc_source_context_t handle) -> tinytc_status_t {
+        return tinytc_source_context_release(handle);
+    }
 };
 
-class source_context : public unique_handle<tinytc_source_context_t> {
+class source_context : public shared_handle<tinytc_source_context_t> {
   public:
-    using unique_handle::unique_handle;
-
-    source_context() { CHECK_STATUS(tinytc_source_context_create(&obj_)); }
-
-    inline auto parse_file(const char *filename) -> prog {
-        return ::tinytc::parse_file(filename, obj_);
-    }
-    inline auto parse_stdin() -> prog { return ::tinytc::parse_stdin(obj_); }
-    inline auto parse_string(std::string const &src) -> prog {
-        return ::tinytc::parse_string(src, obj_);
-    }
+    using shared_handle::shared_handle;
 
     inline auto add_source(char const *name, char const *text) -> std::int32_t {
         std::int32_t source_id;
@@ -1081,30 +1064,58 @@ class source_context : public unique_handle<tinytc_source_context_t> {
     }
 };
 
+inline auto create_source_context() -> source_context {
+    tinytc_source_context_t ctx;
+    CHECK_STATUS(tinytc_source_context_create(&ctx));
+    return {ctx};
+}
+
+inline auto parse_file(char const *filename, source_context source_ctx = {}) -> prog {
+    tinytc_prog_t prg;
+    CHECK_STATUS(tinytc_parse_file(&prg, filename, source_ctx.get()));
+    return prog(prg);
+}
+inline auto parse_stdin(source_context source_ctx = {}) -> prog {
+    tinytc_prog_t prg;
+    CHECK_STATUS(tinytc_parse_stdin(&prg, source_ctx.get()));
+    return prog(prg);
+}
+inline auto parse_string(std::string const &src, source_context source_ctx = {}) -> prog {
+    tinytc_prog_t prg;
+    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), source_ctx.get()));
+    return prog(prg);
+}
+
 ////////////////////////////
 ///////// Compiler /////////
 ////////////////////////////
 
-template <> struct unique_handle_traits<tinytc_source_t> {
-    static void destroy(tinytc_source_t obj) { tinytc_source_destroy(obj); }
+template <> struct shared_handle_traits<tinytc_source_t> {
+    static auto retain(tinytc_source_t handle) -> tinytc_status_t {
+        return tinytc_source_retain(handle);
+    }
+    static auto release(tinytc_source_t handle) -> tinytc_status_t {
+        return tinytc_source_release(handle);
+    }
 };
+
+class source : public shared_handle<tinytc_source_t> {
+  public:
+    using shared_handle::shared_handle;
+
+    inline auto get_code() -> char const * {
+        char const *code = nullptr;
+        CHECK_STATUS(tinytc_source_get_code(obj_, &code));
+        return code;
+    }
+};
+
 template <> struct shared_handle_traits<tinytc_binary_t> {
     static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
         return tinytc_binary_retain(handle);
     }
     static auto release(tinytc_binary_t handle) -> tinytc_status_t {
         return tinytc_binary_release(handle);
-    }
-};
-
-class source : public unique_handle<tinytc_source_t> {
-  public:
-    using unique_handle::unique_handle;
-
-    inline auto get_code() -> char const * {
-        char const *code = nullptr;
-        CHECK_STATUS(tinytc_source_get_code(obj_, &code));
-        return code;
     }
 };
 
@@ -1132,26 +1143,25 @@ class binary : public shared_handle<tinytc_binary_t> {
     }
 };
 
-inline auto compile_to_opencl(prog prg, core_info const &info,
-                              tinytc_source_context_t ctx = nullptr) -> source {
+inline auto compile_to_opencl(prog prg, core_info const &info, source_context ctx = {}) -> source {
     tinytc_source_t src;
-    CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx));
+    CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
     return source{src};
 }
 
 inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
-                              tinytc_source_context_t ctx = nullptr) -> binary {
+                              source_context ctx = {}) -> binary {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_source_compile_to_binary(&bin, src.get(), info.get(),
-                                                 static_cast<tinytc_bundle_format_t>(format), ctx));
+    CHECK_STATUS(tinytc_source_compile_to_binary(
+        &bin, src.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 
 inline auto compile_to_binary(prog prg, core_info const &info, bundle_format format,
-                              tinytc_source_context_t ctx = nullptr) -> binary {
+                              source_context ctx = {}) -> binary {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_prog_compile_to_binary(&bin, prg.get(), info.get(),
-                                               static_cast<tinytc_bundle_format_t>(format), ctx));
+    CHECK_STATUS(tinytc_prog_compile_to_binary(
+        &bin, prg.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
     return binary{bin};
 }
 
@@ -1451,11 +1461,11 @@ class small_gemm_batched : public recipe {
     inline small_gemm_batched(core_info const &info, scalar_type ty, transpose tA, transpose tB,
                               uint32_t M, uint32_t N, uint32_t K, uint32_t ldA, uint32_t strideA,
                               uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
-                              tinytc_source_context_t ctx = nullptr) {
+                              source_context ctx = {}) {
         CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
             &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty),
             static_cast<tinytc_transpose_t>(tA), static_cast<tinytc_transpose_t>(tB), M, N, K, ldA,
-            strideA, ldB, strideB, ldC, strideC, ctx));
+            strideA, ldB, strideB, ldC, strideC, ctx.get()));
     }
 
     template <typename T>
@@ -1471,9 +1481,10 @@ class tall_and_skinny : public recipe {
     using recipe::recipe;
 
     inline tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t N, std::uint32_t K,
-                           std::uint32_t M_block_size = 0, tinytc_source_context_t ctx = nullptr) {
-        CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
-            &obj_, info.get(), static_cast<tinytc_scalar_type_t>(ty), N, K, M_block_size, ctx));
+                           std::uint32_t M_block_size = 0, source_context ctx = {}) {
+        CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&obj_, info.get(),
+                                                          static_cast<tinytc_scalar_type_t>(ty), N,
+                                                          K, M_block_size, ctx.get()));
     }
 
     template <typename T>

@@ -4,6 +4,7 @@
 #ifndef DEVICE_INFO_20240304_HPP
 #define DEVICE_INFO_20240304_HPP
 
+#include "reference_counted.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
@@ -25,7 +26,7 @@ class core_config {
 
 } // namespace tinytc
 
-struct tinytc_core_info {
+struct tinytc_core_info : tinytc::reference_counted {
     //! empty dtor
     virtual ~tinytc_core_info();
     //! Returns IP version

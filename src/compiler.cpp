@@ -95,7 +95,7 @@ tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_
     TINYTC_CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg, info, ctx));
     if (auto status = tinytc_source_compile_to_binary(bin, src, info, format, ctx);
         status != tinytc_status_success) {
-        tinytc_source_destroy(src);
+        tinytc_source_release(src);
         return status;
     }
     return tinytc_status_success;

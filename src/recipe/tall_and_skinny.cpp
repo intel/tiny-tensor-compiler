@@ -50,7 +50,7 @@ using namespace tinytc;
 
 extern "C" {
 tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
-                                                     tinytc_core_info_t info,
+                                                     const_tinytc_core_info_t info,
                                                      tinytc_scalar_type_t ty, uint32_t N,
                                                      uint32_t K, uint32_t M_block_size,
                                                      tinytc_source_context_t ctx) {
@@ -153,7 +153,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
         ctx, my_loc());
 }
 
-tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(tinytc_core_info_t info,
+tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_core_info_t info,
                                                                  uint32_t *M_block_size) {
     if (info == nullptr || M_block_size == nullptr) {
         return tinytc_status_invalid_arguments;

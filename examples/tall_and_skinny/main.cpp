@@ -100,13 +100,13 @@ template <typename T> void test(queue q, args &a) {
             });
         }
 
-        auto source_ctx = source_context{};
+        auto source_ctx = create_source_context();
         try {
             auto info = create_core_info(q.get_device());
             info.set_core_feature(core_feature_flag::large_register_file);
 
             auto tas = sycl_recipe_handler(
-                q, tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx.get()));
+                q, tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx));
 
             tall_and_skinny::set_args(tas, c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m);
             tas.submit(q).wait();

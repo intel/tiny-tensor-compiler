@@ -110,13 +110,13 @@ binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &l
     result_ = value(at->ty());
 }
 
-cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc) : a_(std::move(a)) {
+cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
+    : a_(std::move(a)), result_{to_ty} {
     loc(lc);
-    result_ = value(to_ty);
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a, value b, location const &lc)
-    : cond_(cond), a_(std::move(a)), b_(std::move(b)) {
+    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{scalar_type::bool_} {
     loc(lc);
 
     auto at = get_scalar_type(loc(), a_);
@@ -125,7 +125,6 @@ compare_inst::compare_inst(cmp_condition cond, value a, value b, location const 
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-    result_ = value(scalar_type::bool_);
 }
 
 gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,

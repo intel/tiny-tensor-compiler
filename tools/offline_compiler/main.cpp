@@ -11,17 +11,17 @@
 using namespace tinytc;
 
 int main(int argc, char **argv) {
-    auto ctx = source_context();
+    auto ctx = create_source_context();
     try {
         auto p = prog{};
         if (argc < 2 || strcmp(argv[1], "-") == 0) {
-            p = ctx.parse_stdin();
+            p = parse_stdin(ctx);
         } else {
-            p = ctx.parse_file(argv[1]);
+            p = parse_file(argv[1], ctx);
         }
 
         auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
-        auto src = compile_to_opencl(p, info, ctx.get());
+        auto src = compile_to_opencl(p, info, ctx);
         std::cout << src.get_code();
     } catch (status const &st) {
         std::cerr << ctx.get_error_log() << std::endl;

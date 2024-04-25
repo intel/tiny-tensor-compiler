@@ -199,5 +199,22 @@ tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_info_t info,
         [&] { info->clear_core_feature(enum_cast<core_feature_flag>(flag)); });
 }
 
-void tinytc_core_info_destroy(tinytc_core_info_t info) { delete info; }
+tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    auto ref_count = obj->dec_ref();
+    if (ref_count == 0) {
+        delete obj;
+    }
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj) {
+    if (obj == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    obj->inc_ref();
+    return tinytc_status_success;
+}
 }
