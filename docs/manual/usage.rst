@@ -19,11 +19,6 @@ The following recipes are available:
 * :ref:`Small GEMM batched recipe`
 * :ref:`Tall and skinny GEMM recipe`
 
-Recipes are the simplest method of using the library, as one only needs to create a functor,
-passing the desired runtime as template argument, and call the functor for executing the tensor
-program on the device.
-See the recipe sub-pages for code examples.
-
 JIT compilation
 ===============
 
@@ -95,48 +90,52 @@ We observe that
 * load and subview calls translate to simple pointer manipulation,
 * and that a barrier has been introduced between the GEMM calls to avoid data races.
 
-Our kernel is then compiled and run using the following pseudo-code:
+SYCL users compile and run the kernel using the following pseudo-code:
 
 .. _kernel compilation and running example:
 
 .. code-block:: cpp
 
     #include <tinytc/tinytc.hpp>
+    #include <tinytc/tinytc_sycl.hpp>
     #include <sycl/sycl.hpp>
 
-    // Parse tensor program
-    auto srcman = tinytc::source_manager(&std::cerr);
-    auto prog = srcman.parse_file("fused_kernel.ir");
-    if (!prog) {
-        return -1;
-    }
-
-    // JIT compile program
-    auto q = sycl::queue{};
-    auto bin = tinytc::optimize_and_make_binary(std::move(prog), tinytc::bundle_format::spirv,
-                                                get_core_info(q.get_device()),
-                                                srcman.error_reporter());
-    if (!bin) {
-        return -1;
-    }
-
-    // Initialize tensors
-    float* K = ...;
-    float* P = ...;
-    float** A = ...;
-    float* Q = ...;
+    auto source_ctx = tinytc::create_source_context();
     try {
-        auto bundle = tinytc::tensor_kernel_bundle(std::move(bin), q.get_context(), q.get_device());
-        auto kernel = bundle.get("fused_kernel");
-        kernel.set_args(K, P, howmany, A, Q, howmany);
+        // Parse tensor program
+        auto prog = tinytc::parse_file("fused_kernel.ir", source_ctx);
+
+        // JIT compile program
+        auto q = sycl::queue{};
+        auto info = tinytc::create_core_info(q.get_device());
+        auto bin = tinytc::compile_to_binary(std::move(prog), info, tinytc::bundle_format::spirv,
+                                             source_ctx);
+
+        // Initialize tensors
+        float* K = ...;
+        float* P = ...;
+        float** A = ...;
+        float* Q = ...;
+
+        auto bundle = tinytc::create_kernel_bundle(q.get_context(), q.get_device(), bin);
+        auto kernel = tinytc::create_kernel(bundle, "fused_kernel");
+        auto exe_range = tinytc::get_execution_range(kernel, howmany);
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
-            kernel.submit(howmany, q).wait();
+            q.submit([&](sycl::handler &h) {
+                h.set_args(K, P, howmany, A, Q, howmany);
+                h.parallel_for(exec_range, kernel);
+            }).wait();
         }
-    } catch (std::exception const& e) {
-        ...
+    } catch (tinytc::status const& st) {
+        std::cerr << "Error (" << static_cast<int>(st) << "): "
+                  << tinytc::error_string(st) << std::endl;
+        std::cerr << "Error log:" << std::endl
+                  << source_ctx.get_error_log() << std::endl;
+    } catch (std::exception const &e) {
+        std::cerr << e.what() << std::endl;
     }
 
-Note that a fictional time-loop was introduced around `kernel.submit`.
+Note that a fictional time-loop was introduced around `q.submit`.
 As a general rule, JIT compilation is expensive in comparison to kernel execution,
 hence, a compiled program should be reused many times.
 

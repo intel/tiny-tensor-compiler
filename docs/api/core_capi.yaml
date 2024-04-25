@@ -1,0 +1,96 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+Core C-API:
+  Common:
+    enum:
+      - tinytc_status_t
+    define:
+      - TINYTC_VERSION_MAJOR
+      - TINYTC_VERSION_MINOR
+      - TINYTC_VERSION_PATCH
+      - TINYTC_VERSION_HASH
+      - TINYTC_VERSION_NUMBER_OF_COMMITS_SINCE_RELEASE
+      - TINYTC_VERSION_DESCRIPTION
+    function:
+      - tinytc_error_string
+      - tinytc_string_destroy
+    typedef:
+      - tinytc_binary_t
+      - tinytc_bool_t
+      - tinytc_core_info_t
+      - tinytc_recipe_t
+      - tinytc_recipe_handler_t
+      - tinytc_source_t
+      - tinytc_source_context_t
+      - const_tinytc_binary_t
+      - const_tinytc_core_info_t
+      - const_tinytc_recipe_t
+      - const_tinytc_recipe_handler_t
+      - const_tinytc_source_t
+      - const_tinytc_source_context_t
+  Binary:
+    function:
+      - tinytc_binary_get_core_features
+      - tinytc_binary_get_raw
+      - tinytc_binary_release
+      - tinytc_binary_retain
+  Compiler:
+    enum:
+      - tinytc_bundle_format_t
+    function:
+      - tinytc_prog_compile_to_binary
+      - tinytc_prog_compile_to_opencl
+      - tinytc_source_compile_to_binary
+  Device Info:
+    enum:
+      - tinytc_core_feature_flag_t
+      - tinytc_intel_gpu_architecture_t
+    function:
+      - tinytc_core_info_get_ip_version
+      - tinytc_core_info_get_num_registers_per_thread
+      - tinytc_core_info_get_register_size
+      - tinytc_core_info_get_subgroup_sizes
+      - tinytc_core_info_clear_core_feature
+      - tinytc_core_info_set_core_feature
+      - tinytc_core_info_intel_create
+      - tinytc_core_info_intel_create_from_arch
+      - tinytc_core_info_release
+      - tinytc_core_info_retain
+  Parser:
+    function:
+      - tinytc_parse_file
+      - tinytc_parse_stdin
+      - tinytc_parse_string
+  Recipe:
+    enum:
+      - tinytc_mem_type_t
+    function:
+      - tinytc_recipe_get_binary
+      - tinytc_recipe_get_prog
+      - tinytc_recipe_handler_get_recipe
+      - tinytc_recipe_small_gemm_batched_create
+      - tinytc_recipe_small_gemm_batched_set_args
+      - tinytc_recipe_tall_and_skinny_create
+      - tinytc_recipe_tall_and_skinny_set_args
+      - tinytc_recipe_tall_and_skinny_suggest_block_size
+      - tinytc_recipe_release
+      - tinytc_recipe_retain
+      - tinytc_recipe_handler_release
+      - tinytc_recipe_handler_retain
+    struct:
+      - tinytc_mem
+    typedef:
+      - tinytc_mem_t
+  Source:
+    function:
+      - tinytc_source_get_code
+      - tinytc_source_release
+      - tinytc_source_retain
+  Source Context:
+    function:
+      - tinytc_source_context_create
+      - tinytc_source_context_add_source
+      - tinytc_source_context_get_error_log
+      - tinytc_source_context_report_error
+      - tinytc_source_context_release
+      - tinytc_source_context_retain

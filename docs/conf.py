@@ -5,7 +5,7 @@ project = 'Tiny Tensor Compiler'
 copyright = '2024, Intel Corporation'
 author = 'Intel'
 
-extensions = ['breathe', 'sphinx.ext.mathjax']
+extensions = ['breathe', 'sphinx.ext.autosectionlabel', 'sphinx.ext.mathjax']
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -26,9 +26,13 @@ html_css_files = ['fix-scrollbar-bug.css']
 
 breathe_default_project = 'api'
 breathe_show_include = False
+breathe_show_define_initializer = True
 breathe_show_enumvalue_initializer = True
 breathe_default_members = ('members',)
 breathe_domain_by_extension = {
+    'h': 'c',
     'hpp': 'cpp',
     'cpp': 'cpp'
 }
+
+toc_object_entries = False
