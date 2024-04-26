@@ -84,23 +84,25 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             auto const tB_ = enum_cast<transpose>(tB);
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(ty_, "alpha", my_loc());
+                auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
                 auto A = fb.argument(make_memref(ty_, {selA(M, K), selA(K, M), dynamic},
                                                  {1, ldA, strideA}, my_loc()),
                                      "A", my_loc());
                 auto B = fb.argument(make_memref(ty_, {selB(K, N), selB(N, K), dynamic},
                                                  {1, ldB, strideB}, my_loc()),
                                      "B", my_loc());
-                auto beta_arg = fb.argument(ty_, "beta", my_loc());
+                auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
                 auto C = fb.argument(make_memref(ty_, {M, N, dynamic}, {1, ldC, strideC}, my_loc()),
                                      "C", my_loc());
 
-                auto beta = is_beta_nonzero ? std::move(beta_arg) : value(0.0, ty_, my_loc());
+                auto beta = is_beta_nonzero ? std::move(beta_arg) : make_imm(0.0, ty_, my_loc());
                 fb.body(
                     [&](region_builder &bb) {
                         auto gid = bb.add(make_group_id(my_loc()));
-                        auto offsets = std::vector<value>{0, 0, gid};
-                        auto size = std::vector<value>{dynamic, dynamic, nullptr};
+                        auto offsets =
+                            std::vector<value>{make_imm(0u, my_loc()), make_imm(0u, my_loc()), gid};
+                        auto size = std::vector<value>{make_dynamic(my_loc()),
+                                                       make_dynamic(my_loc()), value{}};
                         auto a = bb.add(make_subview(A, offsets, size, my_loc()));
                         auto b = bb.add(make_subview(B, offsets, size, my_loc()));
                         auto c = bb.add(make_subview(C, offsets, size, my_loc()));

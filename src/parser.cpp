@@ -30,7 +30,7 @@ auto parse(std::uint64_t size, char const *input) -> prog {
     if (p() == 0) {
         return ctx.program();
     }
-    return nullptr;
+    return prog{};
 }
 } // namespace tinytc
 
@@ -57,7 +57,7 @@ auto tinytc_source_context::parse(std::string name, std::string text) -> prog {
         last_error_log_ = report_error_with_context(input.text.c_str(), input.text.size(),
                                                     input.name, err.first, err.second);
     }
-    return nullptr;
+    return prog{};
 }
 
 void tinytc_source_context::report_error(location const &l, char const *what, bool append) {

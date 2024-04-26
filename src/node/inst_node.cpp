@@ -42,8 +42,7 @@ blas_a3_inst::blas_a3_inst(value alpha, value A, value B, value beta, value C, b
       C_(std::move(C)), atomic_(atomic) {}
 
 loop_inst::loop_inst(value loop_var, value from, value to, region body, location const &lc)
-    : loop_inst(std::move(loop_var), std::move(from), std::move(to), nullptr, std::move(body), lc) {
-}
+    : loop_inst(std::move(loop_var), std::move(from), std::move(to), {}, std::move(body), lc) {}
 
 loop_inst::loop_inst(value loop_var, value from, value to, value step, region body,
                      location const &lc)
@@ -65,7 +64,7 @@ loop_inst::loop_inst(value loop_var, value from, value to, value step, region bo
 }
 
 alloca_inst::alloca_inst(data_type ty, location const &lc)
-    : result_(std::move(ty)), stack_ptr_(-1) {
+    : result_{make_value(std::move(ty))}, stack_ptr_{-1} {
     loc(lc);
     auto memref = dynamic_cast<memref_data_type *>(result_->ty().get());
     if (memref == nullptr) {
@@ -107,16 +106,16 @@ binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &l
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-    result_ = value(at->ty());
+    result_ = make_value(at->ty());
 }
 
 cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
-    : a_(std::move(a)), result_{to_ty} {
+    : a_(std::move(a)), result_{make_value(to_ty)} {
     loc(lc);
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a, value b, location const &lc)
-    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{scalar_type::bool_} {
+    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{make_value(scalar_type::bool_)} {
     loc(lc);
 
     auto at = get_scalar_type(loc(), a_);
@@ -288,7 +287,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
         if (dyn_mode >= 0) {
             std::int64_t const s = size / prod;
             known_expand_shape[dyn_mode] = s;
-            expand_shape_[dyn_mode] = value(s);
+            expand_shape_[dyn_mode] = make_imm(s);
             prod *= s;
         }
         if (prod != size) {
@@ -320,7 +319,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = value(data_type(r.release()));
+    result_ = make_value(data_type(r.release()));
 }
 
 fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc)
@@ -357,7 +356,7 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = value(data_type(r.release()));
+    result_ = make_value(data_type(r.release()));
 }
 
 if_inst::if_inst(value condition, region then, region otherwise,
@@ -365,7 +364,7 @@ if_inst::if_inst(value condition, region then, region otherwise,
     : condition_(std::move(condition)), then_(std::move(then)), otherwise_(std::move(otherwise)) {
     loc(lc);
     for (auto &ty : return_types) {
-        results_.push_back(value(ty));
+        results_.push_back(make_value(ty));
     }
 }
 
@@ -377,13 +376,13 @@ load_inst::load_inst(value op, std::vector<value> index_list, location const &lc
                   if (static_cast<std::int64_t>(index_list_.size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_ = value(g.ty());
+                  result_ = make_value(g.ty());
               },
               [&](memref_data_type &m) {
                   if (m.dim() != static_cast<std::int64_t>(index_list_.size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_ = value(m.element_ty());
+                  result_ = make_value(m.element_ty());
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *op_->ty());
@@ -393,7 +392,7 @@ neg_inst::neg_inst(value a, location const &lc) : a_(std::move(a)) {
     loc(lc);
 
     auto at = get_scalar_type(loc(), a_);
-    result_ = value(at->ty());
+    result_ = make_value(at->ty());
 }
 
 size_inst::size_inst(value op, std::int64_t mode, location const &lc)
@@ -405,7 +404,7 @@ size_inst::size_inst(value op, std::int64_t mode, location const &lc)
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    result_ = value(scalar_type::index);
+    result_ = make_value(scalar_type::index);
 }
 
 subview_inst::subview_inst(value op, std::vector<slice> slices, location const &lc)
@@ -460,7 +459,7 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = value(data_type(r.release()));
+    result_ = make_value(data_type(r.release()));
 }
 
 store_inst::store_inst(value val, value op, std::vector<value> index_list, location const &lc)

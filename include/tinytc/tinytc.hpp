@@ -156,7 +156,7 @@ template <typename T> class shared_handle {
     //! Create empty (invalid) handle
     shared_handle() : obj_{nullptr} {}
     //! Create handle from C handle
-    shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
+    explicit shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
         if (needs_retain) {
             CHECK_STATUS(c_retain());
         }
@@ -241,7 +241,7 @@ template <typename T> class unique_handle {
     //! Create empty (invalid) handle
     unique_handle() : obj_{nullptr} {}
     //! Create handle from C handle
-    unique_handle(T obj) : obj_(obj) {}
+    explicit unique_handle(T obj) : obj_(obj) {}
     //! Destroy object
     ~unique_handle() {
         if (obj_) {
@@ -309,12 +309,14 @@ template <> struct shared_handle_traits<tinytc_data_type_t> {
 class data_type : public shared_handle<tinytc_data_type_t> {
   public:
     using shared_handle::shared_handle;
-
-    data_type(scalar_type type, location const &loc = {}) {
-        CHECK_STATUS_LOC(
-            tinytc_scalar_type_create(&obj_, static_cast<tinytc_scalar_type_t>(type), &loc), loc);
-    }
 };
+
+inline data_type make_scalar(scalar_type scalar_ty, location const &loc = {}) {
+    tinytc_data_type_t st;
+    CHECK_STATUS_LOC(
+        tinytc_scalar_type_create(&st, static_cast<tinytc_scalar_type_t>(scalar_ty), &loc), loc);
+    return data_type{st};
+}
 
 inline data_type make_memref(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,
                              std::vector<std::int64_t> const &stride = {},
@@ -324,12 +326,12 @@ inline data_type make_memref(scalar_type scalar_ty, std::vector<std::int64_t> co
                                                shape.size(), shape.data(), stride.size(),
                                                stride.data(), &loc),
                      loc);
-    return {mt};
+    return data_type{mt};
 }
 inline data_type make_group(data_type const &memref_ty, location const &loc = {}) {
     tinytc_data_type_t gt;
     CHECK_STATUS_LOC(tinytc_group_type_create(&gt, memref_ty.get(), &loc), loc);
-    return {gt};
+    return data_type{gt};
 }
 
 ////////////////////////////
@@ -351,41 +353,6 @@ template <> struct shared_handle_traits<tinytc_value_t> {
 class value : public shared_handle<tinytc_value_t> {
   public:
     using shared_handle::shared_handle;
-    //! Create value with data type ty
-    value(data_type const &ty, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_value_create(&obj_, ty.get(), &loc), loc);
-    }
-    //! Create immediate value from float
-    value(float imm, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_float_imm_create(&obj_, imm, tinytc_scalar_type_f32, &loc), loc);
-    }
-    //! Create immediate value from double
-    value(double imm, scalar_type type = scalar_type::f64, location const &loc = {}) {
-        CHECK_STATUS_LOC(
-            tinytc_float_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type), &loc),
-            loc);
-    }
-    //! Create immediate value from int8_t
-    value(std::int8_t imm, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i8, &loc), loc);
-    }
-    //! Create immediate value from int16_t
-    value(std::int16_t imm, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i16, &loc), loc);
-    }
-    //! Create immediate value from int32_t
-    value(std::int32_t imm, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_i32, &loc), loc);
-    }
-    //! Create immediate value from int64_t
-    value(std::int64_t imm, scalar_type type = scalar_type::i64, location const &loc = {}) {
-        CHECK_STATUS_LOC(
-            tinytc_int_imm_create(&obj_, imm, static_cast<tinytc_scalar_type_t>(type), &loc), loc);
-    }
-    //! Create immediate value from uint32_t (index type)
-    value(std::uint32_t imm, location const &loc = {}) {
-        CHECK_STATUS_LOC(tinytc_int_imm_create(&obj_, imm, tinytc_scalar_type_index, &loc), loc);
-    }
 
     /**
      * @brief Get name
@@ -410,6 +377,72 @@ class value : public shared_handle<tinytc_value_t> {
 //! Is reinterpret_cast<tinytc_value_t*>(&v) allowed, where v has type value
 constexpr bool value_reinterpret_allowed =
     std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t);
+
+//! Create value with data type ty
+inline auto make_value(data_type const &ty, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_value_create(&val, ty.get(), &loc), loc);
+    return value{val};
+}
+//! Create value with scalar type ty
+inline auto make_value(scalar_type scalar_ty, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    auto ty = make_scalar(scalar_ty, loc);
+    CHECK_STATUS_LOC(tinytc_value_create(&val, ty.get(), &loc), loc);
+    return value{val};
+}
+//! Create immediate value from float
+inline auto make_imm(float imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_float_imm_create(&val, imm, tinytc_scalar_type_f32, &loc), loc);
+    return value{val};
+}
+//! Create immediate value from double
+inline auto make_imm(double imm, scalar_type type = scalar_type::f64, location const &loc = {})
+    -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(
+        tinytc_float_imm_create(&val, imm, static_cast<tinytc_scalar_type_t>(type), &loc), loc);
+    return value{val};
+}
+//! Create immediate value from int8_t
+inline auto make_imm(std::int8_t imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_i8, &loc), loc);
+    return value{val};
+}
+//! Create immediate value from int16_t
+inline auto make_imm(std::int16_t imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_i16, &loc), loc);
+    return value{val};
+}
+//! Create immediate value from int32_t
+inline auto make_imm(std::int32_t imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_i32, &loc), loc);
+    return value{val};
+}
+//! Create immediate value from int64_t
+inline auto make_imm(std::int64_t imm, scalar_type type = scalar_type::i64,
+                     location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(
+        tinytc_int_imm_create(&val, imm, static_cast<tinytc_scalar_type_t>(type), &loc), loc);
+    return value{val};
+}
+//! Create immediate value from uint32_t (index type)
+inline auto make_imm(std::uint32_t imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_index, &loc), loc);
+    return value{val};
+}
+
+inline auto make_dynamic(location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, dynamic, tinytc_scalar_type_i64, &loc), loc);
+    return value{val};
+}
 
 ////////////////////////////
 /////////// Inst ///////////
@@ -448,7 +481,7 @@ class inst : public shared_handle<tinytc_inst_t> {
     inline auto get_value() const -> value {
         tinytc_value_t result;
         CHECK_STATUS(tinytc_inst_get_value(obj_, &result));
-        return value(result);
+        return value{result};
     }
 
     inline auto get_values() const -> std::vector<value> {
@@ -497,7 +530,7 @@ inline region make_region(std::vector<inst> &instructions, location const &loc =
                                           reinterpret_cast<tinytc_inst_t *>(instructions.data()),
                                           &loc),
                      loc);
-    return {reg};
+    return region{reg};
 }
 
 ////////////////////////////
@@ -815,7 +848,7 @@ class prog : public shared_handle<tinytc_prog_t> {
     auto print_to_string() const -> unique_handle<char *> {
         char *str;
         CHECK_STATUS(tinytc_prog_print_to_string(obj_, &str));
-        return {str};
+        return unique_handle<char *>{str};
     }
 };
 
@@ -828,7 +861,7 @@ inline prog make_program(std::vector<func> &fun_list, location const &loc = {}) 
     }
     tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
     CHECK_STATUS_LOC(tinytc_program_create(&prg, len, fl, &loc), loc);
-    return {prg};
+    return prog{prg};
 }
 
 ////////////////////////////
@@ -876,7 +909,7 @@ class region_builder {
     void make_for(data_type const &loop_var_ty, value const &from, value const &to,
                   value const &step, F &&f, std::string const &name = "",
                   location const &loc = {}) {
-        auto loop_var = value(loop_var_ty);
+        auto loop_var = make_value(loop_var_ty);
         if (name.size() > 0) {
             loop_var.name(name);
         }
@@ -888,7 +921,7 @@ class region_builder {
     template <typename F>
     void make_foreach(data_type const &loop_var_ty, value const &from, value const &to, F &&f,
                       std::string const &name = "", location const &loc = {}) {
-        auto loop_var = value(loop_var_ty);
+        auto loop_var = make_value(loop_var_ty);
         if (name.size() > 0) {
             loop_var.name(name);
         }
@@ -977,7 +1010,7 @@ class function_builder {
      */
     inline value argument(data_type const &ty, std::string const &name = "",
                           location const &loc = {}) {
-        auto v = value(ty, loc);
+        auto v = make_value(ty, loc);
         if (name.size() > 0) {
             v.name(name);
         }
@@ -1242,7 +1275,7 @@ class source_context : public shared_handle<tinytc_source_context_t> {
 inline auto make_source_context() -> source_context {
     tinytc_source_context_t ctx;
     CHECK_STATUS(tinytc_source_context_create(&ctx));
-    return {ctx};
+    return source_context{ctx};
 }
 
 /**
@@ -1499,7 +1532,7 @@ class recipe : public shared_handle<tinytc_recipe_t> {
     auto get_prog() const -> prog {
         tinytc_prog_t prg;
         CHECK_STATUS(tinytc_recipe_get_prog(obj_, &prg));
-        return {prg};
+        return prog{prg};
     }
 
     /**
@@ -1510,7 +1543,7 @@ class recipe : public shared_handle<tinytc_recipe_t> {
     auto get_binary() const -> binary {
         tinytc_binary_t bin;
         CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
-        return {bin};
+        return binary{bin};
     }
 };
 
@@ -1527,7 +1560,7 @@ class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
     auto get_recipe() const -> recipe {
         tinytc_recipe_t rec;
         CHECK_STATUS(tinytc_recipe_handler_get_recipe(obj_, &rec));
-        return {rec};
+        return recipe{rec};
     }
 };
 
@@ -1588,7 +1621,7 @@ inline auto make_small_gemm_batched(core_info const &info, scalar_type ty, trans
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty),
         static_cast<tinytc_transpose_t>(tA), static_cast<tinytc_transpose_t>(tB), M, N, K, ldA,
         strideA, ldB, strideB, ldC, strideC, ctx.get()));
-    return {rec};
+    return small_gemm_batched{rec};
 }
 
 class tall_and_skinny : public recipe {
@@ -1639,7 +1672,7 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::uin
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), N, K, M_block_size, ctx.get()));
-    return {rec};
+    return tall_and_skinny{rec};
 }
 
 } // namespace tinytc

@@ -38,7 +38,8 @@ using value_node = ::tinytc_value;
 
 class float_imm : public clir::visitable<float_imm, value_node> {
   public:
-    inline float_imm(double v, scalar_type ty = scalar_type::f64) : ty_(ty), value_(v) {}
+    inline float_imm(double v, scalar_type ty = scalar_type::f64)
+        : ty_{make_scalar(ty)}, value_(v) {}
 
     inline data_type ty() const override { return ty_; }
     inline void ty(data_type ty) override { ty_ = std::move(ty); }
@@ -55,7 +56,8 @@ class float_imm : public clir::visitable<float_imm, value_node> {
 
 class int_imm : public clir::visitable<int_imm, value_node> {
   public:
-    inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64) : ty_(ty), value_(v) {}
+    inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64)
+        : ty_{make_scalar(ty)}, value_(v) {}
 
     inline data_type ty() const override { return ty_; }
     inline void ty(data_type ty) override { ty_ = std::move(ty); }
