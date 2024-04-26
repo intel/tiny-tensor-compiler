@@ -25,9 +25,11 @@ Table of contents
    :caption: User manual
 
    manual/build
-   manual/usage
+   manual/core
+   manual/builder
    manual/calling_convention
    manual/tensor-ir
+   manual/tutorial_matrix_chain
 
 .. toctree::
    :maxdepth: 2

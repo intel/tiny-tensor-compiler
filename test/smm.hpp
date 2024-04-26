@@ -140,7 +140,11 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
     auto g = gpu_rt->get_recipe_handler(
         tinytc::make_small_gemm_batched(info, tinytc::to_scalar_type_v<T>, transA, transB, M, N, K,
                                         ldA, strideA, ldB, strideB, ldC, strideC));
-    tinytc::small_gemm_batched::set_args(g, howmany, alpha, A, B, beta, C);
+    if constexpr (std::is_fundamental_v<std::remove_pointer_t<decltype(A)>>) {
+        tinytc::small_gemm_batched::set_args(g, howmany, alpha, A, B, beta, C);
+    } else {
+        tinytc::small_gemm_batched::set_args(g, howmany, alpha, &A, &B, beta, &C);
+    }
     g.submit(gpu_rt->get_command_list());
     gpu_rt->synchronize();
 

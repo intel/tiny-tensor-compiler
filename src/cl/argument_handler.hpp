@@ -51,7 +51,7 @@ class opencl_argument_handler {
                             tinytc_mem_t const &mem) const {
         switch (mem.type) {
         case tinytc_mem_type_buffer:
-            set_arg(kernel, arg_index, sizeof(mem.value), &mem.value);
+            set_arg(kernel, arg_index, sizeof(mem.value), mem.value);
             return;
         case tinytc_mem_type_usm_pointer:
             if (clSetKernelArgMemPointerINTEL_ == nullptr) {

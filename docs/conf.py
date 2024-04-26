@@ -5,7 +5,7 @@ project = 'Tiny Tensor Compiler'
 copyright = '2024, Intel Corporation'
 author = 'Intel'
 
-extensions = ['breathe', 'sphinx.ext.autosectionlabel', 'sphinx.ext.mathjax']
+extensions = ['breathe', 'sphinx.ext.autosectionlabel', 'sphinx.ext.mathjax', 'sphinx_tabs.tabs']
 
 templates_path = ['_templates']
 exclude_patterns = []
