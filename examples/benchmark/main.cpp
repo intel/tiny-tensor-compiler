@@ -41,7 +41,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> B_stride,
                                        std::array<std::int64_t, 2> C_stride,
                                        std::uint32_t repetitions, queue q) -> binary {
-    auto ctx = create_source_context();
+    auto ctx = make_source_context();
     char const *file_name = std::source_location::current().file_name();
     auto const source_id = ctx.add_source(file_name, "");
 
@@ -57,28 +57,28 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 
     auto kernel = [&](function_builder &fb) {
         auto A = fb.argument(
-            create_group(create_memref(
+            make_group(make_memref(
                 ty, {M, K}, std::vector<std::int64_t>(A_stride.begin(), A_stride.end()), my_loc())),
             "A", my_loc());
         auto B = fb.argument(
-            create_group(create_memref(
+            make_group(make_memref(
                 ty, {K, N}, std::vector<std::int64_t>(B_stride.begin(), B_stride.end()), my_loc())),
             "B", my_loc());
         auto C = fb.argument(
-            create_group(create_memref(
+            make_group(make_memref(
                 ty, {M, N}, std::vector<std::int64_t>(C_stride.begin(), C_stride.end()), my_loc())),
             "C", my_loc());
         fb.body(
             [&](region_builder &bb) {
-                auto gid = bb.add(create_group_id(my_loc()));
-                auto a = bb.add(create_load(A, {gid}, my_loc()));
-                auto b = bb.add(create_load(B, {gid}, my_loc()));
-                auto c = bb.add(create_load(C, {gid}, my_loc()));
-                bb.create_for(
+                auto gid = bb.add(make_group_id(my_loc()));
+                auto a = bb.add(make_load(A, {gid}, my_loc()));
+                auto b = bb.add(make_load(B, {gid}, my_loc()));
+                auto c = bb.add(make_load(C, {gid}, my_loc()));
+                bb.make_for(
                     scalar_type::index, value(0u, my_loc()), value(repetitions, my_loc()),
                     [&](region_builder &bb) {
-                        bb.add(create_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
-                                           value(0.0, ty, my_loc()), c, my_loc()));
+                        bb.add(make_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
+                                         value(0.0, ty, my_loc()), c, my_loc()));
                     },
                     "r", my_loc());
             },
@@ -90,7 +90,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         pb.create("gemm", kernel, my_loc());
         auto p = pb.get_product(my_loc());
 
-        auto info = create_core_info(q.get_device());
+        auto info = make_core_info(q.get_device());
         info.set_core_feature(core_feature_flag::large_register_file);
         return compile_to_binary(p, info, bundle_format::native, ctx);
     } catch (builder_error const &e) {
@@ -195,8 +195,8 @@ template <typename T> void test(queue q, args &a) {
                 // auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(),
                 // q.get_device()); auto kernel = bundle.get("gemm"); kernel.set_args(AA, BB, CC);
                 // kernel.submit(howmany, q).wait();
-                auto bundle = create_kernel_bundle(q.get_context(), q.get_device(), bin);
-                auto kernel = create_kernel(bundle, "gemm");
+                auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), bin);
+                auto kernel = make_kernel(bundle, "gemm");
                 auto exe_range = get_execution_range(kernel, howmany);
                 q.submit([&](handler &h) {
                      h.set_args(AA, BB, CC);

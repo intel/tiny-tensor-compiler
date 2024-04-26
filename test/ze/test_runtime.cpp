@@ -58,11 +58,14 @@ void level_zero_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t
 }
 
 auto level_zero_test_runtime::get_core_info() const -> tinytc::core_info {
-    return ::tinytc::create_core_info(dev_);
+    return ::tinytc::make_core_info(dev_);
 }
 auto level_zero_test_runtime::get_device() -> device_t { return dev_; }
 auto level_zero_test_runtime::get_context() -> context_t { return ctx_; }
 auto level_zero_test_runtime::get_command_list() -> command_list_t { return list_; }
+auto level_zero_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
+    return tinytc::make_recipe_handler(ctx_, dev_, rec);
+}
 void level_zero_test_runtime::synchronize() {
     ZE_CHECK_STATUS(zeCommandListHostSynchronize(list_, UINT64_MAX));
 }

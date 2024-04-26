@@ -19,7 +19,7 @@
 using namespace tinytc;
 
 TEST_CASE("suggest work group size") {
-    auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
+    auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
     info->set_core_feature(core_feature_flag::large_register_file);
     REQUIRE(info->register_size() == 64);
     REQUIRE(info->num_registers_per_thread() == 256);

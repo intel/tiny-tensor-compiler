@@ -296,7 +296,7 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list RCHEV {
         try {
-            $$ = create_memref($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
+            $$ = make_memref($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -309,8 +309,8 @@ memref_type:
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
         try {
-            $$ = create_memref($scalar_type, std::move($mode_list),
-                                 std::move($optional_stride_list), @memref_type);
+            $$ = make_memref($scalar_type, std::move($mode_list), std::move($optional_stride_list),
+                             @memref_type);
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -340,7 +340,7 @@ constant_or_dynamic:
 
 group_type:
     GROUP LCHEV memref_type RCHEV {
-        $$ = create_group(std::move($memref_type));
+        $$ = make_group(std::move($memref_type));
         $$->loc(@group_type);
     }
 ;

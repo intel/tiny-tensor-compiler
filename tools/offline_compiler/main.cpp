@@ -11,7 +11,7 @@
 using namespace tinytc;
 
 int main(int argc, char **argv) {
-    auto ctx = create_source_context();
+    auto ctx = make_source_context();
     try {
         auto p = prog{};
         if (argc < 2 || strcmp(argv[1], "-") == 0) {
@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
             p = parse_file(argv[1], ctx);
         }
 
-        auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
+        auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
         auto src = compile_to_opencl(p, info, ctx);
         std::cout << src.get_code();
     } catch (status const &st) {

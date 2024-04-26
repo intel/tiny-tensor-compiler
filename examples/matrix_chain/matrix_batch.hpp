@@ -32,10 +32,10 @@ template <typename T> class matrix_batch {
     inline tinytc::data_type type(bool include_batch_dim = true) {
         constexpr auto real_t = tinytc::to_scalar_type_v<T>;
         if (include_batch_dim && howmany() > 1) {
-            return tinytc::create_memref(real_t, {nrows(), ncols(), tinytc::dynamic},
-                                         {1, ld(), stride()});
+            return tinytc::make_memref(real_t, {nrows(), ncols(), tinytc::dynamic},
+                                       {1, ld(), stride()});
         }
-        return tinytc::create_memref(real_t, {nrows(), ncols()}, {1, ld()});
+        return tinytc::make_memref(real_t, {nrows(), ncols()}, {1, ld()});
     }
 
   private:

@@ -76,7 +76,7 @@ void small_gemm_batched_ref(tinytc::transpose transA, tinytc::transpose transB, 
 template <typename T>
 concept test_runtime_gpu =
     requires(T rt, std::size_t bytes, typename T::mem_t buf, typename T::const_mem_t const_buf,
-             void *dst, void const *src, int value) {
+             void *dst, void const *src, int value, tinytc::recipe const &rec) {
         typename T::device_t;
         typename T::context_t;
         typename T::command_list_t;
@@ -92,6 +92,7 @@ concept test_runtime_gpu =
         { rt.get_device() } -> std::same_as<typename T::device_t>;
         { rt.get_context() } -> std::same_as<typename T::context_t>;
         { rt.get_command_list() } -> std::same_as<typename T::command_list_t>;
+        { rt.get_recipe_handler(rec) } -> std::same_as<typename T::recipe_handler_t>;
         rt.synchronize();
     };
 
@@ -136,10 +137,9 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
 
     auto info = gpu_rt->get_core_info();
 
-    auto g = typename R::recipe_handler_t(
-        gpu_rt->get_context(), gpu_rt->get_device(),
-        tinytc::small_gemm_batched(info, tinytc::to_scalar_type_v<T>, transA, transB, M, N, K, ldA,
-                                   strideA, ldB, strideB, ldC, strideC));
+    auto g = gpu_rt->get_recipe_handler(
+        tinytc::make_small_gemm_batched(info, tinytc::to_scalar_type_v<T>, transA, transB, M, N, K,
+                                        ldA, strideA, ldB, strideB, ldC, strideC));
     tinytc::small_gemm_batched::set_args(g, howmany, alpha, A, B, beta, C);
     g.submit(gpu_rt->get_command_list());
     gpu_rt->synchronize();

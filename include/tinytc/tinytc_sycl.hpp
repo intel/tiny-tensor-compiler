@@ -26,18 +26,18 @@ namespace tinytc {
  *
  * @return core info
  */
-TINYTC_EXPORT auto create_core_info(sycl::device const &dev) -> core_info;
+TINYTC_EXPORT auto make_core_info(sycl::device const &dev) -> core_info;
 
 ////////////////////////////
 ////////// Kernel //////////
 ////////////////////////////
 
-TINYTC_EXPORT auto create_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                                        binary const &bin)
+TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                      binary const &bin)
     -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
-TINYTC_EXPORT auto create_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
-                                 char const *name) -> sycl::kernel;
+TINYTC_EXPORT auto make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
+                               char const *name) -> sycl::kernel;
 
 TINYTC_EXPORT auto get_group_size(sycl::kernel const &krnl) -> sycl::range<3u>;
 
@@ -55,14 +55,16 @@ class TINYTC_EXPORT sycl_recipe_handler : public recipe_handler {
   public:
     using recipe_handler::recipe_handler;
 
-    sycl_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec);
-    sycl_recipe_handler(sycl::queue const &q, recipe const &rec);
-
     void parallel_for(sycl::handler &h);
     auto submit(sycl::queue q) -> sycl::event;
     auto submit(sycl::queue q, sycl::event const &dep_event) -> sycl::event;
     auto submit(sycl::queue q, std::vector<sycl::event> const &dep_events) -> sycl::event;
 };
+
+TINYTC_EXPORT auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
+                                       recipe const &rec) -> sycl_recipe_handler;
+TINYTC_EXPORT auto make_recipe_handler(sycl::queue const &q, recipe const &rec)
+    -> sycl_recipe_handler;
 
 } // namespace tinytc
 

@@ -13,8 +13,8 @@ Builder C++-API:
       - tinytc::builder_error
   Data Type:
     function:
-      - tinytc::create_memref
-      - tinytc::create_group
+      - tinytc::make_memref
+      - tinytc::make_group
     class:
       - tinytc::data_type
     struct:
@@ -23,8 +23,8 @@ Builder C++-API:
       - tinytc::to_scalar_type_v
   Function:
     function:
-      - tinytc::create_function
-      - tinytc::create_function_prototype
+      - tinytc::make_function
+      - tinytc::make_function_prototype
       - tinytc::set_work_group_size
       - tinytc::set_subgroup_size
     class:
@@ -32,29 +32,29 @@ Builder C++-API:
       - tinytc::function_builder
   Instruction:
     function:
-      - tinytc::create_alloca
-      - tinytc::create_axpby
-      - tinytc::create_binary_op
-      - tinytc::create_cast
-      - tinytc::create_cmp
-      - tinytc::create_expand
-      - tinytc::create_for
-      - tinytc::create_foreach
-      - tinytc::create_fuse
-      - tinytc::create_gemm
-      - tinytc::create_gemv
-      - tinytc::create_ger
-      - tinytc::create_group_id
-      - tinytc::create_group_size
-      - tinytc::create_hadamard
-      - tinytc::create_if
-      - tinytc::create_load
-      - tinytc::create_neg
-      - tinytc::create_size
-      - tinytc::create_store
-      - tinytc::create_subview
-      - tinytc::create_sum
-      - tinytc::create_yield
+      - tinytc::make_alloca
+      - tinytc::make_axpby
+      - tinytc::make_binary_op
+      - tinytc::make_cast
+      - tinytc::make_cmp
+      - tinytc::make_expand
+      - tinytc::make_for
+      - tinytc::make_foreach
+      - tinytc::make_fuse
+      - tinytc::make_gemm
+      - tinytc::make_gemv
+      - tinytc::make_ger
+      - tinytc::make_group_id
+      - tinytc::make_group_size
+      - tinytc::make_hadamard
+      - tinytc::make_if
+      - tinytc::make_load
+      - tinytc::make_neg
+      - tinytc::make_size
+      - tinytc::make_store
+      - tinytc::make_subview
+      - tinytc::make_sum
+      - tinytc::make_yield
     class:
       - tinytc::inst
   Program:

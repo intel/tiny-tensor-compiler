@@ -52,9 +52,12 @@ void opencl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t byt
 }
 
 auto opencl_test_runtime::get_core_info() const -> tinytc::core_info {
-    return ::tinytc::create_core_info(dev_);
+    return ::tinytc::make_core_info(dev_);
 }
 auto opencl_test_runtime::get_device() -> device_t { return dev_; }
 auto opencl_test_runtime::get_context() -> context_t { return ctx_; }
 auto opencl_test_runtime::get_command_list() -> command_list_t { return q_; }
+auto opencl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
+    return tinytc::make_recipe_handler(ctx_, dev_, rec);
+}
 void opencl_test_runtime::synchronize() { CL_CHECK_STATUS(clFinish(q_)); }

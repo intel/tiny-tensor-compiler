@@ -26,13 +26,13 @@ template <> struct arg_handler_dispatcher<sycl::backend::opencl> {
 sycl_recipe_handler_impl::sycl_recipe_handler_impl(sycl::context const &context,
                                                    sycl::device const &device, recipe rec)
     : ::tinytc_recipe_handler(std::move(rec)),
-      module_(create_kernel_bundle(context, device, get_recipe().get_binary())) {
+      module_(make_kernel_bundle(context, device, get_recipe().get_binary())) {
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
     for (std::uint32_t num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(create_kernel(module_, get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(make_kernel(module_, get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back()));
     }
 
@@ -65,14 +65,17 @@ auto sycl_recipe_handler_impl::local_size() const -> sycl::range<3u> const & {
     return local_size_[active_kernel_];
 }
 
-sycl_recipe_handler::sycl_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
-                                         recipe const &rec) {
-    obj_ = std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec).release();
+auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec)
+    -> sycl_recipe_handler {
+    tinytc_recipe_handler_t handler =
+        std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec).release();
+    return {handler};
 }
 
-sycl_recipe_handler::sycl_recipe_handler(sycl::queue const &q, recipe const &rec) {
-    obj_ =
+auto make_recipe_handler(sycl::queue const &q, recipe const &rec) -> sycl_recipe_handler {
+    tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec).release();
+    return {handler};
 }
 
 void sycl_recipe_handler::parallel_for(sycl::handler &h) {

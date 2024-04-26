@@ -20,7 +20,7 @@ template <> struct kernel_bundle_dispatcher<backend::ext_oneapi_level_zero> {
     auto operator()(context const &ctx, device const &dev, binary const &bin) {
         auto native_context = get_native<backend::ext_oneapi_level_zero, context>(ctx);
         auto native_device = get_native<backend::ext_oneapi_level_zero, device>(dev);
-        auto native_mod = create_module(native_context, native_device, bin, nullptr);
+        auto native_mod = make_kernel_bundle(native_context, native_device, bin, nullptr);
         return make_kernel_bundle<backend::ext_oneapi_level_zero, bundle_state::executable>(
             {native_mod.release(), ext::oneapi::level_zero::ownership::transfer}, ctx);
     }
@@ -29,7 +29,7 @@ template <> struct kernel_bundle_dispatcher<backend::opencl> {
     auto operator()(context const &ctx, device const &dev, binary const &bin) {
         auto native_context = get_native<backend::opencl, context>(ctx);
         auto native_device = get_native<backend::opencl, device>(dev);
-        auto native_mod = create_program(native_context, native_device, bin);
+        auto native_mod = make_kernel_bundle(native_context, native_device, bin);
         auto bundle =
             make_kernel_bundle<backend::opencl, bundle_state::executable>(native_mod.get(), ctx);
         CL_CHECK_STATUS(clReleaseDevice(native_device));
@@ -38,7 +38,7 @@ template <> struct kernel_bundle_dispatcher<backend::opencl> {
     }
 };
 
-auto create_kernel_bundle(context const &ctx, device const &dev, binary const &bin)
+auto make_kernel_bundle(context const &ctx, device const &dev, binary const &bin)
     -> kernel_bundle<bundle_state::executable> {
     return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, bin);
 }
@@ -48,7 +48,7 @@ template <> struct kernel_dispatcher<backend::ext_oneapi_level_zero> {
     auto operator()(kernel_bundle<bundle_state::executable> const &bundle, char const *name) {
         auto native_bundle =
             get_native<backend::ext_oneapi_level_zero, bundle_state::executable>(bundle);
-        auto native_kernel = create_kernel(native_bundle.front(), name);
+        auto native_kernel = make_kernel(native_bundle.front(), name);
         return make_kernel<backend::ext_oneapi_level_zero>(
             {bundle, native_kernel.release(), ext::oneapi::level_zero::ownership::transfer},
             bundle.get_context());
@@ -57,7 +57,7 @@ template <> struct kernel_dispatcher<backend::ext_oneapi_level_zero> {
 template <> struct kernel_dispatcher<backend::opencl> {
     auto operator()(kernel_bundle<bundle_state::executable> const &bundle, char const *name) {
         auto native_bundle = get_native<backend::opencl, bundle_state::executable>(bundle);
-        auto native_kernel = create_kernel(native_bundle.front(), name);
+        auto native_kernel = make_kernel(native_bundle.front(), name);
         auto kernel = make_kernel<backend::opencl>(native_kernel.get(), bundle.get_context());
         for (auto &m : native_bundle) {
             CL_CHECK_STATUS(clReleaseProgram(m));
@@ -66,7 +66,7 @@ template <> struct kernel_dispatcher<backend::opencl> {
     }
 };
 
-auto create_kernel(kernel_bundle<bundle_state::executable> const &bundle, char const *name)
+auto make_kernel(kernel_bundle<bundle_state::executable> const &bundle, char const *name)
     -> kernel {
     return dispatch<kernel_dispatcher>(bundle.get_backend(), bundle, name);
 }
