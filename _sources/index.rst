@@ -10,6 +10,7 @@ supporting
 the `OpenCL <https://www.khronos.org/opencl/>`_,
 `Level Zero <https://spec.oneapi.io/level-zero/latest/>`_,
 and `SYCL <https://www.khronos.org/sycl/>`_ runtime.
+The library exposes a C-API and a C++-API.
 
 License
 -------
@@ -24,18 +25,20 @@ Table of contents
    :caption: User manual
 
    manual/build
-   manual/usage
+   manual/core
+   manual/builder
    manual/calling_convention
    manual/tensor-ir
+   manual/tutorial_matrix_chain
 
 .. toctree::
    :maxdepth: 2
    :caption: API
 
    api/index
-   api/ze/index
    api/cl/index
    api/sycl/index
+   api/ze/index
 
 Index
 -----

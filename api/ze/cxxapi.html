@@ -1,0 +1,800 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>C++-API &#8212; Tiny Tensor Compiler  documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../_static/styles/theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/bootstrap.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+<link href="../../_static/styles/pydata-sphinx-theme.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+
+  
+  <link href="../../_static/vendor/fontawesome/6.5.1/css/all.min.css?digest=8d27b9dea8ad943066ae" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../_static/vendor/fontawesome/6.5.1/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../../_static/fix-scrollbar-bug.css?v=1c140a14" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae" />
+<link rel="preload" as="script" href="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
+  <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
+
+    <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'api/ze/cxxapi';</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="C-API" href="capi.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a id="pst-skip-link" class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+
+<a class="navbar-brand logo" href="../../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Tiny Tensor Compiler  documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../../manual/build.html">Building and linking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/builder.html">Builder programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/calling_convention.html">Calling convention</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../builder_cxxapi.html">Builder C++-API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/cxxapi.html">C++-API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../sycl/cxxapi.html">C++-API</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="index.html">tinytc_ze</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="capi.html">C-API</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">C++-API</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/blob/main/docs/api/ze/cxxapi.rst?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/edit/main/docs/api/ze/cxxapi.rst" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/intel/tiny-tensor-compiler/issues/new?title=Issue%20on%20page%20%2Fapi/ze/cxxapi.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../../_sources/api/ze/cxxapi.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>C++-API</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ze-check-status">ZE_CHECK_STATUS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-core-info-ze-device-handle-t">make_core_info(ze_device_handle_t)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-count">get_group_count</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-size-ze-kernel-handle-t">get_group_size(ze_kernel_handle_t)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-ze-module-handle-t-char-const">make_kernel(ze_module_handle_t,char const *)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-ze-context-handle-t-ze-device-handle-t-binary-const-ze-module-build-log-handle-t">make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&amp;,ze_module_build_log_handle_t*)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-ze-context-handle-t-ze-device-handle-t-recipe-const">make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&amp;)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-classes">Recipe Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#level-zero-recipe-handler">level_zero_recipe_handler</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="c-api">
+<h1>C++-API<a class="headerlink" href="#c-api" title="Link to this heading">#</a></h1>
+<section id="common">
+<h2>Common<a class="headerlink" href="#common" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Functions</p>
+<ul>
+<li><p><a class="reference internal" href="#ze-check-status"><span class="std std-ref">ZE_CHECK_STATUS</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="common-functions">
+<h3>Common Functions<a class="headerlink" href="#common-functions" title="Link to this heading">#</a></h3>
+<section id="ze-check-status">
+<h4>ZE_CHECK_STATUS<a class="headerlink" href="#ze-check-status" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15ZE_CHECK_STATUSE11ze_result_t">
+<span id="_CPPv3N6tinytc15ZE_CHECK_STATUSE11ze_result_t"></span><span id="_CPPv2N6tinytc15ZE_CHECK_STATUSE11ze_result_t"></span><span id="tinytc::ZE_CHECK_STATUS__ze_result_t"></span><span class="target" id="namespacetinytc_1a5bd95290599b0a3b5d1713e4a021cdfe"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ZE_CHECK_STATUS</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_result_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">result</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc15ZE_CHECK_STATUSE11ze_result_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Throw exception for unsuccessful call to C-API and convert result code to tinytc status. </p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+<section id="device-info">
+<h2>Device Info<a class="headerlink" href="#device-info" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Functions</p>
+<ul>
+<li><p><a class="reference internal" href="#make-core-info-ze-device-handle-t"><span class="std std-ref">make_core_info(ze_device_handle_t)</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="device-info-functions">
+<h3>Device Info Functions<a class="headerlink" href="#device-info-functions" title="Link to this heading">#</a></h3>
+<section id="make-core-info-ze-device-handle-t">
+<h4>make_core_info(ze_device_handle_t)<a class="headerlink" href="#make-core-info-ze-device-handle-t" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14make_core_infoE18ze_device_handle_t">
+<span id="_CPPv3N6tinytc14make_core_infoE18ze_device_handle_t"></span><span id="_CPPv2N6tinytc14make_core_infoE18ze_device_handle_t"></span><span id="tinytc::make_core_info__ze_device_handle_t"></span><span class="target" id="namespacetinytc_1a0045952a3ec8758ce6b86548cd3693c3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_core_info</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc9core_infoE" title="tinytc::core_info"><span class="n"><span class="pre">core_info</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc14make_core_infoE18ze_device_handle_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Query core info from level zero runtime. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> – [in] device handle</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>core info </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+<section id="kernel">
+<h2>Kernel<a class="headerlink" href="#kernel" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Functions</p>
+<ul>
+<li><p><a class="reference internal" href="#get-group-count"><span class="std std-ref">get_group_count</span></a></p></li>
+<li><p><a class="reference internal" href="#get-group-size-ze-kernel-handle-t"><span class="std std-ref">get_group_size(ze_kernel_handle_t)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-kernel-ze-module-handle-t-char-const"><span class="std std-ref">make_kernel(ze_module_handle_t,char const *)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-kernel-bundle-ze-context-handle-t-ze-device-handle-t-binary-const-ze-module-build-log-handle-t"><span class="std std-ref">make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&amp;,ze_module_build_log_handle_t*)</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="kernel-functions">
+<h3>Kernel Functions<a class="headerlink" href="#kernel-functions" title="Link to this heading">#</a></h3>
+<section id="get-group-count">
+<h4>get_group_count<a class="headerlink" href="#get-group-count" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15get_group_countENSt8uint32_tE">
+<span id="_CPPv3N6tinytc15get_group_countENSt8uint32_tE"></span><span id="_CPPv2N6tinytc15get_group_countENSt8uint32_tE"></span><span id="tinytc::get_group_count__std::uint32_t"></span><span class="target" id="namespacetinytc_1aad06247a42ba08ea822abee3e4a514a9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_group_count</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">howmany</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">ze_group_count_t</span></span><a class="headerlink" href="#_CPPv4N6tinytc15get_group_countENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert group size to Level Zero group count. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>howmany</strong> – Group size</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Group count </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="get-group-size-ze-kernel-handle-t">
+<h4>get_group_size(ze_kernel_handle_t)<a class="headerlink" href="#get-group-size-ze-kernel-handle-t" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14get_group_sizeE18ze_kernel_handle_t">
+<span id="_CPPv3N6tinytc14get_group_sizeE18ze_kernel_handle_t"></span><span id="_CPPv2N6tinytc14get_group_sizeE18ze_kernel_handle_t"></span><span id="tinytc::get_group_size__ze_kernel_handle_t"></span><span class="target" id="namespacetinytc_1a223ef8d34ff4ae2c198e65ef59886bd0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_group_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_kernel_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">kernel</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3u</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc14get_group_sizeE18ze_kernel_handle_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get work group size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kernel</strong> – kernel</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Work-group size </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-kernel-ze-module-handle-t-char-const">
+<h4>make_kernel(ze_module_handle_t,char const <a href="#id1"><span class="problematic" id="id2">*</span></a>)<a class="headerlink" href="#make-kernel-ze-module-handle-t-char-const" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11make_kernelE18ze_module_handle_tPKc">
+<span id="_CPPv3N6tinytc11make_kernelE18ze_module_handle_tPKc"></span><span id="_CPPv2N6tinytc11make_kernelE18ze_module_handle_tPKc"></span><span id="tinytc::make_kernel__ze_module_handle_t.cCP"></span><span class="target" id="namespacetinytc_1ab1615186a0857da564a444555006a15d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mod</span></span>, <span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13unique_handleE" title="tinytc::unique_handle"><span class="n"><span class="pre">unique_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">ze_kernel_handle_t</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc11make_kernelE18ze_module_handle_tPKc" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make a Level Zero kernel and set its group size. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mod</strong> – Module </p></li>
+<li><p><strong>name</strong> – Kernel name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Level Zero kernel (unique handle) </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-kernel-bundle-ze-context-handle-t-ze-device-handle-t-binary-const-ze-module-build-log-handle-t">
+<h4>make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&amp;,ze_module_build_log_handle_t*)<a class="headerlink" href="#make-kernel-bundle-ze-context-handle-t-ze-device-handle-t-binary-const-ze-module-build-log-handle-t" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc18make_kernel_bundleE19ze_context_handle_t18ze_device_handle_tRK6binaryP28ze_module_build_log_handle_t">
+<span id="_CPPv3N6tinytc18make_kernel_bundleE19ze_context_handle_t18ze_device_handle_tRK6binaryP28ze_module_build_log_handle_t"></span><span id="_CPPv2N6tinytc18make_kernel_bundleE19ze_context_handle_t18ze_device_handle_tRK6binaryP28ze_module_build_log_handle_t"></span><span id="tinytc::make_kernel_bundle__ze_context_handle_t.ze_device_handle_t.binaryCR.ze_module_build_log_handle_tP"></span><span class="target" id="namespacetinytc_1a1db58ca78f3ae2f4a35cb0f79936b72b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel_bundle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6binaryE" title="tinytc::binary"><span class="n"><span class="pre">binary</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bin</span></span>, <span class="n"><span class="pre">ze_module_build_log_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">build_log</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13unique_handleE" title="tinytc::unique_handle"><span class="n"><span class="pre">unique_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc18make_kernel_bundleE19ze_context_handle_t18ze_device_handle_tRK6binaryP28ze_module_build_log_handle_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make a Level Zero module from a tinytc binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – Context </p></li>
+<li><p><strong>device</strong> – Device </p></li>
+<li><p><strong>bin</strong> – Binary </p></li>
+<li><p><strong>build_log</strong> – Optional build log (user responsible for clean-up)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Level Zero module (unique handle) </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+</section>
+<section id="recipe">
+<h2>Recipe<a class="headerlink" href="#recipe" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>Functions</p>
+<ul>
+<li><p><a class="reference internal" href="#make-recipe-handler-ze-context-handle-t-ze-device-handle-t-recipe-const"><span class="std std-ref">make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&amp;)</span></a></p></li>
+</ul>
+</li>
+<li><p>Classes</p>
+<ul>
+<li><p><a class="reference internal" href="#level-zero-recipe-handler"><span class="std std-ref">level_zero_recipe_handler</span></a></p></li>
+</ul>
+</li>
+</ul>
+<section id="recipe-functions">
+<h3>Recipe Functions<a class="headerlink" href="#recipe-functions" title="Link to this heading">#</a></h3>
+<section id="make-recipe-handler-ze-context-handle-t-ze-device-handle-t-recipe-const">
+<h4>make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&amp;)<a class="headerlink" href="#make-recipe-handler-ze-context-handle-t-ze-device-handle-t-recipe-const" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc19make_recipe_handlerE19ze_context_handle_t18ze_device_handle_tRK6recipe">
+<span id="_CPPv3N6tinytc19make_recipe_handlerE19ze_context_handle_t18ze_device_handle_tRK6recipe"></span><span id="_CPPv2N6tinytc19make_recipe_handlerE19ze_context_handle_t18ze_device_handle_tRK6recipe"></span><span id="tinytc::make_recipe_handler__ze_context_handle_t.ze_device_handle_t.recipeCR"></span><span class="target" id="namespacetinytc_1a9d6fa76a2796a20353ec16c59248d633"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_recipe_handler</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6recipeE" title="tinytc::recipe"><span class="n"><span class="pre">recipe</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rec</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc25level_zero_recipe_handlerE" title="tinytc::level_zero_recipe_handler"><span class="n"><span class="pre">level_zero_recipe_handler</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc19make_recipe_handlerE19ze_context_handle_t18ze_device_handle_tRK6recipe" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make recipe handler. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – Context </p></li>
+<li><p><strong>device</strong> – Device </p></li>
+<li><p><strong>rec</strong> – Recipe</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Level Zero recipe handler </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+<section id="recipe-classes">
+<h3>Recipe Classes<a class="headerlink" href="#recipe-classes" title="Link to this heading">#</a></h3>
+<section id="level-zero-recipe-handler">
+<h4>level_zero_recipe_handler<a class="headerlink" href="#level-zero-recipe-handler" title="Link to this heading">#</a></h4>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc25level_zero_recipe_handlerE">
+<span id="_CPPv3N6tinytc25level_zero_recipe_handlerE"></span><span id="_CPPv2N6tinytc25level_zero_recipe_handlerE"></span><span id="tinytc::level_zero_recipe_handler"></span><span class="target" id="classtinytc_1_1level__zero__recipe__handler"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">level_zero_recipe_handler</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc14recipe_handlerE" title="tinytc::recipe_handler"><span class="n"><span class="pre">recipe_handler</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc25level_zero_recipe_handlerE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Recipe handler for the Level Zero runtime. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc25level_zero_recipe_handler6submitE24ze_command_list_handle_t17ze_event_handle_t8uint32_tP17ze_event_handle_t">
+<span id="_CPPv3N6tinytc25level_zero_recipe_handler6submitE24ze_command_list_handle_t17ze_event_handle_t8uint32_tP17ze_event_handle_t"></span><span id="_CPPv2N6tinytc25level_zero_recipe_handler6submitE24ze_command_list_handle_t17ze_event_handle_t8uint32_tP17ze_event_handle_t"></span><span id="tinytc::level_zero_recipe_handler::submit__ze_command_list_handle_t.ze_event_handle_t.uint32_t.ze_event_handle_tP"></span><span class="target" id="classtinytc_1_1level__zero__recipe__handler_1a42b067accaf1b067b3e13e3898087d3c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">submit</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_command_list_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">list</span></span>, <span class="n"><span class="pre">ze_event_handle_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">signal_event</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">num_wait_events</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span>, <span class="n"><span class="pre">ze_event_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">wait_events</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc25level_zero_recipe_handler6submitE24ze_command_list_handle_t17ze_event_handle_t8uint32_tP17ze_event_handle_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Append recipe to command list. </p>
+<p>Cf. <a class="reference internal" href="capi.html#tinytc__ze_8h_1a2e7d858ee37a3ba97b78fe6dde33e1c0"><span class="std std-ref">tinytc_ze_recipe_handler_submit</span></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>list</strong> – Command list </p></li>
+<li><p><strong>signal_event</strong> – Event to be signalled on completetion </p></li>
+<li><p><strong>num_wait_events</strong> – Number of wait events to wait on </p></li>
+<li><p><strong>wait_events</strong> – Array of num_wait_events events to wait on </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="capi.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">C-API</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#ze-check-status">ZE_CHECK_STATUS</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-core-info-ze-device-handle-t">make_core_info(ze_device_handle_t)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-count">get_group_count</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-size-ze-kernel-handle-t">get_group_size(ze_kernel_handle_t)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-ze-module-handle-t-char-const">make_kernel(ze_module_handle_t,char const *)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-ze-context-handle-t-ze-device-handle-t-binary-const-ze-module-build-log-handle-t">make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&amp;,ze_module_build_log_handle_t*)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-ze-context-handle-t-ze-device-handle-t-recipe-const">make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&amp;)</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-classes">Recipe Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#level-zero-recipe-handler">level_zero_recipe_handler</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Intel
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2024, Intel Corporation.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../_static/scripts/bootstrap.js?digest=8d27b9dea8ad943066ae"></script>
+<script src="../../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

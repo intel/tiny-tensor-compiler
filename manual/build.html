@@ -30,6 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
     <link rel="stylesheet" type="text/css" href="../_static/fix-scrollbar-bug.css?v=1c140a14" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -44,7 +45,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'manual/build';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Basic usage" href="usage.html" />
+    <link rel="next" title="Core programming guide" href="core.html" />
     <link rel="prev" title="Tiny Tensor Compiler" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -149,47 +150,33 @@
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Building and linking</a></li>
-<li class="toctree-l1"><a class="reference internal" href="usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/introduction.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/parser.html">Parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/jit.html">JIT compiler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/runtime.html">Runtime</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../api/recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../api/recipe/small_gemm_batched.html">Batched small GEMM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../api/ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../api/ir/builder.html">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/ir/tiling.html">Work-group size</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/ir/passes.html">Compiler passes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/ir/generator.html">GEMM generator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../api/ir/error.html">Error handling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/cl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/ze/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/ze/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/ze/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/cl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/cl/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/cl/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../api/sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../api/sycl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../api/sycl/runtime.html">Runtime</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../api/ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../api/ze/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
 </ul>
@@ -463,7 +450,7 @@ package manager.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">git clone https://github.com/intel/double-batched-fft-library.git</span>
 </pre></div>
 </div>
-<p>We only need libclir.so, which we build and install using the following steps.</p>
+<p>We only need libclir.so that we build and install using the following steps.</p>
 <div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">cd double-batched-fft-library/clir/</span>
 <span class="go">cmake -Bbuild -GNinja -DCMAKE_CXX_COMPILER=icpx -DCMAKE_INSTALL_PREFIX=$(pwd)/../../install/ \</span>
 <span class="go">      -DCMAKE_CXX_FLAGS=&quot;-ffp-model=precise&quot; -DBUILD_SHARED_LIBS=YES</span>
@@ -500,14 +487,14 @@ package manager.</p>
 <tr class="row-odd"><td><p>BUILD_TESTING</p></td>
 <td><p>Build unit tests</p></td>
 </tr>
+<tr class="row-even"><td><p>BUILD_LEVEL_ZERO</p></td>
+<td><p>Build libtinytc_ze for Level Zero support (enforced if BUILD_SYCL=ON)</p></td>
+</tr>
+<tr class="row-odd"><td><p>BUILD_OPENCL</p></td>
+<td><p>Build libtinytc_cl for OpenCL support (enforced if BUILD_SYCL=ON)</p></td>
+</tr>
 <tr class="row-even"><td><p>BUILD_SYCL</p></td>
-<td><p>Build libtinytc-sycl for SYCL support</p></td>
-</tr>
-<tr class="row-odd"><td><p>BUILD_LEVEL_ZERO</p></td>
-<td><p>Build libtinytc-level-zero for Level Zero support (enforced if BUILD_SYCL=ON)</p></td>
-</tr>
-<tr class="row-even"><td><p>BUILD_OPENCL</p></td>
-<td><p>Build libtinytc-opencl for OpenCL support (enforced if BUILD_SYCL=ON)</p></td>
+<td><p>Build libtinytc_sycl for SYCL support</p></td>
 </tr>
 </tbody>
 </table>
@@ -524,16 +511,17 @@ package manager.</p>
 <p>For non-standard installation directories add -DCMAKE_PREFIX_PATH=/path/to/installation
 when invoking cmake.</p>
 </div>
-<p>Runtime support is split in the three library tinytc-level-zero, tinytc-opencl, and tinytc-sycl.
-The BUILD_(SYCL, LEVEL_ZERO, OPENCL) options control which libraries are built.
+<p>Runtime support is split in the three library libtinytc_ze, libtinytc_cl, and libtinytc_sycl.
+The BUILD_(LEVEL_ZERO, OPENCL, SYCL) options control which libraries are built, respectively.
 For example, when using OpenCL only, you can set BUILD_SYCL=OFF such that you do
 not need a C++ compiler with SYCL support.</p>
 <p>For runtime support you have to add one of the following <cite>find_package</cite> calls to your CMakeLists.txt:</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-sycl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
-<span class="c"># or</span>
-<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-level-zero</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
-<span class="c"># or</span>
-<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc-opencl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="c"># For SYCL</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc_sycl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+<span class="c"># For Level Zero</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc_ze</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
+<span class="c"># For OpenCL</span>
+<span class="nb">find_package</span><span class="p">(</span><span class="s">tinytc_cl</span><span class="w"> </span><span class="s">REQUIRED</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -541,11 +529,11 @@ not need a C++ compiler with SYCL support.</p>
 <p>You can add “static” or “shared” after “REQUIRED” to explicitly request the static or shared library version.</p>
 </div>
 <p>For linking and setting up include directories you only need</p>
-<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc-sycl</span><span class="p">)</span>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc_sycl</span><span class="p">)</span>
 <span class="c"># or</span>
-<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc-level-zero</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc_ze</span><span class="p">)</span>
 <span class="c"># or</span>
-<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::opencl</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">your-target</span><span class="w"> </span><span class="s">PRIVATE</span><span class="w"> </span><span class="s">tinytc::tinytc</span><span class="w"> </span><span class="s">tinytc::tinytc_cl</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -572,11 +560,11 @@ not need a C++ compiler with SYCL support.</p>
       </div>
     </a>
     <a class="right-next"
-       href="usage.html"
+       href="core.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Basic usage</p>
+        <p class="prev-next-title">Core programming guide</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

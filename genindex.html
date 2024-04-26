@@ -29,6 +29,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
     <link rel="stylesheet" type="text/css" href="_static/fix-scrollbar-bug.css?v=1c140a14" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -39,6 +40,7 @@
     <script src="_static/documentation_options.js?v=9eb32ce0"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/tabs.js?v=3030b3cb"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
     <link rel="index" title="Index" href="#" />
@@ -148,47 +150,33 @@
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="manual/build.html">Building and linking</a></li>
-<li class="toctree-l1"><a class="reference internal" href="manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual/calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/introduction.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/parser.html">Parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/jit.html">JIT compiler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/runtime.html">Runtime</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/recipe/small_gemm_batched.html">Batched small GEMM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/builder.html">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/tiling.html">Work-group size</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/passes.html">Compiler passes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/generator.html">GEMM generator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/error.html">Error handling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/runtime.html">Runtime</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
 </ul>
@@ -345,23 +333,35 @@ document.write(`
 
 <div class="genindex-jumpbox">
  <a href="#C"><strong>C</strong></a>
- | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#Z"><strong>Z</strong></a>
  
 </div>
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/cl/error.html#c.CL_CHECK">CL_CHECK (C macro)</a>
+      <li><a href="api/core_capi.html#c.const_tinytc_binary_t">const_tinytc_binary_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.const_tinytc_core_info_t">const_tinytc_core_info_t (C type)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.const_tinytc_data_type_t">const_tinytc_data_type_t (C type)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.const_tinytc_func_t">const_tinytc_func_t (C type)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.const_tinytc_inst_t">const_tinytc_inst_t (C type)</a>
 </li>
   </ul></td>
-</tr></table>
-
-<h2 id="S">S</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/ir/error.html#_CPPv4NStlsER7ostreamRKN6tinytc2ir8locationE">std::operator&lt;&lt; (C++ function)</a>, <a href="api/ir/error.html#_CPPv4NStlsER7ostreamRKN6tinytc2ir8positionE">[1]</a>
+      <li><a href="api/builder_capi.html#c.const_tinytc_prog_t">const_tinytc_prog_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.const_tinytc_recipe_handler_t">const_tinytc_recipe_handler_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.const_tinytc_recipe_t">const_tinytc_recipe_t (C type)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.const_tinytc_region_t">const_tinytc_region_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.const_tinytc_source_context_t">const_tinytc_source_context_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.const_tinytc_source_t">const_tinytc_source_t (C type)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -369,757 +369,1393 @@ document.write(`
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/jit.html#_CPPv4N6tinytc6binaryE">tinytc::binary (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc13auto_mem_typeE">tinytc::auto_mem_type (C++ struct)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc6binary6binaryENSt6vectorINSt7uint8_tEEE13bundle_formatNSt13unordered_mapINSt6stringE15kernel_metadataEENSt8uint32_tE">tinytc::binary::binary (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc15auto_mem_type_vE">tinytc::auto_mem_type_v (C++ member)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc6binary13core_featuresEv">tinytc::binary::core_features (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binaryE">tinytc::binary (C++ class)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc6binary4dataEv">tinytc::binary::data (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary17get_core_featuresEv">tinytc::binary::get_core_features (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc6binary6formatEv">tinytc::binary::format (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary7get_rawEv">tinytc::binary::get_raw (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc6binary8metadataERKNSt6stringE">tinytc::binary::metadata (C++ function)</a>, <a href="api/jit.html#_CPPv4NK6tinytc6binary8metadataEv">[1]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary3rawE">tinytc::binary::raw (C++ struct)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc6binary4sizeEv">tinytc::binary::size (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary3raw4dataE">tinytc::binary::raw::data (C++ member)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc13bundle_formatE">tinytc::bundle_format (C++ enum)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary3raw9data_sizeE">tinytc::binary::raw::data_size (C++ member)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc13bundle_format6nativeE">tinytc::bundle_format::native (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary3raw6formatE">tinytc::binary::raw::format (C++ member)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc13bundle_format5spirvE">tinytc::bundle_format::spirv (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary13shared_handleE1Tb">tinytc::binary::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6binary13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/cl/error.html#_CPPv4N6tinytc19cl_status_to_stringE6cl_int">tinytc::cl_status_to_string (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_opE">tinytc::binary_op (C++ enum)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc16compile_opencl_cERKNSt6stringE13bundle_formatNSt8uint32_tERKNSt6vectorINSt6stringEEERKNSt6vectorINSt6stringEEE">tinytc::compile_opencl_c (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_op3addE">tinytc::binary_op::add (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_configE">tinytc::core_config (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_op3divE">tinytc::binary_op::div (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config13core_featuresE">tinytc::core_config::core_features (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_op3mulE">tinytc::binary_op::mul (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config10ip_versionE">tinytc::core_config::ip_version (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_op3remE">tinytc::binary_op::rem (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config17local_memory_sizeE">tinytc::core_config::local_memory_size (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9binary_op3subE">tinytc::binary_op::sub (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config24max_number_of_work_itemsE">tinytc::core_config::max_number_of_work_items (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13builder_errorE">tinytc::builder_error (C++ class)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config14register_spaceE">tinytc::core_config::register_space (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13builder_error13builder_errorE6statusRK8location">tinytc::builder_error::builder_error (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc11core_config13subgroup_sizeE">tinytc::core_config::subgroup_size (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc13builder_error4codeEv">tinytc::builder_error::code (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc17core_feature_flagE">tinytc::core_feature_flag (C++ enum)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc13builder_error3locEv">tinytc::builder_error::loc (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc17core_feature_flag19large_register_fileE">tinytc::core_feature_flag::large_register_file (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc13builder_error4whatEv">tinytc::builder_error::what (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc9core_infoE">tinytc::core_info (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13bundle_formatE">tinytc::bundle_format (C++ enum)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag">tinytc::core_info::clear_core_feature (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13bundle_format6nativeE">tinytc::bundle_format::native (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info13core_featuresEv">tinytc::core_info::core_features (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13bundle_format5spirvE">tinytc::bundle_format::spirv (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info15get_core_configENSt8uint32_tE">tinytc::core_info::get_core_config (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc12CHECK_STATUSE15tinytc_status_t">tinytc::CHECK_STATUS (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info10ip_versionEv">tinytc::core_info::ip_version (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc16CHECK_STATUS_LOCE15tinytc_status_tRK8location">tinytc::CHECK_STATUS_LOC (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info24num_registers_per_threadEv">tinytc::core_info::num_registers_per_thread (C++ function)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc15CL_CHECK_STATUSE6cl_int">tinytc::CL_CHECK_STATUS (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info13register_sizeEv">tinytc::core_info::register_size (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_conditionE">tinytc::cmp_condition (C++ enum)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag">tinytc::core_info::set_core_feature (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2eqE">tinytc::cmp_condition::eq (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc9core_info14subgroup_sizesEv">tinytc::core_info::subgroup_sizes (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2geE">tinytc::cmp_condition::ge (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc9core_infoD0Ev">tinytc::core_info::~core_info (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2gtE">tinytc::cmp_condition::gt (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15core_info_intelE">tinytc::core_info_intel (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2leE">tinytc::cmp_condition::le (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15core_info_intel18clear_core_featureE17core_feature_flag">tinytc::core_info_intel::clear_core_feature (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2ltE">tinytc::cmp_condition::lt (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel13core_featuresEv">tinytc::core_info_intel::core_features (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13cmp_condition2neE">tinytc::cmp_condition::ne (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15core_info_intel15core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE">tinytc::core_info_intel::core_info_intel (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc17compile_to_binaryE4progRK9core_info13bundle_format14source_context">tinytc::compile_to_binary (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc17compile_to_binaryERK6sourceRK9core_info13bundle_format14source_context">[1]</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel15get_core_configENSt8uint32_tE">tinytc::core_info_intel::get_core_config (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc17compile_to_openclE4progRK9core_info14source_context">tinytc::compile_to_opencl (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel10ip_versionEv">tinytc::core_info_intel::ip_version (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc17core_feature_flagE">tinytc::core_feature_flag (C++ enum)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel24num_registers_per_threadEv">tinytc::core_info_intel::num_registers_per_thread (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc17core_feature_flag19large_register_fileE">tinytc::core_feature_flag::large_register_file (C++ enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel13register_sizeEv">tinytc::core_info_intel::register_size (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_infoE">tinytc::core_info (C++ class)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15core_info_intel16set_core_featureE17core_feature_flag">tinytc::core_info_intel::set_core_feature (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info18clear_core_featureE17core_feature_flag">tinytc::core_info::clear_core_feature (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4NK6tinytc15core_info_intel14subgroup_sizesEv">tinytc::core_info_intel::subgroup_sizes (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info14get_ip_versionEv">tinytc::core_info::get_ip_version (C++ function)</a>
 </li>
-      <li><a href="api/cl/info.html#_CPPv4N6tinytc13get_core_infoE12cl_device_id">tinytc::get_core_info (C++ function)</a>, <a href="api/sycl/info.html#_CPPv4N6tinytc13get_core_infoEN4sycl6deviceE">[1]</a>, <a href="api/ze/info.html#_CPPv4N6tinytc13get_core_infoE18ze_device_handle_t">[2]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info28get_num_registers_per_threadEv">tinytc::core_info::get_num_registers_per_thread (C++ function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc23get_core_info_intel_gpuE22intel_gpu_architecture">tinytc::get_core_info_intel_gpu (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info17get_register_sizeEv">tinytc::core_info::get_register_size (C++ function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc15get_group_countENSt8uint32_tE">tinytc::get_group_count (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info18get_subgroup_sizesEP8uint32_tPPK8uint32_t">tinytc::core_info::get_subgroup_sizes (C++ function)</a>
 </li>
-      <li><a href="api/cl/info.html#_CPPv4N6tinytc19get_number_of_coresE12cl_device_id">tinytc::get_number_of_cores (C++ function)</a>, <a href="api/sycl/info.html#_CPPv4N6tinytc19get_number_of_coresEN4sycl6deviceE">[1]</a>, <a href="api/ze/info.html#_CPPv4N6tinytc19get_number_of_coresE18ze_device_handle_t">[2]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info16set_core_featureE17core_feature_flag">tinytc::core_info::set_core_feature (C++ function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc19get_opencl_nd_rangeENSt5arrayINSt8uint32_tEXL2EEEENSt6size_tE">tinytc::get_opencl_nd_range (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info13shared_handleE1Tb">tinytc::core_info::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc9core_info13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc17get_sycl_nd_rangeENSt5arrayINSt8uint32_tEXL2EEEENSt6size_tE">tinytc::get_sycl_nd_range (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9data_typeE">tinytc::data_type (C++ class)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc10git_commitE">tinytc::git_commit (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9data_type13shared_handleE1Tb">tinytc::data_type::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9data_type13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9data_type13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9data_type13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc22intel_gpu_architectureE">tinytc::intel_gpu_architecture (C++ enum)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc7dynamicE">tinytc::dynamic (C++ member)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc22intel_gpu_architecture3pvcE">tinytc::intel_gpu_architecture::pvc (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc12error_stringE6status">tinytc::error_string (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir14alias_analysisE4func">tinytc::ir::alias_analysis (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4funcE">tinytc::func (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_opE">tinytc::ir::binary_op (C++ enum)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4func13shared_handleE1Tb">tinytc::func::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4func13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4func13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4func13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_op3addE">tinytc::ir::binary_op::add (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builderE">tinytc::function_builder (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_op3divE">tinytc::ir::binary_op::div (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builder8argumentERK9data_typeRKNSt6stringERK8location">tinytc::function_builder::argument (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_op3mulE">tinytc::ir::binary_op::mul (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc16function_builder4bodyEvRR1FRK8location">tinytc::function_builder::body (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_op3remE">tinytc::ir::binary_op::rem (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builder16function_builderENSt6stringE">tinytc::function_builder::function_builder (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9binary_op3subE">tinytc::ir::binary_op::sub (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builder11get_productERK8location">tinytc::function_builder::get_product (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir10blas_shapeE">tinytc::ir::blas_shape (C++ struct)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builder13subgroup_sizeENSt8uint32_tE">tinytc::function_builder::subgroup_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir10blas_shapeneERK10blas_shape">tinytc::ir::blas_shape::operator!= (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE">tinytc::function_builder::work_group_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir10blas_shapeeqERK10blas_shape">tinytc::ir::blas_shape::operator== (C++ function)</a>
+      <li><a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19get_execution_rangeERKN4sycl6kernelENSt8uint32_tE">tinytc::get_execution_range (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir10blas_shape5shapeE">tinytc::ir::blas_shape::shape (C++ member)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc15get_global_sizeENSt8uint32_tERKNSt5arrayINSt6size_tEXL3uEEEE">tinytc::get_global_size (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc15get_global_sizeENSt8uint32_tERKN4sycl5rangeIXL3uEEEE">[1]</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir10blas_shape2tyE">tinytc::ir::blas_shape::ty (C++ member)</a>
+      <li><a href="api/ze/cxxapi.html#_CPPv4N6tinytc15get_group_countENSt8uint32_tE">tinytc::get_group_count (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir8check_irE4prog23error_reporter_function">tinytc::ir::check_ir (C++ function)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc14get_group_sizeE9cl_kernel">tinytc::get_group_size (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc14get_group_sizeERKN4sycl6kernelE">[1]</a>, <a href="api/ze/cxxapi.html#_CPPv4N6tinytc14get_group_sizeE18ze_kernel_handle_t">[2]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_conditionE">tinytc::ir::cmp_condition (C++ enum)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4instE">tinytc::inst (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2eqE">tinytc::ir::cmp_condition::eq (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc4inst9get_valueEv">tinytc::inst::get_value (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2geE">tinytc::ir::cmp_condition::ge (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc4inst10get_valuesEv">tinytc::inst::get_values (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2gtE">tinytc::ir::cmp_condition::gt (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4inst13shared_handleE1Tb">tinytc::inst::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4inst13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4inst13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4inst13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2leE">tinytc::ir::cmp_condition::le (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc22intel_gpu_architectureE">tinytc::intel_gpu_architecture (C++ enum)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2ltE">tinytc::ir::cmp_condition::lt (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc22intel_gpu_architecture3pvcE">tinytc::intel_gpu_architecture::pvc (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir13cmp_condition2neE">tinytc::ir::cmp_condition::ne (C++ enumerator)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc16is_dynamic_valueENSt7int64_tE">tinytc::is_dynamic_value (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir17compilation_errorE">tinytc::ir::compilation_error (C++ class)</a>
+      <li><a href="api/ze/cxxapi.html#_CPPv4N6tinytc25level_zero_recipe_handlerE">tinytc::level_zero_recipe_handler (C++ class)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir17compilation_error17compilation_errorERK8locationRKNSt6stringE">tinytc::ir::compilation_error::compilation_error (C++ function)</a>
+      <li><a href="api/ze/cxxapi.html#_CPPv4N6tinytc25level_zero_recipe_handler6submitE24ze_command_list_handle_t17ze_event_handle_t8uint32_tP17ze_event_handle_t">tinytc::level_zero_recipe_handler::submit (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4NK6tinytc2ir17compilation_error3locEv">tinytc::ir::compilation_error::loc (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8locationE">tinytc::location (C++ type)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4NK6tinytc2ir17compilation_error4whatEv">tinytc::ir::compilation_error::what (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11make_allocaERK9data_typeRK8location">tinytc::make_alloca (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9data_typeE">tinytc::ir::data_type (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_axpbyE9transposebRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_axpby (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9data_type9data_typeE11scalar_type">tinytc::ir::data_type::data_type (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc14make_binary_opE9binary_opRK5valueRK5valueRK8location">tinytc::make_binary_op (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir7dump_irERNSt7ostreamE4func">tinytc::ir::dump_ir (C++ function)</a>, <a href="api/ir/passes.html#_CPPv4N6tinytc2ir7dump_irERNSt7ostreamE4prog">[1]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_castERK5value11scalar_typeRK8location">tinytc::make_cast (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir7dynamicE">tinytc::ir::dynamic (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_cmpE13cmp_conditionRK5valueRK5valueRK8location">tinytc::make_cmp (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir23error_reporter_functionE">tinytc::ir::error_reporter_function (C++ type)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc14make_core_infoE12cl_device_id">tinytc::make_core_info (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc14make_core_infoERKN4sycl6deviceE">[1]</a>, <a href="api/ze/cxxapi.html#_CPPv4N6tinytc14make_core_infoE18ze_device_handle_t">[2]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir4funcE">tinytc::ir::func (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc20make_core_info_intelENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt6vectorINSt8uint32_tEEE">tinytc::make_core_info_intel (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builderE">tinytc::ir::function_builder (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc30make_core_info_intel_from_archE22intel_gpu_architecture">tinytc::make_core_info_intel_from_arch (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builder8argumentE9data_typeRKNSt6stringEKNSt15source_locationE">tinytc::ir::function_builder::argument (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc12make_dynamicERK8location">tinytc::make_dynamic (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir16function_builder4bodyEvRR1F">tinytc::ir::function_builder::body (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11make_expandERK5valueNSt7int64_tERKNSt6vectorI5valueEERK8location">tinytc::make_expand (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builder16function_builderENSt6stringE">tinytc::ir::function_builder::function_builder (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_forERK5valueRK5valueRK5valueRK5valueRK6regionRK8location">tinytc::make_for (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builder11get_productEv">tinytc::ir::function_builder::get_product (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc12make_foreachERK5valueRK5valueRK5valueRK6regionRK8location">tinytc::make_foreach (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builder13subgroup_sizeENSt8uint32_tE">tinytc::ir::function_builder::subgroup_size (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13make_functionERK4funcRK6regionRK8location">tinytc::make_function (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE">tinytc::ir::function_builder::work_group_size (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc23make_function_prototypeEPKcRNSt6vectorI5valueEERK8location">tinytc::make_function_prototype (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configurationE">tinytc::ir::gemm_configuration (C++ struct)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_fuseERK5valueNSt7int64_tENSt7int64_tERK8location">tinytc::make_fuse (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration8A_strideE">tinytc::ir::gemm_configuration::A_stride (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_gemmE9transpose9transposebRK5valueRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_gemm (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration5alphaE">tinytc::ir::gemm_configuration::alpha (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_gemvE9transposebRK5valueRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_gemv (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration6atomicE">tinytc::ir::gemm_configuration::atomic (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_gerEbRK5valueRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_ger (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration8B_strideE">tinytc::ir::gemm_configuration::B_stride (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_groupERK9data_typeRK8location">tinytc::make_group (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration4betaE">tinytc::ir::gemm_configuration::beta (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13make_group_idERK8location">tinytc::make_group_id (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration8C_strideE">tinytc::ir::gemm_configuration::C_stride (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc15make_group_sizeERK8location">tinytc::make_group_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4NK6tinytc2ir18gemm_configuration10identifierENSt11string_viewE">tinytc::ir::gemm_configuration::identifier (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc13make_hadamardEbRK5valueRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_hadamard (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration1KE">tinytc::ir::gemm_configuration::K (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc7make_ifERK5valueRK6regionRK6regionRKNSt6vectorI11scalar_typeEERK8location">tinytc::make_if (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration1ME">tinytc::ir::gemm_configuration::M (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immENSt6int8_tERK8location">tinytc::make_imm (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immENSt7int16_tERK8location">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immENSt7int32_tERK8location">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immENSt7int64_tE11scalar_typeRK8location">[3]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immENSt8uint32_tERK8location">[4]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immEd11scalar_typeRK8location">[5]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_immEfRK8location">[6]</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration1NE">tinytc::ir::gemm_configuration::N (C++ member)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc11make_kernelE10cl_programPKc">tinytc::make_kernel (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc11make_kernelERKN4sycl13kernel_bundleIN4sycl12bundle_state10executableEEEPKc">[1]</a>, <a href="api/ze/cxxapi.html#_CPPv4N6tinytc11make_kernelE18ze_module_handle_tPKc">[2]</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration6transAE">tinytc::ir::gemm_configuration::transA (C++ member)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary">tinytc::make_kernel_bundle (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc18make_kernel_bundleERKN4sycl7contextERKN4sycl6deviceERK6binary">[1]</a>, <a href="api/ze/cxxapi.html#_CPPv4N6tinytc18make_kernel_bundleE19ze_context_handle_t18ze_device_handle_tRK6binaryP28ze_module_build_log_handle_t">[2]</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration6transBE">tinytc::ir::gemm_configuration::transB (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_loadERK5valueRKNSt6vectorI5valueEERK8location">tinytc::make_load (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir18gemm_configuration2tyE">tinytc::ir::gemm_configuration::ty (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11make_memrefE11scalar_typeRKNSt6vectorINSt7int64_tEEERKNSt6vectorINSt7int64_tEEERK8location">tinytc::make_memref (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_typeE">tinytc::ir::gemm_scalar_type (C++ struct)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_negERK5valueRK8location">tinytc::make_neg (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type1AE">tinytc::ir::gemm_scalar_type::A (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc12make_programERNSt6vectorI4funcEERK8location">tinytc::make_program (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type5alphaE">tinytc::ir::gemm_scalar_type::alpha (C++ member)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe">tinytc::make_recipe_handler (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19make_recipe_handlerERKN4sycl5queueERK6recipe">[1]</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19make_recipe_handlerERKN4sycl7contextERKN4sycl6deviceERK6recipe">[2]</a>, <a href="api/ze/cxxapi.html#_CPPv4N6tinytc19make_recipe_handlerE19ze_context_handle_t18ze_device_handle_tRK6recipe">[3]</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type1BE">tinytc::ir::gemm_scalar_type::B (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11make_regionERNSt6vectorI4instEERK8location">tinytc::make_region (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type4betaE">tinytc::ir::gemm_scalar_type::beta (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11make_scalarE11scalar_typeRK8location">tinytc::make_scalar (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type1CE">tinytc::ir::gemm_scalar_type::C (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9make_sizeERK5valueNSt7int64_tERK8location">tinytc::make_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type16gemm_scalar_typeE11scalar_type">tinytc::ir::gemm_scalar_type::gemm_scalar_type (C++ function)</a>, <a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type16gemm_scalar_typeE11scalar_type11scalar_type">[1]</a>, <a href="api/ir/generator.html#_CPPv4N6tinytc2ir16gemm_scalar_type16gemm_scalar_typeE11scalar_type11scalar_type11scalar_type11scalar_type11scalar_type">[2]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc23make_small_gemm_batchedERK9core_info11scalar_type9transpose9transpose8uint32_t8uint32_t8uint32_t8uint32_t8uint32_t8uint32_t8uint32_t8uint32_t8uint32_t14source_context">tinytc::make_small_gemm_batched (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir13generate_gemmERK18gemm_configurationRK12local_tilingRK11core_configNSt11string_viewEN4clir13address_spaceEN4clir13address_spaceEN4clir13address_spaceE">tinytc::ir::generate_gemm (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc19make_source_contextEv">tinytc::make_source_context (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir19generate_opencl_astE4progNSt10shared_ptrI9core_infoEE">tinytc::ir::generate_opencl_ast (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_storeERK5valueRK5valueRKNSt6vectorI5valueEERK8location">tinytc::make_store (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir10group_typeE9data_type">tinytc::ir::group_type (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc12make_subviewERK5valueRKNSt6vectorI5valueEERKNSt6vectorI5valueEERK8location">tinytc::make_subview (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir15insert_barriersE4func">tinytc::ir::insert_barriers (C++ function)</a>, <a href="api/ir/passes.html#_CPPv4N6tinytc2ir15insert_barriersE4prog">[1]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8make_sumE9transposebRK5valueRK5valueRK5valueRK5valueRK8location">tinytc::make_sum (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir25insert_lifetime_stop_instE4func">tinytc::ir::insert_lifetime_stop_inst (C++ function)</a>, <a href="api/ir/passes.html#_CPPv4N6tinytc2ir25insert_lifetime_stop_instE4prog">[1]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc20make_tall_and_skinnyERK9core_info11scalar_typeNSt8uint32_tENSt8uint32_tENSt8uint32_tE14source_context">tinytc::make_tall_and_skinny (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir4instE">tinytc::ir::inst (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_valueE11scalar_typeRK8location">tinytc::make_value (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_valueERK9data_typeRK8location">[1]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9inst_kindE">tinytc::ir::inst_kind (C++ enum)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc10make_yieldERKNSt6vectorI5valueEERK8location">tinytc::make_yield (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9inst_kind10collectiveE">tinytc::ir::inst_kind::collective (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc3memE">tinytc::mem (C++ struct)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9inst_kind10replicatedE">tinytc::ir::inst_kind::replicated (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc3mem3memEK1T8mem_type">tinytc::mem::mem (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16is_dynamic_valueENSt7int64_tE">tinytc::ir::is_dynamic_value (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc8mem_typeE">tinytc::mem_type (C++ enum)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir8is_equalE9data_type9data_type">tinytc::ir::is_equal (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc8mem_type6bufferE">tinytc::mem_type::buffer (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir16is_floating_typeE11scalar_type">tinytc::ir::is_floating_type (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc8mem_type11svm_pointerE">tinytc::mem_type::svm_pointer (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir12local_tilingE">tinytc::ir::local_tiling (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc8mem_type11usm_pointerE">tinytc::mem_type::usm_pointer (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir12local_tiling7m_tilesEv">tinytc::ir::local_tiling::m_tiles (C++ function)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc21opencl_recipe_handlerE">tinytc::opencl_recipe_handler (C++ class)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir12local_tiling7n_tilesEv">tinytc::ir::local_tiling::n_tiles (C++ function)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc21opencl_recipe_handler6submitE16cl_command_queue8uint32_tP8cl_event">tinytc::opencl_recipe_handler::submit (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir12local_tiling20number_of_work_itemsENSt8uint32_tE">tinytc::ir::local_tiling::number_of_work_items (C++ function)</a>
+      <li><a href="api/cl/cxxapi.html#_CPPv4N6tinytc21opencl_recipe_handler15submit_no_eventE16cl_command_queue8uint32_tP8cl_event">tinytc::opencl_recipe_handler::submit_no_event (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4NK6tinytc2ir12local_tiling15work_group_sizeENSt8uint32_tE">tinytc::ir::local_tiling::work_group_size (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc10parse_fileEPKc14source_context">tinytc::parse_file (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8locationE">tinytc::ir::location (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc11parse_stdinE14source_context">tinytc::parse_stdin (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8location5beginE">tinytc::ir::location::begin (C++ member)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc12parse_stringERKNSt6stringE14source_context">tinytc::parse_string (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8location7columnsEi">tinytc::ir::location::columns (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc8positionE">tinytc::position (C++ type)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8location3endE">tinytc::ir::location::end (C++ member)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4progE">tinytc::prog (C++ class)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8location5linesEi">tinytc::ir::location::lines (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc4prog4dumpEv">tinytc::prog::dump (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8location4stepEv">tinytc::ir::location::step (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc4prog13print_to_fileEPKc">tinytc::prog::print_to_file (C++ function)</a>
 </li>
-      <li><a href="api/ir/generator.html#_CPPv4N6tinytc2ir23max_register_block_gemmENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt4pairINSt8uint32_tENSt8uint32_tEEE">tinytc::ir::max_register_block_gemm (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc4prog15print_to_stringEv">tinytc::prog::print_to_string (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11memref_typeE11scalar_typeNSt6vectorINSt7int64_tEEENSt6vectorINSt7int64_tEEERK8location">tinytc::ir::memref_type (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4prog13shared_handleE1Tb">tinytc::prog::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4prog13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4prog13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc4prog13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2irplE8positioni">tinytc::ir::operator+ (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc15program_builderE">tinytc::program_builder (C++ class)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2irpLER8positioni">tinytc::ir::operator+= (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc15program_builder3addE4func">tinytc::program_builder::add (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2irmiE8positioni">tinytc::ir::operator- (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc15program_builder6createEvNSt6stringERR1FRK8location">tinytc::program_builder::create (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2irmIER8positioni">tinytc::ir::operator-= (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc15program_builder11get_productERK8location">tinytc::program_builder::get_product (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8positionE">tinytc::ir::position (C++ class)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6recipeE">tinytc::recipe (C++ class)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position6columnE">tinytc::ir::position::column (C++ member)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc6recipe10get_binaryEv">tinytc::recipe::get_binary (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position7columnsEi">tinytc::ir::position::columns (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc6recipe8get_progEv">tinytc::recipe::get_prog (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position11count_startE">tinytc::ir::position::count_start (C++ member)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6recipe13shared_handleE1Tb">tinytc::recipe::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6recipe13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6recipe13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6recipe13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position8filenameE">tinytc::ir::position::filename (C++ member)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14recipe_handlerE">tinytc::recipe_handler (C++ class)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position4lineE">tinytc::ir::position::line (C++ member)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc14recipe_handler10get_recipeEv">tinytc::recipe_handler::get_recipe (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir8position5linesEi">tinytc::ir::position::lines (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14recipe_handler13shared_handleE1Tb">tinytc::recipe_handler::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14recipe_handler13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14recipe_handler13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14recipe_handler13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir4progE">tinytc::ir::prog (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc6regionE">tinytc::region (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir4prog4progE4func">tinytc::ir::prog::prog (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir4prog4progENSt6vectorI4funcEE">[1]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc6region13shared_handleE1Tb">tinytc::region::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc6region13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc6region13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc6region13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir15program_builderE">tinytc::ir::program_builder (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc14region_builderE">tinytc::region_builder (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir15program_builder3addE4func">tinytc::ir::program_builder::add (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc14region_builder3addE4instRKNSt6stringE">tinytc::region_builder::add (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir15program_builder6createEvNSt6stringERR1F">tinytc::ir::program_builder::create (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc14region_builder15add_multivaluedE4instRKNSt6stringE">tinytc::region_builder::add_multivalued (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir15program_builder11get_productEv">tinytc::ir::program_builder::get_product (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc14region_builder8for_loopEv11scalar_typeRK5valueRK5valueRK5valueRR1FRKNSt6stringERK8location">tinytc::region_builder::for_loop (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc14region_builder8for_loopEv11scalar_typeRK5valueRK5valueRR1FRKNSt6stringERK8location">[1]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir6regionE">tinytc::ir::region (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc14region_builder7foreachEvRK9data_typeRK5valueRK5valueRR1FRKNSt6stringERK8location">tinytc::region_builder::foreach (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builderE">tinytc::ir::region_builder (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc14region_builder11get_productERK8location">tinytc::region_builder::get_product (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_addE5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_add (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc14region_builder12if_conditionENSt6vectorI5valueEERK5valueRR1FRKNSt6vectorI11scalar_typeEERK8location">tinytc::region_builder::if_condition (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder13create_allocaE9data_typeRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_alloca (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I00EN6tinytc14region_builder6ifelseENSt6vectorI5valueEERK5valueRR1FRR1GRKNSt6vectorI11scalar_typeEERK8location">tinytc::region_builder::ifelse (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder12create_axpbyE9transpose5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_axpby (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_typeE">tinytc::scalar_type (C++ enum)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder14create_barrierEKNSt15source_locationE">tinytc::ir::region_builder::create_barrier (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type5bool_E">tinytc::scalar_type::bool_ (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_castE5value11scalar_typeRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_cast (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3f32E">tinytc::scalar_type::f32 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_cmpE13cmp_condition5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_cmp (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3f64E">tinytc::scalar_type::f64 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_divE5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_div (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3i16E">tinytc::scalar_type::i16 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder13create_expandE5valueNSt7int64_tENSt6vectorI5valueEERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_expand (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3i32E">tinytc::scalar_type::i32 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir14region_builder10create_forEv9data_type5value5value5valueRR1FRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_for (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir14region_builder10create_forEv9data_type5value5valueRR1FRKNSt6stringEKNSt15source_locationE">[1]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_forE5value5value5value5value6regionKNSt15source_locationE">[2]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_forE5value5value5value6regionKNSt15source_locationE">[3]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3i64E">tinytc::scalar_type::i64 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir14region_builder14create_foreachEv9data_type5value5valueRR1FRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_foreach (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder14create_foreachE5value5value5value6regionKNSt15source_locationE">[1]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type2i8E">tinytc::scalar_type::i8 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_fuseE5valueNSt7int64_tENSt7int64_tERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_fuse (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type5indexE">tinytc::scalar_type::index (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_gemmE9transpose9transpose5value5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_gemm (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3u16E">tinytc::scalar_type::u16 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_gemvE9transpose5value5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_gemv (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3u32E">tinytc::scalar_type::u32 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_gerE5value5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_ger (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type3u64E">tinytc::scalar_type::u64 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder15create_group_idERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_group_id (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc11scalar_type2u8E">tinytc::scalar_type::u8 (C++ enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder17create_group_sizeERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_group_size (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc17set_subgroup_sizeER4func8uint32_t">tinytc::set_subgroup_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder15create_hadamardE5value5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_hadamard (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc19set_work_group_sizeER4func8uint32_t8uint32_t">tinytc::set_work_group_size (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir14region_builder9create_ifEv5valueRR1FKNSt15source_locationE">tinytc::ir::region_builder::create_if (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder9create_ifE5value6region6regionKNSt15source_locationE">[1]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc13shared_handleE">tinytc::shared_handle (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I00EN6tinytc2ir14region_builder13create_ifelseEv5valueRR1FRR1GKNSt15source_locationE">tinytc::ir::region_builder::create_ifelse (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handle3getEv">tinytc::shared_handle::get (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_loadE5valueNSt6vectorI5valueEERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_load (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle11native_typeE">tinytc::shared_handle::native_type (C++ type)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_mulE5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_mul (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handlecvbEv">tinytc::shared_handle::operator bool (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_negE5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_neg (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handleneERK13shared_handleI1TE">tinytc::shared_handle::operator!= (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_remE5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_rem (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handlemlEv">tinytc::shared_handle::operator* (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11create_sizeE5valueNSt7int64_tERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_size (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handleptEv">tinytc::shared_handle::operator-&gt; (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder12create_storeE5value5valueNSt6vectorI5valueEERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_store (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handleaSERK13shared_handle">tinytc::shared_handle::operator= (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handleaSERR13shared_handle">[1]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_subE5value5valueRKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_sub (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13shared_handleeqERK13shared_handleI1TE">tinytc::shared_handle::operator== (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder14create_subviewE5valueNSt6vectorI5sliceEERKNSt6stringEKNSt15source_locationE">tinytc::ir::region_builder::create_subview (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle7releaseEv">tinytc::shared_handle::release (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder10create_sumE9transpose5value5value5value5valuebKNSt15source_locationE">tinytc::ir::region_builder::create_sum (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle13shared_handleE1Tb">tinytc::shared_handle::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder11get_productEv">tinytc::ir::region_builder::get_product (C++ function)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handle6traitsE">tinytc::shared_handle::traits (C++ type)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder14region_builderENSt10shared_ptrIN8internal3rgnEEE">tinytc::ir::region_builder::region_builder (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir14region_builder14region_builderEv">[1]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13shared_handleD0Ev">tinytc::shared_handle::~shared_handle (C++ function)</a>
 </li>
-      <li><a href="api/ir/error.html#_CPPv4N6tinytc2ir25report_error_with_contextEPNSt7ostreamEPKcNSt6size_tERKN2ir8locationERKNSt6stringE">tinytc::ir::report_error_with_context (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc4sizeE11scalar_type">tinytc::size (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_typeE">tinytc::ir::scalar_type (C++ enum)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc18small_gemm_batchedE">tinytc::small_gemm_batched (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type5bool_E">tinytc::ir::scalar_type::bool_ (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc18small_gemm_batched8set_argsEvR14recipe_handler8uint32_t1T3mem3mem1T3mem">tinytc::small_gemm_batched::set_args (C++ function)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6sourceE">tinytc::source (C++ class)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6source8get_codeEv">tinytc::source::get_code (C++ function)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6source13shared_handleE1Tb">tinytc::source::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6source13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6source13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc6source13shared_handleEv">[3]</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_contextE">tinytc::source_context (C++ class)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context10add_sourceEPKcPKc">tinytc::source_context::add_source (C++ function)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc14source_context13get_error_logEv">tinytc::source_context::get_error_log (C++ function)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context12report_errorERK8locationPKcb">tinytc::source_context::report_error (C++ function)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context13shared_handleE1Tb">tinytc::source_context::shared_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context13shared_handleERK13shared_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context13shared_handleERR13shared_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc14source_context13shared_handleEv">[3]</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6statusE">tinytc::status (C++ enum)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status9bad_allocE">tinytc::status::bad_alloc (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24cl_build_program_failureE">tinytc::status::cl_build_program_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status26cl_compile_program_failureE">tinytc::status::cl_compile_program_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25cl_compiler_not_availableE">tinytc::status::cl_compiler_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23cl_device_not_availableE">tinytc::status::cl_device_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_device_not_foundE">tinytc::status::cl_device_not_found (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status26cl_device_partition_failedE">tinytc::status::cl_device_partition_failed (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status44cl_exec_status_error_for_events_in_wait_listE">tinytc::status::cl_exec_status_error_for_events_in_wait_list (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24cl_image_format_mismatchE">tinytc::status::cl_image_format_mismatch (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status29cl_image_format_not_supportedE">tinytc::status::cl_image_format_not_supported (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status20cl_invalid_arg_indexE">tinytc::status::cl_invalid_arg_index (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_invalid_arg_sizeE">tinytc::status::cl_invalid_arg_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status20cl_invalid_arg_valueE">tinytc::status::cl_invalid_arg_value (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17cl_invalid_binaryE">tinytc::status::cl_invalid_binary (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status22cl_invalid_buffer_sizeE">tinytc::status::cl_invalid_buffer_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24cl_invalid_build_optionsE">tinytc::status::cl_invalid_build_options (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24cl_invalid_command_queueE">tinytc::status::cl_invalid_command_queue (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27cl_invalid_compiler_optionsE">tinytc::status::cl_invalid_compiler_options (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18cl_invalid_contextE">tinytc::status::cl_invalid_context (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17cl_invalid_deviceE">tinytc::status::cl_invalid_device (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status33cl_invalid_device_partition_countE">tinytc::status::cl_invalid_device_partition_count (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23cl_invalid_device_queueE">tinytc::status::cl_invalid_device_queue (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status22cl_invalid_device_typeE">tinytc::status::cl_invalid_device_type (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status16cl_invalid_eventE">tinytc::status::cl_invalid_event (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status26cl_invalid_event_wait_listE">tinytc::status::cl_invalid_event_wait_list (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24cl_invalid_global_offsetE">tinytc::status::cl_invalid_global_offset (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27cl_invalid_global_work_sizeE">tinytc::status::cl_invalid_global_work_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_invalid_host_ptrE">tinytc::status::cl_invalid_host_ptr (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27cl_invalid_image_descriptorE">tinytc::status::cl_invalid_image_descriptor (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status34cl_invalid_image_format_descriptorE">tinytc::status::cl_invalid_image_format_descriptor (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status21cl_invalid_image_sizeE">tinytc::status::cl_invalid_image_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17cl_invalid_kernelE">tinytc::status::cl_invalid_kernel (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status22cl_invalid_kernel_argsE">tinytc::status::cl_invalid_kernel_args (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status28cl_invalid_kernel_definitionE">tinytc::status::cl_invalid_kernel_definition (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status22cl_invalid_kernel_nameE">tinytc::status::cl_invalid_kernel_name (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25cl_invalid_linker_optionsE">tinytc::status::cl_invalid_linker_options (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status21cl_invalid_mem_objectE">tinytc::status::cl_invalid_mem_object (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status20cl_invalid_operationE">tinytc::status::cl_invalid_operation (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status20cl_invalid_pipe_sizeE">tinytc::status::cl_invalid_pipe_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_invalid_platformE">tinytc::status::cl_invalid_platform (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18cl_invalid_programE">tinytc::status::cl_invalid_program (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status29cl_invalid_program_executableE">tinytc::status::cl_invalid_program_executable (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_invalid_propertyE">tinytc::status::cl_invalid_property (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27cl_invalid_queue_propertiesE">tinytc::status::cl_invalid_queue_properties (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18cl_invalid_samplerE">tinytc::status::cl_invalid_sampler (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18cl_invalid_spec_idE">tinytc::status::cl_invalid_spec_id (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status16cl_invalid_valueE">tinytc::status::cl_invalid_value (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25cl_invalid_work_dimensionE">tinytc::status::cl_invalid_work_dimension (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status26cl_invalid_work_group_sizeE">tinytc::status::cl_invalid_work_group_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25cl_invalid_work_item_sizeE">tinytc::status::cl_invalid_work_item_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status32cl_kernel_arg_info_not_availableE">tinytc::status::cl_kernel_arg_info_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23cl_link_program_failureE">tinytc::status::cl_link_program_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23cl_linker_not_availableE">tinytc::status::cl_linker_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status14cl_map_failureE">tinytc::status::cl_map_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status32cl_max_size_restriction_exceededE">tinytc::status::cl_max_size_restriction_exceeded (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_mem_copy_overlapE">tinytc::status::cl_mem_copy_overlap (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status32cl_mem_object_allocation_failureE">tinytc::status::cl_mem_object_allocation_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status31cl_misaligned_sub_buffer_offsetE">tinytc::status::cl_misaligned_sub_buffer_offset (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status21cl_out_of_host_memoryE">tinytc::status::cl_out_of_host_memory (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19cl_out_of_resourcesE">tinytc::status::cl_out_of_resources (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status31cl_profiling_info_not_availableE">tinytc::status::cl_profiling_info_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17compilation_errorE">tinytc::status::compilation_error (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status13file_io_errorE">tinytc::status::file_io_error (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23internal_compiler_errorE">tinytc::status::internal_compiler_error (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17invalid_argumentsE">tinytc::status::invalid_arguments (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24invalid_kernel_argumentsE">tinytc::status::invalid_kernel_arguments (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status30ir_collective_called_from_spmdE">tinytc::status::ir_collective_called_from_spmd (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24ir_expand_shape_mismatchE">tinytc::status::ir_expand_shape_mismatch (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status31ir_expand_shape_order_too_smallE">tinytc::status::ir_expand_shape_order_too_small (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18ir_expected_memrefE">tinytc::status::ir_expected_memref (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27ir_expected_memref_or_groupE">tinytc::status::ir_expected_memref_or_group (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status28ir_expected_memref_or_scalarE">tinytc::status::ir_expected_memref_or_scalar (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18ir_expected_scalarE">tinytc::status::ir_expected_scalar (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status28ir_expected_vector_or_matrixE">tinytc::status::ir_expected_vector_or_matrix (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status22ir_incompatible_shapesE">tinytc::status::ir_incompatible_shapes (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status28ir_invalid_number_of_indicesE">tinytc::status::ir_invalid_number_of_indices (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status16ir_invalid_shapeE">tinytc::status::ir_invalid_shape (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status16ir_invalid_sliceE">tinytc::status::ir_invalid_slice (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25ir_multiple_dynamic_modesE">tinytc::status::ir_multiple_dynamic_modes (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status16ir_out_of_boundsE">tinytc::status::ir_out_of_bounds (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status18ir_scalar_mismatchE">tinytc::status::ir_scalar_mismatch (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status24ir_shape_stride_mismatchE">tinytc::status::ir_shape_stride_mismatch (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19ir_unexpected_yieldE">tinytc::status::ir_unexpected_yield (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status17ir_yield_mismatchE">tinytc::status::ir_yield_mismatch (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status12out_of_rangeE">tinytc::status::out_of_range (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status11parse_errorE">tinytc::status::parse_error (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status13runtime_errorE">tinytc::status::runtime_error (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status7successE">tinytc::status::success (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status21unavailable_extensionE">tinytc::status::unavailable_extension (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status7unknownE">tinytc::status::unknown (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19unsupported_backendE">tinytc::status::unsupported_backend (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status25unsupported_subgroup_sizeE">tinytc::status::unsupported_subgroup_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27unsupported_work_group_sizeE">tinytc::status::unsupported_work_group_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status38ze_result_error_dependency_unavailableE">tinytc::status::ze_result_error_dependency_unavailable (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status41ze_result_error_device_in_low_power_stateE">tinytc::status::ze_result_error_device_in_low_power_state (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status27ze_result_error_device_lostE">tinytc::status::ze_result_error_device_lost (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status37ze_result_error_device_requires_resetE">tinytc::status::ze_result_error_device_requires_reset (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status36ze_result_error_handle_object_in_useE">tinytc::status::ze_result_error_handle_object_in_use (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status40ze_result_error_insufficient_permissionsE">tinytc::status::ze_result_error_insufficient_permissions (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status32ze_result_error_invalid_argumentE">tinytc::status::ze_result_error_invalid_argument (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status41ze_result_error_invalid_command_list_typeE">tinytc::status::ze_result_error_invalid_command_list_type (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_invalid_enumerationE">tinytc::status::ze_result_error_invalid_enumeration (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status37ze_result_error_invalid_function_nameE">tinytc::status::ze_result_error_invalid_function_name (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_invalid_global_nameE">tinytc::status::ze_result_error_invalid_global_name (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status46ze_result_error_invalid_global_width_dimensionE">tinytc::status::ze_result_error_invalid_global_width_dimension (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status44ze_result_error_invalid_group_size_dimensionE">tinytc::status::ze_result_error_invalid_group_size_dimension (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status45ze_result_error_invalid_kernel_argument_indexE">tinytc::status::ze_result_error_invalid_kernel_argument_index (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status44ze_result_error_invalid_kernel_argument_sizeE">tinytc::status::ze_result_error_invalid_kernel_argument_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status46ze_result_error_invalid_kernel_attribute_valueE">tinytc::status::ze_result_error_invalid_kernel_attribute_value (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_invalid_kernel_nameE">tinytc::status::ze_result_error_invalid_kernel_name (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status39ze_result_error_invalid_module_unlinkedE">tinytc::status::ze_result_error_invalid_module_unlinked (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status37ze_result_error_invalid_native_binaryE">tinytc::status::ze_result_error_invalid_native_binary (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_invalid_null_handleE">tinytc::status::ze_result_error_invalid_null_handle (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status36ze_result_error_invalid_null_pointerE">tinytc::status::ze_result_error_invalid_null_pointer (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status28ze_result_error_invalid_sizeE">tinytc::status::ze_result_error_invalid_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status46ze_result_error_invalid_synchronization_objectE">tinytc::status::ze_result_error_invalid_synchronization_object (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status36ze_result_error_module_build_failureE">tinytc::status::ze_result_error_module_build_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_module_link_failureE">tinytc::status::ze_result_error_module_link_failure (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status29ze_result_error_not_availableE">tinytc::status::ze_result_error_not_available (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status36ze_result_error_out_of_device_memoryE">tinytc::status::ze_result_error_out_of_device_memory (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status34ze_result_error_out_of_host_memoryE">tinytc::status::ze_result_error_out_of_host_memory (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_overlapping_regionsE">tinytc::status::ze_result_error_overlapping_regions (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status29ze_result_error_uninitializedE">tinytc::status::ze_result_error_uninitialized (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status23ze_result_error_unknownE">tinytc::status::ze_result_error_unknown (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status37ze_result_error_unsupported_alignmentE">tinytc::status::ze_result_error_unsupported_alignment (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status39ze_result_error_unsupported_enumerationE">tinytc::status::ze_result_error_unsupported_enumeration (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_unsupported_featureE">tinytc::status::ze_result_error_unsupported_feature (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status40ze_result_error_unsupported_image_formatE">tinytc::status::ze_result_error_unsupported_image_format (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status32ze_result_error_unsupported_sizeE">tinytc::status::ze_result_error_unsupported_size (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status35ze_result_error_unsupported_versionE">tinytc::status::ze_result_error_unsupported_version (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status40ze_result_exp_error_device_is_not_vertexE">tinytc::status::ze_result_exp_error_device_is_not_vertex (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status41ze_result_exp_error_operands_incompatibleE">tinytc::status::ze_result_exp_error_operands_incompatible (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status33ze_result_exp_error_remote_deviceE">tinytc::status::ze_result_exp_error_remote_device (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status40ze_result_exp_error_vertex_is_not_deviceE">tinytc::status::ze_result_exp_error_vertex_is_not_device (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status33ze_result_exp_rtas_build_deferredE">tinytc::status::ze_result_exp_rtas_build_deferred (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status30ze_result_exp_rtas_build_retryE">tinytc::status::ze_result_exp_rtas_build_retry (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status19ze_result_not_readyE">tinytc::status::ze_result_not_ready (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status33ze_result_warning_action_requiredE">tinytc::status::ze_result_warning_action_required (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc6status30ze_result_warning_dropped_dataE">tinytc::status::ze_result_warning_dropped_data (C++ enumerator)</a>
+</li>
+      <li><a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19sycl_recipe_handlerE">tinytc::sycl_recipe_handler (C++ class)</a>
+</li>
+      <li><a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19sycl_recipe_handler12parallel_forERN4sycl7handlerE">tinytc::sycl_recipe_handler::parallel_for (C++ function)</a>
+</li>
+      <li><a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19sycl_recipe_handler6submitEN4sycl5queueE">tinytc::sycl_recipe_handler::submit (C++ function)</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19sycl_recipe_handler6submitEN4sycl5queueERKN4sycl5eventE">[1]</a>, <a href="api/sycl/cxxapi.html#_CPPv4N6tinytc19sycl_recipe_handler6submitEN4sycl5queueERKNSt6vectorIN4sycl5eventEEE">[2]</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc15tall_and_skinnyE">tinytc::tall_and_skinny (C++ class)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc15tall_and_skinny8set_argsEvR14recipe_handlerNSt8uint32_tE1T3memNSt8uint32_tE3memNSt8uint32_tE1T3memNSt8uint32_tE">tinytc::tall_and_skinny::set_args (C++ function)</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc14to_scalar_typeE">tinytc::to_scalar_type (C++ struct)</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4I0EN6tinytc16to_scalar_type_vE">tinytc::to_scalar_type_v (C++ member)</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9to_stringE11scalar_type">tinytc::to_string (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9to_stringE13cmp_condition">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9to_stringE9binary_op">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc9to_stringE9transpose">[3]</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9transposeE">tinytc::transpose (C++ enum)</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9transpose1NE">tinytc::transpose::N (C++ enumerator)</a>
+</li>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc9transpose1TE">tinytc::transpose::T (C++ enumerator)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc13unique_handleE">tinytc::unique_handle (C++ class)</a>
+</li>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handle3getEv">tinytc::unique_handle::get (C++ function)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3f32E">tinytc::ir::scalar_type::f32 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle11native_typeE">tinytc::unique_handle::native_type (C++ type)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3f64E">tinytc::ir::scalar_type::f64 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handlecvbEv">tinytc::unique_handle::operator bool (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3i16E">tinytc::ir::scalar_type::i16 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handleneERK13unique_handleI1TE">tinytc::unique_handle::operator!= (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3i32E">tinytc::ir::scalar_type::i32 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handlemlEv">tinytc::unique_handle::operator* (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3i64E">tinytc::ir::scalar_type::i64 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handleptEv">tinytc::unique_handle::operator-&gt; (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type2i8E">tinytc::ir::scalar_type::i8 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handleaSERK13unique_handle">tinytc::unique_handle::operator= (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handleaSERR13unique_handle">[1]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type5indexE">tinytc::ir::scalar_type::index (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4NK6tinytc13unique_handleeqERK13unique_handleI1TE">tinytc::unique_handle::operator== (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3u16E">tinytc::ir::scalar_type::u16 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle7releaseEv">tinytc::unique_handle::release (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3u32E">tinytc::ir::scalar_type::u32 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle6traitsE">tinytc::unique_handle::traits (C++ type)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type3u64E">tinytc::ir::scalar_type::u64 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle13unique_handleE1T">tinytc::unique_handle::unique_handle (C++ function)</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle13unique_handleERK13unique_handle">[1]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle13unique_handleERR13unique_handle">[2]</a>, <a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handle13unique_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir11scalar_type2u8E">tinytc::ir::scalar_type::u8 (C++ enumerator)</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4N6tinytc13unique_handleD0Ev">tinytc::unique_handle::~unique_handle (C++ function)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir14set_stack_ptrsE4func">tinytc::ir::set_stack_ptrs (C++ function)</a>, <a href="api/ir/passes.html#_CPPv4N6tinytc2ir14set_stack_ptrsE4prog">[1]</a>
+      <li><a href="api/core_cxxapi.html#_CPPv4I0EN6tinytc16usm_pointer_typeE">tinytc::usm_pointer_type (C++ concept)</a>
 </li>
-      <li><a href="api/ir/passes.html#_CPPv4N6tinytc2ir19set_work_group_sizeE4funcNSt10shared_ptrI9core_infoEE">tinytc::ir::set_work_group_size (C++ function)</a>, <a href="api/ir/passes.html#_CPPv4N6tinytc2ir19set_work_group_sizeE4progNSt10shared_ptrI9core_infoEE">[1]</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc5valueE">tinytc::value (C++ class)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir4sizeE11scalar_type">tinytc::ir::size (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4NK6tinytc5value8get_nameEv">tinytc::value::get_name (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir5sliceE">tinytc::ir::slice (C++ class)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc5value4nameERKNSt6stringE">tinytc::value::name (C++ function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir5slice5sliceE5value5value">tinytc::ir::slice::slice (C++ function)</a>
+      <li><a href="api/builder_cxxapi.html#_CPPv4N6tinytc5value13shared_handleE1Tb">tinytc::value::shared_handle (C++ function)</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc5value13shared_handleERK13shared_handle">[1]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc5value13shared_handleERR13shared_handle">[2]</a>, <a href="api/builder_cxxapi.html#_CPPv4N6tinytc5value13shared_handleEv">[3]</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir20suggest_local_tilingERK10blas_shapeRK11core_config">tinytc::ir::suggest_local_tiling (C++ function)</a>, <a href="api/ir/tiling.html#_CPPv4N6tinytc2ir20suggest_local_tilingERKNSt6vectorI10blas_shapeEERK11core_config">[1]</a>
+      <li><a href="api/ze/cxxapi.html#_CPPv4N6tinytc15ZE_CHECK_STATUSE11ze_result_t">tinytc::ZE_CHECK_STATUS (C++ function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir21suggest_subgroup_sizeERKNSt6vectorI10blas_shapeEERKNSt6vectorINSt8uint32_tEEE">tinytc::ir::suggest_subgroup_size (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_alloca_inst_create">tinytc_alloca_inst_create (C function)</a>
 </li>
-      <li><a href="api/ir/tiling.html#_CPPv4N6tinytc2ir32suggest_subgroup_size_and_tilingERKNSt6vectorI10blas_shapeEERK9core_info">tinytc::ir::suggest_subgroup_size_and_tiling (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_axpby_inst_create">tinytc_axpby_inst_create (C function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir14to_scalar_typeE">tinytc::ir::to_scalar_type (C++ struct)</a>
+      <li><a href="api/core_capi.html#c.tinytc_binary_get_core_features">tinytc_binary_get_core_features (C function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4I0EN6tinytc2ir16to_scalar_type_vE">tinytc::ir::to_scalar_type_v (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_binary_get_raw">tinytc_binary_get_raw (C function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9to_stringE11scalar_type">tinytc::ir::to_string (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir9to_stringE13cmp_condition">[1]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir9to_stringE9binary_op">[2]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir9to_stringE9transpose">[3]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_inst_create">tinytc_binary_op_inst_create (C function)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9transposeE">tinytc::ir::transpose (C++ enum)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t">tinytc_binary_op_t (C enum)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9transpose1NE">tinytc::ir::transpose::N (C++ enumerator)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t.tinytc_binary_op_add">tinytc_binary_op_t.tinytc_binary_op_add (C enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9transpose1TE">tinytc::ir::transpose::T (C++ enumerator)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t.tinytc_binary_op_div">tinytc_binary_op_t.tinytc_binary_op_div (C enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir5valueE">tinytc::ir::value (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t.tinytc_binary_op_mul">tinytc_binary_op_t.tinytc_binary_op_mul (C enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueE9data_typeNSt6stringE">tinytc::ir::value::value (C++ function)</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt6int8_tE11scalar_type">[1]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt6stringE">[2]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt7int16_tE11scalar_type">[3]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt7int32_tE11scalar_type">[4]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt7int64_tE11scalar_type">[5]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueENSt8uint32_tE11scalar_type">[6]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueEd11scalar_type">[7]</a>, <a href="api/ir/builder.html#_CPPv4N6tinytc2ir5value5valueEf11scalar_type">[8]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t.tinytc_binary_op_rem">tinytc_binary_op_t.tinytc_binary_op_rem (C enumerator)</a>
 </li>
-      <li><a href="api/ir/builder.html#_CPPv4N6tinytc2ir9void_typeEv">tinytc::ir::void_type (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_t.tinytc_binary_op_sub">tinytc_binary_op_t.tinytc_binary_op_sub (C enumerator)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15kernel_metadataE">tinytc::kernel_metadata (C++ struct)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_binary_op_to_string">tinytc_binary_op_to_string (C function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15kernel_metadata13subgroup_sizeE">tinytc::kernel_metadata::subgroup_size (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_binary_release">tinytc_binary_release (C function)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc15kernel_metadata15work_group_sizeE">tinytc::kernel_metadata::work_group_size (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_binary_retain">tinytc_binary_retain (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc27level_zero_argument_handlerE">tinytc::level_zero_argument_handler (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_binary_t">tinytc_binary_t (C type)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4I0EN6tinytc27level_zero_argument_handler7set_argEv18ze_kernel_handle_tNSt8uint32_tERK1T">tinytc::level_zero_argument_handler::set_arg (C++ function)</a>, <a href="api/ze/runtime.html#_CPPv4N6tinytc27level_zero_argument_handler7set_argE18ze_kernel_handle_tNSt8uint32_tENSt6size_tEPKv">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_bool_t">tinytc_bool_t (C type)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4IDpEN6tinytc27level_zero_argument_handler8set_argsEv18ze_kernel_handle_tDpRK1T">tinytc::level_zero_argument_handler::set_args (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_bundle_format_t">tinytc_bundle_format_t (C enum)</a>
 </li>
-      <li><a href="api/ze/error.html#_CPPv4N6tinytc16level_zero_errorE">tinytc::level_zero_error (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_bundle_format_t.tinytc_bundle_format_native">tinytc_bundle_format_t.tinytc_bundle_format_native (C enumerator)</a>
 </li>
-      <li><a href="api/ze/error.html#_CPPv4N6tinytc16level_zero_error16level_zero_errorENSt6stringE11ze_result_t">tinytc::level_zero_error::level_zero_error (C++ function)</a>, <a href="api/ze/error.html#_CPPv4N6tinytc16level_zero_error16level_zero_errorEPKc11ze_result_t">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_bundle_format_t.tinytc_bundle_format_spirv">tinytc_bundle_format_t.tinytc_bundle_format_spirv (C enumerator)</a>
 </li>
-      <li><a href="api/ze/error.html#_CPPv4NK6tinytc16level_zero_error11status_codeEv">tinytc::level_zero_error::status_code (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cast_inst_create">tinytc_cast_inst_create (C function)</a>
 </li>
-      <li><a href="api/ze/error.html#_CPPv4NK6tinytc16level_zero_error4whatEv">tinytc::level_zero_error::what (C++ function)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_convert_status">tinytc_cl_convert_status (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtimeE">tinytc::level_zero_runtime (C++ class)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_core_info_create">tinytc_cl_core_info_create (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime18argument_handler_tE">tinytc::level_zero_runtime::argument_handler_t (C++ type)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_get_global_size">tinytc_cl_get_global_size (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime14command_list_tE">tinytc::level_zero_runtime::command_list_t (C++ type)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_get_group_size">tinytc_cl_get_group_size (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime11const_mem_tE">tinytc::level_zero_runtime::const_mem_t (C++ type)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_program_create">tinytc_cl_program_create (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime9context_tE">tinytc::level_zero_runtime::context_t (C++ type)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_recipe_handler_create">tinytc_cl_recipe_handler_create (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime8device_tE">tinytc::level_zero_runtime::device_t (C++ type)</a>
+      <li><a href="api/cl/capi.html#c.tinytc_cl_recipe_handler_submit">tinytc_cl_recipe_handler_submit (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime7event_tE">tinytc::level_zero_runtime::event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t">tinytc_cmp_condition_t (C enum)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4I0EN6tinytc18level_zero_runtime3getEN1T10value_typeER1T">tinytc::level_zero_runtime::get (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_eq">tinytc_cmp_condition_t.tinytc_cmp_condition_eq (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime16is_event_managedE">tinytc::level_zero_runtime::is_event_managed (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_ge">tinytc_cmp_condition_t.tinytc_cmp_condition_ge (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime15kernel_bundle_tE">tinytc::level_zero_runtime::kernel_bundle_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_gt">tinytc_cmp_condition_t.tinytc_cmp_condition_gt (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime8kernel_tE">tinytc::level_zero_runtime::kernel_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_le">tinytc_cmp_condition_t.tinytc_cmp_condition_le (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime21make_argument_handlerE8device_t">tinytc::level_zero_runtime::make_argument_handler (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_lt">tinytc_cmp_condition_t.tinytc_cmp_condition_lt (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime11make_kernelE18ze_module_handle_tPKc">tinytc::level_zero_runtime::make_kernel (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_t.tinytc_cmp_condition_ne">tinytc_cmp_condition_t.tinytc_cmp_condition_ne (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tE19ze_context_handle_t18ze_device_handle_t">tinytc::level_zero_runtime::make_kernel_bundle (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_condition_to_string">tinytc_cmp_condition_to_string (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime5mem_tE">tinytc::level_zero_runtime::mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_cmp_inst_create">tinytc_cmp_inst_create (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime14native_event_tE">tinytc::level_zero_runtime::native_event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_feature_flag_t">tinytc_core_feature_flag_t (C enum)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime22native_kernel_bundle_tE">tinytc::level_zero_runtime::native_kernel_bundle_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_feature_flag_t.tinytc_core_feature_flag_large_register_file">tinytc_core_feature_flag_t.tinytc_core_feature_flag_large_register_file (C enumerator)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime15native_kernel_tE">tinytc::level_zero_runtime::native_kernel_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_clear_core_feature">tinytc_core_info_clear_core_feature (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc18level_zero_runtime6submitENSt5arrayINSt8uint32_tEXL2EEEENSt6size_tE15native_kernel_t14command_list_t14native_event_tNSt8uint32_tEP14native_event_t">tinytc::level_zero_runtime::submit (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_get_ip_version">tinytc_core_info_get_ip_version (C function)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc13major_versionE">tinytc::major_version (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_get_num_registers_per_thread">tinytc_core_info_get_num_registers_per_thread (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc11make_kernelE10cl_programPKc">tinytc::make_kernel (C++ function)</a>, <a href="api/sycl/runtime.html#_CPPv4N6tinytc11make_kernelEN4sycl13kernel_bundleIN4sycl12bundle_state10executableEEEPKc">[1]</a>, <a href="api/ze/runtime.html#_CPPv4N6tinytc11make_kernelE18ze_module_handle_tPKc">[2]</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_get_register_size">tinytc_core_info_get_register_size (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tE10cl_context12cl_device_id">tinytc::make_kernel_bundle (C++ function)</a>, <a href="api/sycl/runtime.html#_CPPv4N6tinytc18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tEN4sycl7contextEN4sycl6deviceE">[1]</a>, <a href="api/ze/runtime.html#_CPPv4N6tinytc18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tE19ze_context_handle_t18ze_device_handle_t">[2]</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_get_subgroup_sizes">tinytc_core_info_get_subgroup_sizes (C function)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc13minor_versionE">tinytc::minor_version (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_intel_create">tinytc_core_info_intel_create (C function)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc31number_of_commits_since_releaseE">tinytc::number_of_commits_since_release (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_intel_create_from_arch">tinytc_core_info_intel_create_from_arch (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handlerE">tinytc::opencl_argument_handler (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_release">tinytc_core_info_release (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handler31clSetKernelArgMemPointerINTEL_tE">tinytc::opencl_argument_handler::clSetKernelArgMemPointerINTEL_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_retain">tinytc_core_info_retain (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handler23opencl_argument_handlerE14cl_platform_id">tinytc::opencl_argument_handler::opencl_argument_handler (C++ function)</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handler23opencl_argument_handlerEv">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_set_core_feature">tinytc_core_info_set_core_feature (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4I_23pointer_kernel_argumentEN6tinytc23opencl_argument_handler7set_argEv9cl_kernelNSt8uint32_tERK1T">tinytc::opencl_argument_handler::set_arg (C++ function)</a>, <a href="api/cl/runtime.html#_CPPv4I_23regular_kernel_argumentEN6tinytc23opencl_argument_handler7set_argEv9cl_kernelNSt8uint32_tERK1T">[1]</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handler7set_argE9cl_kernelNSt8uint32_tENSt6size_tEPKv">[2]</a>
+      <li><a href="api/core_capi.html#c.tinytc_core_info_t">tinytc_core_info_t (C type)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc23opencl_argument_handler19set_arg_mem_pointerE9cl_kernelNSt8uint32_tEPKv">tinytc::opencl_argument_handler::set_arg_mem_pointer (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_data_type_release">tinytc_data_type_release (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4IDpEN6tinytc23opencl_argument_handler8set_argsEv9cl_kernelDpRK1T">tinytc::opencl_argument_handler::set_args (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_data_type_retain">tinytc_data_type_retain (C function)</a>
 </li>
-      <li><a href="api/cl/error.html#_CPPv4N6tinytc12opencl_errorE">tinytc::opencl_error (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_data_type_t">tinytc_data_type_t (C type)</a>
 </li>
-      <li><a href="api/cl/error.html#_CPPv4N6tinytc12opencl_error12opencl_errorENSt6stringE6cl_int">tinytc::opencl_error::opencl_error (C++ function)</a>, <a href="api/cl/error.html#_CPPv4N6tinytc12opencl_error12opencl_errorEPKc6cl_int">[1]</a>
+      <li><a href="api/builder_capi.html#c.TINYTC_DYNAMIC">TINYTC_DYNAMIC (C macro)</a>
 </li>
-      <li><a href="api/cl/error.html#_CPPv4NK6tinytc12opencl_error11status_codeEv">tinytc::opencl_error::status_code (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_error_string">tinytc_error_string (C function)</a>
 </li>
-      <li><a href="api/cl/error.html#_CPPv4NK6tinytc12opencl_error4whatEv">tinytc::opencl_error::what (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_expand_inst_create">tinytc_expand_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc15opencl_nd_rangeE">tinytc::opencl_nd_range (C++ struct)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_float_imm_create">tinytc_float_imm_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc15opencl_nd_range3dimE">tinytc::opencl_nd_range::dim (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_for_inst_create">tinytc_for_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc15opencl_nd_range16global_work_sizeE">tinytc::opencl_nd_range::global_work_size (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_foreach_inst_create">tinytc_foreach_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc15opencl_nd_range15local_work_sizeE">tinytc::opencl_nd_range::local_work_size (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_func_release">tinytc_func_release (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4I0EN6tinytc21opencl_object_wrapperE">tinytc::opencl_object_wrapper (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_func_retain">tinytc_func_retain (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4NK6tinytc21opencl_object_wrapper3getEv">tinytc::opencl_object_wrapper::get (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_func_t">tinytc_func_t (C type)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapper11native_typeE">tinytc::opencl_object_wrapper::native_type (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_function_create">tinytc_function_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapper21opencl_object_wrapperERK1Tb">tinytc::opencl_object_wrapper::opencl_object_wrapper (C++ function)</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapper21opencl_object_wrapperERK21opencl_object_wrapper">[1]</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapper21opencl_object_wrapperERR21opencl_object_wrapper">[2]</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapper21opencl_object_wrapperEv">[3]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_function_prototype_create">tinytc_function_prototype_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapperclEv">tinytc::opencl_object_wrapper::operator() (C++ function)</a>, <a href="api/cl/runtime.html#_CPPv4NK6tinytc21opencl_object_wrapperclEv">[1]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_function_set_subgroup_size">tinytc_function_set_subgroup_size (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapperaSERK21opencl_object_wrapper">tinytc::opencl_object_wrapper::operator= (C++ function)</a>, <a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapperaSERR21opencl_object_wrapper">[1]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_function_set_work_group_size">tinytc_function_set_work_group_size (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc21opencl_object_wrapperD0Ev">tinytc::opencl_object_wrapper::~opencl_object_wrapper (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_fuse_inst_create">tinytc_fuse_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtimeE">tinytc::opencl_runtime (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_gemm_inst_create">tinytc_gemm_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime18argument_handler_tE">tinytc::opencl_runtime::argument_handler_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_gemv_inst_create">tinytc_gemv_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime14command_list_tE">tinytc::opencl_runtime::command_list_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_ger_inst_create">tinytc_ger_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime11const_mem_tE">tinytc::opencl_runtime::const_mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_group_id_inst_create">tinytc_group_id_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime9context_tE">tinytc::opencl_runtime::context_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_group_size_inst_create">tinytc_group_size_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime8device_tE">tinytc::opencl_runtime::device_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_group_type_create">tinytc_group_type_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime7event_tE">tinytc::opencl_runtime::event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_hadamard_inst_create">tinytc_hadamard_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4I0EN6tinytc14opencl_runtime3getEN1T11native_typeER1T">tinytc::opencl_runtime::get (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_if_inst_create">tinytc_if_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime16is_event_managedE">tinytc::opencl_runtime::is_event_managed (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_inst_get_value">tinytc_inst_get_value (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime15kernel_bundle_tE">tinytc::opencl_runtime::kernel_bundle_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_inst_get_values">tinytc_inst_get_values (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime8kernel_tE">tinytc::opencl_runtime::kernel_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_inst_release">tinytc_inst_release (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime21make_argument_handlerE8device_t">tinytc::opencl_runtime::make_argument_handler (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_inst_retain">tinytc_inst_retain (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime11make_kernelE22native_kernel_bundle_tPKc">tinytc::opencl_runtime::make_kernel (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_inst_t">tinytc_inst_t (C type)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tE9context_t8device_t">tinytc::opencl_runtime::make_kernel_bundle (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_int_imm_create">tinytc_int_imm_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime5mem_tE">tinytc::opencl_runtime::mem_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_intel_gpu_architecture_t">tinytc_intel_gpu_architecture_t (C enum)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime14native_event_tE">tinytc::opencl_runtime::native_event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_pvc">tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_pvc (C enumerator)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime22native_kernel_bundle_tE">tinytc::opencl_runtime::native_kernel_bundle_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_load_inst_create">tinytc_load_inst_create (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime15native_kernel_tE">tinytc::opencl_runtime::native_kernel_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_location">tinytc_location (C struct)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4N6tinytc14opencl_runtime6submitENSt5arrayINSt8uint32_tEXL2EEEENSt6size_tE15native_kernel_t14command_list_tRKNSt6vectorI14native_event_tEE">tinytc::opencl_runtime::submit (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_location.begin">tinytc_location.begin (C var)</a>
 </li>
-      <li><a href="api/jit.html#_CPPv4N6tinytc24optimize_and_make_binaryEN2ir4progE13bundle_formatNSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE">tinytc::optimize_and_make_binary (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_location.end">tinytc_location.end (C var)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc5parseERKNSt6stringEPNSt7ostreamERKNSt6stringE">tinytc::parse (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_location_t">tinytc_location_t (C type)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc13patch_versionE">tinytc::patch_version (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem">tinytc_mem (C struct)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4I0EN6tinytc23pointer_kernel_argumentE">tinytc::pointer_kernel_argument (C++ concept)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem.type">tinytc_mem.type (C var)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe34generate_small_gemm_batched_binaryEN2ir16gemm_scalar_typeEN2ir9transposeEN2ir9transposeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE">tinytc::recipe::generate_small_gemm_batched_binary (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem.value">tinytc_mem.value (C var)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe31generate_tall_and_skinny_binaryEN2ir16gemm_scalar_typeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEEN2ir23error_reporter_functionE">tinytc::recipe::generate_tall_and_skinny_binary (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem_t">tinytc_mem_t (C type)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4I0_7runtimeEN6tinytc6recipe18small_gemm_batchedE">tinytc::recipe::small_gemm_batched (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem_type_t">tinytc_mem_type_t (C enum)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched14command_list_tE">tinytc::recipe::small_gemm_batched::command_list_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem_type_t.tinytc_mem_type_buffer">tinytc_mem_type_t.tinytc_mem_type_buffer (C enumerator)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched11const_mem_tE">tinytc::recipe::small_gemm_batched::const_mem_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem_type_t.tinytc_mem_type_svm_pointer">tinytc_mem_type_t.tinytc_mem_type_svm_pointer (C enumerator)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched9context_tE">tinytc::recipe::small_gemm_batched::context_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_mem_type_t.tinytc_mem_type_usm_pointer">tinytc_mem_type_t.tinytc_mem_type_usm_pointer (C enumerator)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched8device_tE">tinytc::recipe::small_gemm_batched::device_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_memref_type_create">tinytc_memref_type_create (C function)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched7event_tE">tinytc::recipe::small_gemm_batched::event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_neg_inst_create">tinytc_neg_inst_create (C function)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched5mem_tE">tinytc::recipe::small_gemm_batched::mem_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_parse_file">tinytc_parse_file (C function)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched14native_event_tE">tinytc::recipe::small_gemm_batched::native_event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_parse_stdin">tinytc_parse_stdin (C function)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe18small_gemm_batchedclENSt8uint32_tE1T11const_mem_t11const_mem_t1T5mem_t14command_list_tRKNSt6vectorI14native_event_tEE">tinytc::recipe::small_gemm_batched::operator() (C++ function)</a>, <a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batchedclENSt8uint32_tE1T11const_mem_t11const_mem_t1T5mem_t14command_list_t14native_event_tNSt8uint32_tEP14native_event_t">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_parse_string">tinytc_parse_string (C function)</a>
 </li>
-      <li><a href="api/recipe/small_gemm_batched.html#_CPPv4N6tinytc6recipe18small_gemm_batched18small_gemm_batchedEN2ir9transposeEN2ir9transposeENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t">tinytc::recipe::small_gemm_batched::small_gemm_batched (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_position">tinytc_position (C struct)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4I0_7runtimeEN6tinytc6recipe15tall_and_skinnyE">tinytc::recipe::tall_and_skinny (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_position.column">tinytc_position.column (C var)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny14command_list_tE">tinytc::recipe::tall_and_skinny::command_list_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_position.line">tinytc_position.line (C var)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny11const_mem_tE">tinytc::recipe::tall_and_skinny::const_mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_position.source_id">tinytc_position.source_id (C var)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny9context_tE">tinytc::recipe::tall_and_skinny::context_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_position_t">tinytc_position_t (C type)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny8device_tE">tinytc::recipe::tall_and_skinny::device_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_prog_compile_to_binary">tinytc_prog_compile_to_binary (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny7event_tE">tinytc::recipe::tall_and_skinny::event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_prog_compile_to_opencl">tinytc_prog_compile_to_opencl (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4NK6tinytc6recipe15tall_and_skinny7howmanyENSt8uint32_tE">tinytc::recipe::tall_and_skinny::howmany (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_dump">tinytc_prog_dump (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny5mem_tE">tinytc::recipe::tall_and_skinny::mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_print_to_file">tinytc_prog_print_to_file (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny14native_event_tE">tinytc::recipe::tall_and_skinny::native_event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_print_to_string">tinytc_prog_print_to_string (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4IQN1R16is_event_managedEEN6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_tRKNSt6vectorI14native_event_tEE">tinytc::recipe::tall_and_skinny::operator() (C++ function)</a>, <a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinnyclENSt8uint32_tE1T11const_mem_tNSt8uint32_tE11const_mem_tNSt8uint32_tE1T5mem_tNSt8uint32_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t">[1]</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_release">tinytc_prog_release (C function)</a>
 </li>
-      <li><a href="api/recipe/tall_and_skinny.html#_CPPv4N6tinytc6recipe15tall_and_skinny15tall_and_skinnyENSt8uint32_tENSt8uint32_tENSt10shared_ptrI9core_infoEE9context_t8device_t">tinytc::recipe::tall_and_skinny::tall_and_skinny (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_retain">tinytc_prog_retain (C function)</a>
 </li>
-      <li><a href="api/cl/runtime.html#_CPPv4I0EN6tinytc23regular_kernel_argumentE">tinytc::regular_kernel_argument (C++ concept)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_prog_t">tinytc_prog_t (C type)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4I0EN6tinytc7runtimeE">tinytc::runtime (C++ concept)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_program_create">tinytc_program_create (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4I_6handleEN6tinytc13shared_handleE">tinytc::shared_handle (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_get_binary">tinytc_recipe_get_binary (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4NK6tinytc13shared_handle3getEv">tinytc::shared_handle::get (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_get_prog">tinytc_recipe_get_prog (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4NK6tinytc13shared_handlecvbEv">tinytc::shared_handle::operator bool (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_handler_get_recipe">tinytc_recipe_handler_get_recipe (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc13shared_handle13shared_handleE1TPFv1TE">tinytc::shared_handle::shared_handle (C++ function)</a>, <a href="api/ze/runtime.html#_CPPv4N6tinytc13shared_handle13shared_handleEv">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_handler_release">tinytc_recipe_handler_release (C function)</a>
 </li>
-      <li><a href="api/ze/runtime.html#_CPPv4N6tinytc13shared_handle10value_typeE">tinytc::shared_handle::value_type (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_handler_retain">tinytc_recipe_handler_retain (C function)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_managerE">tinytc::source_manager (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_handler_t">tinytc_recipe_handler_t (C type)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager14error_reporterEv">tinytc::source_manager::error_reporter (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_release">tinytc_recipe_release (C function)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager10parse_fileERKNSt6stringE">tinytc::source_manager::parse_file (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_retain">tinytc_recipe_retain (C function)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager11parse_stdinEv">tinytc::source_manager::parse_stdin (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_small_gemm_batched_create">tinytc_recipe_small_gemm_batched_create (C function)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager12parse_stringENSt6stringE">tinytc::source_manager::parse_string (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_small_gemm_batched_set_args">tinytc_recipe_small_gemm_batched_set_args (C function)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager12report_errorERKN2ir8locationERKNSt6stringE">tinytc::source_manager::report_error (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_t">tinytc_recipe_t (C type)</a>
 </li>
-      <li><a href="api/parser.html#_CPPv4N6tinytc14source_manager14source_managerEPNSt7ostreamE">tinytc::source_manager::source_manager (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_tall_and_skinny_create">tinytc_recipe_tall_and_skinny_create (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc21sycl_argument_handlerE">tinytc::sycl_argument_handler (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_tall_and_skinny_set_args">tinytc_recipe_tall_and_skinny_set_args (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4I0EN6tinytc21sycl_argument_handler7set_argEvN4sycl6kernelENSt8uint32_tERK1T">tinytc::sycl_argument_handler::set_arg (C++ function)</a>, <a href="api/sycl/runtime.html#_CPPv4N6tinytc21sycl_argument_handler7set_argEN4sycl6kernelENSt8uint32_tENSt6size_tEPKv">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_recipe_tall_and_skinny_suggest_block_size">tinytc_recipe_tall_and_skinny_suggest_block_size (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4IDpEN6tinytc21sycl_argument_handler8set_argsEvN4sycl6kernelEDpRK1T">tinytc::sycl_argument_handler::set_args (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_region_create">tinytc_region_create (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc21sycl_argument_handler21sycl_argument_handlerEN4sycl8platformE">tinytc::sycl_argument_handler::sycl_argument_handler (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_region_release">tinytc_region_release (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtimeE">tinytc::sycl_runtime (C++ class)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_region_retain">tinytc_region_retain (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime18argument_handler_tE">tinytc::sycl_runtime::argument_handler_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_region_t">tinytc_region_t (C type)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime14command_list_tE">tinytc::sycl_runtime::command_list_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_create">tinytc_scalar_type_create (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime11const_mem_tE">tinytc::sycl_runtime::const_mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_size">tinytc_scalar_type_size (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime9context_tE">tinytc::sycl_runtime::context_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t">tinytc_scalar_type_t (C enum)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime8device_tE">tinytc::sycl_runtime::device_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_bool">tinytc_scalar_type_t.tinytc_scalar_type_bool (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime7event_tE">tinytc::sycl_runtime::event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_f32">tinytc_scalar_type_t.tinytc_scalar_type_f32 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4I0EN6tinytc12sycl_runtime3getERR1TRR1T">tinytc::sycl_runtime::get (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_f64">tinytc_scalar_type_t.tinytc_scalar_type_f64 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime16is_event_managedE">tinytc::sycl_runtime::is_event_managed (C++ member)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_i16">tinytc_scalar_type_t.tinytc_scalar_type_i16 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime15kernel_bundle_tE">tinytc::sycl_runtime::kernel_bundle_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_i32">tinytc_scalar_type_t.tinytc_scalar_type_i32 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime8kernel_tE">tinytc::sycl_runtime::kernel_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_i64">tinytc_scalar_type_t.tinytc_scalar_type_i64 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime21make_argument_handlerE8device_t">tinytc::sycl_runtime::make_argument_handler (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_i8">tinytc_scalar_type_t.tinytc_scalar_type_i8 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime11make_kernelE22native_kernel_bundle_tPKc">tinytc::sycl_runtime::make_kernel (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_index">tinytc_scalar_type_t.tinytc_scalar_type_index (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime18make_kernel_bundleEPKNSt7uint8_tENSt6size_tE13bundle_formatNSt8uint32_tEN4sycl7contextEN4sycl6deviceE">tinytc::sycl_runtime::make_kernel_bundle (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_u16">tinytc_scalar_type_t.tinytc_scalar_type_u16 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime5mem_tE">tinytc::sycl_runtime::mem_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_u32">tinytc_scalar_type_t.tinytc_scalar_type_u32 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime14native_event_tE">tinytc::sycl_runtime::native_event_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_u64">tinytc_scalar_type_t.tinytc_scalar_type_u64 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime22native_kernel_bundle_tE">tinytc::sycl_runtime::native_kernel_bundle_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_t.tinytc_scalar_type_u8">tinytc_scalar_type_t.tinytc_scalar_type_u8 (C enumerator)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime15native_kernel_tE">tinytc::sycl_runtime::native_kernel_t (C++ type)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_scalar_type_to_string">tinytc_scalar_type_to_string (C function)</a>
 </li>
-      <li><a href="api/sycl/runtime.html#_CPPv4N6tinytc12sycl_runtime6submitENSt5arrayINSt8uint32_tEXL2EEEENSt6size_tE15native_kernel_t14command_list_tRKNSt6vectorI14native_event_tEE">tinytc::sycl_runtime::submit (C++ function)</a>
+      <li><a href="api/builder_capi.html#c.tinytc_size_inst_create">tinytc_size_inst_create (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4I_7runtimeEN6tinytc13tensor_kernelE">tinytc::tensor_kernel (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_compile_to_binary">tinytc_source_compile_to_binary (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel18argument_handler_tE">tinytc::tensor_kernel::argument_handler_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_add_source">tinytc_source_context_add_source (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel14command_list_tE">tinytc::tensor_kernel::command_list_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_create">tinytc_source_context_create (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel7event_tE">tinytc::tensor_kernel::event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_get_error_log">tinytc_source_context_get_error_log (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel8kernel_tE">tinytc::tensor_kernel::kernel_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_release">tinytc_source_context_release (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4NK6tinytc13tensor_kernel8metadataEv">tinytc::tensor_kernel::metadata (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_report_error">tinytc_source_context_report_error (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel14native_event_tE">tinytc::tensor_kernel::native_event_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_retain">tinytc_source_context_retain (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4I0EN6tinytc13tensor_kernel7set_argEvNSt8uint32_tERK3Arg">tinytc::tensor_kernel::set_arg (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_context_t">tinytc_source_context_t (C type)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4IDpEN6tinytc13tensor_kernel8set_argsEvDpRK3Arg">tinytc::tensor_kernel::set_args (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_get_code">tinytc_source_get_code (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4IQN1T16is_event_managedEEN6tinytc13tensor_kernel6submitENSt6size_tE14command_list_tRKNSt6vectorI14native_event_tEE">tinytc::tensor_kernel::submit (C++ function)</a>, <a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel6submitENSt6size_tE14command_list_t14native_event_tNSt8uint32_tEP14native_event_t">[1]</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_release">tinytc_source_release (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc13tensor_kernel13tensor_kernelE8kernel_t18argument_handler_tRK15kernel_metadata">tinytc::tensor_kernel::tensor_kernel (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_retain">tinytc_source_retain (C function)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4I_7runtimeEN6tinytc20tensor_kernel_bundleE">tinytc::tensor_kernel_bundle (C++ class)</a>
+      <li><a href="api/core_capi.html#c.tinytc_source_t">tinytc_source_t (C type)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle18argument_handler_tE">tinytc::tensor_kernel_bundle::argument_handler_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t">tinytc_status_t (C enum)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle9context_tE">tinytc::tensor_kernel_bundle::context_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_bad_alloc">tinytc_status_t.tinytc_status_bad_alloc (C enumerator)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle8device_tE">tinytc::tensor_kernel_bundle::device_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_build_program_failure">tinytc_status_t.tinytc_status_cl_build_program_failure (C enumerator)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle3getEPKc">tinytc::tensor_kernel_bundle::get (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_compile_program_failure">tinytc_status_t.tinytc_status_cl_compile_program_failure (C enumerator)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle15kernel_bundle_tE">tinytc::tensor_kernel_bundle::kernel_bundle_t (C++ type)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_compiler_not_available">tinytc_status_t.tinytc_status_cl_compiler_not_available (C enumerator)</a>
 </li>
-      <li><a href="api/runtime.html#_CPPv4N6tinytc20tensor_kernel_bundle20tensor_kernel_bundleENSt10shared_ptrI6binaryEE9context_t8device_t">tinytc::tensor_kernel_bundle::tensor_kernel_bundle (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_device_not_available">tinytc_status_t.tinytc_status_cl_device_not_available (C enumerator)</a>
 </li>
-      <li><a href="api/introduction.html#_CPPv4N6tinytc7versionE">tinytc::version (C++ member)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_device_not_found">tinytc_status_t.tinytc_status_cl_device_not_found (C enumerator)</a>
 </li>
-      <li><a href="api/ze/error.html#_CPPv4N6tinytc19ze_result_to_stringE11ze_result_t">tinytc::ze_result_to_string (C++ function)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_device_partition_failed">tinytc_status_t.tinytc_status_cl_device_partition_failed (C enumerator)</a>
 </li>
-  </ul></td>
-</tr></table>
-
-<h2 id="Z">Z</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="api/ze/error.html#c.ZE_CHECK">ZE_CHECK (C macro)</a>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_exec_status_error_for_events_in_wait_list">tinytc_status_t.tinytc_status_cl_exec_status_error_for_events_in_wait_list (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_image_format_mismatch">tinytc_status_t.tinytc_status_cl_image_format_mismatch (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_image_format_not_supported">tinytc_status_t.tinytc_status_cl_image_format_not_supported (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_arg_index">tinytc_status_t.tinytc_status_cl_invalid_arg_index (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_arg_size">tinytc_status_t.tinytc_status_cl_invalid_arg_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_arg_value">tinytc_status_t.tinytc_status_cl_invalid_arg_value (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_binary">tinytc_status_t.tinytc_status_cl_invalid_binary (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_buffer_size">tinytc_status_t.tinytc_status_cl_invalid_buffer_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_build_options">tinytc_status_t.tinytc_status_cl_invalid_build_options (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_command_queue">tinytc_status_t.tinytc_status_cl_invalid_command_queue (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_compiler_options">tinytc_status_t.tinytc_status_cl_invalid_compiler_options (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_context">tinytc_status_t.tinytc_status_cl_invalid_context (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_device">tinytc_status_t.tinytc_status_cl_invalid_device (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_device_partition_count">tinytc_status_t.tinytc_status_cl_invalid_device_partition_count (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_device_queue">tinytc_status_t.tinytc_status_cl_invalid_device_queue (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_device_type">tinytc_status_t.tinytc_status_cl_invalid_device_type (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_event">tinytc_status_t.tinytc_status_cl_invalid_event (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_event_wait_list">tinytc_status_t.tinytc_status_cl_invalid_event_wait_list (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_global_offset">tinytc_status_t.tinytc_status_cl_invalid_global_offset (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_global_work_size">tinytc_status_t.tinytc_status_cl_invalid_global_work_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_host_ptr">tinytc_status_t.tinytc_status_cl_invalid_host_ptr (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_image_descriptor">tinytc_status_t.tinytc_status_cl_invalid_image_descriptor (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_image_format_descriptor">tinytc_status_t.tinytc_status_cl_invalid_image_format_descriptor (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_image_size">tinytc_status_t.tinytc_status_cl_invalid_image_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_kernel">tinytc_status_t.tinytc_status_cl_invalid_kernel (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_kernel_args">tinytc_status_t.tinytc_status_cl_invalid_kernel_args (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_kernel_definition">tinytc_status_t.tinytc_status_cl_invalid_kernel_definition (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_kernel_name">tinytc_status_t.tinytc_status_cl_invalid_kernel_name (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_linker_options">tinytc_status_t.tinytc_status_cl_invalid_linker_options (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_mem_object">tinytc_status_t.tinytc_status_cl_invalid_mem_object (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_operation">tinytc_status_t.tinytc_status_cl_invalid_operation (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_pipe_size">tinytc_status_t.tinytc_status_cl_invalid_pipe_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_platform">tinytc_status_t.tinytc_status_cl_invalid_platform (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_program">tinytc_status_t.tinytc_status_cl_invalid_program (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_program_executable">tinytc_status_t.tinytc_status_cl_invalid_program_executable (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_property">tinytc_status_t.tinytc_status_cl_invalid_property (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_queue_properties">tinytc_status_t.tinytc_status_cl_invalid_queue_properties (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_sampler">tinytc_status_t.tinytc_status_cl_invalid_sampler (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_spec_id">tinytc_status_t.tinytc_status_cl_invalid_spec_id (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_value">tinytc_status_t.tinytc_status_cl_invalid_value (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_work_dimension">tinytc_status_t.tinytc_status_cl_invalid_work_dimension (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_work_group_size">tinytc_status_t.tinytc_status_cl_invalid_work_group_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_invalid_work_item_size">tinytc_status_t.tinytc_status_cl_invalid_work_item_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_kernel_arg_info_not_available">tinytc_status_t.tinytc_status_cl_kernel_arg_info_not_available (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_link_program_failure">tinytc_status_t.tinytc_status_cl_link_program_failure (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_linker_not_available">tinytc_status_t.tinytc_status_cl_linker_not_available (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_map_failure">tinytc_status_t.tinytc_status_cl_map_failure (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_max_size_restriction_exceeded">tinytc_status_t.tinytc_status_cl_max_size_restriction_exceeded (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_mem_copy_overlap">tinytc_status_t.tinytc_status_cl_mem_copy_overlap (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_mem_object_allocation_failure">tinytc_status_t.tinytc_status_cl_mem_object_allocation_failure (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_misaligned_sub_buffer_offset">tinytc_status_t.tinytc_status_cl_misaligned_sub_buffer_offset (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_out_of_host_memory">tinytc_status_t.tinytc_status_cl_out_of_host_memory (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_out_of_resources">tinytc_status_t.tinytc_status_cl_out_of_resources (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_cl_profiling_info_not_available">tinytc_status_t.tinytc_status_cl_profiling_info_not_available (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_compilation_error">tinytc_status_t.tinytc_status_compilation_error (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_file_io_error">tinytc_status_t.tinytc_status_file_io_error (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_internal_compiler_error">tinytc_status_t.tinytc_status_internal_compiler_error (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_invalid_arguments">tinytc_status_t.tinytc_status_invalid_arguments (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_invalid_kernel_arguments">tinytc_status_t.tinytc_status_invalid_kernel_arguments (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_collective_called_from_spmd">tinytc_status_t.tinytc_status_ir_collective_called_from_spmd (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expand_shape_mismatch">tinytc_status_t.tinytc_status_ir_expand_shape_mismatch (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expand_shape_order_too_small">tinytc_status_t.tinytc_status_ir_expand_shape_order_too_small (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expected_memref">tinytc_status_t.tinytc_status_ir_expected_memref (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expected_memref_or_group">tinytc_status_t.tinytc_status_ir_expected_memref_or_group (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expected_memref_or_scalar">tinytc_status_t.tinytc_status_ir_expected_memref_or_scalar (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expected_scalar">tinytc_status_t.tinytc_status_ir_expected_scalar (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_expected_vector_or_matrix">tinytc_status_t.tinytc_status_ir_expected_vector_or_matrix (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_incompatible_shapes">tinytc_status_t.tinytc_status_ir_incompatible_shapes (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_invalid_number_of_indices">tinytc_status_t.tinytc_status_ir_invalid_number_of_indices (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_invalid_shape">tinytc_status_t.tinytc_status_ir_invalid_shape (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_invalid_slice">tinytc_status_t.tinytc_status_ir_invalid_slice (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_multiple_dynamic_modes">tinytc_status_t.tinytc_status_ir_multiple_dynamic_modes (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_out_of_bounds">tinytc_status_t.tinytc_status_ir_out_of_bounds (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_scalar_mismatch">tinytc_status_t.tinytc_status_ir_scalar_mismatch (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_shape_stride_mismatch">tinytc_status_t.tinytc_status_ir_shape_stride_mismatch (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_unexpected_yield">tinytc_status_t.tinytc_status_ir_unexpected_yield (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ir_yield_mismatch">tinytc_status_t.tinytc_status_ir_yield_mismatch (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_out_of_range">tinytc_status_t.tinytc_status_out_of_range (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_parse_error">tinytc_status_t.tinytc_status_parse_error (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_runtime_error">tinytc_status_t.tinytc_status_runtime_error (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_success">tinytc_status_t.tinytc_status_success (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_unavailable_extension">tinytc_status_t.tinytc_status_unavailable_extension (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_unknown">tinytc_status_t.tinytc_status_unknown (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_unsupported_backend">tinytc_status_t.tinytc_status_unsupported_backend (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_unsupported_subgroup_size">tinytc_status_t.tinytc_status_unsupported_subgroup_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_unsupported_work_group_size">tinytc_status_t.tinytc_status_unsupported_work_group_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_dependency_unavailable">tinytc_status_t.tinytc_status_ze_result_error_dependency_unavailable (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_device_in_low_power_state">tinytc_status_t.tinytc_status_ze_result_error_device_in_low_power_state (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_device_lost">tinytc_status_t.tinytc_status_ze_result_error_device_lost (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_device_requires_reset">tinytc_status_t.tinytc_status_ze_result_error_device_requires_reset (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_handle_object_in_use">tinytc_status_t.tinytc_status_ze_result_error_handle_object_in_use (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_insufficient_permissions">tinytc_status_t.tinytc_status_ze_result_error_insufficient_permissions (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_argument">tinytc_status_t.tinytc_status_ze_result_error_invalid_argument (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_command_list_type">tinytc_status_t.tinytc_status_ze_result_error_invalid_command_list_type (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_enumeration">tinytc_status_t.tinytc_status_ze_result_error_invalid_enumeration (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_function_name">tinytc_status_t.tinytc_status_ze_result_error_invalid_function_name (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_global_name">tinytc_status_t.tinytc_status_ze_result_error_invalid_global_name (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_global_width_dimension">tinytc_status_t.tinytc_status_ze_result_error_invalid_global_width_dimension (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_group_size_dimension">tinytc_status_t.tinytc_status_ze_result_error_invalid_group_size_dimension (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_argument_index">tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_argument_index (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_argument_size">tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_argument_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_attribute_value">tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_attribute_value (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_name">tinytc_status_t.tinytc_status_ze_result_error_invalid_kernel_name (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_module_unlinked">tinytc_status_t.tinytc_status_ze_result_error_invalid_module_unlinked (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_native_binary">tinytc_status_t.tinytc_status_ze_result_error_invalid_native_binary (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_null_handle">tinytc_status_t.tinytc_status_ze_result_error_invalid_null_handle (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_null_pointer">tinytc_status_t.tinytc_status_ze_result_error_invalid_null_pointer (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_size">tinytc_status_t.tinytc_status_ze_result_error_invalid_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_invalid_synchronization_object">tinytc_status_t.tinytc_status_ze_result_error_invalid_synchronization_object (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_module_build_failure">tinytc_status_t.tinytc_status_ze_result_error_module_build_failure (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_module_link_failure">tinytc_status_t.tinytc_status_ze_result_error_module_link_failure (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_not_available">tinytc_status_t.tinytc_status_ze_result_error_not_available (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_out_of_device_memory">tinytc_status_t.tinytc_status_ze_result_error_out_of_device_memory (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_out_of_host_memory">tinytc_status_t.tinytc_status_ze_result_error_out_of_host_memory (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_overlapping_regions">tinytc_status_t.tinytc_status_ze_result_error_overlapping_regions (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_uninitialized">tinytc_status_t.tinytc_status_ze_result_error_uninitialized (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unknown">tinytc_status_t.tinytc_status_ze_result_error_unknown (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_alignment">tinytc_status_t.tinytc_status_ze_result_error_unsupported_alignment (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_enumeration">tinytc_status_t.tinytc_status_ze_result_error_unsupported_enumeration (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_feature">tinytc_status_t.tinytc_status_ze_result_error_unsupported_feature (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_image_format">tinytc_status_t.tinytc_status_ze_result_error_unsupported_image_format (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_size">tinytc_status_t.tinytc_status_ze_result_error_unsupported_size (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_error_unsupported_version">tinytc_status_t.tinytc_status_ze_result_error_unsupported_version (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_error_device_is_not_vertex">tinytc_status_t.tinytc_status_ze_result_exp_error_device_is_not_vertex (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_error_operands_incompatible">tinytc_status_t.tinytc_status_ze_result_exp_error_operands_incompatible (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_error_remote_device">tinytc_status_t.tinytc_status_ze_result_exp_error_remote_device (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_error_vertex_is_not_device">tinytc_status_t.tinytc_status_ze_result_exp_error_vertex_is_not_device (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_rtas_build_deferred">tinytc_status_t.tinytc_status_ze_result_exp_rtas_build_deferred (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_exp_rtas_build_retry">tinytc_status_t.tinytc_status_ze_result_exp_rtas_build_retry (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_not_ready">tinytc_status_t.tinytc_status_ze_result_not_ready (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_warning_action_required">tinytc_status_t.tinytc_status_ze_result_warning_action_required (C enumerator)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_status_t.tinytc_status_ze_result_warning_dropped_data">tinytc_status_t.tinytc_status_ze_result_warning_dropped_data (C enumerator)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_store_inst_create">tinytc_store_inst_create (C function)</a>
+</li>
+      <li><a href="api/core_capi.html#c.tinytc_string_destroy">tinytc_string_destroy (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_subview_inst_create">tinytc_subview_inst_create (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_sum_inst_create">tinytc_sum_inst_create (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_transpose_t">tinytc_transpose_t (C enum)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_transpose_t.tinytc_transpose_N">tinytc_transpose_t.tinytc_transpose_N (C enumerator)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_transpose_t.tinytc_transpose_T">tinytc_transpose_t.tinytc_transpose_T (C enumerator)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_transpose_to_string">tinytc_transpose_to_string (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_create">tinytc_value_create (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_get_name">tinytc_value_get_name (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_release">tinytc_value_release (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_retain">tinytc_value_retain (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_set_name">tinytc_value_set_name (C function)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_value_t">tinytc_value_t (C type)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_DESCRIPTION">TINYTC_VERSION_DESCRIPTION (C macro)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_HASH">TINYTC_VERSION_HASH (C macro)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_MAJOR">TINYTC_VERSION_MAJOR (C macro)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_MINOR">TINYTC_VERSION_MINOR (C macro)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_NUMBER_OF_COMMITS_SINCE_RELEASE">TINYTC_VERSION_NUMBER_OF_COMMITS_SINCE_RELEASE (C macro)</a>
+</li>
+      <li><a href="api/core_capi.html#c.TINYTC_VERSION_PATCH">TINYTC_VERSION_PATCH (C macro)</a>
+</li>
+      <li><a href="api/builder_capi.html#c.tinytc_yield_inst_create">tinytc_yield_inst_create (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_convert_status">tinytc_ze_convert_status (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_core_info_create">tinytc_ze_core_info_create (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_get_group_count">tinytc_ze_get_group_count (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_get_group_size">tinytc_ze_get_group_size (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_kernel_create">tinytc_ze_kernel_create (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_module_create">tinytc_ze_module_create (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_recipe_handler_create">tinytc_ze_recipe_handler_create (C function)</a>
+</li>
+      <li><a href="api/ze/capi.html#c.tinytc_ze_recipe_handler_submit">tinytc_ze_recipe_handler_submit (C function)</a>
 </li>
   </ul></td>
 </tr></table>

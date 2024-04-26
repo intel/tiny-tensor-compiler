@@ -30,6 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
     <link rel="stylesheet" type="text/css" href="_static/fix-scrollbar-bug.css?v=1c140a14" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -150,47 +151,33 @@
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="manual/build.html">Building and linking</a></li>
-<li class="toctree-l1"><a class="reference internal" href="manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual/calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="api/index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/introduction.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/parser.html">Parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/jit.html">JIT compiler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/runtime.html">Runtime</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/recipe/small_gemm_batched.html">Batched small GEMM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/builder.html">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/tiling.html">Work-group size</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/passes.html">Compiler passes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/generator.html">GEMM generator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/ir/error.html">Error handling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/sycl/index.html">tinytc_sycl</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/sycl/index.html">tinytc-sycl</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/runtime.html">Runtime</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
 </ul>
@@ -445,7 +432,8 @@ to OpenCL-C and provides methods to run these programs on GPU devices and other 
 supporting
 the <a class="reference external" href="https://www.khronos.org/opencl/">OpenCL</a>,
 <a class="reference external" href="https://spec.oneapi.io/level-zero/latest/">Level Zero</a>,
-and <a class="reference external" href="https://www.khronos.org/sycl/">SYCL</a> runtime.</p>
+and <a class="reference external" href="https://www.khronos.org/sycl/">SYCL</a> runtime.
+The library exposes a C-API and a C++-API.</p>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
 <p><a class="reference external" href="https://www.opensource.org/licenses/BSD-3-Clause">BSD 3-Clause License</a></p>
@@ -462,12 +450,16 @@ and <a class="reference external" href="https://www.khronos.org/sycl/">SYCL</a> 
 <li class="toctree-l2"><a class="reference internal" href="manual/build.html#linking-in-a-cmake-project">Linking in a CMake project</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="manual/usage.html">Basic usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="manual/usage.html#recipes">Recipes</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/usage.html#jit-compilation">JIT compilation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="manual/usage.html#ir-builder">IR builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="manual/core.html">Core programming guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#memory">Memory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#error">Error</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#parser">Parser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#compiler">Compiler</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#runtime">Runtime</a></li>
+<li class="toctree-l2"><a class="reference internal" href="manual/core.html#recipe">Recipe</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="manual/builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="manual/calling_convention.html">Calling convention</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="manual/calling_convention.html#scalar-types">Scalar types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="manual/calling_convention.html#memref-types">Memref types</a></li>
@@ -486,35 +478,31 @@ and <a class="reference external" href="https://www.khronos.org/sycl/">SYCL</a> 
 <li class="toctree-l2"><a class="reference internal" href="manual/tensor-ir.html#sample-code">Sample code</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 </div>
 <div class="toctree-wrapper compound">
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="api/index.html">tinytc</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/introduction.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/parser.html">Parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/jit.html">JIT compiler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/recipe/index.html">Recipe module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ir/index.html">IR module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/ze/index.html">tinytc-level-zero</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/ze/error.html">Error handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/cl/index.html">tinytc_cl</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/cl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/cl/index.html">tinytc-opencl</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/cl/error.html">Error handling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/sycl/index.html">tinytc_sycl</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/sycl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/sycl/index.html">tinytc-sycl</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="api/sycl/runtime.html">Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/ze/index.html">tinytc_ze</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/ze/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
 </ul>

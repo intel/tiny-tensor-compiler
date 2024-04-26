@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tinytc-sycl &#8212; Tiny Tensor Compiler  documentation</title>
+    <title>tinytc_sycl &#8212; Tiny Tensor Compiler  documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=a746c00c" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/sphinx-book-theme.css?v=384b581d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
     <link rel="stylesheet" type="text/css" href="../../_static/fix-scrollbar-bug.css?v=1c140a14" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
@@ -44,8 +45,8 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/sycl/index';</script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Device info" href="info.html" />
-    <link rel="prev" title="Error handling" href="../cl/error.html" />
+    <link rel="next" title="C++-API" href="cxxapi.html" />
+    <link rel="prev" title="C++-API" href="../cl/cxxapi.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -149,47 +150,33 @@
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">User manual</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="../../manual/build.html">Building and linking</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../manual/usage.html">Basic usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/core.html">Core programming guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/builder.html">Builder programming guide</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual/calling_convention.html">Calling convention</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../manual/tensor-ir.html">Tensor language reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../manual/tutorial_matrix_chain.html">Tutorial: Matrix chain product</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">API</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 has-children"><a class="reference internal" href="../index.html">tinytc</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../introduction.html">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../parser.html">Parser</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../jit.html">JIT compiler</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../runtime.html">Runtime</a></li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../recipe/index.html">Recipe module</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../recipe/small_gemm_batched.html">Batched small GEMM</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../recipe/tall_and_skinny.html">Tall and skinny GEMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../core_capi.html">Core C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../builder_capi.html">Builder C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../core_cxxapi.html">Core C++-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../builder_cxxapi.html">Builder C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="../ir/index.html">IR module</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="../ir/builder.html">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ir/tiling.html">Work-group size</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ir/passes.html">Compiler passes</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ir/generator.html">GEMM generator</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../ir/error.html">Error handling</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../cl/index.html">tinytc_cl</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../cl/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../cl/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
+<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">tinytc_sycl</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="cxxapi.html">C++-API</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc-level-zero</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../ze/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../ze/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../ze/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../cl/index.html">tinytc-opencl</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="../cl/info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../cl/runtime.html">Runtime</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../cl/error.html">Error handling</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="current reference internal" href="#">tinytc-sycl</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="info.html">Device info</a></li>
-<li class="toctree-l2"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../ze/index.html">tinytc_ze</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../ze/capi.html">C-API</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../ze/cxxapi.html">C++-API</a></li>
 </ul>
 </li>
 </ul>
@@ -409,7 +396,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>tinytc-sycl</h1>
+    <h1>tinytc_sycl</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -424,11 +411,16 @@ document.write(`
                 <article class="bd-article">
                   
   <section id="tinytc-sycl">
-<h1>tinytc-sycl<a class="headerlink" href="#tinytc-sycl" title="Link to this heading">#</a></h1>
+<h1>tinytc_sycl<a class="headerlink" href="#tinytc-sycl" title="Link to this heading">#</a></h1>
+<p>SYCL runtime support is provided in libtinytc_sycl.
+C++ users should include the header</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;tinytc/tinytc_sycl.hpp&quot;</span>
+</pre></div>
+</div>
+<p>There is no C-API for libtinytc_sycl.</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="info.html">Device info</a></li>
-<li class="toctree-l1"><a class="reference internal" href="runtime.html">Runtime</a></li>
+<li class="toctree-l1"><a class="reference internal" href="cxxapi.html">C++-API</a></li>
 </ul>
 </div>
 </section>
@@ -445,20 +437,20 @@ document.write(`
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../cl/error.html"
+       href="../cl/cxxapi.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Error handling</p>
+        <p class="prev-next-title">C++-API</p>
       </div>
     </a>
     <a class="right-next"
-       href="info.html"
+       href="cxxapi.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Device info</p>
+        <p class="prev-next-title">C++-API</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
