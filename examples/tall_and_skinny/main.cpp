@@ -86,18 +86,18 @@ template <typename T> void test(queue q, args &a) {
             q.memset(C, 0, c.m * c.n * sizeof(T)).wait();
             q.memset(C_ref, 0, c.m * c.n * sizeof(T)).wait();
             q.submit([&](auto &h) {
-                auto beta = a.beta;
-                h.parallel_for(range{static_cast<std::size_t>(c.n), static_cast<std::size_t>(c.m)},
-                               [=](id<2> it) {
-                                   auto m = it[1];
-                                   auto n = it[0];
-                                   auto c_acc = T(0.0);
-                                   for (std::int64_t k = 0; k < c.k; ++k) {
-                                       c_acc += A[m + k * c.m] * B[k + n * c.k];
-                                   }
-                                   C_ref[m + n * c.m] = c_acc + T(beta) * C_ref[m + n * c.m];
-                               });
-            });
+                 auto beta = a.beta;
+                 h.parallel_for(range{static_cast<std::size_t>(c.n), static_cast<std::size_t>(c.m)},
+                                [=](id<2> it) {
+                                    auto m = it[1];
+                                    auto n = it[0];
+                                    auto c_acc = T(0.0);
+                                    for (std::int64_t k = 0; k < c.k; ++k) {
+                                        c_acc += A[m + k * c.m] * B[k + n * c.k];
+                                    }
+                                    C_ref[m + n * c.m] = c_acc + T(beta) * C_ref[m + n * c.m];
+                                });
+             }).wait();
         }
 
         auto source_ctx = make_source_context();
@@ -108,7 +108,7 @@ template <typename T> void test(queue q, args &a) {
             auto tas = make_recipe_handler(
                 q, make_tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx));
 
-            tall_and_skinny::set_args(tas, c.m, 1.0, A, c.m, B, c.k, a.beta, C, c.m);
+            tall_and_skinny::set_args(tas, c.m, T(1.0), A, c.m, B, c.k, T(a.beta), C, c.m);
             tas.submit(q).wait();
             if (a.verify) {
                 check(c.m, c.n);
@@ -122,8 +122,11 @@ template <typename T> void test(queue q, args &a) {
             std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << a.beta
                       << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops << std::endl;
         } catch (status const &st) {
-            std::cerr << source_ctx.get_error_log() << " (" << static_cast<int>(st) << ") "
+            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::error_string(st)
                       << std::endl;
+            if (source_ctx.get_error_log()[0] != '\0') {
+                std::cerr << "Error log: " << std::endl << source_ctx.get_error_log() << std::endl;
+            }
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }

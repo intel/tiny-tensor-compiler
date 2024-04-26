@@ -37,6 +37,7 @@ typedef enum {
     tinytc_status_parse_error = 0xa,                 ///< Error during parsing
     tinytc_status_unavailable_extension = 0xb,       ///< Unavailable runtime extension
     tinytc_status_unsupported_backend = 0xc,         ///< Unsupported backend (SYCL runtime)
+    tinytc_status_invalid_kernel_arguments = 0xd,    ///< Kernel got invalid arguments
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,             ///< Out of bounds access
     tinytc_status_ir_invalid_shape = 0x101,             ///< Invalid tensor shape
