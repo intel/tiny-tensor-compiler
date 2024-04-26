@@ -14,7 +14,7 @@ namespace tinytc {
 class slice : public std::pair<value, value> {
   public:
     //! ctor
-    inline slice(value offset = nullptr, value size = nullptr)
+    inline slice(value offset = {}, value size = {})
         : std::pair<value, value>{std::move(offset), std::move(size)} {}
 };
 

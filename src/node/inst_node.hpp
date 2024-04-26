@@ -236,7 +236,7 @@ class load_inst : public clir::visitable<load_inst, inst_node> {
 
 class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
   public:
-    inline group_id_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
+    inline group_id_inst(location const &lc = {}) : result_{make_value(scalar_type::index)} {
         loc(lc);
     }
     inline value result() const override { return result_; }
@@ -248,7 +248,7 @@ class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
 
 class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
   public:
-    inline group_size_inst(location const &lc = {}) : result_{data_type(scalar_type::index)} {
+    inline group_size_inst(location const &lc = {}) : result_{make_value(scalar_type::index)} {
         loc(lc);
     }
     inline value result() const override { return result_; }
@@ -325,7 +325,7 @@ class hadamard_inst : public clir::visitable<hadamard_inst, blas_a3_inst> {
 
 class if_inst : public clir::visitable<if_inst, inst_node> {
   public:
-    if_inst(value condition, region then, region otherwise = nullptr,
+    if_inst(value condition, region then, region otherwise = {},
             std::vector<scalar_type> const &return_types = {}, location const &lc = {});
     inline auto condition() const -> value const & { return condition_; }
     inline auto then() const -> region const & { return then_; }

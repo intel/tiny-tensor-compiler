@@ -18,13 +18,13 @@ namespace tinytc {
 find_alloca::find_alloca(bool recursive) : recursive_(recursive) {}
 
 /* Inst nodes */
-value find_alloca::operator()(inst_node &) { return nullptr; }
+value find_alloca::operator()(inst_node &) { return value{}; }
 value find_alloca::operator()(alloca_inst &a) { return a.result(); }
 value find_alloca::operator()(for_inst &p) {
     if (recursive_) {
         visit(*this, *p.body());
     }
-    return nullptr;
+    return value{};
 }
 
 /* Region nodes */
@@ -32,7 +32,7 @@ value find_alloca::operator()(rgn &b) {
     for (auto &s : b.insts()) {
         alloca_.emplace_back(visit(*this, *s));
     }
-    return nullptr;
+    return value{};
 }
 
 std::vector<value> find_alloca::allocas() const { return alloca_; }

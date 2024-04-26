@@ -94,23 +94,30 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
             auto const body = [&](region_builder &bb, value &alpha, value &A, value &B, value &beta,
                                   value &C) {
                 auto gid = bb.add(make_group_id(my_loc()));
-                auto m = bb.add(
-                    make_binary_op(binary_op::mul, gid, value(M_block_size, my_loc()), my_loc()));
+                auto m = bb.add(make_binary_op(binary_op::mul, gid,
+                                               make_imm(M_block_size, my_loc()), my_loc()));
                 auto M = bb.add(make_size(C, 0, my_loc()));
                 auto M_m = bb.add(make_binary_op(binary_op::sub, M, m, my_loc()));
                 auto cond = bb.add(
-                    make_cmp(cmp_condition::lt, M_m, value(M_block_size, my_loc()), my_loc()));
+                    make_cmp(cmp_condition::lt, M_m, make_imm(M_block_size, my_loc()), my_loc()));
+                auto const offsets = std::vector<value>{m, make_imm(0u, my_loc())};
+                auto const dynamic_imm = make_dynamic(my_loc());
+                auto const block_size_imm = make_imm(M_block_size, my_loc());
                 bb.make_ifelse(
                     cond,
                     [&](region_builder &bb) {
-                        auto a = bb.add(make_subview(A, {m, 0u}, {dynamic, K}, my_loc()));
-                        auto c = bb.add(make_subview(C, {m, 0u}, {dynamic, N}, my_loc()));
+                        auto a = bb.add(make_subview(
+                            A, offsets, {dynamic_imm, make_imm(K, my_loc())}, my_loc()));
+                        auto c = bb.add(make_subview(
+                            C, offsets, {dynamic_imm, make_imm(N, my_loc())}, my_loc()));
                         bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                          my_loc()));
                     },
                     [&](region_builder &bb) {
-                        auto a = bb.add(make_subview(A, {m, 0u}, {M_block_size, K}, my_loc()));
-                        auto c = bb.add(make_subview(C, {m, 0u}, {M_block_size, N}, my_loc()));
+                        auto a = bb.add(make_subview(
+                            A, offsets, {block_size_imm, make_imm(K, my_loc())}, my_loc()));
+                        auto c = bb.add(make_subview(
+                            C, offsets, {block_size_imm, make_imm(N, my_loc())}, my_loc()));
                         bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                          my_loc()));
                     },
@@ -118,19 +125,19 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
             };
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(ty_, "alpha", my_loc());
+                auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
                 auto A = fb.argument(make_memref(ty_, {dynamic, K}, {1, dynamic}, my_loc()), "A",
                                      my_loc());
                 auto B =
                     fb.argument(make_memref(ty_, {K, N}, {1, dynamic}, my_loc()), "B", my_loc());
-                auto beta_arg = fb.argument(ty_, "beta", my_loc());
+                auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
                 auto C = fb.argument(make_memref(ty_, {dynamic, N}, {1, dynamic}, my_loc()), "C",
                                      my_loc());
                 fb.subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);
 
-                auto beta = is_beta_nonzero ? beta_arg : value(0.0, ty_, my_loc());
+                auto beta = is_beta_nonzero ? beta_arg : make_imm(0.0, ty_, my_loc());
                 fb.body([&](region_builder &bb) { body(bb, alpha, A, B, beta, C); }, my_loc());
             };
 

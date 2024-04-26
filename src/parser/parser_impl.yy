@@ -46,10 +46,10 @@
     void check_scalar_type(value & val, scalar_type const& sty, location & loc1,
                            location & loc2) {
         clir::visit(
-            overloaded{[&](int_imm &i) { i.ty(sty); },
-                           [&](float_imm &i) { i.ty(sty); },
+            overloaded{[&](int_imm &i) { i.ty(make_scalar(sty)); },
+                           [&](float_imm &i) { i.ty(make_scalar(sty)); },
                            [&](auto &) {
-                               if (!val->ty() || !is_equal(*val->ty(), *data_type(sty))) {
+                               if (!val->ty() || !is_equal(*val->ty(), *make_scalar(sty))) {
                                    auto loc = loc1;
                                    loc.end = loc2.end;
                                    throw parser::syntax_error(
@@ -248,7 +248,7 @@ arguments:
 
 argument:
     LOCAL_IDENTIFIER COLON data_type {
-        auto v = value(std::move($data_type));
+        auto v = make_value(std::move($data_type));
         v.name($LOCAL_IDENTIFIER);
         ctx.val($LOCAL_IDENTIFIER, v, @LOCAL_IDENTIFIER);
         $$ = std::move(v);
@@ -283,7 +283,7 @@ attribute:
 
 
 data_type:
-    scalar_type { $$ = data_type($scalar_type); $$->loc(@scalar_type); }
+    scalar_type { $$ = make_scalar($scalar_type); $$->loc(@scalar_type); }
   | memref_type
   | group_type
 ;
@@ -414,8 +414,8 @@ atomic:
 
 identifier_or_constant:
     var { $$ = $var; }
-  | INTEGER_CONSTANT { $$ = value($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
-  | FLOATING_CONSTANT { $$ = value($FLOATING_CONSTANT); $$->loc(@FLOATING_CONSTANT); }
+  | INTEGER_CONSTANT { $$ = make_imm($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
+  | FLOATING_CONSTANT { $$ = make_imm($FLOATING_CONSTANT); $$->loc(@FLOATING_CONSTANT); }
 ;
 
 optional_identifier_or_constant_list:
@@ -514,7 +514,7 @@ for_inst:
         if ($optional_step) {
             check_scalar_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
-        auto v = value(data_type($for_loop_var_type));
+        auto v = make_value($for_loop_var_type);
         v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
@@ -532,7 +532,7 @@ for_inst:
 ;
 
 optional_step:
-    %empty { $$ = nullptr; }
+    %empty { $$ = {}; }
   | COMMA identifier_or_constant { $$ = $identifier_or_constant; }
 
 foreach_inst:
@@ -540,7 +540,7 @@ foreach_inst:
         EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] for_loop_var_type {
         check_scalar_type($from, $for_loop_var_type, @from, @for_loop_var_type);
         check_scalar_type($to, $for_loop_var_type, @to, @for_loop_var_type);
-        auto v = value(data_type($for_loop_var_type));
+        auto v = make_value($for_loop_var_type);
         v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
@@ -758,8 +758,8 @@ constant_or_dynamic_or_identifier:
         check_scalar_type($var, scalar_type::index, @var, @var);
         $$ = $var;
     }
-  | INTEGER_CONSTANT { $$ = value($INTEGER_CONSTANT, scalar_type::index); $$->loc(@INTEGER_CONSTANT); }
-  | DYNAMIC { $$ = value(dynamic); $$->loc(@DYNAMIC); }
+  | INTEGER_CONSTANT { $$ = make_imm($INTEGER_CONSTANT, scalar_type::index); $$->loc(@INTEGER_CONSTANT); }
+  | DYNAMIC { $$ = make_imm(dynamic); $$->loc(@DYNAMIC); }
 ;
 
 fuse_inst:
@@ -816,8 +816,7 @@ index_identifier_or_const:
         $$ = $var;
     }
   | INTEGER_CONSTANT {
-        $$ = value($INTEGER_CONSTANT);
-        $$->ty(scalar_type::index);
+        $$ = make_imm($INTEGER_CONSTANT, scalar_type::index);
         $$->loc(@INTEGER_CONSTANT);
     }
 ;
@@ -862,7 +861,7 @@ if_inst:
 ;
 
 else_region:
-    %empty { $$ = nullptr; }
+    %empty { $$ = {}; }
   | ELSE region{ $$ = std::move($region); }
 ;
 
@@ -941,14 +940,14 @@ slice_list:
 ;
 
 slice:
-    COLON { $$ = slice(static_cast<std::int64_t>(0), dynamic); }
+    COLON { $$ = slice(make_imm(std::int64_t(0)), make_imm(dynamic)); }
   | index_identifier_or_const slice_size { $$ = slice(std::move($1), std::move($2)); }
 ;
 
 slice_size:
-    %empty { $$ = nullptr; }
+    %empty { $$ = {}; }
   | COLON index_identifier_or_const { $$ = $2; }
-  | COLON DYNAMIC { $$ = dynamic; }
+  | COLON DYNAMIC { $$ = make_imm(dynamic); }
 ;
 
 %%
