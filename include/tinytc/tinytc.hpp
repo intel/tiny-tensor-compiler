@@ -1979,12 +1979,15 @@ inline auto compile_to_binary(prog prg, core_info const &info, bundle_format for
 template <typename T> struct auto_mem_type;
 
 /**
- * @brief Identify pointer to non-classes
+ * @brief True if T is either pointer to a fundamental type or a pointer to a pointer to a
+ * fundamental type
  *
- * @tparam T memory object type
+ * @tparam T type
  */
 template <typename T>
-concept pointer_to_scalar = std::is_pointer_v<T> && !std::is_class_v<std::remove_pointer_t<T>>;
+concept usm_pointer_type = std::is_pointer_v<T> &&
+                           (std::is_fundamental_v<std::remove_pointer_t<T>> ||
+                            std::is_fundamental_v<std::remove_pointer_t<std::remove_pointer_t<T>>>);
 
 /**
  * @brief Specialize auto_mem_type for pointer to non-class types
@@ -1994,7 +1997,7 @@ concept pointer_to_scalar = std::is_pointer_v<T> && !std::is_class_v<std::remove
  *
  * @tparam T memory object type
  */
-template <pointer_to_scalar T> struct auto_mem_type<T> {
+template <usm_pointer_type T> struct auto_mem_type<T> {
     constexpr static mem_type value = mem_type::usm_pointer; ///< Pointer maps to USM pointer type
 };
 
@@ -2010,12 +2013,12 @@ struct mem : ::tinytc_mem {
     /**
      * @brief ctor
      *
-     * @tparam T pointer, scalar, or buffer type
-     * @param value memory object
+     * @tparam T non-class type or buffer type
+     * @param value Pointer to non-class type or pointer or buffer type
      * @param type memory object type
      */
     template <typename T>
-    inline mem(T value, mem_type type = auto_mem_type_v<T>)
+    inline mem(T const value, mem_type type = auto_mem_type_v<T>)
         : ::tinytc_mem{value, static_cast<tinytc_mem_type_t>(type)} {}
 };
 

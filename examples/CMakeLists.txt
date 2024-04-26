@@ -1,6 +1,7 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
 
+add_subdirectory(builder)
 add_subdirectory(jit)
 
 if(BUILD_LEVEL_ZERO)

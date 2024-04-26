@@ -1,9 +1,0 @@
-func @sample(%A0: memref<f32x16x4x?>,
-             %B0: memref<f32x4x8>,
-             %C0: memref<f32x16x8x?>) work_group_size(16,1) {
-  %0 = group_id
-  %1 = subview %A0[0:?,0:?,%0] : memref<f32x16x4x?>
-  %2 = subview %C0[0:?,0:?,%0] : memref<f32x16x8x?>
-  gemm.n.n 0x1p+0, %1, %B0, 0x0p+0, %2
-    : f32, memref<f32x16x4>, memref<f32x4x8>, f32, memref<f32x16x8>
-}

@@ -43,40 +43,20 @@ set(DOC_FILES
     api/core_capi.rst
     api/core_cxxapi.rst
     api/index.rst
-    api/jit.rst
-    api/parser.rst
-    api/runtime.rst
-    api/ir/builder.rst
-    api/ir/builder_example.cpp
-    api/ir/builder_example.ir
-    api/ir/error.rst
-    api/ir/generator.rst
-    api/ir/index.rst
-    api/ir/passes.rst
-    api/ir/tiling.rst
-    api/recipe/index.rst
-    api/recipe/small_gemm_batched.rst
-    api/recipe/tall_and_skinny.rst
     api/cl/capi.rst
     api/cl/cxxapi.rst
-    api/cl/error.rst
     api/cl/index.rst
-    api/cl/info.rst
-    api/cl/runtime.rst
     api/sycl/cxxapi.rst
-    api/sycl/info.rst
     api/sycl/index.rst
-    api/sycl/runtime.rst
     api/ze/capi.rst
     api/ze/cxxapi.rst
-    api/ze/error.rst
     api/ze/index.rst
-    api/ze/info.rst
-    api/ze/runtime.rst
     manual/build.rst
+    manual/builder.rst
     manual/calling_convention.rst
+    manual/core.rst
     manual/tensor-ir.rst
-    manual/usage.rst
+    manual/tutorial_matrix_chain.rst
 )
 
 set(SPHINX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})

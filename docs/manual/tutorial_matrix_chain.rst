@@ -1,28 +1,11 @@
 .. Copyright (C) 2024 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
-===========
-Basic usage
-===========
+==============================
+Tutorial: Matrix chain product
+==============================
 
-The Tiny Tensor Compiler library offers three method to build and run a tensor kernel:
-recipes, JIT compilation of a program written in tensor language, and the IR builder.
-
-Recipes
-=======
-
-Recipes cover the generation of a tensor program, just-in-time compilation, and
-submitting a kernel to the device for common use cases.
-
-The following recipes are available:
-
-* :ref:`Small GEMM batched recipe`
-* :ref:`Tall and skinny GEMM recipe`
-
-JIT compilation
-===============
-
-Suppose we have the tensors
+We have the tensors
 :math:`Q \in \mathbb{R}^{56x9xE}`,
 :math:`K \in \mathbb{R}^{56x9}`,
 :math:`P \in \mathbb{R}^{56x9xE}`,
@@ -36,7 +19,7 @@ For all :math:`e\in[0,E)` we want to compute the matrix chain multiplication
 where :math:`Q(:,:,e)` selects a :math:`\mathbb{R}^{56x9}` submatrix from the tensor Q
 and likewise for :math:`P(:,:,e)`.
 
-In the :ref:`tensor language <tensor language>` we can implement that kernel as following:
+In the :ref:`tensor language <tensor language>` we can implement the kernel as following:
 
 .. _fused kernel example:
 
@@ -90,9 +73,7 @@ We observe that
 * load and subview calls translate to simple pointer manipulation,
 * and that a barrier has been introduced between the GEMM calls to avoid data races.
 
-SYCL users compile and run the kernel using the following pseudo-code:
-
-.. _kernel compilation and running example:
+When using SYCL, we can run the kernel using the following pseudo-code:
 
 .. code-block:: cpp
 
@@ -100,15 +81,15 @@ SYCL users compile and run the kernel using the following pseudo-code:
     #include <tinytc/tinytc_sycl.hpp>
     #include <sycl/sycl.hpp>
 
-    auto source_ctx = tinytc::create_source_context();
+    auto source_ctx = tinytc::make_source_context();
     try {
         // Parse tensor program
         auto prog = tinytc::parse_file("fused_kernel.ir", source_ctx);
 
         // JIT compile program
         auto q = sycl::queue{};
-        auto info = tinytc::create_core_info(q.get_device());
-        auto bin = tinytc::compile_to_binary(std::move(prog), info, tinytc::bundle_format::spirv,
+        auto info = tinytc::make_core_info(q.get_device());
+        auto bin = tinytc::compile_to_binary(std::move(prog), info, tinytc::bundle_format::native,
                                              source_ctx);
 
         // Initialize tensors
@@ -117,8 +98,8 @@ SYCL users compile and run the kernel using the following pseudo-code:
         float** A = ...;
         float* Q = ...;
 
-        auto bundle = tinytc::create_kernel_bundle(q.get_context(), q.get_device(), bin);
-        auto kernel = tinytc::create_kernel(bundle, "fused_kernel");
+        auto bundle = tinytc::make_kernel_bundle(q.get_context(), q.get_device(), bin);
+        auto kernel = tinytc::make_kernel(bundle, "fused_kernel");
         auto exe_range = tinytc::get_execution_range(kernel, howmany);
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
             q.submit([&](sycl::handler &h) {
@@ -138,21 +119,3 @@ SYCL users compile and run the kernel using the following pseudo-code:
 Note that a fictional time-loop was introduced around `q.submit`.
 As a general rule, JIT compilation is expensive in comparison to kernel execution,
 hence, a compiled program should be reused many times.
-
-IR builder
-==========
-
-Some kind of templating is often required.
-For example, one might want to create a double-precision variant of the
-:ref:`above tensor kernel <fused kernel example>`,
-meaning that one needs to replace every occurence of "f32" with "f64".
-To faciliate templating in a programmatic way,
-the :ref:`tensor language builder <IR builder>` classes are offered as an alternative
-to writing tensor language in textual form.
-With the builder classes, place-holders are simply C++-objects.
-Moreover, complex code generation patterns can be realized, e.g. offering different code paths
-for specific values of a parameterization.
-
-When using builder classes, the parsing step in the
-:ref:`pseudo code <kernel compilation and running example>` listed above
-is omitted and the "prog" variable is directly obtained from a program builder object.

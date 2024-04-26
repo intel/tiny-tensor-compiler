@@ -406,7 +406,7 @@ typedef struct tinytc_location {
 
 //! @brief Memory object
 typedef struct tinytc_mem {
-    const void *value;      ///< Pointer value or pointer to buffer object
+    const void *value;      ///< USM / SVM pointer or pointer to buffer object
     tinytc_mem_type_t type; ///< Memory object type
 } tinytc_mem_t;
 

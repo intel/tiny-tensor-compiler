@@ -238,7 +238,7 @@ Recipe
 
 * Concepts
 
-  * :ref:`pointer_to_scalar`
+  * :ref:`usm_pointer_type`
 
 Recipe Enumerations
 -------------------
@@ -308,10 +308,10 @@ auto_mem_type_v
 Recipe Concepts
 ---------------
 
-pointer_to_scalar
-.................
+usm_pointer_type
+................
 
-.. doxygenconcept:: tinytc::pointer_to_scalar
+.. doxygenconcept:: tinytc::usm_pointer_type
 
 Source
 ======

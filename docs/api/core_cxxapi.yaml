@@ -52,7 +52,7 @@ Core C++-API:
     variable:
       - tinytc::auto_mem_type_v
     concept:
-      - tinytc::pointer_to_scalar
+      - tinytc::usm_pointer_type
   Source:
     class:
       - tinytc::source
