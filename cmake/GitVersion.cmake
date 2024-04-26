@@ -18,7 +18,7 @@ function(git_version)
             RESULT_VARIABLE status_code
             OUTPUT_VARIABLE output
             OUTPUT_STRIP_TRAILING_WHITESPACE)
-        if(${output} MATCHES "v([0-9]*)\.([0-9]*)\.([0-9]*)-([0-9]*)-([a-zA-Z0-9]*)")
+        if(${output} MATCHES "v([0-9]*)\.([0-9]*)\.([0-9]*)-([0-9]*)-g([a-zA-Z0-9]*)")
             set(GIT_MAJOR_VERSION ${CMAKE_MATCH_1} PARENT_SCOPE)
             set(GIT_MINOR_VERSION ${CMAKE_MATCH_2} PARENT_SCOPE)
             set(GIT_PATCH_VERSION ${CMAKE_MATCH_3} PARENT_SCOPE)
