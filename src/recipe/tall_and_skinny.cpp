@@ -103,7 +103,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                 auto const offsets = std::vector<value>{m, make_imm(0u, my_loc())};
                 auto const dynamic_imm = make_dynamic(my_loc());
                 auto const block_size_imm = make_imm(M_block_size, my_loc());
-                bb.make_ifelse(
+                bb.ifelse(
                     cond,
                     [&](region_builder &bb) {
                         auto a = bb.add(make_subview(

@@ -1,0 +1,19 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+C++-API:
+  Device Info:
+    function:
+      - tinytc::make_core_info(sycl::device const&)
+  Kernel:
+    function:
+      - tinytc::get_execution_range
+      - tinytc::get_global_size(std::uint32_t,sycl::range<3u> const &)
+      - tinytc::get_group_size(sycl::kernel const &)
+      - tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)
+  Recipe:
+    function:
+      - tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)
+      - tinytc::make_recipe_handler(sycl::queue const&,recipe const&)
+    class:
+      - tinytc::sycl_recipe_handler

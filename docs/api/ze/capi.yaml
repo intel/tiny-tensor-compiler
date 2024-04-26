@@ -1,0 +1,19 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+C-API:
+  Common:
+    function:
+      - tinytc_ze_convert_status
+  Device Info:
+    function:
+      - tinytc_ze_core_info_create
+  Kernel:
+    function:
+      - tinytc_ze_get_group_count
+      - tinytc_ze_get_group_size
+      - tinytc_ze_kernel_create
+      - tinytc_ze_module_create
+  Recipe:
+    function:
+      - tinytc_ze_recipe_handler_create
+      - tinytc_ze_recipe_handler_submit

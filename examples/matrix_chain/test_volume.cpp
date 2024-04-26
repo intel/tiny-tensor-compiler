@@ -92,22 +92,30 @@ auto test_volume<T>::make_optimized_kernel()
         auto I = fb.argument(I_.type(), "I");
         fb.body([&](region_builder &bb) {
             auto gid = bb.add(make_group_id());
+            auto const offsets2 = std::vector<value>{make_imm(0), make_imm(0)};
+            auto const offsets3 = std::vector<value>{make_imm(0), make_imm(0), gid};
+            auto const size3 = std::vector<value>{make_dynamic(), make_dynamic(), value{}};
+            auto const sizeK2 = std::vector<value>{make_imm(B3_aligned_), make_imm(B2_)};
             auto tmp = bb.add(make_alloca(make_memref(real_t, {B2_, P_}, {1, B2_aligned_})));
-            auto a0 = bb.add(make_subview(A0, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto a1 = bb.add(make_subview(A1, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto a2 = bb.add(make_subview(A2, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto K0v = bb.add(make_subview(K0, {0, 0}, {B3_aligned_, B2_}));
-            auto K1v = bb.add(make_subview(K1, {0, 0}, {B3_aligned_, B2_}));
-            auto K2v = bb.add(make_subview(K2, {0, 0}, {B3_aligned_, B2_}));
-            auto qv = bb.add(make_subview(Q, {0, 0, gid}, {B3_aligned_, P_, nullptr}));
-            auto iv = bb.add(make_subview(I, {0, 0, gid}, {B2_aligned_, P_, nullptr}));
-            auto tmpv = bb.add(make_subview(tmp, {0, 0}, {B2_aligned_, P_}));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a0, T(0.0), tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K0v, tmp, T(1.0), qv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a1, T(0.0), tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K1v, tmp, T(1.0), qv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a2, T(0.0), tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K2v, tmp, T(1.0), qv));
+            auto a0 = bb.add(make_subview(A0, offsets3, size3));
+            auto a1 = bb.add(make_subview(A1, offsets3, size3));
+            auto a2 = bb.add(make_subview(A2, offsets3, size3));
+            auto K0v = bb.add(make_subview(K0, offsets2, sizeK2));
+            auto K1v = bb.add(make_subview(K1, offsets2, sizeK2));
+            auto K2v = bb.add(make_subview(K2, offsets2, sizeK2));
+            auto qv =
+                bb.add(make_subview(Q, offsets3, {make_imm(B3_aligned_), make_imm(P_), value{}}));
+            auto iv =
+                bb.add(make_subview(I, offsets3, {make_imm(B2_aligned_), make_imm(P_), value{}}));
+            auto tmpv = bb.add(make_subview(tmp, offsets2, {make_imm(B2_aligned_), make_imm(P_)}));
+            auto const s0 = make_imm(T(0.0));
+            auto const s1 = make_imm(T(1.0));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a0, s0, tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K0v, tmp, s1, qv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a1, s0, tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K1v, tmp, s1, qv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a2, s0, tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K2v, tmp, s1, qv));
         });
     };
     auto pb = program_builder{};

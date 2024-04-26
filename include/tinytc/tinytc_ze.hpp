@@ -54,27 +54,59 @@ template <> struct unique_handle_traits<ze_module_handle_t> {
 };
 } // namespace internal
 
+/**
+ * @brief Make a Level Zero module from a tinytc binary
+ *
+ * @param context Context
+ * @param device Device
+ * @param bin Binary
+ * @param build_log Optional build log (user responsible for clean-up)
+ *
+ * @return Level Zero module (unique handle)
+ */
 inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device,
                                binary const &bin, ze_module_build_log_handle_t *build_log = nullptr)
     -> unique_handle<ze_module_handle_t> {
     ze_module_handle_t obj;
     CHECK_STATUS(tinytc_ze_module_create(&obj, context, device, bin.get(), build_log));
-    return {obj};
+    return unique_handle<ze_module_handle_t>{obj};
 }
 
+/**
+ * @brief Make a Level Zero kernel and set its group size
+ *
+ * @param mod Module
+ * @param name Kernel name
+ *
+ * @return Level Zero kernel (unique handle)
+ */
 inline auto make_kernel(ze_module_handle_t mod, char const *name)
     -> unique_handle<ze_kernel_handle_t> {
     ze_kernel_handle_t obj;
     CHECK_STATUS(tinytc_ze_kernel_create(&obj, mod, name));
-    return {obj};
+    return unique_handle<ze_kernel_handle_t>{obj};
 }
 
+/**
+ * @brief Get work group size
+ *
+ * @param kernel kernel
+ *
+ * @return Work-group size
+ */
 inline auto get_group_size(ze_kernel_handle_t kernel) -> std::array<std::uint32_t, 3u> {
     std::array<std::uint32_t, 3u> group_size;
     CHECK_STATUS(tinytc_ze_get_group_size(kernel, &group_size[0], &group_size[1], &group_size[2]));
     return group_size;
 }
 
+/**
+ * @brief Convert group size to Level Zero group count
+ *
+ * @param howmany Group size
+ *
+ * @return Group count
+ */
 inline auto get_group_count(std::uint32_t howmany) -> ze_group_count_t {
     return tinytc_ze_get_group_count(howmany);
 }
@@ -83,10 +115,23 @@ inline auto get_group_count(std::uint32_t howmany) -> ze_group_count_t {
 ////////// Recipe //////////
 ////////////////////////////
 
+/**
+ * @brief Recipe handler for the Level Zero runtime
+ */
 class level_zero_recipe_handler : public recipe_handler {
   public:
     using recipe_handler::recipe_handler;
 
+    /**
+     * @brief Append recipe to command list
+     *
+     * Cf. @ref tinytc_ze_recipe_handler_submit
+     *
+     * @param list Command list
+     * @param signal_event Event to be signalled on completetion
+     * @param num_wait_events Number of wait events to wait on
+     * @param wait_events Array of num_wait_events events to wait on
+     */
     inline void submit(ze_command_list_handle_t list, ze_event_handle_t signal_event = nullptr,
                        uint32_t num_wait_events = 0, ze_event_handle_t *wait_events = nullptr) {
         CHECK_STATUS(tinytc_ze_recipe_handler_submit(obj_, list, signal_event, num_wait_events,
@@ -94,11 +139,20 @@ class level_zero_recipe_handler : public recipe_handler {
     }
 };
 
+/**
+ * @brief Make recipe handler
+ *
+ * @param context Context
+ * @param device Device
+ * @param rec Recipe
+ *
+ * @return Level Zero recipe handler
+ */
 inline auto make_recipe_handler(ze_context_handle_t context, ze_device_handle_t device,
                                 recipe const &rec) -> level_zero_recipe_handler {
     tinytc_recipe_handler_t handler;
     CHECK_STATUS(tinytc_ze_recipe_handler_create(&handler, context, device, rec.get()));
-    return {handler};
+    return level_zero_recipe_handler{handler};
 }
 
 } // namespace tinytc

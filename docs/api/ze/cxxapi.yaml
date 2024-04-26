@@ -1,0 +1,20 @@
+# Copyright (C) 2024 Intel Corporation
+# SPDX-License-Identifier: BSD-3-Clause
+C++-API:
+  Common:
+    function:
+      - tinytc::ZE_CHECK_STATUS
+  Device Info:
+    function:
+      - tinytc::make_core_info(ze_device_handle_t)
+  Kernel:
+    function:
+      - tinytc::get_group_count
+      - tinytc::get_group_size(ze_kernel_handle_t)
+      - tinytc::make_kernel(ze_module_handle_t,char const *)
+      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&,ze_module_build_log_handle_t*)
+  Recipe:
+    function:
+      - tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&)
+    class:
+      - tinytc::level_zero_recipe_handler

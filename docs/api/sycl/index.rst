@@ -7,5 +7,6 @@ tinytc_sycl
 .. toctree::
    :maxdepth: 1
 
+   cxxapi
    info
    runtime

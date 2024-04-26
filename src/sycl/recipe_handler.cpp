@@ -69,13 +69,13 @@ auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, reci
     -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec).release();
-    return {handler};
+    return sycl_recipe_handler{handler};
 }
 
 auto make_recipe_handler(sycl::queue const &q, recipe const &rec) -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec).release();
-    return {handler};
+    return sycl_recipe_handler{handler};
 }
 
 void sycl_recipe_handler::parallel_for(sycl::handler &h) {

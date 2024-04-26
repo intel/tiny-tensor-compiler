@@ -8,6 +8,16 @@ Builder C++-API
 Common
 ======
 
+* Enumerations
+
+  * :ref:`binary_op`
+
+  * :ref:`cmp_condition`
+
+  * :ref:`scalar_type`
+
+  * :ref:`transpose`
+
 * Functions
 
   * :ref:`is_dynamic_value`
@@ -25,6 +35,39 @@ Common
 * Classes
 
   * :ref:`builder_error`
+
+* Typedefs
+
+  * :ref:`position`
+
+  * :ref:`location`
+
+* Variables
+
+  * :ref:`dynamic`
+
+Common Enumerations
+-------------------
+
+binary_op
+.........
+
+.. doxygenenum:: tinytc::binary_op
+
+cmp_condition
+.............
+
+.. doxygenenum:: tinytc::cmp_condition
+
+scalar_type
+...........
+
+.. doxygenenum:: tinytc::scalar_type
+
+transpose
+.........
+
+.. doxygenenum:: tinytc::transpose
 
 Common Functions
 ----------------
@@ -67,14 +110,37 @@ builder_error
 
 .. doxygenclass:: tinytc::builder_error
 
+Common Typedefs
+---------------
+
+position
+........
+
+.. doxygentypedef:: tinytc::position
+
+location
+........
+
+.. doxygentypedef:: tinytc::location
+
+Common Variables
+----------------
+
+dynamic
+.......
+
+.. doxygenvariable:: tinytc::dynamic
+
 Data Type
 =========
 
 * Functions
 
-  * :ref:`create_memref`
+  * :ref:`make_memref`
 
-  * :ref:`create_group`
+  * :ref:`make_group`
+
+  * :ref:`make_scalar`
 
 * Classes
 
@@ -91,15 +157,20 @@ Data Type
 Data Type Functions
 -------------------
 
-create_memref
-.............
+make_memref
+...........
 
-.. doxygenfunction:: tinytc::create_memref
+.. doxygenfunction:: tinytc::make_memref
 
-create_group
-............
+make_group
+..........
 
-.. doxygenfunction:: tinytc::create_group
+.. doxygenfunction:: tinytc::make_group
+
+make_scalar
+...........
+
+.. doxygenfunction:: tinytc::make_scalar
 
 Data Type Classes
 -----------------
@@ -130,9 +201,9 @@ Function
 
 * Functions
 
-  * :ref:`create_function`
+  * :ref:`make_function`
 
-  * :ref:`create_function_prototype`
+  * :ref:`make_function_prototype`
 
   * :ref:`set_work_group_size`
 
@@ -147,15 +218,15 @@ Function
 Function Functions
 ------------------
 
-create_function
-...............
+make_function
+.............
 
-.. doxygenfunction:: tinytc::create_function
+.. doxygenfunction:: tinytc::make_function
 
-create_function_prototype
-.........................
+make_function_prototype
+.......................
 
-.. doxygenfunction:: tinytc::create_function_prototype
+.. doxygenfunction:: tinytc::make_function_prototype
 
 set_work_group_size
 ...................
@@ -185,51 +256,51 @@ Instruction
 
 * Functions
 
-  * :ref:`create_alloca`
+  * :ref:`make_alloca`
 
-  * :ref:`create_axpby`
+  * :ref:`make_axpby`
 
-  * :ref:`create_binary_op`
+  * :ref:`make_binary_op`
 
-  * :ref:`create_cast`
+  * :ref:`make_cast`
 
-  * :ref:`create_cmp`
+  * :ref:`make_cmp`
 
-  * :ref:`create_expand`
+  * :ref:`make_expand`
 
-  * :ref:`create_for`
+  * :ref:`make_for`
 
-  * :ref:`create_foreach`
+  * :ref:`make_foreach`
 
-  * :ref:`create_fuse`
+  * :ref:`make_fuse`
 
-  * :ref:`create_gemm`
+  * :ref:`make_gemm`
 
-  * :ref:`create_gemv`
+  * :ref:`make_gemv`
 
-  * :ref:`create_ger`
+  * :ref:`make_ger`
 
-  * :ref:`create_group_id`
+  * :ref:`make_group_id`
 
-  * :ref:`create_group_size`
+  * :ref:`make_group_size`
 
-  * :ref:`create_hadamard`
+  * :ref:`make_hadamard`
 
-  * :ref:`create_if`
+  * :ref:`make_if`
 
-  * :ref:`create_load`
+  * :ref:`make_load`
 
-  * :ref:`create_neg`
+  * :ref:`make_neg`
 
-  * :ref:`create_size`
+  * :ref:`make_size`
 
-  * :ref:`create_store`
+  * :ref:`make_store`
 
-  * :ref:`create_subview`
+  * :ref:`make_subview`
 
-  * :ref:`create_sum`
+  * :ref:`make_sum`
 
-  * :ref:`create_yield`
+  * :ref:`make_yield`
 
 * Classes
 
@@ -238,120 +309,120 @@ Instruction
 Instruction Functions
 ---------------------
 
-create_alloca
-.............
-
-.. doxygenfunction:: tinytc::create_alloca
-
-create_axpby
-............
-
-.. doxygenfunction:: tinytc::create_axpby
-
-create_binary_op
-................
-
-.. doxygenfunction:: tinytc::create_binary_op
-
-create_cast
+make_alloca
 ...........
 
-.. doxygenfunction:: tinytc::create_cast
+.. doxygenfunction:: tinytc::make_alloca
 
-create_cmp
+make_axpby
 ..........
 
-.. doxygenfunction:: tinytc::create_cmp
+.. doxygenfunction:: tinytc::make_axpby
 
-create_expand
-.............
-
-.. doxygenfunction:: tinytc::create_expand
-
-create_for
-..........
-
-.. doxygenfunction:: tinytc::create_for
-
-create_foreach
+make_binary_op
 ..............
 
-.. doxygenfunction:: tinytc::create_foreach
+.. doxygenfunction:: tinytc::make_binary_op
 
-create_fuse
-...........
-
-.. doxygenfunction:: tinytc::create_fuse
-
-create_gemm
-...........
-
-.. doxygenfunction:: tinytc::create_gemm
-
-create_gemv
-...........
-
-.. doxygenfunction:: tinytc::create_gemv
-
-create_ger
-..........
-
-.. doxygenfunction:: tinytc::create_ger
-
-create_group_id
-...............
-
-.. doxygenfunction:: tinytc::create_group_id
-
-create_group_size
-.................
-
-.. doxygenfunction:: tinytc::create_group_size
-
-create_hadamard
-...............
-
-.. doxygenfunction:: tinytc::create_hadamard
-
-create_if
+make_cast
 .........
 
-.. doxygenfunction:: tinytc::create_if
+.. doxygenfunction:: tinytc::make_cast
 
-create_load
+make_cmp
+........
+
+.. doxygenfunction:: tinytc::make_cmp
+
+make_expand
 ...........
 
-.. doxygenfunction:: tinytc::create_load
+.. doxygenfunction:: tinytc::make_expand
 
-create_neg
-..........
+make_for
+........
 
-.. doxygenfunction:: tinytc::create_neg
+.. doxygenfunction:: tinytc::make_for
 
-create_size
-...........
-
-.. doxygenfunction:: tinytc::create_size
-
-create_store
+make_foreach
 ............
 
-.. doxygenfunction:: tinytc::create_store
+.. doxygenfunction:: tinytc::make_foreach
 
-create_subview
-..............
+make_fuse
+.........
 
-.. doxygenfunction:: tinytc::create_subview
+.. doxygenfunction:: tinytc::make_fuse
 
-create_sum
+make_gemm
+.........
+
+.. doxygenfunction:: tinytc::make_gemm
+
+make_gemv
+.........
+
+.. doxygenfunction:: tinytc::make_gemv
+
+make_ger
+........
+
+.. doxygenfunction:: tinytc::make_ger
+
+make_group_id
+.............
+
+.. doxygenfunction:: tinytc::make_group_id
+
+make_group_size
+...............
+
+.. doxygenfunction:: tinytc::make_group_size
+
+make_hadamard
+.............
+
+.. doxygenfunction:: tinytc::make_hadamard
+
+make_if
+.......
+
+.. doxygenfunction:: tinytc::make_if
+
+make_load
+.........
+
+.. doxygenfunction:: tinytc::make_load
+
+make_neg
+........
+
+.. doxygenfunction:: tinytc::make_neg
+
+make_size
+.........
+
+.. doxygenfunction:: tinytc::make_size
+
+make_store
 ..........
 
-.. doxygenfunction:: tinytc::create_sum
+.. doxygenfunction:: tinytc::make_store
 
-create_yield
+make_subview
 ............
 
-.. doxygenfunction:: tinytc::create_yield
+.. doxygenfunction:: tinytc::make_subview
+
+make_sum
+........
+
+.. doxygenfunction:: tinytc::make_sum
+
+make_yield
+..........
+
+.. doxygenfunction:: tinytc::make_yield
 
 Instruction Classes
 -------------------
@@ -364,11 +435,23 @@ inst
 Program
 =======
 
+* Functions
+
+  * :ref:`make_program`
+
 * Classes
 
   * :ref:`prog`
 
   * :ref:`program_builder`
+
+Program Functions
+-----------------
+
+make_program
+............
+
+.. doxygenfunction:: tinytc::make_program
 
 Program Classes
 ---------------
@@ -386,11 +469,23 @@ program_builder
 Region
 ======
 
+* Functions
+
+  * :ref:`make_region`
+
 * Classes
 
   * :ref:`region`
 
   * :ref:`region_builder`
+
+Region Functions
+----------------
+
+make_region
+...........
+
+.. doxygenfunction:: tinytc::make_region
 
 Region Classes
 --------------
@@ -408,9 +503,84 @@ region_builder
 Value
 =====
 
+* Functions
+
+  * :ref:`make_dynamic(location const&)`
+
+  * :ref:`make_imm(float,location const&)`
+
+  * :ref:`make_imm(double,scalar_type,location const&)`
+
+  * :ref:`make_imm(std::int8_t,location const&)`
+
+  * :ref:`make_imm(std::int16_t,location const&)`
+
+  * :ref:`make_imm(std::int32_t,location const&)`
+
+  * :ref:`make_imm(std::int64_t,scalar_type,location const&)`
+
+  * :ref:`make_imm(std::uint32_t,location const&)`
+
+  * :ref:`make_value(data_type const&,location const&)`
+
+  * :ref:`make_value(scalar_type,location const&)`
+
 * Classes
 
   * :ref:`value`
+
+Value Functions
+---------------
+
+make_dynamic(location const&)
+.............................
+
+.. doxygenfunction:: tinytc::make_dynamic(location const&)
+
+make_imm(float,location const&)
+...............................
+
+.. doxygenfunction:: tinytc::make_imm(float,location const&)
+
+make_imm(double,scalar_type,location const&)
+............................................
+
+.. doxygenfunction:: tinytc::make_imm(double,scalar_type,location const&)
+
+make_imm(std::int8_t,location const&)
+.....................................
+
+.. doxygenfunction:: tinytc::make_imm(std::int8_t,location const&)
+
+make_imm(std::int16_t,location const&)
+......................................
+
+.. doxygenfunction:: tinytc::make_imm(std::int16_t,location const&)
+
+make_imm(std::int32_t,location const&)
+......................................
+
+.. doxygenfunction:: tinytc::make_imm(std::int32_t,location const&)
+
+make_imm(std::int64_t,scalar_type,location const&)
+..................................................
+
+.. doxygenfunction:: tinytc::make_imm(std::int64_t,scalar_type,location const&)
+
+make_imm(std::uint32_t,location const&)
+.......................................
+
+.. doxygenfunction:: tinytc::make_imm(std::uint32_t,location const&)
+
+make_value(data_type const&,location const&)
+............................................
+
+.. doxygenfunction:: tinytc::make_value(data_type const&,location const&)
+
+make_value(scalar_type,location const&)
+.......................................
+
+.. doxygenfunction:: tinytc::make_value(scalar_type,location const&)
 
 Value Classes
 -------------

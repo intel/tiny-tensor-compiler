@@ -10,8 +10,8 @@
 using namespace tinytc;
 
 TEST_CASE("is_equal") {
-    CHECK(is_equal(*data_type(scalar_type::f32), *data_type(scalar_type::f32)));
-    CHECK(!is_equal(*data_type(scalar_type::i32), *data_type(scalar_type::u16)));
+    CHECK(is_equal(*make_scalar(scalar_type::f32), *make_scalar(scalar_type::f32)));
+    CHECK(!is_equal(*make_scalar(scalar_type::i32), *make_scalar(scalar_type::u16)));
     auto a = make_memref(scalar_type::f32, {1, 2});
     auto b = make_memref(scalar_type::f32, {2, 3});
     auto c = make_memref(scalar_type::f64, {1, 2});

@@ -7,6 +7,8 @@ tinytc_cl
 .. toctree::
    :maxdepth: 1
 
+   capi
+   cxxapi
    info
    runtime
    error

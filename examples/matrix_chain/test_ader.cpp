@@ -75,29 +75,36 @@ auto test_ader<T>::make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_s
         auto Q = fb.argument(dQ_[0].type(), "dQ");
         auto I = fb.argument(I_opt_.type(), "I");
         fb.body([&](region_builder &bb) {
-            auto gid = bb.add(make_group_id());
-            auto dq = bb.add(make_subview(Q, {0, 0, gid}, {dynamic, dynamic, nullptr}));
+            auto const gid = bb.add(make_group_id());
+            auto const offsets3 = std::vector<value>{make_imm(0), make_imm(0), gid};
+            auto const size3 = std::vector<value>{make_dynamic(), make_dynamic(), value{}};
+            auto dq = bb.add(make_subview(Q, offsets3, size3));
             for (std::size_t d = 0; d < dim; ++d) {
-                A[d] = bb.add(make_subview(A[d], {0, 0, gid}, {dynamic, dynamic, nullptr}));
+                A[d] = bb.add(make_subview(A[d], offsets3, size3));
             }
-            auto i = bb.add(make_subview(I, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            bb.add(make_axpby(transpose::N, false, num / denom, dq, T(1.0), i));
+            auto i = bb.add(make_subview(I, offsets3, size3));
+            bb.add(make_axpby(transpose::N, false, make_imm(num / denom), dq, make_imm(T(1.0)), i));
+
+            auto const offsets2 = std::vector<value>{make_imm(0), make_imm(0)};
             for (std::int64_t n = 1; n <= N_; ++n) {
                 num *= dt;
                 denom *= n + 1;
                 auto bn = Bd_aligned(N_ - n);
                 auto dq_next = bb.add(make_alloca(dQ_[n].type(false)));
-                auto dq_nextv = bb.add(make_subview(dq_next, {0, 0}, {bn, P_}));
+                auto dq_nextv =
+                    bb.add(make_subview(dq_next, offsets2, {make_imm(bn), make_imm(P_)}));
                 auto tmp = bb.add(make_alloca(make_memref(real_t, {bn, P_}, {1, bn})));
                 for (std::size_t d = 0; d < dim; ++d) {
-                    auto Kv = bb.add(make_subview(K[d], {0, 0}, {bn, Bd(N_ - n + 1)}));
-                    bb.add(
-                        make_gemm(transpose::N, transpose::N, false, T(1.0), Kv, dq, T(0.0), tmp));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), tmp, A[d],
-                                     T(d > 0 ? 1.0 : 0.0), dq_nextv));
+                    auto Kv = bb.add(
+                        make_subview(K[d], offsets2, {make_imm(bn), make_imm(Bd(N_ - n + 1))}));
+                    bb.add(make_gemm(transpose::N, transpose::N, false, make_imm(T(1.0)), Kv, dq,
+                                     make_imm(T(0.0)), tmp));
+                    bb.add(make_gemm(transpose::N, transpose::N, false, make_imm(T(1.0)), tmp, A[d],
+                                     make_imm(T(d > 0 ? 1.0 : 0.0)), dq_nextv));
                 }
-                auto iv = bb.add(make_subview(i, {0, 0}, {Bd(N_ - n), P_}));
-                bb.add(make_axpby(transpose::N, false, num / denom, dq_next, T(1.0), iv));
+                auto iv = bb.add(make_subview(i, offsets2, {make_imm(Bd(N_ - n)), make_imm(P_)}));
+                bb.add(make_axpby(transpose::N, false, make_imm(num / denom), dq_next,
+                                  make_imm(T(1.0)), iv));
                 dq = dq_next;
             }
         });

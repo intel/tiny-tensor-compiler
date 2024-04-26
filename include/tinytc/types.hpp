@@ -231,8 +231,10 @@ enum class transpose {
     T = tinytc_transpose_T  ///< transpose
 };
 
+//! @brief Cf. @ref tinytc_core_feature_flag_t
 enum class core_feature_flag { large_register_file = tinytc_core_feature_flag_large_register_file };
 
+//! @brief Cf. @ref tinytc_intel_gpu_architecture_t
 enum class intel_gpu_architecture { pvc = tinytc_intel_gpu_architecture_pvc };
 
 //! Target binary format

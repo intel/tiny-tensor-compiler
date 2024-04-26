@@ -68,8 +68,8 @@ Common
 
   * :ref:`const_tinytc_region_t`
 
-Common Enums
-------------
+Common Enumerations
+-------------------
 
 tinytc_binary_op_t
 ..................
@@ -91,8 +91,8 @@ tinytc_transpose_t
 
 .. doxygenenum:: tinytc_transpose_t
 
-Common Defines
---------------
+Common Definitions
+------------------
 
 TINYTC_DYNAMIC
 ..............
@@ -127,8 +127,8 @@ tinytc_transpose_to_string
 
 .. doxygenfunction:: tinytc_transpose_to_string
 
-Common Structs
---------------
+Common Structures
+-----------------
 
 tinytc_position
 ...............
