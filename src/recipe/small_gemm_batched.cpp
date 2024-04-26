@@ -141,6 +141,10 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(tinytc_recipe_handler_
         return tinytc_status_invalid_arguments;
     }
     return tinytc::exception_to_status_code([&] {
+        auto scalar_size = size(recipe->ty());
+        if (scalar_size != alpha_size || scalar_size != beta_size) {
+            throw status::invalid_kernel_arguments;
+        }
         if (tinytc::is_argument_zero(recipe->ty(), beta_size, beta_value)) {
             handler->active_kernel(
                 static_cast<std::uint32_t>(small_gemm_batched_kernel::gemm_beta0));

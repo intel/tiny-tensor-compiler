@@ -184,6 +184,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(tinytc_recipe_handler_t h
         return tinytc_status_invalid_arguments;
     }
     return tinytc::exception_to_status_code([&] {
+        auto scalar_size = size(recipe->ty());
+        if (scalar_size != alpha_size || scalar_size != beta_size) {
+            throw status::invalid_kernel_arguments;
+        }
         if (tinytc::is_argument_zero(recipe->ty(), beta_size, beta_value)) {
             handler->active_kernel(static_cast<std::uint32_t>(tall_and_skinny_kernel::gemm_beta0));
         } else {

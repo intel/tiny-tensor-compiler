@@ -108,6 +108,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Required vendor extension is unavailable";
     case tinytc_status_unsupported_backend:
         return "Unsupport backend";
+    case tinytc_status_invalid_kernel_arguments:
+        return "Invalid arguments passed to kernel";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
