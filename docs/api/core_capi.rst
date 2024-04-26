@@ -60,16 +60,16 @@ Common
 
   * :ref:`const_tinytc_source_context_t`
 
-Common Enums
-------------
+Common Enumerations
+-------------------
 
 tinytc_status_t
 ...............
 
 .. doxygenenum:: tinytc_status_t
 
-Common Defines
---------------
+Common Definitions
+------------------
 
 TINYTC_VERSION_MAJOR
 ....................
@@ -233,8 +233,8 @@ Compiler
 
   * :ref:`tinytc_source_compile_to_binary`
 
-Compiler Enums
---------------
+Compiler Enumerations
+---------------------
 
 tinytc_bundle_format_t
 ......................
@@ -290,8 +290,8 @@ Device Info
 
   * :ref:`tinytc_core_info_retain`
 
-Device Info Enums
------------------
+Device Info Enumerations
+------------------------
 
 tinytc_core_feature_flag_t
 ..........................
@@ -426,8 +426,8 @@ Recipe
 
   * :ref:`tinytc_mem_t`
 
-Recipe Enums
-------------
+Recipe Enumerations
+-------------------
 
 tinytc_mem_type_t
 .................
@@ -497,8 +497,8 @@ tinytc_recipe_handler_retain
 
 .. doxygenfunction:: tinytc_recipe_handler_retain
 
-Recipe Structs
---------------
+Recipe Structures
+-----------------
 
 tinytc_mem
 ..........

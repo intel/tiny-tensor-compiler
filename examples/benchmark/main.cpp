@@ -74,11 +74,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                 auto a = bb.add(make_load(A, {gid}, my_loc()));
                 auto b = bb.add(make_load(B, {gid}, my_loc()));
                 auto c = bb.add(make_load(C, {gid}, my_loc()));
-                bb.make_for(
-                    scalar_type::index, value(0u, my_loc()), value(repetitions, my_loc()),
+                bb.for_loop(
+                    scalar_type::index, make_imm(0u, my_loc()), make_imm(repetitions, my_loc()),
                     [&](region_builder &bb) {
-                        bb.add(make_gemm(tA, tB, false, value(1.0, ty, my_loc()), a, b,
-                                         value(0.0, ty, my_loc()), c, my_loc()));
+                        bb.add(make_gemm(tA, tB, false, make_imm(1.0, ty, my_loc()), a, b,
+                                         make_imm(0.0, ty, my_loc()), c, my_loc()));
                     },
                     "r", my_loc());
             },
@@ -102,7 +102,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                   << "Error log:" << std::endl
                   << ctx.get_error_log() << std::endl;
     }
-    return nullptr;
+    return binary{nullptr};
 }
 
 template <typename T> void test(queue q, args &a) {

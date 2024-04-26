@@ -20,7 +20,9 @@ extern "C" {
 /////// Enumerations ///////
 ////////////////////////////
 
-//! Status codes
+/**
+ * @brief Status codes
+ */
 typedef enum {
     tinytc_status_success = 0x0,                     ///< Success
     tinytc_status_bad_alloc = 0x1,                   ///< Failure to allocate storage

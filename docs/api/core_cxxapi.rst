@@ -68,9 +68,21 @@ unique_handle
 Binary
 ======
 
+* Enumerations
+
+  * :ref:`bundle_format`
+
 * Classes
 
   * :ref:`binary`
+
+Binary Enumerations
+-------------------
+
+bundle_format
+.............
+
+.. doxygenenum:: tinytc::bundle_format
 
 Binary Classes
 --------------
@@ -87,9 +99,9 @@ Compiler
 
   * :ref:`compile_to_opencl`
 
-  * :ref:`compile_to_binary`
+  * :ref:`compile_to_binary(prog,core_info const &,bundle_format,source_context)`
 
-  * :ref:`compile_to_binary`
+  * :ref:`compile_to_binary(source const &,core_info const &,bundle_format,source_context)`
 
 Compiler Functions
 ------------------
@@ -99,41 +111,60 @@ compile_to_opencl
 
 .. doxygenfunction:: tinytc::compile_to_opencl
 
-compile_to_binary
-.................
+compile_to_binary(prog,core_info const &,bundle_format,source_context)
+......................................................................
 
-.. doxygenfunction:: tinytc::compile_to_binary
+.. doxygenfunction:: tinytc::compile_to_binary(prog,core_info const &,bundle_format,source_context)
 
-compile_to_binary
-.................
+compile_to_binary(source const &,core_info const &,bundle_format,source_context)
+................................................................................
 
-.. doxygenfunction:: tinytc::compile_to_binary
+.. doxygenfunction:: tinytc::compile_to_binary(source const &,core_info const &,bundle_format,source_context)
 
 Device Info
 ===========
 
+* Enumerations
+
+  * :ref:`core_feature_flag`
+
+  * :ref:`intel_gpu_architecture`
+
 * Functions
 
-  * :ref:`create_core_info_intel`
+  * :ref:`make_core_info_intel`
 
-  * :ref:`create_core_info_intel_from_arch`
+  * :ref:`make_core_info_intel_from_arch`
 
 * Classes
 
   * :ref:`core_info`
 
+Device Info Enumerations
+------------------------
+
+core_feature_flag
+.................
+
+.. doxygenenum:: tinytc::core_feature_flag
+
+intel_gpu_architecture
+......................
+
+.. doxygenenum:: tinytc::intel_gpu_architecture
+
 Device Info Functions
 ---------------------
 
-create_core_info_intel
-......................
+make_core_info_intel
+....................
 
-.. doxygenfunction:: tinytc::create_core_info_intel
+.. doxygenfunction:: tinytc::make_core_info_intel
 
-create_core_info_intel_from_arch
-................................
+make_core_info_intel_from_arch
+..............................
 
-.. doxygenfunction:: tinytc::create_core_info_intel_from_arch
+.. doxygenfunction:: tinytc::make_core_info_intel_from_arch
 
 Device Info Classes
 -------------------
@@ -175,6 +206,16 @@ parse_string
 Recipe
 ======
 
+* Enumerations
+
+  * :ref:`mem_type`
+
+* Functions
+
+  * :ref:`make_small_gemm_batched`
+
+  * :ref:`make_tall_and_skinny`
+
 * Classes
 
   * :ref:`recipe`
@@ -198,6 +239,27 @@ Recipe
 * Concepts
 
   * :ref:`pointer_to_scalar`
+
+Recipe Enumerations
+-------------------
+
+mem_type
+........
+
+.. doxygenenum:: tinytc::mem_type
+
+Recipe Functions
+----------------
+
+make_small_gemm_batched
+.......................
+
+.. doxygenfunction:: tinytc::make_small_gemm_batched
+
+make_tall_and_skinny
+....................
+
+.. doxygenfunction:: tinytc::make_tall_and_skinny
 
 Recipe Classes
 --------------
@@ -271,7 +333,7 @@ Source Context
 
 * Functions
 
-  * :ref:`create_source_context`
+  * :ref:`make_source_context`
 
 * Classes
 
@@ -280,10 +342,10 @@ Source Context
 Source Context Functions
 ------------------------
 
-create_source_context
-.....................
+make_source_context
+...................
 
-.. doxygenfunction:: tinytc::create_source_context
+.. doxygenfunction:: tinytc::make_source_context
 
 Source Context Classes
 ----------------------

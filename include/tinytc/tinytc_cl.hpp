@@ -64,26 +64,58 @@ template <> struct shared_handle_traits<cl_kernel> {
 };
 } // namespace internal
 
+/**
+ * @brief Make a cl_program from a tinytc binary
+ *
+ * @param context Context
+ * @param device Device
+ * @param bin Binary
+ *
+ * @return cl_program (shared handle)
+ */
 inline auto make_kernel_bundle(cl_context context, cl_device_id device, binary const &bin)
     -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_program_create(&obj, context, device, bin.get()));
-    return {obj};
+    return shared_handle<cl_program>{obj};
 }
 
+/**
+ * @brief Make a cl_kernel from a cl_program
+ *
+ * @param mod Program
+ * @param name Kernel name
+ *
+ * @return cl_kernel (shared handle)
+ */
 inline auto make_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
     cl_int err;
     cl_kernel obj = clCreateKernel(mod, name, &err);
     CL_CHECK_STATUS(err);
-    return {obj};
+    return shared_handle<cl_kernel>{obj};
 }
 
+/**
+ * @brief Get work group size
+ *
+ * @param kernel Kernel
+ *
+ * @return Work-group size
+ */
 inline auto get_group_size(cl_kernel kernel) -> std::array<std::size_t, 3u> {
     auto group_size = std::array<std::size_t, 3u>{};
     CHECK_STATUS(tinytc_cl_get_group_size(kernel, group_size.data()));
     return group_size;
 }
 
+/**
+ * @brief Convert group size to opencl global range
+ *
+ * @param howmany Group size
+ * @param local_size Work-group size
+ *
+ * @return Global size
+ */
 inline auto get_global_size(std::uint32_t howmany, std::array<std::size_t, 3u> const &local_size)
     -> std::array<std::size_t, 3u> {
     auto global_size = std::array<std::size_t, 3u>{};
@@ -106,21 +138,43 @@ template <> struct shared_handle_traits<cl_event> {
 };
 } // namespace internal
 
+/**
+ * @brief Specialize auto_mem_type for cl_mem
+ */
 template <> struct auto_mem_type<cl_mem> {
-    constexpr static mem_type value = mem_type::buffer;
+    constexpr static mem_type value = mem_type::buffer; ///< cl_mem maps to buffer type
 };
 
+/**
+ * @brief Recipe handler for the OpenCL runtime
+ */
 class opencl_recipe_handler : public recipe_handler {
   public:
     using recipe_handler::recipe_handler;
 
+    /**
+     * @brief Submit recipe to queue
+     *
+     * @param queue Command queue
+     * @param num_wait_events Number of events to wait
+     * @param wait_events Array of num_wait_events events to wait on
+     *
+     * @return Event (cl_event wrapped in shared_handle -> cleans up automatically)
+     */
     inline auto submit(cl_command_queue queue, uint32_t num_wait_events = 0,
                        cl_event *wait_events = nullptr) -> shared_handle<cl_event> {
         cl_event evt;
         CHECK_STATUS(
             tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, &evt));
-        return {evt};
+        return shared_handle<cl_event>{evt};
     }
+    /**
+     * @brief Submit recipe to queue; does not return event
+     *
+     * @param queue Command queue
+     * @param num_wait_events Number of events to wait
+     * @param wait_events Array of num_wait_events events to wait on
+     */
     inline void submit_no_event(cl_command_queue queue, uint32_t num_wait_events = 0,
                                 cl_event *wait_events = nullptr) {
         CHECK_STATUS(
@@ -128,11 +182,20 @@ class opencl_recipe_handler : public recipe_handler {
     }
 };
 
+/**
+ * @brief Make recipe handler
+ *
+ * @param context Context
+ * @param device Device
+ * @param rec Recipe
+ *
+ * @return OpenCL recipe handler
+ */
 inline auto make_recipe_handler(cl_context context, cl_device_id device, recipe const &rec)
     -> opencl_recipe_handler {
     tinytc_recipe_handler_t handler;
     CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec.get()));
-    return {handler};
+    return opencl_recipe_handler{handler};
 }
 
 } // namespace tinytc

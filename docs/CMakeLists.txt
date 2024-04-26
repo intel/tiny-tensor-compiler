@@ -57,13 +57,18 @@ set(DOC_FILES
     api/recipe/index.rst
     api/recipe/small_gemm_batched.rst
     api/recipe/tall_and_skinny.rst
+    api/cl/capi.rst
+    api/cl/cxxapi.rst
     api/cl/error.rst
     api/cl/index.rst
     api/cl/info.rst
     api/cl/runtime.rst
+    api/sycl/cxxapi.rst
     api/sycl/info.rst
     api/sycl/index.rst
     api/sycl/runtime.rst
+    api/ze/capi.rst
+    api/ze/cxxapi.rst
     api/ze/error.rst
     api/ze/index.rst
     api/ze/info.rst

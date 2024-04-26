@@ -2,6 +2,11 @@
 # SPDX-License-Identifier: BSD-3-Clause
 Builder C++-API:
   Common:
+    enum:
+      - tinytc::binary_op
+      - tinytc::cmp_condition
+      - tinytc::scalar_type
+      - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(binary_op)
@@ -11,10 +16,16 @@ Builder C++-API:
       - tinytc::size
     class:
       - tinytc::builder_error
+    typedef:
+      - tinytc::position
+      - tinytc::location
+    variable:
+      - tinytc::dynamic
   Data Type:
     function:
       - tinytc::make_memref
       - tinytc::make_group
+      - tinytc::make_scalar
     class:
       - tinytc::data_type
     struct:
@@ -58,13 +69,28 @@ Builder C++-API:
     class:
       - tinytc::inst
   Program:
+    function:
+      - tinytc::make_program
     class:
       - tinytc::prog
       - tinytc::program_builder
   Region:
+    function:
+      - tinytc::make_region
     class:
       - tinytc::region
       - tinytc::region_builder
   Value:
+    function:
+      - tinytc::make_dynamic(location const&)
+      - tinytc::make_imm(float,location const&)
+      - tinytc::make_imm(double,scalar_type,location const&)
+      - tinytc::make_imm(std::int8_t,location const&)
+      - tinytc::make_imm(std::int16_t,location const&)
+      - tinytc::make_imm(std::int32_t,location const&)
+      - tinytc::make_imm(std::int64_t,scalar_type,location const&)
+      - tinytc::make_imm(std::uint32_t,location const&)
+      - tinytc::make_value(data_type const&,location const&)
+      - tinytc::make_value(scalar_type,location const&)
     class:
       - tinytc::value
