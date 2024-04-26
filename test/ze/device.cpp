@@ -33,7 +33,7 @@ TEST_CASE("device") {
     ZE_CHECK_STATUS(zeDeviceGetProperties(device, &dev_props));
 
     if (dev_ip_ver.ipVersion >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        auto info = create_core_info(device);
+        auto info = make_core_info(device);
 
         std::uint32_t sgs_size;
         std::uint32_t const *sgs;

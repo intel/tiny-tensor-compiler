@@ -21,8 +21,8 @@ Core C++-API:
       - tinytc::compile_to_binary
   Device Info:
     function:
-      - tinytc::create_core_info_intel
-      - tinytc::create_core_info_intel_from_arch
+      - tinytc::make_core_info_intel
+      - tinytc::make_core_info_intel_from_arch
     class:
       - tinytc::core_info
   Parser:
@@ -48,6 +48,6 @@ Core C++-API:
       - tinytc::source
   Source Context:
     function:
-      - tinytc::create_source_context
+      - tinytc::make_source_context
     class:
       - tinytc::source_context

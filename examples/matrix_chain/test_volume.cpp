@@ -18,12 +18,12 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
                             std::size_t alignment, queue q)
     : B3_(num_basis(N, dim)), B2_(num_basis(N - 1, dim)), P_(P), howmany_(howmany),
       B3_aligned_(aligned<T>(B3_, alignment)), B2_aligned_(aligned<T>(B2_, alignment)),
-      q_(std::move(q)), dev_info_(create_core_info(q_.get_device())),
+      q_(std::move(q)), dev_info_(make_core_info(q_.get_device())),
       Q_ref_(B3_, P_, B3_aligned_, howmany_, q_), Q_opt_(B3_, P_, B3_aligned_, howmany_, q_),
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), opt_bundle_(make_optimized_kernel()),
-      opt_kernel_(create_kernel(opt_bundle_, "volume_kernel")) {
+      opt_kernel_(make_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
     Q_opt_.random();
     I_.random();
@@ -35,14 +35,14 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
         k.random();
     }
 
-    g_.emplace_back(sycl_recipe_handler(
-        q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                               B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
-                               B2_aligned_, B2_aligned_ * P_)));
-    g_.emplace_back(sycl_recipe_handler(
-        q_, small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                               B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_, B2_aligned_ * P_,
-                               B3_aligned_, B3_aligned_ * P_)));
+    g_.emplace_back(make_recipe_handler(
+        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+                                    B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
+                                    B2_aligned_, B2_aligned_ * P_)));
+    g_.emplace_back(make_recipe_handler(
+        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+                                    B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
+                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)));
 }
 
 template <typename T>
@@ -91,29 +91,29 @@ auto test_volume<T>::make_optimized_kernel()
         auto Q = fb.argument(Q_opt_.type(), "Q");
         auto I = fb.argument(I_.type(), "I");
         fb.body([&](region_builder &bb) {
-            auto gid = bb.add(create_group_id());
-            auto tmp = bb.add(create_alloca(create_memref(real_t, {B2_, P_}, {1, B2_aligned_})));
-            auto a0 = bb.add(create_subview(A0, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto a1 = bb.add(create_subview(A1, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto a2 = bb.add(create_subview(A2, {0, 0, gid}, {dynamic, dynamic, nullptr}));
-            auto K0v = bb.add(create_subview(K0, {0, 0}, {B3_aligned_, B2_}));
-            auto K1v = bb.add(create_subview(K1, {0, 0}, {B3_aligned_, B2_}));
-            auto K2v = bb.add(create_subview(K2, {0, 0}, {B3_aligned_, B2_}));
-            auto qv = bb.add(create_subview(Q, {0, 0, gid}, {B3_aligned_, P_, nullptr}));
-            auto iv = bb.add(create_subview(I, {0, 0, gid}, {B2_aligned_, P_, nullptr}));
-            auto tmpv = bb.add(create_subview(tmp, {0, 0}, {B2_aligned_, P_}));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), iv, a0, T(0.0), tmpv));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), K0v, tmp, T(1.0), qv));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), iv, a1, T(0.0), tmpv));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), K1v, tmp, T(1.0), qv));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), iv, a2, T(0.0), tmpv));
-            bb.add(create_gemm(transpose::N, transpose::N, false, T(1.0), K2v, tmp, T(1.0), qv));
+            auto gid = bb.add(make_group_id());
+            auto tmp = bb.add(make_alloca(make_memref(real_t, {B2_, P_}, {1, B2_aligned_})));
+            auto a0 = bb.add(make_subview(A0, {0, 0, gid}, {dynamic, dynamic, nullptr}));
+            auto a1 = bb.add(make_subview(A1, {0, 0, gid}, {dynamic, dynamic, nullptr}));
+            auto a2 = bb.add(make_subview(A2, {0, 0, gid}, {dynamic, dynamic, nullptr}));
+            auto K0v = bb.add(make_subview(K0, {0, 0}, {B3_aligned_, B2_}));
+            auto K1v = bb.add(make_subview(K1, {0, 0}, {B3_aligned_, B2_}));
+            auto K2v = bb.add(make_subview(K2, {0, 0}, {B3_aligned_, B2_}));
+            auto qv = bb.add(make_subview(Q, {0, 0, gid}, {B3_aligned_, P_, nullptr}));
+            auto iv = bb.add(make_subview(I, {0, 0, gid}, {B2_aligned_, P_, nullptr}));
+            auto tmpv = bb.add(make_subview(tmp, {0, 0}, {B2_aligned_, P_}));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a0, T(0.0), tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K0v, tmp, T(1.0), qv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a1, T(0.0), tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K1v, tmp, T(1.0), qv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), iv, a2, T(0.0), tmpv));
+            bb.add(make_gemm(transpose::N, transpose::N, false, T(1.0), K2v, tmp, T(1.0), qv));
         });
     };
     auto pb = program_builder{};
     pb.create("volume_kernel", opt_kernel);
 
-    return create_kernel_bundle(
+    return make_kernel_bundle(
         q_.get_context(), q_.get_device(),
         compile_to_binary(pb.get_product(), dev_info_, bundle_format::native));
 }

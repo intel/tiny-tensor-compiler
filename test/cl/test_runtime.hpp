@@ -37,6 +37,7 @@ class opencl_test_runtime {
     auto get_device() -> device_t;
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
+    auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
     void synchronize();
 
   private:

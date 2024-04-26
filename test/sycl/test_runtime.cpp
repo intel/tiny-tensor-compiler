@@ -22,9 +22,12 @@ void sycl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes
 }
 
 auto sycl_test_runtime::get_core_info() const -> tinytc::core_info {
-    return ::tinytc::create_core_info(q_.get_device());
+    return ::tinytc::make_core_info(q_.get_device());
 }
 auto sycl_test_runtime::get_device() -> device_t { return q_.get_device(); }
 auto sycl_test_runtime::get_context() -> context_t { return q_.get_context(); }
 auto sycl_test_runtime::get_command_list() -> command_list_t { return q_; }
+auto sycl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
+    return tinytc::make_recipe_handler(q_, rec);
+}
 void sycl_test_runtime::synchronize() { q_.wait(); }

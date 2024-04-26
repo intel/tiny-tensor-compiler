@@ -35,7 +35,7 @@ inline void CL_CHECK_STATUS(cl_int stat) {
  *
  * @return core info
  */
-inline auto create_core_info(cl_device_id device) -> core_info {
+inline auto make_core_info(cl_device_id device) -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(::tinytc_cl_core_info_create(&info, device));
     return core_info{info};
@@ -64,14 +64,14 @@ template <> struct shared_handle_traits<cl_kernel> {
 };
 } // namespace internal
 
-inline auto create_program(cl_context context, cl_device_id device, binary const &bin)
+inline auto make_kernel_bundle(cl_context context, cl_device_id device, binary const &bin)
     -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_program_create(&obj, context, device, bin.get()));
     return {obj};
 }
 
-inline auto create_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
+inline auto make_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
     cl_int err;
     cl_kernel obj = clCreateKernel(mod, name, &err);
     CL_CHECK_STATUS(err);
@@ -114,10 +114,6 @@ class opencl_recipe_handler : public recipe_handler {
   public:
     using recipe_handler::recipe_handler;
 
-    inline opencl_recipe_handler(cl_context context, cl_device_id device, recipe const &rec) {
-        CHECK_STATUS(tinytc_cl_recipe_handler_create(&obj_, context, device, rec.get()));
-    }
-
     inline auto submit(cl_command_queue queue, uint32_t num_wait_events = 0,
                        cl_event *wait_events = nullptr) -> shared_handle<cl_event> {
         cl_event evt;
@@ -131,6 +127,13 @@ class opencl_recipe_handler : public recipe_handler {
             tinytc_cl_recipe_handler_submit(obj_, queue, num_wait_events, wait_events, NULL));
     }
 };
+
+inline auto make_recipe_handler(cl_context context, cl_device_id device, recipe const &rec)
+    -> opencl_recipe_handler {
+    tinytc_recipe_handler_t handler;
+    CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec.get()));
+    return {handler};
+}
 
 } // namespace tinytc
 

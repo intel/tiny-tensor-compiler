@@ -27,7 +27,7 @@ TEST_CASE("device") {
         clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr));
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        auto info = create_core_info(device);
+        auto info = make_core_info(device);
 
         std::uint32_t sgs_size;
         std::uint32_t const *sgs;
