@@ -21,8 +21,7 @@ add_library(tinytc::tinytc_sycl ALIAS tinytc_sycl)
 add_sycl_to_target(TARGET tinytc_sycl SOURCES ${SOURCES})
 
 set_cxx_common_options(tinytc_sycl)
-target_link_libraries(tinytc_sycl PRIVATE tinytc)
-target_link_libraries(tinytc_sycl PUBLIC tinytc_ze tinytc_cl)
+target_link_libraries(tinytc_sycl PUBLIC tinytc tinytc_ze tinytc_cl)
 
 # include directories
 
