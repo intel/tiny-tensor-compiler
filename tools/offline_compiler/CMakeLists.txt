@@ -10,6 +10,7 @@ set_target_properties(tinytc-oc PROPERTIES OUTPUT_NAME "tinytc")
 set_cxx_common_options(tinytc-oc)
 
 set_target_properties(tinytc-oc PROPERTIES INSTALL_RPATH_USE_LINK_PATH True)
+set_target_properties(tinytc-oc PROPERTIES INSTALL_RPATH "\$ORIGIN/../${CMAKE_INSTALL_LIBDIR}")
 
 install(TARGETS tinytc-oc
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
