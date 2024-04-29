@@ -408,7 +408,7 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst const &e) {
             clinst.emplace_back(clir::declaration_assignment(to_clir_ty(scalar_type::index),
                                                              inferred_size,
                                                              std::move(prod) / dv.shape(e.mode())));
-            return std::move(inferred_size);
+            return inferred_size;
         }
         return eshape_cl[j];
     };
