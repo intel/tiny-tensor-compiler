@@ -1978,7 +1978,7 @@ inline auto compile_to_binary(prog prg, core_info const &info, bundle_format for
  *
  * @tparam T memory object type
  */
-template <typename T> struct auto_mem_type;
+template <typename T, typename Enable = void> struct auto_mem_type;
 
 /**
  * @brief True if T is either pointer to a fundamental type or a pointer to a pointer to a
@@ -1987,9 +1987,10 @@ template <typename T> struct auto_mem_type;
  * @tparam T type
  */
 template <typename T>
-concept usm_pointer_type = std::is_pointer_v<T> &&
-                           (std::is_fundamental_v<std::remove_pointer_t<T>> ||
-                            std::is_fundamental_v<std::remove_pointer_t<std::remove_pointer_t<T>>>);
+constexpr bool usm_pointer_type =
+    std::is_pointer_v<T> &&
+    (std::is_fundamental_v<std::remove_pointer_t<T>> ||
+     std::is_fundamental_v<std::remove_pointer_t<std::remove_pointer_t<T>>>);
 
 /**
  * @brief Specialize auto_mem_type for pointer to non-class types
@@ -1999,7 +2000,7 @@ concept usm_pointer_type = std::is_pointer_v<T> &&
  *
  * @tparam T memory object type
  */
-template <usm_pointer_type T> struct auto_mem_type<T> {
+template <typename T> struct auto_mem_type<T, std::enable_if_t<usm_pointer_type<T>>> {
     constexpr static mem_type value = mem_type::usm_pointer; ///< Pointer maps to USM pointer type
 };
 
