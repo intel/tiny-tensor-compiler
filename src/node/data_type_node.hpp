@@ -38,12 +38,17 @@ using data_type_node = ::tinytc_data_type;
 
 class group_data_type : public clir::visitable<group_data_type, data_type_node> {
   public:
-    inline group_data_type(data_type ty, location const &lc = {}) : ty_(std::move(ty)) { loc(lc); }
+    inline group_data_type(data_type ty, std::int64_t offset = 0, location const &lc = {})
+        : ty_(std::move(ty)), offset_(offset) {
+        loc(lc);
+    }
 
     inline auto ty() const -> data_type const & { return ty_; }
+    inline auto offset() const -> std::int64_t { return offset_; }
 
   private:
     data_type ty_;
+    std::int64_t offset_;
 };
 
 class void_data_type : public clir::visitable<void_data_type, data_type_node> {};

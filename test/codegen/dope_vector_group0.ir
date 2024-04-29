@@ -2,10 +2,17 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: %tinytc-oc < %s | filecheck %s
-; CHECK: void kernel(global float*global* in, global uint* in_shape1, global uint* in_stride2)
-func @kernel(%in: group<memref<f32x8x?x9>>) {
-  ; CHECK-NEXT:      global float* x0 = *(in + 5);
+func @kernel1(%in: group<memref<f32x8x?x9>>) {
+; CHECK: void kernel1(global float*global* in, global uint* in_shape1, global uint* in_stride2)
+  %0 = load %in[5] : group<memref<f32x8x?x9>>
+  ; CHECK-NEXT:      global float* x0 = *(in + 5) + 0;
   ; CHECK-NEXT: uint x0_shape1 = in_shape1[5];
   ; CHECK-NEXT: uint x0_stride2 = in_stride2[5];
-  %0 = load %in[5] : group<memref<f32x8x?x9>>
+}
+
+func @kernel2(%in: group<memref<f32x?>, offset: ?>) {
+; CHECK: void kernel2(global float*global* in, global uint* in_shape0, uint in_offset)
+  %0 = load %in[5] : group<memref<f32x?>, offset: ?>
+  ; CHECK-NEXT:      global float* x0 = *(in + 5) + in_offset;
+  ; CHECK-NEXT: uint x0_shape0 = in_shape0[5];
 }

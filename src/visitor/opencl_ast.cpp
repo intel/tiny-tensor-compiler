@@ -61,8 +61,21 @@ dope_vector dope_vector::from_value(value_node const &v, decl_fun_t declare) {
             v.loc(), status::internal_compiler_error,
             "dope_vector::from_value must only be called for memref or group type");
     }
-    return dope_vector::from_memref_type(std::string(v.name()), *m, std::move(dt),
-                                         std::move(declare));
+    auto dv = dope_vector::from_memref_type(std::string(v.name()), *m, std::move(dt), declare);
+    visit(overloaded{[&](memref_data_type const &) {},
+                     [&](group_data_type const &g) {
+                         if (is_dynamic_value(g.offset())) {
+                             auto var = clir::var(
+                                 (std::ostringstream{} << var_name(v.name()) << "_offset").str());
+                             declare(to_clir_ty(scalar_type::index), var, type::offset, 0);
+                             dv.offset(std::move(var));
+                         } else {
+                             dv.offset(g.offset());
+                         }
+                     },
+                     [](auto const &) {}},
+          *v.ty());
+    return dv;
 }
 
 dope_vector dope_vector::from_memref_type(std::string const &prefix, memref_data_type const &m,
@@ -470,10 +483,13 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst const &e) {
                          if (e.index_list().size() != 1) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
+
                          auto idx = visit(*this, *e.index_list().front());
                          rhs = rhs + idx;
 
                          auto &dv = get_dope_vector(e.operand().get());
+                         rhs = clir::dereference(std::move(rhs)) + dv.offset();
+
                          set_dope_vector(
                              e.result().get(),
                              dope_vector::from_value(
@@ -493,6 +509,7 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst const &e) {
                          for (std::int64_t i = 0; i < m.dim(); ++i) {
                              rhs = rhs + visit(*this, *e.index_list()[i]) * dv.stride(i);
                          }
+                         rhs = clir::dereference(std::move(rhs));
                      },
                      [&e](auto const &) {
                          throw compilation_error(e.loc(), status::ir_expected_memref_or_group);
@@ -504,9 +521,9 @@ std::vector<clir::stmt> opencl_ast::operator()(load_inst const &e) {
     if (result_type == nullptr) {
         throw compilation_error(e.loc(), status::internal_compiler_error, "Expected type");
     }
-    clinst.emplace(clinst.begin(),
-                   declaration_assignment(visit(*this, *result_type), std::move(lhs),
-                                          clir::dereference(std::move(rhs))));
+
+    clinst.emplace(clinst.begin(), declaration_assignment(visit(*this, *result_type),
+                                                          std::move(lhs), std::move(rhs)));
 
     return clinst;
 }
