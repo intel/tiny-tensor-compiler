@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GNUInstallDirs)
 include(InstallLib)
 
 find_package(OpenCL REQUIRED)
@@ -22,8 +23,7 @@ add_library(tinytc_cl ${SOURCES})
 add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
 
 set_cxx_common_options(tinytc_cl)
-target_link_libraries(tinytc_cl PRIVATE tinytc)
-target_link_libraries(tinytc_cl PUBLIC OpenCL::OpenCL)
+target_link_libraries(tinytc_cl PUBLIC tinytc OpenCL::OpenCL)
 
 # include directories
 
@@ -35,3 +35,8 @@ target_sources(tinytc_cl PUBLIC FILE_SET HEADERS
 # install
 
 install_lib(tinytc_cl tinytc)
+
+install(FILES
+    "${PROJECT_SOURCE_DIR}/cmake/FindOpenCL.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tinytc_cl
+)

@@ -7,8 +7,8 @@ include(CMakeFindDependencyMacro)
 
 function(load_dependencies type)
     find_dependency(tinytc REQUIRED)
-    find_dependency(tinytc-level-zero REQUIRED)
-    find_dependency(tinytc-opencl REQUIRED)
+    find_dependency(tinytc_ze REQUIRED)
+    find_dependency(tinytc_cl REQUIRED)
 endfunction()
 
 @SHARED_STATIC_TEMPLATE@

@@ -82,7 +82,7 @@ target_compile_definitions(tinytc-objects PUBLIC
 
 add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
 add_library(tinytc::tinytc ALIAS tinytc)
-target_link_libraries(tinytc PUBLIC clir::clir ocloc::ocloc)
+target_link_libraries(tinytc PRIVATE clir::clir ocloc::ocloc)
 set_cxx_common_options(tinytc)
 
 # Generate export header
