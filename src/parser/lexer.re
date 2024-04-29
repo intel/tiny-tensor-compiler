@@ -118,6 +118,7 @@ lex:
         "group"             { adv_loc(); return parser::make_GROUP(loc_); }
 
         // layouts
+        "offset"            { adv_loc(); return parser::make_OFFSET(loc_); }
         "strided"           { adv_loc(); return parser::make_STRIDED(loc_); }
 
         // instructions

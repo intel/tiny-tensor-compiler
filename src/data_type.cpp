@@ -52,14 +52,15 @@ tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt, tinytc_scalar_
 }
 
 tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt, tinytc_data_type_t memref_ty,
-                                         const tinytc_location_t *loc) {
+                                         int64_t offset, const tinytc_location_t *loc) {
     if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
     return exception_to_status_code([&] {
-        *dt = std::make_unique<group_data_type>(data_type(memref_ty, true), get_optional(loc))
-                  .release();
+        *dt =
+            std::make_unique<group_data_type>(data_type(memref_ty, true), offset, get_optional(loc))
+                .release();
     });
 }
 

@@ -64,8 +64,8 @@ leads to
 
    kernel void memref_example1(global float* a) {}
    kernel void memref_example2(global double* a, uint a_shape1) {}
-   kernel void memref_example3(global long* a, uint a_shape1, a_stride2) {}
-   kernel void memref_example4(global long* a, uint a_shape1, a_stride2) {}
+   kernel void memref_example3(global long* a, uint a_shape1, uint a_stride2) {}
+   kernel void memref_example4(global long* a, uint a_shape1, uint a_stride2) {}
 
 Note that `memref_example3` and `memref_example4` have the same signature,
 because `memref<i64x5x?x6>` has the canonical stride `strided<1,5,?>`.
@@ -75,13 +75,16 @@ Group types
 
 A group argument might require multiple arguments in the OpenCL-C code.
 The rule is that the first argument in the OpenCL kernel is a global pointer to a global pointer to the
-underlying scalar type of the memref and then a global pointer argument follows for every '?'
-in the memref's shape or stride, ordered from left-to-right.
+underlying scalar type of the memref.
+Then a global pointer argument follows for every '?' in the memref's shape or stride, ordered from left-to-right.
+If an dynamic offset is given, the offset is the last argument.
+
 
 .. code::
 
    func @group_example1(%a: group<memref<i16x5x6>) {}
    func @group_example2(%a: group<memref<i32x5x?x6>>) {}
+   func @group_example3(%a: group<memref<f32x?>, offset: ?>) {}
 
 leads to
 
@@ -89,7 +92,8 @@ leads to
 
    kernel void group_example1(global short*global* a) {}
    kernel void group_example2(global int*global* a, global uint* a_shape1, global uint* a_stride2) {}
+   kernel void group_example3(global float*global* a, global uint* a_shape0, uint a_offset) {}
 
-Note that `a_shape1` and `a_stride2` must contain at least as many values as the group size.
+Note that `a_shape_0`, `a_shape1`, and `a_stride2` must contain at least as many values as the group size.
 That is, if a is accessed with `load %a[%id] : group<memref<i32x5x?x6>>`, then
-`*(a_shape1 + id)` and `*(a_stride2 + id)` must not lead to out-of-bounds memory access.
+`*(a_shape0 + id)`, `*(a_shape1 + id)`, and `*(a_stride2 + id)` must not lead to out-of-bounds memory access.

@@ -225,16 +225,20 @@ Group type
 
 .. code:: abnf
 
-    group-type                  = "group<" memref-type ">"
+    group-type                  = "group<" memref-type ["," "offset" ":" constant-or-dynamic] ">"
 
 The group type collects unstructured pointers to memref's with potentially different dynamic mode sizes.
 The C-analogy of a group is a pointer-to-a-pointer.
 For example, the C-analogue of a ``group<memref<f32x16x16>>`` is a ``float**``.
 
-Group size information is stored in a dope vector; the calling convention for groups is
-implementation-defined.
-The dope vector also contains size information for the memref type if it contains dynamic mode sizes
-or dynamic stride values.
+The optional offset parameter is used to offset each pointer by the given number of elements.
+Given the C-analogue ``float** group``, loading element ``i`` with offset ``off`` gives the
+pointer ``float* tmp = group[i] + off``.
+The default offset is 0.
+
+Dynamic values ('?') may appear in the memref-type and in the offset.
+These values are stored in the dope vector;
+the calling convention for groups is implementation-defined.
 
 Instructions
 ============
@@ -541,6 +545,7 @@ Examples:
 #. ``load %0[] : memref<f32>`` returns a ``f32`` value.
 #. ``load %0[5, %1] : memref<f32x10x?>`` returns a ``f32`` value.
 #. ``load %0[%1] : group<memref<f32x42>>`` returns a ``memref<f32x42>`` value.
+#. ``load %0[%1] : group<memref<f32x42>, offset: ?>`` returns a ``memref<f32x42>`` value.
 
 Size
 ----

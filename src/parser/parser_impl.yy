@@ -107,6 +107,7 @@
     ATOMIC          ".atomic"
     MEMREF          "memref"
     GROUP           "group"
+    OFFSET          "offset"
     STRIDED         "strided"
     AXPBY           "axpby"
     GEMM            "gemm"
@@ -156,6 +157,7 @@
 %nterm <std::vector<std::int64_t>> stride_list
 %nterm <std::int64_t> constant_or_dynamic
 %nterm <data_type> group_type
+%nterm <std::int64_t> group_offset
 %nterm <data_type> memref_or_group_type
 %nterm <region> region
 %nterm <::tinytc::value> var
@@ -339,10 +341,15 @@ constant_or_dynamic:
 ;
 
 group_type:
-    GROUP LCHEV memref_type RCHEV {
-        $$ = make_group(std::move($memref_type));
+    GROUP LCHEV memref_type group_offset RCHEV {
+        $$ = make_group(std::move($memref_type), $group_offset);
         $$->loc(@group_type);
     }
+;
+
+group_offset:
+    %empty { $$ = std::int64_t(0); }
+  | COMMA OFFSET COLON constant_or_dynamic { $$ = $constant_or_dynamic; }
 ;
 
 memref_or_group_type:

@@ -24,7 +24,8 @@ int main(int argc, char **argv) {
         auto src = compile_to_opencl(p, info, ctx);
         std::cout << src.get_code();
     } catch (status const &st) {
-        std::cerr << ctx.get_error_log() << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error log: " << std::endl << ctx.get_error_log() << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

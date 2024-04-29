@@ -35,7 +35,7 @@ namespace tinytc {
 
 class dope_vector {
   public:
-    enum class type { shape, stride };
+    enum class type { shape, stride, offset };
     using decl_fun_t = std::function<void(clir::data_type, clir::var, type, std::int64_t)>;
     static dope_vector from_value(value_node const &v, decl_fun_t declare);
 
@@ -45,11 +45,14 @@ class dope_vector {
 
     inline auto shape(std::int64_t i) { return shape_[i]; }
     inline auto stride(std::int64_t i) { return stride_[i]; }
+    inline auto offset() { return offset_; }
+    inline auto offset(clir::expr offset) { offset_ = std::move(offset); }
 
   private:
     static dope_vector from_memref_type(std::string const &prefix, memref_data_type const &m,
                                         clir::data_type dt, decl_fun_t declare);
     std::vector<clir::expr> shape_, stride_;
+    clir::expr offset_ = clir::expr(std::int64_t(0));
 };
 
 class opencl_ast {
