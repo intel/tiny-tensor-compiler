@@ -38,6 +38,7 @@
 tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue queue) {
     tinytc_status_t status = tinytc_status_success;
     tinytc_core_info_t info = NULL;
+    tinytc_source_context_t source_ctx = NULL;
     tinytc_recipe_t recipe = NULL;
     tinytc_recipe_handler_t handler = NULL;
     cl_mem A = NULL, B = NULL, C = NULL;
@@ -47,9 +48,10 @@ tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue q
     CHECK(tinytc_cl_core_info_create(&info, device));
 
     const uint32_t M = 64, N = 64, K = 64, howmany = 1000;
+    CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
                                                   tinytc_transpose_N, tinytc_transpose_N, M, N, K,
-                                                  M, M * K, K, K * N, M, M * N, NULL));
+                                                  M, M * K, K, K * N, M, M * N, source_ctx));
     CHECK(tinytc_cl_recipe_handler_create(&handler, context, device, recipe));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
@@ -107,6 +109,14 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
+    if (source_ctx) {
+        const char *error_log;
+        tinytc_source_context_get_error_log(source_ctx, &error_log);
+        if (error_log[0] != '\0') {
+            printf("\nError log:\n%s\n", error_log);
+        }
+        tinytc_source_context_release(source_ctx);
+    }
     tinytc_core_info_release(info);
 
     return status;
@@ -153,7 +163,7 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
 
     CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, source_ctx));
-    CHECK(tinytc_prog_compile_to_binary(&binary, program, info, tinytc_bundle_format_native,
+    CHECK(tinytc_prog_compile_to_binary(&binary, program, info, tinytc_bundle_format_spirv,
                                         source_ctx));
     CHECK(tinytc_cl_program_create(&module, context, device, binary));
     kernel = clCreateKernel(module, "copy", &err);
@@ -214,17 +224,35 @@ err:
 
 int main(void) {
     tinytc_status_t status = tinytc_status_success;
-    cl_platform_id platform = NULL;
+    cl_platform_id *platforms = NULL;
     cl_device_id device = NULL;
     cl_context context = NULL;
     cl_command_queue queue = NULL;
     cl_int err;
 
-    cl_uint platform_count = 1;
-    CL_CHECK(clGetPlatformIDs(platform_count, &platform, NULL));
+    cl_uint platform_count = 0;
+    CL_CHECK(clGetPlatformIDs(platform_count, NULL, &platform_count));
+    platforms = (cl_platform_id *)malloc(platform_count * sizeof(cl_platform_id));
+    CL_CHECK(clGetPlatformIDs(platform_count, platforms, &platform_count));
 
-    cl_uint device_count = 1;
-    CL_CHECK(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, device_count, &device, NULL));
+    cl_uint device_count = 0;
+    for (cl_uint p = 0; p < platform_count; ++p) {
+        err = clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
+        if (err == CL_SUCCESS) {
+            CL_CHECK(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &device,
+                                    &device_count));
+            char name[256] = {0};
+            clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, sizeof(name) - 1, name, NULL);
+            printf("Platform: %s\n", name);
+            clGetDeviceInfo(device, CL_DEVICE_NAME, sizeof(name) - 1, name, NULL);
+            printf("Device: %s\n", name);
+            break;
+        }
+    }
+    if (device_count == 0) {
+        err = CL_DEVICE_NOT_FOUND;
+        goto err;
+    }
 
     context = clCreateContext(NULL, device_count, &device, NULL, NULL, &err);
     CL_CHECK(err);
@@ -245,6 +273,7 @@ err:
     if (context) {
         clReleaseContext(context);
     }
+    free(platforms);
 
     return status == tinytc_status_success ? 0 : -1;
 }
