@@ -11,11 +11,11 @@
 #
 
 include(FindPackageHandleStandardArgs)
-find_package(PythonInterp)
+find_package(Python3 COMPONENTS Interpreter)
 
 function (has_python_module out_var module)
     execute_process(
-        COMMAND "${PYTHON_EXECUTABLE}" -c "import ${module}"
+        COMMAND "${Python3_EXECUTABLE}" -c "import ${module}"
         OUTPUT_VARIABLE output
         ERROR_VARIABLE error
         RESULT_VARIABLE status)
@@ -31,7 +31,7 @@ function (has_python_module out_var module)
     set(${out_var} FALSE PARENT_SCOPE)
 endfunction ()
 
-if (PYTHONINTERP_FOUND)
+if (Python3_Interpreter_FOUND)
     set(BUILD_MODULE "sphinx.cmd.build")
 
     has_python_module(HAS_SPHINX_BUILD ${BUILD_MODULE})
@@ -46,7 +46,7 @@ if (PYTHONINTERP_FOUND)
 
     if (HAS_SPHINX_BUILD AND HAS_REQUIRED_EXTENSIONS)
         set(Sphinx_FOUND TRUE)
-        set(Sphinx_BUILD_COMMAND ${PYTHON_EXECUTABLE} -m ${BUILD_MODULE})
+        set(Sphinx_BUILD_COMMAND ${Python3_EXECUTABLE} -m ${BUILD_MODULE})
     endif ()
 
 endif ()
