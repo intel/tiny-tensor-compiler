@@ -6,16 +6,31 @@
 #include "tinytc/tinytc_cl.hpp"
 
 #include <CL/cl_platform.h>
+#include <stdexcept>
+#include <vector>
 
 using tinytc::CL_CHECK_STATUS;
 
 opencl_test_runtime::opencl_test_runtime() {
-    cl_uint platform_count = 1;
-    cl_platform_id platform;
-    CL_CHECK_STATUS(clGetPlatformIDs(platform_count, &platform, nullptr));
+    auto platforms = std::vector<cl_platform_id>{};
+    cl_uint platform_count = 0;
+    CL_CHECK_STATUS(clGetPlatformIDs(platform_count, NULL, &platform_count));
+    platforms.resize(platform_count);
+    CL_CHECK_STATUS(clGetPlatformIDs(platform_count, platforms.data(), &platform_count));
 
-    cl_uint device_count = 1;
-    CL_CHECK_STATUS(clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, device_count, &dev_, nullptr));
+    cl_uint device_count = 0;
+    for (cl_uint p = 0; p < platform_count; ++p) {
+        cl_int err =
+            clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
+        if (err == CL_SUCCESS) {
+            CL_CHECK_STATUS(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &dev_,
+                                           &device_count));
+            break;
+        }
+    }
+    if (device_count == 0) {
+        throw std::runtime_error("No GPU device available");
+    }
 
     cl_int err;
     ctx_ = clCreateContext(nullptr, device_count, &dev_, nullptr, nullptr, &err);
@@ -61,3 +76,10 @@ auto opencl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recip
     return tinytc::make_recipe_handler(ctx_, dev_, rec);
 }
 void opencl_test_runtime::synchronize() { CL_CHECK_STATUS(clFinish(q_)); }
+
+bool opencl_test_runtime::supports_fp64() {
+    cl_device_fp_config fp_cfg;
+    CL_CHECK_STATUS(
+        clGetDeviceInfo(dev_, CL_DEVICE_DOUBLE_FP_CONFIG, sizeof(fp_cfg), &fp_cfg, NULL));
+    return bool(fp_cfg & CL_FP_FMA);
+}

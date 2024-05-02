@@ -16,38 +16,47 @@
 
 namespace tinytc {
 
-std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_format format,
-                                           std::uint32_t ip_version,
-                                           std::vector<char const *> const &options,
-                                           std::vector<char const *> const &extensions) {
-    auto const format_ext_list = [](auto const &extensions) -> std::string {
-        if (extensions.empty()) {
+std::vector<std::uint8_t> compile_opencl_c(std::size_t source_length, char const *source_text,
+                                           bundle_format format, std::uint32_t ip_version,
+                                           std::uint32_t options_size, char const *const *options,
+                                           std::uint32_t extensions_size,
+                                           char const *const *extensions) {
+    auto const format_options = [](std::uint32_t options_size,
+                                   char const *const *options) -> std::string {
+        if (options_size == 0) {
             return {};
         }
         auto oss = std::ostringstream{};
-        auto ext_it = extensions.begin();
-        oss << "-cl-ext=+" << *ext_it++;
-        for (; ext_it != extensions.end(); ++ext_it) {
-            oss << ",+" << *ext_it;
+        std::uint32_t opt_it = 0;
+        oss << options[opt_it++];
+        for (; opt_it < options_size; ++opt_it) {
+            oss << " " << options[opt_it];
+        }
+        return oss.str();
+    };
+    auto const format_ext_list = [](std::uint32_t extensions_size,
+                                    char const *const *extensions) -> std::string {
+        if (extensions_size == 0) {
+            return {};
+        }
+        auto oss = std::ostringstream{};
+        std::uint32_t ext_it = 0;
+        oss << "-cl-ext=+" << extensions[ext_it++];
+        for (; ext_it < extensions_size; ++ext_it) {
+            oss << ",+" << extensions[ext_it];
         }
         return oss.str();
     };
     unsigned int num_args = 2;
     constexpr unsigned int max_num_args = 11;
     char const *argv[max_num_args] = {"ocloc", "compile"};
-    auto ext_list = format_ext_list(extensions);
+    auto const ext_list = format_ext_list(extensions_size, extensions);
     if (!ext_list.empty()) {
         argv[num_args++] = "-internal_options";
         argv[num_args++] = ext_list.c_str();
     }
-    auto cl_options = std::string{};
-    if (options.size() > 0) {
-        auto it = options.cbegin();
-        cl_options = *it++;
-        for (; it != options.cend(); ++it) {
-            cl_options += " ";
-            cl_options += *it;
-        }
+    auto const cl_options = format_options(options_size, options);
+    if (!cl_options.empty()) {
         argv[num_args++] = "-options";
         argv[num_args++] = cl_options.c_str();
     }
@@ -64,8 +73,8 @@ std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_for
     argv[num_args++] = "kernel.cl";
 
     const std::uint32_t num_sources = 1;
-    const std::uint8_t *data_sources = reinterpret_cast<const std::uint8_t *>(source.c_str());
-    const std::uint64_t len_sources = source.size() + 1;
+    const std::uint8_t *data_sources = reinterpret_cast<const std::uint8_t *>(source_text);
+    const std::uint64_t len_sources = source_length + 1;
     char const *name_sources = argv[num_args - 1];
     std::uint32_t num_input_headers = 0;
     std::uint32_t num_outputs = 0;

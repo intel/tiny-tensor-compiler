@@ -46,7 +46,11 @@ Kernel
 
   * :ref:`make_kernel(cl_program,char const*)`
 
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,binary const&)`
+  * :ref:`make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)`
+
+  * :ref:`make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)`
+
+  * :ref:`make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)`
 
 Kernel Functions
 ----------------
@@ -66,17 +70,27 @@ make_kernel(cl_program,char const*)
 
 .. doxygenfunction:: tinytc::make_kernel(cl_program,char const*)
 
-make_kernel_bundle(cl_context,cl_device_id,binary const&)
-.........................................................
+make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)
+........................................................................
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)
+.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)
+
+make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)
+...........................................................................................
+
+.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)
+
+make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)
+........................................................................
+
+.. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,source const&,source_context)
 
 Recipe
 ======
 
 * Functions
 
-  * :ref:`make_recipe_handler(cl_context,cl_device_id,recipe const&)`
+  * :ref:`make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)`
 
 * Classes
 
@@ -85,10 +99,10 @@ Recipe
 Recipe Functions
 ----------------
 
-make_recipe_handler(cl_context,cl_device_id,recipe const&)
-..........................................................
+make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)
+.........................................................................
 
-.. doxygenfunction:: tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&)
+.. doxygenfunction:: tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)
 
 Recipe Classes
 --------------

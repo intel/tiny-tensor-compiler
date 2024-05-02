@@ -130,9 +130,9 @@ Compiler
 ========
 
 Program objects (:ref:`tinytc_prog_t`, :ref:`prog`) are online-compiled
-using the :ref:`tinytc_prog_compile_to_binary` (:ref:`compile_to_binary`) function.
+using the :ref:`tinytc_prog_compile_to_opencl` (:ref:`compile_to_opencl`) function.
 The program object is hereby modified as compiler passes are necessary.
-A binary object is returned that either contains SPIR-V or a native device binary.
+A source object is returned that contains OpenCL-C source text.
 
 Some compiler passes specialize the code based on properties of the GPU device.
 Therefore, a :ref:`tinytc_core_info_t` (:ref:`core_info`) object is required.
@@ -152,12 +152,12 @@ A source context can be added to capture potential errors in the optimizer.
 
           tinytc_status_t status;
           tinytc_core_info_t info = NULL;
-          tinytc_binary_t binary = NULL;
+          tinytc_source_t source = NULL;
           status = tinytc_core_info_intel_create_from_arch(&info, tinytc_intel_gpu_architecture_pvc);
           // ... check status ...
-          status = tinytc_prog_compile_to_binary(&binary, program, info, tinytc_bundle_format_native, source_ctx);
+          status = tinytc_prog_compile_to_opencl(&source, program, info, source_ctx);
           // ...
-          tinytc_binary_release(binary);
+          tinytc_source_release(source);
           tinytc_core_info_release(info);
 
     .. tab:: C++
@@ -168,7 +168,7 @@ A source context can be added to capture potential errors in the optimizer.
 
           try {
               auto info = tinytc::make_core_info_intel_from_arch(tinytc::intel_gpu_architecture::pvc);
-              auto binary = tinytc::compile_to_binary(program, info, tinytc::bundle_format::native, source_ctx);
+              auto source = tinytc::compile_to_opencl(program, info, source_ctx);
           } catch (tinytc::status const& st) {
               ...
           }
@@ -184,9 +184,9 @@ A source context can be added to capture potential errors in the optimizer.
 Runtime
 =======
 
-The JIT compiler compiles tensor programs into a binary kernel bundle (SPIR-V or native device binary).
+The JIT compiler compiles tensor programs into OpenCL-C code.
 The libray provides functions to create the runtime's kernel bundle object
-(cl_program, sycl::kernel_bundle, ze_module_handle_t) from a binary object.
+(cl_program, sycl::kernel_bundle, ze_module_handle_t) from a source object.
 The runtime's kernel objects are obtained using the native API or the Tiny Tensor Compiler API (if applicable).
 Setting the kernel arguments should following the :ref:`calling convention`.
 The Tiny Tensor Compiler should be used to translate the 2D work-group size of the tensor language
@@ -203,7 +203,7 @@ Example for "func @foo(%a: i32, ...) { ... }" (without error handling code):
           ze_module_handle_t module = NULL;
           ze_kernel_handle_t kernel = NULL;
           int a = 42;
-          tinytc_ze_module_create(&module, context, device, binary, NULL);
+          tinytc_ze_kernel_bundle_create_with_source(&module, context, device, source, source_ctx);
           tinytc_ze_kernel_create(&kernel, module, "foo"); // Sets the work-group size
           zeKernelSetArgumentValue(kernel, 0, sizeof(a), &a);
           // ...
@@ -217,12 +217,12 @@ Example for "func @foo(%a: i32, ...) { ... }" (without error handling code):
 
        .. code:: C
 
-          cl_program module = NULL;
+          cl_program program = NULL;
           cl_kernel kernel;
           cl_int err;
           int a = 42;
-          tinytc_cl_program_create(&program, context, device, binary);
-          kernel = clCreateKernel(module, "foo", &err);
+          tinytc_cl_kernel_bundle_create_with_source(&program, context, device, binary, source_ctx);
+          kernel = clCreateKernel(program, "foo", &err);
           clSetKernelArg(kernel, 0, sizeof(a), &a);
           // ...
           size_t ls[3], gs[3];
@@ -231,19 +231,24 @@ Example for "func @foo(%a: i32, ...) { ... }" (without error handling code):
           clEnqueueNDRangeKernel(command_list, kernel, 3u, NULL, gs, ls, 0, NULL, NULL);
           // ...
           clReleaseKernel(kernel);
-          clReleaseProgram(module);
+          clReleaseProgram(program);
 
     .. tab:: SYCL (C++)
 
        .. code:: C++
 
-          auto bundle = tinytc::make_kernel_bundle(context, device, binary);
+          auto bundle = tinytc::make_kernel_bundle(context, device, source, source_ctx);
           auto kernel = tinytc::make_kernel(bundle, "foo");
           auto exe_range = tinytc::get_execution_range(kernel, howmany);
           queue.submit([&](sycl::handler &h) {
               h.set_args(42, ...);
               h.parallel_for(exe_range, kernel);
           });
+
+.. note::
+
+   Kernel bundles can also be created from program objects directly, e.g. with 
+   :ref:`tinytc_cl_kernel_bundle_create_with_program` or :ref:`tinytc_ze_kernel_bundle_create_with_program`.
 
 
 Recipe
@@ -265,7 +270,7 @@ The general usage of a recipe is as following:
           tinytc_recipe_t recipe = NULL;
           tinytc_recipe_handler_t handler = NULL;
           tinytc_recipe_<recipe_name>_create(&recipe, info, <recipe_parameters>, source_ctx);
-          tinytc_ze_recipe_handler_create(&handler, context, device, recipe);
+          tinytc_ze_recipe_handler_create(&handler, context, device, recipe, source_ctx);
           tinytc_recipe_<recipe_name>_set_args(handler, <recipe_args>);
           tinytc_ze_recipe_handler_submit(handler, command_list, NULL, 0, NULL);
           // ...
@@ -279,7 +284,7 @@ The general usage of a recipe is as following:
           tinytc_recipe_t recipe = NULL;
           tinytc_recipe_handler_t handler = NULL;
           tinytc_recipe_<recipe_name>_create(&recipe, info, <recipe_parameters>, source_ctx);
-          tinytc_cl_recipe_handler_create(&handler, context, device, recipe);
+          tinytc_cl_recipe_handler_create(&handler, context, device, recipe, source_ctx);
           tinytc_recipe_<recipe_name>_set_args(handler, <recipe_args>);
           tinytc_cl_recipe_handler_submit(handler, queue, 0, NULL, NULL);
           // ...
@@ -291,7 +296,7 @@ The general usage of a recipe is as following:
        .. code:: C++
 
           auto handler = tinytc::make_recipe_handler(queue,
-              tinytc::make_<recipe_name>(info, <recipe_parameters>, source_ctx));
+              tinytc::make_<recipe_name>(info, <recipe_parameters>, source_ctx), source_ctx);
           <recipe_name>::set_args(handler, <recipe_args>);
           handler.submit(queue);
 

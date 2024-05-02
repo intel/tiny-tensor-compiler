@@ -1001,26 +1001,26 @@ TINYTC_EXPORT tinytc_status_t
 tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_info_t info, uint32_t *num);
 
 /**
- * @brief Request core feature
+ * @brief Set core features
  *
  * @param info [in] core info object
- * @param flag [in] feature flag
+ * @param flags [in] set core features; must be 0 or a combination of tinytc_core_feature_flag_t
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_core_feature(tinytc_core_info_t info,
-                                                                tinytc_core_feature_flag_t flag);
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_core_features(tinytc_core_info_t info,
+                                                                 tinytc_core_feature_flags_t flags);
 
 /**
- * @brief Clear core feature request
+ * @brief Get core features
  *
  * @param info [in] core info object
- * @param flag [in] feature flag
+ * @param flags [out] pointer to core feature flags
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_info_t info,
-                                                                  tinytc_core_feature_flag_t flag);
+TINYTC_EXPORT tinytc_status_t
+tinytc_core_info_get_core_features(tinytc_core_info_t info, tinytc_core_feature_flags_t *flags);
 
 /**
  * @brief Release core info object
@@ -1177,51 +1177,72 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_retain(tinytc_source_context
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
                                                             const_tinytc_core_info_t info,
                                                             tinytc_source_context_t ctx);
-/**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bin [out] pointer to the binary object created
- * @param src [in] source text
- * @param info [in] core info object
- * @param format [in] binary format (SPIR-V or native)
- * @param ctx [inout][optional] source context object to save extended error messages that are
- * enhanced with source code context; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_compile_to_binary(tinytc_binary_t *bin,
-                                                              const_tinytc_source_t src,
-                                                              const_tinytc_core_info_t info,
-                                                              tinytc_bundle_format_t format,
-                                                              tinytc_source_context_t ctx);
-
-/**
- * @brief Compile tensor language to device binary
- *
- * @param bin [out] pointer to the binary object created
- * @param prg [inout] tensor program; modified as compiler passes are run
- * @param info [in] core info object
- * @param format [in] binary format (SPIR-V or native)
- * @param ctx [inout][optional] source context object to save extended error messages that are
- * enhanced with source code context; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_binary(tinytc_binary_t *bin, tinytc_prog_t prg,
-                                                            const_tinytc_core_info_t info,
-                                                            tinytc_bundle_format_t format,
-                                                            tinytc_source_context_t ctx);
 
 /**
  * @brief Get source text
  *
  * @param src [in] source object
+ * @param length [out] pointer to code length
  * @param code [out] code contains a pointer to the source text; the pointer is only valid as long
  * as the source object is alive
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, char const **code);
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, size_t *length,
+                                                     char const **code);
+
+/**
+ * @brief Get source location
+ *
+ * @param src [in] source object
+ * @param loc [out] pointer to location
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_location(const_tinytc_source_t src,
+                                                         tinytc_location_t *loc);
+
+/**
+ * @brief Get core features
+ *
+ * @param src [in] source object
+ * @param core_features [out] pointer to core features
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_core_features(
+    const_tinytc_source_t src, tinytc_core_feature_flags_t *core_features);
+
+/**
+ * @brief Get required OpenCL extensions
+ *
+ * @param src [in] source object
+ * @param extensions_size [out] pointer to number of extensions
+ * @param extensions [out][range(0,extensions_size)] pointer to array of C-strings; array owned by
+ * source object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t src,
+                                                           uint32_t *extensions_size,
+                                                           char const *const **extensions);
+
+/**
+ * @brief Create binary
+ *
+ * @param bin [out] pointer to binary object
+ * @param format [in] Bundle format (SPIR-V or Native)
+ * @param data_size [in] Size of data in bytes
+ * @param data [in][range(0, data_size)] Binary data; data is copied
+ * @param core_features [in][optional] requested core features; must be 0 (default) or a combination
+ * of tinytc_core_feature_flag_t
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin,
+                                                   tinytc_bundle_format_t format,
+                                                   uint64_t data_size, uint8_t const *data,
+                                                   tinytc_core_feature_flags_t core_features);
 
 /**
  * @brief Get raw binary data
@@ -1244,8 +1265,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,
-                                                              uint32_t *core_features);
+TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
+    const_tinytc_binary_t bin, tinytc_core_feature_flags_t *core_features);
 
 /**
  * @brief Release source object
@@ -1442,16 +1463,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recip
                                                      tinytc_prog_t *prg);
 
 /**
- * @brief Get binary object
+ * @brief Get source object
  *
  * @param recipe [in] recipe object
- * @param bin [out] pointer to binary object; reference count is increased so the user needs to call
- * tinytc_binary_release to clean up
+ * @param src [out] pointer to source object; reference count is increased so the user needs to call
+ * tinytc_source_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe,
-                                                       tinytc_binary_t *bin);
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_source(const_tinytc_recipe_t recipe,
+                                                       tinytc_source_t *src);
 
 /**
  * @brief Release recipe object

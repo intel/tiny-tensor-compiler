@@ -31,3 +31,5 @@ auto sycl_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_
     return tinytc::make_recipe_handler(q_, rec);
 }
 void sycl_test_runtime::synchronize() { q_.wait(); }
+
+bool sycl_test_runtime::supports_fp64() { return q_.get_device().has(sycl::aspect::fp64); }

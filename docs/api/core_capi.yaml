@@ -30,6 +30,7 @@ Core C-API:
       - const_tinytc_source_context_t
   Binary:
     function:
+      - tinytc_binary_create
       - tinytc_binary_get_core_features
       - tinytc_binary_get_raw
       - tinytc_binary_release
@@ -38,20 +39,18 @@ Core C-API:
     enum:
       - tinytc_bundle_format_t
     function:
-      - tinytc_prog_compile_to_binary
       - tinytc_prog_compile_to_opencl
-      - tinytc_source_compile_to_binary
   Device Info:
     enum:
       - tinytc_core_feature_flag_t
       - tinytc_intel_gpu_architecture_t
     function:
+      - tinytc_core_info_get_core_features
       - tinytc_core_info_get_ip_version
       - tinytc_core_info_get_num_registers_per_thread
       - tinytc_core_info_get_register_size
       - tinytc_core_info_get_subgroup_sizes
-      - tinytc_core_info_clear_core_feature
-      - tinytc_core_info_set_core_feature
+      - tinytc_core_info_set_core_features
       - tinytc_core_info_intel_create
       - tinytc_core_info_intel_create_from_arch
       - tinytc_core_info_release
@@ -67,8 +66,8 @@ Core C-API:
     enum:
       - tinytc_mem_type_t
     function:
-      - tinytc_recipe_get_binary
       - tinytc_recipe_get_prog
+      - tinytc_recipe_get_source
       - tinytc_recipe_handler_get_recipe
       - tinytc_recipe_small_gemm_batched_create
       - tinytc_recipe_small_gemm_batched_set_args
@@ -86,6 +85,8 @@ Core C-API:
   Source:
     function:
       - tinytc_source_get_code
+      - tinytc_source_get_location
+      - tinytc_source_get_extensions
       - tinytc_source_release
       - tinytc_source_retain
   Source Context:

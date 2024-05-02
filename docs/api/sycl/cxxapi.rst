@@ -33,7 +33,11 @@ Kernel
 
   * :ref:`make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)`
 
-  * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)`
+  * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)`
+
+  * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t,source_context)`
+
+  * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,source const &,source_context)`
 
 Kernel Functions
 ----------------
@@ -58,19 +62,29 @@ make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char con
 
 .. doxygenfunction:: tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
 
-make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)
-.............................................................................
+make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)
+............................................................................................
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)
+.. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)
+
+make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t,source_context)
+..............................................................................................................
+
+.. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t,source_context)
+
+make_kernel_bundle(sycl::context const &,sycl::device const &,source const &,source_context)
+............................................................................................
+
+.. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,source const &,source_context)
 
 Recipe
 ======
 
 * Functions
 
-  * :ref:`make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)`
+  * :ref:`make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &,source_context)`
 
-  * :ref:`make_recipe_handler(sycl::queue const&,recipe const&)`
+  * :ref:`make_recipe_handler(sycl::queue const&,recipe const&,source_context)`
 
 * Classes
 
@@ -79,15 +93,15 @@ Recipe
 Recipe Functions
 ----------------
 
-make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)
-..............................................................................
+make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &,source_context)
+.............................................................................................
 
-.. doxygenfunction:: tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)
+.. doxygenfunction:: tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &,source_context)
 
-make_recipe_handler(sycl::queue const&,recipe const&)
-.....................................................
+make_recipe_handler(sycl::queue const&,recipe const&,source_context)
+....................................................................
 
-.. doxygenfunction:: tinytc::make_recipe_handler(sycl::queue const&,recipe const&)
+.. doxygenfunction:: tinytc::make_recipe_handler(sycl::queue const&,recipe const&,source_context)
 
 Recipe Classes
 --------------

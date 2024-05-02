@@ -9,6 +9,7 @@
 
 #include <CL/cl.h>
 #include <sycl/sycl.hpp>
+#include <utility>
 #include <vector>
 
 using namespace sycl;
@@ -17,19 +18,46 @@ namespace tinytc {
 
 template <backend B> struct kernel_bundle_dispatcher;
 template <> struct kernel_bundle_dispatcher<backend::ext_oneapi_level_zero> {
-    auto operator()(context const &ctx, device const &dev, binary const &bin) {
+    template <typename T>
+    auto operator()(context const &ctx, device const &dev, T const &obj,
+                    source_context source_ctx) {
         auto native_context = get_native<backend::ext_oneapi_level_zero, context>(ctx);
         auto native_device = get_native<backend::ext_oneapi_level_zero, device>(dev);
-        auto native_mod = make_kernel_bundle(native_context, native_device, bin, nullptr);
+        auto native_mod =
+            make_kernel_bundle(native_context, native_device, obj, std::move(source_ctx));
+        return make_kernel_bundle<backend::ext_oneapi_level_zero, bundle_state::executable>(
+            {native_mod.release(), ext::oneapi::level_zero::ownership::transfer}, ctx);
+    }
+    auto operator()(context const &ctx, device const &dev, prog prg,
+                    tinytc_core_feature_flags_t core_features, source_context source_ctx) {
+        auto native_context = get_native<backend::ext_oneapi_level_zero, context>(ctx);
+        auto native_device = get_native<backend::ext_oneapi_level_zero, device>(dev);
+        auto native_mod = make_kernel_bundle(native_context, native_device, std::move(prg),
+                                             core_features, std::move(source_ctx));
         return make_kernel_bundle<backend::ext_oneapi_level_zero, bundle_state::executable>(
             {native_mod.release(), ext::oneapi::level_zero::ownership::transfer}, ctx);
     }
 };
 template <> struct kernel_bundle_dispatcher<backend::opencl> {
-    auto operator()(context const &ctx, device const &dev, binary const &bin) {
+    template <typename T>
+    auto operator()(context const &ctx, device const &dev, T const &obj,
+                    source_context source_ctx) {
         auto native_context = get_native<backend::opencl, context>(ctx);
         auto native_device = get_native<backend::opencl, device>(dev);
-        auto native_mod = make_kernel_bundle(native_context, native_device, bin);
+        auto native_mod =
+            make_kernel_bundle(native_context, native_device, obj, std::move(source_ctx));
+        auto bundle =
+            make_kernel_bundle<backend::opencl, bundle_state::executable>(native_mod.get(), ctx);
+        CL_CHECK_STATUS(clReleaseDevice(native_device));
+        CL_CHECK_STATUS(clReleaseContext(native_context));
+        return bundle;
+    }
+    auto operator()(context const &ctx, device const &dev, prog prg,
+                    tinytc_core_feature_flags_t core_features, source_context source_ctx) {
+        auto native_context = get_native<backend::opencl, context>(ctx);
+        auto native_device = get_native<backend::opencl, device>(dev);
+        auto native_mod = make_kernel_bundle(native_context, native_device, std::move(prg),
+                                             core_features, std::move(source_ctx));
         auto bundle =
             make_kernel_bundle<backend::opencl, bundle_state::executable>(native_mod.get(), ctx);
         CL_CHECK_STATUS(clReleaseDevice(native_device));
@@ -38,9 +66,21 @@ template <> struct kernel_bundle_dispatcher<backend::opencl> {
     }
 };
 
-auto make_kernel_bundle(context const &ctx, device const &dev, binary const &bin)
+auto make_kernel_bundle(context const &ctx, device const &dev, source const &src,
+                        source_context source_ctx) -> kernel_bundle<bundle_state::executable> {
+    return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, src,
+                                              std::move(source_ctx));
+}
+auto make_kernel_bundle(context const &ctx, device const &dev, prog prg,
+                        tinytc_core_feature_flags_t core_features, source_context source_ctx)
     -> kernel_bundle<bundle_state::executable> {
-    return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, bin);
+    return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, std::move(prg),
+                                              core_features, std::move(source_ctx));
+}
+auto make_kernel_bundle(context const &ctx, device const &dev, binary const &bin,
+                        source_context source_ctx) -> kernel_bundle<bundle_state::executable> {
+    return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, bin,
+                                              std::move(source_ctx));
 }
 
 template <backend B> struct kernel_dispatcher;

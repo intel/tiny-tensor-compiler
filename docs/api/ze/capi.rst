@@ -46,7 +46,13 @@ Kernel
 
   * :ref:`tinytc_ze_kernel_create`
 
-  * :ref:`tinytc_ze_module_create`
+  * :ref:`tinytc_ze_kernel_bundle_create_with_binary`
+
+  * :ref:`tinytc_ze_kernel_bundle_create_with_program`
+
+  * :ref:`tinytc_ze_kernel_bundle_create_with_source`
+
+  * :ref:`tinytc_ze_source_compile_to_binary`
 
 Kernel Functions
 ----------------
@@ -66,10 +72,25 @@ tinytc_ze_kernel_create
 
 .. doxygenfunction:: tinytc_ze_kernel_create
 
-tinytc_ze_module_create
-.......................
+tinytc_ze_kernel_bundle_create_with_binary
+..........................................
 
-.. doxygenfunction:: tinytc_ze_module_create
+.. doxygenfunction:: tinytc_ze_kernel_bundle_create_with_binary
+
+tinytc_ze_kernel_bundle_create_with_program
+...........................................
+
+.. doxygenfunction:: tinytc_ze_kernel_bundle_create_with_program
+
+tinytc_ze_kernel_bundle_create_with_source
+..........................................
+
+.. doxygenfunction:: tinytc_ze_kernel_bundle_create_with_source
+
+tinytc_ze_source_compile_to_binary
+..................................
+
+.. doxygenfunction:: tinytc_ze_source_compile_to_binary
 
 Recipe
 ======

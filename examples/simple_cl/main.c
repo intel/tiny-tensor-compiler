@@ -52,7 +52,7 @@ tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue q
     CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
                                                   tinytc_transpose_N, tinytc_transpose_N, M, N, K,
                                                   M, M * K, K, K * N, M, M * N, source_ctx));
-    CHECK(tinytc_cl_recipe_handler_create(&handler, context, device, recipe));
+    CHECK(tinytc_cl_recipe_handler_create(&handler, context, device, recipe, source_ctx));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
     const size_t Bbytes = K * N * howmany * sizeof(float);
@@ -129,7 +129,6 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     tinytc_core_info_t info = NULL;
     tinytc_source_context_t source_ctx = NULL;
     tinytc_prog_t program = NULL;
-    tinytc_binary_t binary = NULL;
     cl_program module = NULL;
     cl_kernel kernel = NULL;
     cl_int err;
@@ -163,9 +162,8 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
 
     CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, source_ctx));
-    CHECK(tinytc_prog_compile_to_binary(&binary, program, info, tinytc_bundle_format_spirv,
-                                        source_ctx));
-    CHECK(tinytc_cl_program_create(&module, context, device, binary));
+    CHECK(tinytc_cl_kernel_bundle_create_with_program(&module, context, device, program, 0u,
+                                                      source_ctx));
     kernel = clCreateKernel(module, "copy", &err);
     CL_CHECK(err);
 
@@ -200,7 +198,6 @@ err:
     if (module) {
         clReleaseProgram(module);
     }
-    tinytc_binary_release(binary);
     tinytc_prog_release(program);
     if (source_ctx) {
         const char *error_log;

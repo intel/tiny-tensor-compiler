@@ -41,6 +41,7 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
                      ze_command_list_handle_t list) {
     tinytc_status_t status = tinytc_status_success;
     tinytc_core_info_t info = NULL;
+    tinytc_source_context_t source_ctx = NULL;
     tinytc_recipe_t recipe = NULL;
     tinytc_recipe_handler_t handler = NULL;
     void *A = NULL, *B = NULL, *C = NULL;
@@ -49,10 +50,11 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
     CHECK(tinytc_ze_core_info_create(&info, device));
 
     const uint32_t M = 64, N = 64, K = 64, howmany = 1000;
+    CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
                                                   tinytc_transpose_N, tinytc_transpose_N, M, N, K,
-                                                  M, M * K, K, K * N, M, M * N, NULL));
-    CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe));
+                                                  M, M * K, K, K * N, M, M * N, source_ctx));
+    CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe, source_ctx));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
     const size_t Bbytes = K * N * howmany * sizeof(float);
@@ -110,6 +112,14 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
+    if (source_ctx) {
+        const char *error_log;
+        tinytc_source_context_get_error_log(source_ctx, &error_log);
+        if (error_log[0] != '\0') {
+            printf("\nError log:\n%s\n", error_log);
+        }
+        tinytc_source_context_release(source_ctx);
+    }
     tinytc_core_info_release(info);
 
     return status;
@@ -123,7 +133,6 @@ tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t de
     tinytc_core_info_t info = NULL;
     tinytc_source_context_t source_ctx = NULL;
     tinytc_prog_t program = NULL;
-    tinytc_binary_t binary = NULL;
     ze_module_handle_t module = NULL;
     ze_kernel_handle_t kernel = NULL;
 
@@ -158,9 +167,8 @@ tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t de
 
     CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, source_ctx));
-    CHECK(tinytc_prog_compile_to_binary(&binary, program, info, tinytc_bundle_format_native,
-                                        source_ctx));
-    CHECK(tinytc_ze_module_create(&module, context, device, binary, NULL));
+    CHECK(tinytc_ze_kernel_bundle_create_with_program(&module, context, device, program, 0u,
+                                                      source_ctx));
     CHECK(tinytc_ze_kernel_create(&kernel, module, "copy"));
 
     ZE_CHECK(zeKernelSetArgumentValue(kernel, 0, sizeof(A), &A));
@@ -193,7 +201,6 @@ err:
     if (module) {
         zeModuleDestroy(module);
     }
-    tinytc_binary_release(binary);
     tinytc_prog_release(program);
     if (source_ctx) {
         const char *error_log;

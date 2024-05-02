@@ -40,6 +40,8 @@ class level_zero_test_runtime {
     auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
     void synchronize();
 
+    bool supports_fp64();
+
   private:
     void memcpy(void *dst, const void *src, std::size_t bytes);
 

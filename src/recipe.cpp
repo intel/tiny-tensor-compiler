@@ -58,12 +58,12 @@ tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recipe, tinytc_prog
         [&] { *prg = tinytc::prog(recipe->get_program()).release(); });
 }
 
-tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe, tinytc_binary_t *bin) {
-    if (recipe == nullptr || bin == nullptr) {
+tinytc_status_t tinytc_recipe_get_source(const_tinytc_recipe_t recipe, tinytc_source_t *src) {
+    if (recipe == nullptr || src == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return tinytc::exception_to_status_code(
-        [&] { *bin = tinytc::binary(recipe->get_binary()).release(); });
+        [&] { *src = tinytc::source(recipe->get_source()).release(); });
 }
 
 tinytc_status_t tinytc_recipe_release(tinytc_recipe_t obj) {

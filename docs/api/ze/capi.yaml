@@ -12,7 +12,10 @@ C-API:
       - tinytc_ze_get_group_count
       - tinytc_ze_get_group_size
       - tinytc_ze_kernel_create
-      - tinytc_ze_module_create
+      - tinytc_ze_kernel_bundle_create_with_binary
+      - tinytc_ze_kernel_bundle_create_with_program
+      - tinytc_ze_kernel_bundle_create_with_source
+      - tinytc_ze_source_compile_to_binary
   Recipe:
     function:
       - tinytc_ze_recipe_handler_create

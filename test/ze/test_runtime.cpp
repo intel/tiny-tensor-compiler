@@ -69,3 +69,11 @@ auto level_zero_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> r
 void level_zero_test_runtime::synchronize() {
     ZE_CHECK_STATUS(zeCommandListHostSynchronize(list_, UINT64_MAX));
 }
+
+bool level_zero_test_runtime::supports_fp64() {
+    auto props = ze_device_module_properties_t{};
+    props.stype = ZE_STRUCTURE_TYPE_DEVICE_MODULE_PROPERTIES;
+    props.pNext = nullptr;
+    ZE_CHECK_STATUS(zeDeviceGetModuleProperties(dev_, &props));
+    return bool(props.flags & ZE_DEVICE_MODULE_FLAG_FP64);
+}

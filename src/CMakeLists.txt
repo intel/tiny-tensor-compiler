@@ -13,7 +13,6 @@ else ()
 endif ()
 
 find_package(clir 0.5.1 REQUIRED ${type})
-find_package(ocloc REQUIRED)
 find_package(re2c REQUIRED)
 find_package(BISON 3.8.2 REQUIRED)
 
@@ -30,7 +29,6 @@ set(SOURCES
     location.cpp
     node/data_type_node.cpp
     node/inst_node.cpp
-    opencl_cc.cpp
     parser/parse_context.cpp
     parser.cpp
     passes.cpp
@@ -76,13 +74,13 @@ add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused
 add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
 add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
 set_cxx_common_options(tinytc-objects)
-target_link_libraries(tinytc-objects PUBLIC clir::clir ocloc::ocloc)
+target_link_libraries(tinytc-objects PUBLIC clir::clir)
 target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
 
 add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
 add_library(tinytc::tinytc ALIAS tinytc)
-target_link_libraries(tinytc PRIVATE clir::clir ocloc::ocloc)
+target_link_libraries(tinytc PRIVATE clir::clir)
 set_cxx_common_options(tinytc)
 
 # Generate export header

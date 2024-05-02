@@ -12,6 +12,7 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -1677,23 +1678,23 @@ class core_info : public shared_handle<tinytc_core_info_t> {
     }
 
     /**
-     * @brief Set core feature
+     * @brief Set core features
      *
-     * @param flag core feature flag
+     * @param flags set core features; must be 0 or a combination of tinytc_core_feature_flag_t
      */
-    void set_core_feature(core_feature_flag flag) {
-        CHECK_STATUS(tinytc_core_info_set_core_feature(
-            obj_, static_cast<::tinytc_core_feature_flag_t>(flag)));
+    void set_core_features(tinytc_core_feature_flags_t flags) {
+        CHECK_STATUS(tinytc_core_info_set_core_features(obj_, flags));
     }
 
     /**
-     * @brief Clear core feature
+     * @brief Get core features
      *
-     * @param flag core feature flag
+     * @return Core features
      */
-    void clear_core_feature(core_feature_flag flag) {
-        CHECK_STATUS(tinytc_core_info_clear_core_feature(
-            obj_, static_cast<::tinytc_core_feature_flag_t>(flag)));
+    auto get_core_features() const -> tinytc_core_feature_flags_t {
+        tinytc_core_feature_flags_t flags;
+        CHECK_STATUS(tinytc_core_info_get_core_features(obj_, &flags));
+        return flags;
     }
 };
 
@@ -1864,10 +1865,32 @@ class source : public shared_handle<tinytc_source_t> {
      *
      * @return Pointer to C-string that is bound to the lifetime of the source object
      */
-    inline auto get_code() -> char const * {
+    inline auto get_code() const -> std::string_view {
         char const *code = nullptr;
-        CHECK_STATUS(tinytc_source_get_code(obj_, &code));
-        return code;
+        std::size_t length = 0;
+        CHECK_STATUS(tinytc_source_get_code(obj_, &length, &code));
+        return std::string_view(code, length);
+    }
+
+    /**
+     * @brief Get location
+     *
+     * @return Location
+     */
+    inline auto get_location() const -> location {
+        location loc = {};
+        CHECK_STATUS(tinytc_source_get_location(obj_, &loc));
+        return loc;
+    }
+
+    /**
+     * @brief Get OpenCL extension
+     *
+     * @param extensions_size Number of extensions
+     * @param extensions Array of extensions
+     */
+    inline void get_extensions(uint32_t &extensions_size, char const *const *&extensions) const {
+        CHECK_STATUS(tinytc_source_get_extensions(obj_, &extensions_size, &extensions));
     }
 };
 
@@ -1911,12 +1934,31 @@ class binary : public shared_handle<tinytc_binary_t> {
      *
      * @return Core features
      */
-    inline auto get_core_features() -> std::uint32_t {
+    inline auto get_core_features() -> tinytc_core_feature_flags_t {
         std::uint32_t cf;
         CHECK_STATUS(tinytc_binary_get_core_features(obj_, &cf));
         return cf;
     }
 };
+
+/**
+ * @brief Make binary
+ *
+ * @param format Bundle format (SPIR-V or Native)
+ * @param data_size Size of data in bytes
+ * @param data Binary data; data is copied
+ * @param core_features requested core features; must be 0 (default) or a combination of
+ * tinytc_core_feature_flag_t
+ *
+ * @return Binary
+ */
+inline auto make_binary(bundle_format format, std::uint64_t data_size, std::uint8_t const *data,
+                        tinytc_core_feature_flags_t core_features) -> binary {
+    tinytc_binary_t bin;
+    CHECK_STATUS(tinytc_binary_create(&bin, static_cast<tinytc_bundle_format_t>(format), data_size,
+                                      data, core_features));
+    return binary{bin};
+}
 
 /**
  * @brief Compile program to OpenCL-C
@@ -1931,42 +1973,6 @@ inline auto compile_to_opencl(prog prg, core_info const &info, source_context ct
     tinytc_source_t src;
     CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
     return source{src};
-}
-
-/**
- * @brief Compile source to binary
- *
- * @param src Source object
- * @param info Core info
- * @param format Bundle format (SPIR-V or Native)
- * @param ctx Source context for improved error reporting
- *
- * @return Binary
- */
-inline auto compile_to_binary(source const &src, core_info const &info, bundle_format format,
-                              source_context ctx = {}) -> binary {
-    tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_source_compile_to_binary(
-        &bin, src.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
-    return binary{bin};
-}
-
-/**
- * @brief Compile a program to a binary
- *
- * @param prg Program
- * @param info Core info
- * @param format Bundle format (SPIR-V or Native)
- * @param ctx Source context for improved error reporting
- *
- * @return Binary
- */
-inline auto compile_to_binary(prog prg, core_info const &info, bundle_format format,
-                              source_context ctx = {}) -> binary {
-    tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_prog_compile_to_binary(
-        &bin, prg.get(), info.get(), static_cast<tinytc_bundle_format_t>(format), ctx.get()));
-    return binary{bin};
 }
 
 ////////////////////////////
@@ -2061,14 +2067,14 @@ class recipe : public shared_handle<tinytc_recipe_t> {
     }
 
     /**
-     * @brief Get binary
+     * @brief Get source
      *
-     * @return Binary
+     * @return Source
      */
-    auto get_binary() const -> binary {
-        tinytc_binary_t bin;
-        CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
-        return binary{bin};
+    auto get_source() const -> source {
+        tinytc_source_t src;
+        CHECK_STATUS(tinytc_recipe_get_source(obj_, &src));
+        return source{src};
     }
 };
 

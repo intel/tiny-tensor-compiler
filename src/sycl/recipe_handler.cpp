@@ -24,9 +24,11 @@ template <> struct arg_handler_dispatcher<sycl::backend::opencl> {
 };
 
 sycl_recipe_handler_impl::sycl_recipe_handler_impl(sycl::context const &context,
-                                                   sycl::device const &device, recipe rec)
+                                                   sycl::device const &device, recipe rec,
+                                                   source_context source_ctx)
     : ::tinytc_recipe_handler(std::move(rec)),
-      module_(make_kernel_bundle(context, device, get_recipe().get_binary())) {
+      module_(
+          make_kernel_bundle(context, device, get_recipe().get_source(), std::move(source_ctx))) {
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
@@ -65,16 +67,19 @@ auto sycl_recipe_handler_impl::local_size() const -> sycl::range<3u> const & {
     return local_size_[active_kernel_];
 }
 
-auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec)
-    -> sycl_recipe_handler {
+auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec,
+                         source_context source_ctx) -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
-        std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec).release();
+        std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec, std::move(source_ctx)).release();
     return sycl_recipe_handler{handler};
 }
 
-auto make_recipe_handler(sycl::queue const &q, recipe const &rec) -> sycl_recipe_handler {
+auto make_recipe_handler(sycl::queue const &q, recipe const &rec, source_context source_ctx)
+    -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
-        std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec).release();
+        std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec,
+                                                   std::move(source_ctx))
+            .release();
     return sycl_recipe_handler{handler};
 }
 

@@ -187,6 +187,8 @@ Binary
 
 * Functions
 
+  * :ref:`tinytc_binary_create`
+
   * :ref:`tinytc_binary_get_core_features`
 
   * :ref:`tinytc_binary_get_raw`
@@ -197,6 +199,11 @@ Binary
 
 Binary Functions
 ----------------
+
+tinytc_binary_create
+....................
+
+.. doxygenfunction:: tinytc_binary_create
 
 tinytc_binary_get_core_features
 ...............................
@@ -227,11 +234,7 @@ Compiler
 
 * Functions
 
-  * :ref:`tinytc_prog_compile_to_binary`
-
   * :ref:`tinytc_prog_compile_to_opencl`
-
-  * :ref:`tinytc_source_compile_to_binary`
 
 Compiler Enumerations
 ---------------------
@@ -244,20 +247,10 @@ tinytc_bundle_format_t
 Compiler Functions
 ------------------
 
-tinytc_prog_compile_to_binary
-.............................
-
-.. doxygenfunction:: tinytc_prog_compile_to_binary
-
 tinytc_prog_compile_to_opencl
 .............................
 
 .. doxygenfunction:: tinytc_prog_compile_to_opencl
-
-tinytc_source_compile_to_binary
-...............................
-
-.. doxygenfunction:: tinytc_source_compile_to_binary
 
 Device Info
 ===========
@@ -270,6 +263,8 @@ Device Info
 
 * Functions
 
+  * :ref:`tinytc_core_info_get_core_features`
+
   * :ref:`tinytc_core_info_get_ip_version`
 
   * :ref:`tinytc_core_info_get_num_registers_per_thread`
@@ -278,9 +273,7 @@ Device Info
 
   * :ref:`tinytc_core_info_get_subgroup_sizes`
 
-  * :ref:`tinytc_core_info_clear_core_feature`
-
-  * :ref:`tinytc_core_info_set_core_feature`
+  * :ref:`tinytc_core_info_set_core_features`
 
   * :ref:`tinytc_core_info_intel_create`
 
@@ -289,6 +282,10 @@ Device Info
   * :ref:`tinytc_core_info_release`
 
   * :ref:`tinytc_core_info_retain`
+
+* Typedefs
+
+  * :ref:`tinytc_core_feature_flags_t`
 
 Device Info Enumerations
 ------------------------
@@ -305,6 +302,11 @@ tinytc_intel_gpu_architecture_t
 
 Device Info Functions
 ---------------------
+
+tinytc_core_info_get_core_features
+..................................
+
+.. doxygenfunction:: tinytc_core_info_get_core_features
 
 tinytc_core_info_get_ip_version
 ...............................
@@ -326,15 +328,10 @@ tinytc_core_info_get_subgroup_sizes
 
 .. doxygenfunction:: tinytc_core_info_get_subgroup_sizes
 
-tinytc_core_info_clear_core_feature
-...................................
+tinytc_core_info_set_core_features
+..................................
 
-.. doxygenfunction:: tinytc_core_info_clear_core_feature
-
-tinytc_core_info_set_core_feature
-.................................
-
-.. doxygenfunction:: tinytc_core_info_set_core_feature
+.. doxygenfunction:: tinytc_core_info_set_core_features
 
 tinytc_core_info_intel_create
 .............................
@@ -355,6 +352,14 @@ tinytc_core_info_retain
 .......................
 
 .. doxygenfunction:: tinytc_core_info_retain
+
+Device Info Typedefs
+--------------------
+
+tinytc_core_feature_flags_t
+...........................
+
+.. doxygentypedef:: tinytc_core_feature_flags_t
 
 Parser
 ======
@@ -394,9 +399,9 @@ Recipe
 
 * Functions
 
-  * :ref:`tinytc_recipe_get_binary`
-
   * :ref:`tinytc_recipe_get_prog`
+
+  * :ref:`tinytc_recipe_get_source`
 
   * :ref:`tinytc_recipe_handler_get_recipe`
 
@@ -437,15 +442,15 @@ tinytc_mem_type_t
 Recipe Functions
 ----------------
 
-tinytc_recipe_get_binary
-........................
-
-.. doxygenfunction:: tinytc_recipe_get_binary
-
 tinytc_recipe_get_prog
 ......................
 
 .. doxygenfunction:: tinytc_recipe_get_prog
+
+tinytc_recipe_get_source
+........................
+
+.. doxygenfunction:: tinytc_recipe_get_source
 
 tinytc_recipe_handler_get_recipe
 ................................
@@ -520,6 +525,10 @@ Source
 
   * :ref:`tinytc_source_get_code`
 
+  * :ref:`tinytc_source_get_location`
+
+  * :ref:`tinytc_source_get_extensions`
+
   * :ref:`tinytc_source_release`
 
   * :ref:`tinytc_source_retain`
@@ -531,6 +540,16 @@ tinytc_source_get_code
 ......................
 
 .. doxygenfunction:: tinytc_source_get_code
+
+tinytc_source_get_location
+..........................
+
+.. doxygenfunction:: tinytc_source_get_location
+
+tinytc_source_get_extensions
+............................
+
+.. doxygenfunction:: tinytc_source_get_extensions
 
 tinytc_source_release
 .....................

@@ -5,7 +5,7 @@
 #include "error.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
-#include "util.hpp"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -52,22 +52,16 @@ auto core_info_intel::num_registers_per_thread() const -> std::uint32_t {
     return num_registers_per_thread_;
 }
 
-void core_info_intel::set_core_feature(core_feature_flag flag) {
-    core_features_ |= static_cast<tinytc_core_feature_flags_t>(flag);
-    if (flag == core_feature_flag::large_register_file) {
-        num_registers_per_thread_ = num_reg_large_grf();
-    }
-}
-
-void core_info_intel::clear_core_feature(core_feature_flag flag) {
-    core_features_ &= ~static_cast<tinytc_core_feature_flags_t>(flag);
-    if (flag == core_feature_flag::large_register_file) {
-        num_registers_per_thread_ = num_reg_small_grf();
-    }
-}
-
 auto core_info_intel::core_features() const -> tinytc_core_feature_flags_t {
     return core_features_;
+}
+
+void core_info_intel::core_features(tinytc_core_feature_flags_t flags) {
+    if (flags & tinytc_core_feature_flag_large_register_file) {
+        num_registers_per_thread_ = num_reg_large_grf();
+    } else {
+        num_registers_per_thread_ = num_reg_small_grf();
+    }
 }
 
 auto core_info_intel::max_number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t {
@@ -188,23 +182,21 @@ tinytc_status_t tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_
     return exception_to_status_code([&] { *num = info->num_registers_per_thread(); });
 }
 
-tinytc_status_t tinytc_core_info_set_core_feature(tinytc_core_info_t info,
-                                                  tinytc_core_feature_flag_t flag) {
+tinytc_status_t tinytc_core_info_set_core_features(tinytc_core_info_t info,
+                                                   tinytc_core_feature_flags_t flags) {
 
     if (info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { info->set_core_feature(enum_cast<core_feature_flag>(flag)); });
+    return exception_to_status_code([&] { info->core_features(flags); });
 }
 
-tinytc_status_t tinytc_core_info_clear_core_feature(tinytc_core_info_t info,
-                                                    tinytc_core_feature_flag_t flag) {
-    if (info == nullptr) {
+tinytc_status_t tinytc_core_info_get_core_features(tinytc_core_info_t info,
+                                                   tinytc_core_feature_flags_t *flags) {
+    if (info == nullptr || flags == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { info->clear_core_feature(enum_cast<core_feature_flag>(flag)); });
+    return exception_to_status_code([&] { *flags = info->core_features(); });
 }
 
 tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj) {

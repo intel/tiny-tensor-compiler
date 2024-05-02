@@ -7,6 +7,7 @@
 #include "doctest/doctest.h"
 
 #include <algorithm>
+#include <type_traits>
 
 using namespace tinytc;
 

@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
         if (!prog) {
             return -1;
         }
-        compile_to_binary(std::move(prog), info, bundle_format::spirv, ctx);
+        compile_to_opencl(std::move(prog), info, ctx);
     } catch (status const &st) {
         std::cerr << ctx.get_error_log() << std::endl;
         return 1;
