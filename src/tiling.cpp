@@ -7,7 +7,9 @@
 #include "tinytc/tinytc.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <stdexcept>
 
 namespace tinytc {
 
@@ -16,20 +18,35 @@ auto blas_shape::operator==(blas_shape const &other) const -> bool {
 }
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
-                           std::vector<std::uint32_t> const &available_subgroup_sizes)
+auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
     -> std::uint32_t {
-    auto const has_long_or_double = [](std::vector<blas_shape> const &shapes) -> bool {
-        for (auto &shape : shapes) {
-            if (size(shape.ty) == 8) {
-                return true;
+    std::size_t max_size = 1u;
+    for (auto &shape : shapes) {
+        max_size = std::max(max_size, size(shape.ty));
+    }
+
+    auto const &available_subgroup_sizes = info.subgroup_sizes();
+    if (available_subgroup_sizes.size() == 0) {
+        throw std::out_of_range("Subgroup size vector must have at least one entry");
+    }
+    auto sensible_subgroup_sizes = std::vector<std::uint32_t>{};
+    sensible_subgroup_sizes.reserve(available_subgroup_sizes.size());
+
+    auto it = available_subgroup_sizes.begin();
+    sensible_subgroup_sizes.push_back(*it++);
+    if (max_size < 8u) { // Only consider smallest sub-group size for double precision
+        auto const register_space = info.register_size() * info.num_registers_per_thread();
+        auto const number_of_reals_in_register = (register_space / 2) / max_size;
+        auto const number_of_reals_sqrt =
+            static_cast<std::uint32_t>(std::sqrt(static_cast<double>(number_of_reals_in_register)));
+        for (; it != available_subgroup_sizes.end(); ++it) {
+            if (*it <= number_of_reals_sqrt) {
+                sensible_subgroup_sizes.push_back(*it);
             }
         }
-        return false;
-    };
-
-    if (has_long_or_double(shapes)) {
-        return available_subgroup_sizes.front();
+    }
+    if (sensible_subgroup_sizes.size() == 1) {
+        return sensible_subgroup_sizes.front();
     }
 
     auto max_shape0 = std::max_element(
@@ -39,14 +56,13 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
             return a0 < b0;
         });
     if (max_shape0 != shapes.end()) {
-        for (auto it = available_subgroup_sizes.begin(); it != available_subgroup_sizes.end();
-             ++it) {
+        for (auto it = sensible_subgroup_sizes.begin(); it != sensible_subgroup_sizes.end(); ++it) {
             if (max_shape0->shape[0] <= *it) {
                 return *it;
             }
         }
     }
-    return available_subgroup_sizes.back();
+    return sensible_subgroup_sizes.back();
 }
 
 auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config const &core_cfg)
@@ -119,7 +135,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
 auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
                                       ::tinytc_core_info const &dev_info)
     -> std::tuple<std::uint32_t, local_tiling> {
-    auto const sgs = suggest_subgroup_size(shapes, dev_info.subgroup_sizes());
+    auto const sgs = suggest_subgroup_size(shapes, dev_info);
     auto const core_cfg = dev_info.get_core_config(sgs);
     auto const tiling = suggest_local_tiling(shapes, core_cfg);
     return std::make_tuple(sgs, tiling);

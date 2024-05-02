@@ -261,6 +261,9 @@ typedef enum {
     tinytc_core_feature_flag_large_register_file = 0x1
 } tinytc_core_feature_flag_t;
 
+//! Type for combination of core feature flags
+typedef uint32_t tinytc_core_feature_flags_t;
+
 /**
  * @brief IP versions for Intel GPUs
  *

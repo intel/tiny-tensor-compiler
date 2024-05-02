@@ -22,7 +22,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus
                                  std::vector<std::uint32_t> subgroup_sizes)
     : ip_version_(ip_version), num_eus_per_subslice_(num_eus_per_subslice),
       num_threads_per_eu_(num_threads_per_eu), local_memory_size_(local_memory_size),
-      subgroup_sizes_(std::move(subgroup_sizes)), core_features_(0) {
+      subgroup_sizes_(std::move(subgroup_sizes)), core_features_(0u) {
     std::sort(subgroup_sizes_.begin(), subgroup_sizes_.end());
 
     register_size_ = 32;
@@ -53,20 +53,22 @@ auto core_info_intel::num_registers_per_thread() const -> std::uint32_t {
 }
 
 void core_info_intel::set_core_feature(core_feature_flag flag) {
-    core_features_ |= static_cast<std::uint32_t>(flag);
+    core_features_ |= static_cast<tinytc_core_feature_flags_t>(flag);
     if (flag == core_feature_flag::large_register_file) {
         num_registers_per_thread_ = num_reg_large_grf();
     }
 }
 
 void core_info_intel::clear_core_feature(core_feature_flag flag) {
-    core_features_ &= ~static_cast<std::uint32_t>(flag);
+    core_features_ &= ~static_cast<tinytc_core_feature_flags_t>(flag);
     if (flag == core_feature_flag::large_register_file) {
         num_registers_per_thread_ = num_reg_small_grf();
     }
 }
 
-auto core_info_intel::core_features() const -> std::uint32_t { return core_features_; }
+auto core_info_intel::core_features() const -> tinytc_core_feature_flags_t {
+    return core_features_;
+}
 
 auto core_info_intel::max_number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t {
     auto const num_threads_per_eu_due_to_register_use =
@@ -93,9 +95,15 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
         throw std::out_of_range("Requested subgroup size not available");
     }
 
-    return core_config{subgroup_size,      max_number_of_work_items(subgroup_size),
-                       local_memory_size_, register_size_ * num_registers_per_thread_,
-                       ip_version_,        core_features_};
+    bool block_read_write_supported = !(subgroup_size == 32 && register_size_ == 32);
+
+    return core_config{subgroup_size,
+                       max_number_of_work_items(subgroup_size),
+                       local_memory_size_,
+                       register_size_ * num_registers_per_thread_,
+                       ip_version_,
+                       core_features_,
+                       block_read_write_supported};
 }
 
 } // namespace tinytc
