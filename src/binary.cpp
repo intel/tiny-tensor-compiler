@@ -2,19 +2,36 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "binary.hpp"
+#include "error.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
+#include "util.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <utility>
 
 using namespace tinytc;
 
 tinytc_binary::tinytc_binary(std::vector<std::uint8_t> data, bundle_format format,
-                             std::uint32_t core_features)
+                             tinytc_core_feature_flags_t core_features)
     : data_(std::move(data)), format_(format), core_features_(core_features) {}
 
 extern "C" {
+
+tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_bundle_format_t format,
+                                     uint64_t data_size, uint8_t const *data,
+                                     tinytc_core_feature_flags_t core_features) {
+    if (bin == nullptr || data == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *bin = std::make_unique<tinytc_binary>(std::vector<std::uint8_t>(data, data + data_size),
+                                               enum_cast<bundle_format>(format), core_features)
+                   .release();
+    });
+}
+
 tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin, tinytc_bundle_format_t *format,
                                       uint64_t *data_size, uint8_t const **data) {
     if (bin == nullptr || format == nullptr || data_size == nullptr || data == nullptr) {
@@ -27,7 +44,7 @@ tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin, tinytc_bundle_f
 }
 
 tinytc_status_t tinytc_binary_get_core_features(const_tinytc_binary_t bin,
-                                                uint32_t *core_features) {
+                                                tinytc_core_feature_flags_t *core_features) {
     if (bin == nullptr || core_features == nullptr) {
         return tinytc_status_invalid_arguments;
     }

@@ -10,10 +10,12 @@ C++-API:
       - tinytc::get_global_size(std::uint32_t,sycl::range<3u> const &)
       - tinytc::get_group_size(sycl::kernel const &)
       - tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
-      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t,source_context)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,source const &,source_context)
   Recipe:
     function:
-      - tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)
-      - tinytc::make_recipe_handler(sycl::queue const&,recipe const&)
+      - tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &,source_context)
+      - tinytc::make_recipe_handler(sycl::queue const&,recipe const&,source_context)
     class:
       - tinytc::sycl_recipe_handler

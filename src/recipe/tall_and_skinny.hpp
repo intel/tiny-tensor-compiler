@@ -17,7 +17,7 @@ auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const *;
 
 struct tall_and_skinny_recipe : ::tinytc_recipe {
   public:
-    tall_and_skinny_recipe(prog prg, binary bin, scalar_type ty, std::uint32_t M_block_size);
+    tall_and_skinny_recipe(prog prg, source src, scalar_type ty, std::uint32_t M_block_size);
     auto num_kernels() const -> std::uint32_t override;
     auto kernel_name(std::uint32_t kernel_num) const -> char const * override;
 

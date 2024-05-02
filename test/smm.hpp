@@ -94,6 +94,7 @@ concept test_runtime_gpu =
         { rt.get_context() } -> std::same_as<typename T::context_t>;
         { rt.get_command_list() } -> std::same_as<typename T::command_list_t>;
         { rt.get_recipe_handler(rec) } -> std::same_as<typename T::recipe_handler_t>;
+        { rt.supports_fp64() } -> std::same_as<bool>;
         rt.synchronize();
     };
 
@@ -111,6 +112,12 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
     };
 
     auto gpu_rt = std::make_shared<R>();
+    if constexpr (std::is_same_v<T, double>) {
+        if (!gpu_rt->supports_fp64()) {
+            WARN_MESSAGE(false, "Double precision tests need double precision device support");
+            return;
+        }
+    }
 
     auto const fill = [](tensor3<T> &x) {
         T *data = x.data();

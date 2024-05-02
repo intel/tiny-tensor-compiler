@@ -54,10 +54,9 @@ struct blas_shape {
  * @brief Suggest a subgroup size based on blas sizes
  *
  * @param shapes Shapes that occur in kernel
- * @param available_subgroup_sizes Subgroup sizes supported by device; must be in ascending order
+ * @param info Core info
  */
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
-                           std::vector<std::uint32_t> const &available_subgroup_sizes)
+auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
     -> std::uint32_t;
 
 /**

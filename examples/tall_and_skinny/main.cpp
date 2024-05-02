@@ -103,7 +103,7 @@ template <typename T> void test(queue q, args &a) {
         auto source_ctx = make_source_context();
         try {
             auto info = make_core_info(q.get_device());
-            info.set_core_feature(core_feature_flag::large_register_file);
+            info.set_core_features(tinytc_core_feature_flag_large_register_file);
 
             auto tas = make_recipe_handler(
                 q, make_tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx));

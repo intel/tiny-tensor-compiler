@@ -11,7 +11,9 @@ C-API:
     function:
       - tinytc_cl_get_global_size
       - tinytc_cl_get_group_size
-      - tinytc_cl_program_create
+      - tinytc_cl_kernel_bundle_create_with_source
+      - tinytc_cl_kernel_bundle_create_with_program
+      - tinytc_cl_kernel_bundle_create_with_binary
   Recipe:
     function:
       - tinytc_cl_recipe_handler_create

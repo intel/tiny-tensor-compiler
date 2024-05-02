@@ -5,7 +5,7 @@
 #define DEVICE_INFO_20240304_HPP
 
 #include "reference_counted.hpp"
-#include "tinytc/types.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <vector>
@@ -38,12 +38,10 @@ struct tinytc_core_info : tinytc::reference_counted {
     virtual auto register_size() const -> std::uint32_t = 0;
     //! Returns available number of registers per subgroup
     virtual auto num_registers_per_thread() const -> std::uint32_t = 0;
-    //! Request core feature
-    virtual void set_core_feature(tinytc::core_feature_flag flag) = 0;
-    //! Clear core feature request
-    virtual void clear_core_feature(tinytc::core_feature_flag flag) = 0;
     //! Get core features
     virtual auto core_features() const -> tinytc_core_feature_flags_t = 0;
+    //! Set core features
+    virtual void core_features(tinytc_core_feature_flags_t flags) = 0;
     //! Returns the minimum of the maximum work group size over all subgroup sizes; selected
     //! core features are respected
     virtual auto minmax_number_of_work_items() const -> std::uint32_t = 0;
@@ -78,12 +76,10 @@ class core_info_intel : public ::tinytc_core_info {
     auto register_size() const -> std::uint32_t override;
     //! @copydoc ::tinytc_core_info::num_registers_per_thread
     auto num_registers_per_thread() const -> std::uint32_t override;
-    //! @copydoc ::tinytc_core_info::set_core_feature
-    void set_core_feature(core_feature_flag flag) override;
-    //! @copydoc ::tinytc_core_info::clear_core_feature
-    void clear_core_feature(core_feature_flag flag) override;
-    //! @copydoc ::tinytc_core_info::core_features
+    //! @copydoc ::tinytc_core_info::core_features()
     auto core_features() const -> tinytc_core_feature_flags_t override;
+    //! @copydoc ::tinytc_core_info::core_features(tinytc_core_feature_flags_t)
+    void core_features(tinytc_core_feature_flags_t flags) override;
     //! @copydoc ::tinytc_core_info::minmax_number_of_work_items
     auto minmax_number_of_work_items() const -> std::uint32_t override;
     //! @copydoc ::tinytc_core_info::get_core_config

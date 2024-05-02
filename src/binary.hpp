@@ -5,6 +5,7 @@
 #define BINARY_20240308_HPP
 
 #include "reference_counted.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstddef>
@@ -25,7 +26,7 @@ struct tinytc_binary : tinytc::reference_counted {
      * @param core_features Required core features
      */
     tinytc_binary(std::vector<std::uint8_t> data, tinytc::bundle_format format,
-                  std::uint32_t core_features);
+                  tinytc_core_feature_flags_t core_features);
 
     //! Get raw data
     inline auto data() const noexcept -> std::uint8_t const * { return data_.data(); }
@@ -34,12 +35,14 @@ struct tinytc_binary : tinytc::reference_counted {
     //! Get binary format
     inline auto format() const noexcept -> tinytc::bundle_format { return format_; }
     //! Get core features
-    inline auto core_features() const noexcept -> std::uint32_t { return core_features_; }
+    inline auto core_features() const noexcept -> tinytc_core_feature_flags_t {
+        return core_features_;
+    }
 
   private:
     std::vector<std::uint8_t> data_;
     tinytc::bundle_format format_;
-    std::uint32_t core_features_;
+    tinytc_core_feature_flags_t core_features_;
 };
 
 #endif // BINARY_20240308_HPP

@@ -112,9 +112,8 @@ auto test_ader<T>::make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_s
     auto pb = program_builder{};
     pb.create("ader_kernel", opt_kernel);
 
-    return make_kernel_bundle(
-        q_.get_context(), q_.get_device(),
-        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native));
+    return make_kernel_bundle(q_.get_context(), q_.get_device(),
+                              compile_to_opencl(pb.get_product(), dev_info_));
 }
 
 template <typename T>

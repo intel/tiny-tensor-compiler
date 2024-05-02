@@ -61,15 +61,15 @@ typedef enum {
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST
     tinytc_status_ze_result_error_out_of_host_memory =
-        0x10002,                                         ///< ZE_RESULT_ERROR_OUT_OF_HOST_MEMORY
+        0x10002, ///< ZE_RESULT_ERROR_OUT_OF_HOST_MEMORY
     tinytc_status_ze_result_error_out_of_device_memory =
-        0x10003,                                         ///< ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY
+        0x10003, ///< ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY
     tinytc_status_ze_result_error_module_build_failure =
-        0x10004,                                         ///< ZE_RESULT_ERROR_MODULE_BUILD_FAILURE
+        0x10004, ///< ZE_RESULT_ERROR_MODULE_BUILD_FAILURE
     tinytc_status_ze_result_error_module_link_failure =
-        0x10005,                                         ///< ZE_RESULT_ERROR_MODULE_LINK_FAILURE
+        0x10005, ///< ZE_RESULT_ERROR_MODULE_LINK_FAILURE
     tinytc_status_ze_result_error_device_requires_reset =
-        0x10006,                                         ///< ZE_RESULT_ERROR_DEVICE_REQUIRES_RESET
+        0x10006, ///< ZE_RESULT_ERROR_DEVICE_REQUIRES_RESET
     tinytc_status_ze_result_error_device_in_low_power_state =
         0x10007, ///< ZE_RESULT_ERROR_DEVICE_IN_LOW_POWER_STATE
     tinytc_status_ze_result_exp_error_device_is_not_vertex =
@@ -82,7 +82,7 @@ typedef enum {
         0x1000B, ///< ZE_RESULT_EXP_ERROR_OPERANDS_INCOMPATIBLE
     tinytc_status_ze_result_exp_rtas_build_retry = 0x1000C, ///< ZE_RESULT_EXP_RTAS_BUILD_RETRY
     tinytc_status_ze_result_exp_rtas_build_deferred =
-        0x1000D,                                            ///< ZE_RESULT_EXP_RTAS_BUILD_DEFERRED
+        0x1000D, ///< ZE_RESULT_EXP_RTAS_BUILD_DEFERRED
     tinytc_status_ze_result_error_insufficient_permissions =
         0x1000E, ///< ZE_RESULT_ERROR_INSUFFICIENT_PERMISSIONS
     tinytc_status_ze_result_error_not_available = 0x1000F, ///< ZE_RESULT_ERROR_NOT_AVAILABLE
@@ -91,14 +91,14 @@ typedef enum {
     tinytc_status_ze_result_warning_dropped_data = 0x10011, ///< ZE_RESULT_WARNING_DROPPED_DATA
     tinytc_status_ze_result_error_uninitialized = 0x10012,  ///< ZE_RESULT_ERROR_UNINITIALIZED
     tinytc_status_ze_result_error_unsupported_version =
-        0x10013,                                            ///< ZE_RESULT_ERROR_UNSUPPORTED_VERSION
+        0x10013, ///< ZE_RESULT_ERROR_UNSUPPORTED_VERSION
     tinytc_status_ze_result_error_unsupported_feature =
-        0x10014,                                            ///< ZE_RESULT_ERROR_UNSUPPORTED_FEATURE
+        0x10014, ///< ZE_RESULT_ERROR_UNSUPPORTED_FEATURE
     tinytc_status_ze_result_error_invalid_argument = 0x10015, ///< ZE_RESULT_ERROR_INVALID_ARGUMENT
     tinytc_status_ze_result_error_invalid_null_handle =
-        0x10016,                                          ///< ZE_RESULT_ERROR_INVALID_NULL_HANDLE
+        0x10016, ///< ZE_RESULT_ERROR_INVALID_NULL_HANDLE
     tinytc_status_ze_result_error_handle_object_in_use =
-        0x10017,                                          ///< ZE_RESULT_ERROR_HANDLE_OBJECT_IN_USE
+        0x10017, ///< ZE_RESULT_ERROR_HANDLE_OBJECT_IN_USE
     tinytc_status_ze_result_error_invalid_null_pointer =
         0x10018,                                          ///< ZE_RESULT_ERROR_INVALID_NULL_POINTER
     tinytc_status_ze_result_error_invalid_size = 0x10019, ///< ZE_RESULT_ERROR_INVALID_SIZE
@@ -138,7 +138,7 @@ typedef enum {
     tinytc_status_ze_result_error_overlapping_regions =
         0x1002B, ///< ZE_RESULT_ERROR_OVERLAPPING_REGIONS
     tinytc_status_ze_result_warning_action_required =
-        0x1002C, ///< ZE_RESULT_WARNING_ACTION_REQUIRED
+        0x1002C,                                     ///< ZE_RESULT_WARNING_ACTION_REQUIRED
     tinytc_status_ze_result_error_unknown = 0x1002D, ///< ZE_RESULT_ERROR_UNKNOWN
     // OpenCL errors
     tinytc_status_cl_build_program_failure = 0x20000,   ///< CL_BUILD_PROGRAM_FAILURE
@@ -162,15 +162,15 @@ typedef enum {
     tinytc_status_cl_invalid_context = 0x20011,            ///< CL_INVALID_CONTEXT
     tinytc_status_cl_invalid_device = 0x20012,             ///< CL_INVALID_DEVICE
     tinytc_status_cl_invalid_device_partition_count =
-        0x20013,                                           ///< CL_INVALID_DEVICE_PARTITION_COUNT
-    tinytc_status_cl_invalid_device_queue = 0x20014,       ///< CL_INVALID_DEVICE_QUEUE
-    tinytc_status_cl_invalid_device_type = 0x20015,        ///< CL_INVALID_DEVICE_TYPE
-    tinytc_status_cl_invalid_event = 0x20016,              ///< CL_INVALID_EVENT
-    tinytc_status_cl_invalid_event_wait_list = 0x20017,    ///< CL_INVALID_EVENT_WAIT_LIST
-    tinytc_status_cl_invalid_global_offset = 0x20018,      ///< CL_INVALID_GLOBAL_OFFSET
-    tinytc_status_cl_invalid_global_work_size = 0x20019,   ///< CL_INVALID_GLOBAL_WORK_SIZE
-    tinytc_status_cl_invalid_host_ptr = 0x2001A,           ///< CL_INVALID_HOST_PTR
-    tinytc_status_cl_invalid_image_descriptor = 0x2001B,   ///< CL_INVALID_IMAGE_DESCRIPTOR
+        0x20013,                                         ///< CL_INVALID_DEVICE_PARTITION_COUNT
+    tinytc_status_cl_invalid_device_queue = 0x20014,     ///< CL_INVALID_DEVICE_QUEUE
+    tinytc_status_cl_invalid_device_type = 0x20015,      ///< CL_INVALID_DEVICE_TYPE
+    tinytc_status_cl_invalid_event = 0x20016,            ///< CL_INVALID_EVENT
+    tinytc_status_cl_invalid_event_wait_list = 0x20017,  ///< CL_INVALID_EVENT_WAIT_LIST
+    tinytc_status_cl_invalid_global_offset = 0x20018,    ///< CL_INVALID_GLOBAL_OFFSET
+    tinytc_status_cl_invalid_global_work_size = 0x20019, ///< CL_INVALID_GLOBAL_WORK_SIZE
+    tinytc_status_cl_invalid_host_ptr = 0x2001A,         ///< CL_INVALID_HOST_PTR
+    tinytc_status_cl_invalid_image_descriptor = 0x2001B, ///< CL_INVALID_IMAGE_DESCRIPTOR
     tinytc_status_cl_invalid_image_format_descriptor =
         0x2001C,                                           ///< CL_INVALID_IMAGE_FORMAT_DESCRIPTOR
     tinytc_status_cl_invalid_image_size = 0x2001D,         ///< CL_INVALID_IMAGE_SIZE
@@ -272,7 +272,8 @@ typedef uint32_t tinytc_core_feature_flags_t;
  * * https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619
  */
 typedef enum {
-    tinytc_intel_gpu_architecture_pvc = 0x030f0007 ///< PVC
+    tinytc_intel_gpu_architecture_tgl = 0x03000000, ///< Tiger Lake
+    tinytc_intel_gpu_architecture_pvc = 0x030f0007  ///< Ponte Vecchio
 } tinytc_intel_gpu_architecture_t;
 
 //! Target binary format

@@ -72,6 +72,10 @@ Binary
 
   * :ref:`bundle_format`
 
+* Functions
+
+  * :ref:`make_binary`
+
 * Classes
 
   * :ref:`binary`
@@ -83,6 +87,14 @@ bundle_format
 .............
 
 .. doxygenenum:: tinytc::bundle_format
+
+Binary Functions
+----------------
+
+make_binary
+...........
+
+.. doxygenfunction:: tinytc::make_binary
 
 Binary Classes
 --------------
@@ -99,10 +111,6 @@ Compiler
 
   * :ref:`compile_to_opencl`
 
-  * :ref:`compile_to_binary(prog,core_info const &,bundle_format,source_context)`
-
-  * :ref:`compile_to_binary(source const &,core_info const &,bundle_format,source_context)`
-
 Compiler Functions
 ------------------
 
@@ -110,16 +118,6 @@ compile_to_opencl
 .................
 
 .. doxygenfunction:: tinytc::compile_to_opencl
-
-compile_to_binary(prog,core_info const &,bundle_format,source_context)
-......................................................................
-
-.. doxygenfunction:: tinytc::compile_to_binary(prog,core_info const &,bundle_format,source_context)
-
-compile_to_binary(source const &,core_info const &,bundle_format,source_context)
-................................................................................
-
-.. doxygenfunction:: tinytc::compile_to_binary(source const &,core_info const &,bundle_format,source_context)
 
 Device Info
 ===========

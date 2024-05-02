@@ -10,6 +10,7 @@
 
 #include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <exception>
 #include <string>
@@ -30,7 +31,8 @@ class opencl_c_compilation_error : public std::exception {
 /**
  * @brief Takes OpenCL-C code and outputs a SPIR-V or native device binary
  *
- * @param source OpenCL-C source code
+ * @param source_length Source text length (excluding zero terminator)
+ * @param source_text OpenCL-C source code (zero-terminated)
  * @param format Target binary format
  * @param ip_version Device ip version; you may pass 0 for format==spirv
  * @param options List of compiler options
@@ -38,10 +40,12 @@ class opencl_c_compilation_error : public std::exception {
  *
  * @return binary
  */
-std::vector<std::uint8_t> compile_opencl_c(std::string const &source, bundle_format format,
-                                           std::uint32_t ip_version,
-                                           std::vector<char const *> const &options = {},
-                                           std::vector<char const *> const &extensions = {});
+std::vector<std::uint8_t> compile_opencl_c(std::size_t source_length, char const *source_text,
+                                           bundle_format format, std::uint32_t ip_version,
+                                           std::uint32_t options_size = 0,
+                                           char const *const *options = nullptr,
+                                           std::uint32_t extensions_size = 0,
+                                           char const *const *extensions = nullptr);
 
 } // namespace tinytc
 

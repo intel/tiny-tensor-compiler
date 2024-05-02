@@ -40,6 +40,8 @@ class opencl_test_runtime {
     auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
     void synchronize();
 
+    bool supports_fp64();
+
   private:
     device_t dev_;
     context_t ctx_;

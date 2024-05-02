@@ -121,9 +121,8 @@ auto test_volume<T>::make_optimized_kernel()
     auto pb = program_builder{};
     pb.create("volume_kernel", opt_kernel);
 
-    return make_kernel_bundle(
-        q_.get_context(), q_.get_device(),
-        compile_to_binary(pb.get_product(), dev_info_, bundle_format::native));
+    return make_kernel_bundle(q_.get_context(), q_.get_device(),
+                              compile_to_opencl(pb.get_product(), dev_info_));
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {

@@ -4,7 +4,6 @@
 #ifndef ERROR_20240410_HPP
 #define ERROR_20240410_HPP
 
-#include "opencl_cc.hpp"
 #include "parser.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -48,8 +47,7 @@ class internal_compiler_error : public std::exception {
 };
 
 template <typename F>
-auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
-                              location const &loc = {}) -> tinytc_status_t {
+auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr) -> tinytc_status_t {
     try {
         f();
     } catch (internal_compiler_error const &e) {
@@ -71,11 +69,6 @@ auto exception_to_status_code(F &&f, tinytc_source_context_t context = nullptr,
             }
         }
         return static_cast<tinytc_status_t>(e.code());
-    } catch (opencl_c_compilation_error const &e) {
-        if (context) {
-            context->report_error(loc, e.what());
-        }
-        return tinytc_status_compilation_error;
     } catch (std::bad_alloc const &e) {
         return tinytc_status_bad_alloc;
     } catch (std::out_of_range const &e) {

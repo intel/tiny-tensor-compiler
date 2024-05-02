@@ -32,8 +32,8 @@ auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *
     }
     throw status::invalid_arguments;
 }
-small_gemm_batched_recipe::small_gemm_batched_recipe(prog prg, binary bin, scalar_type ty)
-    : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty) {}
+small_gemm_batched_recipe::small_gemm_batched_recipe(prog prg, source src, scalar_type ty)
+    : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty) {}
 auto small_gemm_batched_recipe::num_kernels() const -> std::uint32_t {
     return static_cast<std::uint32_t>(small_gemm_batched_kernel::num_kernels);
 }
@@ -119,13 +119,12 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0),
                 [&](function_builder &fb) { kernel(fb, false); }, my_loc());
             auto p = pb.get_product(my_loc());
-            tinytc_binary_t bin;
-            CHECK_STATUS(tinytc_prog_compile_to_binary(&bin, p.get(), info,
-                                                       tinytc_bundle_format_native, ctx));
-            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), binary(bin), ty_)
+            tinytc_source_t src;
+            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
+            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src), ty_)
                           .release();
         },
-        ctx, my_loc());
+        ctx);
 }
 
 tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(tinytc_recipe_handler_t handler,

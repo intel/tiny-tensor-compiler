@@ -40,7 +40,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride,
                                        std::array<std::int64_t, 2> C_stride,
-                                       std::uint32_t repetitions, queue q) -> binary {
+                                       std::uint32_t repetitions, queue q) -> source {
     auto ctx = make_source_context();
     char const *file_name = std::source_location::current().file_name();
     auto const source_id = ctx.add_source(file_name, "");
@@ -91,8 +91,8 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto p = pb.get_product(my_loc());
 
         auto info = make_core_info(q.get_device());
-        info.set_core_feature(core_feature_flag::large_register_file);
-        return compile_to_binary(p, info, bundle_format::native, ctx);
+        info.set_core_features(tinytc_core_feature_flag_large_register_file);
+        return compile_to_opencl(p, info, ctx);
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
         std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << std::endl
@@ -102,7 +102,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                   << "Error log:" << std::endl
                   << ctx.get_error_log() << std::endl;
     }
-    return binary{nullptr};
+    return source{nullptr};
 }
 
 template <typename T> void test(queue q, args &a) {
@@ -187,15 +187,12 @@ template <typename T> void test(queue q, args &a) {
 
         double min_exec_time_ns = 0.0;
         try {
-            auto bin = gemm_kernel_with_inner_repetition(
+            auto src = gemm_kernel_with_inner_repetition(
                 to_scalar_type_v<T>, a.transA, a.transB, c.m, c.n, c.k,
                 {1, a.transA == transpose::T ? c.k : c.m},
                 {1, a.transB == transpose::T ? c.n : c.k}, {1, c.m}, a.internal_repetitions, q);
-            if (bin) {
-                // auto bundle = tensor_kernel_bundle(std::move(bin), q.get_context(),
-                // q.get_device()); auto kernel = bundle.get("gemm"); kernel.set_args(AA, BB, CC);
-                // kernel.submit(howmany, q).wait();
-                auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), bin);
+            if (src) {
+                auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src);
                 auto kernel = make_kernel(bundle, "gemm");
                 auto exe_range = get_execution_range(kernel, howmany);
                 q.submit([&](handler &h) {
