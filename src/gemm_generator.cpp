@@ -240,7 +240,8 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                                         .then([&](block_builder &bb) { read_A(bb, m_block, k); })
                                         .get_product());
                             } else {
-                                if (gemm_cfg.A_stride[am] == 1) {
+                                if (core_cfg.block_read_write_supported &&
+                                    gemm_cfg.A_stride[am] == 1) {
                                     block_read_A(bb, m_block, k);
                                 } else {
                                     read_A(bb, m_block, k);
@@ -344,7 +345,8 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                     for (std::size_t m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
                         auto my_c = alpha * cmn(m_block, n);
                         auto Coffset = C_stride[0] * (m + m_block * core_cfg.subgroup_size);
-                        if (is_remainder || gemm_cfg.C_stride[0] != 1 || gemm_cfg.atomic) {
+                        if (!core_cfg.block_read_write_supported || is_remainder ||
+                            gemm_cfg.C_stride[0] != 1 || gemm_cfg.atomic) {
                             auto const write_C_mn = [&](block_builder &bb) {
                                 auto Cdst = bb.declare_assign(
                                     pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)),

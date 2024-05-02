@@ -84,7 +84,7 @@ void work_group_size::operator()(function &fn) {
         auto const shapes = std::vector<blas_shape>(shapes_.begin(), shapes_.end());
 
         if (subgroup_size == 0) {
-            subgroup_size = suggest_subgroup_size(shapes, info_->subgroup_sizes());
+            subgroup_size = suggest_subgroup_size(shapes, *info_);
             fn.subgroup_size(subgroup_size);
         }
 

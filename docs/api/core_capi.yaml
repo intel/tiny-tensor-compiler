@@ -56,6 +56,8 @@ Core C-API:
       - tinytc_core_info_intel_create_from_arch
       - tinytc_core_info_release
       - tinytc_core_info_retain
+    typedef:
+      - tinytc_core_feature_flags_t
   Parser:
     function:
       - tinytc_parse_file
