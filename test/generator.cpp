@@ -6,6 +6,7 @@
 #include "reference_counted.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <doctest/doctest.h>

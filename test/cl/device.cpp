@@ -3,11 +3,13 @@
 
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <CL/cl_ext.h>
 #include <CL/cl_platform.h>
+#include <cstddef>
 #include <cstdint>
 #include <doctest/doctest.h>
 #include <vector>

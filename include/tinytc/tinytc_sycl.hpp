@@ -22,7 +22,7 @@ namespace tinytc {
 /**
  * @brief Get support level of SYCL device
  *
- * @param device Device
+ * @param dev Device
  *
  * @return Support Level
  */
