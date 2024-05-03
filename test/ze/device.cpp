@@ -12,7 +12,7 @@
 
 using namespace tinytc;
 
-TEST_CASE("device") {
+TEST_CASE("device (Level Zero)") {
     ZE_CHECK_STATUS(zeInit(0));
 
     std::uint32_t num_drivers = 1;

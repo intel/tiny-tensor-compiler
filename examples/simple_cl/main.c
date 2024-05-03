@@ -235,7 +235,8 @@ int main(void) {
     cl_uint device_count = 0;
     for (cl_uint p = 0; p < platform_count; ++p) {
         err = clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
-        if (err == CL_SUCCESS) {
+        if (err == CL_SUCCESS && device_count > 0) {
+            device_count = 1;
             CL_CHECK(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &device,
                                     &device_count));
             char name[256] = {0};

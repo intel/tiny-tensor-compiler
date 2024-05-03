@@ -22,7 +22,8 @@ opencl_test_runtime::opencl_test_runtime() {
     for (cl_uint p = 0; p < platform_count; ++p) {
         cl_int err =
             clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
-        if (err == CL_SUCCESS) {
+        if (err == CL_SUCCESS && device_count > 0) {
+            device_count = 1;
             CL_CHECK_STATUS(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &dev_,
                                            &device_count));
             break;

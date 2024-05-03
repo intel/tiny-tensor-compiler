@@ -14,7 +14,7 @@
 
 using namespace tinytc;
 
-TEST_CASE("device") {
+TEST_CASE("device (OpenCL)") {
     auto platforms = std::vector<cl_platform_id>{};
     cl_uint platform_count = 0;
     CL_CHECK_STATUS(clGetPlatformIDs(platform_count, NULL, &platform_count));
@@ -26,7 +26,8 @@ TEST_CASE("device") {
     for (cl_uint p = 0; p < platform_count; ++p) {
         cl_int err =
             clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
-        if (err == CL_SUCCESS) {
+        if (err == CL_SUCCESS && device_count > 0) {
+            device_count = 1;
             CL_CHECK_STATUS(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &device,
                                            &device_count));
             break;
