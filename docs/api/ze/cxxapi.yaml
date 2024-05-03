@@ -6,6 +6,7 @@ C++-API:
       - tinytc::ZE_CHECK_STATUS
   Device Info:
     function:
+      - tinytc::get_support_level(ze_device_handle_t)
       - tinytc::make_core_info(ze_device_handle_t)
   Kernel:
     function:

@@ -7,6 +7,7 @@ C-API:
   Device Info:
     function:
       - tinytc_cl_core_info_create
+      - tinytc_cl_get_support_level
   Kernel:
     function:
       - tinytc_cl_get_global_size

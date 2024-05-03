@@ -32,6 +32,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_convert_status(cl_int status);
 ////////////////////////////
 
 /**
+ * @brief Get support level of OpenCL device
+ *
+ * @param device [in] Device handle
+ * @param level [out] Pointer to support level
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cl_get_support_level(cl_device_id device,
+                                                          tinytc_support_level_t *level);
+
+/**
  * @brief Query core info from OpenCL runtime
  *
  * @param info [out] pointer to the core_info object created

@@ -10,6 +10,30 @@
 #include <vector>
 
 extern "C" {
+tinytc_status_t tinytc_ze_get_support_level(ze_device_handle_t device,
+                                            tinytc_support_level_t *level) {
+    if (level == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    auto dev_ip_ver = ze_device_ip_version_ext_t{};
+    dev_ip_ver.stype = ZE_STRUCTURE_TYPE_DEVICE_IP_VERSION_EXT;
+    dev_ip_ver.pNext = nullptr;
+    auto dev_props = ze_device_properties_t{};
+    dev_props.stype = ZE_STRUCTURE_TYPE_DEVICE_PROPERTIES;
+    dev_props.pNext = &dev_ip_ver;
+    TINYTC_ZE_CHECK_STATUS(zeDeviceGetProperties(device, &dev_props));
+
+    if (dev_props.vendorId != 0x8086) {
+        *level = tinytc_support_level_none;
+        return tinytc_status_success;
+    }
+    *level = tinytc_support_level_basic;
+    if (dev_ip_ver.ipVersion == tinytc_intel_gpu_architecture_pvc) {
+        *level = tinytc_support_level_tuned;
+    }
+    return tinytc_status_success;
+}
 
 tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *info, ze_device_handle_t device) {
     if (info == nullptr) {

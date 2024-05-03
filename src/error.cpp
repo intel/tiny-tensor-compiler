@@ -110,6 +110,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Unsupport backend";
     case tinytc_status_invalid_kernel_arguments:
         return "Invalid arguments passed to kernel";
+    case tinytc_status_unsupported_device:
+        return "Unsupported device";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";

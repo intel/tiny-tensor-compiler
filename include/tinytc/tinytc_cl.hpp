@@ -29,9 +29,22 @@ inline void CL_CHECK_STATUS(cl_int stat) {
 ////////////////////////////
 
 /**
+ * @brief Get support level of OpenCL device
+ *
+ * @param device Device handle
+ *
+ * @return Support level
+ */
+inline auto get_support_level(cl_device_id device) -> support_level {
+    tinytc_support_level_t level;
+    CHECK_STATUS(::tinytc_cl_get_support_level(device, &level));
+    return support_level{std::underlying_type_t<support_level>(level)};
+}
+
+/**
  * @brief Query core info from OpenCL runtime
  *
- * @param device [in] device handle
+ * @param device device handle
  *
  * @return core info
  */

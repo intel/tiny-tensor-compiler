@@ -38,6 +38,7 @@ typedef enum {
     tinytc_status_unavailable_extension = 0xb,       ///< Unavailable runtime extension
     tinytc_status_unsupported_backend = 0xc,         ///< Unsupported backend (SYCL runtime)
     tinytc_status_invalid_kernel_arguments = 0xd,    ///< Kernel got invalid arguments
+    tinytc_status_unsupported_device = 0xe,          ///< Unsupported device
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,             ///< Out of bounds access
     tinytc_status_ir_invalid_shape = 0x101,             ///< Invalid tensor shape
@@ -288,6 +289,16 @@ typedef enum {
     tinytc_mem_type_usm_pointer = 0x1, ///< Unified shared memory pointer
     tinytc_mem_type_svm_pointer = 0x2, ///< Shared virtual memory pointer
 } tinytc_mem_type_t;
+
+//! Support level of a device
+typedef enum {
+    //! Device is unsupported (e.g. subgroups feature missing in OpenCL-C)
+    tinytc_support_level_none = 0x0,
+    //! Device provides necessary features but is not well tested
+    tinytc_support_level_basic = 0x1,
+    //! Device provides necessary features and is well tested
+    tinytc_support_level_tuned = 0x2
+} tinytc_support_level_t;
 
 ////////////////////////////
 /////////// Types //////////

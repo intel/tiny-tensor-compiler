@@ -3,6 +3,7 @@
 C++-API:
   Device Info:
     function:
+      - tinytc::get_support_level(sycl::device const&)
       - tinytc::make_core_info(sycl::device const&)
   Kernel:
     function:
