@@ -12,6 +12,7 @@
 #include <CL/cl_platform.h>
 #include <cstddef>
 #include <cstring>
+#include <string>
 #include <vector>
 
 extern "C" {

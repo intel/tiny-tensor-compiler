@@ -4,7 +4,7 @@
 #ifndef CL_DEVICE_INFO_HELPER_20240503_HPP
 #define CL_DEVICE_INFO_HELPER_20240503_HPP
 
-#include <cstdint>
+#include <cstddef>
 
 namespace tinytc {
 
