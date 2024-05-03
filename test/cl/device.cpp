@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "device_info_helper.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"
@@ -71,4 +72,37 @@ TEST_CASE("device (OpenCL)") {
     } else {
         WARN_MESSAGE(false, "Device test only works on Gen12 / PVC");
     }
+}
+
+TEST_CASE("device info helper") {
+    static char const subgroups1[] = "cl_intel_subgroups";
+    static char const subgroups2[] = "foo cl_khr_subgroups ";
+    static char const subgroups3[] = "    foo     cl_khr_subgroups    bar    ";
+    static char const subgroups4[] = "cl_khr_ubgroups";
+    CHECK(has_subgroup_extension(sizeof(subgroups1), subgroups1));
+    CHECK(has_subgroup_extension(sizeof(subgroups2), subgroups2));
+    CHECK(has_subgroup_extension(sizeof(subgroups3), subgroups3));
+    CHECK(!has_subgroup_extension(sizeof(subgroups4), subgroups4));
+
+    static char const version1[] = "OpenCL 2.0";
+    static char const version2[] = "OpenCL 2.0 foobar";
+    static char const version3[] = "OCL 1.0";
+    static char const version4[] = " OpenCL 3.0";
+    static char const version5[] = "OpenCL 42.123";
+    opencl_version v;
+    v = get_opencl_version(sizeof(version1), version1);
+    CHECK(v.major == 2);
+    CHECK(v.minor == 0);
+    v = get_opencl_version(sizeof(version2), version2);
+    CHECK(v.major == 2);
+    CHECK(v.minor == 0);
+    v = get_opencl_version(sizeof(version3), version3);
+    CHECK(v.major == 0);
+    CHECK(v.minor == 0);
+    v = get_opencl_version(sizeof(version4), version4);
+    CHECK(v.major == 0);
+    CHECK(v.minor == 0);
+    v = get_opencl_version(sizeof(version5), version5);
+    CHECK(v.major == 42);
+    CHECK(v.minor == 123);
 }

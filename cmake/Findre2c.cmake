@@ -48,7 +48,7 @@ endif()
 
 if(re2c_EXECUTABLE)
     function(add_re2c_to_target)
-        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET" "SOURCES")
+        cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;FLAGS" "SOURCES")
         foreach(SOURCE IN LISTS ARG_SOURCES)
             set(INPUT_FILE ${SOURCE})
             if(NOT IS_ABSOLUTE "${INPUT_FILE}")
@@ -64,7 +64,7 @@ if(re2c_EXECUTABLE)
             add_custom_command(
                 OUTPUT ${OUTPUT_FILE}
                 DEPENDS ${SOURCE}
-                COMMAND ${re2c_EXECUTABLE} -o ${OUTPUT_FILE} ${INPUT_FILE}
+                COMMAND ${re2c_EXECUTABLE} ${ARG_FLAGS} -o ${OUTPUT_FILE} ${INPUT_FILE}
                 COMMENT "Generating lexer ${OUTPUT_FILE}"
             )
             target_sources(${ARG_TARGET} PRIVATE ${OUTPUT_FILE})
