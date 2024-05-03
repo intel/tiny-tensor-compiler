@@ -6,6 +6,7 @@ C++-API:
       - tinytc::CL_CHECK_STATUS
   Device Info:
     function:
+      - tinytc::get_support_level(cl_device_id)
       - tinytc::make_core_info(cl_device_id)
   Kernel:
     function:

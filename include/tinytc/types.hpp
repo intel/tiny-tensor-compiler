@@ -48,6 +48,7 @@ enum class status {
     unavailable_extension = tinytc_status_unavailable_extension,
     unsupported_backend = tinytc_status_unsupported_backend,
     invalid_kernel_arguments = tinytc_status_invalid_kernel_arguments,
+    unsupported_device = tinytc_status_unsupported_device,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,
@@ -252,6 +253,16 @@ enum class mem_type {
     buffer = tinytc_mem_type_buffer,           ///< Buffer object (e.g. cl_mem)
     usm_pointer = tinytc_mem_type_usm_pointer, ///< Unified shared memory pointer
     svm_pointer = tinytc_mem_type_svm_pointer, ///< Shared virtual memory pointer
+};
+
+//! Support level of a device
+enum class support_level {
+    //! Device is unsupported (e.g. subgroups feature missing in OpenCL-C)
+    none = tinytc_support_level_none,
+    //! Device provides necessary features but is not well tested
+    basic = tinytc_support_level_basic,
+    //! Device provides necessary features and is well tested
+    tuned = tinytc_support_level_tuned
 };
 
 ////////////////////////////

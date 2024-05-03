@@ -22,7 +22,7 @@
 #define ZE_CHECK(X)                                                                                \
     do {                                                                                           \
         ze_result_t result = X;                                                                    \
-        if (X != ZE_RESULT_SUCCESS) {                                                              \
+        if (result != ZE_RESULT_SUCCESS) {                                                         \
             status = tinytc_ze_convert_status(result);                                             \
             printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
@@ -236,6 +236,15 @@ int main(void) {
 
     uint32_t device_count = 1;
     ZE_CHECK(zeDeviceGet(driver, &device_count, &device));
+
+    tinytc_support_level_t level;
+    CHECK(tinytc_ze_get_support_level(device, &level));
+    printf("Device support level: %d\n", level);
+    if (level == tinytc_support_level_none) {
+        printf("Device is not supported\n");
+        status = tinytc_status_unsupported_device;
+        goto err;
+    }
 
     ze_context_desc_t context_desc = {ZE_STRUCTURE_TYPE_CONTEXT_DESC, NULL, 0};
     ZE_CHECK(zeContextCreate(driver, &context_desc, &context));

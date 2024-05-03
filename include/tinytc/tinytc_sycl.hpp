@@ -20,9 +20,18 @@ namespace tinytc {
 ////////////////////////////
 
 /**
+ * @brief Get support level of SYCL device
+ *
+ * @param device Device
+ *
+ * @return Support Level
+ */
+TINYTC_EXPORT auto get_support_level(sycl::device const &dev) -> support_level;
+
+/**
  * @brief Query core info from SYCL runtime
  *
- * @param dev [in] device handle
+ * @param dev Device
  *
  * @return core info
  */

@@ -4,6 +4,7 @@ Core C-API:
   Common:
     enum:
       - tinytc_status_t
+      - tinytc_support_level_t
     define:
       - TINYTC_VERSION_MAJOR
       - TINYTC_VERSION_MINOR

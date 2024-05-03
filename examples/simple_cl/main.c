@@ -22,7 +22,7 @@
 #define CL_CHECK(X)                                                                                \
     do {                                                                                           \
         cl_int result = X;                                                                         \
-        if (X != CL_SUCCESS) {                                                                     \
+        if (result != CL_SUCCESS) {                                                                \
             status = tinytc_cl_convert_status(result);                                             \
             printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
@@ -237,8 +237,7 @@ int main(void) {
         err = clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, NULL, &device_count);
         if (err == CL_SUCCESS && device_count > 0) {
             device_count = 1;
-            CL_CHECK(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &device,
-                                    &device_count));
+            CL_CHECK(clGetDeviceIDs(platforms[p], CL_DEVICE_TYPE_GPU, device_count, &device, NULL));
             char name[256] = {0};
             clGetPlatformInfo(platforms[p], CL_PLATFORM_NAME, sizeof(name) - 1, name, NULL);
             printf("Platform: %s\n", name);
@@ -248,7 +247,15 @@ int main(void) {
         }
     }
     if (device_count == 0) {
-        err = CL_DEVICE_NOT_FOUND;
+        CL_CHECK(CL_DEVICE_NOT_FOUND);
+    }
+
+    tinytc_support_level_t level;
+    CHECK(tinytc_cl_get_support_level(device, &level));
+    printf("Device support level: %d\n", level);
+    if (level == tinytc_support_level_none) {
+        printf("Device is not supported\n");
+        status = tinytc_status_unsupported_device;
         goto err;
     }
 

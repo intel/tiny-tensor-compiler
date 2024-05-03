@@ -29,9 +29,22 @@ inline void ZE_CHECK_STATUS(ze_result_t result) {
 ////////////////////////////
 
 /**
+ * @brief Get support level of Level Zero device
+ *
+ * @param device Device handle
+ *
+ * @return Support level
+ */
+inline auto get_support_level(ze_device_handle_t device) -> support_level {
+    tinytc_support_level_t level;
+    CHECK_STATUS(::tinytc_ze_get_support_level(device, &level));
+    return support_level{std::underlying_type_t<support_level>(level)};
+}
+
+/**
  * @brief Query core info from level zero runtime
  *
- * @param device [in] device handle
+ * @param device device handle
  *
  * @return core info
  */

@@ -32,6 +32,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_convert_status(ze_result_t result);
 ////////////////////////////
 
 /**
+ * @brief Get support level of Level Zero device
+ *
+ * @param device [in] Device handle
+ * @param level [out] Pointer to support level
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_ze_get_support_level(ze_device_handle_t device,
+                                                          tinytc_support_level_t *level);
+
+/**
  * @brief Query core info from level zero runtime
  *
  * @param info [out] pointer to the core_info object created

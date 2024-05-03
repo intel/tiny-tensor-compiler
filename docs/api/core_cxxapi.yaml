@@ -4,6 +4,7 @@ Core C++-API:
   Common:
     enum:
       - tinytc::status
+      - tinytc::support_level
     function:
       - tinytc::error_string
       - tinytc::CHECK_STATUS
