@@ -8,7 +8,14 @@
 
 namespace tinytc {
 
-bool has_subgroups_extension(std::size_t str_length, const char *str);
+struct opencl_version {
+    int major;
+    int minor;
+};
+
+bool has_subgroup_extension(std::size_t str_length, const char *str);
+bool has_additional_subgroup_extensions(std::size_t str_length, const char *str);
+auto get_opencl_version(std::size_t str_length, const char *str) -> opencl_version;
 
 } // namespace tinytc
 
