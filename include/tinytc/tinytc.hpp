@@ -1633,17 +1633,6 @@ class core_info : public shared_handle<tinytc_core_info_t> {
     using shared_handle::shared_handle;
 
     /**
-     * @brief Get IP version
-     *
-     * @return IP version
-     */
-    auto get_ip_version() -> std::uint32_t {
-        std::uint32_t ip_version;
-        CHECK_STATUS(tinytc_core_info_get_ip_version(obj_, &ip_version));
-        return ip_version;
-    }
-
-    /**
      * @brief Get subgroup sizes
      *
      * Cf. @ref tinytc_core_info_get_subgroup_sizes
@@ -1656,25 +1645,14 @@ class core_info : public shared_handle<tinytc_core_info_t> {
     }
 
     /**
-     * @brief Get single register size
+     * @brief Get register space per subgroup in bytes
      *
-     * @return Register size
+     * @return Register space
      */
-    auto get_register_size() -> std::uint32_t {
-        std::uint32_t size;
-        CHECK_STATUS(tinytc_core_info_get_register_size(obj_, &size));
-        return size;
-    }
-
-    /**
-     * @brief Get number of registers per thread
-     *
-     * @return
-     */
-    auto get_num_registers_per_thread() -> std::uint32_t {
-        std::uint32_t num;
-        CHECK_STATUS(tinytc_core_info_get_num_registers_per_thread(obj_, &num));
-        return num;
+    auto get_register_space() -> std::uint32_t {
+        std::uint32_t space;
+        CHECK_STATUS(tinytc_core_info_get_register_space(obj_, &space));
+        return space;
     }
 
     /**
@@ -1699,6 +1677,23 @@ class core_info : public shared_handle<tinytc_core_info_t> {
 };
 
 /**
+ * @brief Create core info for generic GPUs manually
+ *
+ * @param register_space Size of register file per subgroup in bytes
+ * @param max_work_group_size Maximum size of local work group
+ * @param sgs Subgrouip sizes
+ *
+ * @return Core info
+ */
+inline auto make_core_info_generic(std::uint32_t register_space, std::uint32_t max_work_group_size,
+                                   std::vector<std::uint32_t> sgs) -> core_info {
+    tinytc_core_info_t info;
+    CHECK_STATUS(tinytc_core_info_generic_create(&info, register_space, max_work_group_size,
+                                                 sgs.size(), sgs.data()));
+    return core_info{info};
+}
+
+/**
  * @brief Get core info for Intel GPUs from lookup table
  *
  * @param arch IP version
@@ -1718,18 +1713,16 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_
  * @param ip_version IP version
  * @param num_eus_per_subslice Number of EUs (XVEs) per subslice (XeCore)
  * @param num_threads_per_eu Number of hardware threads per EU (XVE)
- * @param local_memory_size Size of local memory in bytes
  * @param sgs Subgrouip sizes
  *
  * @return Core info
  */
 inline auto make_core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
-                                 std::uint32_t num_threads_per_eu, std::uint32_t local_memory_size,
-                                 std::vector<std::uint32_t> sgs) -> core_info {
+                                 std::uint32_t num_threads_per_eu, std::vector<std::uint32_t> sgs)
+    -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
-                                               num_threads_per_eu, local_memory_size, sgs.size(),
-                                               sgs.data()));
+                                               num_threads_per_eu, sgs.size(), sgs.data()));
     return core_info{info};
 }
 

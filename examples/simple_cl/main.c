@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 
 #define CHECK(X)                                                                                   \
     do {                                                                                           \
@@ -77,8 +78,14 @@ tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue q
     CHECK(tinytc_recipe_small_gemm_batched_set_args(handler, howmany, sizeof(alpha), &alpha, Amem,
                                                     Bmem, sizeof(beta), &beta, Cmem));
 
+    struct timespec start_time, end_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     CHECK(tinytc_cl_recipe_handler_submit(handler, queue, 0, NULL, NULL));
     CL_CHECK(clFinish(queue));
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    printf("Matmul computation time: %ld ns\n",
+           1000000000L * (end_time.tv_sec - start_time.tv_sec) + end_time.tv_nsec -
+               start_time.tv_nsec);
 
     Chost = (float *)malloc(Cbytes);
     if (!Chost) {
@@ -174,8 +181,15 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     size_t ls[3], gs[3];
     CHECK(tinytc_cl_get_group_size(kernel, ls));
     tinytc_cl_get_global_size(howmany, ls, gs);
+
+    struct timespec start_time, end_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
     CL_CHECK(clEnqueueNDRangeKernel(queue, kernel, 3u, NULL, gs, ls, 0, NULL, NULL));
     CL_CHECK(clFinish(queue));
+    clock_gettime(CLOCK_MONOTONIC, &end_time);
+    printf("Custom kernel computation time: %ld ns\n",
+           1000000000L * (end_time.tv_sec - start_time.tv_sec) + end_time.tv_nsec -
+               start_time.tv_nsec);
 
     CL_CHECK(clEnqueueReadBuffer(queue, B, CL_TRUE, 0, bytes, host, 0, NULL, NULL));
 

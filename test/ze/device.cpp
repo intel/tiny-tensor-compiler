@@ -43,9 +43,9 @@ TEST_CASE("device (Level Zero)") {
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_num_registers_per_thread() == 128);
+        CHECK(info.get_register_space() == 64 * 128);
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_num_registers_per_thread() == 256);
+        CHECK(info.get_register_space() == 64 * 256);
     } else {
         WARN_MESSAGE(false, "Device test only works on PVC");
     }

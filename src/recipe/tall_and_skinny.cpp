@@ -166,7 +166,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_co
     }
 
     return tinytc::exception_to_status_code(
-        [&] { *M_block_size = std::min(128u, info->minmax_number_of_work_items()); });
+        [&] { *M_block_size = std::min(128u, info->minmax_work_group_size()); });
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(tinytc_recipe_handler_t handler, uint32_t M,

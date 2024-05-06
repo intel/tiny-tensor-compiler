@@ -40,10 +40,15 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             // opencl
             auto ast = generate_opencl_ast(*prg, *info);
             clir::make_names_unique(ast);
-            auto oss = std::ostringstream{};
-            clir::generate_opencl(oss, ast);
 
-            auto ext = required_extensions(std::move(ast));
+            auto oss = std::ostringstream{};
+            auto ext = required_extensions(ast);
+            for (auto const &e : ext) {
+                oss << "#pragma OPENCL EXTENSION " << e << " : enable" << std::endl;
+            }
+
+            clir::generate_opencl(oss, std::move(ast));
+
             *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(ext),
                                                      info->core_features())
                        .release();

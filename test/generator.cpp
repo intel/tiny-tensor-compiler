@@ -22,8 +22,7 @@ using namespace tinytc;
 TEST_CASE("suggest work group size") {
     auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
     info.set_core_features(tinytc_core_feature_flag_large_register_file);
-    REQUIRE(info->register_size() == 64);
-    REQUIRE(info->num_registers_per_thread() == 256);
+    REQUIRE(info->register_space() == 64 * 256);
     auto check = [&info](std::int64_t M, std::int64_t N, std::size_t sgs, std::size_t m_tiles,
                          std::size_t n_tiles) {
         auto const core_cfg = info->get_core_config(sgs);
@@ -31,7 +30,7 @@ TEST_CASE("suggest work group size") {
         auto tiling = suggest_local_tiling(shape, core_cfg);
         CHECK(tiling.m_tiles() == m_tiles);
         CHECK(tiling.n_tiles() == n_tiles);
-        CHECK(tiling.number_of_work_items(sgs) <= core_cfg.max_number_of_work_items);
+        CHECK(tiling.number_of_work_items(sgs) <= core_cfg.max_work_group_size);
     };
 
     check(1, 1, 16, 1, 1);
