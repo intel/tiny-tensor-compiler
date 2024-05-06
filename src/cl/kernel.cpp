@@ -10,7 +10,9 @@
 #include <CL/cl_platform.h>
 #include <cstddef>
 #include <cstdint>
+#include <sstream>
 #include <string>
+#include <utility>
 
 extern "C" {
 
@@ -32,11 +34,16 @@ tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(cl_program *bundle, c
     cl_program p = clCreateProgramWithSource(context, 1, &code, &length, &err);
     TINYTC_CL_CHECK_STATUS(err);
 
-    char const *options = "";
-    if (core_features & tinytc_core_feature_flag_large_register_file) {
-        options = tinytc::large_register_file_compiler_option_cl;
+    auto options = std::ostringstream{};
+    for (auto const &opt : tinytc::default_compiler_options) {
+        options << opt << " ";
     }
-    if (err = clBuildProgram(p, 1, &device, options, nullptr, nullptr); err != CL_SUCCESS) {
+    if (core_features & tinytc_core_feature_flag_large_register_file) {
+        options << tinytc::large_register_file_compiler_option_cl;
+    }
+    auto options_str = std::move(options).str();
+    if (err = clBuildProgram(p, 1, &device, options_str.c_str(), nullptr, nullptr);
+        err != CL_SUCCESS) {
         if (source_ctx) {
             std::string log;
             std::size_t log_size;
@@ -139,8 +146,12 @@ tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
     if (local_size == nullptr) {
         return tinytc_status_invalid_arguments;
     }
+    cl_program p;
+    cl_device_id d;
+    TINYTC_CL_CHECK_STATUS(clGetKernelInfo(kernel, CL_KERNEL_PROGRAM, sizeof(p), &p, nullptr));
+    TINYTC_CL_CHECK_STATUS(clGetProgramInfo(p, CL_PROGRAM_DEVICES, sizeof(d), &d, nullptr));
     return tinytc_cl_convert_status(
-        clGetKernelWorkGroupInfo(kernel, NULL, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+        clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
                                  3 * sizeof(std::size_t), local_size, nullptr));
 }
 

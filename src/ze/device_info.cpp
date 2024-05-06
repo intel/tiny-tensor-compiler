@@ -56,7 +56,7 @@ tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *info, ze_device_h
 
     TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(
         info, dev_ip_ver.ipVersion, dev_props.numEUsPerSubslice, dev_props.numThreadsPerEU,
-        compute_props.maxSharedLocalMemory, subgroup_sizes.size(), subgroup_sizes.data()));
+        subgroup_sizes.size(), subgroup_sizes.data()));
     return tinytc_status_success;
 }
 }

@@ -17,12 +17,35 @@ tinytc_core_info::~tinytc_core_info() {}
 
 namespace tinytc {
 
+core_info_generic::core_info_generic(std::uint32_t register_space,
+                                     std::uint32_t max_work_group_size,
+                                     std::vector<std::uint32_t> subgroup_sizes)
+    : register_space_(register_space), max_work_group_size_(max_work_group_size),
+      subgroup_sizes_(std::move(subgroup_sizes)) {}
+
+auto core_info_generic::subgroup_sizes() const -> std::vector<std::uint32_t> const & {
+    return subgroup_sizes_;
+}
+auto core_info_generic::register_space() const -> std::uint32_t { return register_space_; }
+auto core_info_generic::core_features() const -> tinytc_core_feature_flags_t { return 0u; }
+void core_info_generic::core_features(tinytc_core_feature_flags_t) {}
+auto core_info_generic::minmax_work_group_size() const -> std::uint32_t {
+    return max_work_group_size_;
+}
+auto core_info_generic::get_core_config(std::uint32_t subgroup_size) const -> tinytc::core_config {
+    if (std::find(subgroup_sizes_.begin(), subgroup_sizes_.end(), subgroup_size) ==
+        subgroup_sizes_.end()) {
+        throw std::out_of_range("Requested subgroup size not available");
+    }
+    return core_config{subgroup_size, max_work_group_size_, register_space_, false};
+}
+
 core_info_intel::core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
-                                 std::uint32_t num_threads_per_eu, std::uint32_t local_memory_size,
+                                 std::uint32_t num_threads_per_eu,
                                  std::vector<std::uint32_t> subgroup_sizes)
     : ip_version_(ip_version), num_eus_per_subslice_(num_eus_per_subslice),
-      num_threads_per_eu_(num_threads_per_eu), local_memory_size_(local_memory_size),
-      subgroup_sizes_(std::move(subgroup_sizes)), core_features_(0u) {
+      num_threads_per_eu_(num_threads_per_eu), subgroup_sizes_(std::move(subgroup_sizes)),
+      core_features_(0u) {
     std::sort(subgroup_sizes_.begin(), subgroup_sizes_.end());
 
     register_size_ = 32;
@@ -40,16 +63,12 @@ auto core_info_intel::num_reg_large_grf() const -> std::uint32_t {
                : num_reg_small_grf();
 }
 
-auto core_info_intel::ip_version() const -> std::uint32_t { return ip_version_; }
-
 auto core_info_intel::subgroup_sizes() const -> std::vector<std::uint32_t> const & {
     return subgroup_sizes_;
 }
 
-auto core_info_intel::register_size() const -> std::uint32_t { return register_size_; }
-
-auto core_info_intel::num_registers_per_thread() const -> std::uint32_t {
-    return num_registers_per_thread_;
+auto core_info_intel::register_space() const -> std::uint32_t {
+    return register_size_ * num_registers_per_thread_;
 }
 
 auto core_info_intel::core_features() const -> tinytc_core_feature_flags_t {
@@ -64,7 +83,7 @@ void core_info_intel::core_features(tinytc_core_feature_flags_t flags) {
     }
 }
 
-auto core_info_intel::max_number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t {
+auto core_info_intel::max_work_group_size(std::uint32_t subgroup_size) const -> std::uint32_t {
     auto const num_threads_per_eu_due_to_register_use =
         num_threads_per_eu_ * num_reg_small_grf() / num_registers_per_thread_;
     auto const num_threads_per_eu_due_to_subgroup_size =
@@ -75,10 +94,10 @@ auto core_info_intel::max_number_of_work_items(std::uint32_t subgroup_size) cons
     return num_threads_per_eu * num_eus_per_subslice_ * subgroup_size;
 }
 
-auto core_info_intel::minmax_number_of_work_items() const -> std::uint32_t {
+auto core_info_intel::minmax_work_group_size() const -> std::uint32_t {
     std::uint32_t minmax = std::numeric_limits<std::uint32_t>::max();
     for (auto const &sgs : subgroup_sizes_) {
-        minmax = std::min(minmax, max_number_of_work_items(sgs));
+        minmax = std::min(minmax, max_work_group_size(sgs));
     }
     return minmax;
 }
@@ -91,12 +110,7 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
 
     bool block_read_write_supported = !(subgroup_size == 32 && register_size_ == 32);
 
-    return core_config{subgroup_size,
-                       max_number_of_work_items(subgroup_size),
-                       local_memory_size_,
-                       register_size_ * num_registers_per_thread_,
-                       ip_version_,
-                       core_features_,
+    return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
                        block_read_write_supported};
 }
 
@@ -105,6 +119,19 @@ auto core_info_intel::get_core_config(std::uint32_t subgroup_size) const -> core
 using namespace tinytc;
 
 extern "C" {
+tinytc_status_t tinytc_core_info_generic_create(tinytc_core_info_t *info, uint32_t register_space,
+                                                uint32_t max_work_group_size, uint32_t sgs_size,
+                                                uint32_t const *sgs) {
+    if (info == nullptr || sgs == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *info = std::make_unique<core_info_generic>(register_space, max_work_group_size,
+                                                    std::vector<std::uint32_t>(sgs, sgs + sgs_size))
+                    .release();
+    });
+}
+
 tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info,
                                                         tinytc_intel_gpu_architecture_t arch) {
     if (info == nullptr) {
@@ -113,10 +140,9 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
     return exception_to_status_code([&] {
         switch (arch) {
         case tinytc_intel_gpu_architecture_pvc:
-            *info =
-                std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
-                                                  128 * 1024, std::vector<std::uint32_t>{16, 32})
-                    .release();
+            *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
+                                                      std::vector<std::uint32_t>{16, 32})
+                        .release();
             break;
         default:
             *info = nullptr;
@@ -127,26 +153,17 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
 
 tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info, uint32_t ip_version,
                                               uint32_t num_eus_per_subslice,
-                                              uint32_t num_threads_per_eu,
-                                              uint32_t local_memory_size, uint32_t sgs_size,
+                                              uint32_t num_threads_per_eu, uint32_t sgs_size,
                                               uint32_t const *sgs) {
     if (info == nullptr || sgs == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *info = std::make_unique<core_info_intel>(ip_version, num_eus_per_subslice,
-                                                  num_threads_per_eu, local_memory_size,
-                                                  std::vector<std::uint32_t>(sgs, sgs + sgs_size))
-                    .release();
+        *info =
+            std::make_unique<core_info_intel>(ip_version, num_eus_per_subslice, num_threads_per_eu,
+                                              std::vector<std::uint32_t>(sgs, sgs + sgs_size))
+                .release();
     });
-}
-
-tinytc_status_t tinytc_core_info_get_ip_version(const_tinytc_core_info_t info,
-                                                uint32_t *ip_version) {
-    if (info == nullptr || ip_version == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { *ip_version = info->ip_version(); });
 }
 
 tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
@@ -165,21 +182,13 @@ tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t inf
     });
 }
 
-tinytc_status_t tinytc_core_info_get_register_size(const_tinytc_core_info_t info, uint32_t *size) {
+tinytc_status_t tinytc_core_info_get_register_space(const_tinytc_core_info_t info,
+                                                    uint32_t *space) {
 
-    if (info == nullptr || size == nullptr) {
+    if (info == nullptr || space == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *size = info->register_size(); });
-}
-
-tinytc_status_t tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_info_t info,
-                                                              uint32_t *num) {
-
-    if (info == nullptr || num == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { *num = info->num_registers_per_thread(); });
+    return exception_to_status_code([&] { *space = info->register_space(); });
 }
 
 tinytc_status_t tinytc_core_info_set_core_features(tinytc_core_info_t info,

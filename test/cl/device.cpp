@@ -42,8 +42,12 @@ TEST_CASE("device (OpenCL)") {
     }
 
     cl_version ip_ver;
-    CL_CHECK_STATUS(
-        clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr));
+    cl_int err =
+        clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr);
+    if (err == CL_INVALID_VALUE) {
+        WARN_MESSAGE(false, "Device test needs Intel GPU");
+        return;
+    }
 
     auto info = make_core_info(device);
     std::uint32_t sgs_size;
@@ -55,20 +59,18 @@ TEST_CASE("device (OpenCL)") {
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_register_size() == 64);
-        CHECK(info.get_num_registers_per_thread() == 128);
+        CHECK(info.get_register_space() == 64 * 128);
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_num_registers_per_thread() == 256);
+        CHECK(info.get_register_space() == 64 * 256);
     } else if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::tgl)) {
         REQUIRE(sgs_size == 3);
         CHECK(sgs[0] == 8);
         CHECK(sgs[1] == 16);
         CHECK(sgs[2] == 32);
 
-        CHECK(info.get_register_size() == 32);
-        CHECK(info.get_num_registers_per_thread() == 128);
+        CHECK(info.get_register_space() == 32 * 128);
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_num_registers_per_thread() == 128);
+        CHECK(info.get_register_space() == 32 * 128);
     } else {
         WARN_MESSAGE(false, "Device test only works on Gen12 / PVC");
     }

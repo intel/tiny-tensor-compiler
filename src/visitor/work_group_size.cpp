@@ -115,7 +115,7 @@ void work_group_size::operator()(function &fn) {
     } catch (std::out_of_range const &e) {
         throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
-    if (work_group_size[0] * work_group_size[1] > cfg.max_number_of_work_items) {
+    if (work_group_size[0] * work_group_size[1] > cfg.max_work_group_size) {
         throw compilation_error(fn.loc(), status::unsupported_work_group_size);
     }
 }

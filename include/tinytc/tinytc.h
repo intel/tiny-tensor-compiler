@@ -923,6 +923,23 @@ TINYTC_EXPORT void tinytc_string_destroy(char *str);
 ////////////////////////////
 
 /**
+ * @brief Create core_info for a generic GPUs
+ *
+ * @param info [out] pointer to the core_info object created
+ * @param register_space [in] Size of register file per subgroup in bytes
+ * @param max_work_group_size [in] Maximum size of local work group
+ * @param sgs_size [in] Length of sgs array
+ * @param sgs [in] Allowed subgroup sizes
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_generic_create(tinytc_core_info_t *info,
+                                                              uint32_t register_space,
+                                                              uint32_t max_work_group_size,
+                                                              uint32_t sgs_size,
+                                                              uint32_t const *sgs);
+
+/**
  * @brief Look up core info for Intel GPU architecture
  *
  * @param info [out] pointer to the core_info object created
@@ -941,7 +958,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create_from_arch(
  * @param num_eus_per_subslice [in] Number of Execution Units (Xe Vector Engines) per subslice (Xe
  * Core)
  * @param num_threads_per_eu [in] Number of threads per Execution Unit (Xe Vector Engine)
- * @param local_memory_size [in] Size of shared local memory
  * @param sgs_size [in] Length of sgs array
  * @param sgs [in] Allowed subgroup sizes
  *
@@ -951,19 +967,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *
                                                             uint32_t ip_version,
                                                             uint32_t num_eus_per_subslice,
                                                             uint32_t num_threads_per_eu,
-                                                            uint32_t local_memory_size,
                                                             uint32_t sgs_size, uint32_t const *sgs);
-
-/**
- * @brief Returns IP version
- *
- * @param info [in] core info object
- * @param ip_version [out] pointer to IP version
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_ip_version(const_tinytc_core_info_t info,
-                                                              uint32_t *ip_version);
 
 /**
  * @brief Returns available subgroup sizes
@@ -979,26 +983,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_c
                                                                   uint32_t const **sgs);
 
 /**
- * @brief Returns size of one register size in bytes
+ * @brief Returns register space per subgroup in bytes
  *
  * @param info [in] core info object
- * @param size [out] pointer to register size
+ * @param space [out] pointer to register space
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_size(const_tinytc_core_info_t info,
-                                                                 uint32_t *size);
-
-/**
- * @brief Returns available number of registers per subgroup
- *
- * @param info [in] core info object
- * @param num [out] pointer to number of registers
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t
-tinytc_core_info_get_num_registers_per_thread(const_tinytc_core_info_t info, uint32_t *num);
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_space(const_tinytc_core_info_t info,
+                                                                  uint32_t *space);
 
 /**
  * @brief Set core features

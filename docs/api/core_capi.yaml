@@ -47,11 +47,10 @@ Core C-API:
       - tinytc_intel_gpu_architecture_t
     function:
       - tinytc_core_info_get_core_features
-      - tinytc_core_info_get_ip_version
-      - tinytc_core_info_get_num_registers_per_thread
-      - tinytc_core_info_get_register_size
+      - tinytc_core_info_get_register_space
       - tinytc_core_info_get_subgroup_sizes
       - tinytc_core_info_set_core_features
+      - tinytc_core_info_generic_create
       - tinytc_core_info_intel_create
       - tinytc_core_info_intel_create_from_arch
       - tinytc_core_info_release

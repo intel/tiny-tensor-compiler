@@ -27,6 +27,7 @@ Core C++-API:
       - tinytc::core_feature_flag
       - tinytc::intel_gpu_architecture
     function:
+      - tinytc::make_core_info_generic
       - tinytc::make_core_info_intel
       - tinytc::make_core_info_intel_from_arch
     class:

@@ -35,7 +35,7 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_
     auto it = available_subgroup_sizes.begin();
     sensible_subgroup_sizes.push_back(*it++);
     if (max_size < 8u) { // Only consider smallest sub-group size for double precision
-        auto const register_space = info.register_size() * info.num_registers_per_thread();
+        auto const register_space = info.register_space();
         auto const number_of_reals_in_register = (register_space / 2) / max_size;
         auto const number_of_reals_sqrt =
             static_cast<std::uint32_t>(std::sqrt(static_cast<double>(number_of_reals_in_register)));
@@ -107,7 +107,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
     auto const m_limit = num_tile_limit(bshape.shape[0], row_blocks * core_cfg.subgroup_size);
     auto const n_limit = num_tile_limit(bshape.shape[1], cols);
 
-    auto const max_threads = core_cfg.max_number_of_work_items / core_cfg.subgroup_size;
+    auto const max_threads = core_cfg.max_work_group_size / core_cfg.subgroup_size;
     if (max_threads == 0) {
         return local_tiling{1, 1};
     }
