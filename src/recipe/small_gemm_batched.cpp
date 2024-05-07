@@ -127,11 +127,10 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
         ctx);
 }
 
-tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(tinytc_recipe_handler_t handler,
-                                                          uint32_t howmany, size_t alpha_size,
-                                                          const void *alpha_value, tinytc_mem_t A,
-                                                          tinytc_mem_t B, size_t beta_size,
-                                                          const void *beta_value, tinytc_mem_t C) {
+tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
+    tinytc_recipe_handler_t handler, uint32_t howmany, size_t alpha_size, const void *alpha_value,
+    const void *A_value, tinytc_mem_type_t A_type, const void *B_value, tinytc_mem_type_t B_type,
+    size_t beta_size, const void *beta_value, const void *C_value, tinytc_mem_type_t C_type) {
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -151,12 +150,12 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(tinytc_recipe_handler_
             handler->active_kernel(static_cast<std::uint32_t>(small_gemm_batched_kernel::gemm));
         }
         handler->arg(0, alpha_size, alpha_value);
-        handler->mem_arg(1, A);
+        handler->mem_arg(1, A_value, A_type);
         handler->arg(2, sizeof(uint32_t), &howmany);
-        handler->mem_arg(3, B);
+        handler->mem_arg(3, B_value, B_type);
         handler->arg(4, sizeof(uint32_t), &howmany);
         handler->arg(5, beta_size, beta_value);
-        handler->mem_arg(6, C);
+        handler->mem_arg(6, C_value, C_type);
         handler->arg(7, sizeof(uint32_t), &howmany);
         handler->howmany(howmany);
     });

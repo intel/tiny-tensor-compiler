@@ -47,20 +47,20 @@ class opencl_argument_handler {
      * @param arg_index Argument index
      * @param mem Memory object
      */
-    inline void set_mem_arg(cl_kernel kernel, std::uint32_t arg_index,
-                            tinytc_mem_t const &mem) const {
-        switch (mem.type) {
+    inline void set_mem_arg(cl_kernel kernel, std::uint32_t arg_index, const void *value,
+                            tinytc_mem_type_t type) const {
+        switch (type) {
         case tinytc_mem_type_buffer:
-            set_arg(kernel, arg_index, sizeof(mem.value), mem.value);
+            set_arg(kernel, arg_index, sizeof(value), &value);
             return;
         case tinytc_mem_type_usm_pointer:
             if (clSetKernelArgMemPointerINTEL_ == nullptr) {
                 throw status::unavailable_extension;
             }
-            CL_CHECK_STATUS(clSetKernelArgMemPointerINTEL_(kernel, arg_index, mem.value));
+            CL_CHECK_STATUS(clSetKernelArgMemPointerINTEL_(kernel, arg_index, value));
             return;
         case tinytc_mem_type_svm_pointer:
-            CL_CHECK_STATUS(clSetKernelArgSVMPointer(kernel, arg_index, mem.value));
+            CL_CHECK_STATUS(clSetKernelArgSVMPointer(kernel, arg_index, value));
             return;
         default:
             break;

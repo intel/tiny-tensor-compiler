@@ -21,8 +21,8 @@ class sycl_argument_handler {
     virtual ~sycl_argument_handler() = default;
     virtual void set_arg(sycl::kernel const &krnl, std::uint32_t arg_index, std::size_t arg_size,
                          void const *arg_value) const = 0;
-    virtual void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index,
-                             tinytc_mem_t const &mem) const = 0;
+    virtual void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index, const void *value,
+                             tinytc_mem_type_t type) const = 0;
 };
 
 class sycl_argument_handler_opencl_backend : public sycl_argument_handler {
@@ -37,10 +37,10 @@ class sycl_argument_handler_opencl_backend : public sycl_argument_handler {
         CL_CHECK_STATUS(clReleaseKernel(native_krnl));
     }
 
-    inline void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index,
-                            tinytc_mem_t const &mem) const override {
+    inline void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index, const void *value,
+                            tinytc_mem_type_t type) const override {
         auto native_krnl = sycl::get_native<sycl::backend::opencl, sycl::kernel>(krnl);
-        cl_arg_.set_mem_arg(native_krnl, arg_index, mem);
+        cl_arg_.set_mem_arg(native_krnl, arg_index, value, type);
         CL_CHECK_STATUS(clReleaseKernel(native_krnl));
     }
 
@@ -57,12 +57,11 @@ class sycl_argument_handler_level_zero_backend : public sycl_argument_handler {
         ZE_CHECK_STATUS(zeKernelSetArgumentValue(native_krnl, arg_index, arg_size, arg_value));
     }
 
-    inline void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index,
-                            tinytc_mem_t const &mem) const override {
+    inline void set_mem_arg(sycl::kernel const &krnl, std::uint32_t arg_index, const void *value,
+                            tinytc_mem_type_t) const override {
         auto native_krnl =
             sycl::get_native<sycl::backend::ext_oneapi_level_zero, sycl::kernel>(krnl);
-        ZE_CHECK_STATUS(
-            zeKernelSetArgumentValue(native_krnl, arg_index, sizeof(mem.value), &mem.value));
+        ZE_CHECK_STATUS(zeKernelSetArgumentValue(native_krnl, arg_index, sizeof(value), &value));
     }
 };
 

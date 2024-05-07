@@ -24,7 +24,7 @@ struct cl_recipe_handler : ::tinytc_recipe_handler {
 
     void active_kernel(std::uint32_t kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;
-    void mem_arg(std::uint32_t arg_index, tinytc_mem_t const &mem) override;
+    void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) override;
     void howmany(std::uint32_t num) override;
 
     auto kernel() -> cl_kernel;

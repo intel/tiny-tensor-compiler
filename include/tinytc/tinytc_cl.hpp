@@ -195,7 +195,7 @@ template <> struct shared_handle_traits<cl_event> {
 /**
  * @brief Specialize auto_mem_type for cl_mem
  */
-template <> struct auto_mem_type<cl_mem *> {
+template <> struct auto_mem_type<cl_mem> {
     constexpr static mem_type value = mem_type::buffer; ///< cl_mem maps to buffer type
 };
 

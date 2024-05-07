@@ -73,11 +73,9 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
                                            K * N * howmany * sizeof(float), NULL, 0, NULL));
     ZE_CHECK(zeCommandListHostSynchronize(list, TIMEOUT));
 
-    tinytc_mem_t Amem = {A, tinytc_mem_type_usm_pointer};
-    tinytc_mem_t Bmem = {B, tinytc_mem_type_usm_pointer};
-    tinytc_mem_t Cmem = {C, tinytc_mem_type_usm_pointer};
-    CHECK(tinytc_recipe_small_gemm_batched_set_args(handler, howmany, sizeof(alpha), &alpha, Amem,
-                                                    Bmem, sizeof(beta), &beta, Cmem));
+    CHECK(tinytc_recipe_small_gemm_batched_set_args(
+        handler, howmany, sizeof(alpha), &alpha, A, tinytc_mem_type_usm_pointer, B,
+        tinytc_mem_type_usm_pointer, sizeof(beta), &beta, C, tinytc_mem_type_usm_pointer));
 
     CHECK(tinytc_ze_recipe_handler_submit(handler, list, NULL, 0, NULL));
     ZE_CHECK(zeCommandListHostSynchronize(list, TIMEOUT));

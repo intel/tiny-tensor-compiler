@@ -2010,18 +2010,20 @@ template <typename T> struct auto_mem_type<T, std::enable_if_t<usm_pointer_type<
  */
 template <typename T> inline constexpr auto auto_mem_type_v = auto_mem_type<T>::value;
 
-//! Constructor for tinytc_mem with automatic type deduction
-struct mem : ::tinytc_mem {
+//! Type-safe wrapper for memory objects
+struct mem {
     /**
      * @brief ctor
      *
-     * @tparam T non-class type or buffer type
-     * @param value Pointer to non-class type or pointer or buffer type
+     * @tparam T pointer type or buffer type
+     * @param value USM / SVM pointer or cl_mem (cl_mem implicitly converts to void*)
      * @param type memory object type
      */
     template <typename T>
-    inline mem(T const value, mem_type type = auto_mem_type_v<T>)
-        : ::tinytc_mem{value, static_cast<tinytc_mem_type_t>(type)} {}
+    inline mem(T const value, mem_type type = auto_mem_type_v<T>) : value{value}, type{type} {}
+
+    const void *value; ///< USM / SVM pointer or cl_mem (passed by value)
+    mem_type type;     ///< Memory object type
 };
 
 namespace internal {
@@ -2109,7 +2111,9 @@ class small_gemm_batched : public recipe {
     static void set_args(recipe_handler &handler, uint32_t howmany, T alpha, mem A, mem B, T beta,
                          mem C) {
         CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
-            handler.get(), howmany, sizeof(alpha), &alpha, A, B, sizeof(beta), &beta, C));
+            handler.get(), howmany, sizeof(alpha), &alpha, A.value,
+            static_cast<tinytc_mem_type_t>(A.type), B.value, static_cast<tinytc_mem_type_t>(B.type),
+            sizeof(beta), &beta, C.value, static_cast<tinytc_mem_type_t>(C.type)));
     }
 };
 
@@ -2173,7 +2177,10 @@ class tall_and_skinny : public recipe {
                          std::uint32_t ldA, mem B, std::uint32_t ldB, T beta, mem C,
                          std::uint32_t ldC) {
         CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
-            handler.get(), M, sizeof(alpha), &alpha, A, ldA, B, ldB, sizeof(beta), &beta, C, ldC));
+            handler.get(), M, sizeof(alpha), &alpha, A.value,
+            static_cast<tinytc_mem_type_t>(A.type), ldA, B.value,
+            static_cast<tinytc_mem_type_t>(B.type), ldB, sizeof(beta), &beta, C.value,
+            static_cast<tinytc_mem_type_t>(C.type), ldC));
     }
 };
 
