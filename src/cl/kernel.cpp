@@ -155,7 +155,7 @@ tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
                                  3 * sizeof(std::size_t), local_size, nullptr));
 }
 
-void tinytc_cl_get_global_size(size_t howmany, const size_t *local_size, size_t *global_size) {
+void tinytc_cl_get_global_size(int64_t howmany, const size_t *local_size, size_t *global_size) {
     for (size_t i = 0; i < 3; ++i) {
         global_size[i] = local_size[i];
     }

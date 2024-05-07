@@ -89,7 +89,8 @@ Builder C++-API:
       - tinytc::make_imm(std::int16_t,location const&)
       - tinytc::make_imm(std::int32_t,location const&)
       - tinytc::make_imm(std::int64_t,scalar_type,location const&)
-      - tinytc::make_imm(std::uint32_t,location const&)
+      - tinytc::make_index(std::int32_t,location const&)
+      - tinytc::make_index(std::int64_t,location const&)
       - tinytc::make_value(data_type const&,location const&)
       - tinytc::make_value(scalar_type,location const&)
     class:

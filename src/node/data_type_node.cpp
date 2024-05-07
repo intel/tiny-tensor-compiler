@@ -14,8 +14,19 @@ memref_data_type::memref_data_type(scalar_type type, std::vector<std::int64_t> s
                                    std::vector<std::int64_t> stride, location const &lc)
     : element_ty_(std::move(type)), shape_(std::move(shape)), stride_(std::move(stride)) {
     loc(lc);
+    for (auto const &s : shape_) {
+        if (s < 0 && !is_dynamic_value(s)) {
+            throw compilation_error(loc(), status::ir_invalid_shape);
+        }
+    }
     if (stride_.empty()) {
         stride_ = canonical_stride();
+    } else {
+        for (auto const &s : stride_) {
+            if (s < 0 && !is_dynamic_value(s)) {
+                throw compilation_error(loc(), status::ir_invalid_shape);
+            }
+        }
     }
     if (stride_.size() != shape_.size()) {
         throw compilation_error(loc(), status::ir_shape_stride_mismatch);

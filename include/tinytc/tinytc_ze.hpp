@@ -180,7 +180,7 @@ inline auto get_group_size(ze_kernel_handle_t kernel) -> std::array<std::uint32_
  *
  * @return Group count
  */
-inline auto get_group_count(std::uint32_t howmany) -> ze_group_count_t {
+inline auto get_group_count(std::int64_t howmany) -> ze_group_count_t {
     return tinytc_ze_get_group_count(howmany);
 }
 

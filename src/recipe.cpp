@@ -19,7 +19,7 @@ template <typename T> bool is_argument_zero(std::size_t arg_size, const void *ar
 auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool {
     switch (type) {
     case scalar_type::index:
-        return is_argument_zero<std::uint32_t>(arg_size, arg_value);
+        return is_argument_zero<std::int64_t>(arg_size, arg_value);
     case scalar_type::i8:
         return is_argument_zero<std::int8_t>(arg_size, arg_value);
     case scalar_type::i16:

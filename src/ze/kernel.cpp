@@ -199,7 +199,7 @@ tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
     return tinytc_ze_convert_status(status);
 }
 
-ze_group_count_t tinytc_ze_get_group_count(uint32_t howmany) {
-    return ze_group_count_t{1u, 1u, howmany};
+ze_group_count_t tinytc_ze_get_group_count(int64_t howmany) {
+    return ze_group_count_t{1u, 1u, static_cast<uint32_t>(howmany)};
 }
 }

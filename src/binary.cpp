@@ -20,7 +20,7 @@ tinytc_binary::tinytc_binary(std::vector<std::uint8_t> data, bundle_format forma
 extern "C" {
 
 tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_bundle_format_t format,
-                                     uint64_t data_size, uint8_t const *data,
+                                     size_t data_size, uint8_t const *data,
                                      tinytc_core_feature_flags_t core_features) {
     if (bin == nullptr || data == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -33,12 +33,12 @@ tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin, tinytc_bundle_format_
 }
 
 tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin, tinytc_bundle_format_t *format,
-                                      uint64_t *data_size, uint8_t const **data) {
+                                      size_t *data_size, uint8_t const **data) {
     if (bin == nullptr || format == nullptr || data_size == nullptr || data == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     *format = static_cast<tinytc_bundle_format_t>(bin->format());
-    *data_size = static_cast<uint64_t>(bin->size());
+    *data_size = bin->size();
     *data = bin->data();
     return tinytc_status_success;
 }

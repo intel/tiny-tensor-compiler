@@ -336,7 +336,7 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                        .get_product());
         });
     auto write_C = [&](block_builder &bb) {
-        auto n_to = is_N_constant ? n_bs : min(N, cast(to_clir_ty(scalar_type::index), n_bs));
+        auto n_to = is_N_constant ? n_bs : min(N, cast(generic_uint(), n_bs));
         auto n_unroll = is_N_constant ? n_bs : 1;
         bb.add(
             for_loop_builder(declaration_assignment(generic_short(), n, 0), n < std::move(n_to),

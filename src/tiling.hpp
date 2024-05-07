@@ -17,7 +17,7 @@
 namespace tinytc {
 
 //! Size of 2D subgroup grid
-class local_tiling : public std::array<std::uint32_t, 2> {
+class local_tiling : public std::array<std::int32_t, 2> {
   public:
     //! Number of subgroups working on the row blocks (M-loop)
     inline auto m_tiles() const { return operator[](0); }
@@ -29,12 +29,11 @@ class local_tiling : public std::array<std::uint32_t, 2> {
      * The work-group size is given by {m_tiles() * subgroup_size, n_tiles}.
      * The returned values can be used in the work_group_size function attribute
      */
-    inline auto work_group_size(std::uint32_t subgroup_size) const
-        -> std::array<std::uint32_t, 2u> {
+    inline auto work_group_size(std::int32_t subgroup_size) const -> std::array<std::int32_t, 2u> {
         return {subgroup_size * m_tiles(), n_tiles()};
     }
     //! Compute number of work items
-    inline auto number_of_work_items(std::uint32_t subgroup_size) const -> std::uint32_t {
+    inline auto number_of_work_items(std::int32_t subgroup_size) const -> std::int32_t {
         auto const wgs = work_group_size(subgroup_size);
         return wgs[0] * wgs[1];
     }
@@ -57,7 +56,7 @@ struct blas_shape {
  * @param info Core info
  */
 auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
-    -> std::uint32_t;
+    -> std::int32_t;
 
 /**
  * @brief Suggest a local tiling based on blas size
@@ -89,7 +88,7 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
  */
 auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
                                       ::tinytc_core_info const &dev_info)
-    -> std::tuple<std::uint32_t, local_tiling>;
+    -> std::tuple<std::int32_t, local_tiling>;
 
 } // namespace tinytc
 

@@ -17,7 +17,7 @@ A scalar argument always corresponds to a single scalar argument in the OpenCL-C
 Argument type OpenCL type
 ============= ===========
 bool          bool
-index         uint
+index         long
 i8            char
 i16           short
 i32           int
@@ -63,9 +63,9 @@ leads to
 .. code:: c
 
    kernel void memref_example1(global float* a) {}
-   kernel void memref_example2(global double* a, uint a_shape1) {}
-   kernel void memref_example3(global long* a, uint a_shape1, uint a_stride2) {}
-   kernel void memref_example4(global long* a, uint a_shape1, uint a_stride2) {}
+   kernel void memref_example2(global double* a, long a_shape1) {}
+   kernel void memref_example3(global long* a, long a_shape1, long a_stride2) {}
+   kernel void memref_example4(global long* a, long a_shape1, long a_stride2) {}
 
 Note that `memref_example3` and `memref_example4` have the same signature,
 because `memref<i64x5x?x6>` has the canonical stride `strided<1,5,?>`.
@@ -91,8 +91,8 @@ leads to
 .. code:: c
 
    kernel void group_example1(global short*global* a) {}
-   kernel void group_example2(global int*global* a, global uint* a_shape1, global uint* a_stride2) {}
-   kernel void group_example3(global float*global* a, global uint* a_shape0, uint a_offset) {}
+   kernel void group_example2(global int*global* a, global long* a_shape1, global long* a_stride2) {}
+   kernel void group_example3(global float*global* a, global long* a_shape0, long a_offset) {}
 
 Note that `a_shape_0`, `a_shape1`, and `a_stride2` must contain at least as many values as the group size.
 That is, if a is accessed with `load %a[%id] : group<memref<i32x5x?x6>>`, then

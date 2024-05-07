@@ -519,7 +519,9 @@ Value
 
   * :ref:`make_imm(std::int64_t,scalar_type,location const&)`
 
-  * :ref:`make_imm(std::uint32_t,location const&)`
+  * :ref:`make_index(std::int32_t,location const&)`
+
+  * :ref:`make_index(std::int64_t,location const&)`
 
   * :ref:`make_value(data_type const&,location const&)`
 
@@ -567,10 +569,15 @@ make_imm(std::int64_t,scalar_type,location const&)
 
 .. doxygenfunction:: tinytc::make_imm(std::int64_t,scalar_type,location const&)
 
-make_imm(std::uint32_t,location const&)
-.......................................
+make_index(std::int32_t,location const&)
+........................................
 
-.. doxygenfunction:: tinytc::make_imm(std::uint32_t,location const&)
+.. doxygenfunction:: tinytc::make_index(std::int32_t,location const&)
+
+make_index(std::int64_t,location const&)
+........................................
+
+.. doxygenfunction:: tinytc::make_index(std::int64_t,location const&)
 
 make_value(data_type const&,location const&)
 ............................................

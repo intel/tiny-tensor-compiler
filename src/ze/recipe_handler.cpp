@@ -24,13 +24,13 @@ ze_recipe_handler::ze_recipe_handler(ze_context_handle_t context, ze_device_hand
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
-    for (std::uint32_t num = 0; num < num_kernels; ++num) {
+    for (int num = 0; num < num_kernels; ++num) {
         kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
     }
 }
 
-void ze_recipe_handler::active_kernel(std::uint32_t kernel_num) {
-    if (kernel_num >= kernels_.size()) {
+void ze_recipe_handler::active_kernel(int kernel_num) {
+    if (kernel_num < 0 || static_cast<std::size_t>(kernel_num) >= kernels_.size()) {
         throw status::out_of_range;
     }
     active_kernel_ = kernel_num;
@@ -43,7 +43,7 @@ void ze_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tiny
     arg(arg_index, sizeof(value), &value);
 }
 
-void ze_recipe_handler::howmany(std::uint32_t num) {
+void ze_recipe_handler::howmany(std::int64_t num) {
     group_count_ = ::tinytc_ze_get_group_count(num);
 }
 

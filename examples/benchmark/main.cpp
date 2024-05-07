@@ -40,7 +40,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride,
                                        std::array<std::int64_t, 2> C_stride,
-                                       std::uint32_t repetitions, queue q) -> source {
+                                       std::int32_t repetitions, queue q) -> source {
     auto ctx = make_source_context();
     char const *file_name = std::source_location::current().file_name();
     auto const source_id = ctx.add_source(file_name, "");
@@ -75,7 +75,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                 auto b = bb.add(make_load(B, {gid}, my_loc()));
                 auto c = bb.add(make_load(C, {gid}, my_loc()));
                 bb.for_loop(
-                    scalar_type::index, make_imm(0u, my_loc()), make_imm(repetitions, my_loc()),
+                    scalar_type::index, make_index(0, my_loc()), make_index(repetitions, my_loc()),
                     [&](region_builder &bb) {
                         bb.add(make_gemm(tA, tB, false, make_imm(1.0, ty, my_loc()), a, b,
                                          make_imm(0.0, ty, my_loc()), c, my_loc()));

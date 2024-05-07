@@ -26,8 +26,8 @@ struct tinytc_recipe : tinytc::reference_counted {
     inline auto get_program() const -> tinytc::prog const & { return prg_; }
     inline auto get_source() const -> tinytc::source const & { return src_; }
 
-    virtual auto num_kernels() const -> std::uint32_t = 0;
-    virtual auto kernel_name(std::uint32_t kernel_num) const -> char const * = 0;
+    virtual auto num_kernels() const -> int = 0;
+    virtual auto kernel_name(int kernel_num) const -> char const * = 0;
 
   private:
     tinytc::prog prg_;
@@ -41,10 +41,10 @@ struct tinytc_recipe_handler : tinytc::reference_counted {
 
     inline auto get_recipe() const -> tinytc::recipe const & { return recipe_; }
 
-    virtual void active_kernel(std::uint32_t kernel_num) = 0;
+    virtual void active_kernel(int kernel_num) = 0;
     virtual void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) = 0;
     virtual void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) = 0;
-    virtual void howmany(std::uint32_t num) = 0;
+    virtual void howmany(std::int64_t num) = 0;
 
   private:
     tinytc::recipe recipe_;

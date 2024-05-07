@@ -11,8 +11,8 @@ namespace tinytc {
 
 //! Kernel metadata
 struct kernel_metadata {
-    std::uint32_t subgroup_size;                  ///< Subgroup size
-    std::array<std::uint32_t, 2> work_group_size; ///< Work-group size
+    std::int32_t subgroup_size;                  ///< Subgroup size
+    std::array<std::int32_t, 2> work_group_size; ///< Work-group size
 };
 
 } // namespace tinytc
