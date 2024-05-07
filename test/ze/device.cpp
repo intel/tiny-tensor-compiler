@@ -37,9 +37,9 @@ TEST_CASE("device (Level Zero)") {
         auto info = make_core_info(device);
 
         std::uint32_t sgs_size;
-        std::uint32_t const *sgs;
+        std::int32_t const *sgs;
         info.get_subgroup_sizes(&sgs_size, &sgs);
-        REQUIRE(sgs_size == 2);
+        REQUIRE(sgs_size == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 

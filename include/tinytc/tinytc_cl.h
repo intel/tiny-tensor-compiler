@@ -125,7 +125,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t 
  * @param local_size [in][range(0,3)] pointer to local size array of size >= 3
  * @param global_size [out][range(0,3)] pointer to global size array of size >= 3
  */
-TINYTC_EXPORT void tinytc_cl_get_global_size(size_t howmany, const size_t *local_size,
+TINYTC_EXPORT void tinytc_cl_get_global_size(int64_t howmany, const size_t *local_size,
                                              size_t *global_size);
 
 ////////////////////////////

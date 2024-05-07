@@ -93,7 +93,7 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
                                                subgroup_sizes_size, subgroup_sizes_long.data(),
                                                nullptr));
         auto subgroup_sizes =
-            std::vector<std::uint32_t>(subgroup_sizes_long.begin(), subgroup_sizes_long.end());
+            std::vector<std::int32_t>(subgroup_sizes_long.begin(), subgroup_sizes_long.end());
 
         TINYTC_CL_CHECK_STATUS(
             clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr));
@@ -112,14 +112,14 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         // 512 KB / 32 wavefronts
         // @todo: can this info be queried?
         std::uint32_t register_space = 512 * 1024 / 32;
-        cl_uint subgroup_size;
+        cl_int subgroup_size;
         size_t max_work_group_size;
         TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_WAVEFRONT_WIDTH_AMD,
                                                sizeof(subgroup_size), &subgroup_size, nullptr));
         TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
                                                sizeof(max_work_group_size), &max_work_group_size,
                                                nullptr));
-        auto subgroup_sizes = std::vector<std::uint32_t>{subgroup_size};
+        auto subgroup_sizes = std::vector<std::int32_t>{subgroup_size};
         TINYTC_CHECK_STATUS(
             tinytc_core_info_generic_create(info, register_space, max_work_group_size,
                                             subgroup_sizes.size(), subgroup_sizes.data()));

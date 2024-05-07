@@ -805,8 +805,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t x,
-                                                                  uint32_t y);
+TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, int32_t x,
+                                                                  int32_t y);
 /**
  * @brief Set subgroup size
  *
@@ -815,7 +815,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t 
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, uint32_t sgs);
+TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs);
 
 /**
  * @brief Release function object
@@ -934,10 +934,10 @@ TINYTC_EXPORT void tinytc_string_destroy(char *str);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_generic_create(tinytc_core_info_t *info,
-                                                              uint32_t register_space,
-                                                              uint32_t max_work_group_size,
+                                                              int32_t register_space,
+                                                              int32_t max_work_group_size,
                                                               uint32_t sgs_size,
-                                                              uint32_t const *sgs);
+                                                              int32_t const *sgs);
 
 /**
  * @brief Look up core info for Intel GPU architecture
@@ -965,9 +965,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create_from_arch(
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *info,
                                                             uint32_t ip_version,
-                                                            uint32_t num_eus_per_subslice,
-                                                            uint32_t num_threads_per_eu,
-                                                            uint32_t sgs_size, uint32_t const *sgs);
+                                                            int32_t num_eus_per_subslice,
+                                                            int32_t num_threads_per_eu,
+                                                            uint32_t sgs_size, int32_t const *sgs);
 
 /**
  * @brief Returns available subgroup sizes
@@ -980,7 +980,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
                                                                   uint32_t *sgs_size,
-                                                                  uint32_t const **sgs);
+                                                                  int32_t const **sgs);
 
 /**
  * @brief Returns register space per subgroup in bytes
@@ -991,7 +991,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_c
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_space(const_tinytc_core_info_t info,
-                                                                  uint32_t *space);
+                                                                  int32_t *space);
 
 /**
  * @brief Set core features
@@ -1233,8 +1233,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin,
-                                                   tinytc_bundle_format_t format,
-                                                   uint64_t data_size, uint8_t const *data,
+                                                   tinytc_bundle_format_t format, size_t data_size,
+                                                   uint8_t const *data,
                                                    tinytc_core_feature_flags_t core_features);
 
 /**
@@ -1249,7 +1249,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
                                                     tinytc_bundle_format_t *format,
-                                                    uint64_t *data_size, uint8_t const **data);
+                                                    size_t *data_size, uint8_t const **data);
 /**
  * @brief Get requested core features
  *
@@ -1347,8 +1347,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_retain(tinytc_binary_t bin);
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
-    tinytc_transpose_t tA, tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
-    uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
+    tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
+    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC,
     tinytc_source_context_t ctx);
 
 /**
@@ -1370,7 +1370,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
-    tinytc_recipe_handler_t handler, uint32_t howmany, size_t alpha_size, const void *alpha_value,
+    tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
     const void *A_value, tinytc_mem_type_t A_type, const void *B_value, tinytc_mem_type_t B_type,
     size_t beta_size, const void *beta_value, const void *C_value, tinytc_mem_type_t C_type);
 
@@ -1410,8 +1410,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, uint32_t N,
-    uint32_t K, uint32_t M_block_size, tinytc_source_context_t ctx);
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t N,
+    int64_t K, int32_t M_block_size, tinytc_source_context_t ctx);
 
 /**
  * @brief Suggest an M block size for tall and skinny recipe
@@ -1422,7 +1422,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
-    const_tinytc_core_info_t info, uint32_t *M_block_size);
+    const_tinytc_core_info_t info, int32_t *M_block_size);
 
 /**
  * @brief Set kernel arguments for tall and skinny GEMM recipe
@@ -1446,10 +1446,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
-    tinytc_recipe_handler_t handler, uint32_t M, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, uint32_t ldA, const void *B_value,
-    tinytc_mem_type_t B_type, uint32_t ldB, size_t beta_size, const void *beta_value,
-    const void *C_value, tinytc_mem_type_t C_type, uint32_t ldC);
+    tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
+    const void *A_value, tinytc_mem_type_t A_type, int64_t ldA, const void *B_value,
+    tinytc_mem_type_t B_type, int64_t ldB, size_t beta_size, const void *beta_value,
+    const void *C_value, tinytc_mem_type_t C_type, int64_t ldC);
 
 /**
  * @brief Get prog object

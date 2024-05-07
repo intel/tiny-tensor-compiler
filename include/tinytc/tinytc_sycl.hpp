@@ -114,7 +114,7 @@ TINYTC_EXPORT auto get_group_size(sycl::kernel const &krnl) -> sycl::range<3u>;
  *
  * @return Global size
  */
-TINYTC_EXPORT auto get_global_size(std::uint32_t howmany, sycl::range<3u> const &local_size)
+TINYTC_EXPORT auto get_global_size(std::int64_t howmany, sycl::range<3u> const &local_size)
     -> sycl::range<3u>;
 
 /**
@@ -125,7 +125,7 @@ TINYTC_EXPORT auto get_global_size(std::uint32_t howmany, sycl::range<3u> const 
  *
  * @return ND range
  */
-TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, std::uint32_t howmany)
+TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, std::int64_t howmany)
     -> sycl::nd_range<3u>;
 
 ////////////////////////////

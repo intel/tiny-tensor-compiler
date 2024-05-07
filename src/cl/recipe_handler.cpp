@@ -26,7 +26,7 @@ cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device, re
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
-    for (std::uint32_t num = 0; num < num_kernels; ++num) {
+    for (int num = 0; num < num_kernels; ++num) {
         kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back().get()));
     }
@@ -37,8 +37,8 @@ cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device, re
     arg_handler_ = opencl_argument_handler(platform);
 }
 
-void cl_recipe_handler::active_kernel(std::uint32_t kernel_num) {
-    if (kernel_num >= kernels_.size()) {
+void cl_recipe_handler::active_kernel(int kernel_num) {
+    if (kernel_num < 0 || static_cast<std::size_t>(kernel_num) >= kernels_.size()) {
         throw status::out_of_range;
     }
     active_kernel_ = kernel_num;
@@ -51,7 +51,7 @@ void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value,
     arg_handler_.set_mem_arg(kernel(), arg_index, value, type);
 }
 
-void cl_recipe_handler::howmany(std::uint32_t num) {
+void cl_recipe_handler::howmany(std::int64_t num) {
     global_size_ = get_global_size(num, local_size());
 }
 

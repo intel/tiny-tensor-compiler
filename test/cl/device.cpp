@@ -51,11 +51,11 @@ TEST_CASE("device (OpenCL)") {
 
     auto info = make_core_info(device);
     std::uint32_t sgs_size;
-    std::uint32_t const *sgs;
+    std::int32_t const *sgs;
     info.get_subgroup_sizes(&sgs_size, &sgs);
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        REQUIRE(sgs_size == 2);
+        REQUIRE(sgs_size == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
@@ -63,7 +63,7 @@ TEST_CASE("device (OpenCL)") {
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
         CHECK(info.get_register_space() == 64 * 256);
     } else if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::tgl)) {
-        REQUIRE(sgs_size == 3);
+        REQUIRE(sgs_size == 3u);
         CHECK(sgs[0] == 8);
         CHECK(sgs[1] == 16);
         CHECK(sgs[2] == 32);

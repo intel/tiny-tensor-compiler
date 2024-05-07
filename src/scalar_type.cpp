@@ -26,7 +26,7 @@ clir::builtin_type to_clir_builtin_ty(scalar_type ty) {
     case scalar_type::bool_:
         return clir::builtin_type::bool_t;
     case scalar_type::index:
-        return clir::builtin_type::uint_t;
+        return clir::builtin_type::long_t;
     case scalar_type::i8:
         return clir::builtin_type::char_t;
     case scalar_type::i16:
@@ -58,7 +58,7 @@ clir::data_type to_clir_ty(scalar_type ty, clir::address_space as, clir::type_qu
 clir::builtin_type to_clir_atomic_builtin_ty(scalar_type ty) {
     switch (ty) {
     case scalar_type::index:
-        return clir::builtin_type::atomic_uint_t;
+        return clir::builtin_type::atomic_long_t;
     case scalar_type::i32:
         return clir::builtin_type::atomic_int_t;
     case scalar_type::i64:
@@ -117,7 +117,7 @@ size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty) {
     case tinytc_scalar_type_bool:
         return 1;
     case tinytc_scalar_type_index:
-        return 4;
+        return 8;
     case tinytc_scalar_type_i8:
     case tinytc_scalar_type_u8:
         return 1;

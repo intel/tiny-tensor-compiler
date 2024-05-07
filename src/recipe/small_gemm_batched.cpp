@@ -34,10 +34,10 @@ auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *
 }
 small_gemm_batched_recipe::small_gemm_batched_recipe(prog prg, source src, scalar_type ty)
     : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty) {}
-auto small_gemm_batched_recipe::num_kernels() const -> std::uint32_t {
-    return static_cast<std::uint32_t>(small_gemm_batched_kernel::num_kernels);
+auto small_gemm_batched_recipe::num_kernels() const -> int {
+    return static_cast<int>(small_gemm_batched_kernel::num_kernels);
 }
-auto small_gemm_batched_recipe::kernel_name(std::uint32_t kernel_num) const -> char const * {
+auto small_gemm_batched_recipe::kernel_name(int kernel_num) const -> char const * {
     return small_gemm_batched_kernel_name(static_cast<small_gemm_batched_kernel>(kernel_num));
 }
 
@@ -46,11 +46,12 @@ auto small_gemm_batched_recipe::kernel_name(std::uint32_t kernel_num) const -> c
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t tinytc_recipe_small_gemm_batched_create(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
-    tinytc_transpose_t tA, tinytc_transpose_t tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
-    uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC, uint32_t strideC,
-    tinytc_source_context_t ctx) {
+tinytc_status_t
+tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_core_info_t info,
+                                        tinytc_scalar_type_t ty, tinytc_transpose_t tA,
+                                        tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K,
+                                        int64_t ldA, int64_t strideA, int64_t ldB, int64_t strideB,
+                                        int64_t ldC, int64_t strideC, tinytc_source_context_t ctx) {
     if (recipe == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -71,10 +72,10 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
         return l;
     };
 
-    auto const selA = [&](std::uint32_t N1, std::uint32_t N2) {
+    auto const selA = [&](std::int64_t N1, std::int64_t N2) {
         return tA == tinytc_transpose_T ? N2 : N1;
     };
-    auto const selB = [&](std::uint32_t N1, std::uint32_t N2) {
+    auto const selB = [&](std::int64_t N1, std::int64_t N2) {
         return tB == tinytc_transpose_T ? N2 : N1;
     };
     return exception_to_status_code(
@@ -99,8 +100,8 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 fb.body(
                     [&](region_builder &bb) {
                         auto gid = bb.add(make_group_id(my_loc()));
-                        auto offsets =
-                            std::vector<value>{make_imm(0u, my_loc()), make_imm(0u, my_loc()), gid};
+                        auto offsets = std::vector<value>{make_index(0, my_loc()),
+                                                          make_index(0, my_loc()), gid};
                         auto size = std::vector<value>{make_dynamic(my_loc()),
                                                        make_dynamic(my_loc()), value{}};
                         auto a = bb.add(make_subview(A, offsets, size, my_loc()));
@@ -128,7 +129,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 }
 
 tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
-    tinytc_recipe_handler_t handler, uint32_t howmany, size_t alpha_size, const void *alpha_value,
+    tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
     const void *A_value, tinytc_mem_type_t A_type, const void *B_value, tinytc_mem_type_t B_type,
     size_t beta_size, const void *beta_value, const void *C_value, tinytc_mem_type_t C_type) {
     if (handler == nullptr) {
@@ -151,12 +152,12 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
         }
         handler->arg(0, alpha_size, alpha_value);
         handler->mem_arg(1, A_value, A_type);
-        handler->arg(2, sizeof(uint32_t), &howmany);
+        handler->arg(2, sizeof(int64_t), &howmany);
         handler->mem_arg(3, B_value, B_type);
-        handler->arg(4, sizeof(uint32_t), &howmany);
+        handler->arg(4, sizeof(int64_t), &howmany);
         handler->arg(5, beta_size, beta_value);
         handler->mem_arg(6, C_value, C_type);
-        handler->arg(7, sizeof(uint32_t), &howmany);
+        handler->arg(7, sizeof(int64_t), &howmany);
         handler->howmany(howmany);
     });
 }

@@ -47,7 +47,7 @@ tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototy
     });
 }
 
-tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t x, uint32_t y) {
+tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, int32_t x, int32_t y) {
     function *f = dynamic_cast<function *>(fun);
     if (f == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -55,7 +55,7 @@ tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, uint32_t 
     return exception_to_status_code([&] { f->work_group_size({x, y}); });
 }
 
-tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, uint32_t sgs) {
+tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs) {
     function *f = dynamic_cast<function *>(fun);
     if (f == nullptr) {
         return tinytc_status_invalid_arguments;

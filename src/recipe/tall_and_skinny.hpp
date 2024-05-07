@@ -12,21 +12,21 @@
 
 namespace tinytc {
 
-enum class tall_and_skinny_kernel : std::uint32_t { gemm = 0u, gemm_beta0 = 1u, num_kernels = 2u };
+enum class tall_and_skinny_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const *;
 
 struct tall_and_skinny_recipe : ::tinytc_recipe {
   public:
-    tall_and_skinny_recipe(prog prg, source src, scalar_type ty, std::uint32_t M_block_size);
-    auto num_kernels() const -> std::uint32_t override;
-    auto kernel_name(std::uint32_t kernel_num) const -> char const * override;
+    tall_and_skinny_recipe(prog prg, source src, scalar_type ty, std::int32_t M_block_size);
+    auto num_kernels() const -> int override;
+    auto kernel_name(int kernel_num) const -> char const * override;
 
     inline auto ty() const -> scalar_type { return ty_; }
-    inline auto M_block_size() const -> std::uint32_t { return M_block_size_; }
+    inline auto M_block_size() const -> std::int32_t { return M_block_size_; }
 
   private:
     scalar_type ty_;
-    std::uint32_t M_block_size_;
+    std::int32_t M_block_size_;
 };
 
 } // namespace tinytc

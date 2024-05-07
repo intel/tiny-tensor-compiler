@@ -156,7 +156,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel
  *
  * @return group count
  */
-TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(uint32_t howmany);
+TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(int64_t howmany);
 
 ////////////////////////////
 ////////// Recipe //////////

@@ -22,10 +22,10 @@ struct cl_recipe_handler : ::tinytc_recipe_handler {
     cl_recipe_handler(cl_context context, cl_device_id device, recipe rec,
                       source_context source_ctx);
 
-    void active_kernel(std::uint32_t kernel_num) override;
+    void active_kernel(int kernel_num) override;
     void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) override;
     void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) override;
-    void howmany(std::uint32_t num) override;
+    void howmany(std::int64_t num) override;
 
     auto kernel() -> cl_kernel;
     auto local_size() const -> std::array<std::size_t, 3u> const &;
@@ -35,7 +35,7 @@ struct cl_recipe_handler : ::tinytc_recipe_handler {
     shared_handle<cl_program> module_;
     std::vector<std::array<std::size_t, 3u>> local_size_;
     std::vector<shared_handle<cl_kernel>> kernels_;
-    std::uint32_t active_kernel_ = 0;
+    int active_kernel_ = 0;
     std::array<std::size_t, 3u> global_size_;
     opencl_argument_handler arg_handler_;
 };

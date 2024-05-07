@@ -170,7 +170,7 @@ inline auto get_group_size(cl_kernel kernel) -> std::array<std::size_t, 3u> {
  *
  * @return Global size
  */
-inline auto get_global_size(std::uint32_t howmany, std::array<std::size_t, 3u> const &local_size)
+inline auto get_global_size(std::int64_t howmany, std::array<std::size_t, 3u> const &local_size)
     -> std::array<std::size_t, 3u> {
     auto global_size = std::array<std::size_t, 3u>{};
     tinytc_cl_get_global_size(howmany, local_size.data(), global_size.data());

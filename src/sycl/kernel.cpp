@@ -125,11 +125,11 @@ auto get_group_size(kernel const &krnl) -> range<3u> {
     return dispatch<group_size_dispatcher>(krnl.get_backend(), krnl);
 }
 
-auto get_global_size(std::uint32_t howmany, range<3u> const &local_size) -> range<3u> {
+auto get_global_size(std::int64_t howmany, range<3u> const &local_size) -> range<3u> {
     return {howmany * local_size[0], local_size[1], local_size[2]};
 }
 
-auto get_execution_range(kernel const &krnl, std::uint32_t howmany) -> nd_range<3u> {
+auto get_execution_range(kernel const &krnl, std::int64_t howmany) -> nd_range<3u> {
     auto local_size = get_group_size(krnl);
     return {get_global_size(howmany, local_size), local_size};
 }

@@ -35,12 +35,12 @@ auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
     throw status::invalid_arguments;
 }
 tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, source src, scalar_type ty,
-                                               std::uint32_t M_block_size)
+                                               std::int32_t M_block_size)
     : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty), M_block_size_(M_block_size) {}
-auto tall_and_skinny_recipe::num_kernels() const -> std::uint32_t {
-    return static_cast<std::uint32_t>(tall_and_skinny_kernel::num_kernels);
+auto tall_and_skinny_recipe::num_kernels() const -> int {
+    return static_cast<int>(tall_and_skinny_kernel::num_kernels);
 }
-auto tall_and_skinny_recipe::kernel_name(std::uint32_t kernel_num) const -> char const * {
+auto tall_and_skinny_recipe::kernel_name(int kernel_num) const -> char const * {
     return tall_and_skinny_kernel_name(static_cast<tall_and_skinny_kernel>(kernel_num));
 }
 
@@ -51,8 +51,8 @@ using namespace tinytc;
 extern "C" {
 tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      const_tinytc_core_info_t info,
-                                                     tinytc_scalar_type_t ty, uint32_t N,
-                                                     uint32_t K, uint32_t M_block_size,
+                                                     tinytc_scalar_type_t ty, int64_t N, int64_t K,
+                                                     int32_t M_block_size,
                                                      tinytc_source_context_t ctx) {
     if (recipe == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -95,29 +95,29 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                   value &C) {
                 auto gid = bb.add(make_group_id(my_loc()));
                 auto m = bb.add(make_binary_op(binary_op::mul, gid,
-                                               make_imm(M_block_size, my_loc()), my_loc()));
+                                               make_index(M_block_size, my_loc()), my_loc()));
                 auto M = bb.add(make_size(C, 0, my_loc()));
                 auto M_m = bb.add(make_binary_op(binary_op::sub, M, m, my_loc()));
                 auto cond = bb.add(
-                    make_cmp(cmp_condition::lt, M_m, make_imm(M_block_size, my_loc()), my_loc()));
-                auto const offsets = std::vector<value>{m, make_imm(0u, my_loc())};
+                    make_cmp(cmp_condition::lt, M_m, make_index(M_block_size, my_loc()), my_loc()));
+                auto const offsets = std::vector<value>{m, make_index(0, my_loc())};
                 auto const dynamic_imm = make_dynamic(my_loc());
-                auto const block_size_imm = make_imm(M_block_size, my_loc());
+                auto const block_size_imm = make_index(M_block_size, my_loc());
                 bb.ifelse(
                     cond,
                     [&](region_builder &bb) {
                         auto a = bb.add(make_subview(
-                            A, offsets, {dynamic_imm, make_imm(K, my_loc())}, my_loc()));
+                            A, offsets, {dynamic_imm, make_index(K, my_loc())}, my_loc()));
                         auto c = bb.add(make_subview(
-                            C, offsets, {dynamic_imm, make_imm(N, my_loc())}, my_loc()));
+                            C, offsets, {dynamic_imm, make_index(N, my_loc())}, my_loc()));
                         bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                          my_loc()));
                     },
                     [&](region_builder &bb) {
                         auto a = bb.add(make_subview(
-                            A, offsets, {block_size_imm, make_imm(K, my_loc())}, my_loc()));
+                            A, offsets, {block_size_imm, make_index(K, my_loc())}, my_loc()));
                         auto c = bb.add(make_subview(
-                            C, offsets, {block_size_imm, make_imm(N, my_loc())}, my_loc()));
+                            C, offsets, {block_size_imm, make_index(N, my_loc())}, my_loc()));
                         bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                          my_loc()));
                     },
@@ -160,20 +160,20 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_core_info_t info,
-                                                                 uint32_t *M_block_size) {
+                                                                 int32_t *M_block_size) {
     if (info == nullptr || M_block_size == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
     return tinytc::exception_to_status_code(
-        [&] { *M_block_size = std::min(128u, info->minmax_work_group_size()); });
+        [&] { *M_block_size = std::min(128, info->minmax_work_group_size()); });
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
-    tinytc_recipe_handler_t handler, uint32_t M, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, uint32_t ldA, const void *B_value,
-    tinytc_mem_type_t B_type, uint32_t ldB, size_t beta_size, const void *beta_value,
-    const void *C_value, tinytc_mem_type_t C_type, uint32_t ldC) {
+    tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
+    const void *A_value, tinytc_mem_type_t A_type, int64_t ldA, const void *B_value,
+    tinytc_mem_type_t B_type, int64_t ldB, size_t beta_size, const void *beta_value,
+    const void *C_value, tinytc_mem_type_t C_type, int64_t ldC) {
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -193,16 +193,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
         }
         handler->arg(0, alpha_size, alpha_value);
         handler->mem_arg(1, A_value, A_type);
-        handler->arg(2, sizeof(uint32_t), &M);
-        handler->arg(3, sizeof(uint32_t), &ldA);
+        handler->arg(2, sizeof(int64_t), &M);
+        handler->arg(3, sizeof(int64_t), &ldA);
         handler->mem_arg(4, B_value, B_type);
-        handler->arg(5, sizeof(uint32_t), &ldB);
+        handler->arg(5, sizeof(int64_t), &ldB);
         handler->arg(6, beta_size, beta_value);
         handler->mem_arg(7, C_value, C_type);
-        handler->arg(8, sizeof(uint32_t), &M);
-        handler->arg(9, sizeof(uint32_t), &ldC);
+        handler->arg(8, sizeof(int64_t), &M);
+        handler->arg(9, sizeof(int64_t), &ldC);
 
-        std::uint32_t howmany = 1 + (M - 1) / recipe->M_block_size();
+        std::int64_t howmany = 1 + (M - 1) / recipe->M_block_size();
         handler->howmany(howmany);
     });
 }

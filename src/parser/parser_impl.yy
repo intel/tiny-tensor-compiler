@@ -270,15 +270,15 @@ attribute:
         if ($n <= 0) {
             throw parser::syntax_error(@n, "Must be a non-negative number");
         }
-        auto const wgs = std::array<std::uint32_t, 2>{static_cast<std::uint32_t>($m),
-                                                      static_cast<std::uint32_t>($n)};
+        auto const wgs = std::array<std::int32_t, 2>{static_cast<std::int32_t>($m),
+                                                     static_cast<std::int32_t>($n)};
         $$ = [=](function &f) { f.work_group_size(wgs); };
     }
   | SUBGROUP_SIZE LPAREN INTEGER_CONSTANT RPAREN {
         if ($INTEGER_CONSTANT <= 0) {
             throw parser::syntax_error(@INTEGER_CONSTANT, "Must be a non-negative number");
         }
-        auto const sgs = static_cast<std::uint32_t>($INTEGER_CONSTANT);
+        auto const sgs = static_cast<std::int32_t>($INTEGER_CONSTANT);
         $$ = [=](function &f) { f.subgroup_size(sgs); };
     }
 ;
@@ -298,7 +298,11 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list RCHEV {
         try {
-            $$ = make_memref($scalar_type, std::move($mode_list), std::vector<std::int64_t>{}, @memref_type);
+            $$ = data_type {
+                std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
+                                                   std::vector<std::int64_t>{}, @memref_type)
+                    .release()
+            };
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -311,8 +315,11 @@ memref_type:
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
         try {
-            $$ = make_memref($scalar_type, std::move($mode_list), std::move($optional_stride_list),
-                             @memref_type);
+            $$ = data_type {
+                std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
+                                                   std::move($optional_stride_list), @memref_type)
+                    .release()
+            };
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -765,8 +772,8 @@ constant_or_dynamic_or_identifier:
         check_scalar_type($var, scalar_type::index, @var, @var);
         $$ = $var;
     }
-  | INTEGER_CONSTANT { $$ = make_imm($INTEGER_CONSTANT, scalar_type::index); $$->loc(@INTEGER_CONSTANT); }
-  | DYNAMIC { $$ = make_imm(dynamic); $$->loc(@DYNAMIC); }
+  | INTEGER_CONSTANT { $$ = make_index($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
+  | DYNAMIC { $$ = make_dynamic(); $$->loc(@DYNAMIC); }
 ;
 
 fuse_inst:
@@ -823,7 +830,7 @@ index_identifier_or_const:
         $$ = $var;
     }
   | INTEGER_CONSTANT {
-        $$ = make_imm($INTEGER_CONSTANT, scalar_type::index);
+        $$ = make_index($INTEGER_CONSTANT);
         $$->loc(@INTEGER_CONSTANT);
     }
 ;
@@ -947,14 +954,14 @@ slice_list:
 ;
 
 slice:
-    COLON { $$ = slice(make_imm(std::int64_t(0)), make_imm(dynamic)); }
+    COLON { $$ = slice(make_index(0), make_dynamic()); }
   | index_identifier_or_const slice_size { $$ = slice(std::move($1), std::move($2)); }
 ;
 
 slice_size:
     %empty { $$ = {}; }
   | COLON index_identifier_or_const { $$ = $2; }
-  | COLON DYNAMIC { $$ = make_imm(dynamic); }
+  | COLON DYNAMIC { $$ = make_dynamic(); }
 ;
 
 %%

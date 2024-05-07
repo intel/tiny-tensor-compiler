@@ -84,35 +84,35 @@ template <> struct to_scalar_type<bool> {
     static constexpr scalar_type value = scalar_type::bool_; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<int8_t> {
+template <> struct to_scalar_type<std::int8_t> {
     static constexpr scalar_type value = scalar_type::i8; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<int16_t> {
+template <> struct to_scalar_type<std::int16_t> {
     static constexpr scalar_type value = scalar_type::i16; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<int32_t> {
+template <> struct to_scalar_type<std::int32_t> {
     static constexpr scalar_type value = scalar_type::i32; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<int64_t> {
+template <> struct to_scalar_type<std::int64_t> {
     static constexpr scalar_type value = scalar_type::i64; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<uint8_t> {
+template <> struct to_scalar_type<std::uint8_t> {
     static constexpr scalar_type value = scalar_type::u8; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<uint16_t> {
+template <> struct to_scalar_type<std::uint16_t> {
     static constexpr scalar_type value = scalar_type::u16; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<uint32_t> {
+template <> struct to_scalar_type<std::uint32_t> {
     static constexpr scalar_type value = scalar_type::u32; ///< value
 };
 //! to_scalar_type specialization
-template <> struct to_scalar_type<uint64_t> {
+template <> struct to_scalar_type<std::uint64_t> {
     static constexpr scalar_type value = scalar_type::u64; ///< value
 };
 //! to_scalar_type specialization
@@ -542,16 +542,28 @@ inline auto make_imm(std::int64_t imm, scalar_type type = scalar_type::i64,
 }
 
 /**
- * @brief Make immediate value
+ * @brief Make immediate index value
  *
- * Type is index.
- *
- * @param imm Unsigned int value
+ * @param imm index value
  * @param loc Source code location
  *
  * @return Value
  */
-inline auto make_imm(std::uint32_t imm, location const &loc = {}) -> value {
+inline auto make_index(std::int32_t imm, location const &loc = {}) -> value {
+    tinytc_value_t val;
+    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_index, &loc), loc);
+    return value{val};
+}
+
+/**
+ * @brief Make immediate index value
+ *
+ * @param imm index value
+ * @param loc Source code location
+ *
+ * @return Value
+ */
+inline auto make_index(std::int64_t imm, location const &loc = {}) -> value {
     tinytc_value_t val;
     CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, tinytc_scalar_type_index, &loc), loc);
     return value{val};
@@ -641,7 +653,7 @@ class inst : public shared_handle<tinytc_inst_t> {
      */
     inline auto get_values() const -> std::vector<value> {
         static_assert(internal::value_reinterpret_allowed);
-        uint32_t result_list_size = 0;
+        std::uint32_t result_list_size = 0;
         CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, nullptr));
         auto values = std::vector<value>(result_list_size);
         tinytc_value_t *result_list = reinterpret_cast<tinytc_value_t *>(values.data());
@@ -1242,7 +1254,7 @@ inline func make_function(func const &prototype, region const &body, location co
  * @param x x
  * @param y y
  */
-inline void set_work_group_size(func &fun, uint32_t x, uint32_t y) {
+inline void set_work_group_size(func &fun, std::int32_t x, std::int32_t y) {
     CHECK_STATUS(tinytc_function_set_work_group_size(fun.get(), x, y));
 }
 
@@ -1252,7 +1264,7 @@ inline void set_work_group_size(func &fun, uint32_t x, uint32_t y) {
  * @param fun Function object; must have been created with "make_function"
  * @param sgs Subgroup size
  */
-inline void set_subgroup_size(func &fun, uint32_t sgs) {
+inline void set_subgroup_size(func &fun, std::int32_t sgs) {
     CHECK_STATUS(tinytc_function_set_subgroup_size(fun.get(), sgs));
 }
 
@@ -1546,7 +1558,7 @@ class function_builder {
      * @param x x
      * @param y y
      */
-    inline void work_group_size(std::uint32_t x, std::uint32_t y) {
+    inline void work_group_size(std::int32_t x, std::int32_t y) {
         x_ = x;
         y_ = y;
     }
@@ -1555,7 +1567,7 @@ class function_builder {
      *
      * @param subgroup_size Subgroup size
      */
-    inline void subgroup_size(std::uint32_t subgroup_size) { sgs_ = subgroup_size; }
+    inline void subgroup_size(std::int32_t subgroup_size) { sgs_ = subgroup_size; }
 
     /**
      * @brief Build function body with functor f(region_builder&) -> void
@@ -1574,7 +1586,7 @@ class function_builder {
     std::string name_;
     region body_;
     std::vector<value> arguments_;
-    std::uint32_t x_ = 0, y_ = 0, sgs_ = 0;
+    std::int32_t x_ = 0, y_ = 0, sgs_ = 0;
 };
 
 //! Builder for programs
@@ -1640,7 +1652,7 @@ class core_info : public shared_handle<tinytc_core_info_t> {
      * @param sgs_size Pointer to size of subgroup size array
      * @param sgs Pointer ot subgroup size array
      */
-    void get_subgroup_sizes(uint32_t *sgs_size, uint32_t const **sgs) {
+    void get_subgroup_sizes(std::uint32_t *sgs_size, std::int32_t const **sgs) {
         CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(obj_, sgs_size, sgs));
     }
 
@@ -1649,8 +1661,8 @@ class core_info : public shared_handle<tinytc_core_info_t> {
      *
      * @return Register space
      */
-    auto get_register_space() -> std::uint32_t {
-        std::uint32_t space;
+    auto get_register_space() -> std::int32_t {
+        std::int32_t space;
         CHECK_STATUS(tinytc_core_info_get_register_space(obj_, &space));
         return space;
     }
@@ -1685,8 +1697,8 @@ class core_info : public shared_handle<tinytc_core_info_t> {
  *
  * @return Core info
  */
-inline auto make_core_info_generic(std::uint32_t register_space, std::uint32_t max_work_group_size,
-                                   std::vector<std::uint32_t> sgs) -> core_info {
+inline auto make_core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
+                                   std::vector<std::int32_t> sgs) -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_generic_create(&info, register_space, max_work_group_size,
                                                  sgs.size(), sgs.data()));
@@ -1717,8 +1729,8 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_
  *
  * @return Core info
  */
-inline auto make_core_info_intel(std::uint32_t ip_version, std::uint32_t num_eus_per_subslice,
-                                 std::uint32_t num_threads_per_eu, std::vector<std::uint32_t> sgs)
+inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
+                                 std::int32_t num_threads_per_eu, std::vector<std::int32_t> sgs)
     -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
@@ -1882,7 +1894,8 @@ class source : public shared_handle<tinytc_source_t> {
      * @param extensions_size Number of extensions
      * @param extensions Array of extensions
      */
-    inline void get_extensions(uint32_t &extensions_size, char const *const *&extensions) const {
+    inline void get_extensions(std::uint32_t &extensions_size,
+                               char const *const *&extensions) const {
         CHECK_STATUS(tinytc_source_get_extensions(obj_, &extensions_size, &extensions));
     }
 };
@@ -1906,7 +1919,7 @@ class binary : public shared_handle<tinytc_binary_t> {
     //! Container for raw data
     struct raw {
         bundle_format format;     ///< Bundle format
-        std::uint64_t data_size;  ///< Size of binary data in bytes
+        std::size_t data_size;    ///< Size of binary data in bytes
         std::uint8_t const *data; ///< Pointer to binary data
     };
 
@@ -1928,7 +1941,7 @@ class binary : public shared_handle<tinytc_binary_t> {
      * @return Core features
      */
     inline auto get_core_features() -> tinytc_core_feature_flags_t {
-        std::uint32_t cf;
+        tinytc_core_feature_flags_t cf;
         CHECK_STATUS(tinytc_binary_get_core_features(obj_, &cf));
         return cf;
     }
@@ -1945,7 +1958,7 @@ class binary : public shared_handle<tinytc_binary_t> {
  *
  * @return Binary
  */
-inline auto make_binary(bundle_format format, std::uint64_t data_size, std::uint8_t const *data,
+inline auto make_binary(bundle_format format, std::size_t data_size, std::uint8_t const *data,
                         tinytc_core_feature_flags_t core_features) -> binary {
     tinytc_binary_t bin;
     CHECK_STATUS(tinytc_binary_create(&bin, static_cast<tinytc_bundle_format_t>(format), data_size,
@@ -2108,8 +2121,8 @@ class small_gemm_batched : public recipe {
      * @param C Memory object used for C-matrix
      */
     template <typename T>
-    static void set_args(recipe_handler &handler, uint32_t howmany, T alpha, mem A, mem B, T beta,
-                         mem C) {
+    static void set_args(recipe_handler &handler, std::int64_t howmany, T alpha, mem A, mem B,
+                         T beta, mem C) {
         CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
             handler.get(), howmany, sizeof(alpha), &alpha, A.value,
             static_cast<tinytc_mem_type_t>(A.type), B.value, static_cast<tinytc_mem_type_t>(B.type),
@@ -2140,10 +2153,10 @@ class small_gemm_batched : public recipe {
  * @return Small GEMM batched recipe
  */
 inline auto make_small_gemm_batched(core_info const &info, scalar_type ty, transpose tA,
-                                    transpose tB, uint32_t M, uint32_t N, uint32_t K, uint32_t ldA,
-                                    uint32_t strideA, uint32_t ldB, uint32_t strideB, uint32_t ldC,
-                                    uint32_t strideC, source_context ctx = {})
-    -> small_gemm_batched {
+                                    transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
+                                    std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
+                                    std::int64_t strideB, std::int64_t ldC, std::int64_t strideC,
+                                    source_context ctx = {}) -> small_gemm_batched {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty),
@@ -2173,9 +2186,8 @@ class tall_and_skinny : public recipe {
      * @param ldC Leading dimension of C
      */
     template <typename T>
-    static void set_args(recipe_handler &handler, std::uint32_t M, T alpha, mem A,
-                         std::uint32_t ldA, mem B, std::uint32_t ldB, T beta, mem C,
-                         std::uint32_t ldC) {
+    static void set_args(recipe_handler &handler, std::int64_t M, T alpha, mem A, std::int64_t ldA,
+                         mem B, std::int64_t ldB, T beta, mem C, std::int64_t ldC) {
         CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
             handler.get(), M, sizeof(alpha), &alpha, A.value,
             static_cast<tinytc_mem_type_t>(A.type), ldA, B.value,
@@ -2198,8 +2210,8 @@ class tall_and_skinny : public recipe {
  *
  * @return Tall and skinny recipe
  */
-inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::uint32_t N,
-                                 std::uint32_t K, std::uint32_t M_block_size = 0,
+inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int64_t N,
+                                 std::int64_t K, std::int32_t M_block_size = 0,
                                  source_context ctx = {}) -> tall_and_skinny {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(

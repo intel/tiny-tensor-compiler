@@ -92,10 +92,10 @@ auto test_volume<T>::make_optimized_kernel()
         auto I = fb.argument(I_.type(), "I");
         fb.body([&](region_builder &bb) {
             auto gid = bb.add(make_group_id());
-            auto const offsets2 = std::vector<value>{make_imm(0), make_imm(0)};
-            auto const offsets3 = std::vector<value>{make_imm(0), make_imm(0), gid};
+            auto const offsets2 = std::vector<value>{make_index(0), make_index(0)};
+            auto const offsets3 = std::vector<value>{make_index(0), make_index(0), gid};
             auto const size3 = std::vector<value>{make_dynamic(), make_dynamic(), value{}};
-            auto const sizeK2 = std::vector<value>{make_imm(B3_aligned_), make_imm(B2_)};
+            auto const sizeK2 = std::vector<value>{make_index(B3_aligned_), make_index(B2_)};
             auto tmp = bb.add(make_alloca(make_memref(real_t, {B2_, P_}, {1, B2_aligned_})));
             auto a0 = bb.add(make_subview(A0, offsets3, size3));
             auto a1 = bb.add(make_subview(A1, offsets3, size3));
@@ -103,11 +103,12 @@ auto test_volume<T>::make_optimized_kernel()
             auto K0v = bb.add(make_subview(K0, offsets2, sizeK2));
             auto K1v = bb.add(make_subview(K1, offsets2, sizeK2));
             auto K2v = bb.add(make_subview(K2, offsets2, sizeK2));
-            auto qv =
-                bb.add(make_subview(Q, offsets3, {make_imm(B3_aligned_), make_imm(P_), value{}}));
-            auto iv =
-                bb.add(make_subview(I, offsets3, {make_imm(B2_aligned_), make_imm(P_), value{}}));
-            auto tmpv = bb.add(make_subview(tmp, offsets2, {make_imm(B2_aligned_), make_imm(P_)}));
+            auto qv = bb.add(
+                make_subview(Q, offsets3, {make_index(B3_aligned_), make_index(P_), value{}}));
+            auto iv = bb.add(
+                make_subview(I, offsets3, {make_index(B2_aligned_), make_index(P_), value{}}));
+            auto tmpv =
+                bb.add(make_subview(tmp, offsets2, {make_index(B2_aligned_), make_index(P_)}));
             auto const s0 = make_imm(T(0.0));
             auto const s1 = make_imm(T(1.0));
             bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a0, s0, tmpv));

@@ -19,7 +19,7 @@ auto blas_shape::operator==(blas_shape const &other) const -> bool {
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
 auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
-    -> std::uint32_t {
+    -> std::int32_t {
     std::size_t max_size = 1u;
     for (auto &shape : shapes) {
         max_size = std::max(max_size, size(shape.ty));
@@ -29,7 +29,7 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_
     if (available_subgroup_sizes.size() == 0) {
         throw std::out_of_range("Subgroup size vector must have at least one entry");
     }
-    auto sensible_subgroup_sizes = std::vector<std::uint32_t>{};
+    auto sensible_subgroup_sizes = std::vector<std::int32_t>{};
     sensible_subgroup_sizes.reserve(available_subgroup_sizes.size());
 
     auto it = available_subgroup_sizes.begin();
@@ -38,7 +38,7 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_
         auto const register_space = info.register_space();
         auto const number_of_reals_in_register = (register_space / 2) / max_size;
         auto const number_of_reals_sqrt =
-            static_cast<std::uint32_t>(std::sqrt(static_cast<double>(number_of_reals_in_register)));
+            static_cast<std::int32_t>(std::sqrt(static_cast<double>(number_of_reals_in_register)));
         for (; it != available_subgroup_sizes.end(); ++it) {
             if (*it <= number_of_reals_sqrt) {
                 sensible_subgroup_sizes.push_back(*it);
@@ -97,8 +97,8 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config con
 auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg) -> local_tiling {
     auto [row_blocks, cols] =
         max_register_block_gemm(size(bshape.ty), core_cfg.subgroup_size, core_cfg.register_space);
-    auto const num_tile_limit = [](std::int64_t mode, std::uint32_t block_size) {
-        auto limit = std::numeric_limits<std::uint32_t>::max();
+    auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {
+        auto limit = std::numeric_limits<std::int32_t>::max();
         if (!is_dynamic_value(mode)) {
             limit = 1 + (mode - 1) / block_size;
         }
@@ -114,8 +114,8 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
 
     double best_ratio = 0.0;
     auto tiling = local_tiling{1, 1};
-    for (std::uint32_t m = 1; m <= std::min(m_limit, max_threads); m *= 2) {
-        std::uint32_t n = 1;
+    for (std::int32_t m = 1; m <= std::min(m_limit, max_threads); m *= 2) {
+        std::int32_t n = 1;
         while (2 * n <= std::min(n_limit, max_threads / m)) {
             n *= 2;
         }
@@ -134,7 +134,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
 
 auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
                                       ::tinytc_core_info const &dev_info)
-    -> std::tuple<std::uint32_t, local_tiling> {
+    -> std::tuple<std::int32_t, local_tiling> {
     auto const sgs = suggest_subgroup_size(shapes, dev_info);
     auto const core_cfg = dev_info.get_core_config(sgs);
     auto const tiling = suggest_local_tiling(shapes, core_cfg);

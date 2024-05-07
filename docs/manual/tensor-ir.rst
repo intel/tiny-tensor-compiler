@@ -73,7 +73,7 @@ Constants
     floating-constant-hex       = [sign] "0x" (mantissa-hex ["p" exponent] / 1*HEXDIG "p" exponent)
     floating-constant           = floating-constant-dec / floating-constant-hex
 
-Integer constants must lie in the range :math:`-2^63+1,\dots,2^63-1`.
+Integer constants must lie in the range :math:`-2^{63}+1,\dots,2^{63}-1`.
 
 Floating point constants are given in C syntax and expected to be in the range of double precision numbers.
 The hexadecimal floating point syntax is supported, too.

@@ -51,7 +51,7 @@ tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *info, ze_device_h
     compute_props.pNext = nullptr;
     TINYTC_ZE_CHECK_STATUS(zeDeviceGetComputeProperties(device, &compute_props));
 
-    auto subgroup_sizes = std::vector<std::uint32_t>(
+    auto subgroup_sizes = std::vector<std::int32_t>(
         compute_props.subGroupSizes, compute_props.subGroupSizes + compute_props.numSubGroupSizes);
 
     TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(
