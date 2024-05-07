@@ -43,7 +43,7 @@ struct tinytc_recipe_handler : tinytc::reference_counted {
 
     virtual void active_kernel(std::uint32_t kernel_num) = 0;
     virtual void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) = 0;
-    virtual void mem_arg(std::uint32_t arg_index, tinytc_mem_t const &mem) = 0;
+    virtual void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) = 0;
     virtual void howmany(std::uint32_t num) = 0;
 
   private:

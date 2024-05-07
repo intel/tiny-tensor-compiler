@@ -420,12 +420,6 @@ typedef struct tinytc_location {
     tinytc_position_t end;   ///< End position
 } tinytc_location_t;
 
-//! @brief Memory object
-typedef struct tinytc_mem {
-    const void *value;      ///< USM / SVM pointer or pointer to buffer object
-    tinytc_mem_type_t type; ///< Memory object type
-} tinytc_mem_t;
-
 #ifdef __cplusplus
 }
 #endif

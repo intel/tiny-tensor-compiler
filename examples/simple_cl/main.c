@@ -72,11 +72,9 @@ tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue q
     CL_CHECK(clEnqueueFillBuffer(queue, B, &alpha, sizeof(alpha), 0, Bbytes, 0, NULL, NULL));
     CL_CHECK(clFinish(queue));
 
-    tinytc_mem_t Amem = {&A, tinytc_mem_type_buffer};
-    tinytc_mem_t Bmem = {&B, tinytc_mem_type_buffer};
-    tinytc_mem_t Cmem = {&C, tinytc_mem_type_buffer};
-    CHECK(tinytc_recipe_small_gemm_batched_set_args(handler, howmany, sizeof(alpha), &alpha, Amem,
-                                                    Bmem, sizeof(beta), &beta, Cmem));
+    CHECK(tinytc_recipe_small_gemm_batched_set_args(
+        handler, howmany, sizeof(alpha), &alpha, A, tinytc_mem_type_buffer, B,
+        tinytc_mem_type_buffer, sizeof(beta), &beta, C, tinytc_mem_type_buffer));
 
     struct timespec start_time, end_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);

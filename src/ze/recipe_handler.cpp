@@ -39,8 +39,8 @@ void ze_recipe_handler::arg(std::uint32_t arg_index, std::size_t arg_size, const
     ZE_CHECK_STATUS(
         zeKernelSetArgumentValue(kernels_[active_kernel_].get(), arg_index, arg_size, arg_value));
 }
-void ze_recipe_handler::mem_arg(std::uint32_t arg_index, tinytc_mem_t const &mem) {
-    arg(arg_index, sizeof(mem.value), &mem.value);
+void ze_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t) {
+    arg(arg_index, sizeof(value), &value);
 }
 
 void ze_recipe_handler::howmany(std::uint32_t num) {
