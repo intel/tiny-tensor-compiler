@@ -12,6 +12,8 @@ Common
 
   * :ref:`tinytc_status_t`
 
+  * :ref:`tinytc_support_level_t`
+
 * Definitions
 
   * :ref:`TINYTC_VERSION_MAJOR`
@@ -67,6 +69,11 @@ tinytc_status_t
 ...............
 
 .. doxygenenum:: tinytc_status_t
+
+tinytc_support_level_t
+......................
+
+.. doxygenenum:: tinytc_support_level_t
 
 Common Definitions
 ------------------
@@ -265,15 +272,13 @@ Device Info
 
   * :ref:`tinytc_core_info_get_core_features`
 
-  * :ref:`tinytc_core_info_get_ip_version`
-
-  * :ref:`tinytc_core_info_get_num_registers_per_thread`
-
-  * :ref:`tinytc_core_info_get_register_size`
+  * :ref:`tinytc_core_info_get_register_space`
 
   * :ref:`tinytc_core_info_get_subgroup_sizes`
 
   * :ref:`tinytc_core_info_set_core_features`
+
+  * :ref:`tinytc_core_info_generic_create`
 
   * :ref:`tinytc_core_info_intel_create`
 
@@ -308,20 +313,10 @@ tinytc_core_info_get_core_features
 
 .. doxygenfunction:: tinytc_core_info_get_core_features
 
-tinytc_core_info_get_ip_version
-...............................
+tinytc_core_info_get_register_space
+...................................
 
-.. doxygenfunction:: tinytc_core_info_get_ip_version
-
-tinytc_core_info_get_num_registers_per_thread
-.............................................
-
-.. doxygenfunction:: tinytc_core_info_get_num_registers_per_thread
-
-tinytc_core_info_get_register_size
-..................................
-
-.. doxygenfunction:: tinytc_core_info_get_register_size
+.. doxygenfunction:: tinytc_core_info_get_register_space
 
 tinytc_core_info_get_subgroup_sizes
 ...................................
@@ -332,6 +327,11 @@ tinytc_core_info_set_core_features
 ..................................
 
 .. doxygenfunction:: tinytc_core_info_set_core_features
+
+tinytc_core_info_generic_create
+...............................
+
+.. doxygenfunction:: tinytc_core_info_generic_create
 
 tinytc_core_info_intel_create
 .............................
@@ -423,14 +423,6 @@ Recipe
 
   * :ref:`tinytc_recipe_handler_retain`
 
-* Structures
-
-  * :ref:`tinytc_mem`
-
-* Typedefs
-
-  * :ref:`tinytc_mem_t`
-
 Recipe Enumerations
 -------------------
 
@@ -501,22 +493,6 @@ tinytc_recipe_handler_retain
 ............................
 
 .. doxygenfunction:: tinytc_recipe_handler_retain
-
-Recipe Structures
------------------
-
-tinytc_mem
-..........
-
-.. doxygenstruct:: tinytc_mem
-
-Recipe Typedefs
----------------
-
-tinytc_mem_t
-............
-
-.. doxygentypedef:: tinytc_mem_t
 
 Source
 ======

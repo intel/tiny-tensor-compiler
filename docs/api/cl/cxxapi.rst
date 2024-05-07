@@ -25,10 +25,17 @@ Device Info
 
 * Functions
 
+  * :ref:`get_support_level(cl_device_id)`
+
   * :ref:`make_core_info(cl_device_id)`
 
 Device Info Functions
 ---------------------
+
+get_support_level(cl_device_id)
+...............................
+
+.. doxygenfunction:: tinytc::get_support_level(cl_device_id)
 
 make_core_info(cl_device_id)
 ............................
@@ -40,7 +47,7 @@ Kernel
 
 * Functions
 
-  * :ref:`get_global_size(std::uint32_t,std::array<std::size_t, 3u> const &)`
+  * :ref:`get_global_size(std::uint32_t,std::array\<std::size_t, 3u\> const &)`
 
   * :ref:`get_group_size(cl_kernel)`
 
@@ -96,6 +103,10 @@ Recipe
 
   * :ref:`opencl_recipe_handler`
 
+* Structures
+
+  * :ref:`auto_mem_type\<cl_mem\>`
+
 Recipe Functions
 ----------------
 
@@ -111,4 +122,12 @@ opencl_recipe_handler
 .....................
 
 .. doxygenclass:: tinytc::opencl_recipe_handler
+
+Recipe Structures
+-----------------
+
+auto_mem_type<cl_mem>
+.....................
+
+.. doxygenstruct:: tinytc::auto_mem_type< cl_mem >
 

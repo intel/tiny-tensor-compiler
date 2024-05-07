@@ -21,3 +21,5 @@ C++-API:
       - tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&,source_context)
     class:
       - tinytc::opencl_recipe_handler
+    struct:
+      - tinytc::auto_mem_type< cl_mem >

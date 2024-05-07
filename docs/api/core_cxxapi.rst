@@ -12,6 +12,8 @@ Common
 
   * :ref:`status`
 
+  * :ref:`support_level`
+
 * Functions
 
   * :ref:`error_string`
@@ -33,6 +35,11 @@ status
 ......
 
 .. doxygenenum:: tinytc::status
+
+support_level
+.............
+
+.. doxygenenum:: tinytc::support_level
 
 Common Functions
 ----------------
@@ -130,6 +137,8 @@ Device Info
 
 * Functions
 
+  * :ref:`make_core_info_generic`
+
   * :ref:`make_core_info_intel`
 
   * :ref:`make_core_info_intel_from_arch`
@@ -153,6 +162,11 @@ intel_gpu_architecture
 
 Device Info Functions
 ---------------------
+
+make_core_info_generic
+......................
+
+.. doxygenfunction:: tinytc::make_core_info_generic
 
 make_core_info_intel
 ....................
@@ -228,13 +242,13 @@ Recipe
 
   * :ref:`auto_mem_type`
 
+  * :ref:`auto_mem_type\<T, std::enable_if_t\<usm_pointer_type\<T\>\>\>`
+
   * :ref:`mem`
 
 * Variables
 
   * :ref:`auto_mem_type_v`
-
-* Concepts
 
   * :ref:`usm_pointer_type`
 
@@ -290,6 +304,11 @@ auto_mem_type
 
 .. doxygenstruct:: tinytc::auto_mem_type
 
+auto_mem_type<T, std::enable_if_t<usm_pointer_type<T>>>
+.......................................................
+
+.. doxygenstruct:: tinytc::auto_mem_type< T, std::enable_if_t< usm_pointer_type< T > > >
+
 mem
 ...
 
@@ -303,13 +322,10 @@ auto_mem_type_v
 
 .. doxygenvariable:: tinytc::auto_mem_type_v
 
-Recipe Concepts
----------------
-
 usm_pointer_type
 ................
 
-.. doxygenconcept:: tinytc::usm_pointer_type
+.. doxygenvariable:: tinytc::usm_pointer_type
 
 Source
 ======

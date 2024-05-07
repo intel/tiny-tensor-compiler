@@ -25,10 +25,17 @@ Device Info
 
 * Functions
 
+  * :ref:`get_support_level(ze_device_handle_t)`
+
   * :ref:`make_core_info(ze_device_handle_t)`
 
 Device Info Functions
 ---------------------
+
+get_support_level(ze_device_handle_t)
+.....................................
+
+.. doxygenfunction:: tinytc::get_support_level(ze_device_handle_t)
 
 make_core_info(ze_device_handle_t)
 ..................................

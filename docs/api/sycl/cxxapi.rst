@@ -10,10 +10,17 @@ Device Info
 
 * Functions
 
+  * :ref:`get_support_level(sycl::device const&)`
+
   * :ref:`make_core_info(sycl::device const&)`
 
 Device Info Functions
 ---------------------
+
+get_support_level(sycl::device const&)
+......................................
+
+.. doxygenfunction:: tinytc::get_support_level(sycl::device const&)
 
 make_core_info(sycl::device const&)
 ...................................
@@ -27,11 +34,11 @@ Kernel
 
   * :ref:`get_execution_range`
 
-  * :ref:`get_global_size(std::uint32_t,sycl::range<3u> const &)`
+  * :ref:`get_global_size(std::uint32_t,sycl::range\<3u\> const &)`
 
   * :ref:`get_group_size(sycl::kernel const &)`
 
-  * :ref:`make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)`
+  * :ref:`make_kernel(sycl::kernel_bundle\<sycl::bundle_state::executable\> const &,char const *)`
 
   * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)`
 
