@@ -8,8 +8,8 @@ func @kernel1(%a: memref<f32>, %b: memref<f32x10x?>, %c: group<memref<f32x42>>) 
     %2 = load %b[5, %1] : memref<f32x10x?>
     %3 = load %c[%1] : group<memref<f32x42>>
     ; CHECK:      float x0 = *a;
-    ; CHECK-NEXT: uint x1 = get_global_id(2);
-    ; CHECK-NEXT: float x2 = *(b + 5 * 1 + x1 * 10);
+    ; CHECK-NEXT: long x1 = get_global_id(2);
+    ; CHECK-NEXT: float x2 = *(b + 5ll * 1 + x1 * 10);
     ; CHECK-NEXT: global float* x3 = *(c + x1) + 0;
 }
 

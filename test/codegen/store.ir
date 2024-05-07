@@ -7,5 +7,5 @@ func @kernel(%a: memref<f32>, %b: memref<f32x10x?>, %c: f32) {
     store %c, %a[] : memref<f32>
     store %c, %b[5, %1] : memref<f32x10x?>
     ; CHECK:      *a = c;
-    ; CHECK-NEXT: *(b + 5 * 1 + x1 * 10) = c;
+    ; CHECK-NEXT: *(b + 5ll * 1 + x1 * 10) = c;
 }

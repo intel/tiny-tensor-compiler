@@ -60,5 +60,5 @@ func @t4(%a: f32, %b: f32) {
 }
 func @t5(%a: i32) {
   %b = cast %a : i32 -> index
-; CHECK: uint b = (uint) a;
+; CHECK: long b = (long) a;
 }
