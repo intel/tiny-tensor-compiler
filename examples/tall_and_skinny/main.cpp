@@ -106,7 +106,8 @@ template <typename T> void test(queue q, args &a) {
             info.set_core_features(tinytc_core_feature_flag_large_register_file);
 
             auto tas = make_recipe_handler(
-                q, make_tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx));
+                q, make_tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx),
+                source_ctx);
 
             tall_and_skinny::set_args(tas, c.m, T(1.0), A, c.m, B, c.k, T(a.beta), C, c.m);
             tas.submit(q).wait();
