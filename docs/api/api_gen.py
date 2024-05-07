@@ -25,7 +25,13 @@ def title(brief_title):
     return brief_map[brief_title] if brief_title in brief_map else brief_title
 
 def strip_symbol_name(symbol):
+    symbol = symbol.replace('< ', '<')
+    symbol = symbol.replace(' >', '>')
     return symbol.replace('tinytc::', '')
+
+def escape_ref(symbol):
+    symbol = symbol.replace('<', '\\<')
+    return symbol.replace('>', '\\>')
 
 api = dict()
 with open(args.input_yaml, 'r') as y:
@@ -42,7 +48,7 @@ with open(args.output_rst, 'w') as f:
             for symbol_type, symbol_list in category.items():
                 f.write(f'* {title(symbol_type).title()}s\n\n')
                 for symbol in symbol_list:
-                    f.write(f'  * :ref:`{strip_symbol_name(symbol)}`\n\n')
+                    f.write(f'  * :ref:`{escape_ref(strip_symbol_name(symbol))}`\n\n')
             for symbol_type, symbol_list in category.items():
                 write_underline(f, f'{category_name} {title(symbol_type).title()}s', '-')
                 for symbol in symbol_list:

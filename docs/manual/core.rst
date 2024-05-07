@@ -300,23 +300,29 @@ The general usage of a recipe is as following:
           <recipe_name>::set_args(handler, <recipe_args>);
           handler.submit(queue);
 
-As memory is handled as buffers (e.g. cl_mem in OpenCL) or Unified Shared Memory pointers
-(e.g. void* in Level Zero), memory objects are passed via the :ref:`tinytc_mem` struct.
+Memory objects are either buffers (e.g. cl_mem in OpenCL) or Unified Shared Memory pointers
+or Shared Virtual Memory pointers.
+The unified interface requires the memory object to be given as void-pointer, annotated with
+:ref:`tinytc_mem_type_t`.
 For example:
 
 .. code:: C
 
    // OpenCL
    cl_mem A = ...;
-   tinytc_mem_t Amem = {&A, tinytc_mem_type_buffer};
+   tinytc_recipe_<recipe_name>_set_args(..., A, tinytc_mem_type_buffer, ...);
+   
    // Level Zero
    void* A = ...;
-   tinytc_mem_t Amem = {A, tinytc_mem_type_usm_pointer};
+   tinytc_recipe_<recipe_name>_set_args(..., A, tinytc_mem_type_usm_pointer, ...);
 
-Note that USM pointers are passed by value but cl_mem objects are passed as pointer to cl_mem.
+In C++, one only needs to pass the memory object.
+The memory object is implicitly converted to the :ref:`mem` type that
+automatically determines whether a pointer or a cl_mem object is given.
+A pointer maps to tinytc_mem_type_usm_pointer and a cl_mem object maps
+to tinytc_mem_type_buffer.
+For SVM pointers, one needs to explicitly call `mem(pointer, tinytc_mem_type_svm_pointer)`.
 
-In C++, the :ref:`mem` object has the some job but automatically guesses the type,
-such that one usually does not need to explicitly specify it.
 
 
 Batched small GEMM

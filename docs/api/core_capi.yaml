@@ -63,6 +63,8 @@ Core C-API:
       - tinytc_parse_stdin
       - tinytc_parse_string
   Recipe:
+    enum:
+      - tinytc_mem_type_t
     function:
       - tinytc_recipe_get_prog
       - tinytc_recipe_get_source
@@ -76,10 +78,6 @@ Core C-API:
       - tinytc_recipe_retain
       - tinytc_recipe_handler_release
       - tinytc_recipe_handler_retain
-    struct:
-      - tinytc_mem
-    typedef:
-      - tinytc_mem_t
   Source:
     function:
       - tinytc_source_get_code

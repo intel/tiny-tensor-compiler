@@ -27,6 +27,8 @@ Device Info
 
   * :ref:`tinytc_cl_core_info_create`
 
+  * :ref:`tinytc_cl_get_support_level`
+
 Device Info Functions
 ---------------------
 
@@ -34,6 +36,11 @@ tinytc_cl_core_info_create
 ..........................
 
 .. doxygenfunction:: tinytc_cl_core_info_create
+
+tinytc_cl_get_support_level
+...........................
+
+.. doxygenfunction:: tinytc_cl_get_support_level
 
 Kernel
 ======
