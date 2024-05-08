@@ -138,8 +138,8 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     cl_kernel kernel = NULL;
     cl_int err;
 
-    const uint32_t howmany = 1000;
-    const int32_t elements = CHUNK_SIZE * howmany;
+    const int64_t howmany = 1000;
+    const int64_t elements = CHUNK_SIZE * howmany;
     const size_t bytes = elements * sizeof(float);
     host = (int32_t *)malloc(bytes);
     if (!host) {
