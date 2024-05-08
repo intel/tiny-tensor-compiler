@@ -47,7 +47,7 @@ Kernel
 
 * Functions
 
-  * :ref:`get_global_size(std::uint32_t,std::array\<std::size_t, 3u\> const &)`
+  * :ref:`get_global_size(std::int64_t,std::array\<std::size_t, 3u\> const &)`
 
   * :ref:`get_group_size(cl_kernel)`
 
@@ -62,10 +62,10 @@ Kernel
 Kernel Functions
 ----------------
 
-get_global_size(std::uint32_t,std::array<std::size_t, 3u> const &)
-..................................................................
+get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
+.................................................................
 
-.. doxygenfunction:: tinytc::get_global_size(std::uint32_t,std::array<std::size_t, 3u> const &)
+.. doxygenfunction:: tinytc::get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
 
 get_group_size(cl_kernel)
 .........................

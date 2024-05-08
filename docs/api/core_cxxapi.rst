@@ -228,6 +228,8 @@ Recipe
 
   * :ref:`make_tall_and_skinny`
 
+  * :ref:`make_tall_and_skinny_specialized`
+
 * Classes
 
   * :ref:`recipe`
@@ -272,6 +274,11 @@ make_tall_and_skinny
 ....................
 
 .. doxygenfunction:: tinytc::make_tall_and_skinny
+
+make_tall_and_skinny_specialized
+................................
+
+.. doxygenfunction:: tinytc::make_tall_and_skinny_specialized
 
 Recipe Classes
 --------------

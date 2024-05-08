@@ -8,7 +8,7 @@ C++-API:
   Kernel:
     function:
       - tinytc::get_execution_range
-      - tinytc::get_global_size(std::uint32_t,sycl::range<3u> const &)
+      - tinytc::get_global_size(std::int64_t,sycl::range<3u> const &)
       - tinytc::get_group_size(sycl::kernel const &)
       - tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
       - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)
