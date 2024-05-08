@@ -1358,21 +1358,21 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
  * @param howmany [in] Group size
  * @param alpha_size [in] Size of alpha argument
  * @param alpha_value [in] Pointer to data used for alpha; data is copied
- * @param A_value [in] Memory object used for A-matrix
  * @param A_type [in] Type of memory object used for A-matrix
- * @param B_value [in] Memory object used for B-matrix
+ * @param A_value [in] Memory object used for A-matrix
  * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
  * @param beta_size [in] Size of beta argument
  * @param beta_value [in] Pointer to data used for beta; data is copied
- * @param C_value [in] Memory object used for C-matrix
  * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
     tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, const void *B_value, tinytc_mem_type_t B_type,
-    size_t beta_size, const void *beta_value, const void *C_value, tinytc_mem_type_t C_type);
+    tinytc_mem_type_t A_type, const void *A_value, tinytc_mem_type_t B_type, const void *B_value,
+    size_t beta_size, const void *beta_value, tinytc_mem_type_t C_type, const void *C_value);
 
 /**
  * @brief Returns a tall and skinny recipe
@@ -1470,25 +1470,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(
  * @param M [in] Size of M-mode
  * @param alpha_size [in] Size of alpha argument
  * @param alpha_value [in] Pointer to data used for alpha; data is copied
- * @param A_value [in] Memory object used for A-matrix
  * @param A_type [in] Type of memory object used for A-matrix
+ * @param A_value [in] Memory object used for A-matrix
  * @param ldA [in] Leading dimension of A
- * @param B_value [in] Memory object used for B-matrix
  * @param B_type [in] Type of memory object used for B-matrix
+ * @param B_value [in] Memory object used for B-matrix
  * @param ldB [in] Leading dimension of B
  * @param beta_size [in] Size of beta argument
  * @param beta_value [in] Pointer to data used for beta; data is copied
- * @param C_value [in] Memory object used for C-matrix
  * @param C_type [in] Type of memory object used for C-matrix
+ * @param C_value [in] Memory object used for C-matrix
  * @param ldC [in] Leading dimension of C
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
     tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, int64_t ldA, const void *B_value,
-    tinytc_mem_type_t B_type, int64_t ldB, size_t beta_size, const void *beta_value,
-    const void *C_value, tinytc_mem_type_t C_type, int64_t ldC);
+    tinytc_mem_type_t A_type, const void *A_value, int64_t ldA, tinytc_mem_type_t B_type,
+    const void *B_value, int64_t ldB, size_t beta_size, const void *beta_value,
+    tinytc_mem_type_t C_type, const void *C_value, int64_t ldC);
 
 /**
  * @brief Get prog object

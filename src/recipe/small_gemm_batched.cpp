@@ -133,8 +133,8 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
 
 tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
     tinytc_recipe_handler_t handler, int64_t howmany, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, const void *B_value, tinytc_mem_type_t B_type,
-    size_t beta_size, const void *beta_value, const void *C_value, tinytc_mem_type_t C_type) {
+    tinytc_mem_type_t A_type, const void *A_value, tinytc_mem_type_t B_type, const void *B_value,
+    size_t beta_size, const void *beta_value, tinytc_mem_type_t C_type, const void *C_value) {
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }

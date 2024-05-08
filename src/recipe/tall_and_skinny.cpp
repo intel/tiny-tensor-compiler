@@ -181,9 +181,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_co
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
     tinytc_recipe_handler_t handler, int64_t M, size_t alpha_size, const void *alpha_value,
-    const void *A_value, tinytc_mem_type_t A_type, int64_t ldA, const void *B_value,
-    tinytc_mem_type_t B_type, int64_t ldB, size_t beta_size, const void *beta_value,
-    const void *C_value, tinytc_mem_type_t C_type, int64_t ldC) {
+    tinytc_mem_type_t A_type, const void *A_value, int64_t ldA, tinytc_mem_type_t B_type,
+    const void *B_value, int64_t ldB, size_t beta_size, const void *beta_value,
+    tinytc_mem_type_t C_type, const void *C_value, int64_t ldC) {
     if (handler == nullptr) {
         return tinytc_status_invalid_arguments;
     }
