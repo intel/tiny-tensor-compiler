@@ -342,6 +342,8 @@ Instruction
 
   * :ref:`tinytc_neg_inst_create`
 
+  * :ref:`tinytc_size_inst_create`
+
   * :ref:`tinytc_store_inst_create`
 
   * :ref:`tinytc_subview_inst_create`
@@ -451,6 +453,11 @@ tinytc_neg_inst_create
 
 .. doxygenfunction:: tinytc_neg_inst_create
 
+tinytc_size_inst_create
+.......................
+
+.. doxygenfunction:: tinytc_size_inst_create
+
 tinytc_store_inst_create
 ........................
 
@@ -552,8 +559,6 @@ Region
 
   * :ref:`tinytc_region_retain`
 
-  * :ref:`tinytc_size_inst_create`
-
 Region Functions
 ----------------
 
@@ -571,11 +576,6 @@ tinytc_region_retain
 ....................
 
 .. doxygenfunction:: tinytc_region_retain
-
-tinytc_size_inst_create
-.......................
-
-.. doxygenfunction:: tinytc_size_inst_create
 
 Value
 =====

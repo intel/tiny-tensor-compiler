@@ -82,6 +82,7 @@ Core C-API:
   Source:
     function:
       - tinytc_source_get_code
+      - tinytc_source_get_core_features
       - tinytc_source_get_location
       - tinytc_source_get_extensions
       - tinytc_source_release

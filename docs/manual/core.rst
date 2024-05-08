@@ -181,6 +181,51 @@ A source context can be added to capture potential errors in the optimizer.
    the `cl_intel_subgroups_long <https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups_long.html>`_ extension,
    and the `cl_intel_subgroups_short <https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups_short.html>`_ extension.
 
+Device info
+===========
+
+Kernels are specialized for properties of the target device, such as the subgroup size, the
+maximum work group size, and the register space available to a subgroup.
+Moreover, the device's :ref:`support level <tinytc_support_level_t>` can be queried from the
+run-time.
+
+.. tabs::
+
+    .. tab:: Level Zero (C)
+
+       .. code:: C
+
+          tinytc_support_level_t level;
+          tinytc_ze_get_support_level(device, &level);
+          if (level >= tinytc_support_level_basic) {
+              tinytc_core_info_t info;
+              tinytc_ze_core_info_create(&info, device);
+              // ...
+              tinytc_core_info_release(info);
+          }
+
+    .. tab:: OpenCL (C)
+
+       .. code:: C
+
+          tinytc_support_level_t level;
+          tinytc_cl_get_support_level(device, &level);
+          if (level >= tinytc_support_level_basic) {
+              tinytc_core_info_t info;
+              tinytc_cl_core_info_create(&info, device);
+              // ...
+              tinytc_core_info_release(info);
+          }
+
+    .. tab:: SYCL (C++)
+
+       .. code:: C++
+
+          if (tinytc::get_support_level(device) >= tinytc::support_level::basic) {
+              auto info = tinytc::make_core_info(device);
+              // ...
+          }
+
 Runtime
 =======
 

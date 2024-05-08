@@ -67,6 +67,7 @@ Builder C-API:
       - tinytc_if_inst_create
       - tinytc_load_inst_create
       - tinytc_neg_inst_create
+      - tinytc_size_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create
       - tinytc_sum_inst_create
@@ -88,7 +89,6 @@ Builder C-API:
       - tinytc_region_create
       - tinytc_region_release
       - tinytc_region_retain
-      - tinytc_size_inst_create
   Value:
     function:
       - tinytc_float_imm_create

@@ -411,6 +411,8 @@ Recipe
 
   * :ref:`tinytc_recipe_tall_and_skinny_create`
 
+  * :ref:`tinytc_recipe_tall_and_skinny_create_specialized`
+
   * :ref:`tinytc_recipe_tall_and_skinny_set_args`
 
   * :ref:`tinytc_recipe_tall_and_skinny_suggest_block_size`
@@ -464,6 +466,11 @@ tinytc_recipe_tall_and_skinny_create
 
 .. doxygenfunction:: tinytc_recipe_tall_and_skinny_create
 
+tinytc_recipe_tall_and_skinny_create_specialized
+................................................
+
+.. doxygenfunction:: tinytc_recipe_tall_and_skinny_create_specialized
+
 tinytc_recipe_tall_and_skinny_set_args
 ......................................
 
@@ -501,6 +508,8 @@ Source
 
   * :ref:`tinytc_source_get_code`
 
+  * :ref:`tinytc_source_get_core_features`
+
   * :ref:`tinytc_source_get_location`
 
   * :ref:`tinytc_source_get_extensions`
@@ -516,6 +525,11 @@ tinytc_source_get_code
 ......................
 
 .. doxygenfunction:: tinytc_source_get_code
+
+tinytc_source_get_core_features
+...............................
+
+.. doxygenfunction:: tinytc_source_get_core_features
 
 tinytc_source_get_location
 ..........................
