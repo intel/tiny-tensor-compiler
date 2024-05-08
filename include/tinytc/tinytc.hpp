@@ -2124,9 +2124,9 @@ class small_gemm_batched : public recipe {
     static void set_args(recipe_handler &handler, std::int64_t howmany, T alpha, mem A, mem B,
                          T beta, mem C) {
         CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
-            handler.get(), howmany, sizeof(alpha), &alpha, A.value,
-            static_cast<tinytc_mem_type_t>(A.type), B.value, static_cast<tinytc_mem_type_t>(B.type),
-            sizeof(beta), &beta, C.value, static_cast<tinytc_mem_type_t>(C.type)));
+            handler.get(), howmany, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type),
+            A.value, static_cast<tinytc_mem_type_t>(B.type), B.value, sizeof(beta), &beta,
+            static_cast<tinytc_mem_type_t>(C.type), C.value));
     }
 };
 
@@ -2189,10 +2189,9 @@ class tall_and_skinny : public recipe {
     static void set_args(recipe_handler &handler, std::int64_t M, T alpha, mem A, std::int64_t ldA,
                          mem B, std::int64_t ldB, T beta, mem C, std::int64_t ldC) {
         CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
-            handler.get(), M, sizeof(alpha), &alpha, A.value,
-            static_cast<tinytc_mem_type_t>(A.type), ldA, B.value,
-            static_cast<tinytc_mem_type_t>(B.type), ldB, sizeof(beta), &beta, C.value,
-            static_cast<tinytc_mem_type_t>(C.type), ldC));
+            handler.get(), M, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type),
+            A.value, ldA, static_cast<tinytc_mem_type_t>(B.type), B.value, ldB, sizeof(beta), &beta,
+            static_cast<tinytc_mem_type_t>(C.type), C.value, ldC));
     }
 };
 
