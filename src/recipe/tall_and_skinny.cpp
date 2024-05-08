@@ -34,9 +34,12 @@ auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
     }
     throw status::invalid_arguments;
 }
-tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, source src, scalar_type ty,
+tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, source src, scalar_type ty, std::int64_t M,
+                                               std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
                                                std::int32_t M_block_size)
-    : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty), M_block_size_(M_block_size) {}
+    : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty), M_dyn_(is_dynamic_value(M)),
+      ldA_dyn_(is_dynamic_value(ldA)), ldB_dyn_(is_dynamic_value(ldB)),
+      ldC_dyn_(is_dynamic_value(ldC)), M_block_size_(M_block_size) {}
 auto tall_and_skinny_recipe::num_kernels() const -> int {
     return static_cast<int>(tall_and_skinny_kernel::num_kernels);
 }
@@ -54,7 +57,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      tinytc_scalar_type_t ty, int64_t N, int64_t K,
                                                      int32_t M_block_size,
                                                      tinytc_source_context_t ctx) {
-    if (recipe == nullptr || info == nullptr) {
+    return tinytc_recipe_tall_and_skinny_create_specialized(recipe, info, ty, TINYTC_DYNAMIC, N, K,
+                                                            TINYTC_DYNAMIC, TINYTC_DYNAMIC,
+                                                            TINYTC_DYNAMIC, M_block_size, ctx);
+}
+
+tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
+    tinytc_source_context_t ctx) {
+    if (recipe == nullptr || info == nullptr || N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 
@@ -93,46 +105,44 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
 
             auto const body = [&](region_builder &bb, value &alpha, value &A, value &B, value &beta,
                                   value &C) {
+                auto const gemm = [&](region_builder &bb, std::vector<value> const &offsets,
+                                      value const &block_size) {
+                    auto a = bb.add(
+                        make_subview(A, offsets, {block_size, make_index(K, my_loc())}, my_loc()));
+                    auto c = bb.add(
+                        make_subview(C, offsets, {block_size, make_index(N, my_loc())}, my_loc()));
+                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
+                                     my_loc()));
+                };
+
+                auto const block_size_imm = make_index(M_block_size, my_loc());
                 auto gid = bb.add(make_group_id(my_loc()));
                 auto m = bb.add(make_binary_op(binary_op::mul, gid,
                                                make_index(M_block_size, my_loc()), my_loc()));
-                auto M = bb.add(make_size(C, 0, my_loc()));
-                auto M_m = bb.add(make_binary_op(binary_op::sub, M, m, my_loc()));
-                auto cond = bb.add(
-                    make_cmp(cmp_condition::lt, M_m, make_index(M_block_size, my_loc()), my_loc()));
                 auto const offsets = std::vector<value>{m, make_index(0, my_loc())};
-                auto const dynamic_imm = make_dynamic(my_loc());
-                auto const block_size_imm = make_index(M_block_size, my_loc());
-                bb.ifelse(
-                    cond,
-                    [&](region_builder &bb) {
-                        auto a = bb.add(make_subview(
-                            A, offsets, {dynamic_imm, make_index(K, my_loc())}, my_loc()));
-                        auto c = bb.add(make_subview(
-                            C, offsets, {dynamic_imm, make_index(N, my_loc())}, my_loc()));
-                        bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
-                                         my_loc()));
-                    },
-                    [&](region_builder &bb) {
-                        auto a = bb.add(make_subview(
-                            A, offsets, {block_size_imm, make_index(K, my_loc())}, my_loc()));
-                        auto c = bb.add(make_subview(
-                            C, offsets, {block_size_imm, make_index(N, my_loc())}, my_loc()));
-                        bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
-                                         my_loc()));
-                    },
-                    {}, my_loc());
+
+                if (!is_dynamic_value(M) && M % M_block_size == 0) {
+                    gemm(bb, offsets, block_size_imm);
+                } else {
+                    auto M_val =
+                        is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc())) : make_index(M);
+                    auto M_val_sub_m = bb.add(make_binary_op(binary_op::sub, M_val, m, my_loc()));
+                    auto cond = bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
+                                                make_index(M_block_size, my_loc()), my_loc()));
+                    auto const dynamic_imm = make_dynamic(my_loc());
+                    bb.ifelse(
+                        cond, [&](region_builder &bb) { gemm(bb, offsets, dynamic_imm); },
+                        [&](region_builder &bb) { gemm(bb, offsets, block_size_imm); }, {},
+                        my_loc());
+                }
             };
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
                 auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A = fb.argument(make_memref(ty_, {dynamic, K}, {1, dynamic}, my_loc()), "A",
-                                     my_loc());
-                auto B =
-                    fb.argument(make_memref(ty_, {K, N}, {1, dynamic}, my_loc()), "B", my_loc());
+                auto A = fb.argument(make_memref(ty_, {M, K}, {1, ldA}, my_loc()), "A", my_loc());
+                auto B = fb.argument(make_memref(ty_, {K, N}, {1, ldB}, my_loc()), "B", my_loc());
                 auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C = fb.argument(make_memref(ty_, {dynamic, N}, {1, dynamic}, my_loc()), "C",
-                                     my_loc());
+                auto C = fb.argument(make_memref(ty_, {M, N}, {1, ldC}, my_loc()), "C", my_loc());
                 fb.subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);
@@ -152,8 +162,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
             auto p = pb.get_product(my_loc());
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
-            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src), ty_,
-                                                               M_block_size)
+            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src), ty_, M,
+                                                               ldA, ldB, ldC, M_block_size)
                           .release();
         },
         ctx);
@@ -191,16 +201,27 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
         } else {
             handler->active_kernel(static_cast<std::uint32_t>(tall_and_skinny_kernel::gemm));
         }
-        handler->arg(0, alpha_size, alpha_value);
-        handler->mem_arg(1, A_value, A_type);
-        handler->arg(2, sizeof(int64_t), &M);
-        handler->arg(3, sizeof(int64_t), &ldA);
-        handler->mem_arg(4, B_value, B_type);
-        handler->arg(5, sizeof(int64_t), &ldB);
-        handler->arg(6, beta_size, beta_value);
-        handler->mem_arg(7, C_value, C_type);
-        handler->arg(8, sizeof(int64_t), &M);
-        handler->arg(9, sizeof(int64_t), &ldC);
+        std::uint32_t arg_index = 0;
+        handler->arg(arg_index++, alpha_size, alpha_value);
+        handler->mem_arg(arg_index++, A_value, A_type);
+        if (recipe->is_M_dynamic()) {
+            handler->arg(arg_index++, sizeof(int64_t), &M);
+        }
+        if (recipe->is_ldA_dynamic()) {
+            handler->arg(arg_index++, sizeof(int64_t), &ldA);
+        }
+        handler->mem_arg(arg_index++, B_value, B_type);
+        if (recipe->is_ldB_dynamic()) {
+            handler->arg(arg_index++, sizeof(int64_t), &ldB);
+        }
+        handler->arg(arg_index++, beta_size, beta_value);
+        handler->mem_arg(arg_index++, C_value, C_type);
+        if (recipe->is_M_dynamic()) {
+            handler->arg(arg_index++, sizeof(int64_t), &M);
+        }
+        if (recipe->is_ldC_dynamic()) {
+            handler->arg(arg_index++, sizeof(int64_t), &ldC);
+        }
 
         std::int64_t howmany = 1 + (M - 1) / recipe->M_block_size();
         handler->howmany(howmany);

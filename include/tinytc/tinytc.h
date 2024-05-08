@@ -1414,6 +1414,45 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
     int64_t K, int32_t M_block_size, tinytc_source_context_t ctx);
 
 /**
+ * @brief Returns a tall and skinny recipe with additional specialization constants
+ *
+ * Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization
+ * constants M, ldA, ldB, and ldC.
+ * The specializtion constants may be either set to a fixed value or to TINYTC_DYNAMIC.
+ * Note that if a specialization constant is set to a fixed value then the parameter with the same
+ * name in tinytc_recipe_tall_and_skinny_set_args is ignored.
+ *
+ * The generated kernels have the following signature:
+ *
+ * @code
+ * func @{name}(%alpha: {ty.alpha},
+ *              %A: memref<{ty.A}x{M}x{K},strided<1,{ldA}>>,
+ *              %B: memref<{ty.B}x{K}x{N},strided<1,{ldB}>>,
+ *              %beta: {ty.beta},
+ *              %C: memref<{ty.C}x{M}x{N},strided<1,{ldC}>>)
+ * @endcode
+ *
+ * @param recipe [out] pointer to the recipe object created
+ * @param info [in] core info object
+ * @param ty [in] Scalar type of alpha, A, B, beta, C
+ * @param M [in] Number of rows of A, C; can be TINYTC_DYNAMIC
+ * @param N [in] Number of columns of B, C
+ * @param K [in] Number columns of A, number of rows of B
+ * @param ldA [in] Leading dimension of A; can be TINYTC_DYNAMIC
+ * @param ldB [in] Leading dimension of B; can be TINYTC_DYNAMIC
+ * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
+ * parameter auto-selected
+ * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ *
+ * @return
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
+    tinytc_source_context_t ctx);
+
+/**
  * @brief Suggest an M block size for tall and skinny recipe
  *
  * @param info [in] core info object

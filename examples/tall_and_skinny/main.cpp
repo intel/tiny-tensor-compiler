@@ -105,8 +105,17 @@ template <typename T> void test(queue q, args &a) {
             auto info = make_core_info(q.get_device());
             info.set_core_features(tinytc_core_feature_flag_large_register_file);
 
+            std::int64_t M = a.specialize_M ? c.m : dynamic;
+            std::int64_t ldA = dynamic, ldB = dynamic, ldC = dynamic;
+            if (a.specialize_ld) {
+                ldA = c.m;
+                ldB = c.k;
+                ldC = c.m;
+            }
             auto tas = make_recipe_handler(
-                q, make_tall_and_skinny(info, to_scalar_type_v<T>, c.n, c.k, 0, source_ctx),
+                q,
+                make_tall_and_skinny_specialized(info, to_scalar_type_v<T>, M, c.n, c.k, ldA, ldB,
+                                                 ldC, 0, source_ctx),
                 source_ctx);
 
             tall_and_skinny::set_args(tas, c.m, T(1.0), A, c.m, B, c.k, T(a.beta), C, c.m);

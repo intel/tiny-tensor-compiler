@@ -20,6 +20,8 @@ struct args {
     bool help;
     bool verify;
     double beta;
+    bool specialize_M;
+    bool specialize_ld;
 };
 
 class arg_parser {
