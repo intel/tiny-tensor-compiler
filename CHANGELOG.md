@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] - 2024-04-29
+## [0.3.0] - 2024-05-08
 
 * Added offset parameter to group type
 * Deploy FindOpenCL and FindLevelZero script for finding tinytc's dependencies via CMake
