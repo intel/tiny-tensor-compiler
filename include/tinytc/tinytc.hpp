@@ -2219,6 +2219,36 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int
     return tall_and_skinny{rec};
 }
 
+/**
+ * @brief Make tall and skinny recipe with additional specialization constants
+ *
+ * Cf. @ref tinytc_recipe_tall_and_skinny_create_specialized
+ *
+ * @param info Core info
+ * @param ty Scalar type of @f$\alpha@f$, A, B, @f$\beta@f$, C
+ * @param M Number of rows of A and C; can be dynamic
+ * @param N Number of columns of B and C
+ * @param K Number of columns of A, number of rows of B
+ * @param ldA Leading dimension of A; can be dynamic
+ * @param ldB Leading dimension of B; can be dynamic
+ * @param ldC Leading dimension of C; can be dynamic
+ * @param M_block_size Chunk size for M-mode
+ * @param ctx Source context for improved error reporting
+ *
+ * @return Tall and skinny recipe
+ */
+inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type ty, std::int64_t M,
+                                             std::int64_t N, std::int64_t K, std::int64_t ldA,
+                                             std::int64_t ldB, std::int64_t ldC,
+                                             std::int32_t M_block_size = 0, source_context ctx = {})
+    -> tall_and_skinny {
+    tinytc_recipe_t rec;
+    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
+        &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), M, N, K, ldA, ldB, ldC,
+        M_block_size, ctx.get()));
+    return tall_and_skinny{rec};
+}
+
 } // namespace tinytc
 
 #endif // TINYTC_20240403_HPP

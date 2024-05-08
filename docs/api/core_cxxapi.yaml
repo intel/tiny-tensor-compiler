@@ -43,6 +43,7 @@ Core C++-API:
     function:
       - tinytc::make_small_gemm_batched
       - tinytc::make_tall_and_skinny
+      - tinytc::make_tall_and_skinny_specialized
     class:
       - tinytc::recipe
       - tinytc::recipe_handler

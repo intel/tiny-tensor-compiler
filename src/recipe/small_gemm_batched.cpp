@@ -52,7 +52,10 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
                                         tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K,
                                         int64_t ldA, int64_t strideA, int64_t ldB, int64_t strideB,
                                         int64_t ldC, int64_t strideC, tinytc_source_context_t ctx) {
-    if (recipe == nullptr || info == nullptr) {
+    if (recipe == nullptr || info == nullptr || M == TINYTC_DYNAMIC || N == TINYTC_DYNAMIC ||
+        K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC || strideA == TINYTC_DYNAMIC ||
+        ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC || ldC == TINYTC_DYNAMIC ||
+        strideC == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 

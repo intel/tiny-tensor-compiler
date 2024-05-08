@@ -12,6 +12,8 @@
 args arg_parser::parse_args(int argc, char **argv) {
     args a = {};
     a.beta = 0.0;
+    a.specialize_M = false;
+    a.specialize_ld = false;
     auto num = std::vector<std::int64_t>(3);
     for (int i = 1; i < argc; ++i) {
         if (argv[i][0] == '-') {
@@ -23,6 +25,10 @@ args arg_parser::parse_args(int argc, char **argv) {
                 a.help = true;
             } else if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--verify") == 0) {
                 a.verify = true;
+            } else if (std::strcmp(argv[i], "--specialize-M") == 0) {
+                a.specialize_M = true;
+            } else if (std::strcmp(argv[i], "--specialize-ld") == 0) {
+                a.specialize_ld = true;
             } else if (i + 1 < argc) {
                 if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--beta") == 0) {
                     ++i;
@@ -72,5 +78,7 @@ optional arguments:
     -h, --help          Show help and quit
     -p, --precision     Precision (single = s, double = d)
     -v, --verify        Verify optimized implementation
+    --specialize-M      Specialize M instead of using dynamic value
+    --specialize-ld     Specialize ldA, ldB, ldC instead of using dynamic value
 )HELP";
 }
