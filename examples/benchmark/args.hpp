@@ -23,7 +23,9 @@ struct args {
     bool help;
     tinytc::transpose transA;
     tinytc::transpose transB;
+    double beta;
     bool verify;
+    bool atomic;
 };
 
 class arg_parser {
