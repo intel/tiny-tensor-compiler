@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.3.0] - 2024-05-08
+## [0.3.0] - 2024-05-14
 
 * Added offset parameter to group type
 * Deploy FindOpenCL and FindLevelZero script for finding tinytc's dependencies via CMake
@@ -14,6 +14,8 @@
 * Removed tinytc\_mem\_t; memory object type is part of set\_args signature
 * The index type was changed to i64 (from u32); attention: the calling convention is updated
 * Add function to create tall and skinny recipe with additional specialization constants
+* Fix uninitialized value bug in GEMM generator
+* Use relaxed ordering for atomics
 
 ## [0.2.0] - 2024-04-26
 
