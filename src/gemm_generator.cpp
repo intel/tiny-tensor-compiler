@@ -225,8 +225,13 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                     auto b = map_b_to_vec_type
                                  ? bb.declare(array_of(bt.type(Kb), n_blocks), "b")
                                  : bb.declare(array_of(bt.type(), n_blocks * Kb), "b");
-                    auto const read_A = [&](block_builder &bb, unsigned m_block, unsigned k) {
-                        bb.assign(amk(m_block, k), Ab[Aoffset(m_block)]);
+                    auto const read_A = [&](block_builder &bb, unsigned m_block, unsigned k,
+                                            bool check) {
+                        auto condition = m + m_block * core_cfg.subgroup_size < M;
+                        auto rhs = Ab[Aoffset(m_block)];
+                        auto rhs_checked =
+                            check ? ternary_conditional(std::move(condition), rhs, 0) : rhs;
+                        bb.assign(amk(m_block, k), std::move(rhs_checked));
                     };
                     auto block_read_A = [&](block_builder &bb, unsigned m_block, unsigned k) {
                         bb.assign(
@@ -235,33 +240,33 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                     };
                     for (unsigned k = 0; k < Kb; ++k) {
                         for (unsigned m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
-                            if (is_remainder) {
-                                bb.add(
-                                    if_selection_builder(m + m_block * core_cfg.subgroup_size < M)
-                                        .then([&](block_builder &bb) { read_A(bb, m_block, k); })
-                                        .get_product());
+                            if (!is_remainder && core_cfg.block_read_write_supported &&
+                                gemm_cfg.A_stride[am] == 1) {
+                                block_read_A(bb, m_block, k);
                             } else {
-                                if (core_cfg.block_read_write_supported &&
-                                    gemm_cfg.A_stride[am] == 1) {
-                                    block_read_A(bb, m_block, k);
-                                } else {
-                                    read_A(bb, m_block, k);
-                                }
+                                read_A(bb, m_block, k, is_remainder);
                             }
                         }
                         bb.add(add_into(Ab, A_stride[ak]));
                     }
 
-                    auto const read_B = [&](block_builder &bb, int k, int n_block) {
+                    auto const read_B = [&](block_builder &bb, int k, int n_block, bool check) {
+                        auto condition = m + n_block * core_cfg.subgroup_size < N;
                         if (map_b_to_vec_type) {
-                            auto l = vload_helper(Kb, 0, Bb + Boffset(n_block));
-                            if (l) {
-                                bb.assign(b[n_block], std::move(l));
+                            auto rhs = vload_helper(Kb, 0, Bb + Boffset(n_block));
+                            if (rhs) {
+                                auto rhs_checked =
+                                    check ? ternary_conditional(condition, rhs,
+                                                                init_vector(bt.type(Kb), {0}))
+                                          : rhs;
+                                bb.assign(b[n_block], std::move(rhs_checked));
                             } else {
                                 throw std::logic_error("Vload for native type missing");
                             }
                         } else {
-                            bb.assign(b[k + n_block * Kb], Bb[Boffset(n_block)]);
+                            auto rhs = Bb[Boffset(n_block)];
+                            auto rhs_checked = check ? ternary_conditional(condition, rhs, 0) : rhs;
+                            bb.assign(b[k + n_block * Kb], std::move(rhs_checked));
                         }
                     };
                     int first_n_block_with_check =
@@ -273,13 +278,11 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                     }
                     for (int k = 0; k < Kb; k += k_load_block_size) {
                         for (int n_block = 0; n_block < first_n_block_with_check; ++n_block) {
-                            read_B(bb, k, n_block);
+                            read_B(bb, k, n_block, false);
                         }
                         for (int n_block = first_n_block_with_check; n_block < n_blocks;
                              ++n_block) {
-                            bb.add(if_selection_builder(m + n_block * core_cfg.subgroup_size < N)
-                                       .then([&](block_builder &bb) { read_B(bb, k, n_block); })
-                                       .get_product());
+                            read_B(bb, k, n_block, true);
                         }
                         bb.add(add_into(Bb, k_load_block_size * B_stride[bk]));
                     }
