@@ -130,8 +130,9 @@ class generator {
         : gemm_cfg(gemm_cfg), tiling(tiling), core_cfg(core_cfg), Aspace(As), Bspace(Bs),
           Cspace(Cs) {}
     void add_microkernel(block_builder &bb, bool is_remainder, expr M, expr N, var A, var B, var C,
-                         expr alpha, expr beta);
-    void add_mloop(block_builder &bb, expr N, var A, var B, var C, expr alpha, expr beta);
+                         expr C_offset, expr alpha, expr beta);
+    void add_mloop(block_builder &bb, expr N, var A, var B, var C, expr C_offset, expr alpha,
+                   expr beta);
     void add_function_body(block_builder &bb, var A, var B, var C, expr alpha, expr beta);
     ::clir::func function(std::string_view name);
 
@@ -148,7 +149,7 @@ class generator {
 };
 
 void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, expr N, var A, var B,
-                                var C, expr alpha, expr beta) {
+                                var C, expr C_offset, expr alpha, expr beta) {
     std::int64_t n_bs = 0;
     bool is_N_constant = false;
     dispatch_constant_dynamic(
@@ -338,28 +339,34 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
     auto write_C = [&](block_builder &bb) {
         auto n_to = is_N_constant ? n_bs : min(N, cast(generic_uint(), n_bs));
         auto n_unroll = is_N_constant ? n_bs : 1;
+        // We can use block writes if
+        // 1. They are supported (no block writes for SIMD32 before PVC)
+        // 2. We are not in a remainder loop
+        // 3. Data is adjacent in memory
+        // 4. The address is 16 byte aligned
+        // 5. We are not writing atomically
+        bool use_block_write =
+            core_cfg.block_read_write_supported && !is_remainder && gemm_cfg.C_stride[0] == 1 &&
+            gemm_cfg.C_stride[1] * size(gemm_cfg.ty.C) % 16 == 0 && !gemm_cfg.atomic;
+        auto Cb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)), "Cb",
+                                    C + C_offset);
+        if (!use_block_write) {
+            bb.add(add_into(Cb, C_stride[0] * m));
+        }
         bb.add(
             for_loop_builder(declaration_assignment(generic_short(), n, 0), n < std::move(n_to),
                              ++n)
                 .body([&](block_builder &bb) {
                     for (std::size_t m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
                         auto my_c = alpha * cmn(m_block, n);
-                        auto Coffset = C_stride[0] * (m + m_block * core_cfg.subgroup_size);
-                        // We can use block writes if
-                        // 1. They are supported (no block writes for SIMD32 before PVC)
-                        // 2. We are not in a remainder loop
-                        // 3. Data is adjacent in memory
-                        // 4. The address is 16 byte aligned
-                        // 5. We are not writing atomically
-                        if (!core_cfg.block_read_write_supported || is_remainder ||
-                            gemm_cfg.C_stride[0] != 1 ||
-                            gemm_cfg.C_stride[1] * size(gemm_cfg.ty.C) % 16 != 0 ||
-                            gemm_cfg.atomic) {
+                        auto C_offset_m = C_stride[0] * (m_block * core_cfg.subgroup_size);
+                        if (use_block_write) {
+                            bb.add(precision_helper{gemm_cfg.ty.C}.sub_group_block_write(
+                                Cb + m_block * core_cfg.subgroup_size,
+                                std::move(my_c) + beta * Cb[std::move(C_offset_m)], Cspace));
+                        } else {
                             auto const write_C_mn = [&](block_builder &bb) {
-                                auto Cdst = bb.declare_assign(
-                                    pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)),
-                                    "Cdst", C + Coffset);
-                                store_helper(bb, gemm_cfg.atomic, std::move(Cdst), gemm_cfg.ty.C,
+                                store_helper(bb, gemm_cfg.atomic, Cb + C_offset_m, gemm_cfg.ty.C,
                                              Cspace, my_c, beta);
                             };
                             if (is_remainder) {
@@ -370,13 +377,9 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
                             } else {
                                 write_C_mn(bb);
                             }
-                        } else {
-                            bb.add(precision_helper{gemm_cfg.ty.C}.sub_group_block_write(
-                                C + m_block * core_cfg.subgroup_size,
-                                std::move(my_c) + beta * C[std::move(Coffset)], Cspace));
                         }
                     }
-                    bb.add(add_into(C, cast(generic_uint(), C_stride[1])));
+                    bb.add(add_into(Cb, cast(generic_uint(), C_stride[1])));
                 })
                 .attribute(opencl_unroll_hint(n_unroll))
                 .get_product());
@@ -384,7 +387,8 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
     write_C(bb);
 }
 
-void generator::add_mloop(block_builder &bb, expr N, var A, var B, var C, expr alpha, expr beta) {
+void generator::add_mloop(block_builder &bb, expr N, var A, var B, var C, expr C_offset, expr alpha,
+                          expr beta) {
     auto sg_m = bb.declare_assign(generic_uint(), "sg_m", get_sub_group_id() % tiling.m_tiles());
     tile_loop_by_sgs(
         bb, MNK[0], core_cfg.subgroup_size * row_blocks_in_register, tiling.m_tiles(),
@@ -393,10 +397,8 @@ void generator::add_mloop(block_builder &bb, expr N, var A, var B, var C, expr a
             auto Astride_m = gemm_cfg.transA == transpose::T ? A_stride[1] : A_stride[0];
             auto Ab = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.A}.type(Aspace)),
                                         "Ab", A + std::move(Astride_m) * block);
-            auto Cb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)),
-                                        "Cb", C + C_stride[0] * std::move(block));
-            add_microkernel(bb, is_remainder, std::move(inner_trip_count), N, std::move(Ab), B,
-                            std::move(Cb), alpha, beta);
+            add_microkernel(bb, is_remainder, std::move(inner_trip_count), N, std::move(Ab), B, C,
+                            C_stride[0] * std::move(block) + C_offset, alpha, beta);
         });
 }
 
@@ -437,10 +439,8 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
             auto Bstride_n = gemm_cfg.transB == transpose::T ? B_stride[0] : B_stride[1];
             auto Bb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.B}.type(Bspace)),
                                         "Bb", B + std::move(Bstride_n) * block);
-            auto Cb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)),
-                                        "Cb", C + C_stride[1] * std::move(block));
-            add_mloop(bb, std::move(inner_trip_count), A, std::move(Bb), std::move(Cb), alpha,
-                      beta);
+            add_mloop(bb, std::move(inner_trip_count), A, std::move(Bb), C,
+                      C_stride[1] * std::move(block), alpha, beta);
         });
 }
 

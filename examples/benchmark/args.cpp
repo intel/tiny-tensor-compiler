@@ -14,6 +14,7 @@ args arg_parser::parse_args(int argc, char **argv) {
     a.internal_repetitions = 1;
     a.transA = tinytc::transpose::N;
     a.transB = tinytc::transpose::N;
+    a.beta = 0.0;
     auto num = std::vector<std::int64_t>(3);
     for (int i = 1; i < argc; ++i) {
         if (argv[i][0] == '-') {
@@ -29,10 +30,15 @@ args arg_parser::parse_args(int argc, char **argv) {
                 a.transB = tinytc::transpose::T;
             } else if (std::strcmp(argv[i], "-v") == 0 || std::strcmp(argv[i], "--verify") == 0) {
                 a.verify = true;
+            } else if (std::strcmp(argv[i], "-a") == 0 || std::strcmp(argv[i], "--atomic") == 0) {
+                a.atomic = true;
             } else if (i + 1 < argc) {
                 if (std::strcmp(argv[i], "-i") == 0 ||
                     std::strcmp(argv[i], "--internal-reps") == 0) {
                     a.internal_repetitions = atoi(argv[++i]);
+                } else if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--beta") == 0) {
+                    ++i;
+                    a.beta = atof(argv[i]);
                 } else if (std::strcmp(argv[i], "-p") == 0 ||
                            std::strcmp(argv[i], "--precision") == 0) {
                     ++i;
@@ -81,5 +87,6 @@ optional arguments:
     --trans-a           Transpose A matrix
     --trans-b           Transpose B matrix
     -v, --verify        Verify optimized implementation
+    -a, --atomic        Update C atomically
 )HELP";
 }

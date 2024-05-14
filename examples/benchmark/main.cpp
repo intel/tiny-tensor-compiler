@@ -35,10 +35,10 @@ template <typename F> double bench(F f, int nrepeat = 10) {
     return min_exec_time_ns;
 }
 
-auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose tB, std::int64_t M,
-                                       std::int64_t N, std::int64_t K,
+auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose tB, bool atomic,
+                                       std::int64_t M, std::int64_t N, std::int64_t K,
                                        std::array<std::int64_t, 2> A_stride,
-                                       std::array<std::int64_t, 2> B_stride,
+                                       std::array<std::int64_t, 2> B_stride, double beta,
                                        std::array<std::int64_t, 2> C_stride,
                                        std::int32_t repetitions, queue q) -> source {
     auto ctx = make_source_context();
@@ -77,8 +77,8 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                 bb.for_loop(
                     scalar_type::index, make_index(0, my_loc()), make_index(repetitions, my_loc()),
                     [&](region_builder &bb) {
-                        bb.add(make_gemm(tA, tB, false, make_imm(1.0, ty, my_loc()), a, b,
-                                         make_imm(0.0, ty, my_loc()), c, my_loc()));
+                        bb.add(make_gemm(tA, tB, atomic, make_imm(1.0, ty, my_loc()), a, b,
+                                         make_imm(beta, ty, my_loc()), c, my_loc()));
                     },
                     "r", my_loc());
             },
@@ -188,9 +188,10 @@ template <typename T> void test(queue q, args &a) {
         double min_exec_time_ns = 0.0;
         try {
             auto src = gemm_kernel_with_inner_repetition(
-                to_scalar_type_v<T>, a.transA, a.transB, c.m, c.n, c.k,
+                to_scalar_type_v<T>, a.transA, a.transB, a.atomic, c.m, c.n, c.k,
                 {1, a.transA == transpose::T ? c.k : c.m},
-                {1, a.transB == transpose::T ? c.n : c.k}, {1, c.m}, a.internal_repetitions, q);
+                {1, a.transB == transpose::T ? c.n : c.k}, a.beta, {1, c.m}, a.internal_repetitions,
+                q);
             if (src) {
                 auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src);
                 auto kernel = make_kernel(bundle, "gemm");

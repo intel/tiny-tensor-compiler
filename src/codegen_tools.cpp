@@ -67,11 +67,13 @@ void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_sp
     auto pointer_ty = pointer_to(to_clir_atomic_ty(ty, as, type_qualifier::volatile_t));
     auto atomic_dst = cast(std::move(pointer_ty), dst);
     if (mode == 0) {
-        bb.add(call_builtin(builtin_function::atomic_store,
-                            {std::move(atomic_dst), std::move(value)}));
+        bb.add(call_builtin(builtin_function::atomic_store_explicit,
+                            {std::move(atomic_dst), std::move(value), memory_order::relaxed,
+                             memory_scope::work_group}));
     } else if (mode == 1) {
-        bb.add(call_builtin(builtin_function::atomic_fetch_add,
-                            {std::move(atomic_dst), std::move(value)}));
+        bb.add(call_builtin(builtin_function::atomic_fetch_add_explicit,
+                            {std::move(atomic_dst), std::move(value), memory_order::relaxed,
+                             memory_scope::work_group}));
     } else {
         auto expected = bb.declare_assign(to_clir_ty(ty), "expected", dereference(dst));
         auto desired = bb.declare(to_clir_ty(ty), "desired");
