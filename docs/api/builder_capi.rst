@@ -10,7 +10,9 @@ Common
 
 * Enumerations
 
-  * :ref:`tinytc_binary_op_t`
+  * :ref:`tinytc_arithmetic_t`
+
+  * :ref:`tinytc_arithmetic_unary_t`
 
   * :ref:`tinytc_cmp_condition_t`
 
@@ -24,7 +26,9 @@ Common
 
 * Functions
 
-  * :ref:`tinytc_binary_op_to_string`
+  * :ref:`tinytc_arithmetic_to_string`
+
+  * :ref:`tinytc_arithmetic_unary_to_string`
 
   * :ref:`tinytc_cmp_condition_to_string`
 
@@ -71,10 +75,15 @@ Common
 Common Enumerations
 -------------------
 
-tinytc_binary_op_t
-..................
+tinytc_arithmetic_t
+...................
 
-.. doxygenenum:: tinytc_binary_op_t
+.. doxygenenum:: tinytc_arithmetic_t
+
+tinytc_arithmetic_unary_t
+.........................
+
+.. doxygenenum:: tinytc_arithmetic_unary_t
 
 tinytc_cmp_condition_t
 ......................
@@ -102,10 +111,15 @@ TINYTC_DYNAMIC
 Common Functions
 ----------------
 
-tinytc_binary_op_to_string
-..........................
+tinytc_arithmetic_to_string
+...........................
 
-.. doxygenfunction:: tinytc_binary_op_to_string
+.. doxygenfunction:: tinytc_arithmetic_to_string
+
+tinytc_arithmetic_unary_to_string
+.................................
+
+.. doxygenfunction:: tinytc_arithmetic_unary_to_string
 
 tinytc_cmp_condition_to_string
 ..............................
@@ -310,7 +324,9 @@ Instruction
 
   * :ref:`tinytc_axpby_inst_create`
 
-  * :ref:`tinytc_binary_op_inst_create`
+  * :ref:`tinytc_arith_inst_create`
+
+  * :ref:`tinytc_arith_unary_inst_create`
 
   * :ref:`tinytc_cast_inst_create`
 
@@ -339,8 +355,6 @@ Instruction
   * :ref:`tinytc_if_inst_create`
 
   * :ref:`tinytc_load_inst_create`
-
-  * :ref:`tinytc_neg_inst_create`
 
   * :ref:`tinytc_size_inst_create`
 
@@ -373,10 +387,15 @@ tinytc_axpby_inst_create
 
 .. doxygenfunction:: tinytc_axpby_inst_create
 
-tinytc_binary_op_inst_create
-............................
+tinytc_arith_inst_create
+........................
 
-.. doxygenfunction:: tinytc_binary_op_inst_create
+.. doxygenfunction:: tinytc_arith_inst_create
+
+tinytc_arith_unary_inst_create
+..............................
+
+.. doxygenfunction:: tinytc_arith_unary_inst_create
 
 tinytc_cast_inst_create
 .......................
@@ -447,11 +466,6 @@ tinytc_load_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_load_inst_create
-
-tinytc_neg_inst_create
-......................
-
-.. doxygenfunction:: tinytc_neg_inst_create
 
 tinytc_size_inst_create
 .......................

@@ -149,6 +149,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Product of expand shape must equal mode size";
     case tinytc_status_ir_collective_called_from_spmd:
         return "Collective instruction must not be called from SPMD region";
+    case tinytc_status_ir_fp_unsupported:
+        return "Floating point type unsupported for instruction";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

@@ -68,6 +68,7 @@ enum class status {
     ir_expand_shape_order_too_small = tinytc_status_ir_expand_shape_order_too_small,
     ir_expand_shape_mismatch = tinytc_status_ir_expand_shape_mismatch,
     ir_collective_called_from_spmd = tinytc_status_ir_collective_called_from_spmd,
+    ir_fp_unsupported = tinytc_status_ir_fp_unsupported,
     // Level Zero errors
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
@@ -196,28 +197,36 @@ enum class status {
 
 //! Scalar types
 enum class scalar_type {
-    bool_ = tinytc_scalar_type_bool,  ///< boolean
-    index = tinytc_scalar_type_index, ///< Unsigned integer type for indices
+    i1 = tinytc_scalar_type_i1,       ///< Signed 1 bit integer (boolean)
     i8 = tinytc_scalar_type_i8,       ///< Signed 8 bit integer
     i16 = tinytc_scalar_type_i16,     ///< Signed 16 bit integer
     i32 = tinytc_scalar_type_i32,     ///< Signed 32 bit integer
     i64 = tinytc_scalar_type_i64,     ///< Signed 64 bit integer
-    u8 = tinytc_scalar_type_u8,       ///< Unsigned 8 bit integer
-    u16 = tinytc_scalar_type_u16,     ///< Unsigned 16 bit integer
-    u32 = tinytc_scalar_type_u32,     ///< Unsigned 32 bit integer
-    u64 = tinytc_scalar_type_u64,     ///< Unsigned 64 bit integer
+    index = tinytc_scalar_type_index, ///< Unsigned Integer type for indices
     f32 = tinytc_scalar_type_f32,     ///< Single precision floating point (32 bit)
     f64 = tinytc_scalar_type_f64      ///< Double precision floating point (64 bit)
 };
 
-//! Binary operations
-enum class binary_op {
-    add = tinytc_binary_op_add, ///< add
-    sub = tinytc_binary_op_sub, ///< subtract
-    mul = tinytc_binary_op_mul, ///< multiply
-    div = tinytc_binary_op_div, ///< divide
-    rem = tinytc_binary_op_rem  ///< division remainder
+//! Arithmetic operations
+enum class arithmetic {
+    add = tinytc_arithmetic_add,  ///< add
+    sub = tinytc_arithmetic_sub,  ///< subtract
+    mul = tinytc_arithmetic_mul,  ///< multiply
+    div = tinytc_arithmetic_div,  ///< divide
+    rem = tinytc_arithmetic_rem,  ///< division remainder
+    shl = tinytc_arithmetic_shl,  ///< left shift
+    shr = tinytc_arithmetic_shr,  ///< arithmetic right shift
+    and_ = tinytc_arithmetic_and, ///< bitwise and
+    or_ = tinytc_arithmetic_or,   ///< bitwise or
+    xor_ = tinytc_arithmetic_xor  ///< bitwise xor
 };
+
+//! Arithmetic operations (unary)
+enum class arithmetic_unary {
+    neg = tinytc_arithmetic_unary_neg, ///< negation
+    not_ = tinytc_arithmetic_unary_not ///< bitwise not
+};
+
 //! Compare operation
 enum class cmp_condition {
     eq = tinytc_cmp_condition_eq, ///< equals

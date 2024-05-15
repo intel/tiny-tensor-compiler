@@ -2,6 +2,21 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: %tinytc-oc < %s | filecheck %s
+func @if0(%0: i32) {
+    %1 = cmp.lt %0, 16 : i32
+    %2 = cmp.ge %0, 0 : i32
+    %3 = arith.and %1, %2 : i1
+    if %3 {
+    } else {
+    }
+; CHECK:      bool x1 = x0 < 16;
+; CHECK:      bool x2 = x0 >= 0;
+; CHECK:      bool x3 = x1 && x2;
+; CHECK:      if (x3) {
+; CHECK-NEXT: } else {
+; CHECK-NEXT: }
+}
+
 func @if1(%0: i32) {
     %1 = cmp.lt %0, 16 : i32
     if %1 {

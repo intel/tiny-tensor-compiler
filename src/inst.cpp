@@ -22,18 +22,38 @@
 using namespace tinytc;
 
 extern "C" {
-char const *tinytc_binary_op_to_string(tinytc_binary_op_t op) {
+char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op) {
     switch (op) {
-    case tinytc_binary_op_add:
+    case tinytc_arithmetic_add:
         return "add";
-    case tinytc_binary_op_sub:
+    case tinytc_arithmetic_sub:
         return "sub";
-    case tinytc_binary_op_mul:
+    case tinytc_arithmetic_mul:
         return "mul";
-    case tinytc_binary_op_div:
+    case tinytc_arithmetic_div:
         return "div";
-    case tinytc_binary_op_rem:
+    case tinytc_arithmetic_rem:
         return "rem";
+    case tinytc_arithmetic_shl:
+        return "shl";
+    case tinytc_arithmetic_shr:
+        return "shr";
+    case tinytc_arithmetic_and:
+        return "and";
+    case tinytc_arithmetic_or:
+        return "or";
+    case tinytc_arithmetic_xor:
+        return "xor";
+    }
+    return "unknown";
+}
+
+char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op) {
+    switch (op) {
+    case tinytc_arithmetic_unary_neg:
+        return "neg";
+    case tinytc_arithmetic_unary_not:
+        return "not";
     }
     return "unknown";
 }
@@ -66,15 +86,27 @@ char const *tinytc_transpose_to_string(tinytc_transpose_t t) {
     return "unknown";
 }
 
-tinytc_status_t tinytc_binary_op_inst_create(tinytc_inst_t *instr, tinytc_binary_op_t op,
-                                             tinytc_value_t a, tinytc_value_t b,
-                                             const tinytc_location_t *loc) {
+tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_t op,
+                                         tinytc_value_t a, tinytc_value_t b,
+                                         const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<binary_op_inst>(enum_cast<binary_op>(op), value(a, true),
-                                                  value(b, true), get_optional(loc))
+        *instr = std::make_unique<arith_inst>(enum_cast<arithmetic>(op), value(a, true),
+                                              value(b, true), get_optional(loc))
+                     .release();
+    });
+}
+
+tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_unary_t op,
+                                               tinytc_value_t a, const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<arith_unary_inst>(enum_cast<arithmetic_unary>(op), value(a, true),
+                                                    get_optional(loc))
                      .release();
     });
 }
@@ -102,15 +134,6 @@ tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_conditio
                                                 value(b, true), get_optional(loc))
                      .release();
     });
-}
-
-tinytc_status_t tinytc_neg_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                       const tinytc_location_t *loc) {
-    if (instr == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code(
-        [&] { *instr = std::make_unique<neg_inst>(value(a, true), get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type_t ty,

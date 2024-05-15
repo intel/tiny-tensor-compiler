@@ -3,14 +3,16 @@
 Builder C-API:
   Common:
     enum:
-      - tinytc_binary_op_t
+      - tinytc_arithmetic_t
+      - tinytc_arithmetic_unary_t
       - tinytc_cmp_condition_t
       - tinytc_scalar_type_t
       - tinytc_transpose_t
     define:
       - TINYTC_DYNAMIC
     function:
-      - tinytc_binary_op_to_string
+      - tinytc_arithmetic_to_string
+      - tinytc_arithmetic_unary_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_scalar_type_size
       - tinytc_scalar_type_to_string
@@ -51,7 +53,8 @@ Builder C-API:
     function:
       - tinytc_alloca_inst_create
       - tinytc_axpby_inst_create
-      - tinytc_binary_op_inst_create
+      - tinytc_arith_inst_create
+      - tinytc_arith_unary_inst_create
       - tinytc_cast_inst_create
       - tinytc_cmp_inst_create
       - tinytc_expand_inst_create
@@ -66,7 +69,6 @@ Builder C-API:
       - tinytc_hadamard_inst_create
       - tinytc_if_inst_create
       - tinytc_load_inst_create
-      - tinytc_neg_inst_create
       - tinytc_size_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create

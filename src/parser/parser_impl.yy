@@ -110,6 +110,7 @@
     OFFSET          "offset"
     STRIDED         "strided"
     AXPBY           "axpby"
+    ARITH           "arith"
     GEMM            "gemm"
     GEMV            "gemv"
     GER             "ger"
@@ -126,7 +127,6 @@
     ELSE            "else"
     GROUP_ID        "group_id"
     GROUP_SIZE      "group_size"
-    NEG             "neg"
     SIZE            "size"
     SUBVIEW         "subview"
     STORE           "store"
@@ -139,7 +139,8 @@
 %token <double> FLOATING_CONSTANT
 %token <scalar_type> INTEGER_TYPE
 %token <scalar_type> FLOATING_TYPE
-%token <binary_op> BINARY_OP
+%token <arithmetic> ARITHMETIC
+%token <arithmetic_unary> ARITHMETIC_UNARY
 %token <cmp_condition> CMP_CONDITION
 
 %nterm <prog> prog
@@ -188,7 +189,8 @@
 %nterm <std::vector<std::string>> identifier_list
 %nterm <inst> valued_inst
 %nterm <inst> alloca_inst
-%nterm <inst> binary_op_inst
+%nterm <inst> arith_inst
+%nterm <inst> arith_unary_inst
 %nterm <inst> cast_inst
 %nterm <inst> compare_inst
 %nterm <inst> expand_inst
@@ -201,7 +203,6 @@
 %nterm <::tinytc::value> index_identifier_or_const
 %nterm <inst> group_id_inst
 %nterm <inst> group_size_inst
-%nterm <inst> neg_inst
 %nterm <inst> size_inst
 %nterm <inst> store_inst
 %nterm <inst> subview_inst
@@ -667,7 +668,8 @@ yield_inst:
 
 valued_inst:
     alloca_inst
-  | binary_op_inst
+  | arith_inst
+  | arith_unary_inst
   | cast_inst
   | compare_inst
   | expand_inst
@@ -676,7 +678,6 @@ valued_inst:
   | load_inst
   | group_id_inst
   | group_size_inst
-  | neg_inst
   | size_inst
   | subview_inst
 ;
@@ -694,14 +695,13 @@ alloca_inst:
     }
 ;
 
-binary_op_inst:
-    BINARY_OP identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
+arith_inst:
+    ARITH ARITHMETIC identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
         check_scalar_type($a, $ty, @a, @ty);
         check_scalar_type($b, $ty, @b, @ty);
         try {
             $$ = inst {
-                std::make_unique<binary_op_inst>($BINARY_OP, std::move($a), std::move($b),
-                                                 @binary_op_inst)
+                std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), @arith_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -710,6 +710,23 @@ binary_op_inst:
         }
     }
 ;
+
+arith_unary_inst:
+    ARITH ARITHMETIC_UNARY identifier_or_constant[a] COLON scalar_type[ty] {
+        check_scalar_type($a, $ty, @a, @ty);
+        try {
+            $$ = inst {
+                std::make_unique<arith_unary_inst>($ARITHMETIC_UNARY, std::move($a),
+                                                   @arith_unary_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
 
 cast_inst:
     CAST identifier_or_constant[a] COLON scalar_type[from] RETURNS scalar_type[to] {
@@ -865,7 +882,7 @@ group_size_inst:
 
 if_inst:
     IF identifier_or_constant[condition] optional_returned_values region else_region {
-        check_scalar_type($condition, scalar_type::bool_, @condition, @condition);
+        check_scalar_type($condition, scalar_type::i1, @condition, @condition);
         $$ = inst{std::make_unique<if_inst>(std::move($condition), std::move($region),
                                             std::move($else_region),
                                             std::move($optional_returned_values))
@@ -894,18 +911,6 @@ scalar_type_list:
   | scalar_type_list COMMA scalar_type { $$ = std::move($1); $$.push_back($scalar_type); }
 ;
 
-
-neg_inst:
-    NEG identifier_or_constant[a] COLON scalar_type[ty] {
-        check_scalar_type($a, $ty, @a, @ty);
-        try {
-            $$ = inst { std::make_unique<neg_inst>(std::move($a), @neg_inst).release() };
-        } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
-            YYERROR;
-        }
-    }
-;
 
 size_inst:
     SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON memref_type {

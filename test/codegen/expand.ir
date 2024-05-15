@@ -64,7 +64,7 @@ func @t7(%0: memref<f32x32x16>) {
 }
 func @t8(%0: memref<f32x32x?>) {
   %1 = group_id
-  %2 = add %1, 5 : index
+  %2 = arith.add %1, 5 : index
   %3 = expand %0[1 -> %1 x %2] : memref<f32x32x?>
   %4 = load %3[0,0,0] : memref<f32x32x?x?>
 ; CHECK:      global float* x3 = x0;

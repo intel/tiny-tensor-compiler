@@ -81,7 +81,7 @@ inline std::size_t size(scalar_type ty) {
 template <typename T> struct to_scalar_type;
 //! to_scalar_type specialization
 template <> struct to_scalar_type<bool> {
-    static constexpr scalar_type value = scalar_type::bool_; ///< value
+    static constexpr scalar_type value = scalar_type::i1; ///< value
 };
 //! to_scalar_type specialization
 template <> struct to_scalar_type<std::int8_t> {
@@ -98,22 +98,6 @@ template <> struct to_scalar_type<std::int32_t> {
 //! to_scalar_type specialization
 template <> struct to_scalar_type<std::int64_t> {
     static constexpr scalar_type value = scalar_type::i64; ///< value
-};
-//! to_scalar_type specialization
-template <> struct to_scalar_type<std::uint8_t> {
-    static constexpr scalar_type value = scalar_type::u8; ///< value
-};
-//! to_scalar_type specialization
-template <> struct to_scalar_type<std::uint16_t> {
-    static constexpr scalar_type value = scalar_type::u16; ///< value
-};
-//! to_scalar_type specialization
-template <> struct to_scalar_type<std::uint32_t> {
-    static constexpr scalar_type value = scalar_type::u32; ///< value
-};
-//! to_scalar_type specialization
-template <> struct to_scalar_type<std::uint64_t> {
-    static constexpr scalar_type value = scalar_type::u64; ///< value
 };
 //! to_scalar_type specialization
 template <> struct to_scalar_type<float> {
@@ -587,14 +571,25 @@ inline auto make_dynamic(location const &loc = {}) -> value {
 ////////////////////////////
 
 /**
- * @brief Convert binary op to string
+ * @brief Convert arithmetic operation type to string
  *
- * @param op Binary op
+ * @param op Arithmetic operation type
  *
  * @return C-string
  */
-inline char const *to_string(binary_op op) {
-    return ::tinytc_binary_op_to_string(static_cast<::tinytc_binary_op_t>(op));
+inline char const *to_string(arithmetic op) {
+    return ::tinytc_arithmetic_to_string(static_cast<::tinytc_arithmetic_t>(op));
+}
+
+/**
+ * @brief Convert arithmetic operation type to string (unary)
+ *
+ * @param op Arithmetic operation type
+ *
+ * @return C-string
+ */
+inline char const *to_string(arithmetic_unary op) {
+    return ::tinytc_arithmetic_unary_to_string(static_cast<::tinytc_arithmetic_unary_t>(op));
 }
 
 /**
@@ -715,19 +710,36 @@ inline region make_region(std::vector<inst> &instructions, location const &loc =
 ////////////////////////////
 
 /**
- * @brief Make binary operation instruction
+ * @brief Make arithmetic instruction (binary)
  *
- * @param op Binary op type
+ * @param op Arithmetic operation type
  * @param a First operand
  * @param b Second operand
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_binary_op(binary_op op, value const &a, value const &b, location const &loc = {}) {
+inline inst make_arith(arithmetic op, value const &a, value const &b, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_binary_op_inst_create(&instr, static_cast<tinytc_binary_op_t>(op),
-                                                  a.get(), b.get(), &loc),
+    CHECK_STATUS_LOC(tinytc_arith_inst_create(&instr, static_cast<tinytc_arithmetic_t>(op), a.get(),
+                                              b.get(), &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make arithmetic instruction (unary)
+ *
+ * @param op Arithmetic operation type
+ * @param a Operand
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_arith(arithmetic_unary op, value const &a, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_arith_unary_inst_create(
+                         &instr, static_cast<tinytc_arithmetic_unary_t>(op), a.get(), &loc),
                      loc);
     return inst(instr);
 }
@@ -764,20 +776,6 @@ inline inst make_cmp(cmp_condition cond, value const &a, value const &b, locatio
     CHECK_STATUS_LOC(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond),
                                             a.get(), b.get(), &loc),
                      loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make negate instruction
- *
- * @param a Operand
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_neg(value const &a, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_neg_inst_create(&instr, a.get(), &loc), loc);
     return inst(instr);
 }
 

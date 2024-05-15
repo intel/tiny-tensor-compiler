@@ -16,6 +16,9 @@
 * Add function to create tall and skinny recipe with additional specialization constants
 * Fix uninitialized value bug in GEMM generator
 * Use relaxed ordering for atomics
+* Remove unsigned integer types
+* Prefix arithmetic instructions with "arith."
+* Add binary arithmetic (and, or, xor, not)
 
 ## [0.2.0] - 2024-04-26
 

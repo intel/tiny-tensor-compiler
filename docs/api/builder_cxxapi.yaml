@@ -3,13 +3,15 @@
 Builder C++-API:
   Common:
     enum:
-      - tinytc::binary_op
+      - tinytc::arithmetic
+      - tinytc::arithmetic_unary
       - tinytc::cmp_condition
       - tinytc::scalar_type
       - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
-      - tinytc::to_string(binary_op)
+      - tinytc::to_string(arithmetic)
+      - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(transpose)
@@ -45,7 +47,8 @@ Builder C++-API:
     function:
       - tinytc::make_alloca
       - tinytc::make_axpby
-      - tinytc::make_binary_op
+      - tinytc::make_arith(arithmetic,value const&,value const&,location const&)
+      - tinytc::make_arith(arithmetic_unary,value const&,location const&)
       - tinytc::make_cast
       - tinytc::make_cmp
       - tinytc::make_expand
