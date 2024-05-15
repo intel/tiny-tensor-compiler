@@ -78,8 +78,9 @@ void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_sp
         auto expected = bb.declare_assign(to_clir_ty(ty), "expected", dereference(dst));
         auto desired = bb.declare(to_clir_ty(ty), "desired");
         auto cmpxchg =
-            call_builtin(builtin_function::atomic_compare_exchange_strong,
-                         {std::move(atomic_dst), address_of(std::move(expected)), desired});
+            call_builtin(builtin_function::atomic_compare_exchange_strong_explicit,
+                         {std::move(atomic_dst), address_of(std::move(expected)), desired,
+                          memory_order::relaxed, memory_order::relaxed, memory_scope::work_group});
         bb.add(while_loop_builder(std::move(cmpxchg), true)
                    .body([&](block_builder &bb) { bb.assign(desired, value + beta * expected); })
                    .get_product());
