@@ -2,19 +2,37 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: %tinytc-oc < %s | filecheck %s
-func @t1(%a: i32, %b: i32) {
-  %1 = add %a, %b : i32
-  %2 = sub %a, %b : i32
-  %3 = mul %a, %b : i32
-  %4 = div %a, %b : i32
-  %5 = rem %a, %b : i32
-  %6 = neg %a : i32
+func @t1(%a: i32, %b: i32, %a1: i1, %b1: i1) {
+  %1 = arith.add %a, %b : i32
+  %2 = arith.sub %a, %b : i32
+  %3 = arith.mul %a, %b : i32
+  %4 = arith.div %a, %b : i32
+  %5 = arith.rem %a, %b : i32
+  %6 = arith.shl %a, %b : i32
+  %7 = arith.shr %a, %b : i32
+  %8 = arith.and %a, %b : i32
+  %9 = arith.and %a1, %b1 : i1
+  %10 = arith.or %a, %b : i32
+  %11 = arith.or %a1, %b1 : i1
+  %12 = arith.xor %a, %b : i32
+  %13 = arith.neg %a : i32
+  %14 = arith.not %a : i32
+  %15 = arith.not %a1 : i1
 ; CHECK:      int x1 = a + b;
 ; CHECK-NEXT: int x2 = a - b;
 ; CHECK-NEXT: int x3 = a * b;
 ; CHECK-NEXT: int x4 = a / b;
 ; CHECK-NEXT: int x5 = a % b;
-; CHECK-NEXT: int x6 = -a;
+; CHECK-NEXT: int x6 = a << b;
+; CHECK-NEXT: int x7 = a >> b;
+; CHECK-NEXT: int x8 = a & b;
+; CHECK-NEXT: bool x9 = a1 && b1;
+; CHECK-NEXT: int x10 = a | b;
+; CHECK-NEXT: bool x11 = a1 || b1;
+; CHECK-NEXT: int x12 = a ^ b;
+; CHECK-NEXT: int x13 = -a;
+; CHECK-NEXT: int x14 = ~a;
+; CHECK-NEXT: bool x15 = !a1;
 }
 func @t2(%a: i32, %b: i32) {
   %1 = cmp.eq %a, %b : i32
@@ -31,12 +49,12 @@ func @t2(%a: i32, %b: i32) {
 ; CHECK-NEXT: bool x6 = a <= b;
 }
 func @t3(%a: f32, %b: f32) {
-  %1 = add %a, %b : f32
-  %2 = sub %a, %b : f32
-  %3 = mul %a, %b : f32
-  %4 = div %a, %b : f32
-  %5 = rem %a, %b : f32
-  %6 = neg %a : f32
+  %1 = arith.add %a, %b : f32
+  %2 = arith.sub %a, %b : f32
+  %3 = arith.mul %a, %b : f32
+  %4 = arith.div %a, %b : f32
+  %5 = arith.rem %a, %b : f32
+  %6 = arith.neg %a : f32
 ; CHECK:      float x1 = a + b;
 ; CHECK-NEXT: float x2 = a - b;
 ; CHECK-NEXT: float x3 = a * b;

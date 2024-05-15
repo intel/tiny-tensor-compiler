@@ -24,13 +24,14 @@ enum class inst_kind {
     collective  ///< collective instruction distributed among work-items
 };
 
-using inst_nodes = clir::virtual_type_list<
-    class alloca_inst, class axpby_inst, class barrier_inst, class binary_op_inst, class cast_inst,
-    class compare_inst, class expand_inst, class fuse_inst, class load_inst, class group_id_inst,
-    class group_size_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
-    class ger_inst, class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
-    class neg_inst, class size_inst, class subview_inst, class store_inst, class sum_inst,
-    class yield_inst>;
+using inst_nodes =
+    clir::virtual_type_list<class alloca_inst, class axpby_inst, class barrier_inst,
+                            class arith_inst, class arith_unary_inst, class cast_inst,
+                            class compare_inst, class expand_inst, class fuse_inst, class load_inst,
+                            class group_id_inst, class group_size_inst, class lifetime_stop_inst,
+                            class gemm_inst, class gemv_inst, class ger_inst, class for_inst,
+                            class foreach_inst, class hadamard_inst, class if_inst, class size_inst,
+                            class subview_inst, class store_inst, class sum_inst, class yield_inst>;
 
 } // namespace tinytc
 
@@ -139,25 +140,39 @@ class axpby_inst : public clir::visitable<axpby_inst, blas_a2_inst> {
     transpose tA_;
 };
 
-class barrier_inst : public clir::visitable<barrier_inst, inst_node> {
+class arith_inst : public clir::visitable<arith_inst, scalar_inst> {
   public:
-    inline value result() const override { return value{}; }
-    inline inst_kind kind() const override { return inst_kind::collective; }
-};
+    arith_inst(arithmetic op, value a, value b, location const &lc = {});
 
-class binary_op_inst : public clir::visitable<binary_op_inst, scalar_inst> {
-  public:
-    binary_op_inst(binary_op op, value a, value b, location const &lc = {});
-
-    inline binary_op op() const { return op_; }
+    inline arithmetic op() const { return op_; }
     inline auto a() const -> value const & { return a_; }
     inline auto b() const -> value const & { return b_; }
     inline value result() const override { return result_; }
     inline inst_kind kind() const override { return inst_kind::replicated; }
 
   private:
-    binary_op op_;
+    arithmetic op_;
     value a_, b_, result_;
+};
+
+class arith_unary_inst : public clir::visitable<arith_unary_inst, scalar_inst> {
+  public:
+    arith_unary_inst(arithmetic_unary op, value a, location const &lc = {});
+
+    inline arithmetic_unary op() const { return op_; }
+    inline auto a() const -> value const & { return a_; }
+    inline value result() const override { return result_; }
+    inline inst_kind kind() const override { return inst_kind::replicated; }
+
+  private:
+    arithmetic_unary op_;
+    value a_, result_;
+};
+
+class barrier_inst : public clir::visitable<barrier_inst, inst_node> {
+  public:
+    inline value result() const override { return value{}; }
+    inline inst_kind kind() const override { return inst_kind::collective; }
 };
 
 class cast_inst : public clir::visitable<cast_inst, scalar_inst> {
@@ -343,18 +358,6 @@ class if_inst : public clir::visitable<if_inst, inst_node> {
     value condition_;
     region then_, otherwise_;
     std::vector<value> results_;
-};
-
-class neg_inst : public clir::visitable<neg_inst, scalar_inst> {
-  public:
-    neg_inst(value a, location const &lc = {});
-
-    inline auto a() const -> value const & { return a_; }
-    inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
-
-  private:
-    value a_, result_;
 };
 
 class size_inst : public clir::visitable<size_inst, inst_node> {

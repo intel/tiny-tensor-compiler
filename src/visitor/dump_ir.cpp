@@ -120,17 +120,25 @@ void ir_dumper::operator()(axpby_inst const &a) {
     dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 
-void ir_dumper::operator()(barrier_inst const &) { os_ << "barrier"; }
-
-void ir_dumper::operator()(binary_op_inst const &a) {
+void ir_dumper::operator()(arith_inst const &a) {
     visit(*this, *a.result());
-    os_ << " = " << to_string(a.op()) << " ";
+    os_ << " = arith." << to_string(a.op()) << " ";
     visit(*this, *a.a());
     os_ << ", ";
     visit(*this, *a.b());
     os_ << " : ";
     visit(*this, *a.a()->ty());
 }
+
+void ir_dumper::operator()(arith_unary_inst const &a) {
+    visit(*this, *a.result());
+    os_ << " = arith." << to_string(a.op()) << " ";
+    visit(*this, *a.a());
+    os_ << " : ";
+    visit(*this, *a.a()->ty());
+}
+
+void ir_dumper::operator()(barrier_inst const &) { os_ << "barrier"; }
 
 void ir_dumper::operator()(cast_inst const &c) {
     visit(*this, *c.result());
@@ -261,13 +269,6 @@ void ir_dumper::operator()(if_inst const &in) {
         os_ << " else ";
         visit(*this, *in.otherwise());
     }
-}
-
-void ir_dumper::operator()(neg_inst const &a) {
-    os_ << "neg ";
-    visit(*this, *a.a());
-    os_ << " : ";
-    visit(*this, *a.a()->ty());
 }
 
 void ir_dumper::operator()(size_inst const &s) {

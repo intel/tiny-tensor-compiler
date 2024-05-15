@@ -207,30 +207,48 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, cha
 /////// Instructions ///////
 ////////////////////////////
 
-//! Convert binary op to string
-TINYTC_EXPORT char const *tinytc_binary_op_to_string(tinytc_binary_op_t op);
+//! Convert arithmetic operation type to string
+TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
+//! Convert arithmetic operation type to string (unary)
+TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
 //! Convert transpose to string
 TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
 
 /**
- * @brief Create binary op instruction
+ * @brief Create arithmetic instruction (binary)
  *
- * @code %value = <binary_op> %a, %b : type(%a) ; type(%a) == type(%b) @endcode
+ * @code %value = arith.<op> %a, %b : type(%a) ; type(%a) == type(%b) @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param op [in] binary op type
+ * @param op [in] arithmetic operation type
  * @param a [in] left-hand operand
  * @param b [in] right-hand operand
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_binary_op_inst_create(tinytc_inst_t *instr,
-                                                           tinytc_binary_op_t op, tinytc_value_t a,
-                                                           tinytc_value_t b,
-                                                           const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_t op,
+                                                       tinytc_value_t a, tinytc_value_t b,
+                                                       const tinytc_location_t *loc);
+
+/**
+ * @brief Create arithmetic instruction (unary)
+ *
+ * @code %value = arith.<op> %a : type(%a) @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param op [in] unary arithmetic operation type
+ * @param a [in] operand
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr,
+                                                             tinytc_arithmetic_unary_t op,
+                                                             tinytc_value_t a,
+                                                             const tinytc_location_t *loc);
 
 /**
  * @brief Create cast instruction
@@ -264,20 +282,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tiny
 TINYTC_EXPORT tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr,
                                                      tinytc_cmp_condition_t cond, tinytc_value_t a,
                                                      tinytc_value_t b,
-                                                     const tinytc_location_t *loc);
-
-/**
- * @brief Create neg instruction
- *
- * @code %value = neg %a : type(%a) @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param a [in] operand
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_neg_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                      const tinytc_location_t *loc);
 
 /**

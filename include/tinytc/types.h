@@ -58,6 +58,7 @@ typedef enum {
     tinytc_status_ir_expand_shape_order_too_small = 0x10f, ///< Expand shape too small
     tinytc_status_ir_expand_shape_mismatch = 0x110,        ///< Invalid expand shape
     tinytc_status_ir_collective_called_from_spmd = 0x111,  ///< Collective instruction from SPMD
+    tinytc_status_ir_fp_unsupported = 0x112, ///< Instruction does not support floating type
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST
@@ -211,28 +212,35 @@ typedef enum {
 
 //! Scalar types
 typedef enum {
-    tinytc_scalar_type_bool = 0,  ///< Boolean
-    tinytc_scalar_type_index = 1, ///< Unsigned integer type for indices
-    tinytc_scalar_type_i8 = 2,    ///< Signed 8 bit integer
-    tinytc_scalar_type_i16 = 3,   ///< Signed 16 bit integer
-    tinytc_scalar_type_i32 = 4,   ///< Signed 32 bit integer
-    tinytc_scalar_type_i64 = 5,   ///< Signed 64 bit integer
-    tinytc_scalar_type_u8 = 6,    ///< Unsigned 8 bit integer
-    tinytc_scalar_type_u16 = 7,   ///< Unsigned 16 bit integer
-    tinytc_scalar_type_u32 = 8,   ///< Unsigned 32 bit integer
-    tinytc_scalar_type_u64 = 9,   ///< Unsigned 64 bit integer
-    tinytc_scalar_type_f32 = 10,  ///< Single precision floating point (32 bit)
-    tinytc_scalar_type_f64 = 11   ///< Double precision floating point (64 bit)
+    tinytc_scalar_type_i1 = 0,    ///< Signed 1 bit integer (boolean)
+    tinytc_scalar_type_i8 = 1,    ///< Signed 8 bit integer
+    tinytc_scalar_type_i16 = 2,   ///< Signed 16 bit integer
+    tinytc_scalar_type_i32 = 3,   ///< Signed 32 bit integer
+    tinytc_scalar_type_i64 = 4,   ///< Signed 64 bit integer
+    tinytc_scalar_type_index = 5, ///< Integer type for indices
+    tinytc_scalar_type_f32 = 6,   ///< Single precision floating point (32 bit)
+    tinytc_scalar_type_f64 = 7    ///< Double precision floating point (64 bit)
 } tinytc_scalar_type_t;
 
-//! Binary operations
+//! Arithmetic operations
 typedef enum {
-    tinytc_binary_op_add = 0, ///< add
-    tinytc_binary_op_sub = 1, ///< subtract
-    tinytc_binary_op_mul = 2, ///< multiply
-    tinytc_binary_op_div = 3, ///< divide
-    tinytc_binary_op_rem = 4  ///< division remainder
-} tinytc_binary_op_t;
+    tinytc_arithmetic_add = 0, ///< add
+    tinytc_arithmetic_sub = 1, ///< subtract
+    tinytc_arithmetic_mul = 2, ///< multiply
+    tinytc_arithmetic_div = 3, ///< divide
+    tinytc_arithmetic_rem = 4, ///< division remainder
+    tinytc_arithmetic_shl = 5, ///< left shift
+    tinytc_arithmetic_shr = 6, ///< arithmetic right shift
+    tinytc_arithmetic_and = 7, ///< bitwise and
+    tinytc_arithmetic_or = 8,  ///< bitwise or
+    tinytc_arithmetic_xor = 9  ///< bitwise xor
+} tinytc_arithmetic_t;
+
+//! Arithmetic operations (unary)
+typedef enum {
+    tinytc_arithmetic_unary_neg = 0, ///< negation
+    tinytc_arithmetic_unary_not = 1  ///< bitwise not
+} tinytc_arithmetic_unary_t;
 
 //! Compare operation
 typedef enum {

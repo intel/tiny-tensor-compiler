@@ -74,7 +74,8 @@ class opencl_ast {
     std::vector<clir::stmt> operator()(alloca_inst const &a);
     std::vector<clir::stmt> operator()(axpby_inst const &a);
     std::vector<clir::stmt> operator()(barrier_inst const &b);
-    std::vector<clir::stmt> operator()(binary_op_inst const &b);
+    std::vector<clir::stmt> operator()(arith_inst const &a);
+    std::vector<clir::stmt> operator()(arith_unary_inst const &a);
     std::vector<clir::stmt> operator()(cast_inst const &c);
     std::vector<clir::stmt> operator()(compare_inst const &c);
     std::vector<clir::stmt> operator()(expand_inst const &e);
@@ -90,7 +91,6 @@ class opencl_ast {
     std::vector<clir::stmt> operator()(foreach_inst const &in);
     std::vector<clir::stmt> operator()(hadamard_inst const &g);
     std::vector<clir::stmt> operator()(if_inst const &in);
-    std::vector<clir::stmt> operator()(neg_inst const &n);
     std::vector<clir::stmt> operator()(size_inst const &s);
     std::vector<clir::stmt> operator()(subview_inst const &s);
     std::vector<clir::stmt> operator()(store_inst const &s);

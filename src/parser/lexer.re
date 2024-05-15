@@ -39,7 +39,7 @@ lex:
         local_identifier      = "%" identifier;
         global_identifier     = "@" identifier;
 
-        integer_type          = "bool" | [iu] ("8" | "16" | "32" | "64") | "index";
+        integer_type          = "i" ("1" | "8" | "16" | "32" | "64") | "index";
         floating_type         = "f" ("32" | "64");
 
         digit                 = [0-9];
@@ -123,6 +123,7 @@ lex:
 
         // instructions
         "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }
+        "arith"             { adv_loc(); return parser::make_ARITH(loc_); }
         "gemm"              { adv_loc(); return parser::make_GEMM(loc_); }
         "gemv"              { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"               { adv_loc(); return parser::make_GER(loc_); }
@@ -139,7 +140,6 @@ lex:
         "foreach"           { adv_loc(); return parser::make_FOREACH(loc_); }
         "if"                { adv_loc(); return parser::make_IF(loc_); }
         "else"              { adv_loc(); return parser::make_ELSE(loc_); }
-        "neg"               { adv_loc(); return parser::make_NEG(loc_); }
         "size"              { adv_loc(); return parser::make_SIZE(loc_); }
         "subview"           { adv_loc(); return parser::make_SUBVIEW(loc_); }
         "store"             { adv_loc(); return parser::make_STORE(loc_); }
@@ -147,11 +147,20 @@ lex:
         "yield"             { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
-        "add"               { adv_loc(); return parser::make_BINARY_OP(binary_op::add, loc_); }
-        "sub"               { adv_loc(); return parser::make_BINARY_OP(binary_op::sub, loc_); }
-        "mul"               { adv_loc(); return parser::make_BINARY_OP(binary_op::mul, loc_); }
-        "div"               { adv_loc(); return parser::make_BINARY_OP(binary_op::div, loc_); }
-        "rem"               { adv_loc(); return parser::make_BINARY_OP(binary_op::rem, loc_); }
+        ".add"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::add, loc_); }
+        ".sub"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::sub, loc_); }
+        ".mul"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::mul, loc_); }
+        ".div"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::div, loc_); }
+        ".rem"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::rem, loc_); }
+        ".shl"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shl, loc_); }
+        ".shr"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shr, loc_); }
+        ".and"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::and_, loc_); }
+        ".or"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
+        ".xor"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
+
+        // unary op
+        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
+        ".not"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
 
         // comparison condition
         ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq,
@@ -232,16 +241,12 @@ scalar_type lexer::lex_integer_type(char const *s, char const *) {
         re2c:yyfill:enable = 0;
         re2c:define:YYCURSOR = s;
 
-        "bool"  { return scalar_type::bool_; }
-        "index" { return scalar_type::index; }
+        "i1"    { return scalar_type::i1; }
         "i8"    { return scalar_type::i8; }
         "i16"   { return scalar_type::i16; }
         "i32"   { return scalar_type::i32; }
         "i64"   { return scalar_type::i64; }
-        "u8"    { return scalar_type::u8; }
-        "u16"   { return scalar_type::u16; }
-        "u32"   { return scalar_type::u32; }
-        "u64"   { return scalar_type::u64; }
+        "index" { return scalar_type::index; }
         $       { return {}; }
         *       { return {}; }
     */

@@ -309,30 +309,64 @@ std::vector<clir::stmt> opencl_ast::operator()(barrier_inst const &) {
         clir::builtin_function::barrier, {clir::cl_mem_fence_flags::CLK_LOCAL_MEM_FENCE}))};
 }
 
-std::vector<clir::stmt> opencl_ast::operator()(binary_op_inst const &b) {
-    auto const make = [](binary_op op, clir::expr a, clir::expr b, bool floating) -> clir::expr {
+std::vector<clir::stmt> opencl_ast::operator()(arith_inst const &a) {
+    auto const make = [](arithmetic op, clir::expr a, clir::expr b, scalar_type sty) -> clir::expr {
         switch (op) {
-        case binary_op::add:
+        case arithmetic::add:
             return std::move(a) + std::move(b);
-        case binary_op::sub:
+        case arithmetic::sub:
             return std::move(a) - std::move(b);
-        case binary_op::mul:
+        case arithmetic::mul:
             return std::move(a) * std::move(b);
-        case binary_op::div:
+        case arithmetic::div:
             return std::move(a) / std::move(b);
-        case binary_op::rem:
-            if (floating) {
+        case arithmetic::rem:
+            if (is_floating_type(sty)) {
                 return clir::fmod(std::move(a), std::move(b));
             }
             return std::move(a) % std::move(b);
+        case arithmetic::shl:
+            return std::move(a) << std::move(b);
+        case arithmetic::shr:
+            return std::move(a) >> std::move(b);
+        case arithmetic::and_:
+            if (sty == scalar_type::i1) {
+                return std::move(a) && std::move(b);
+            }
+            return std::move(a) & std::move(b);
+        case arithmetic::or_:
+            if (sty == scalar_type::i1) {
+                return std::move(a) || std::move(b);
+            }
+            return std::move(a) | std::move(b);
+        case arithmetic::xor_:
+            return std::move(a) ^ std::move(b);
         }
         return {};
     };
-    auto sty = get_scalar_type(*b.a()->ty());
-    auto v = declare(*b.result());
-    return {declaration_assignment(
-        visit(*this, *b.result()->ty()), std::move(v),
-        make(b.op(), visit(*this, *b.a()), visit(*this, *b.b()), is_floating_type(sty)))};
+    auto sty = get_scalar_type(*a.a()->ty());
+    auto v = declare(*a.result());
+    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
+                                   make(a.op(), visit(*this, *a.a()), visit(*this, *a.b()), sty))};
+}
+
+std::vector<clir::stmt> opencl_ast::operator()(arith_unary_inst const &a) {
+    auto const make = [](arithmetic_unary op, clir::expr a, scalar_type sty) -> clir::expr {
+        switch (op) {
+        case arithmetic_unary::neg:
+            return -std::move(a);
+        case arithmetic_unary::not_:
+            if (sty == scalar_type::i1) {
+                return !std::move(a);
+            }
+            return ~std::move(a);
+        }
+        return {};
+    };
+    auto sty = get_scalar_type(*a.a()->ty());
+    auto v = declare(*a.result());
+    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
+                                   make(a.op(), visit(*this, *a.a()), sty))};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(cast_inst const &c) {
@@ -798,12 +832,6 @@ std::vector<clir::stmt> opencl_ast::operator()(if_inst const &in) {
     yielded_vars_.pop_back();
     clinst.emplace_back(ib.get_product());
     return clinst;
-}
-
-std::vector<clir::stmt> opencl_ast::operator()(neg_inst const &n) {
-    auto v = declare(*n.result());
-    return {declaration_assignment(visit(*this, *n.result()->ty()), std::move(v),
-                                   -visit(*this, *n.a()))};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(size_inst const &s) {

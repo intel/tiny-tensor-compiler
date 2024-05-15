@@ -28,19 +28,11 @@ auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_va
         return is_argument_zero<std::int32_t>(arg_size, arg_value);
     case scalar_type::i64:
         return is_argument_zero<std::int64_t>(arg_size, arg_value);
-    case scalar_type::u8:
-        return is_argument_zero<std::uint8_t>(arg_size, arg_value);
-    case scalar_type::u16:
-        return is_argument_zero<std::uint16_t>(arg_size, arg_value);
-    case scalar_type::u32:
-        return is_argument_zero<std::uint32_t>(arg_size, arg_value);
-    case scalar_type::u64:
-        return is_argument_zero<std::uint64_t>(arg_size, arg_value);
     case scalar_type::f32:
         return is_argument_zero<float>(arg_size, arg_value);
     case scalar_type::f64:
         return is_argument_zero<double>(arg_size, arg_value);
-    case scalar_type::bool_:
+    case scalar_type::i1:
         break;
     };
     throw status::invalid_arguments;

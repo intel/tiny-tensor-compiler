@@ -117,8 +117,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
                 auto const block_size_imm = make_index(M_block_size, my_loc());
                 auto gid = bb.add(make_group_id(my_loc()));
-                auto m = bb.add(make_binary_op(binary_op::mul, gid,
-                                               make_index(M_block_size, my_loc()), my_loc()));
+                auto m = bb.add(
+                    make_arith(arithmetic::mul, gid, make_index(M_block_size, my_loc()), my_loc()));
                 auto const offsets = std::vector<value>{m, make_index(0, my_loc())};
 
                 if (!is_dynamic_value(M) && M % M_block_size == 0) {
@@ -126,7 +126,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 } else {
                     auto M_val =
                         is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc())) : make_index(M);
-                    auto M_val_sub_m = bb.add(make_binary_op(binary_op::sub, M_val, m, my_loc()));
+                    auto M_val_sub_m = bb.add(make_arith(arithmetic::sub, M_val, m, my_loc()));
                     auto cond = bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
                                                 make_index(M_block_size, my_loc()), my_loc()));
                     auto const dynamic_imm = make_dynamic(my_loc());

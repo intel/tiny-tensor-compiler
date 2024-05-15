@@ -35,8 +35,9 @@ class ir_dumper {
     /* Inst nodes */
     void operator()(alloca_inst const &a);
     void operator()(axpby_inst const &a);
+    void operator()(arith_inst const &a);
+    void operator()(arith_unary_inst const &a);
     void operator()(barrier_inst const &b);
-    void operator()(binary_op_inst const &b);
     void operator()(cast_inst const &c);
     void operator()(compare_inst const &c);
     void operator()(expand_inst const &e);
@@ -52,7 +53,6 @@ class ir_dumper {
     void operator()(foreach_inst const &p);
     void operator()(hadamard_inst const &g);
     void operator()(if_inst const &in);
-    void operator()(neg_inst const &n);
     void operator()(size_inst const &s);
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);

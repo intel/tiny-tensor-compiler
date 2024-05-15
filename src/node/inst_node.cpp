@@ -96,7 +96,7 @@ axpby_inst::axpby_inst(transpose tA, value alpha, value A, value beta, value B, 
     }
 }
 
-binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &lc)
+arith_inst::arith_inst(arithmetic op, value a, value b, location const &lc)
     : op_(op), a_(std::move(a)), b_(std::move(b)) {
     loc(lc);
 
@@ -105,6 +105,46 @@ binary_op_inst::binary_op_inst(binary_op op, value a, value b, location const &l
 
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+    bool inst_supports_fp = false;
+    switch (op) {
+    case arithmetic::add:
+    case arithmetic::sub:
+    case arithmetic::mul:
+    case arithmetic::div:
+    case arithmetic::rem:
+        inst_supports_fp = true;
+        break;
+    case arithmetic::shl:
+    case arithmetic::shr:
+    case arithmetic::and_:
+    case arithmetic::or_:
+    case arithmetic::xor_:
+        inst_supports_fp = false;
+        break;
+    }
+    if (!inst_supports_fp && is_floating_type(at->ty())) {
+        throw compilation_error(loc(), status::ir_fp_unsupported);
+    }
+    result_ = make_value(at->ty());
+}
+
+arith_unary_inst::arith_unary_inst(arithmetic_unary op, value a, location const &lc)
+    : op_(op), a_(std::move(a)) {
+    loc(lc);
+
+    auto at = get_scalar_type(loc(), a_);
+    bool inst_supports_fp = false;
+    switch (op) {
+    case arithmetic_unary::neg:
+        inst_supports_fp = true;
+        break;
+    case arithmetic_unary::not_:
+        inst_supports_fp = false;
+        break;
+    }
+    if (!inst_supports_fp && is_floating_type(at->ty())) {
+        throw compilation_error(loc(), status::ir_fp_unsupported);
     }
     result_ = make_value(at->ty());
 }
@@ -115,7 +155,7 @@ cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a, value b, location const &lc)
-    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{make_value(scalar_type::bool_)} {
+    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{make_value(scalar_type::i1)} {
     loc(lc);
 
     auto at = get_scalar_type(loc(), a_);
@@ -386,13 +426,6 @@ load_inst::load_inst(value op, std::vector<value> index_list, location const &lc
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *op_->ty());
-}
-
-neg_inst::neg_inst(value a, location const &lc) : a_(std::move(a)) {
-    loc(lc);
-
-    auto at = get_scalar_type(loc(), a_);
-    result_ = make_value(at->ty());
 }
 
 size_inst::size_inst(value op, std::int64_t mode, location const &lc)

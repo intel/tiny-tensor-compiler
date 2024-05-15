@@ -13,22 +13,18 @@ Scalar types
 
 A scalar argument always corresponds to a single scalar argument in the OpenCL-C code.
 
-============= ===========
-Argument type OpenCL type
-============= ===========
-bool          bool
-index         long
-i8            char
-i16           short
-i32           int
-i64           long
-u8            uchar
-u16           ushort
-u32           uint
-u64           ulong
-f32           float
-f64           double
-============= ===========
+============= ============= ====================
+Argument type OpenCL C type Kernel argument type
+============= ============= ====================
+i1            bool          n/a [#f1]_
+i8            char          cl_char
+i16           short         cl_short
+i32           int           cl_int
+i64           long          cl_long
+index         long          cl_long
+f32           float         cl_float
+f64           double        cl_double
+============= ============= ====================
 
 For example,
 
@@ -41,6 +37,10 @@ leads to
 .. code:: c
 
    kernel void scalar_example(short a) {}
+
+.. rubric:: Footnotes
+
+.. [#f1] Arguments to kernel functions cannot be declared with the type bool in OpenCL
 
 Memref types
 ============
