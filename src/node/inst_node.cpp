@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
+#include "scalar_type.hpp"
 #include "tinytc/types.hpp"
 #include "util.hpp"
 

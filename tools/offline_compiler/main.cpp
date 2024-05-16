@@ -5,9 +5,10 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <cstring>
 #include <exception>
 #include <iostream>
+#include <stdexcept>
+#include <string_view>
 
 using namespace tinytc;
 

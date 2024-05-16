@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "args.hpp"
+#include "tinytc/types.hpp"
 
-#include <cstdlib>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>
-#include <string>
 
 using tinytc::core_info;
 using tinytc::intel_gpu_architecture;
