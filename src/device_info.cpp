@@ -138,6 +138,11 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
     }
     return exception_to_status_code([&] {
         switch (arch) {
+        case tinytc_intel_gpu_architecture_tgl:
+            *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 7,
+                                                      std::vector<std::int32_t>{8, 16, 32})
+                        .release();
+            break;
         case tinytc_intel_gpu_architecture_pvc:
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
