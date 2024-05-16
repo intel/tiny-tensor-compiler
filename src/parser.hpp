@@ -38,7 +38,7 @@ struct tinytc_source_context : tinytc::reference_counted {
     //! Annotate context to error message
     void report_error(tinytc_location const &l, char const *what, bool append = false);
     //! Return error log of last parse call
-    inline auto last_error_log() const -> std::string const & { return last_error_log_; }
+    inline auto last_error_log() const noexcept -> std::string const & { return last_error_log_; }
 
   private:
     struct source_input {

@@ -88,11 +88,10 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
     try {
         auto pb = program_builder{};
         pb.create("gemm", kernel, my_loc());
-        auto p = pb.get_product(my_loc());
 
         auto info = make_core_info(q.get_device());
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        return compile_to_opencl(p, info, ctx);
+        return compile_to_opencl(pb.get_product(my_loc()), info, ctx);
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
         std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << std::endl

@@ -151,7 +151,8 @@ tinytc_status_t tinytc_source_context_get_error_log(const_tinytc_source_context_
     if (ctx == nullptr || log == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *log = ctx->last_error_log().c_str(); });
+    *log = ctx->last_error_log().c_str(); // last_error_log and c_str are noexcept
+    return tinytc_status_success;
 }
 
 tinytc_status_t tinytc_source_context_report_error(tinytc_source_context_t ctx,
