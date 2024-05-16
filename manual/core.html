@@ -39,7 +39,7 @@
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/tabs.js?v=3030b3cb"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
@@ -414,6 +414,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error">Error</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parser">Parser</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler">Compiler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device info</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime">Runtime</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#batched-small-gemm">Batched small GEMM</a></li>
@@ -528,9 +529,9 @@ then the error log of the source context contains the following error message:</
 <section id="compiler">
 <h2>Compiler<a class="headerlink" href="#compiler" title="Link to this heading">#</a></h2>
 <p>Program objects (<a class="reference internal" href="../api/builder_capi.html#tinytc-prog-t"><span class="std std-ref">tinytc_prog_t</span></a>, <a class="reference internal" href="../api/builder_cxxapi.html#prog"><span class="std std-ref">prog</span></a>) are online-compiled
-using the <a class="reference internal" href="../api/core_capi.html#tinytc-prog-compile-to-binary"><span class="std std-ref">tinytc_prog_compile_to_binary</span></a> (<span class="xref std std-ref">compile_to_binary</span>) function.
+using the <a class="reference internal" href="../api/core_capi.html#tinytc-prog-compile-to-opencl"><span class="std std-ref">tinytc_prog_compile_to_opencl</span></a> (<a class="reference internal" href="../api/core_cxxapi.html#compile-to-opencl"><span class="std std-ref">compile_to_opencl</span></a>) function.
 The program object is hereby modified as compiler passes are necessary.
-A binary object is returned that either contains SPIR-V or a native device binary.</p>
+A source object is returned that contains OpenCL-C source text.</p>
 <p>Some compiler passes specialize the code based on properties of the GPU device.
 Therefore, a <a class="reference internal" href="../api/core_capi.html#tinytc-core-info-t"><span class="std std-ref">tinytc_core_info_t</span></a> (<a class="reference internal" href="../api/core_cxxapi.html#core-info"><span class="std std-ref">core_info</span></a>) object is required.
 It is recommend to query the core info from the runtime using any of the tinytc_<em>runtime</em>_core_info_create
@@ -541,19 +542,19 @@ as done in the example code below.</p>
 <div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-3-3-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-3-3-0" name="3-0" role="tab" tabindex="0">C</button><button aria-controls="panel-3-3-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-3-3-1" name="3-1" role="tab" tabindex="-1">C++</button></div><div aria-labelledby="tab-3-3-0" class="sphinx-tabs-panel" id="panel-3-3-0" name="3-0" role="tabpanel" tabindex="0"><p>Example:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_status_t</span><span class="w"> </span><span class="n">status</span><span class="p">;</span>
 <span class="n">tinytc_core_info_t</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
-<span class="n">tinytc_binary_t</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="n">tinytc_source_t</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc_core_info_intel_create_from_arch</span><span class="p">(</span><span class="o">&amp;</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_intel_gpu_architecture_pvc</span><span class="p">);</span>
 <span class="c1">// ... check status ...</span>
-<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc_prog_compile_to_binary</span><span class="p">(</span><span class="o">&amp;</span><span class="n">binary</span><span class="p">,</span><span class="w"> </span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_bundle_format_native</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
+<span class="n">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc_prog_compile_to_opencl</span><span class="p">(</span><span class="o">&amp;</span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="c1">// ...</span>
-<span class="n">tinytc_binary_release</span><span class="p">(</span><span class="n">binary</span><span class="p">);</span>
+<span class="n">tinytc_source_release</span><span class="p">(</span><span class="n">source</span><span class="p">);</span>
 <span class="n">tinytc_core_info_release</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
 </pre></div>
 </div>
 </div><div aria-labelledby="tab-3-3-1" class="sphinx-tabs-panel" hidden="true" id="panel-3-3-1" name="3-1" role="tabpanel" tabindex="0"><p>Example:</p>
 <div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_core_info_intel_from_arch</span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">intel_gpu_architecture</span><span class="o">::</span><span class="n">pvc</span><span class="p">);</span>
-<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">binary</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">compile_to_binary</span><span class="p">(</span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">bundle_format</span><span class="o">::</span><span class="n">native</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">source</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">compile_to_opencl</span><span class="p">(</span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">status</span><span class="w"> </span><span class="k">const</span><span class="o">&amp;</span><span class="w"> </span><span class="n">st</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="p">...</span>
 <span class="p">}</span>
@@ -569,21 +570,56 @@ the <a class="reference external" href="https://registry.khronos.org/OpenCL/exte
 and the <a class="reference external" href="https://registry.khronos.org/OpenCL/extensions/intel/cl_intel_subgroups_short.html">cl_intel_subgroups_short</a> extension.</p>
 </div>
 </section>
+<section id="device-info">
+<h2>Device info<a class="headerlink" href="#device-info" title="Link to this heading">#</a></h2>
+<p>Kernels are specialized for properties of the target device, such as the subgroup size, the
+maximum work group size, and the register space available to a subgroup.
+Moreover, the device’s <a class="reference internal" href="../api/core_capi.html#tinytc-support-level-t"><span class="std std-ref">support level</span></a> can be queried from the
+run-time.</p>
+<div class="sphinx-tabs docutils container">
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-4-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-4-4-0" name="4-0" role="tab" tabindex="0">Level Zero (C)</button><button aria-controls="panel-4-4-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-1" name="4-1" role="tab" tabindex="-1">OpenCL (C)</button><button aria-controls="panel-4-4-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-2" name="4-2" role="tab" tabindex="-1">SYCL (C++)</button></div><div aria-labelledby="tab-4-4-0" class="sphinx-tabs-panel" id="panel-4-4-0" name="4-0" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_support_level_t</span><span class="w"> </span><span class="n">level</span><span class="p">;</span>
+<span class="n">tinytc_ze_get_support_level</span><span class="p">(</span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">level</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">level</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">tinytc_support_level_basic</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">tinytc_core_info_t</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tinytc_ze_core_info_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">    </span><span class="n">tinytc_core_info_release</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-4-1" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-1" name="4-1" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_support_level_t</span><span class="w"> </span><span class="n">level</span><span class="p">;</span>
+<span class="n">tinytc_cl_get_support_level</span><span class="p">(</span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">level</span><span class="p">);</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">level</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">tinytc_support_level_basic</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">tinytc_core_info_t</span><span class="w"> </span><span class="n">info</span><span class="p">;</span>
+<span class="w">    </span><span class="n">tinytc_cl_core_info_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="w">    </span><span class="n">tinytc_core_info_release</span><span class="p">(</span><span class="n">info</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div><div aria-labelledby="tab-4-4-2" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-2" name="4-2" role="tabpanel" tabindex="0"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">tinytc</span><span class="o">::</span><span class="n">get_support_level</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">support_level</span><span class="o">::</span><span class="n">basic</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">info</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_core_info</span><span class="p">(</span><span class="n">device</span><span class="p">);</span>
+<span class="w">    </span><span class="c1">// ...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div></div>
+</section>
 <section id="runtime">
 <h2>Runtime<a class="headerlink" href="#runtime" title="Link to this heading">#</a></h2>
-<p>The JIT compiler compiles tensor programs into a binary kernel bundle (SPIR-V or native device binary).
+<p>The JIT compiler compiles tensor programs into OpenCL-C code.
 The libray provides functions to create the runtime’s kernel bundle object
-(cl_program, sycl::kernel_bundle, ze_module_handle_t) from a binary object.
+(cl_program, sycl::kernel_bundle, ze_module_handle_t) from a source object.
 The runtime’s kernel objects are obtained using the native API or the Tiny Tensor Compiler API (if applicable).
 Setting the kernel arguments should following the <a class="reference internal" href="calling_convention.html#calling-convention"><span class="std std-ref">Calling convention</span></a>.
 The Tiny Tensor Compiler should be used to translate the 2D work-group size of the tensor language
 to a 3D work-group size, and to translate the group size to the global size that is passed to the runtime.</p>
 <p>Example for “func &#64;foo(%a: i32, …) { … }” (without error handling code):</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-4-4-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-4-4-0" name="4-0" role="tab" tabindex="0">Level Zero (C)</button><button aria-controls="panel-4-4-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-1" name="4-1" role="tab" tabindex="-1">OpenCL (C)</button><button aria-controls="panel-4-4-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-4-4-2" name="4-2" role="tab" tabindex="-1">SYCL (C++)</button></div><div aria-labelledby="tab-4-4-0" class="sphinx-tabs-panel" id="panel-4-4-0" name="4-0" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">ze_module_handle_t</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-5-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-5-5-0" name="5-0" role="tab" tabindex="0">Level Zero (C)</button><button aria-controls="panel-5-5-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-1" name="5-1" role="tab" tabindex="-1">OpenCL (C)</button><button aria-controls="panel-5-5-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-2" name="5-2" role="tab" tabindex="-1">SYCL (C++)</button></div><div aria-labelledby="tab-5-5-0" class="sphinx-tabs-panel" id="panel-5-5-0" name="5-0" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">ze_module_handle_t</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">ze_kernel_handle_t</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
-<span class="n">tinytc_ze_module_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">binary</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
+<span class="n">tinytc_ze_kernel_bundle_create_with_source</span><span class="p">(</span><span class="o">&amp;</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="n">tinytc_ze_kernel_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Sets the work-group size</span>
 <span class="n">zeKernelSetArgumentValue</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span>
 <span class="c1">// ...</span>
@@ -594,12 +630,12 @@ to a 3D work-group size, and to translate the group size to the global size that
 <span class="n">zeModuleDestroy</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-4-1" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-1" name="4-1" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">cl_program</span><span class="w"> </span><span class="n">module</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+</div><div aria-labelledby="tab-5-5-1" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-1" name="5-1" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">cl_program</span><span class="w"> </span><span class="n">program</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">cl_kernel</span><span class="w"> </span><span class="n">kernel</span><span class="p">;</span>
 <span class="n">cl_int</span><span class="w"> </span><span class="n">err</span><span class="p">;</span>
 <span class="kt">int</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">42</span><span class="p">;</span>
-<span class="n">tinytc_cl_program_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">binary</span><span class="p">);</span>
-<span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clCreateKernel</span><span class="p">(</span><span class="n">module</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">err</span><span class="p">);</span>
+<span class="n">tinytc_cl_kernel_bundle_create_with_source</span><span class="p">(</span><span class="o">&amp;</span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">binary</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
+<span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">clCreateKernel</span><span class="p">(</span><span class="n">program</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">err</span><span class="p">);</span>
 <span class="n">clSetKernelArg</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="k">sizeof</span><span class="p">(</span><span class="n">a</span><span class="p">),</span><span class="w"> </span><span class="o">&amp;</span><span class="n">a</span><span class="p">);</span>
 <span class="c1">// ...</span>
 <span class="kt">size_t</span><span class="w"> </span><span class="n">ls</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span><span class="w"> </span><span class="n">gs</span><span class="p">[</span><span class="mi">3</span><span class="p">];</span>
@@ -608,10 +644,10 @@ to a 3D work-group size, and to translate the group size to the global size that
 <span class="n">clEnqueueNDRangeKernel</span><span class="p">(</span><span class="n">command_list</span><span class="p">,</span><span class="w"> </span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="mi">3u</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="n">gs</span><span class="p">,</span><span class="w"> </span><span class="n">ls</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 <span class="c1">// ...</span>
 <span class="n">clReleaseKernel</span><span class="p">(</span><span class="n">kernel</span><span class="p">);</span>
-<span class="n">clReleaseProgram</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
+<span class="n">clReleaseProgram</span><span class="p">(</span><span class="n">program</span><span class="p">);</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-4-4-2" class="sphinx-tabs-panel" hidden="true" id="panel-4-4-2" name="4-2" role="tabpanel" tabindex="0"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_kernel_bundle</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">binary</span><span class="p">);</span>
+</div><div aria-labelledby="tab-5-5-2" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-2" name="5-2" role="tabpanel" tabindex="0"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_kernel_bundle</span><span class="p">(</span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">source</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">kernel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_kernel</span><span class="p">(</span><span class="n">bundle</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;foo&quot;</span><span class="p">);</span>
 <span class="k">auto</span><span class="w"> </span><span class="n">exe_range</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">get_execution_range</span><span class="p">(</span><span class="n">kernel</span><span class="p">,</span><span class="w"> </span><span class="n">howmany</span><span class="p">);</span>
 <span class="n">queue</span><span class="p">.</span><span class="n">submit</span><span class="p">([</span><span class="o">&amp;</span><span class="p">](</span><span class="n">sycl</span><span class="o">::</span><span class="n">handler</span><span class="w"> </span><span class="o">&amp;</span><span class="n">h</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -621,6 +657,11 @@ to a 3D work-group size, and to translate the group size to the global size that
 </pre></div>
 </div>
 </div></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Kernel bundles can also be created from program objects directly, e.g. with
+<a class="reference internal" href="../api/cl/capi.html#tinytc-cl-kernel-bundle-create-with-program"><span class="std std-ref">tinytc_cl_kernel_bundle_create_with_program</span></a> or <a class="reference internal" href="../api/ze/capi.html#tinytc-ze-kernel-bundle-create-with-program"><span class="std std-ref">tinytc_ze_kernel_bundle_create_with_program</span></a>.</p>
+</div>
 </section>
 <section id="recipe">
 <h2>Recipe<a class="headerlink" href="#recipe" title="Link to this heading">#</a></h2>
@@ -630,10 +671,10 @@ are all encapsulated in the recipe.</p>
 <p>Recipes are submitted to the runtime using a recipe handler.
 The general usage of a recipe is as following:</p>
 <div class="sphinx-tabs docutils container">
-<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-5-5-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-5-5-0" name="5-0" role="tab" tabindex="0">Level Zero (C)</button><button aria-controls="panel-5-5-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-1" name="5-1" role="tab" tabindex="-1">OpenCL (C)</button><button aria-controls="panel-5-5-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-5-5-2" name="5-2" role="tab" tabindex="-1">SYCL (C++)</button></div><div aria-labelledby="tab-5-5-0" class="sphinx-tabs-panel" id="panel-5-5-0" name="5-0" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_recipe_t</span><span class="w"> </span><span class="n">recipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<div aria-label="Tabbed content" class="closeable" role="tablist"><button aria-controls="panel-6-6-0" aria-selected="true" class="sphinx-tabs-tab" id="tab-6-6-0" name="6-0" role="tab" tabindex="0">Level Zero (C)</button><button aria-controls="panel-6-6-1" aria-selected="false" class="sphinx-tabs-tab" id="tab-6-6-1" name="6-1" role="tab" tabindex="-1">OpenCL (C)</button><button aria-controls="panel-6-6-2" aria-selected="false" class="sphinx-tabs-tab" id="tab-6-6-2" name="6-2" role="tab" tabindex="-1">SYCL (C++)</button></div><div aria-labelledby="tab-6-6-0" class="sphinx-tabs-panel" id="panel-6-6-0" name="6-0" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_recipe_t</span><span class="w"> </span><span class="n">recipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">tinytc_recipe_handler_t</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">recipe</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_parameters</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
-<span class="n">tinytc_ze_recipe_handler_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">recipe</span><span class="p">);</span>
+<span class="n">tinytc_ze_recipe_handler_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">recipe</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_set_args</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_args</span><span class="o">&gt;</span><span class="p">);</span>
 <span class="n">tinytc_ze_recipe_handler_submit</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">command_list</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 <span class="c1">// ...</span>
@@ -641,10 +682,10 @@ The general usage of a recipe is as following:</p>
 <span class="n">tinytc_recipe_release</span><span class="p">(</span><span class="n">recipe</span><span class="p">);</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-5-5-1" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-1" name="5-1" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_recipe_t</span><span class="w"> </span><span class="n">recipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+</div><div aria-labelledby="tab-6-6-1" class="sphinx-tabs-panel" hidden="true" id="panel-6-6-1" name="6-1" role="tabpanel" tabindex="0"><div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">tinytc_recipe_t</span><span class="w"> </span><span class="n">recipe</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">tinytc_recipe_handler_t</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
 <span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">recipe</span><span class="p">,</span><span class="w"> </span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_parameters</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
-<span class="n">tinytc_cl_recipe_handler_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">recipe</span><span class="p">);</span>
+<span class="n">tinytc_cl_recipe_handler_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">context</span><span class="p">,</span><span class="w"> </span><span class="n">device</span><span class="p">,</span><span class="w"> </span><span class="n">recipe</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_set_args</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_args</span><span class="o">&gt;</span><span class="p">);</span>
 <span class="n">tinytc_cl_recipe_handler_submit</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="n">queue</span><span class="p">,</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">,</span><span class="w"> </span><span class="nb">NULL</span><span class="p">);</span>
 <span class="c1">// ...</span>
@@ -652,27 +693,33 @@ The general usage of a recipe is as following:</p>
 <span class="n">tinytc_recipe_release</span><span class="p">(</span><span class="n">recipe</span><span class="p">);</span>
 </pre></div>
 </div>
-</div><div aria-labelledby="tab-5-5-2" class="sphinx-tabs-panel" hidden="true" id="panel-5-5-2" name="5-2" role="tabpanel" tabindex="0"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_recipe_handler</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span>
-<span class="w">    </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_parameters</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">));</span>
+</div><div aria-labelledby="tab-6-6-2" class="sphinx-tabs-panel" hidden="true" id="panel-6-6-2" name="6-2" role="tabpanel" tabindex="0"><div class="highlight-C++ notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">handler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_recipe_handler</span><span class="p">(</span><span class="n">queue</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tinytc</span><span class="o">::</span><span class="n">make_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="p">(</span><span class="n">info</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_parameters</span><span class="o">&gt;</span><span class="p">,</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">),</span><span class="w"> </span><span class="n">source_ctx</span><span class="p">);</span>
 <span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;::</span><span class="n">set_args</span><span class="p">(</span><span class="n">handler</span><span class="p">,</span><span class="w"> </span><span class="o">&lt;</span><span class="n">recipe_args</span><span class="o">&gt;</span><span class="p">);</span>
 <span class="n">handler</span><span class="p">.</span><span class="n">submit</span><span class="p">(</span><span class="n">queue</span><span class="p">);</span>
 </pre></div>
 </div>
 </div></div>
-<p>As memory is handled as buffers (e.g. cl_mem in OpenCL) or Unified Shared Memory pointers
-(e.g. void* in Level Zero), memory objects are passed via the <a class="reference internal" href="../api/core_capi.html#tinytc-mem"><span class="std std-ref">tinytc_mem</span></a> struct.
+<p>Memory objects are either buffers (e.g. cl_mem in OpenCL) or Unified Shared Memory pointers
+or Shared Virtual Memory pointers.
+The unified interface requires the memory object to be given as void-pointer, annotated with
+<a class="reference internal" href="../api/core_capi.html#tinytc-mem-type-t"><span class="std std-ref">tinytc_mem_type_t</span></a>.
 For example:</p>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="c1">// OpenCL</span>
 <span class="n">cl_mem</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="n">tinytc_mem_t</span><span class="w"> </span><span class="n">Amem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="o">&amp;</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_mem_type_buffer</span><span class="p">};</span>
+<span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_set_args</span><span class="p">(...,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_mem_type_buffer</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
+
 <span class="c1">// Level Zero</span>
 <span class="kt">void</span><span class="o">*</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">...;</span>
-<span class="n">tinytc_mem_t</span><span class="w"> </span><span class="n">Amem</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_mem_type_usm_pointer</span><span class="p">};</span>
+<span class="n">tinytc_recipe_</span><span class="o">&lt;</span><span class="n">recipe_name</span><span class="o">&gt;</span><span class="n">_set_args</span><span class="p">(...,</span><span class="w"> </span><span class="n">A</span><span class="p">,</span><span class="w"> </span><span class="n">tinytc_mem_type_usm_pointer</span><span class="p">,</span><span class="w"> </span><span class="p">...);</span>
 </pre></div>
 </div>
-<p>Note that USM pointers are passed by value but cl_mem objects are passed as pointer to cl_mem.</p>
-<p>In C++, the <a class="reference internal" href="../api/core_cxxapi.html#mem"><span class="std std-ref">mem</span></a> object has the some job but automatically guesses the type,
-such that one usually does not need to explicitly specify it.</p>
+<p>In C++, one only needs to pass the memory object.
+The memory object is implicitly converted to the <a class="reference internal" href="../api/core_cxxapi.html#mem"><span class="std std-ref">mem</span></a> type that
+automatically determines whether a pointer or a cl_mem object is given.
+A pointer maps to tinytc_mem_type_usm_pointer and a cl_mem object maps
+to tinytc_mem_type_buffer.
+For SVM pointers, one needs to explicitly call <cite>mem(pointer, tinytc_mem_type_svm_pointer)</cite>.</p>
 <section id="batched-small-gemm">
 <h3>Batched small GEMM<a class="headerlink" href="#batched-small-gemm" title="Link to this heading">#</a></h3>
 <p>The batched small GEMM recipe implements the following tensor operation:</p>
@@ -758,6 +805,7 @@ and <span class="math notranslate nohighlight">\(M \gg K\)</span>, <span class="
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error">Error</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#parser">Parser</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler">Compiler</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device info</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#runtime">Runtime</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#batched-small-gemm">Batched small GEMM</a></li>

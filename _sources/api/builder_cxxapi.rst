@@ -10,7 +10,9 @@ Common
 
 * Enumerations
 
-  * :ref:`binary_op`
+  * :ref:`arithmetic`
+
+  * :ref:`arithmetic_unary`
 
   * :ref:`cmp_condition`
 
@@ -22,7 +24,9 @@ Common
 
   * :ref:`is_dynamic_value`
 
-  * :ref:`to_string(binary_op)`
+  * :ref:`to_string(arithmetic)`
+
+  * :ref:`to_string(arithmetic_unary)`
 
   * :ref:`to_string(cmp_condition)`
 
@@ -49,10 +53,15 @@ Common
 Common Enumerations
 -------------------
 
-binary_op
-.........
+arithmetic
+..........
 
-.. doxygenenum:: tinytc::binary_op
+.. doxygenenum:: tinytc::arithmetic
+
+arithmetic_unary
+................
+
+.. doxygenenum:: tinytc::arithmetic_unary
 
 cmp_condition
 .............
@@ -77,10 +86,15 @@ is_dynamic_value
 
 .. doxygenfunction:: tinytc::is_dynamic_value
 
-to_string(binary_op)
-....................
+to_string(arithmetic)
+.....................
 
-.. doxygenfunction:: tinytc::to_string(binary_op)
+.. doxygenfunction:: tinytc::to_string(arithmetic)
+
+to_string(arithmetic_unary)
+...........................
+
+.. doxygenfunction:: tinytc::to_string(arithmetic_unary)
 
 to_string(cmp_condition)
 ........................
@@ -260,7 +274,9 @@ Instruction
 
   * :ref:`make_axpby`
 
-  * :ref:`make_binary_op`
+  * :ref:`make_arith(arithmetic,value const&,value const&,location const&)`
+
+  * :ref:`make_arith(arithmetic_unary,value const&,location const&)`
 
   * :ref:`make_cast`
 
@@ -290,8 +306,6 @@ Instruction
 
   * :ref:`make_load`
 
-  * :ref:`make_neg`
-
   * :ref:`make_size`
 
   * :ref:`make_store`
@@ -319,10 +333,15 @@ make_axpby
 
 .. doxygenfunction:: tinytc::make_axpby
 
-make_binary_op
-..............
+make_arith(arithmetic,value const&,value const&,location const&)
+................................................................
 
-.. doxygenfunction:: tinytc::make_binary_op
+.. doxygenfunction:: tinytc::make_arith(arithmetic,value const&,value const&,location const&)
+
+make_arith(arithmetic_unary,value const&,location const&)
+.........................................................
+
+.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value const&,location const&)
 
 make_cast
 .........
@@ -393,11 +412,6 @@ make_load
 .........
 
 .. doxygenfunction:: tinytc::make_load
-
-make_neg
-........
-
-.. doxygenfunction:: tinytc::make_neg
 
 make_size
 .........
@@ -519,7 +533,9 @@ Value
 
   * :ref:`make_imm(std::int64_t,scalar_type,location const&)`
 
-  * :ref:`make_imm(std::uint32_t,location const&)`
+  * :ref:`make_index(std::int32_t,location const&)`
+
+  * :ref:`make_index(std::int64_t,location const&)`
 
   * :ref:`make_value(data_type const&,location const&)`
 
@@ -567,10 +583,15 @@ make_imm(std::int64_t,scalar_type,location const&)
 
 .. doxygenfunction:: tinytc::make_imm(std::int64_t,scalar_type,location const&)
 
-make_imm(std::uint32_t,location const&)
-.......................................
+make_index(std::int32_t,location const&)
+........................................
 
-.. doxygenfunction:: tinytc::make_imm(std::uint32_t,location const&)
+.. doxygenfunction:: tinytc::make_index(std::int32_t,location const&)
+
+make_index(std::int64_t,location const&)
+........................................
+
+.. doxygenfunction:: tinytc::make_index(std::int64_t,location const&)
 
 make_value(data_type const&,location const&)
 ............................................

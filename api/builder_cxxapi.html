@@ -39,7 +39,7 @@
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -411,7 +411,8 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-op">binary_op</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arithmetic">arithmetic</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arithmetic-unary">arithmetic_unary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmp-condition">cmp_condition</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-type">scalar_type</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#transpose">transpose</a></li>
@@ -419,7 +420,8 @@ document.write(`
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#is-dynamic-value">is_dynamic_value</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-binary-op">to_string(binary_op)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-arithmetic">to_string(arithmetic)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-arithmetic-unary">to_string(arithmetic_unary)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-cmp-condition">to_string(cmp_condition)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-scalar-type">to_string(scalar_type)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-transpose">to_string(transpose)</a></li>
@@ -481,7 +483,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instruction-functions">Instruction Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-alloca">make_alloca</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-axpby">make_axpby</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-binary-op">make_binary_op</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-arith-arithmetic-value-const-value-const-location-const">make_arith(arithmetic,value const&amp;,value const&amp;,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-arith-arithmetic-unary-value-const-location-const">make_arith(arithmetic_unary,value const&amp;,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-cast">make_cast</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-cmp">make_cmp</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-expand">make_expand</a></li>
@@ -496,7 +499,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-hadamard">make_hadamard</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-if">make_if</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-load">make_load</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-neg">make_neg</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-size">make_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-store">make_store</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-subview">make_subview</a></li>
@@ -543,7 +545,8 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int16-t-location-const">make_imm(std::int16_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int32-t-location-const">make_imm(std::int32_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int64-t-scalar-type-location-const">make_imm(std::int64_t,scalar_type,location const&amp;)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-uint32-t-location-const">make_imm(std::uint32_t,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-index-std-int32-t-location-const">make_index(std::int32_t,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-index-std-int64-t-location-const">make_index(std::int64_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-value-data-type-const-location-const">make_value(data_type const&amp;,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-value-scalar-type-location-const">make_value(scalar_type,location const&amp;)</a></li>
 </ul>
@@ -572,7 +575,8 @@ document.write(`
 <ul class="simple">
 <li><p>Enumerations</p>
 <ul>
-<li><p><a class="reference internal" href="#binary-op"><span class="std std-ref">binary_op</span></a></p></li>
+<li><p><a class="reference internal" href="#arithmetic"><span class="std std-ref">arithmetic</span></a></p></li>
+<li><p><a class="reference internal" href="#arithmetic-unary"><span class="std std-ref">arithmetic_unary</span></a></p></li>
 <li><p><a class="reference internal" href="#cmp-condition"><span class="std std-ref">cmp_condition</span></a></p></li>
 <li><p><a class="reference internal" href="#scalar-type"><span class="std std-ref">scalar_type</span></a></p></li>
 <li><p><a class="reference internal" href="#transpose"><span class="std std-ref">transpose</span></a></p></li>
@@ -581,7 +585,8 @@ document.write(`
 <li><p>Functions</p>
 <ul>
 <li><p><a class="reference internal" href="#is-dynamic-value"><span class="std std-ref">is_dynamic_value</span></a></p></li>
-<li><p><a class="reference internal" href="#to-string-binary-op"><span class="std std-ref">to_string(binary_op)</span></a></p></li>
+<li><p><a class="reference internal" href="#to-string-arithmetic"><span class="std std-ref">to_string(arithmetic)</span></a></p></li>
+<li><p><a class="reference internal" href="#to-string-arithmetic-unary"><span class="std std-ref">to_string(arithmetic_unary)</span></a></p></li>
 <li><p><a class="reference internal" href="#to-string-cmp-condition"><span class="std std-ref">to_string(cmp_condition)</span></a></p></li>
 <li><p><a class="reference internal" href="#to-string-scalar-type"><span class="std std-ref">to_string(scalar_type)</span></a></p></li>
 <li><p><a class="reference internal" href="#to-string-transpose"><span class="std std-ref">to_string(transpose)</span></a></p></li>
@@ -607,41 +612,93 @@ document.write(`
 </ul>
 <section id="common-enumerations">
 <h3>Common Enumerations<a class="headerlink" href="#common-enumerations" title="Link to this heading">#</a></h3>
-<section id="binary-op">
-<h4>binary_op<a class="headerlink" href="#binary-op" title="Link to this heading">#</a></h4>
+<section id="arithmetic">
+<h4>arithmetic<a class="headerlink" href="#arithmetic" title="Link to this heading">#</a></h4>
 <dl class="cpp enum-class">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_opE">
-<span id="_CPPv3N6tinytc9binary_opE"></span><span id="_CPPv2N6tinytc9binary_opE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cc"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">binary_op</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_opE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Binary operations. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmeticE">
+<span id="_CPPv3N6tinytc10arithmeticE"></span><span id="_CPPv2N6tinytc10arithmeticE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">arithmetic</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmeticE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Arithmetic operations. </p>
 <p><em>Values:</em></p>
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_op3addE">
-<span id="_CPPv3N6tinytc9binary_op3addE"></span><span id="_CPPv2N6tinytc9binary_op3addE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cca34ec78fcc91ffb1e54cd85e4a0924332"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_binary_op_add</span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_op3addE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3addE">
+<span id="_CPPv3N6tinytc10arithmetic3addE"></span><span id="_CPPv2N6tinytc10arithmetic3addE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a34ec78fcc91ffb1e54cd85e4a0924332"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_add</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3addE" title="Link to this definition">#</a><br /></dt>
 <dd><p>add </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_op3subE">
-<span id="_CPPv3N6tinytc9binary_op3subE"></span><span id="_CPPv2N6tinytc9binary_op3subE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cca8a68dc3e925eacf92633be230722a140"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sub</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_binary_op_sub</span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_op3subE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3subE">
+<span id="_CPPv3N6tinytc10arithmetic3subE"></span><span id="_CPPv2N6tinytc10arithmetic3subE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a8a68dc3e925eacf92633be230722a140"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sub</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_sub</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3subE" title="Link to this definition">#</a><br /></dt>
 <dd><p>subtract </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_op3mulE">
-<span id="_CPPv3N6tinytc9binary_op3mulE"></span><span id="_CPPv2N6tinytc9binary_op3mulE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cca353942263d1bedfbe06b7bfa78226253"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mul</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_binary_op_mul</span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_op3mulE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3mulE">
+<span id="_CPPv3N6tinytc10arithmetic3mulE"></span><span id="_CPPv2N6tinytc10arithmetic3mulE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a353942263d1bedfbe06b7bfa78226253"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mul</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_mul</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3mulE" title="Link to this definition">#</a><br /></dt>
 <dd><p>multiply </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_op3divE">
-<span id="_CPPv3N6tinytc9binary_op3divE"></span><span id="_CPPv2N6tinytc9binary_op3divE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cca38696558dc98494c08d951c052900a2a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">div</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_binary_op_div</span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_op3divE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3divE">
+<span id="_CPPv3N6tinytc10arithmetic3divE"></span><span id="_CPPv2N6tinytc10arithmetic3divE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a38696558dc98494c08d951c052900a2a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">div</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_div</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3divE" title="Link to this definition">#</a><br /></dt>
 <dd><p>divide </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9binary_op3remE">
-<span id="_CPPv3N6tinytc9binary_op3remE"></span><span id="_CPPv2N6tinytc9binary_op3remE"></span><span class="target" id="namespacetinytc_1a3d032fb1ef12f320af473a1431c336cca5cadb523cb6909f92350f70f124adfb8"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rem</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_binary_op_rem</span></span><a class="headerlink" href="#_CPPv4N6tinytc9binary_op3remE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3remE">
+<span id="_CPPv3N6tinytc10arithmetic3remE"></span><span id="_CPPv2N6tinytc10arithmetic3remE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a5cadb523cb6909f92350f70f124adfb8"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rem</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_rem</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3remE" title="Link to this definition">#</a><br /></dt>
 <dd><p>division remainder </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3shlE">
+<span id="_CPPv3N6tinytc10arithmetic3shlE"></span><span id="_CPPv2N6tinytc10arithmetic3shlE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3abc192716b0e1d5c96a67961dd0d3f9da"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shl</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_shl</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3shlE" title="Link to this definition">#</a><br /></dt>
+<dd><p>left shift </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3shrE">
+<span id="_CPPv3N6tinytc10arithmetic3shrE"></span><span id="_CPPv2N6tinytc10arithmetic3shrE"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a82cfb068052c46d36d9050ce1fcbaf2e"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_shr</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3shrE" title="Link to this definition">#</a><br /></dt>
+<dd><p>arithmetic right shift </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic4and_E">
+<span id="_CPPv3N6tinytc10arithmetic4and_E"></span><span id="_CPPv2N6tinytc10arithmetic4and_E"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3aa195f8c413b580691c2daa246c1b16ce"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">and_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_and</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic4and_E" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise and </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic3or_E">
+<span id="_CPPv3N6tinytc10arithmetic3or_E"></span><span id="_CPPv2N6tinytc10arithmetic3or_E"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3acfc049a17faac959998820e7aaaf4329"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_or</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic3or_E" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise or </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10arithmetic4xor_E">
+<span id="_CPPv3N6tinytc10arithmetic4xor_E"></span><span id="_CPPv2N6tinytc10arithmetic4xor_E"></span><span class="target" id="namespacetinytc_1a4702360d20c461453467b67e947010b3a69def21775f8cfff31d5d7459d09e81c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">xor_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_xor</span></span><a class="headerlink" href="#_CPPv4N6tinytc10arithmetic4xor_E" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise xor </p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="arithmetic-unary">
+<h4>arithmetic_unary<a class="headerlink" href="#arithmetic-unary" title="Link to this heading">#</a></h4>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16arithmetic_unaryE">
+<span id="_CPPv3N6tinytc16arithmetic_unaryE"></span><span id="_CPPv2N6tinytc16arithmetic_unaryE"></span><span class="target" id="namespacetinytc_1a8893691e297432a7d0593878488337cb"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">arithmetic_unary</span></span></span><a class="headerlink" href="#_CPPv4N6tinytc16arithmetic_unaryE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Arithmetic operations (unary) </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16arithmetic_unary3negE">
+<span id="_CPPv3N6tinytc16arithmetic_unary3negE"></span><span id="_CPPv2N6tinytc16arithmetic_unary3negE"></span><span class="target" id="namespacetinytc_1a8893691e297432a7d0593878488337cbaf24c2c15b9d03797c6874986a8d19516"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">neg</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_unary_neg</span></span><a class="headerlink" href="#_CPPv4N6tinytc16arithmetic_unary3negE" title="Link to this definition">#</a><br /></dt>
+<dd><p>negation </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16arithmetic_unary4not_E">
+<span id="_CPPv3N6tinytc16arithmetic_unary4not_E"></span><span id="_CPPv2N6tinytc16arithmetic_unary4not_E"></span><span class="target" id="namespacetinytc_1a8893691e297432a7d0593878488337cba3870b99bc7d3e82e23296558b0741457"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">not_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_arithmetic_unary_not</span></span><a class="headerlink" href="#_CPPv4N6tinytc16arithmetic_unary4not_E" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise not </p>
 </dd></dl>
 
 </dd></dl>
@@ -701,15 +758,9 @@ document.write(`
 <dd><p>Scalar types. </p>
 <p><em>Values:</em></p>
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type5bool_E">
-<span id="_CPPv3N6tinytc11scalar_type5bool_E"></span><span id="_CPPv2N6tinytc11scalar_type5bool_E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba467afb5838aa377d55cce81f84c5512b"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bool_</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_bool</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type5bool_E" title="Link to this definition">#</a><br /></dt>
-<dd><p>boolean </p>
-</dd></dl>
-
-<dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type5indexE">
-<span id="_CPPv3N6tinytc11scalar_type5indexE"></span><span id="_CPPv2N6tinytc11scalar_type5indexE"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba6a992d5529f459a44fee58c733255e86"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_index</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type5indexE" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned integer type for indices. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type2i1E">
+<span id="_CPPv3N6tinytc11scalar_type2i1E"></span><span id="_CPPv2N6tinytc11scalar_type2i1E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba9ce88802f07591e5ce0457ef51ece021"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">i1</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_i1</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type2i1E" title="Link to this definition">#</a><br /></dt>
+<dd><p>Signed 1 bit integer (boolean) </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
@@ -737,27 +788,9 @@ document.write(`
 </dd></dl>
 
 <dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type2u8E">
-<span id="_CPPv3N6tinytc11scalar_type2u8E"></span><span id="_CPPv2N6tinytc11scalar_type2u8E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba077393852be20e37026d6281827662f2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">u8</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_u8</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type2u8E" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 8 bit integer. </p>
-</dd></dl>
-
-<dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type3u16E">
-<span id="_CPPv3N6tinytc11scalar_type3u16E"></span><span id="_CPPv2N6tinytc11scalar_type3u16E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dbade59a481c9d8ace262670bda2b39cb1f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">u16</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_u16</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type3u16E" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 16 bit integer. </p>
-</dd></dl>
-
-<dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type3u32E">
-<span id="_CPPv3N6tinytc11scalar_type3u32E"></span><span id="_CPPv2N6tinytc11scalar_type3u32E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dbaa311a831b48d59687cf0822a612c9032"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">u32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_u32</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type3u32E" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 32 bit integer. </p>
-</dd></dl>
-
-<dl class="cpp enumerator">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type3u64E">
-<span id="_CPPv3N6tinytc11scalar_type3u64E"></span><span id="_CPPv2N6tinytc11scalar_type3u64E"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba476bf781fb66b23778b1004edc3a1028"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">u64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_u64</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type3u64E" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 64 bit integer. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc11scalar_type5indexE">
+<span id="_CPPv3N6tinytc11scalar_type5indexE"></span><span id="_CPPv2N6tinytc11scalar_type5indexE"></span><span class="target" id="namespacetinytc_1a859188ef693b38299632eab3cbb745dba6a992d5529f459a44fee58c733255e86"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">tinytc_scalar_type_index</span></span><a class="headerlink" href="#_CPPv4N6tinytc11scalar_type5indexE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Unsigned Integer type for indices. </p>
 </dd></dl>
 
 <dl class="cpp enumerator">
@@ -809,15 +842,32 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="to-string-binary-op">
-<h4>to_string(binary_op)<a class="headerlink" href="#to-string-binary-op" title="Link to this heading">#</a></h4>
+<section id="to-string-arithmetic">
+<h4>to_string(arithmetic)<a class="headerlink" href="#to-string-arithmetic" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9to_stringE9binary_op">
-<span id="_CPPv3N6tinytc9to_stringE9binary_op"></span><span id="_CPPv2N6tinytc9to_stringE9binary_op"></span><span id="tinytc::to_string__binary_op"></span><span class="target" id="namespacetinytc_1a5c6374a8aea9d6d54fc7dc562368a13a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc9binary_opE" title="tinytc::binary_op"><span class="n"><span class="pre">binary_op</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc9to_stringE9binary_op" title="Link to this definition">#</a><br /></dt>
-<dd><p>Convert binary op to string. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9to_stringE10arithmetic">
+<span id="_CPPv3N6tinytc9to_stringE10arithmetic"></span><span id="_CPPv2N6tinytc9to_stringE10arithmetic"></span><span id="tinytc::to_string__arithmetic"></span><span class="target" id="namespacetinytc_1a639e673309ed73f295b62be39a394f81"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc10arithmeticE" title="tinytc::arithmetic"><span class="n"><span class="pre">arithmetic</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc9to_stringE10arithmetic" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert arithmetic operation type to string. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>op</strong> – Binary op</p>
+<dd class="field-odd"><p><strong>op</strong> – Arithmetic operation type</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>C-string </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="to-string-arithmetic-unary">
+<h4>to_string(arithmetic_unary)<a class="headerlink" href="#to-string-arithmetic-unary" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc9to_stringE16arithmetic_unary">
+<span id="_CPPv3N6tinytc9to_stringE16arithmetic_unary"></span><span id="_CPPv2N6tinytc9to_stringE16arithmetic_unary"></span><span id="tinytc::to_string__arithmetic_unary"></span><span class="target" id="namespacetinytc_1a332444b1b6eaf25f9bdbd6df28b73bad"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc16arithmetic_unaryE" title="tinytc::arithmetic_unary"><span class="n"><span class="pre">arithmetic_unary</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc9to_stringE16arithmetic_unary" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert arithmetic operation type to string (unary) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>op</strong> – Arithmetic operation type</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>C-string </p>
@@ -1005,13 +1055,14 @@ document.write(`
 <section id="make-group">
 <h4>make_group<a class="headerlink" href="#make-group" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_groupERK9data_typeRK8location">
-<span id="_CPPv3N6tinytc10make_groupERK9data_typeRK8location"></span><span id="_CPPv2N6tinytc10make_groupERK9data_typeRK8location"></span><span id="tinytc::make_group__data_typeCR.locationCR"></span><span class="target" id="namespacetinytc_1a523f86e16ec96f6f6c742e3de94ef3d7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc9data_typeE" title="tinytc::data_type"><span class="n"><span class="pre">data_type</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_group</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc9data_typeE" title="tinytc::data_type"><span class="n"><span class="pre">data_type</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">memref_ty</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc10make_groupERK9data_typeRK8location" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_groupERK9data_typeNSt7int64_tERK8location">
+<span id="_CPPv3N6tinytc10make_groupERK9data_typeNSt7int64_tERK8location"></span><span id="_CPPv2N6tinytc10make_groupERK9data_typeNSt7int64_tERK8location"></span><span id="tinytc::make_group__data_typeCR.std::int64_t.locationCR"></span><span class="target" id="namespacetinytc_1a3a1c6593bb229f9e1d7e52d724be535a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc9data_typeE" title="tinytc::data_type"><span class="n"><span class="pre">data_type</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_group</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc9data_typeE" title="tinytc::data_type"><span class="n"><span class="pre">data_type</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">memref_ty</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">offset</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc10make_groupERK9data_typeNSt7int64_tERK8location" title="Link to this definition">#</a><br /></dt>
 <dd><p>Make a group data type. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>memref_ty</strong> – Memref data type </p></li>
+<li><p><strong>offset</strong> – Offset parameter </p></li>
 <li><p><strong>loc</strong> – Source code location</p></li>
 </ul>
 </dd>
@@ -1178,8 +1229,8 @@ document.write(`
 <section id="set-work-group-size">
 <h4>set_work_group_size<a class="headerlink" href="#set-work-group-size" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc19set_work_group_sizeER4func8uint32_t8uint32_t">
-<span id="_CPPv3N6tinytc19set_work_group_sizeER4func8uint32_t8uint32_t"></span><span id="_CPPv2N6tinytc19set_work_group_sizeER4func8uint32_t8uint32_t"></span><span id="tinytc::set_work_group_size__funcR.uint32_t.uint32_t"></span><span class="target" id="namespacetinytc_1a9390daf2044e8c1bec520667f67d375f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">set_work_group_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc4funcE" title="tinytc::func"><span class="n"><span class="pre">func</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fun</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc19set_work_group_sizeER4func8uint32_t8uint32_t" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc19set_work_group_sizeER4funcNSt7int32_tENSt7int32_tE">
+<span id="_CPPv3N6tinytc19set_work_group_sizeER4funcNSt7int32_tENSt7int32_tE"></span><span id="_CPPv2N6tinytc19set_work_group_sizeER4funcNSt7int32_tENSt7int32_tE"></span><span id="tinytc::set_work_group_size__funcR.std::int32_t.std::int32_t"></span><span class="target" id="namespacetinytc_1a9e2d9196c2680fb1a1701df527be5e69"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">set_work_group_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc4funcE" title="tinytc::func"><span class="n"><span class="pre">func</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fun</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc19set_work_group_sizeER4funcNSt7int32_tENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set work-group size (x,y) </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1196,8 +1247,8 @@ document.write(`
 <section id="set-subgroup-size">
 <h4>set_subgroup_size<a class="headerlink" href="#set-subgroup-size" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc17set_subgroup_sizeER4func8uint32_t">
-<span id="_CPPv3N6tinytc17set_subgroup_sizeER4func8uint32_t"></span><span id="_CPPv2N6tinytc17set_subgroup_sizeER4func8uint32_t"></span><span id="tinytc::set_subgroup_size__funcR.uint32_t"></span><span class="target" id="namespacetinytc_1a30700b2a816b2c9226ade6a80fd59a35"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">set_subgroup_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc4funcE" title="tinytc::func"><span class="n"><span class="pre">func</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fun</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc17set_subgroup_sizeER4func8uint32_t" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc17set_subgroup_sizeER4funcNSt7int32_tE">
+<span id="_CPPv3N6tinytc17set_subgroup_sizeER4funcNSt7int32_tE"></span><span id="_CPPv2N6tinytc17set_subgroup_sizeER4funcNSt7int32_tE"></span><span id="tinytc::set_subgroup_size__funcR.std::int32_t"></span><span class="target" id="namespacetinytc_1addac37e2c31566c986dfa0f61d21ddd8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">set_subgroup_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc4funcE" title="tinytc::func"><span class="n"><span class="pre">func</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">fun</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc17set_subgroup_sizeER4funcNSt7int32_tE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set subgroup size. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1303,8 +1354,8 @@ document.write(`
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE">
-<span id="_CPPv3N6tinytc16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE"></span><span id="_CPPv2N6tinytc16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE"></span><span id="tinytc::function_builder::work_group_size__std::uint32_t.std::uint32_t"></span><span class="target" id="classtinytc_1_1function__builder_1a05ab5077fffdd7ec68360a2ca4299ac8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_group_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc16function_builder15work_group_sizeENSt8uint32_tENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16function_builder15work_group_sizeENSt7int32_tENSt7int32_tE">
+<span id="_CPPv3N6tinytc16function_builder15work_group_sizeENSt7int32_tENSt7int32_tE"></span><span id="_CPPv2N6tinytc16function_builder15work_group_sizeENSt7int32_tENSt7int32_tE"></span><span id="tinytc::function_builder::work_group_size__std::int32_t.std::int32_t"></span><span class="target" id="classtinytc_1_1function__builder_1af9af4b356e61ec6109637b450a631401"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">work_group_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">x</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc16function_builder15work_group_sizeENSt7int32_tENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
 <dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">work_group_size</span><span class="p">(</span><span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="o">%</span><span class="n">y</span><span class="p">)</span> 
 </pre></div>
 </div>
@@ -1319,8 +1370,8 @@ document.write(`
 </dd></dl>
 
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16function_builder13subgroup_sizeENSt8uint32_tE">
-<span id="_CPPv3N6tinytc16function_builder13subgroup_sizeENSt8uint32_tE"></span><span id="_CPPv2N6tinytc16function_builder13subgroup_sizeENSt8uint32_tE"></span><span id="tinytc::function_builder::subgroup_size__std::uint32_t"></span><span class="target" id="classtinytc_1_1function__builder_1adbe31be69cc00ec9618c0605e7419b2f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc16function_builder13subgroup_sizeENSt8uint32_tE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc16function_builder13subgroup_sizeENSt7int32_tE">
+<span id="_CPPv3N6tinytc16function_builder13subgroup_sizeENSt7int32_tE"></span><span id="_CPPv2N6tinytc16function_builder13subgroup_sizeENSt7int32_tE"></span><span id="tinytc::function_builder::subgroup_size__std::int32_t"></span><span class="target" id="classtinytc_1_1function__builder_1a9815e17eed23cf56a72bea3185b23a65"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">subgroup_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">subgroup_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc16function_builder13subgroup_sizeENSt7int32_tE" title="Link to this definition">#</a><br /></dt>
 <dd><div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">subgroup_size</span><span class="p">(</span><span class="o">%</span><span class="n">subgroup_size</span><span class="p">)</span> 
 </pre></div>
 </div>
@@ -1361,7 +1412,8 @@ document.write(`
 <ul>
 <li><p><a class="reference internal" href="#make-alloca"><span class="std std-ref">make_alloca</span></a></p></li>
 <li><p><a class="reference internal" href="#make-axpby"><span class="std std-ref">make_axpby</span></a></p></li>
-<li><p><a class="reference internal" href="#make-binary-op"><span class="std std-ref">make_binary_op</span></a></p></li>
+<li><p><a class="reference internal" href="#make-arith-arithmetic-value-const-value-const-location-const"><span class="std std-ref">make_arith(arithmetic,value const&amp;,value const&amp;,location const&amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-arith-arithmetic-unary-value-const-location-const"><span class="std std-ref">make_arith(arithmetic_unary,value const&amp;,location const&amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-cast"><span class="std std-ref">make_cast</span></a></p></li>
 <li><p><a class="reference internal" href="#make-cmp"><span class="std std-ref">make_cmp</span></a></p></li>
 <li><p><a class="reference internal" href="#make-expand"><span class="std std-ref">make_expand</span></a></p></li>
@@ -1376,7 +1428,6 @@ document.write(`
 <li><p><a class="reference internal" href="#make-hadamard"><span class="std std-ref">make_hadamard</span></a></p></li>
 <li><p><a class="reference internal" href="#make-if"><span class="std std-ref">make_if</span></a></p></li>
 <li><p><a class="reference internal" href="#make-load"><span class="std std-ref">make_load</span></a></p></li>
-<li><p><a class="reference internal" href="#make-neg"><span class="std std-ref">make_neg</span></a></p></li>
 <li><p><a class="reference internal" href="#make-size"><span class="std std-ref">make_size</span></a></p></li>
 <li><p><a class="reference internal" href="#make-store"><span class="std std-ref">make_store</span></a></p></li>
 <li><p><a class="reference internal" href="#make-subview"><span class="std std-ref">make_subview</span></a></p></li>
@@ -1437,18 +1488,39 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="make-binary-op">
-<h4>make_binary_op<a class="headerlink" href="#make-binary-op" title="Link to this heading">#</a></h4>
+<section id="make-arith-arithmetic-value-const-value-const-location-const">
+<h4>make_arith(arithmetic,value const&amp;,value const&amp;,location const&amp;)<a class="headerlink" href="#make-arith-arithmetic-value-const-value-const-location-const" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc14make_binary_opE9binary_opRK5valueRK5valueRK8location">
-<span id="_CPPv3N6tinytc14make_binary_opE9binary_opRK5valueRK5valueRK8location"></span><span id="_CPPv2N6tinytc14make_binary_opE9binary_opRK5valueRK5valueRK8location"></span><span id="tinytc::make_binary_op__binary_op.valueCR.valueCR.locationCR"></span><span class="target" id="namespacetinytc_1ab0ea67d560be1180e1a080a06d8eea43"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc4instE" title="tinytc::inst"><span class="n"><span class="pre">inst</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_binary_op</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc9binary_opE" title="tinytc::binary_op"><span class="n"><span class="pre">binary_op</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">b</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc14make_binary_opE9binary_opRK5valueRK5valueRK8location" title="Link to this definition">#</a><br /></dt>
-<dd><p>Make binary operation instruction. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_arithE10arithmeticRK5valueRK5valueRK8location">
+<span id="_CPPv3N6tinytc10make_arithE10arithmeticRK5valueRK5valueRK8location"></span><span id="_CPPv2N6tinytc10make_arithE10arithmeticRK5valueRK5valueRK8location"></span><span id="tinytc::make_arith__arithmetic.valueCR.valueCR.locationCR"></span><span class="target" id="namespacetinytc_1a5eaf58ff31dbab4af4b9328b7e39fd5d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc4instE" title="tinytc::inst"><span class="n"><span class="pre">inst</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_arith</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc10arithmeticE" title="tinytc::arithmetic"><span class="n"><span class="pre">arithmetic</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">b</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc10make_arithE10arithmeticRK5valueRK5valueRK8location" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make arithmetic instruction (binary) </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>op</strong> – Binary op type </p></li>
+<li><p><strong>op</strong> – Arithmetic operation type </p></li>
 <li><p><strong>a</strong> – First operand </p></li>
 <li><p><strong>b</strong> – Second operand </p></li>
+<li><p><strong>loc</strong> – Source code location</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instruction </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-arith-arithmetic-unary-value-const-location-const">
+<h4>make_arith(arithmetic_unary,value const&amp;,location const&amp;)<a class="headerlink" href="#make-arith-arithmetic-unary-value-const-location-const" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_arithE16arithmetic_unaryRK5valueRK8location">
+<span id="_CPPv3N6tinytc10make_arithE16arithmetic_unaryRK5valueRK8location"></span><span id="_CPPv2N6tinytc10make_arithE16arithmetic_unaryRK5valueRK8location"></span><span id="tinytc::make_arith__arithmetic_unary.valueCR.locationCR"></span><span class="target" id="namespacetinytc_1aff7195c212da380ca589ea2a0cdeafa4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc4instE" title="tinytc::inst"><span class="n"><span class="pre">inst</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_arith</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc16arithmetic_unaryE" title="tinytc::arithmetic_unary"><span class="n"><span class="pre">arithmetic_unary</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">op</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc10make_arithE16arithmetic_unaryRK5valueRK8location" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make arithmetic instruction (unary) </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>op</strong> – Arithmetic operation type </p></li>
+<li><p><strong>a</strong> – Operand </p></li>
 <li><p><strong>loc</strong> – Source code location</p></li>
 </ul>
 </dd>
@@ -1764,26 +1836,6 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>a</strong> – Operand </p></li>
 <li><p><strong>index_list</strong> – Vector of indices </p></li>
-<li><p><strong>loc</strong> – Source code location</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Instruction </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="make-neg">
-<h4>make_neg<a class="headerlink" href="#make-neg" title="Link to this heading">#</a></h4>
-<dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc8make_negERK5valueRK8location">
-<span id="_CPPv3N6tinytc8make_negERK5valueRK8location"></span><span id="_CPPv2N6tinytc8make_negERK5valueRK8location"></span><span id="tinytc::make_neg__valueCR.locationCR"></span><span class="target" id="namespacetinytc_1a4d677bd41a4f2f24149aa3a5b1e0be60"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc4instE" title="tinytc::inst"><span class="n"><span class="pre">inst</span></span></a><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_neg</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">a</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6tinytc8make_negERK5valueRK8location" title="Link to this definition">#</a><br /></dt>
-<dd><p>Make negate instruction. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>a</strong> – Operand </p></li>
 <li><p><strong>loc</strong> – Source code location</p></li>
 </ul>
 </dd>
@@ -2390,7 +2442,8 @@ document.write(`
 <li><p><a class="reference internal" href="#make-imm-std-int16-t-location-const"><span class="std std-ref">make_imm(std::int16_t,location const&amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-imm-std-int32-t-location-const"><span class="std std-ref">make_imm(std::int32_t,location const&amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-imm-std-int64-t-scalar-type-location-const"><span class="std std-ref">make_imm(std::int64_t,scalar_type,location const&amp;)</span></a></p></li>
-<li><p><a class="reference internal" href="#make-imm-std-uint32-t-location-const"><span class="std std-ref">make_imm(std::uint32_t,location const&amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-index-std-int32-t-location-const"><span class="std std-ref">make_index(std::int32_t,location const&amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-index-std-int64-t-location-const"><span class="std std-ref">make_index(std::int64_t,location const&amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-value-data-type-const-location-const"><span class="std std-ref">make_value(data_type const&amp;,location const&amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-value-scalar-type-location-const"><span class="std std-ref">make_value(scalar_type,location const&amp;)</span></a></p></li>
 </ul>
@@ -2546,17 +2599,36 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="make-imm-std-uint32-t-location-const">
-<h4>make_imm(std::uint32_t,location const&amp;)<a class="headerlink" href="#make-imm-std-uint32-t-location-const" title="Link to this heading">#</a></h4>
+<section id="make-index-std-int32-t-location-const">
+<h4>make_index(std::int32_t,location const&amp;)<a class="headerlink" href="#make-index-std-int32-t-location-const" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc8make_immENSt8uint32_tERK8location">
-<span id="_CPPv3N6tinytc8make_immENSt8uint32_tERK8location"></span><span id="_CPPv2N6tinytc8make_immENSt8uint32_tERK8location"></span><span id="tinytc::make_imm__std::uint32_t.locationCR"></span><span class="target" id="namespacetinytc_1abb134d98f3fa5f2f722efc5d46a51093"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_imm</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">imm</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc8make_immENSt8uint32_tERK8location" title="Link to this definition">#</a><br /></dt>
-<dd><p>Make immediate value. </p>
-<p>Type is index.</p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_indexENSt7int32_tERK8location">
+<span id="_CPPv3N6tinytc10make_indexENSt7int32_tERK8location"></span><span id="_CPPv2N6tinytc10make_indexENSt7int32_tERK8location"></span><span id="tinytc::make_index__std::int32_t.locationCR"></span><span class="target" id="namespacetinytc_1a056b84ee26c2e0398fbe08cce1c34005"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_index</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">imm</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc10make_indexENSt7int32_tERK8location" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make immediate index value. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>imm</strong> – Unsigned int value </p></li>
+<li><p><strong>imm</strong> – index value </p></li>
+<li><p><strong>loc</strong> – Source code location</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Value </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-index-std-int64-t-location-const">
+<h4>make_index(std::int64_t,location const&amp;)<a class="headerlink" href="#make-index-std-int64-t-location-const" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc10make_indexENSt7int64_tERK8location">
+<span id="_CPPv3N6tinytc10make_indexENSt7int64_tERK8location"></span><span id="_CPPv2N6tinytc10make_indexENSt7int64_tERK8location"></span><span id="tinytc::make_index__std::int64_t.locationCR"></span><span class="target" id="namespacetinytc_1a9179ce014e167ae0448e345752ecf907"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_index</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">imm</span></span>, <a class="reference internal" href="#_CPPv4N6tinytc8locationE" title="tinytc::location"><span class="n"><span class="pre">location</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">loc</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc5valueE" title="tinytc::value"><span class="n"><span class="pre">value</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc10make_indexENSt7int64_tERK8location" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make immediate index value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>imm</strong> – index value </p></li>
 <li><p><strong>loc</strong> – Source code location</p></li>
 </ul>
 </dd>
@@ -2719,7 +2791,8 @@ document.write(`
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-op">binary_op</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arithmetic">arithmetic</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#arithmetic-unary">arithmetic_unary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#cmp-condition">cmp_condition</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#scalar-type">scalar_type</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#transpose">transpose</a></li>
@@ -2727,7 +2800,8 @@ document.write(`
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#is-dynamic-value">is_dynamic_value</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-binary-op">to_string(binary_op)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-arithmetic">to_string(arithmetic)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-arithmetic-unary">to_string(arithmetic_unary)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-cmp-condition">to_string(cmp_condition)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-scalar-type">to_string(scalar_type)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#to-string-transpose">to_string(transpose)</a></li>
@@ -2789,7 +2863,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instruction-functions">Instruction Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-alloca">make_alloca</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-axpby">make_axpby</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-binary-op">make_binary_op</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-arith-arithmetic-value-const-value-const-location-const">make_arith(arithmetic,value const&amp;,value const&amp;,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-arith-arithmetic-unary-value-const-location-const">make_arith(arithmetic_unary,value const&amp;,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-cast">make_cast</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-cmp">make_cmp</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-expand">make_expand</a></li>
@@ -2804,7 +2879,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-hadamard">make_hadamard</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-if">make_if</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-load">make_load</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-neg">make_neg</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-size">make_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-store">make_store</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-subview">make_subview</a></li>
@@ -2851,7 +2925,8 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int16-t-location-const">make_imm(std::int16_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int32-t-location-const">make_imm(std::int32_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-int64-t-scalar-type-location-const">make_imm(std::int64_t,scalar_type,location const&amp;)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-imm-std-uint32-t-location-const">make_imm(std::uint32_t,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-index-std-int32-t-location-const">make_index(std::int32_t,location const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-index-std-int64-t-location-const">make_index(std::int64_t,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-value-data-type-const-location-const">make_value(data_type const&amp;,location const&amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-value-scalar-type-location-const">make_value(scalar_type,location const&amp;)</a></li>
 </ul>

@@ -39,7 +39,7 @@
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/ze/capi';</script>
@@ -418,6 +418,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-core-info-create">tinytc_ze_core_info_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-support-level">tinytc_ze_get_support_level</a></li>
 </ul>
 </li>
 </ul>
@@ -427,7 +428,10 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-group-count">tinytc_ze_get_group_count</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-group-size">tinytc_ze_get_group_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-create">tinytc_ze_kernel_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-module-create">tinytc_ze_module_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-binary">tinytc_ze_kernel_bundle_create_with_binary</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-program">tinytc_ze_kernel_bundle_create_with_program</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-source">tinytc_ze_kernel_bundle_create_with_source</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-source-compile-to-binary">tinytc_ze_source_compile_to_binary</a></li>
 </ul>
 </li>
 </ul>
@@ -480,6 +484,7 @@ document.write(`
 <li><p>Functions</p>
 <ul>
 <li><p><a class="reference internal" href="#tinytc-ze-core-info-create"><span class="std std-ref">tinytc_ze_core_info_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-ze-get-support-level"><span class="std std-ref">tinytc_ze_get_support_level</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -505,6 +510,26 @@ document.write(`
 </dd></dl>
 
 </section>
+<section id="tinytc-ze-get-support-level">
+<h4>tinytc_ze_get_support_level<a class="headerlink" href="#tinytc-ze-get-support-level" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_ze_get_support_level">
+<span class="target" id="tinytc__ze_8h_1a1d14f4dcde87faf6cf7699a565f121f1"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_get_support_level</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_support_level_t" title="tinytc_support_level_t"><span class="n"><span class="pre">tinytc_support_level_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">level</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_get_support_level" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get support level of Level Zero device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>device</strong> – [in] Device handle </p></li>
+<li><p><strong>level</strong> – [out] Pointer to support level</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 </section>
 <section id="kernel">
@@ -515,7 +540,10 @@ document.write(`
 <li><p><a class="reference internal" href="#tinytc-ze-get-group-count"><span class="std std-ref">tinytc_ze_get_group_count</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-ze-get-group-size"><span class="std std-ref">tinytc_ze_get_group_size</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-ze-kernel-create"><span class="std std-ref">tinytc_ze_kernel_create</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-ze-module-create"><span class="std std-ref">tinytc_ze_module_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-ze-kernel-bundle-create-with-binary"><span class="std std-ref">tinytc_ze_kernel_bundle_create_with_binary</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-ze-kernel-bundle-create-with-program"><span class="std std-ref">tinytc_ze_kernel_bundle_create_with_program</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-ze-kernel-bundle-create-with-source"><span class="std std-ref">tinytc_ze_kernel_bundle_create_with_source</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-ze-source-compile-to-binary"><span class="std std-ref">tinytc_ze_source_compile_to_binary</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -525,7 +553,7 @@ document.write(`
 <h4>tinytc_ze_get_group_count<a class="headerlink" href="#tinytc-ze-get-group-count" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_ze_get_group_count">
-<span class="target" id="tinytc__ze_8h_1a4f74efd532d81b1ed25ce9b49993e7b5"></span><span class="n"><span class="pre">ze_group_count_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_get_group_count</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">howmany</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_get_group_count" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__ze_8h_1a99ca808166ec1ca27b53d9cffdca0c85"></span><span class="n"><span class="pre">ze_group_count_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_get_group_count</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">howmany</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_get_group_count" title="Link to this definition">#</a><br /></dt>
 <dd><p>Convert group size to level zero group count. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -583,20 +611,90 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-ze-module-create">
-<h4>tinytc_ze_module_create<a class="headerlink" href="#tinytc-ze-module-create" title="Link to this heading">#</a></h4>
+<section id="tinytc-ze-kernel-bundle-create-with-binary">
+<h4>tinytc_ze_kernel_bundle_create_with_binary<a class="headerlink" href="#tinytc-ze-kernel-bundle-create-with-binary" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_ze_module_create">
-<span class="target" id="tinytc__ze_8h_1a328409da95cf0d7fca336d471015e75a"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_module_create</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">mod</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <span class="n"><span class="pre">ze_module_build_log_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">build_log</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_module_create" title="Link to this definition">#</a><br /></dt>
-<dd><p>Create a level zero module from a tinytc binary. </p>
+<dt class="sig sig-object c" id="c.tinytc_ze_kernel_bundle_create_with_binary">
+<span class="target" id="tinytc__ze_8h_1a70dee24c786a0377db31ed960cc6e3c6"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_kernel_bundle_create_with_binary</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_kernel_bundle_create_with_binary" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create an OpenCL program from a tinytc binary. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mod</strong> – [out] pointer to the module object created </p></li>
+<li><p><strong>bundle</strong> – [out] pointer to the kernel bundle (ze_module_handle_t) object created </p></li>
 <li><p><strong>context</strong> – [in] context handle </p></li>
 <li><p><strong>device</strong> – [in] device handle </p></li>
 <li><p><strong>bin</strong> – [in] binary object </p></li>
-<li><p><strong>build_log</strong> – [out][optional] handle to store build log; caller needs to clean up the build log with zeModuleBuildLogDestroy; can be nullptr</p></li>
+<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-ze-kernel-bundle-create-with-program">
+<h4>tinytc_ze_kernel_bundle_create_with_program<a class="headerlink" href="#tinytc-ze-kernel-bundle-create-with-program" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_ze_kernel_bundle_create_with_program">
+<span class="target" id="tinytc__ze_8h_1abc76d264fb4b498bebb1d21964f92311"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_kernel_bundle_create_with_program</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../builder_capi.html#c.tinytc_prog_t" title="tinytc_prog_t"><span class="n"><span class="pre">tinytc_prog_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">prg</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">core_features</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_kernel_bundle_create_with_program" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compile tensor program. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bundle</strong> – [out] pointer to the kernel bundle (ze_module_handle_t) object created </p></li>
+<li><p><strong>context</strong> – [in] context handle </p></li>
+<li><p><strong>device</strong> – [in] device handle </p></li>
+<li><p><strong>prg</strong> – [inout] tensor program; modified as compiler passes are run </p></li>
+<li><p><strong>core_features</strong> – [in][optional] requested core features; must be 0 (default) or a combination of tinytc_core_feature_flag_t </p></li>
+<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-ze-kernel-bundle-create-with-source">
+<h4>tinytc_ze_kernel_bundle_create_with_source<a class="headerlink" href="#tinytc-ze-kernel-bundle-create-with-source" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_ze_kernel_bundle_create_with_source">
+<span class="target" id="tinytc__ze_8h_1a2e389d6819812088fa50211a0ac1c262"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_kernel_bundle_create_with_source</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">ze_module_handle_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bundle</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_kernel_bundle_create_with_source" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compile OpenCL-C source to device binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bundle</strong> – [out] pointer to the kernel bundle (ze_module_handle_t) object created </p></li>
+<li><p><strong>context</strong> – [in] context handle </p></li>
+<li><p><strong>device</strong> – [in] device handle </p></li>
+<li><p><strong>src</strong> – [in] source text and extensions </p></li>
+<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-ze-source-compile-to-binary">
+<h4>tinytc_ze_source_compile_to_binary<a class="headerlink" href="#tinytc-ze-source-compile-to-binary" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_ze_source_compile_to_binary">
+<span class="target" id="tinytc__ze_8h_1aabbb7272124c154d37c919b55c7546d5"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_source_compile_to_binary</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_binary_t" title="tinytc_binary_t"><span class="n"><span class="pre">tinytc_binary_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="../core_capi.html#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ip_version</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">format</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_source_compile_to_binary" title="Link to this definition">#</a><br /></dt>
+<dd><p>Compile OpenCL-C source to device binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bin</strong> – [out] pointer to the binary object created </p></li>
+<li><p><strong>src</strong> – [in] source text </p></li>
+<li><p><strong>ip_version</strong> – [in] IP version (pass tinytc_intel_gpu_architecture_t here) </p></li>
+<li><p><strong>format</strong> – [in] binary format (SPIR-V or native) </p></li>
+<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -624,7 +722,7 @@ document.write(`
 <h4>tinytc_ze_recipe_handler_create<a class="headerlink" href="#tinytc-ze-recipe-handler-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_ze_recipe_handler_create">
-<span class="target" id="tinytc__ze_8h_1ae479d94f415eb2f568409775ea5ae9c3"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_recipe_handler_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_recipe_handler_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc__ze_8h_1a527fc359fec75403dbc9f4194ccfaefe"></span><a class="reference internal" href="../core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_ze_recipe_handler_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="../core_capi.html#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">ze_context_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">context</span></span>, <span class="n"><span class="pre">ze_device_handle_t</span></span><span class="w"> </span><span class="n"><span class="pre">device</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="../core_capi.html#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">source_ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_ze_recipe_handler_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Create kernel object for recipe. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -632,7 +730,8 @@ document.write(`
 <li><p><strong>handler</strong> – [out] pointer to recipe handler object </p></li>
 <li><p><strong>context</strong> – [in] context handle </p></li>
 <li><p><strong>device</strong> – [in] device handle </p></li>
-<li><p><strong>recipe</strong> – [in] recipe object</p></li>
+<li><p><strong>recipe</strong> – [in] recipe object </p></li>
+<li><p><strong>source_ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -724,6 +823,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-core-info-create">tinytc_ze_core_info_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-support-level">tinytc_ze_get_support_level</a></li>
 </ul>
 </li>
 </ul>
@@ -733,7 +833,10 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-group-count">tinytc_ze_get_group_count</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-get-group-size">tinytc_ze_get_group_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-create">tinytc_ze_kernel_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-module-create">tinytc_ze_module_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-binary">tinytc_ze_kernel_bundle_create_with_binary</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-program">tinytc_ze_kernel_bundle_create_with_program</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-kernel-bundle-create-with-source">tinytc_ze_kernel_bundle_create_with_source</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-ze-source-compile-to-binary">tinytc_ze_source_compile_to_binary</a></li>
 </ul>
 </li>
 </ul>

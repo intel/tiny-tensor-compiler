@@ -39,7 +39,7 @@
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'manual/calling_convention';</script>
@@ -432,45 +432,42 @@ arguments in the generated OpenCL-C code.</p>
 <table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Argument type</p></th>
-<th class="head"><p>OpenCL type</p></th>
+<th class="head"><p>OpenCL C type</p></th>
+<th class="head"><p>Kernel argument type</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>bool</p></td>
+<tr class="row-even"><td><p>i1</p></td>
 <td><p>bool</p></td>
+<td><p>n/a <a class="footnote-reference brackets" href="#f1" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>i8</p></td>
+<td><p>char</p></td>
+<td><p>cl_char</p></td>
+</tr>
+<tr class="row-even"><td><p>i16</p></td>
+<td><p>short</p></td>
+<td><p>cl_short</p></td>
+</tr>
+<tr class="row-odd"><td><p>i32</p></td>
+<td><p>int</p></td>
+<td><p>cl_int</p></td>
+</tr>
+<tr class="row-even"><td><p>i64</p></td>
+<td><p>long</p></td>
+<td><p>cl_long</p></td>
 </tr>
 <tr class="row-odd"><td><p>index</p></td>
-<td><p>uint</p></td>
-</tr>
-<tr class="row-even"><td><p>i8</p></td>
-<td><p>char</p></td>
-</tr>
-<tr class="row-odd"><td><p>i16</p></td>
-<td><p>short</p></td>
-</tr>
-<tr class="row-even"><td><p>i32</p></td>
-<td><p>int</p></td>
-</tr>
-<tr class="row-odd"><td><p>i64</p></td>
 <td><p>long</p></td>
-</tr>
-<tr class="row-even"><td><p>u8</p></td>
-<td><p>uchar</p></td>
-</tr>
-<tr class="row-odd"><td><p>u16</p></td>
-<td><p>ushort</p></td>
-</tr>
-<tr class="row-even"><td><p>u32</p></td>
-<td><p>uint</p></td>
-</tr>
-<tr class="row-odd"><td><p>u64</p></td>
-<td><p>ulong</p></td>
+<td><p>cl_long</p></td>
 </tr>
 <tr class="row-even"><td><p>f32</p></td>
 <td><p>float</p></td>
+<td><p>cl_float</p></td>
 </tr>
 <tr class="row-odd"><td><p>f64</p></td>
 <td><p>double</p></td>
+<td><p>cl_double</p></td>
 </tr>
 </tbody>
 </table>
@@ -482,6 +479,13 @@ arguments in the generated OpenCL-C code.</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">scalar_example</span><span class="p">(</span><span class="kt">short</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
 </pre></div>
 </div>
+<p class="rubric">Footnotes</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="f1" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Arguments to kernel functions cannot be declared with the type bool in OpenCL</p>
+</aside>
+</aside>
 </section>
 <section id="memref-types">
 <h2>Memref types<a class="headerlink" href="#memref-types" title="Link to this heading">#</a></h2>
@@ -497,9 +501,9 @@ func @memref_example4(%a: memref&lt;i64x5x?x6&gt;) {}
 </div>
 <p>leads to</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example1</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">uint</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example3</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">uint</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example4</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">uint</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example3</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">memref_example4</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
 </pre></div>
 </div>
 <p>Note that <cite>memref_example3</cite> and <cite>memref_example4</cite> have the same signature,
@@ -509,20 +513,23 @@ because <cite>memref&lt;i64x5x?x6&gt;</cite> has the canonical stride <cite>stri
 <h2>Group types<a class="headerlink" href="#group-types" title="Link to this heading">#</a></h2>
 <p>A group argument might require multiple arguments in the OpenCL-C code.
 The rule is that the first argument in the OpenCL kernel is a global pointer to a global pointer to the
-underlying scalar type of the memref and then a global pointer argument follows for every ‘?’
-in the memref’s shape or stride, ordered from left-to-right.</p>
+underlying scalar type of the memref.
+Then a global pointer argument follows for every ‘?’ in the memref’s shape or stride, ordered from left-to-right.
+If an dynamic offset is given, the offset is the last argument.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>func @group_example1(%a: group&lt;memref&lt;i16x5x6&gt;) {}
 func @group_example2(%a: group&lt;memref&lt;i32x5x?x6&gt;&gt;) {}
+func @group_example3(%a: group&lt;memref&lt;f32x?&gt;, offset: ?&gt;) {}
 </pre></div>
 </div>
 <p>leads to</p>
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example1</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">short</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
-<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="n">uint</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="n">uint</span><span class="o">*</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example2</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape1</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_stride2</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
+<span class="n">kernel</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="n">group_example3</span><span class="p">(</span><span class="n">global</span><span class="w"> </span><span class="kt">float</span><span class="o">*</span><span class="n">global</span><span class="o">*</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">global</span><span class="w"> </span><span class="kt">long</span><span class="o">*</span><span class="w"> </span><span class="n">a_shape0</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">a_offset</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span>
 </pre></div>
 </div>
-<p>Note that <cite>a_shape1</cite> and <cite>a_stride2</cite> must contain at least as many values as the group size.
+<p>Note that <cite>a_shape_0</cite>, <cite>a_shape1</cite>, and <cite>a_stride2</cite> must contain at least as many values as the group size.
 That is, if a is accessed with <cite>load %a[%id] : group&lt;memref&lt;i32x5x?x6&gt;&gt;</cite>, then
-<cite>*(a_shape1 + id)</cite> and <cite>*(a_stride2 + id)</cite> must not lead to out-of-bounds memory access.</p>
+<cite>*(a_shape0 + id)</cite>, <cite>*(a_shape1 + id)</cite>, and <cite>*(a_stride2 + id)</cite> must not lead to out-of-bounds memory access.</p>
 </section>
 </section>
 

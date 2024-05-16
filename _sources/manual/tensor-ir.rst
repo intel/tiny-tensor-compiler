@@ -73,7 +73,7 @@ Constants
     floating-constant-hex       = [sign] "0x" (mantissa-hex ["p" exponent] / 1*HEXDIG "p" exponent)
     floating-constant           = floating-constant-dec / floating-constant-hex
 
-Integer constants must lie in the range :math:`-2^63+1,\dots,2^63-1`.
+Integer constants must lie in the range :math:`-2^{63}+1,\dots,2^{63}-1`.
 
 Floating point constants are given in C syntax and expected to be in the range of double precision numbers.
 The hexadecimal floating point syntax is supported, too.
@@ -140,11 +140,10 @@ Scalar types
 .. code:: abnf
 
     scalar-type                 = integer-type / floating-type
-    integer-type                = "bool" / ("i" / "u") ("1" / "8" / "16" / "32" / "64") / "index"
+    integer-type                = "i" ("1" / "8" / "16" / "32" / "64") / "index"
     floating-type               = "f" ("32" / "64")
 
-Scalar types are either integer ("i"), unsigned integer ("u"),
-or floating point ("f").
+Scalar types are either signless integer ("i") or floating point ("f").
 The number behind the scalar type prefix denotes the number of bits,
 e.g. "f64" are double precision floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
@@ -225,16 +224,20 @@ Group type
 
 .. code:: abnf
 
-    group-type                  = "group<" memref-type ">"
+    group-type                  = "group<" memref-type ["," "offset" ":" constant-or-dynamic] ">"
 
 The group type collects unstructured pointers to memref's with potentially different dynamic mode sizes.
 The C-analogy of a group is a pointer-to-a-pointer.
 For example, the C-analogue of a ``group<memref<f32x16x16>>`` is a ``float**``.
 
-Group size information is stored in a dope vector; the calling convention for groups is
-implementation-defined.
-The dope vector also contains size information for the memref type if it contains dynamic mode sizes
-or dynamic stride values.
+The optional offset parameter is used to offset each pointer by the given number of elements.
+Given the C-analogue ``float** group``, loading element ``i`` with offset ``off`` gives the
+pointer ``float* tmp = group[i] + off``.
+The default offset is 0.
+
+Dynamic values ('?') may appear in the memref-type and in the offset.
+These values are stored in the dope vector;
+the calling convention for groups is implementation-defined.
 
 Instructions
 ============
@@ -242,7 +245,8 @@ Instructions
 .. code:: abnf
 
     value-instruction           = local-identifier "=" (alloca-instruction
-                                  / binary-op-instruction
+                                  / arith-binary-instruction
+                                  / arith-unary-instruction
                                   / cast-instruction
                                   / comparison-instruction
                                   / expand-instruction
@@ -250,7 +254,6 @@ Instructions
                                   / group-id-instruction
                                   / group-size-instruction
                                   / load-instruction
-                                  / neg-instruction
                                   / size-instruction
                                   / subview-instruction)
     multi-value-instruction     = [local-identifier-list "="] if-instruction
@@ -293,31 +296,68 @@ Restrictions
 
 The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
 
-Binary op
----------
+Arithmetic (binary)
+-------------------
 
 .. code:: abnf
 
     identifier-or-constant      = local-identifier / integer-constant / floating-constant
-    binary-op-instruction       = ("add" / "sub" / "mul" / "div" / "rem")
+    arith-binary-type           = ".add"  /
+                                  ".sub"  /
+                                  ".mul"  /
+                                  ".div" /
+                                  ".rem" /
+                                  ".shl"  /
+                                  ".shr" /
+                                  ".and"  /
+                                  ".or"   /
+                                  ".xor"
+    arith-binary-instruction    = "arith" arith-binary-type
                                   identifier-or-constant "," identifier-or-constant ":" scalar-type
 
 Overview
 ........
 
 *Replicated instruction.*
-Binary operation on scalars.
+Binary arithmetic operation on scalars.
 Both operands, as well as the returned type, have the same scalar type.
 
-=== ===========
-Op  Description
-=== ===========
-add a + b
-sub a - b
-mul a * b
-div a / b
-rem a % b
-=== ===========
+==== ============ ==============================================================================
+Op   Allowed type Description
+==== ============ ==============================================================================
+.add scalar-type  Sum of operands
+.sub scalar-type  Difference of operands
+.mul scalar-type  Product of operands
+.div scalar-type  Quotient of operands
+.rem scalar-type  Remainder from the division of operands
+.shl integer-type Left shift first operand by number of bits given by second operand
+.shr integer-type Arithmetic right shift first operand by number of bits given by second operand
+.and integer-type Bitwise and
+.or  integer-type Bitwise or
+.xor integer-type Bitwise xor
+==== ============ ==============================================================================
+
+Arithmetic (unary)
+------------------
+
+.. code:: abnf
+
+    arith-unary-type          = ".neg"  / ".not"
+    arith-unary-instruction   = "arith" arith-unary-type identifier-or-constant ":" scalar-type
+
+Overview
+........
+
+*Replicated instruction.*
+Unary arithmetic operation on scalars.
+The returned value has the same type as the operand.
+
+==== ============ ==============================================================================
+Op   Allowed type Description
+==== ============ ==============================================================================
+.neg scalar-type  Negation
+.not integer-type Bitwise not
+==== ============ ==============================================================================
 
 Cast
 ----
@@ -541,6 +581,7 @@ Examples:
 #. ``load %0[] : memref<f32>`` returns a ``f32`` value.
 #. ``load %0[5, %1] : memref<f32x10x?>`` returns a ``f32`` value.
 #. ``load %0[%1] : group<memref<f32x42>>`` returns a ``memref<f32x42>`` value.
+#. ``load %0[%1] : group<memref<f32x42>, offset: ?>`` returns a ``memref<f32x42>`` value.
 
 Size
 ----
@@ -645,19 +686,6 @@ The output type is a memref type according to the following rules:
        subview %0[:]               : memref<f32x?>  ; Returns memref<f32x?>
        subview %0[5:?]             : memref<f32x16> ; Returns memref<f32x13>
        subview %0[%2:?]            : memref<f32x16> ; Returns memref<f32x?>
-
-Neg
----
-
-.. code:: abnf
-
-    neg-instruction           = "neg" identifier-or-constant ":" scalar-type
-
-Overview
-........
-
-*Replicated instruction.*
-Negation operation.
 
 If
 --

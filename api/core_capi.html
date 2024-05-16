@@ -39,7 +39,7 @@
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -412,6 +412,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-status-t">tinytc_status_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-support-level-t">tinytc_support_level_t</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-definitions">Common Definitions</a><ul class="nav section-nav flex-column">
@@ -448,6 +449,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary">Binary</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-functions">Binary Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-create">tinytc_binary_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-get-core-features">tinytc_binary_get_core_features</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-get-raw">tinytc_binary_get_raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-release">tinytc_binary_release</a></li>
@@ -462,9 +464,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler-functions">Compiler Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-prog-compile-to-binary">tinytc_prog_compile_to_binary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-prog-compile-to-opencl">tinytc_prog_compile_to_opencl</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-compile-to-binary">tinytc_source_compile_to_binary</a></li>
 </ul>
 </li>
 </ul>
@@ -476,16 +476,19 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-ip-version">tinytc_core_info_get_ip_version</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-num-registers-per-thread">tinytc_core_info_get_num_registers_per_thread</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-register-size">tinytc_core_info_get_register_size</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-core-features">tinytc_core_info_get_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-register-space">tinytc_core_info_get_register_space</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-subgroup-sizes">tinytc_core_info_get_subgroup_sizes</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-clear-core-feature">tinytc_core_info_clear_core_feature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-set-core-feature">tinytc_core_info_set_core_feature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-set-core-features">tinytc_core_info_set_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-generic-create">tinytc_core_info_generic_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-intel-create">tinytc_core_info_intel_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-intel-create-from-arch">tinytc_core_info_intel_create_from_arch</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-release">tinytc_core_info_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-retain">tinytc_core_info_retain</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-typedefs">Device Info Typedefs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-feature-flags-t">tinytc_core_feature_flags_t</a></li>
 </ul>
 </li>
 </ul>
@@ -505,12 +508,13 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-binary">tinytc_recipe_get_binary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-prog">tinytc_recipe_get_prog</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-source">tinytc_recipe_get_source</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-handler-get-recipe">tinytc_recipe_handler_get_recipe</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-small-gemm-batched-create">tinytc_recipe_small_gemm_batched_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-small-gemm-batched-set-args">tinytc_recipe_small_gemm_batched_set_args</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-create">tinytc_recipe_tall_and_skinny_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-create-specialized">tinytc_recipe_tall_and_skinny_create_specialized</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-set-args">tinytc_recipe_tall_and_skinny_set_args</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-suggest-block-size">tinytc_recipe_tall_and_skinny_suggest_block_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-release">tinytc_recipe_release</a></li>
@@ -519,19 +523,14 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-handler-retain">tinytc_recipe_handler_retain</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-structures">Recipe Structures</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-mem">tinytc_mem</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-typedefs">Recipe Typedefs</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-mem-t">tinytc_mem_t</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source">Source</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#source-functions">Source Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-code">tinytc_source_get_code</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-core-features">tinytc_source_get_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-location">tinytc_source_get_location</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-extensions">tinytc_source_get_extensions</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-release">tinytc_source_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-retain">tinytc_source_retain</a></li>
 </ul>
@@ -569,6 +568,7 @@ document.write(`
 <li><p>Enumerations</p>
 <ul>
 <li><p><a class="reference internal" href="#tinytc-status-t"><span class="std std-ref">tinytc_status_t</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-support-level-t"><span class="std std-ref">tinytc_support_level_t</span></a></p></li>
 </ul>
 </li>
 <li><p>Definitions</p>
@@ -699,6 +699,12 @@ document.write(`
 </dd></dl>
 
 <dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_status_t.tinytc_status_unsupported_device">
+<span class="target" id="types_8h_1aa7ab93da56f54f1d57f17943b460f62da3838b4252ffb27f09ac8c420d959f934"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_status_unsupported_device</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0xe</span></span><a class="headerlink" href="#c.tinytc_status_t.tinytc_status_unsupported_device" title="Link to this definition">#</a><br /></dt>
+<dd><p>Unsupported device. </p>
+</dd></dl>
+
+<dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_status_t.tinytc_status_ir_out_of_bounds">
 <span class="target" id="types_8h_1aa7ab93da56f54f1d57f17943b460f62da6bd49d8724c9c5de5c7fd5c2140eb7d2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_status_ir_out_of_bounds</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x100</span></span><a class="headerlink" href="#c.tinytc_status_t.tinytc_status_ir_out_of_bounds" title="Link to this definition">#</a><br /></dt>
 <dd><p>Out of bounds access. </p>
@@ -804,6 +810,12 @@ document.write(`
 <dt class="sig sig-object c" id="c.tinytc_status_t.tinytc_status_ir_collective_called_from_spmd">
 <span class="target" id="types_8h_1aa7ab93da56f54f1d57f17943b460f62da5783d10dcade34a5f9fd5cc1e8411157"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_status_ir_collective_called_from_spmd</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x111</span></span><a class="headerlink" href="#c.tinytc_status_t.tinytc_status_ir_collective_called_from_spmd" title="Link to this definition">#</a><br /></dt>
 <dd><p>Collective instruction from SPMD. </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_status_t.tinytc_status_ir_fp_unsupported">
+<span class="target" id="types_8h_1aa7ab93da56f54f1d57f17943b460f62da60d01bf1cd562d4d7317bf84d07f8fad"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_status_ir_fp_unsupported</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x112</span></span><a class="headerlink" href="#c.tinytc_status_t.tinytc_status_ir_fp_unsupported" title="Link to this definition">#</a><br /></dt>
+<dd><p>Instruction does not support floating type. </p>
 </dd></dl>
 
 <dl class="c enumerator">
@@ -1451,6 +1463,34 @@ document.write(`
 </dd></dl>
 
 </section>
+<section id="tinytc-support-level-t">
+<h4>tinytc_support_level_t<a class="headerlink" href="#tinytc-support-level-t" title="Link to this heading">#</a></h4>
+<dl class="c enum">
+<dt class="sig sig-object c" id="c.tinytc_support_level_t">
+<span class="target" id="types_8h_1add79e20a34687ad4da494f4eab55e0ad"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_support_level_t</span></span></span><a class="headerlink" href="#c.tinytc_support_level_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Support level of a device. </p>
+<p><em>Values:</em></p>
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_support_level_t.tinytc_support_level_none">
+<span class="target" id="types_8h_1add79e20a34687ad4da494f4eab55e0ada2b14ee0680e0080cdeb18f9382dec61b"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_support_level_none</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x0</span></span><a class="headerlink" href="#c.tinytc_support_level_t.tinytc_support_level_none" title="Link to this definition">#</a><br /></dt>
+<dd><p>Device is unsupported (e.g. subgroups feature missing in OpenCL-C) </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_support_level_t.tinytc_support_level_basic">
+<span class="target" id="types_8h_1add79e20a34687ad4da494f4eab55e0ada3378fbd00e112600b48a225386a2de63"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_support_level_basic</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x1</span></span><a class="headerlink" href="#c.tinytc_support_level_t.tinytc_support_level_basic" title="Link to this definition">#</a><br /></dt>
+<dd><p>Device provides necessary features but is not well tested. </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_support_level_t.tinytc_support_level_tuned">
+<span class="target" id="types_8h_1add79e20a34687ad4da494f4eab55e0ada81e05aba2f6fdf190b006f8abb6f0068"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_support_level_tuned</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x2</span></span><a class="headerlink" href="#c.tinytc_support_level_t.tinytc_support_level_tuned" title="Link to this definition">#</a><br /></dt>
+<dd><p>Device provides necessary features and is well tested. </p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
 </section>
 <section id="common-definitions">
 <h3>Common Definitions<a class="headerlink" href="#common-definitions" title="Link to this heading">#</a></h3>
@@ -1467,7 +1507,7 @@ document.write(`
 <h4>TINYTC_VERSION_MINOR<a class="headerlink" href="#tinytc-version-minor" title="Link to this heading">#</a></h4>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.TINYTC_VERSION_MINOR">
-<span class="target" id="version_8h_1a4a2e677216b6a681c32dad8bfa052358"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_MINOR</span></span></span> <span class="pre">=</span> <span class="pre">2;</span><a class="headerlink" href="#c.TINYTC_VERSION_MINOR" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="version_8h_1a4a2e677216b6a681c32dad8bfa052358"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_MINOR</span></span></span> <span class="pre">=</span> <span class="pre">3;</span><a class="headerlink" href="#c.TINYTC_VERSION_MINOR" title="Link to this definition">#</a><br /></dt>
 <dd><p>Minor version (x.X.x) </p>
 </dd></dl>
 
@@ -1476,7 +1516,7 @@ document.write(`
 <h4>TINYTC_VERSION_PATCH<a class="headerlink" href="#tinytc-version-patch" title="Link to this heading">#</a></h4>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.TINYTC_VERSION_PATCH">
-<span class="target" id="version_8h_1aa819df1c1d84bb5ba52ef66af437637e"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_PATCH</span></span></span> <span class="pre">=</span> <span class="pre">1;</span><a class="headerlink" href="#c.TINYTC_VERSION_PATCH" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="version_8h_1aa819df1c1d84bb5ba52ef66af437637e"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_PATCH</span></span></span> <span class="pre">=</span> <span class="pre">0;</span><a class="headerlink" href="#c.TINYTC_VERSION_PATCH" title="Link to this definition">#</a><br /></dt>
 <dd><p>Patch version (x.x.X) </p>
 </dd></dl>
 
@@ -1485,7 +1525,7 @@ document.write(`
 <h4>TINYTC_VERSION_HASH<a class="headerlink" href="#tinytc-version-hash" title="Link to this heading">#</a></h4>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.TINYTC_VERSION_HASH">
-<span class="target" id="version_8h_1a6288df852b615b3791fb7eaf57f7aad0"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_HASH</span></span></span> <span class="pre">=</span> <span class="pre">&quot;db9a2f4&quot;;</span><a class="headerlink" href="#c.TINYTC_VERSION_HASH" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="version_8h_1a6288df852b615b3791fb7eaf57f7aad0"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_HASH</span></span></span> <span class="pre">=</span> <span class="pre">&quot;2c614c9&quot;;</span><a class="headerlink" href="#c.TINYTC_VERSION_HASH" title="Link to this definition">#</a><br /></dt>
 <dd><p>Git commit hash. </p>
 </dd></dl>
 
@@ -1503,7 +1543,7 @@ document.write(`
 <h4>TINYTC_VERSION_DESCRIPTION<a class="headerlink" href="#tinytc-version-description" title="Link to this heading">#</a></h4>
 <dl class="c macro">
 <dt class="sig sig-object c" id="c.TINYTC_VERSION_DESCRIPTION">
-<span class="target" id="version_8h_1affa97082604697197f2267df3e47388e"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_DESCRIPTION</span></span></span> <span class="pre">=</span> <span class="pre">&quot;v0.2.1-0-db9a2f4&quot;;</span><a class="headerlink" href="#c.TINYTC_VERSION_DESCRIPTION" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="version_8h_1affa97082604697197f2267df3e47388e"></span><span class="sig-name descname"><span class="n"><span class="pre">TINYTC_VERSION_DESCRIPTION</span></span></span> <span class="pre">=</span> <span class="pre">&quot;v0.3.0-0-2c614c9&quot;;</span><a class="headerlink" href="#c.TINYTC_VERSION_DESCRIPTION" title="Link to this definition">#</a><br /></dt>
 <dd><p>Version string (vx.x.x-x-x) </p>
 </dd></dl>
 
@@ -1673,6 +1713,7 @@ document.write(`
 <ul class="simple">
 <li><p>Functions</p>
 <ul>
+<li><p><a class="reference internal" href="#tinytc-binary-create"><span class="std std-ref">tinytc_binary_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-binary-get-core-features"><span class="std std-ref">tinytc_binary_get_core_features</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-binary-get-raw"><span class="std std-ref">tinytc_binary_get_raw</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-binary-release"><span class="std std-ref">tinytc_binary_release</span></a></p></li>
@@ -1682,11 +1723,34 @@ document.write(`
 </ul>
 <section id="binary-functions">
 <h3>Binary Functions<a class="headerlink" href="#binary-functions" title="Link to this heading">#</a></h3>
+<section id="tinytc-binary-create">
+<h4>tinytc_binary_create<a class="headerlink" href="#tinytc-binary-create" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_binary_create">
+<span class="target" id="tinytc_8h_1adce3c25f2141bc5a3e22e1c6082ed0a2"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_binary_t" title="tinytc_binary_t"><span class="n"><span class="pre">tinytc_binary_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">format</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">data_size</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_create" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create binary. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bin</strong> – [out] pointer to binary object </p></li>
+<li><p><strong>format</strong> – [in] Bundle format (SPIR-V or Native) </p></li>
+<li><p><strong>data_size</strong> – [in] Size of data in bytes </p></li>
+<li><p><strong>data</strong> – [in][range(0, data_size)] Binary data; data is copied </p></li>
+<li><p><strong>core_features</strong> – [in][optional] requested core features; must be 0 (default) or a combination of tinytc_core_feature_flag_t</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="tinytc-binary-get-core-features">
 <h4>tinytc_binary_get_core_features<a class="headerlink" href="#tinytc-binary-get-core-features" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_binary_get_core_features">
-<span class="target" id="tinytc_8h_1aef565d3634991cbd1423ead6fabb677e"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_get_core_features</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_get_core_features" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1a632313947c479494f64a89fdbca1f1bf"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_get_core_features</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_get_core_features" title="Link to this definition">#</a><br /></dt>
 <dd><p>Get requested core features. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1706,7 +1770,7 @@ document.write(`
 <h4>tinytc_binary_get_raw<a class="headerlink" href="#tinytc-binary-get-raw" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_binary_get_raw">
-<span class="target" id="tinytc_8h_1a5c3ed0959e67e61e01517fc0ac4f47b0"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_get_raw</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">format</span></span>, <span class="n"><span class="pre">uint64_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data_size</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_get_raw" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1af799ab0354101301ea3da71a213c2a4d"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_get_raw</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_binary_t" title="const_tinytc_binary_t"><span class="n"><span class="pre">const_tinytc_binary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">format</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data_size</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">data</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_get_raw" title="Link to this definition">#</a><br /></dt>
 <dd><p>Get raw binary data. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1775,9 +1839,7 @@ document.write(`
 </li>
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#tinytc-prog-compile-to-binary"><span class="std std-ref">tinytc_prog_compile_to_binary</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-prog-compile-to-opencl"><span class="std std-ref">tinytc_prog_compile_to_opencl</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-source-compile-to-binary"><span class="std std-ref">tinytc_source_compile_to_binary</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -1808,29 +1870,6 @@ document.write(`
 </section>
 <section id="compiler-functions">
 <h3>Compiler Functions<a class="headerlink" href="#compiler-functions" title="Link to this heading">#</a></h3>
-<section id="tinytc-prog-compile-to-binary">
-<h4>tinytc_prog_compile_to_binary<a class="headerlink" href="#tinytc-prog-compile-to-binary" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_prog_compile_to_binary">
-<span class="target" id="tinytc_8h_1a198d0a3827bdd114474f0075653ae927"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_prog_compile_to_binary</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_binary_t" title="tinytc_binary_t"><span class="n"><span class="pre">tinytc_binary_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_prog_t" title="tinytc_prog_t"><span class="n"><span class="pre">tinytc_prog_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">prg</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">format</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_prog_compile_to_binary" title="Link to this definition">#</a><br /></dt>
-<dd><p>Compile tensor language to device binary. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bin</strong> – [out] pointer to the binary object created </p></li>
-<li><p><strong>prg</strong> – [inout] tensor program; modified as compiler passes are run </p></li>
-<li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>format</strong> – [in] binary format (SPIR-V or native) </p></li>
-<li><p><strong>ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="tinytc-prog-compile-to-opencl">
 <h4>tinytc_prog_compile_to_opencl<a class="headerlink" href="#tinytc-prog-compile-to-opencl" title="Link to this heading">#</a></h4>
 <dl class="c function">
@@ -1843,29 +1882,6 @@ document.write(`
 <li><p><strong>src</strong> – [out] pointer to the source object created </p></li>
 <li><p><strong>prg</strong> – [inout] tensor program; modified as compiler passes are run </p></li>
 <li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="tinytc-source-compile-to-binary">
-<h4>tinytc_source_compile_to_binary<a class="headerlink" href="#tinytc-source-compile-to-binary" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_source_compile_to_binary">
-<span class="target" id="tinytc_8h_1a13a6d75a70cd4e2b2327971641d675d4"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_compile_to_binary</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_binary_t" title="tinytc_binary_t"><span class="n"><span class="pre">tinytc_binary_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span>, <a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_bundle_format_t" title="tinytc_bundle_format_t"><span class="n"><span class="pre">tinytc_bundle_format_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">format</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_compile_to_binary" title="Link to this definition">#</a><br /></dt>
-<dd><p>Compile OpenCL-C source to device binary. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>bin</strong> – [out] pointer to the binary object created </p></li>
-<li><p><strong>src</strong> – [in] source text </p></li>
-<li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>format</strong> – [in] binary format (SPIR-V or native) </p></li>
 <li><p><strong>ctx</strong> – [inout][optional] source context object to save extended error messages that are enhanced with source code context; can be nullptr</p></li>
 </ul>
 </dd>
@@ -1889,16 +1905,20 @@ document.write(`
 </li>
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#tinytc-core-info-get-ip-version"><span class="std std-ref">tinytc_core_info_get_ip_version</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-core-info-get-num-registers-per-thread"><span class="std std-ref">tinytc_core_info_get_num_registers_per_thread</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-core-info-get-register-size"><span class="std std-ref">tinytc_core_info_get_register_size</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-core-info-get-core-features"><span class="std std-ref">tinytc_core_info_get_core_features</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-core-info-get-register-space"><span class="std std-ref">tinytc_core_info_get_register_space</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-core-info-get-subgroup-sizes"><span class="std std-ref">tinytc_core_info_get_subgroup_sizes</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-core-info-clear-core-feature"><span class="std std-ref">tinytc_core_info_clear_core_feature</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-core-info-set-core-feature"><span class="std std-ref">tinytc_core_info_set_core_feature</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-core-info-set-core-features"><span class="std std-ref">tinytc_core_info_set_core_features</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-core-info-generic-create"><span class="std std-ref">tinytc_core_info_generic_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-core-info-intel-create"><span class="std std-ref">tinytc_core_info_intel_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-core-info-intel-create-from-arch"><span class="std std-ref">tinytc_core_info_intel_create_from_arch</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-core-info-release"><span class="std std-ref">tinytc_core_info_release</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-core-info-retain"><span class="std std-ref">tinytc_core_info_retain</span></a></p></li>
+</ul>
+</li>
+<li><p>Typedefs</p>
+<ul>
+<li><p><a class="reference internal" href="#tinytc-core-feature-flags-t"><span class="std std-ref">tinytc_core_feature_flags_t</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -1933,9 +1953,15 @@ document.write(`
 </p>
 <p><em>Values:</em></p>
 <dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_tgl">
+<span class="target" id="types_8h_1a4908c779dca74de8ba05b60c6ab1ed80a46a90d03061583ae07b2306c911b1365"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_intel_gpu_architecture_tgl</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x03000000</span></span><a class="headerlink" href="#c.tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_tgl" title="Link to this definition">#</a><br /></dt>
+<dd><p>Tiger Lake. </p>
+</dd></dl>
+
+<dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_pvc">
 <span class="target" id="types_8h_1a4908c779dca74de8ba05b60c6ab1ed80a065a613d16ce3fee6d406912d9e8de98"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_intel_gpu_architecture_pvc</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0x030f0007</span></span><a class="headerlink" href="#c.tinytc_intel_gpu_architecture_t.tinytc_intel_gpu_architecture_pvc" title="Link to this definition">#</a><br /></dt>
-<dd><p>PVC. </p>
+<dd><p>Ponte Vecchio. </p>
 </dd></dl>
 
 </dd></dl>
@@ -1944,17 +1970,17 @@ document.write(`
 </section>
 <section id="device-info-functions">
 <h3>Device Info Functions<a class="headerlink" href="#device-info-functions" title="Link to this heading">#</a></h3>
-<section id="tinytc-core-info-get-ip-version">
-<h4>tinytc_core_info_get_ip_version<a class="headerlink" href="#tinytc-core-info-get-ip-version" title="Link to this heading">#</a></h4>
+<section id="tinytc-core-info-get-core-features">
+<h4>tinytc_core_info_get_core_features<a class="headerlink" href="#tinytc-core-info-get-core-features" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_core_info_get_ip_version">
-<span class="target" id="tinytc_8h_1a97c2f2f0424d03eb71ad77fbf4b0faeb"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_ip_version</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">ip_version</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_ip_version" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns IP version. </p>
+<dt class="sig sig-object c" id="c.tinytc_core_info_get_core_features">
+<span class="target" id="tinytc_8h_1ad7db7ce3f5dbcfe2fd6ae0612b42461f"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_core_features</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">flags</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_core_features" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get core features. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>ip_version</strong> – [out] pointer to IP version</p></li>
+<li><p><strong>flags</strong> – [out] pointer to core feature flags</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1964,37 +1990,17 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-core-info-get-num-registers-per-thread">
-<h4>tinytc_core_info_get_num_registers_per_thread<a class="headerlink" href="#tinytc-core-info-get-num-registers-per-thread" title="Link to this heading">#</a></h4>
+<section id="tinytc-core-info-get-register-space">
+<h4>tinytc_core_info_get_register_space<a class="headerlink" href="#tinytc-core-info-get-register-space" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_core_info_get_num_registers_per_thread">
-<span class="target" id="tinytc_8h_1a76b5bf19569470457199a171c883ad64"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_num_registers_per_thread</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">num</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_num_registers_per_thread" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns available number of registers per subgroup. </p>
+<dt class="sig sig-object c" id="c.tinytc_core_info_get_register_space">
+<span class="target" id="tinytc_8h_1a3df11c39e237aa9e0d1a9ac85cc649cb"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_register_space</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">space</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_register_space" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns register space per subgroup in bytes. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>num</strong> – [out] pointer to number of registers</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="tinytc-core-info-get-register-size">
-<h4>tinytc_core_info_get_register_size<a class="headerlink" href="#tinytc-core-info-get-register-size" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_core_info_get_register_size">
-<span class="target" id="tinytc_8h_1a2313faeda17c2f4af16984f58a3490e9"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_register_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_register_size" title="Link to this definition">#</a><br /></dt>
-<dd><p>Returns size of one register size in bytes. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>size</strong> – [out] pointer to register size</p></li>
+<li><p><strong>space</strong> – [out] pointer to register space</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2008,7 +2014,7 @@ document.write(`
 <h4>tinytc_core_info_get_subgroup_sizes<a class="headerlink" href="#tinytc-core-info-get-subgroup-sizes" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_core_info_get_subgroup_sizes">
-<span class="target" id="tinytc_8h_1a5dd4c54d742e1dbd0ce005e507ea819a"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_subgroup_sizes</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs_size</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_subgroup_sizes" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1a31b37b0d9b748e6ed36b656d28beefb3"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_get_subgroup_sizes</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs_size</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_get_subgroup_sizes" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns available subgroup sizes. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2025,17 +2031,17 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-core-info-clear-core-feature">
-<h4>tinytc_core_info_clear_core_feature<a class="headerlink" href="#tinytc-core-info-clear-core-feature" title="Link to this heading">#</a></h4>
+<section id="tinytc-core-info-set-core-features">
+<h4>tinytc_core_info_set_core_features<a class="headerlink" href="#tinytc-core-info-set-core-features" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_core_info_clear_core_feature">
-<span class="target" id="tinytc_8h_1a24d39e96670627e58d4a0cd509aceb0e"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_clear_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flag_t" title="tinytc_core_feature_flag_t"><span class="n"><span class="pre">tinytc_core_feature_flag_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">flag</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_clear_core_feature" title="Link to this definition">#</a><br /></dt>
-<dd><p>Clear core feature request. </p>
+<dt class="sig sig-object c" id="c.tinytc_core_info_set_core_features">
+<span class="target" id="tinytc_8h_1adafb53bf81371f93070aa351440220d3"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_set_core_features</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">flags</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_set_core_features" title="Link to this definition">#</a><br /></dt>
+<dd><p>Set core features. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>flag</strong> – [in] feature flag</p></li>
+<li><p><strong>flags</strong> – [in] set core features; must be 0 or a combination of tinytc_core_feature_flag_t</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2045,17 +2051,20 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-core-info-set-core-feature">
-<h4>tinytc_core_info_set_core_feature<a class="headerlink" href="#tinytc-core-info-set-core-feature" title="Link to this heading">#</a></h4>
+<section id="tinytc-core-info-generic-create">
+<h4>tinytc_core_info_generic_create<a class="headerlink" href="#tinytc-core-info-generic-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_core_info_set_core_feature">
-<span class="target" id="tinytc_8h_1a6afbd28dd3357efee4dbe5319789a6ea"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_set_core_feature</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flag_t" title="tinytc_core_feature_flag_t"><span class="n"><span class="pre">tinytc_core_feature_flag_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">flag</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_set_core_feature" title="Link to this definition">#</a><br /></dt>
-<dd><p>Request core feature. </p>
+<dt class="sig sig-object c" id="c.tinytc_core_info_generic_create">
+<span class="target" id="tinytc_8h_1a4566bba6035cc675a7cdfaf46267d85d"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_generic_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">register_space</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">max_work_group_size</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">sgs_size</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_generic_create" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create core_info for a generic GPUs. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>info</strong> – [in] core info object </p></li>
-<li><p><strong>flag</strong> – [in] feature flag</p></li>
+<li><p><strong>info</strong> – [out] pointer to the core_info object created </p></li>
+<li><p><strong>register_space</strong> – [in] Size of register file per subgroup in bytes </p></li>
+<li><p><strong>max_work_group_size</strong> – [in] Maximum size of local work group </p></li>
+<li><p><strong>sgs_size</strong> – [in] Length of sgs array </p></li>
+<li><p><strong>sgs</strong> – [in] Allowed subgroup sizes</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2069,7 +2078,7 @@ document.write(`
 <h4>tinytc_core_info_intel_create<a class="headerlink" href="#tinytc-core-info-intel-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_core_info_intel_create">
-<span class="target" id="tinytc_8h_1adfa59845343836beb2595f7e5bb3c79f"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_intel_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ip_version</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">num_eus_per_subslice</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">num_threads_per_eu</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">local_memory_size</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">sgs_size</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_intel_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1a392ae4d55ee58081229b16e32c61a785"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_info_intel_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_core_info_t" title="tinytc_core_info_t"><span class="n"><span class="pre">tinytc_core_info_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ip_version</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">num_eus_per_subslice</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">num_threads_per_eu</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">sgs_size</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_core_info_intel_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Create core_info for Intel GPUs. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2078,7 +2087,6 @@ document.write(`
 <li><p><strong>ip_version</strong> – [in] IP version of architecture </p></li>
 <li><p><strong>num_eus_per_subslice</strong> – [in] Number of Execution Units (Xe Vector Engines) per subslice (Xe Core) </p></li>
 <li><p><strong>num_threads_per_eu</strong> – [in] Number of threads per Execution Unit (Xe Vector Engine) </p></li>
-<li><p><strong>local_memory_size</strong> – [in] Size of shared local memory </p></li>
 <li><p><strong>sgs_size</strong> – [in] Length of sgs array </p></li>
 <li><p><strong>sgs</strong> – [in] Allowed subgroup sizes</p></li>
 </ul>
@@ -2146,6 +2154,18 @@ document.write(`
 <dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+</section>
+<section id="device-info-typedefs">
+<h3>Device Info Typedefs<a class="headerlink" href="#device-info-typedefs" title="Link to this heading">#</a></h3>
+<section id="tinytc-core-feature-flags-t">
+<h4>tinytc_core_feature_flags_t<a class="headerlink" href="#tinytc-core-feature-flags-t" title="Link to this heading">#</a></h4>
+<dl class="c type">
+<dt class="sig sig-object c" id="c.tinytc_core_feature_flags_t">
+<span class="target" id="types_8h_1aa54f262ab9b9ab9034247b7b2c56b748"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></span><a class="headerlink" href="#c.tinytc_core_feature_flags_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Type for combination of core feature flags. </p>
 </dd></dl>
 
 </section>
@@ -2239,28 +2259,19 @@ document.write(`
 </li>
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#tinytc-recipe-get-binary"><span class="std std-ref">tinytc_recipe_get_binary</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-get-prog"><span class="std std-ref">tinytc_recipe_get_prog</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-recipe-get-source"><span class="std std-ref">tinytc_recipe_get_source</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-handler-get-recipe"><span class="std std-ref">tinytc_recipe_handler_get_recipe</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-small-gemm-batched-create"><span class="std std-ref">tinytc_recipe_small_gemm_batched_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-small-gemm-batched-set-args"><span class="std std-ref">tinytc_recipe_small_gemm_batched_set_args</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-tall-and-skinny-create"><span class="std std-ref">tinytc_recipe_tall_and_skinny_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-recipe-tall-and-skinny-create-specialized"><span class="std std-ref">tinytc_recipe_tall_and_skinny_create_specialized</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-tall-and-skinny-set-args"><span class="std std-ref">tinytc_recipe_tall_and_skinny_set_args</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-tall-and-skinny-suggest-block-size"><span class="std std-ref">tinytc_recipe_tall_and_skinny_suggest_block_size</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-release"><span class="std std-ref">tinytc_recipe_release</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-retain"><span class="std std-ref">tinytc_recipe_retain</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-handler-release"><span class="std std-ref">tinytc_recipe_handler_release</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-recipe-handler-retain"><span class="std std-ref">tinytc_recipe_handler_retain</span></a></p></li>
-</ul>
-</li>
-<li><p>Structures</p>
-<ul>
-<li><p><a class="reference internal" href="#tinytc-mem"><span class="std std-ref">tinytc_mem</span></a></p></li>
-</ul>
-</li>
-<li><p>Typedefs</p>
-<ul>
-<li><p><a class="reference internal" href="#tinytc-mem-t"><span class="std std-ref">tinytc_mem_t</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -2297,26 +2308,6 @@ document.write(`
 </section>
 <section id="recipe-functions">
 <h3>Recipe Functions<a class="headerlink" href="#recipe-functions" title="Link to this heading">#</a></h3>
-<section id="tinytc-recipe-get-binary">
-<h4>tinytc_recipe_get_binary<a class="headerlink" href="#tinytc-recipe-get-binary" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_recipe_get_binary">
-<span class="target" id="tinytc_8h_1a2fe5c29421baea49c46116e82d552a5f"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_get_binary</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_recipe_t" title="const_tinytc_recipe_t"><span class="n"><span class="pre">const_tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.tinytc_binary_t" title="tinytc_binary_t"><span class="n"><span class="pre">tinytc_binary_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">bin</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_get_binary" title="Link to this definition">#</a><br /></dt>
-<dd><p>Get binary object. </p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>recipe</strong> – [in] recipe object </p></li>
-<li><p><strong>bin</strong> – [out] pointer to binary object; reference count is increased so the user needs to call tinytc_binary_release to clean up</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
 <section id="tinytc-recipe-get-prog">
 <h4>tinytc_recipe_get_prog<a class="headerlink" href="#tinytc-recipe-get-prog" title="Link to this heading">#</a></h4>
 <dl class="c function">
@@ -2328,6 +2319,26 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>recipe</strong> – [in] recipe object </p></li>
 <li><p><strong>prg</strong> – [out] pointer to prog object; reference count is increased so the user needs to call tinytc_prog_release to clean up</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-recipe-get-source">
+<h4>tinytc_recipe_get_source<a class="headerlink" href="#tinytc-recipe-get-source" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_recipe_get_source">
+<span class="target" id="tinytc_8h_1ac91c8ed8eca99508ba7a6c1aec3fe0cf"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_get_source</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_recipe_t" title="const_tinytc_recipe_t"><span class="n"><span class="pre">const_tinytc_recipe_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.tinytc_source_t" title="tinytc_source_t"><span class="n"><span class="pre">tinytc_source_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">src</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_get_source" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get source object. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>recipe</strong> – [in] recipe object </p></li>
+<li><p><strong>src</strong> – [out] pointer to source object; reference count is increased so the user needs to call tinytc_source_release to clean up</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2361,7 +2372,7 @@ document.write(`
 <h4>tinytc_recipe_small_gemm_batched_create<a class="headerlink" href="#tinytc-recipe-small-gemm-batched-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_recipe_small_gemm_batched_create">
-<span class="target" id="tinytc_8h_1a4499bb0c4684dcc9fef847f9f651d1dd"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_small_gemm_batched_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_scalar_type_t" title="tinytc_scalar_type_t"><span class="n"><span class="pre">tinytc_scalar_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ty</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_transpose_t" title="tinytc_transpose_t"><span class="n"><span class="pre">tinytc_transpose_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">tA</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_transpose_t" title="tinytc_transpose_t"><span class="n"><span class="pre">tinytc_transpose_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">tB</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">M</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">N</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">K</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldA</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideA</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldB</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideB</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldC</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideC</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_small_gemm_batched_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1add560f905f3641546ac87851baca504b"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_small_gemm_batched_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_scalar_type_t" title="tinytc_scalar_type_t"><span class="n"><span class="pre">tinytc_scalar_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ty</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_transpose_t" title="tinytc_transpose_t"><span class="n"><span class="pre">tinytc_transpose_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">tA</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_transpose_t" title="tinytc_transpose_t"><span class="n"><span class="pre">tinytc_transpose_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">tB</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">M</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">N</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">K</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldA</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideA</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldB</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideB</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldC</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">strideC</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_small_gemm_batched_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a small batched GEMM recipe. </p>
 <p>The program contains a kernel for <span class="math notranslate nohighlight">\(\beta=0\)</span> called “gemm_beta0” and a kernel for <span class="math notranslate nohighlight">\(\beta\neq
 0\)</span> called “gemm”. All matrix shapes and strides are known at compile-time.</p>
@@ -2408,7 +2419,7 @@ document.write(`
 <h4>tinytc_recipe_small_gemm_batched_set_args<a class="headerlink" href="#tinytc-recipe-small-gemm-batched-set-args" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_recipe_small_gemm_batched_set_args">
-<span class="target" id="tinytc_8h_1a12b365f39dafc4395cd0bbba615d1bb2"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_small_gemm_batched_set_args</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">howmany</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">alpha_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">alpha_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">A</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">B</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">beta_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">beta_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">C</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_small_gemm_batched_set_args" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1ad1a0de904a5a7d91e3517d5d5aaec5d0"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_small_gemm_batched_set_args</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">howmany</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">alpha_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">alpha_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">A_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">A_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">B_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">B_value</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">beta_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">beta_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">C_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">C_value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_small_gemm_batched_set_args" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set kernel arguments for small GEMM batched recipe. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2417,11 +2428,14 @@ document.write(`
 <li><p><strong>howmany</strong> – [in] Group size </p></li>
 <li><p><strong>alpha_size</strong> – [in] Size of alpha argument </p></li>
 <li><p><strong>alpha_value</strong> – [in] Pointer to data used for alpha; data is copied </p></li>
-<li><p><strong>A</strong> – [in] Memory object used for A-matrix </p></li>
-<li><p><strong>B</strong> – [in] Memory object used for B-matrix </p></li>
+<li><p><strong>A_type</strong> – [in] Type of memory object used for A-matrix </p></li>
+<li><p><strong>A_value</strong> – [in] Memory object used for A-matrix </p></li>
+<li><p><strong>B_type</strong> – [in] Type of memory object used for B-matrix </p></li>
+<li><p><strong>B_value</strong> – [in] Memory object used for B-matrix </p></li>
 <li><p><strong>beta_size</strong> – [in] Size of beta argument </p></li>
 <li><p><strong>beta_value</strong> – [in] Pointer to data used for beta; data is copied </p></li>
-<li><p><strong>C</strong> – [in] Memory object used for C-matrix</p></li>
+<li><p><strong>C_type</strong> – [in] Type of memory object used for C-matrix </p></li>
+<li><p><strong>C_value</strong> – [in] Memory object used for C-matrix</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2435,7 +2449,7 @@ document.write(`
 <h4>tinytc_recipe_tall_and_skinny_create<a class="headerlink" href="#tinytc-recipe-tall-and-skinny-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_recipe_tall_and_skinny_create">
-<span class="target" id="tinytc_8h_1ad9b962a2b56786f7105405ae40e8d7c0"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_scalar_type_t" title="tinytc_scalar_type_t"><span class="n"><span class="pre">tinytc_scalar_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ty</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">N</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">K</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">M_block_size</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1a25254a272eb81621c80415ad1b095c3e"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_scalar_type_t" title="tinytc_scalar_type_t"><span class="n"><span class="pre">tinytc_scalar_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ty</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">N</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">K</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">M_block_size</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Returns a tall and skinny recipe. </p>
 <p>The program contains a kernel for beta = 0 called “gemm_beta0” and a kernel for beta != 0 called “gemm”. M (= number of rows of A, C) and strides are dynamic.</p>
 <p>The signature of the generated kernels gemm and gemm_beta0 is</p>
@@ -2470,11 +2484,49 @@ document.write(`
 </dd></dl>
 
 </section>
+<section id="tinytc-recipe-tall-and-skinny-create-specialized">
+<h4>tinytc_recipe_tall_and_skinny_create_specialized<a class="headerlink" href="#tinytc-recipe-tall-and-skinny-create-specialized" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_recipe_tall_and_skinny_create_specialized">
+<span class="target" id="tinytc_8h_1af45440795d09a64dd0c7f777ca7674cc"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_create_specialized</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_t" title="tinytc_recipe_t"><span class="n"><span class="pre">tinytc_recipe_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">recipe</span></span>, <a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_scalar_type_t" title="tinytc_scalar_type_t"><span class="n"><span class="pre">tinytc_scalar_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ty</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">M</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">N</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">K</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldA</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldB</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldC</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">M_block_size</span></span>, <a class="reference internal" href="#c.tinytc_source_context_t" title="tinytc_source_context_t"><span class="n"><span class="pre">tinytc_source_context_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">ctx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_create_specialized" title="Link to this definition">#</a><br /></dt>
+<dd><p>Returns a tall and skinny recipe with additional specialization constants. </p>
+<p>Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization constants M, ldA, ldB, and ldC. The specializtion constants may be either set to a fixed value or to TINYTC_DYNAMIC. Note that if a specialization constant is set to a fixed value then the parameter with the same name in tinytc_recipe_tall_and_skinny_set_args is ignored.</p>
+<p>The generated kernels have the following signature:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">func</span> <span class="o">@</span><span class="p">{</span><span class="n">name</span><span class="p">}(</span><span class="o">%</span><span class="n">alpha</span><span class="p">:</span> <span class="p">{</span><span class="n">ty</span><span class="o">.</span><span class="n">alpha</span><span class="p">},</span>
+             <span class="o">%</span><span class="n">A</span><span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="p">{</span><span class="n">ty</span><span class="o">.</span><span class="n">A</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">M</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">K</span><span class="p">},</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,{</span><span class="n">ldA</span><span class="p">}</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+             <span class="o">%</span><span class="n">B</span><span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="p">{</span><span class="n">ty</span><span class="o">.</span><span class="n">B</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">K</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">N</span><span class="p">},</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,{</span><span class="n">ldB</span><span class="p">}</span><span class="o">&gt;&gt;</span><span class="p">,</span>
+             <span class="o">%</span><span class="n">beta</span><span class="p">:</span> <span class="p">{</span><span class="n">ty</span><span class="o">.</span><span class="n">beta</span><span class="p">},</span>
+             <span class="o">%</span><span class="n">C</span><span class="p">:</span> <span class="n">memref</span><span class="o">&lt;</span><span class="p">{</span><span class="n">ty</span><span class="o">.</span><span class="n">C</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">M</span><span class="p">}</span><span class="n">x</span><span class="p">{</span><span class="n">N</span><span class="p">},</span><span class="n">strided</span><span class="o">&lt;</span><span class="mi">1</span><span class="p">,{</span><span class="n">ldC</span><span class="p">}</span><span class="o">&gt;&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>recipe</strong> – [out] pointer to the recipe object created </p></li>
+<li><p><strong>info</strong> – [in] core info object </p></li>
+<li><p><strong>ty</strong> – [in] Scalar type of alpha, A, B, beta, C </p></li>
+<li><p><strong>M</strong> – [in] Number of rows of A, C; can be TINYTC_DYNAMIC </p></li>
+<li><p><strong>N</strong> – [in] Number of columns of B, C </p></li>
+<li><p><strong>K</strong> – [in] Number columns of A, number of rows of B </p></li>
+<li><p><strong>ldA</strong> – [in] Leading dimension of A; can be TINYTC_DYNAMIC </p></li>
+<li><p><strong>ldB</strong> – [in] Leading dimension of B; can be TINYTC_DYNAMIC </p></li>
+<li><p><strong>ldC</strong> – [in] Leading dimension of C; can be TINYTC_DYNAMIC </p></li>
+<li><p><strong>M_block_size</strong> – [in][optional] Size of M block that each work group gets; pass 0 to have the parameter auto-selected </p></li>
+<li><p><strong>ctx</strong> – [inout][optional] source context object; saves error log; can be nullptr</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="tinytc-recipe-tall-and-skinny-set-args">
 <h4>tinytc_recipe_tall_and_skinny_set_args<a class="headerlink" href="#tinytc-recipe-tall-and-skinny-set-args" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_recipe_tall_and_skinny_set_args">
-<span class="target" id="tinytc_8h_1afa948fa641f3515aba48cc3659d9bcc3"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_set_args</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">M</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">alpha_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">alpha_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">A</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldA</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">B</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldB</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">beta_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">beta_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_t" title="tinytc_mem_t"><span class="n"><span class="pre">tinytc_mem_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">C</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldC</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_set_args" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1aace6e76ffe3b9ce94e017dd2cbed2442"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_set_args</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_recipe_handler_t" title="tinytc_recipe_handler_t"><span class="n"><span class="pre">tinytc_recipe_handler_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">handler</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">M</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">alpha_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">alpha_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">A_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">A_value</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldA</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">B_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">B_value</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldB</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="n"><span class="pre">beta_size</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">beta_value</span></span>, <a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">C_type</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">C_value</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">ldC</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_set_args" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set kernel arguments for tall and skinny GEMM recipe. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2483,13 +2535,16 @@ document.write(`
 <li><p><strong>M</strong> – [in] Size of M-mode </p></li>
 <li><p><strong>alpha_size</strong> – [in] Size of alpha argument </p></li>
 <li><p><strong>alpha_value</strong> – [in] Pointer to data used for alpha; data is copied </p></li>
-<li><p><strong>A</strong> – [in] Memory object used for A-matrix </p></li>
+<li><p><strong>A_type</strong> – [in] Type of memory object used for A-matrix </p></li>
+<li><p><strong>A_value</strong> – [in] Memory object used for A-matrix </p></li>
 <li><p><strong>ldA</strong> – [in] Leading dimension of A </p></li>
-<li><p><strong>B</strong> – [in] Memory object used for B-matrix </p></li>
+<li><p><strong>B_type</strong> – [in] Type of memory object used for B-matrix </p></li>
+<li><p><strong>B_value</strong> – [in] Memory object used for B-matrix </p></li>
 <li><p><strong>ldB</strong> – [in] Leading dimension of B </p></li>
 <li><p><strong>beta_size</strong> – [in] Size of beta argument </p></li>
 <li><p><strong>beta_value</strong> – [in] Pointer to data used for beta; data is copied </p></li>
-<li><p><strong>C</strong> – [in] Memory object used for C-matrix </p></li>
+<li><p><strong>C_type</strong> – [in] Type of memory object used for C-matrix </p></li>
+<li><p><strong>C_value</strong> – [in] Memory object used for C-matrix </p></li>
 <li><p><strong>ldC</strong> – [in] Leading dimension of C</p></li>
 </ul>
 </dd>
@@ -2504,7 +2559,7 @@ document.write(`
 <h4>tinytc_recipe_tall_and_skinny_suggest_block_size<a class="headerlink" href="#tinytc-recipe-tall-and-skinny-suggest-block-size" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_recipe_tall_and_skinny_suggest_block_size">
-<span class="target" id="tinytc_8h_1a316ab14cdb5d18812d971b497cb8c5de"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_suggest_block_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">M_block_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_suggest_block_size" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1ab38f1bba6577931d317dab8480bc0d4f"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_recipe_tall_and_skinny_suggest_block_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_core_info_t" title="const_tinytc_core_info_t"><span class="n"><span class="pre">const_tinytc_core_info_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">info</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">M_block_size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_recipe_tall_and_skinny_suggest_block_size" title="Link to this definition">#</a><br /></dt>
 <dd><p>Suggest an M block size for tall and skinny recipe. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2599,46 +2654,6 @@ document.write(`
 
 </section>
 </section>
-<section id="recipe-structures">
-<h3>Recipe Structures<a class="headerlink" href="#recipe-structures" title="Link to this heading">#</a></h3>
-<section id="tinytc-mem">
-<h4>tinytc_mem<a class="headerlink" href="#tinytc-mem" title="Link to this heading">#</a></h4>
-<dl class="c struct">
-<dt class="sig sig-object c" id="c.tinytc_mem">
-<span class="target" id="structtinytc__mem"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_mem</span></span></span><a class="headerlink" href="#c.tinytc_mem" title="Link to this definition">#</a><br /></dt>
-<dd><p>Memory object. </p>
-<p>Subclassed by <a class="reference internal" href="core_cxxapi.html#structtinytc_1_1mem"><span class="std std-ref">tinytc::mem</span></a></p>
-<div class="breathe-sectiondef docutils container">
-<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
-<dl class="c var">
-<dt class="sig sig-object c" id="c.tinytc_mem.value">
-<span class="target" id="structtinytc__mem_1a424a219da00606b75aa67e94d36082fd"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><a class="headerlink" href="#c.tinytc_mem.value" title="Link to this definition">#</a><br /></dt>
-<dd><p>USM / SVM pointer or pointer to buffer object. </p>
-</dd></dl>
-
-<dl class="c var">
-<dt class="sig sig-object c" id="c.tinytc_mem.type">
-<span class="target" id="structtinytc__mem_1a581a0457c95ac725500be1df0a0b1482"></span><a class="reference internal" href="#c.tinytc_mem_type_t" title="tinytc_mem_type_t"><span class="n"><span class="pre">tinytc_mem_type_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">type</span></span></span><a class="headerlink" href="#c.tinytc_mem.type" title="Link to this definition">#</a><br /></dt>
-<dd><p>Memory object type. </p>
-</dd></dl>
-
-</div>
-</dd></dl>
-
-</section>
-</section>
-<section id="recipe-typedefs">
-<h3>Recipe Typedefs<a class="headerlink" href="#recipe-typedefs" title="Link to this heading">#</a></h3>
-<section id="tinytc-mem-t">
-<h4>tinytc_mem_t<a class="headerlink" href="#tinytc-mem-t" title="Link to this heading">#</a></h4>
-<dl class="c type">
-<dt class="sig sig-object c" id="c.tinytc_mem_t">
-<span class="target" id="types_8h_1a004d434f5ada349d00f1d4952335d632"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_mem" title="tinytc_mem"><span class="n"><span class="pre">tinytc_mem</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_mem_t</span></span></span><a class="headerlink" href="#c.tinytc_mem_t" title="Link to this definition">#</a><br /></dt>
-<dd><p>Memory object. </p>
-</dd></dl>
-
-</section>
-</section>
 </section>
 <section id="source">
 <h2>Source<a class="headerlink" href="#source" title="Link to this heading">#</a></h2>
@@ -2646,6 +2661,9 @@ document.write(`
 <li><p>Functions</p>
 <ul>
 <li><p><a class="reference internal" href="#tinytc-source-get-code"><span class="std std-ref">tinytc_source_get_code</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-source-get-core-features"><span class="std std-ref">tinytc_source_get_core_features</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-source-get-location"><span class="std std-ref">tinytc_source_get_location</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-source-get-extensions"><span class="std std-ref">tinytc_source_get_extensions</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-source-release"><span class="std std-ref">tinytc_source_release</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-source-retain"><span class="std std-ref">tinytc_source_retain</span></a></p></li>
 </ul>
@@ -2657,13 +2675,75 @@ document.write(`
 <h4>tinytc_source_get_code<a class="headerlink" href="#tinytc-source-get-code" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_source_get_code">
-<span class="target" id="tinytc_8h_1a0dc1572e35340f96c4d32d92dff01147"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_get_code</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">code</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_get_code" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1ad8f5c14704a05ec946cbd6e4f5fbda14"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_get_code</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">length</span></span>, <span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">code</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_get_code" title="Link to this definition">#</a><br /></dt>
 <dd><p>Get source text. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>src</strong> – [in] source object </p></li>
+<li><p><strong>length</strong> – [out] pointer to code length </p></li>
 <li><p><strong>code</strong> – [out] code contains a pointer to the source text; the pointer is only valid as long as the source object is alive</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-source-get-core-features">
+<h4>tinytc_source_get_core_features<a class="headerlink" href="#tinytc-source-get-core-features" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_source_get_core_features">
+<span class="target" id="tinytc_8h_1a0847aa60d132c902c203c9658839a2ed"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_get_core_features</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <a class="reference internal" href="#c.tinytc_core_feature_flags_t" title="tinytc_core_feature_flags_t"><span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">core_features</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_get_core_features" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get core features. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> – [in] source object </p></li>
+<li><p><strong>core_features</strong> – [out] pointer to core features</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-source-get-location">
+<h4>tinytc_source_get_location<a class="headerlink" href="#tinytc-source-get-location" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_source_get_location">
+<span class="target" id="tinytc_8h_1a36076a522a21e15ff60d726f7de58e8a"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_get_location</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <a class="reference internal" href="builder_capi.html#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_get_location" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get source location. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> – [in] source object </p></li>
+<li><p><strong>loc</strong> – [out] pointer to location</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-source-get-extensions">
+<h4>tinytc_source_get_extensions<a class="headerlink" href="#tinytc-source-get-extensions" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_source_get_extensions">
+<span class="target" id="tinytc_8h_1a4c00501ce419f063fd0e3695dbc920fb"></span><a class="reference internal" href="#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_source_get_extensions</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.const_tinytc_source_t" title="const_tinytc_source_t"><span class="n"><span class="pre">const_tinytc_source_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">src</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">extensions_size</span></span>, <span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">extensions</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_source_get_extensions" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get required OpenCL extensions. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>src</strong> – [in] source object </p></li>
+<li><p><strong>extensions_size</strong> – [out] pointer to number of extensions </p></li>
+<li><p><strong>extensions</strong> – [out][range(0,extensions_size)] pointer to array of C-strings; array owned by source object</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2907,6 +2987,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-status-t">tinytc_status_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-support-level-t">tinytc_support_level_t</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-definitions">Common Definitions</a><ul class="nav section-nav flex-column">
@@ -2943,6 +3024,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#binary">Binary</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#binary-functions">Binary Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-create">tinytc_binary_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-get-core-features">tinytc_binary_get_core_features</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-get-raw">tinytc_binary_get_raw</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-release">tinytc_binary_release</a></li>
@@ -2957,9 +3039,7 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#compiler-functions">Compiler Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-prog-compile-to-binary">tinytc_prog_compile_to_binary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-prog-compile-to-opencl">tinytc_prog_compile_to_opencl</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-compile-to-binary">tinytc_source_compile_to_binary</a></li>
 </ul>
 </li>
 </ul>
@@ -2971,16 +3051,19 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-ip-version">tinytc_core_info_get_ip_version</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-num-registers-per-thread">tinytc_core_info_get_num_registers_per_thread</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-register-size">tinytc_core_info_get_register_size</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-core-features">tinytc_core_info_get_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-register-space">tinytc_core_info_get_register_space</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-get-subgroup-sizes">tinytc_core_info_get_subgroup_sizes</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-clear-core-feature">tinytc_core_info_clear_core_feature</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-set-core-feature">tinytc_core_info_set_core_feature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-set-core-features">tinytc_core_info_set_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-generic-create">tinytc_core_info_generic_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-intel-create">tinytc_core_info_intel_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-intel-create-from-arch">tinytc_core_info_intel_create_from_arch</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-release">tinytc_core_info_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-info-retain">tinytc_core_info_retain</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-typedefs">Device Info Typedefs</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-core-feature-flags-t">tinytc_core_feature_flags_t</a></li>
 </ul>
 </li>
 </ul>
@@ -3000,12 +3083,13 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-binary">tinytc_recipe_get_binary</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-prog">tinytc_recipe_get_prog</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-get-source">tinytc_recipe_get_source</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-handler-get-recipe">tinytc_recipe_handler_get_recipe</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-small-gemm-batched-create">tinytc_recipe_small_gemm_batched_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-small-gemm-batched-set-args">tinytc_recipe_small_gemm_batched_set_args</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-create">tinytc_recipe_tall_and_skinny_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-create-specialized">tinytc_recipe_tall_and_skinny_create_specialized</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-set-args">tinytc_recipe_tall_and_skinny_set_args</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-tall-and-skinny-suggest-block-size">tinytc_recipe_tall_and_skinny_suggest_block_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-release">tinytc_recipe_release</a></li>
@@ -3014,19 +3098,14 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-recipe-handler-retain">tinytc_recipe_handler_retain</a></li>
 </ul>
 </li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-structures">Recipe Structures</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-mem">tinytc_mem</a></li>
-</ul>
-</li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-typedefs">Recipe Typedefs</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-mem-t">tinytc_mem_t</a></li>
-</ul>
-</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source">Source</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#source-functions">Source Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-code">tinytc_source_get_code</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-core-features">tinytc_source_get_core_features</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-location">tinytc_source_get_location</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-get-extensions">tinytc_source_get_extensions</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-release">tinytc_source_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-source-retain">tinytc_source_retain</a></li>
 </ul>

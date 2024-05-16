@@ -39,7 +39,7 @@
   <script src="../../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api/cl/cxxapi';</script>
@@ -417,6 +417,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-support-level-cl-device-id">get_support_level(cl_device_id)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-core-info-cl-device-id">make_core_info(cl_device_id)</a></li>
 </ul>
 </li>
@@ -424,21 +425,27 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-global-size-std-uint32-t-std-array-std-size-t-3u-const">get_global_size(std::uint32_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-global-size-std-int64-t-std-array-std-size-t-3u-const">get_global_size(std::int64_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-size-cl-kernel">get_group_size(cl_kernel)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-cl-program-char-const">make_kernel(cl_program,char const*)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const-source-context">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;,source_context)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-prog-tinytc-core-feature-flags-t-source-context">make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-source-const-source-context">make_kernel_bundle(cl_context,cl_device_id,source const&amp;,source_context)</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const-source-context">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;,source_context)</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-classes">Recipe Classes</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#opencl-recipe-handler">opencl_recipe_handler</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-structures">Recipe Structures</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-mem-type-cl-mem">auto_mem_type&lt;cl_mem&gt;</a></li>
 </ul>
 </li>
 </ul>
@@ -483,12 +490,30 @@ document.write(`
 <ul class="simple">
 <li><p>Functions</p>
 <ul>
+<li><p><a class="reference internal" href="#get-support-level-cl-device-id"><span class="std std-ref">get_support_level(cl_device_id)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-core-info-cl-device-id"><span class="std std-ref">make_core_info(cl_device_id)</span></a></p></li>
 </ul>
 </li>
 </ul>
 <section id="device-info-functions">
 <h3>Device Info Functions<a class="headerlink" href="#device-info-functions" title="Link to this heading">#</a></h3>
+<section id="get-support-level-cl-device-id">
+<h4>get_support_level(cl_device_id)<a class="headerlink" href="#get-support-level-cl-device-id" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc17get_support_levelE12cl_device_id">
+<span id="_CPPv3N6tinytc17get_support_levelE12cl_device_id"></span><span id="_CPPv2N6tinytc17get_support_levelE12cl_device_id"></span><span id="tinytc::get_support_level__cl_device_id"></span><span class="target" id="namespacetinytc_1a9f1d4e723aa4f20bb9ae232f4b8d42b1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_support_level</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc13support_levelE" title="tinytc::support_level"><span class="n"><span class="pre">support_level</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc17get_support_levelE12cl_device_id" title="Link to this definition">#</a><br /></dt>
+<dd><p>Get support level of OpenCL device. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> – Device handle</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Support level </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="make-core-info-cl-device-id">
 <h4>make_core_info(cl_device_id)<a class="headerlink" href="#make-core-info-cl-device-id" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
@@ -497,7 +522,7 @@ document.write(`
 <dd><p>Query core info from OpenCL runtime. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> – [in] device handle</p>
+<dd class="field-odd"><p><strong>device</strong> – device handle</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>core info </p>
@@ -513,20 +538,22 @@ document.write(`
 <ul class="simple">
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#get-global-size-std-uint32-t-std-array-std-size-t-3u-const"><span class="std std-ref">get_global_size(std::uint32_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#get-global-size-std-int64-t-std-array-std-size-t-3u-const"><span class="std std-ref">get_global_size(std::int64_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</span></a></p></li>
 <li><p><a class="reference internal" href="#get-group-size-cl-kernel"><span class="std std-ref">get_group_size(cl_kernel)</span></a></p></li>
 <li><p><a class="reference internal" href="#make-kernel-cl-program-char-const"><span class="std std-ref">make_kernel(cl_program,char const*)</span></a></p></li>
-<li><p><a class="reference internal" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const"><span class="std std-ref">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const-source-context"><span class="std std-ref">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;,source_context)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-kernel-bundle-cl-context-cl-device-id-prog-tinytc-core-feature-flags-t-source-context"><span class="std std-ref">make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-kernel-bundle-cl-context-cl-device-id-source-const-source-context"><span class="std std-ref">make_kernel_bundle(cl_context,cl_device_id,source const&amp;,source_context)</span></a></p></li>
 </ul>
 </li>
 </ul>
 <section id="kernel-functions">
 <h3>Kernel Functions<a class="headerlink" href="#kernel-functions" title="Link to this heading">#</a></h3>
-<section id="get-global-size-std-uint32-t-std-array-std-size-t-3u-const">
-<h4>get_global_size(std::uint32_t,std::array&lt;std::size_t, 3u&gt; const &amp;)<a class="headerlink" href="#get-global-size-std-uint32-t-std-array-std-size-t-3u-const" title="Link to this heading">#</a></h4>
+<section id="get-global-size-std-int64-t-std-array-std-size-t-3u-const">
+<h4>get_global_size(std::int64_t,std::array&lt;std::size_t, 3u&gt; const &amp;)<a class="headerlink" href="#get-global-size-std-int64-t-std-array-std-size-t-3u-const" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15get_global_sizeENSt8uint32_tERKNSt5arrayINSt6size_tEXL3uEEEE">
-<span id="_CPPv3N6tinytc15get_global_sizeENSt8uint32_tERKNSt5arrayINSt6size_tEXL3uEEEE"></span><span id="_CPPv2N6tinytc15get_global_sizeENSt8uint32_tERKNSt5arrayINSt6size_tEX3uEEE"></span><span id="tinytc::get_global_size__std::uint32_t.std::array:std::s.3u:CR"></span><span class="target" id="namespacetinytc_1afd3add16255d557e9f95e339be89ce23"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_global_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">howmany</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3u</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">local_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3u</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc15get_global_sizeENSt8uint32_tERKNSt5arrayINSt6size_tEXL3uEEEE" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc15get_global_sizeENSt7int64_tERKNSt5arrayINSt6size_tEXL3uEEEE">
+<span id="_CPPv3N6tinytc15get_global_sizeENSt7int64_tERKNSt5arrayINSt6size_tEXL3uEEEE"></span><span id="_CPPv2N6tinytc15get_global_sizeENSt7int64_tERKNSt5arrayINSt6size_tEX3uEEE"></span><span id="tinytc::get_global_size__std::int64_t.std::array:std::s.3u:CR"></span><span class="target" id="namespacetinytc_1af3510d88ce36339e8acd20579b6e9821"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">get_global_size</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">howmany</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3u</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">local_size</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3u</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc15get_global_sizeENSt7int64_tERKNSt5arrayINSt6size_tEXL3uEEEE" title="Link to this definition">#</a><br /></dt>
 <dd><p>Convert group size to opencl global range. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -579,18 +606,64 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="make-kernel-bundle-cl-context-cl-device-id-binary-const">
-<h4>make_kernel_bundle(cl_context,cl_device_id,binary const&amp;)<a class="headerlink" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const" title="Link to this heading">#</a></h4>
+<section id="make-kernel-bundle-cl-context-cl-device-id-binary-const-source-context">
+<h4>make_kernel_bundle(cl_context,cl_device_id,binary const&amp;,source_context)<a class="headerlink" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const-source-context" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary">
-<span id="_CPPv3N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary"></span><span id="_CPPv2N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary"></span><span id="tinytc::make_kernel_bundle__cl_context.cl_device_id.binaryCR"></span><span class="target" id="namespacetinytc_1af308c9ed19c2a20d5a350ec3df9ac80f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel_bundle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6binaryE" title="tinytc::binary"><span class="n"><span class="pre">binary</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bin</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13shared_handleE" title="tinytc::shared_handle"><span class="n"><span class="pre">shared_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">cl_program</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary" title="Link to this definition">#</a><br /></dt>
-<dd><p>Make a cl_program from a tinytc binary. </p>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary14source_context">
+<span id="_CPPv3N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary14source_context"></span><span id="_CPPv2N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary14source_context"></span><span id="tinytc::make_kernel_bundle__cl_context.cl_device_id.binaryCR.source_context"></span><span class="target" id="namespacetinytc_1aa6d70c6179b70d1d19223663c84f7951"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel_bundle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6binaryE" title="tinytc::binary"><span class="n"><span class="pre">binary</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">bin</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc14source_contextE" title="tinytc::source_context"><span class="n"><span class="pre">source_context</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">source_ctx</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13shared_handleE" title="tinytc::shared_handle"><span class="n"><span class="pre">shared_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">cl_program</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6binary14source_context" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make an OpenCL program from a tinytc binary. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> – Context </p></li>
 <li><p><strong>device</strong> – Device </p></li>
-<li><p><strong>bin</strong> – Binary</p></li>
+<li><p><strong>bin</strong> – Binary </p></li>
+<li><p><strong>source_ctx</strong> – Source context for improved error reporting</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>cl_program (shared handle) </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-kernel-bundle-cl-context-cl-device-id-prog-tinytc-core-feature-flags-t-source-context">
+<h4>make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)<a class="headerlink" href="#make-kernel-bundle-cl-context-cl-device-id-prog-tinytc-core-feature-flags-t-source-context" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_id4prog27tinytc_core_feature_flags_t14source_context">
+<span id="_CPPv3N6tinytc18make_kernel_bundleE10cl_context12cl_device_id4prog27tinytc_core_feature_flags_t14source_context"></span><span id="_CPPv2N6tinytc18make_kernel_bundleE10cl_context12cl_device_id4prog27tinytc_core_feature_flags_t14source_context"></span><span id="tinytc::make_kernel_bundle__cl_context.cl_device_id.prog.tinytc_core_feature_flags_t.source_context"></span><span class="target" id="namespacetinytc_1a9b215334396167044032b022ce7c2dd9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel_bundle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../builder_cxxapi.html#_CPPv4N6tinytc4progE" title="tinytc::prog"><span class="n"><span class="pre">prog</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">prg</span></span>, <span class="n"><span class="pre">tinytc_core_feature_flags_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">core_features</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc14source_contextE" title="tinytc::source_context"><span class="n"><span class="pre">source_context</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">source_ctx</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13shared_handleE" title="tinytc::shared_handle"><span class="n"><span class="pre">shared_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">cl_program</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_id4prog27tinytc_core_feature_flags_t14source_context" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make an OpenCL program from a tinytc program. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – Context </p></li>
+<li><p><strong>device</strong> – Device </p></li>
+<li><p><strong>prg</strong> – Program </p></li>
+<li><p><strong>core_features</strong> – requested core features; must be 0 (default) or a combination of tinytc_core_feature_flag_t </p></li>
+<li><p><strong>source_ctx</strong> – Source context for improved error reporting</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>cl_program (shared handle) </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="make-kernel-bundle-cl-context-cl-device-id-source-const-source-context">
+<h4>make_kernel_bundle(cl_context,cl_device_id,source const&amp;,source_context)<a class="headerlink" href="#make-kernel-bundle-cl-context-cl-device-id-source-const-source-context" title="Link to this heading">#</a></h4>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6source14source_context">
+<span id="_CPPv3N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6source14source_context"></span><span id="_CPPv2N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6source14source_context"></span><span id="tinytc::make_kernel_bundle__cl_context.cl_device_id.sourceCR.source_context"></span><span class="target" id="namespacetinytc_1acffda2bc742dbfb7905f2ccf6a4c7f95"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_kernel_bundle</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6sourceE" title="tinytc::source"><span class="n"><span class="pre">source</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">src</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc14source_contextE" title="tinytc::source_context"><span class="n"><span class="pre">source_context</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">source_ctx</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4I0EN6tinytc13shared_handleE" title="tinytc::shared_handle"><span class="n"><span class="pre">shared_handle</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">cl_program</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N6tinytc18make_kernel_bundleE10cl_context12cl_device_idRK6source14source_context" title="Link to this definition">#</a><br /></dt>
+<dd><p>Make an OpenCL program from a tinytc source. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>context</strong> – Context </p></li>
+<li><p><strong>device</strong> – Device </p></li>
+<li><p><strong>src</strong> – Source </p></li>
+<li><p><strong>source_ctx</strong> – Source context for improved error reporting</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -607,7 +680,7 @@ document.write(`
 <ul class="simple">
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const"><span class="std std-ref">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;)</span></a></p></li>
+<li><p><a class="reference internal" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const-source-context"><span class="std std-ref">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;,source_context)</span></a></p></li>
 </ul>
 </li>
 <li><p>Classes</p>
@@ -615,21 +688,27 @@ document.write(`
 <li><p><a class="reference internal" href="#opencl-recipe-handler"><span class="std std-ref">opencl_recipe_handler</span></a></p></li>
 </ul>
 </li>
+<li><p>Structures</p>
+<ul>
+<li><p><a class="reference internal" href="#auto-mem-type-cl-mem"><span class="std std-ref">auto_mem_type&lt;cl_mem&gt;</span></a></p></li>
+</ul>
+</li>
 </ul>
 <section id="recipe-functions">
 <h3>Recipe Functions<a class="headerlink" href="#recipe-functions" title="Link to this heading">#</a></h3>
-<section id="make-recipe-handler-cl-context-cl-device-id-recipe-const">
-<h4>make_recipe_handler(cl_context,cl_device_id,recipe const&amp;)<a class="headerlink" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const" title="Link to this heading">#</a></h4>
+<section id="make-recipe-handler-cl-context-cl-device-id-recipe-const-source-context">
+<h4>make_recipe_handler(cl_context,cl_device_id,recipe const&amp;,source_context)<a class="headerlink" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const-source-context" title="Link to this heading">#</a></h4>
 <dl class="cpp function">
-<dt class="sig sig-object cpp" id="_CPPv4N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe">
-<span id="_CPPv3N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe"></span><span id="_CPPv2N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe"></span><span id="tinytc::make_recipe_handler__cl_context.cl_device_id.recipeCR"></span><span class="target" id="namespacetinytc_1aed729a50d049daaff2da79c8fff3f793"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_recipe_handler</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6recipeE" title="tinytc::recipe"><span class="n"><span class="pre">recipe</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rec</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc21opencl_recipe_handlerE" title="tinytc::opencl_recipe_handler"><span class="n"><span class="pre">opencl_recipe_handler</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe14source_context">
+<span id="_CPPv3N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe14source_context"></span><span id="_CPPv2N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe14source_context"></span><span id="tinytc::make_recipe_handler__cl_context.cl_device_id.recipeCR.source_context"></span><span class="target" id="namespacetinytc_1a16950b64341f81cedcefbcddba094b03"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">tinytc</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_recipe_handler</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">cl_context</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">context</span></span>, <span class="n"><span class="pre">cl_device_id</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">device</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc6recipeE" title="tinytc::recipe"><span class="n"><span class="pre">recipe</span></span></a><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rec</span></span>, <a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc14source_contextE" title="tinytc::source_context"><span class="n"><span class="pre">source_context</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">source_ctx</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6tinytc21opencl_recipe_handlerE" title="tinytc::opencl_recipe_handler"><span class="n"><span class="pre">opencl_recipe_handler</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc19make_recipe_handlerE10cl_context12cl_device_idRK6recipe14source_context" title="Link to this definition">#</a><br /></dt>
 <dd><p>Make recipe handler. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>context</strong> – Context </p></li>
 <li><p><strong>device</strong> – Device </p></li>
-<li><p><strong>rec</strong> – Recipe</p></li>
+<li><p><strong>rec</strong> – Recipe </p></li>
+<li><p><strong>source_ctx</strong> – Source context for improved error reporting</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -681,6 +760,27 @@ document.write(`
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+<section id="recipe-structures">
+<h3>Recipe Structures<a class="headerlink" href="#recipe-structures" title="Link to this heading">#</a></h3>
+<section id="auto-mem-type-cl-mem">
+<h4>auto_mem_type&lt;cl_mem&gt;<a class="headerlink" href="#auto-mem-type-cl-mem" title="Link to this heading">#</a></h4>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IEN6tinytc13auto_mem_typeI6cl_memEE">
+<span id="_CPPv3IEN6tinytc13auto_mem_typeI6cl_memEE"></span><span id="_CPPv2IEN6tinytc13auto_mem_typeI6cl_memEE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structtinytc_1_1auto__mem__type_3_01cl__mem_01_4"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">auto_mem_type</span></span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">cl_mem</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4IEN6tinytc13auto_mem_typeI6cl_memEE" title="Link to this definition">#</a><br /></dt>
+<dd><p>Specialize <a class="reference internal" href="../core_cxxapi.html#structtinytc_1_1auto__mem__type"><span class="std std-ref">auto_mem_type</span></a> for cl_mem. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-attributes">Public Static Attributes</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N6tinytc13auto_mem_typeI6cl_memE5valueE">
+<span id="_CPPv3N6tinytc13auto_mem_typeI6cl_memE5valueE"></span><span id="_CPPv2N6tinytc13auto_mem_typeI6cl_memE5valueE"></span><span id="tinytc::auto_mem_type:cl_mem:::value__mem_type"></span><span class="target" id="structtinytc_1_1auto__mem__type_3_01cl__mem_01_4_1aa2290e224acfa448e608d9c26f9ffdf0"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc8mem_typeE" title="tinytc::mem_type"><span class="n"><span class="pre">mem_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc8mem_typeE" title="tinytc::mem_type"><span class="n"><span class="pre">mem_type</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../core_cxxapi.html#_CPPv4N6tinytc8mem_type6bufferE" title="tinytc::mem_type::buffer"><span class="n"><span class="pre">buffer</span></span></a><a class="headerlink" href="#_CPPv4N6tinytc13auto_mem_typeI6cl_memE5valueE" title="Link to this definition">#</a><br /></dt>
+<dd><p>cl_mem maps to buffer type </p>
 </dd></dl>
 
 </div>
@@ -745,6 +845,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info">Device Info</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#device-info-functions">Device Info Functions</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-support-level-cl-device-id">get_support_level(cl_device_id)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-core-info-cl-device-id">make_core_info(cl_device_id)</a></li>
 </ul>
 </li>
@@ -752,21 +853,27 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel">Kernel</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#kernel-functions">Kernel Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-global-size-std-uint32-t-std-array-std-size-t-3u-const">get_global_size(std::uint32_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-global-size-std-int64-t-std-array-std-size-t-3u-const">get_global_size(std::int64_t,std::array&lt;std::size_t, 3u&gt; const &amp;)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#get-group-size-cl-kernel">get_group_size(cl_kernel)</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-cl-program-char-const">make_kernel(cl_program,char const*)</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-binary-const-source-context">make_kernel_bundle(cl_context,cl_device_id,binary const&amp;,source_context)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-prog-tinytc-core-feature-flags-t-source-context">make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t,source_context)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-kernel-bundle-cl-context-cl-device-id-source-const-source-context">make_kernel_bundle(cl_context,cl_device_id,source const&amp;,source_context)</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe">Recipe</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-functions">Recipe Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;)</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#make-recipe-handler-cl-context-cl-device-id-recipe-const-source-context">make_recipe_handler(cl_context,cl_device_id,recipe const&amp;,source_context)</a></li>
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-classes">Recipe Classes</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#opencl-recipe-handler">opencl_recipe_handler</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#recipe-structures">Recipe Structures</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#auto-mem-type-cl-mem">auto_mem_type&lt;cl_mem&gt;</a></li>
 </ul>
 </li>
 </ul>

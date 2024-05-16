@@ -39,7 +39,7 @@
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
     <script src="../_static/documentation_options.js?v=9eb32ce0"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -411,7 +411,8 @@ document.write(`
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-t">tinytc_binary_op_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-t">tinytc_arithmetic_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-unary-t">tinytc_arithmetic_unary_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-condition-t">tinytc_cmp_condition_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-t">tinytc_scalar_type_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-transpose-t">tinytc_transpose_t</a></li>
@@ -422,7 +423,8 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-to-string">tinytc_binary_op_to_string</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-to-string">tinytc_arithmetic_to_string</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-unary-to-string">tinytc_arithmetic_unary_to_string</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-condition-to-string">tinytc_cmp_condition_to_string</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-size">tinytc_scalar_type_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-to-string">tinytc_scalar_type_to_string</a></li>
@@ -479,7 +481,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instruction-functions">Instruction Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-alloca-inst-create">tinytc_alloca_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-axpby-inst-create">tinytc_axpby_inst_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-inst-create">tinytc_binary_op_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arith-inst-create">tinytc_arith_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arith-unary-inst-create">tinytc_arith_unary_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cast-inst-create">tinytc_cast_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-inst-create">tinytc_cmp_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-expand-inst-create">tinytc_expand_inst_create</a></li>
@@ -494,7 +497,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-hadamard-inst-create">tinytc_hadamard_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-if-inst-create">tinytc_if_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-load-inst-create">tinytc_load_inst_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-neg-inst-create">tinytc_neg_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-size-inst-create">tinytc_size_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-store-inst-create">tinytc_store_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-subview-inst-create">tinytc_subview_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-sum-inst-create">tinytc_sum_inst_create</a></li>
@@ -524,7 +527,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-create">tinytc_region_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-release">tinytc_region_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-retain">tinytc_region_retain</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-size-inst-create">tinytc_size_inst_create</a></li>
 </ul>
 </li>
 </ul>
@@ -560,7 +562,8 @@ document.write(`
 <ul class="simple">
 <li><p>Enumerations</p>
 <ul>
-<li><p><a class="reference internal" href="#tinytc-binary-op-t"><span class="std std-ref">tinytc_binary_op_t</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arithmetic-t"><span class="std std-ref">tinytc_arithmetic_t</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arithmetic-unary-t"><span class="std std-ref">tinytc_arithmetic_unary_t</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cmp-condition-t"><span class="std std-ref">tinytc_cmp_condition_t</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-scalar-type-t"><span class="std std-ref">tinytc_scalar_type_t</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-transpose-t"><span class="std std-ref">tinytc_transpose_t</span></a></p></li>
@@ -573,7 +576,8 @@ document.write(`
 </li>
 <li><p>Functions</p>
 <ul>
-<li><p><a class="reference internal" href="#tinytc-binary-op-to-string"><span class="std std-ref">tinytc_binary_op_to_string</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arithmetic-to-string"><span class="std std-ref">tinytc_arithmetic_to_string</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arithmetic-unary-to-string"><span class="std std-ref">tinytc_arithmetic_unary_to_string</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cmp-condition-to-string"><span class="std std-ref">tinytc_cmp_condition_to_string</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-scalar-type-size"><span class="std std-ref">tinytc_scalar_type_size</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-scalar-type-to-string"><span class="std std-ref">tinytc_scalar_type_to_string</span></a></p></li>
@@ -606,41 +610,93 @@ document.write(`
 </ul>
 <section id="common-enumerations">
 <h3>Common Enumerations<a class="headerlink" href="#common-enumerations" title="Link to this heading">#</a></h3>
-<section id="tinytc-binary-op-t">
-<h4>tinytc_binary_op_t<a class="headerlink" href="#tinytc-binary-op-t" title="Link to this heading">#</a></h4>
+<section id="tinytc-arithmetic-t">
+<h4>tinytc_arithmetic_t<a class="headerlink" href="#tinytc-arithmetic-t" title="Link to this heading">#</a></h4>
 <dl class="c enum">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fb"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_t</span></span></span><a class="headerlink" href="#c.tinytc_binary_op_t" title="Link to this definition">#</a><br /></dt>
-<dd><p>Binary operations. </p>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_t</span></span></span><a class="headerlink" href="#c.tinytc_arithmetic_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Arithmetic operations. </p>
 <p><em>Values:</em></p>
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t.tinytc_binary_op_add">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fba063f037311432f5ed247b34741e82643"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_add</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#c.tinytc_binary_op_t.tinytc_binary_op_add" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_add">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328af03bfaa424c675b7115d0bdb2dcefaa4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_add</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_add" title="Link to this definition">#</a><br /></dt>
 <dd><p>add </p>
 </dd></dl>
 
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t.tinytc_binary_op_sub">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fba5d2ca2fdfb5254a043fc9caa54a47abf"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_sub</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#c.tinytc_binary_op_t.tinytc_binary_op_sub" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_sub">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328aa332b152d4427d50769f177da25fcbb6"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_sub</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_sub" title="Link to this definition">#</a><br /></dt>
 <dd><p>subtract </p>
 </dd></dl>
 
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t.tinytc_binary_op_mul">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fbaacad15792685d203aa79a4b404b5c713"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_mul</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><a class="headerlink" href="#c.tinytc_binary_op_t.tinytc_binary_op_mul" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_mul">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a517d85fb73e8d5eaf4e2d49791218cc7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_mul</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_mul" title="Link to this definition">#</a><br /></dt>
 <dd><p>multiply </p>
 </dd></dl>
 
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t.tinytc_binary_op_div">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fbae61cb1a8a6f0097eacb590d13af31cea"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_div</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#c.tinytc_binary_op_t.tinytc_binary_op_div" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_div">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328aadac7806a84509bca09c4bbf6daedfc0"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_div</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_div" title="Link to this definition">#</a><br /></dt>
 <dd><p>divide </p>
 </dd></dl>
 
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_t.tinytc_binary_op_rem">
-<span class="target" id="types_8h_1adbb08d8b9223f588f121fb6f5680e3fbad6655d4ae18e2b032d470e92049a659f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_rem</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">4</span></span><a class="headerlink" href="#c.tinytc_binary_op_t.tinytc_binary_op_rem" title="Link to this definition">#</a><br /></dt>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_rem">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a0155cd79138cc3a36f254354fee1e08c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_rem</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">4</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_rem" title="Link to this definition">#</a><br /></dt>
 <dd><p>division remainder </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_shl">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a5abf37d0b02f49e61ee1c53f1b5c8b00"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_shl</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">5</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_shl" title="Link to this definition">#</a><br /></dt>
+<dd><p>left shift </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_shr">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a1b47740aac50cfa7f17dc8e96614a5b6"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_shr</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_shr" title="Link to this definition">#</a><br /></dt>
+<dd><p>arithmetic right shift </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_and">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a98557e63ea045f73b56dc5aaa0d0ec71"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_and</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">7</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_and" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise and </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_or">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328a82a4a8b385449d495aa2af324ecf4930"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_or</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">8</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_or" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise or </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_t.tinytc_arithmetic_xor">
+<span class="target" id="types_8h_1a701c9c8bde71efd52f86ba187668e328aa849c256566077f260208cb0431877b1"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_xor</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">9</span></span><a class="headerlink" href="#c.tinytc_arithmetic_t.tinytc_arithmetic_xor" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise xor </p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="tinytc-arithmetic-unary-t">
+<h4>tinytc_arithmetic_unary_t<a class="headerlink" href="#tinytc-arithmetic-unary-t" title="Link to this heading">#</a></h4>
+<dl class="c enum">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_unary_t">
+<span class="target" id="types_8h_1ac61769f10e5aaebe767777f5f70266b4"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_unary_t</span></span></span><a class="headerlink" href="#c.tinytc_arithmetic_unary_t" title="Link to this definition">#</a><br /></dt>
+<dd><p>Arithmetic operations (unary) </p>
+<p><em>Values:</em></p>
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_unary_t.tinytc_arithmetic_unary_neg">
+<span class="target" id="types_8h_1ac61769f10e5aaebe767777f5f70266b4a79807d091bf51bf49f9b4bd7ad463d93"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_unary_neg</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#c.tinytc_arithmetic_unary_t.tinytc_arithmetic_unary_neg" title="Link to this definition">#</a><br /></dt>
+<dd><p>negation </p>
+</dd></dl>
+
+<dl class="c enumerator">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_unary_t.tinytc_arithmetic_unary_not">
+<span class="target" id="types_8h_1ac61769f10e5aaebe767777f5f70266b4a6a3a5e606e66dcd4683216509b9e6334"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_unary_not</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#c.tinytc_arithmetic_unary_t.tinytc_arithmetic_unary_not" title="Link to this definition">#</a><br /></dt>
+<dd><p>bitwise not </p>
 </dd></dl>
 
 </dd></dl>
@@ -700,74 +756,50 @@ document.write(`
 <dd><p>Scalar types. </p>
 <p><em>Values:</em></p>
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_bool">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ab8679e3418c1dd21f3d1750f99a71216"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_bool</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_bool" title="Link to this definition">#</a><br /></dt>
-<dd><p>Boolean. </p>
-</dd></dl>
-
-<dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_index">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a485b8e043ec57ab49740714726ced22c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_index" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned integer type for indices. </p>
+<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_i1">
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a41f2528b8e9a090c318b063c8ba36e4c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i1</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i1" title="Link to this definition">#</a><br /></dt>
+<dd><p>Signed 1 bit integer (boolean) </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_i8">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ab5a19b12e2760fe25559f34c85a537b2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i8</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i8" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ab5a19b12e2760fe25559f34c85a537b2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i8</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i8" title="Link to this definition">#</a><br /></dt>
 <dd><p>Signed 8 bit integer. </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_i16">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ab43f7837f46a6df112e0db41ac0edcc7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i16</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i16" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ab43f7837f46a6df112e0db41ac0edcc7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i16</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i16" title="Link to this definition">#</a><br /></dt>
 <dd><p>Signed 16 bit integer. </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_i32">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a324d380018049592630d697392e05a15"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">4</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i32" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a324d380018049592630d697392e05a15"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i32" title="Link to this definition">#</a><br /></dt>
 <dd><p>Signed 32 bit integer. </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_i64">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a35d37459fde59fddbc08e4c6e8250c6c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">5</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i64" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a35d37459fde59fddbc08e4c6e8250c6c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_i64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">4</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_i64" title="Link to this definition">#</a><br /></dt>
 <dd><p>Signed 64 bit integer. </p>
 </dd></dl>
 
 <dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_u8">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a30450dd43530b7dacf44ef86249d80ca"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_u8</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_u8" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 8 bit integer. </p>
-</dd></dl>
-
-<dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_u16">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a0a8c4f8223c82bcea5c08d6cf6a4d8a3"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_u16</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">7</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_u16" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 16 bit integer. </p>
-</dd></dl>
-
-<dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_u32">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74ad2310da43ea253fe472f18b6ded44b9a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_u32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">8</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_u32" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 32 bit integer. </p>
-</dd></dl>
-
-<dl class="c enumerator">
-<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_u64">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a491b3990e6b7c3cc1772f855fa82eb31"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_u64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">9</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_u64" title="Link to this definition">#</a><br /></dt>
-<dd><p>Unsigned 64 bit integer. </p>
+<dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_index">
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a485b8e043ec57ab49740714726ced22c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_index</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">5</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_index" title="Link to this definition">#</a><br /></dt>
+<dd><p>Integer type for indices. </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_f32">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a467752cc186c3c1d8f44a5c3bc1f9f46"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_f32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">10</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_f32" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a467752cc186c3c1d8f44a5c3bc1f9f46"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_f32</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_f32" title="Link to this definition">#</a><br /></dt>
 <dd><p>Single precision floating point (32 bit) </p>
 </dd></dl>
 
 <dl class="c enumerator">
 <dt class="sig sig-object c" id="c.tinytc_scalar_type_t.tinytc_scalar_type_f64">
-<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a197461017203cecc30069d020266449d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_f64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">11</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_f64" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="types_8h_1a06841d0d8f209dd789c619430e0bbe74a197461017203cecc30069d020266449d"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_scalar_type_f64</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">7</span></span><a class="headerlink" href="#c.tinytc_scalar_type_t.tinytc_scalar_type_f64" title="Link to this definition">#</a><br /></dt>
 <dd><p>Double precision floating point (64 bit) </p>
 </dd></dl>
 
@@ -810,12 +842,21 @@ document.write(`
 </section>
 <section id="common-functions">
 <h3>Common Functions<a class="headerlink" href="#common-functions" title="Link to this heading">#</a></h3>
-<section id="tinytc-binary-op-to-string">
-<h4>tinytc_binary_op_to_string<a class="headerlink" href="#tinytc-binary-op-to-string" title="Link to this heading">#</a></h4>
+<section id="tinytc-arithmetic-to-string">
+<h4>tinytc_arithmetic_to_string<a class="headerlink" href="#tinytc-arithmetic-to-string" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_to_string">
-<span class="target" id="tinytc_8h_1ab42d04a2ef725b1d39653d5c2c0b6aaa"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_binary_op_t" title="tinytc_binary_op_t"><span class="n"><span class="pre">tinytc_binary_op_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_op_to_string" title="Link to this definition">#</a><br /></dt>
-<dd><p>Convert binary op to string. </p>
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_to_string">
+<span class="target" id="tinytc_8h_1aad4fd1e17f9d0a87d56fe2cc125c9102"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_arithmetic_t" title="tinytc_arithmetic_t"><span class="n"><span class="pre">tinytc_arithmetic_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_arithmetic_to_string" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert arithmetic operation type to string. </p>
+</dd></dl>
+
+</section>
+<section id="tinytc-arithmetic-unary-to-string">
+<h4>tinytc_arithmetic_unary_to_string<a class="headerlink" href="#tinytc-arithmetic-unary-to-string" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_arithmetic_unary_to_string">
+<span class="target" id="tinytc_8h_1aedb7279abdf45e6bc4e70b18372261f6"></span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arithmetic_unary_to_string</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_arithmetic_unary_t" title="tinytc_arithmetic_unary_t"><span class="n"><span class="pre">tinytc_arithmetic_unary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_arithmetic_unary_to_string" title="Link to this definition">#</a><br /></dt>
+<dd><p>Convert arithmetic operation type to string (unary) </p>
 </dd></dl>
 
 </section>
@@ -1053,13 +1094,14 @@ document.write(`
 <h4>tinytc_group_type_create<a class="headerlink" href="#tinytc-group-type-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_group_type_create">
-<span class="target" id="tinytc_8h_1abae58353d86be23f3ef21ef32d6eeb0c"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_group_type_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_data_type_t" title="tinytc_data_type_t"><span class="n"><span class="pre">tinytc_data_type_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dt</span></span>, <a class="reference internal" href="#c.tinytc_data_type_t" title="tinytc_data_type_t"><span class="n"><span class="pre">tinytc_data_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">memref_ty</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_group_type_create" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1aed3bcbfe6366f05f387758b0b315485f"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_group_type_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_data_type_t" title="tinytc_data_type_t"><span class="n"><span class="pre">tinytc_data_type_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">dt</span></span>, <a class="reference internal" href="#c.tinytc_data_type_t" title="tinytc_data_type_t"><span class="n"><span class="pre">tinytc_data_type_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">memref_ty</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">offset</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_group_type_create" title="Link to this definition">#</a><br /></dt>
 <dd><p>Create group data type. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>dt</strong> – [out] pointer to the data type object created </p></li>
 <li><p><strong>memref_ty</strong> – [in] memref data type object </p></li>
+<li><p><strong>offset</strong> – [in][optional] offset parameter; pass 0 for default </p></li>
 <li><p><strong>loc</strong> – [in][optional] Source code location; can be nullptr</p></li>
 </ul>
 </dd>
@@ -1222,7 +1264,7 @@ document.write(`
 <h4>tinytc_function_set_subgroup_size<a class="headerlink" href="#tinytc-function-set-subgroup-size" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_function_set_subgroup_size">
-<span class="target" id="tinytc_8h_1afda4ad7774d072b9b6494b5d85c00aa7"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_function_set_subgroup_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_func_t" title="tinytc_func_t"><span class="n"><span class="pre">tinytc_func_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">fun</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_function_set_subgroup_size" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1aef1773ed12f4c4c2348d4a2873a7f9de"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_function_set_subgroup_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_func_t" title="tinytc_func_t"><span class="n"><span class="pre">tinytc_func_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">fun</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">sgs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_function_set_subgroup_size" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set subgroup size. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1242,7 +1284,7 @@ document.write(`
 <h4>tinytc_function_set_work_group_size<a class="headerlink" href="#tinytc-function-set-work-group-size" title="Link to this heading">#</a></h4>
 <dl class="c function">
 <dt class="sig sig-object c" id="c.tinytc_function_set_work_group_size">
-<span class="target" id="tinytc_8h_1aac9bda1025fde279346b32decffdec60"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_function_set_work_group_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_func_t" title="tinytc_func_t"><span class="n"><span class="pre">tinytc_func_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">fun</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">uint32_t</span></span><span class="w"> </span><span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_function_set_work_group_size" title="Link to this definition">#</a><br /></dt>
+<span class="target" id="tinytc_8h_1abcf1a9c63834e823d75df480c27a56e3"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_function_set_work_group_size</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_func_t" title="tinytc_func_t"><span class="n"><span class="pre">tinytc_func_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">fun</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">x</span></span>, <span class="n"><span class="pre">int32_t</span></span><span class="w"> </span><span class="n"><span class="pre">y</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_function_set_work_group_size" title="Link to this definition">#</a><br /></dt>
 <dd><p>Set work-group size. </p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1307,7 +1349,8 @@ document.write(`
 <ul>
 <li><p><a class="reference internal" href="#tinytc-alloca-inst-create"><span class="std std-ref">tinytc_alloca_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-axpby-inst-create"><span class="std std-ref">tinytc_axpby_inst_create</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-binary-op-inst-create"><span class="std std-ref">tinytc_binary_op_inst_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arith-inst-create"><span class="std std-ref">tinytc_arith_inst_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-arith-unary-inst-create"><span class="std std-ref">tinytc_arith_unary_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cast-inst-create"><span class="std std-ref">tinytc_cast_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-cmp-inst-create"><span class="std std-ref">tinytc_cmp_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-expand-inst-create"><span class="std std-ref">tinytc_expand_inst_create</span></a></p></li>
@@ -1322,7 +1365,7 @@ document.write(`
 <li><p><a class="reference internal" href="#tinytc-hadamard-inst-create"><span class="std std-ref">tinytc_hadamard_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-if-inst-create"><span class="std std-ref">tinytc_if_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-load-inst-create"><span class="std std-ref">tinytc_load_inst_create</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-neg-inst-create"><span class="std std-ref">tinytc_neg_inst_create</span></a></p></li>
+<li><p><a class="reference internal" href="#tinytc-size-inst-create"><span class="std std-ref">tinytc_size_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-store-inst-create"><span class="std std-ref">tinytc_store_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-subview-inst-create"><span class="std std-ref">tinytc_subview_inst_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-sum-inst-create"><span class="std std-ref">tinytc_sum_inst_create</span></a></p></li>
@@ -1389,22 +1432,47 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-binary-op-inst-create">
-<h4>tinytc_binary_op_inst_create<a class="headerlink" href="#tinytc-binary-op-inst-create" title="Link to this heading">#</a></h4>
+<section id="tinytc-arith-inst-create">
+<h4>tinytc_arith_inst_create<a class="headerlink" href="#tinytc-arith-inst-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_binary_op_inst_create">
-<span class="target" id="tinytc_8h_1a31ec614d895b06458b7c160f94cfc081"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_binary_op_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_binary_op_t" title="tinytc_binary_op_t"><span class="n"><span class="pre">tinytc_binary_op_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_binary_op_inst_create" title="Link to this definition">#</a><br /></dt>
-<dd><p>Create binary op instruction. </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="o">&lt;</span><span class="n">binary_op</span><span class="o">&gt;</span> <span class="o">%</span><span class="n">a</span><span class="p">,</span> <span class="o">%</span><span class="n">b</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> <span class="p">;</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">b</span><span class="p">)</span> 
+<dt class="sig sig-object c" id="c.tinytc_arith_inst_create">
+<span class="target" id="tinytc_8h_1ab1ab693be68c27d99e31063d445edbdb"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arith_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_arithmetic_t" title="tinytc_arithmetic_t"><span class="n"><span class="pre">tinytc_arithmetic_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">b</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_arith_inst_create" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create arithmetic instruction (binary) </p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="n">arith</span><span class="o">.&lt;</span><span class="n">op</span><span class="o">&gt;</span> <span class="o">%</span><span class="n">a</span><span class="p">,</span> <span class="o">%</span><span class="n">b</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> <span class="p">;</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">b</span><span class="p">)</span> 
 </pre></div>
 </div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instr</strong> – [out] pointer to the inst object created </p></li>
-<li><p><strong>op</strong> – [in] binary op type </p></li>
+<li><p><strong>op</strong> – [in] arithmetic operation type </p></li>
 <li><p><strong>a</strong> – [in] left-hand operand </p></li>
 <li><p><strong>b</strong> – [in] right-hand operand </p></li>
+<li><p><strong>loc</strong> – [in][optional] Source code location; can be nullptr</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="tinytc-arith-unary-inst-create">
+<h4>tinytc_arith_unary_inst_create<a class="headerlink" href="#tinytc-arith-unary-inst-create" title="Link to this heading">#</a></h4>
+<dl class="c function">
+<dt class="sig sig-object c" id="c.tinytc_arith_unary_inst_create">
+<span class="target" id="tinytc_8h_1a05027ca6bfcbf20e319db4f5094bc30a"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_arith_unary_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_arithmetic_unary_t" title="tinytc_arithmetic_unary_t"><span class="n"><span class="pre">tinytc_arithmetic_unary_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">op</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_arith_unary_inst_create" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create arithmetic instruction (unary) </p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="n">arith</span><span class="o">.&lt;</span><span class="n">op</span><span class="o">&gt;</span> <span class="o">%</span><span class="n">a</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> 
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instr</strong> – [out] pointer to the inst object created </p></li>
+<li><p><strong>op</strong> – [in] unary arithmetic operation type </p></li>
+<li><p><strong>a</strong> – [in] operand </p></li>
 <li><p><strong>loc</strong> – [in][optional] Source code location; can be nullptr</p></li>
 </ul>
 </dd>
@@ -1802,13 +1870,13 @@ document.write(`
 </dd></dl>
 
 </section>
-<section id="tinytc-neg-inst-create">
-<h4>tinytc_neg_inst_create<a class="headerlink" href="#tinytc-neg-inst-create" title="Link to this heading">#</a></h4>
+<section id="tinytc-size-inst-create">
+<h4>tinytc_size_inst_create<a class="headerlink" href="#tinytc-size-inst-create" title="Link to this heading">#</a></h4>
 <dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_neg_inst_create">
-<span class="target" id="tinytc_8h_1a1b416dcf2b5a34ab0da148d9dff133d2"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_neg_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_neg_inst_create" title="Link to this definition">#</a><br /></dt>
-<dd><p>Create neg instruction. </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="n">neg</span> <span class="o">%</span><span class="n">a</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> 
+<dt class="sig sig-object c" id="c.tinytc_size_inst_create">
+<span class="target" id="tinytc_8h_1a09434532d48de3a070c25d3db5179adf"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_size_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_size_inst_create" title="Link to this definition">#</a><br /></dt>
+<dd><p>Create size instruction. </p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="n">size</span> <span class="o">%</span><span class="n">a</span><span class="p">[</span><span class="o">%</span><span class="n">mode</span><span class="p">]</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> 
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1816,6 +1884,7 @@ document.write(`
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>instr</strong> – [out] pointer to the inst object created </p></li>
 <li><p><strong>a</strong> – [in] operand </p></li>
+<li><p><strong>mode</strong> – [in] mode for that the size is queried </p></li>
 <li><p><strong>loc</strong> – [in][optional] Source code location; can be nullptr</p></li>
 </ul>
 </dd>
@@ -2164,7 +2233,6 @@ document.write(`
 <li><p><a class="reference internal" href="#tinytc-region-create"><span class="std std-ref">tinytc_region_create</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-region-release"><span class="std std-ref">tinytc_region_release</span></a></p></li>
 <li><p><a class="reference internal" href="#tinytc-region-retain"><span class="std std-ref">tinytc_region_retain</span></a></p></li>
-<li><p><a class="reference internal" href="#tinytc-size-inst-create"><span class="std std-ref">tinytc_size_inst_create</span></a></p></li>
 </ul>
 </li>
 </ul>
@@ -2222,31 +2290,6 @@ document.write(`
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>reg</strong> – [inout] region object</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>tinytc_status_success on success and error otherwise </p>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="tinytc-size-inst-create">
-<h4>tinytc_size_inst_create<a class="headerlink" href="#tinytc-size-inst-create" title="Link to this heading">#</a></h4>
-<dl class="c function">
-<dt class="sig sig-object c" id="c.tinytc_size_inst_create">
-<span class="target" id="tinytc_8h_1a09434532d48de3a070c25d3db5179adf"></span><a class="reference internal" href="core_capi.html#c.tinytc_status_t" title="tinytc_status_t"><span class="n"><span class="pre">tinytc_status_t</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">tinytc_size_inst_create</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#c.tinytc_inst_t" title="tinytc_inst_t"><span class="n"><span class="pre">tinytc_inst_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">instr</span></span>, <a class="reference internal" href="#c.tinytc_value_t" title="tinytc_value_t"><span class="n"><span class="pre">tinytc_value_t</span></span></a><span class="w"> </span><span class="n"><span class="pre">a</span></span>, <span class="n"><span class="pre">int64_t</span></span><span class="w"> </span><span class="n"><span class="pre">mode</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#c.tinytc_location_t" title="tinytc_location_t"><span class="n"><span class="pre">tinytc_location_t</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n"><span class="pre">loc</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.tinytc_size_inst_create" title="Link to this definition">#</a><br /></dt>
-<dd><p>Create size instruction. </p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="n">value</span> <span class="o">=</span> <span class="n">size</span> <span class="o">%</span><span class="n">a</span><span class="p">[</span><span class="o">%</span><span class="n">mode</span><span class="p">]</span> <span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="o">%</span><span class="n">a</span><span class="p">)</span> 
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>instr</strong> – [out] pointer to the inst object created </p></li>
-<li><p><strong>a</strong> – [in] operand </p></li>
-<li><p><strong>mode</strong> – [in] mode for that the size is queried </p></li>
-<li><p><strong>loc</strong> – [in][optional] Source code location; can be nullptr</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2471,7 +2514,8 @@ document.write(`
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#common">Common</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-enumerations">Common Enumerations</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-t">tinytc_binary_op_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-t">tinytc_arithmetic_t</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-unary-t">tinytc_arithmetic_unary_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-condition-t">tinytc_cmp_condition_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-t">tinytc_scalar_type_t</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-transpose-t">tinytc_transpose_t</a></li>
@@ -2482,7 +2526,8 @@ document.write(`
 </ul>
 </li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#common-functions">Common Functions</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-to-string">tinytc_binary_op_to_string</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-to-string">tinytc_arithmetic_to_string</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arithmetic-unary-to-string">tinytc_arithmetic_unary_to_string</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-condition-to-string">tinytc_cmp_condition_to_string</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-size">tinytc_scalar_type_size</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-scalar-type-to-string">tinytc_scalar_type_to_string</a></li>
@@ -2539,7 +2584,8 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#instruction-functions">Instruction Functions</a><ul class="nav section-nav flex-column">
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-alloca-inst-create">tinytc_alloca_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-axpby-inst-create">tinytc_axpby_inst_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-binary-op-inst-create">tinytc_binary_op_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arith-inst-create">tinytc_arith_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-arith-unary-inst-create">tinytc_arith_unary_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cast-inst-create">tinytc_cast_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-cmp-inst-create">tinytc_cmp_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-expand-inst-create">tinytc_expand_inst_create</a></li>
@@ -2554,7 +2600,7 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-hadamard-inst-create">tinytc_hadamard_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-if-inst-create">tinytc_if_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-load-inst-create">tinytc_load_inst_create</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-neg-inst-create">tinytc_neg_inst_create</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-size-inst-create">tinytc_size_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-store-inst-create">tinytc_store_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-subview-inst-create">tinytc_subview_inst_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-sum-inst-create">tinytc_sum_inst_create</a></li>
@@ -2584,7 +2630,6 @@ document.write(`
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-create">tinytc_region_create</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-release">tinytc_region_release</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-region-retain">tinytc_region_retain</a></li>
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#tinytc-size-inst-create">tinytc_size_inst_create</a></li>
 </ul>
 </li>
 </ul>
