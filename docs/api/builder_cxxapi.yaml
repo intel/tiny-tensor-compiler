@@ -63,7 +63,6 @@ Builder C++-API:
       - tinytc::make_hadamard
       - tinytc::make_if
       - tinytc::make_load
-      - tinytc::make_neg
       - tinytc::make_size
       - tinytc::make_store
       - tinytc::make_subview

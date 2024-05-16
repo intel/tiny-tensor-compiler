@@ -51,7 +51,7 @@ Kernel
 
   * :ref:`get_group_size(cl_kernel)`
 
-  * :ref:`make_kernel(cl_program,char const*)`
+  * :ref:`make_kernel(cl_program,char const\\*)`
 
   * :ref:`make_kernel_bundle(cl_context,cl_device_id,binary const&,source_context)`
 
@@ -72,8 +72,8 @@ get_group_size(cl_kernel)
 
 .. doxygenfunction:: tinytc::get_group_size(cl_kernel)
 
-make_kernel(cl_program,char const*)
-...................................
+make_kernel(cl_program,char const\*)
+....................................
 
 .. doxygenfunction:: tinytc::make_kernel(cl_program,char const*)
 
