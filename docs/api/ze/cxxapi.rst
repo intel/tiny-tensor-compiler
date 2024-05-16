@@ -53,7 +53,7 @@ Kernel
 
   * :ref:`get_group_size(ze_kernel_handle_t)`
 
-  * :ref:`make_kernel(ze_module_handle_t,char const *)`
+  * :ref:`make_kernel(ze_module_handle_t,char const \\*)`
 
   * :ref:`make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&,source_context)`
 
@@ -79,8 +79,8 @@ get_group_size(ze_kernel_handle_t)
 
 .. doxygenfunction:: tinytc::get_group_size(ze_kernel_handle_t)
 
-make_kernel(ze_module_handle_t,char const *)
-............................................
+make_kernel(ze_module_handle_t,char const \*)
+.............................................
 
 .. doxygenfunction:: tinytc::make_kernel(ze_module_handle_t,char const *)
 

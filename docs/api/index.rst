@@ -30,8 +30,3 @@ for using the C++-API and link against libtinytc.
    builder_capi
    core_cxxapi
    builder_cxxapi
-   parser
-   jit
-   runtime
-   recipe/index
-   ir/index

@@ -306,8 +306,6 @@ Instruction
 
   * :ref:`make_load`
 
-  * :ref:`make_neg`
-
   * :ref:`make_size`
 
   * :ref:`make_store`
@@ -414,11 +412,6 @@ make_load
 .........
 
 .. doxygenfunction:: tinytc::make_load
-
-make_neg
-........
-
-.. doxygenfunction:: tinytc::make_neg
 
 make_size
 .........

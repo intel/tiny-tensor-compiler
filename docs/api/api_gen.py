@@ -27,11 +27,13 @@ def title(brief_title):
 def strip_symbol_name(symbol):
     symbol = symbol.replace('< ', '<')
     symbol = symbol.replace(' >', '>')
-    return symbol.replace('tinytc::', '')
+    symbol = symbol.replace('tinytc::', '')
+    return symbol.replace('*', '\\*')
 
 def escape_ref(symbol):
     symbol = symbol.replace('<', '\\<')
-    return symbol.replace('>', '\\>')
+    symbol = symbol.replace('>', '\\>')
+    return symbol.replace('*', '\\*')
 
 api = dict()
 with open(args.input_yaml, 'r') as y:

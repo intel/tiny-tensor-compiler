@@ -38,7 +38,7 @@ Kernel
 
   * :ref:`get_group_size(sycl::kernel const &)`
 
-  * :ref:`make_kernel(sycl::kernel_bundle\<sycl::bundle_state::executable\> const &,char const *)`
+  * :ref:`make_kernel(sycl::kernel_bundle\<sycl::bundle_state::executable\> const &,char const \\*)`
 
   * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &,source_context)`
 
@@ -64,8 +64,8 @@ get_group_size(sycl::kernel const &)
 
 .. doxygenfunction:: tinytc::get_group_size(sycl::kernel const &)
 
-make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
-.....................................................................................
+make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const \*)
+......................................................................................
 
 .. doxygenfunction:: tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
 
