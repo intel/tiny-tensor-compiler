@@ -8,6 +8,7 @@
 
 #include <CL/cl.h>
 #include <CL/cl_platform.h>
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <sstream>

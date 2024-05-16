@@ -8,8 +8,6 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <cstdint>
-
 namespace tinytc {
 
 enum class small_gemm_batched_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
