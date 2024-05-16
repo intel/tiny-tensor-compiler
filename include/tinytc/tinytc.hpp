@@ -1772,12 +1772,18 @@ class source_context : public shared_handle<tinytc_source_context_t> {
     /**
      * @brief Get error log
      *
-     * @return C-string that is valid as long as source_context is not modified
+     * @return C-string that is valid as long as source_context is not modified; empty string if
+     * source_context is empty
      */
-    inline auto get_error_log() const -> char const * {
-        char const *log;
-        CHECK_STATUS(tinytc_source_context_get_error_log(obj_, &log));
-        return log;
+    inline auto get_error_log() const noexcept -> char const * {
+        if (obj_) {
+            char const *log;
+            // No need to call CHECK_STATUS, as the only possible error code is
+            // tinytc_status_invalid_arguments but we only pass valid arguments
+            tinytc_source_context_get_error_log(obj_, &log);
+            return log;
+        }
+        return "";
     }
     /**
      * @brief Enhance error message with source context; useful when builder is used

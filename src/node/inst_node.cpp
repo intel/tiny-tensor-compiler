@@ -47,8 +47,8 @@ loop_inst::loop_inst(value loop_var, value from, value to, region body, location
 
 loop_inst::loop_inst(value loop_var, value from, value to, value step, region body,
                      location const &lc)
-    : loop_var_(std::move(loop_var)), from_(from), to_(to), step_(std::move(step)),
-      body_(std::move(body)) {
+    : loop_var_(std::move(loop_var)), from_(std::move(from)), to_(std::move(to)),
+      step_(std::move(step)), body_(std::move(body)) {
     loc(lc);
     auto lvt = get_scalar_type(loc(), loop_var_);
     auto fromt = get_scalar_type(loc(), from_);

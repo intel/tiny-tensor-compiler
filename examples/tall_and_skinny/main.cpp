@@ -100,8 +100,9 @@ template <typename T> void test(queue q, args &a) {
              }).wait();
         }
 
-        auto source_ctx = make_source_context();
+        auto source_ctx = source_context{};
         try {
+            source_ctx = make_source_context();
             auto info = make_core_info(q.get_device());
             info.set_core_features(tinytc_core_feature_flag_large_register_file);
 
