@@ -34,9 +34,9 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
         [&] {
             // passes
             check_ir(*prg);
-            insert_barriers(*prg);
             insert_lifetime_stop_inst(*prg);
             set_stack_ptrs(*prg);
+            insert_barriers(*prg);
             set_work_group_size(*prg, *info);
             // opencl
             auto ast = generate_opencl_ast(*prg, *info);

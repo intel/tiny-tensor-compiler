@@ -6,6 +6,7 @@
 
 #include "tinytc/types.h"
 
+#include <cstdint>
 #include <unordered_map>
 
 namespace tinytc {
@@ -17,8 +18,14 @@ class aa_results {
     bool alias(::tinytc_value &a, ::tinytc_value &b);
 
   private:
-    aa_results(std::unordered_map<::tinytc_value *, ::tinytc_value *> alias);
+    struct allocation {
+        std::int64_t start, stop;
+    };
+
+    aa_results(std::unordered_map<::tinytc_value *, ::tinytc_value *> alias,
+               std::unordered_map<::tinytc_value *, allocation> allocs);
     std::unordered_map<::tinytc_value *, ::tinytc_value *> alias_;
+    std::unordered_map<::tinytc_value *, allocation> allocs_;
 
     friend class alias_analyser;
 };

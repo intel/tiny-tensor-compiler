@@ -11,6 +11,7 @@
 #include "visitor/aa_results.hpp"
 
 #include <unordered_map>
+#include <vector>
 
 namespace tinytc {
 
@@ -18,6 +19,7 @@ class alias_analyser {
   public:
     /* Stmt nodes */
     void operator()(inst_node &);
+    void operator()(alloca_inst &a);
     void operator()(loop_inst &p);
     void operator()(expand_inst &e);
     void operator()(fuse_inst &f);
@@ -34,6 +36,7 @@ class alias_analyser {
     aa_results get_result() const;
 
   private:
+    std::unordered_map<value_node *, aa_results::allocation> allocs_;
     std::unordered_map<value_node *, value_node *> alias_;
 };
 

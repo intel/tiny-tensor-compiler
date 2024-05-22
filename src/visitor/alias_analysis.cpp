@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/alias_analysis.hpp"
+#include "error.hpp"
+#include "node/data_type_node.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/visit.hpp>
@@ -14,6 +16,14 @@ namespace tinytc {
 
 /* Stmt nodes */
 void alias_analyser::operator()(inst_node &) {}
+void alias_analyser::operator()(alloca_inst &a) {
+    auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
+    if (t == nullptr) {
+        throw compilation_error(a.loc(), status::ir_expected_memref);
+    }
+    allocs_[a.result().get()] =
+        aa_results::allocation{a.stack_ptr(), a.stack_ptr() + t->size_in_bytes()};
+}
 void alias_analyser::operator()(loop_inst &p) { visit(*this, *p.body()); }
 void alias_analyser::operator()(expand_inst &e) {
     value_node *source = e.operand().get();
@@ -60,6 +70,6 @@ void alias_analyser::operator()(function &fn) {
     visit(*this, *fn.body());
 }
 
-aa_results alias_analyser::get_result() const { return aa_results(alias_); }
+aa_results alias_analyser::get_result() const { return aa_results(alias_, allocs_); }
 
 } // namespace tinytc

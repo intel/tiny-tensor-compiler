@@ -23,10 +23,10 @@ void stack_ptr::operator()(alloca_inst &a) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }
     auto size = t->size_in_bytes();
-    std::size_t stack_ptr = 0;
+    std::int64_t stack_ptr = 0;
     auto it = allocs_.begin();
     for (; it != allocs_.end(); ++it) {
-        if (it->start - stack_ptr >= static_cast<std::size_t>(size)) {
+        if (it->start - stack_ptr >= size) {
             break;
         }
         stack_ptr = it->stop;

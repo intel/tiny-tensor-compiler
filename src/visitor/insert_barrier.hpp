@@ -26,29 +26,29 @@ class insert_barrier {
     bool operator()(scalar_data_type &s);
 
     /* Value nodes */
-    std::uintptr_t operator()(int_imm &v);
-    std::uintptr_t operator()(float_imm &v);
-    std::uintptr_t operator()(val &v);
+    value_node *operator()(int_imm &v);
+    value_node *operator()(float_imm &v);
+    value_node *operator()(val &v);
 
     /* Stmt nodes */
-    std::unordered_set<std::uintptr_t> operator()(blas_a2_inst &inst);
-    std::unordered_set<std::uintptr_t> operator()(blas_a3_inst &inst);
-    std::unordered_set<std::uintptr_t> operator()(loop_inst &p);
-    std::unordered_set<std::uintptr_t> operator()(scalar_inst &inst);
-    std::unordered_set<std::uintptr_t> operator()(alloca_inst &a);
-    std::unordered_set<std::uintptr_t> operator()(barrier_inst &b);
-    std::unordered_set<std::uintptr_t> operator()(expand_inst &e);
-    std::unordered_set<std::uintptr_t> operator()(fuse_inst &f);
-    std::unordered_set<std::uintptr_t> operator()(load_inst &e);
-    std::unordered_set<std::uintptr_t> operator()(if_inst &in);
-    std::unordered_set<std::uintptr_t> operator()(lifetime_stop_inst &);
-    std::unordered_set<std::uintptr_t> operator()(size_inst &s);
-    std::unordered_set<std::uintptr_t> operator()(store_inst &s);
-    std::unordered_set<std::uintptr_t> operator()(subview_inst &s);
-    std::unordered_set<std::uintptr_t> operator()(yield_inst &y);
+    std::unordered_set<value_node *> operator()(blas_a2_inst &inst);
+    std::unordered_set<value_node *> operator()(blas_a3_inst &inst);
+    std::unordered_set<value_node *> operator()(loop_inst &p);
+    std::unordered_set<value_node *> operator()(scalar_inst &inst);
+    std::unordered_set<value_node *> operator()(alloca_inst &a);
+    std::unordered_set<value_node *> operator()(barrier_inst &b);
+    std::unordered_set<value_node *> operator()(expand_inst &e);
+    std::unordered_set<value_node *> operator()(fuse_inst &f);
+    std::unordered_set<value_node *> operator()(load_inst &e);
+    std::unordered_set<value_node *> operator()(if_inst &in);
+    std::unordered_set<value_node *> operator()(lifetime_stop_inst &);
+    std::unordered_set<value_node *> operator()(size_inst &s);
+    std::unordered_set<value_node *> operator()(store_inst &s);
+    std::unordered_set<value_node *> operator()(subview_inst &s);
+    std::unordered_set<value_node *> operator()(yield_inst &y);
 
     /* Region nodes */
-    std::unordered_set<std::uintptr_t> operator()(rgn &b);
+    std::unordered_set<value_node *> operator()(rgn &b);
 
     /* Func nodes */
     void operator()(prototype &p);
