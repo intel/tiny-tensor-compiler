@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.3.1] - 2024-05-22
+* Bugfix: Add alias analysis for stack; needed to correctly insert barriers
+* Bugfix: Disable block writes as alignment analysis is missing
+
 ## [0.3.0] - 2024-05-16
 
 * Added offset parameter to group type
