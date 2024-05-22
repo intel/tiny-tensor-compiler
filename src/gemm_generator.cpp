@@ -348,9 +348,13 @@ void generator::add_microkernel(block_builder &bb, bool is_remainder, expr M, ex
         // 3. Data is adjacent in memory
         // 4. The address is 16 byte aligned
         // 5. We are not writing atomically
-        bool use_block_write =
+        /*bool use_block_write =
             core_cfg.block_read_write_supported && !is_remainder && gemm_cfg.C_stride[0] == 1 &&
-            gemm_cfg.C_stride[1] * size(gemm_cfg.ty.C) % 16 == 0 && !gemm_cfg.atomic;
+            gemm_cfg.C_stride[1] * size(gemm_cfg.ty.C) % 16 == 0 && !gemm_cfg.atomic;*/
+
+        // Block writes are disabled for now; would need to track memref alignment in subview / load
+        // instruction AND would need to impose alignment requirement in calling convention
+        constexpr bool use_block_write = false;
         auto Cb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)), "Cb",
                                     C + C_offset);
         if (!use_block_write) {
