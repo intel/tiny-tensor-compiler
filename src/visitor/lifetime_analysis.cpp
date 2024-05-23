@@ -38,39 +38,43 @@ value find_alloca::operator()(rgn &b) {
 std::vector<value> find_alloca::allocas() const { return alloca_; }
 
 /* Inst nodes */
-std::unordered_set<value_node *> lifetime_inserter::operator()(blas_a2_inst &a) {
+auto lifetime_inserter::operator()(blas_a2_inst &a) -> std::unordered_set<value_node const *> {
     return {a.A().get(), a.B().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(blas_a3_inst &inst) {
+auto lifetime_inserter::operator()(blas_a3_inst &inst) -> std::unordered_set<value_node const *> {
     return {inst.A().get(), inst.B().get(), inst.C().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(loop_inst &p) {
+auto lifetime_inserter::operator()(loop_inst &p) -> std::unordered_set<value_node const *> {
     return visit(*this, *p.body());
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(scalar_inst &) { return {}; }
+auto lifetime_inserter::operator()(scalar_inst &) -> std::unordered_set<value_node const *> {
+    return {};
+}
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(alloca_inst &a) {
+auto lifetime_inserter::operator()(alloca_inst &a) -> std::unordered_set<value_node const *> {
     return {a.result().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(barrier_inst &) { return {}; }
-
-std::unordered_set<value_node *> lifetime_inserter::operator()(expand_inst &e) {
-    return std::unordered_set<value_node *>{e.operand().get(), e.result().get()};
+auto lifetime_inserter::operator()(barrier_inst &) -> std::unordered_set<value_node const *> {
+    return {};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(fuse_inst &f) {
-    return std::unordered_set<value_node *>{f.operand().get(), f.result().get()};
+auto lifetime_inserter::operator()(expand_inst &e) -> std::unordered_set<value_node const *> {
+    return std::unordered_set<value_node const *>{e.operand().get(), e.result().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(load_inst &e) {
-    return std::unordered_set<value_node *>{e.operand().get(), e.result().get()};
+auto lifetime_inserter::operator()(fuse_inst &f) -> std::unordered_set<value_node const *> {
+    return std::unordered_set<value_node const *>{f.operand().get(), f.result().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(if_inst &in) {
+auto lifetime_inserter::operator()(load_inst &e) -> std::unordered_set<value_node const *> {
+    return std::unordered_set<value_node const *>{e.operand().get(), e.result().get()};
+}
+
+auto lifetime_inserter::operator()(if_inst &in) -> std::unordered_set<value_node const *> {
     auto s = visit(*this, *in.then());
     if (in.otherwise()) {
         s.merge(visit(*this, *in.otherwise()));
@@ -78,27 +82,31 @@ std::unordered_set<value_node *> lifetime_inserter::operator()(if_inst &in) {
     return s;
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(lifetime_stop_inst &ls) {
+auto lifetime_inserter::operator()(lifetime_stop_inst &ls)
+    -> std::unordered_set<value_node const *> {
     return {ls.object().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(size_inst &s) {
-    return std::unordered_set<value_node *>{s.operand().get()};
+auto lifetime_inserter::operator()(size_inst &s) -> std::unordered_set<value_node const *> {
+    return std::unordered_set<value_node const *>{s.operand().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(store_inst &s) {
-    return std::unordered_set<value_node *>{s.operand().get()};
+auto lifetime_inserter::operator()(store_inst &s) -> std::unordered_set<value_node const *> {
+    return std::unordered_set<value_node const *>{s.operand().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(subview_inst &s) {
+auto lifetime_inserter::operator()(subview_inst &s) -> std::unordered_set<value_node const *> {
     return {s.result().get(), s.operand().get()};
 }
 
-std::unordered_set<value_node *> lifetime_inserter::operator()(yield_inst &) { return {}; }
+auto lifetime_inserter::operator()(yield_inst &) -> std::unordered_set<value_node const *> {
+    return {};
+}
 
 /* Region nodes */
-std::unordered_set<value_node *> lifetime_inserter::operator()(rgn &b) {
-    auto const intersects = [](std::vector<value> &a, std::unordered_set<value_node *> const &b) {
+auto lifetime_inserter::operator()(rgn &b) -> std::unordered_set<value_node const *> {
+    auto const intersects = [](std::vector<value> &a,
+                               std::unordered_set<value_node const *> const &b) {
         for (auto aa = a.begin(); aa != a.end(); ++aa) {
             if (b.find(aa->get()) != b.end()) {
                 return aa;
@@ -111,7 +119,7 @@ std::unordered_set<value_node *> lifetime_inserter::operator()(rgn &b) {
     fa(b);
     auto allocas = fa.allocas();
 
-    auto rgn_ops = std::unordered_set<value_node *>{};
+    auto rgn_ops = std::unordered_set<value_node const *>{};
 
     auto s = b.insts().end();
     while (s != b.insts().begin()) {
@@ -120,7 +128,7 @@ std::unordered_set<value_node *> lifetime_inserter::operator()(rgn &b) {
         auto operands_root = decltype(operands){};
         std::transform(operands.begin(), operands.end(),
                        std::inserter(operands_root, operands_root.begin()),
-                       [this](auto &op) { return aa_.root(*op); });
+                       [this](auto const &op) { return aa_.root(*op); });
         std::vector<value>::iterator aa;
         while ((aa = intersects(allocas, operands_root)) != allocas.end()) {
             s = b.insts().insert(s, inst{std::make_unique<lifetime_stop_inst>(*aa).release()});

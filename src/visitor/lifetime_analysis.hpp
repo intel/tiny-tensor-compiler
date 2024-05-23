@@ -39,24 +39,24 @@ class find_alloca {
 class lifetime_inserter {
   public:
     /* Inst nodes */
-    std::unordered_set<::tinytc_value *> operator()(blas_a2_inst &inst);
-    std::unordered_set<::tinytc_value *> operator()(blas_a3_inst &inst);
-    std::unordered_set<::tinytc_value *> operator()(loop_inst &p);
-    std::unordered_set<::tinytc_value *> operator()(scalar_inst &inst);
-    std::unordered_set<::tinytc_value *> operator()(alloca_inst &a);
-    std::unordered_set<::tinytc_value *> operator()(barrier_inst &b);
-    std::unordered_set<::tinytc_value *> operator()(expand_inst &e);
-    std::unordered_set<::tinytc_value *> operator()(fuse_inst &f);
-    std::unordered_set<::tinytc_value *> operator()(load_inst &e);
-    std::unordered_set<::tinytc_value *> operator()(if_inst &in);
-    std::unordered_set<::tinytc_value *> operator()(lifetime_stop_inst &);
-    std::unordered_set<::tinytc_value *> operator()(size_inst &s);
-    std::unordered_set<::tinytc_value *> operator()(store_inst &s);
-    std::unordered_set<::tinytc_value *> operator()(subview_inst &s);
-    std::unordered_set<::tinytc_value *> operator()(yield_inst &in);
+    auto operator()(blas_a2_inst &inst) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(blas_a3_inst &inst) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(loop_inst &p) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(scalar_inst &inst) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(alloca_inst &a) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(barrier_inst &b) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(expand_inst &e) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(fuse_inst &f) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(load_inst &e) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(if_inst &in) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(lifetime_stop_inst &) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(size_inst &s) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(store_inst &s) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(subview_inst &s) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(yield_inst &in) -> std::unordered_set<::tinytc_value const *>;
 
     /* Region nodes */
-    std::unordered_set<::tinytc_value *> operator()(rgn &b);
+    auto operator()(rgn &b) -> std::unordered_set<::tinytc_value const *>;
 
     /* Func nodes */
     void operator()(prototype &p);

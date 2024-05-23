@@ -15,8 +15,8 @@ using clir::visit;
 namespace tinytc {
 
 /* Stmt nodes */
-void alias_analyser::operator()(inst_node &) {}
-void alias_analyser::operator()(alloca_inst &a) {
+void alias_analyser::operator()(inst_node const &) {}
+void alias_analyser::operator()(alloca_inst const &a) {
     auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
@@ -24,31 +24,31 @@ void alias_analyser::operator()(alloca_inst &a) {
     allocs_[a.result().get()] =
         aa_results::allocation{a.stack_ptr(), a.stack_ptr() + t->size_in_bytes()};
 }
-void alias_analyser::operator()(loop_inst &p) { visit(*this, *p.body()); }
-void alias_analyser::operator()(expand_inst &e) {
-    value_node *source = e.operand().get();
+void alias_analyser::operator()(loop_inst const &p) { visit(*this, *p.body()); }
+void alias_analyser::operator()(expand_inst const &e) {
+    value_node const *source = e.operand().get();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
     alias_[e.result().get()] = source;
 }
-void alias_analyser::operator()(fuse_inst &f) {
-    value_node *source = f.operand().get();
+void alias_analyser::operator()(fuse_inst const &f) {
+    value_node const *source = f.operand().get();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
     alias_[f.result().get()] = source;
 }
 
-void alias_analyser::operator()(if_inst &in) {
+void alias_analyser::operator()(if_inst const &in) {
     visit(*this, *in.then());
     if (in.otherwise()) {
         visit(*this, *in.otherwise());
     }
 }
 
-void alias_analyser::operator()(subview_inst &s) {
-    value_node *source = s.operand().get();
+void alias_analyser::operator()(subview_inst const &s) {
+    value_node const *source = s.operand().get();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
@@ -56,15 +56,15 @@ void alias_analyser::operator()(subview_inst &s) {
 }
 
 /* Region nodes */
-void alias_analyser::operator()(rgn &b) {
+void alias_analyser::operator()(rgn const &b) {
     for (auto &s : b.insts()) {
         visit(*this, *s);
     }
 }
 
 /* Function nodes */
-void alias_analyser::operator()(prototype &) {}
-void alias_analyser::operator()(function &fn) {
+void alias_analyser::operator()(prototype const &) {}
+void alias_analyser::operator()(function const &fn) {
     alias_.clear();
     visit(*this, *fn.prototype());
     visit(*this, *fn.body());
