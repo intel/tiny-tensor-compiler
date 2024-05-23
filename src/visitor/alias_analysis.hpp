@@ -11,30 +11,33 @@
 #include "visitor/aa_results.hpp"
 
 #include <unordered_map>
+#include <vector>
 
 namespace tinytc {
 
 class alias_analyser {
   public:
     /* Stmt nodes */
-    void operator()(inst_node &);
-    void operator()(loop_inst &p);
-    void operator()(expand_inst &e);
-    void operator()(fuse_inst &f);
-    void operator()(if_inst &in);
-    void operator()(subview_inst &s);
+    void operator()(inst_node const &);
+    void operator()(alloca_inst const &a);
+    void operator()(loop_inst const &p);
+    void operator()(expand_inst const &e);
+    void operator()(fuse_inst const &f);
+    void operator()(if_inst const &in);
+    void operator()(subview_inst const &s);
 
     /* Region nodes */
-    void operator()(rgn &b);
+    void operator()(rgn const &b);
 
     /* Func nodes */
-    void operator()(prototype &);
-    void operator()(function &fn);
+    void operator()(prototype const &);
+    void operator()(function const &fn);
 
     aa_results get_result() const;
 
   private:
-    std::unordered_map<value_node *, value_node *> alias_;
+    std::unordered_map<value_node const *, aa_results::allocation> allocs_;
+    std::unordered_map<value_node const *, value_node const *> alias_;
 };
 
 } // namespace tinytc

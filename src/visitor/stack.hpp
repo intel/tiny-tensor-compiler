@@ -36,7 +36,7 @@ class stack_ptr {
   private:
     struct allocation {
         value_node *value;
-        std::size_t start, stop;
+        std::int64_t start, stop;
     };
     std::list<allocation> allocs_;
 };

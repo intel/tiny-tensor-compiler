@@ -26,53 +26,49 @@ bool insert_barrier::operator()(memref_data_type &m) {
 bool insert_barrier::operator()(scalar_data_type &) { return false; }
 
 /* Value nodes */
-std::uintptr_t insert_barrier::operator()(float_imm &) {
-    return std::bit_cast<std::uintptr_t>(nullptr);
-}
-std::uintptr_t insert_barrier::operator()(int_imm &) {
-    return std::bit_cast<std::uintptr_t>(nullptr);
-}
-std::uintptr_t insert_barrier::operator()(val &v) {
+value_node *insert_barrier::operator()(float_imm &) { return nullptr; }
+value_node *insert_barrier::operator()(int_imm &) { return nullptr; }
+value_node *insert_barrier::operator()(val &v) {
     if (visit(*this, *v.ty())) {
-        return std::bit_cast<std::uintptr_t>(aa_.root(v));
+        return &v;
     }
-    return std::bit_cast<std::uintptr_t>(nullptr);
+    return nullptr;
 }
 
 /* Inst nodes */
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(blas_a2_inst &g) {
-    auto rw = std::unordered_set<std::uintptr_t>{};
+std::unordered_set<value_node *> insert_barrier::operator()(blas_a2_inst &g) {
+    auto rw = std::unordered_set<value_node *>{};
     rw.emplace(visit(*this, *g.A()));
     rw.emplace(visit(*this, *g.B()));
     return rw;
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(blas_a3_inst &inst) {
-    auto rw = std::unordered_set<std::uintptr_t>{};
+std::unordered_set<value_node *> insert_barrier::operator()(blas_a3_inst &inst) {
+    auto rw = std::unordered_set<value_node *>{};
     rw.emplace(visit(*this, *inst.A()));
     rw.emplace(visit(*this, *inst.B()));
     rw.emplace(visit(*this, *inst.C()));
     return rw;
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(loop_inst &p) {
+std::unordered_set<value_node *> insert_barrier::operator()(loop_inst &p) {
     return visit(*this, *p.body());
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(scalar_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(scalar_inst &) { return {}; }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(alloca_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(alloca_inst &) { return {}; }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(barrier_inst &) {
+std::unordered_set<value_node *> insert_barrier::operator()(barrier_inst &) {
     last_instruction_was_barrier_ = true;
     return {};
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(expand_inst &) { return {}; }
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(fuse_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(expand_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(fuse_inst &) { return {}; }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(load_inst &e) {
-    auto rw = std::unordered_set<std::uintptr_t>{};
+std::unordered_set<value_node *> insert_barrier::operator()(load_inst &e) {
+    auto rw = std::unordered_set<value_node *>{};
     auto t = dynamic_cast<memref_data_type *>(e.operand()->ty().get());
     if (t) {
         rw.emplace(visit(*this, *e.operand()));
@@ -80,7 +76,7 @@ std::unordered_set<std::uintptr_t> insert_barrier::operator()(load_inst &e) {
     return rw;
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(if_inst &in) {
+std::unordered_set<value_node *> insert_barrier::operator()(if_inst &in) {
     auto s = visit(*this, *in.then());
     if (in.otherwise()) {
         s.merge(visit(*this, *in.otherwise()));
@@ -88,32 +84,36 @@ std::unordered_set<std::uintptr_t> insert_barrier::operator()(if_inst &in) {
     return s;
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(lifetime_stop_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(lifetime_stop_inst &) { return {}; }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(size_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(size_inst &) { return {}; }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(store_inst &s) {
-    auto rw = std::unordered_set<std::uintptr_t>{};
+std::unordered_set<value_node *> insert_barrier::operator()(store_inst &s) {
+    auto rw = std::unordered_set<value_node *>{};
     rw.emplace(visit(*this, *s.operand()));
     return rw;
 }
 
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(subview_inst &) { return {}; }
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(yield_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(subview_inst &) { return {}; }
+std::unordered_set<value_node *> insert_barrier::operator()(yield_inst &) { return {}; }
 
 /* Region nodes */
-std::unordered_set<std::uintptr_t> insert_barrier::operator()(rgn &b) {
-    auto const intersects = [](std::unordered_set<std::uintptr_t> const &a,
-                               std::unordered_set<std::uintptr_t> const &b) {
+std::unordered_set<value_node *> insert_barrier::operator()(rgn &b) {
+    auto const intersects = [this](std::unordered_set<value_node *> const &a,
+                                   std::unordered_set<value_node *> const &b) {
         for (auto &aa : a) {
-            if (aa != std::bit_cast<std::uintptr_t>(nullptr) && b.find(aa) != b.end()) {
-                return true;
+            if (aa != nullptr) {
+                for (auto &bb : b) {
+                    if (aa_.alias(*aa, *bb)) {
+                        return true;
+                    }
+                }
             }
         }
         return false;
     };
 
-    auto rw = std::unordered_set<std::uintptr_t>{};
+    auto rw = std::unordered_set<value_node *>{};
     auto insts = std::vector<inst>{};
     insts.reserve(b.insts().size());
     for (auto &s : b.insts()) {

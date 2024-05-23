@@ -153,7 +153,7 @@ Memref type
 
 .. code:: abnf
 
-    memref-type                 = "memref<" scalar-type "x" tensor-shape ["," memory-layout] ">"
+    memref-type                 = "memref<" scalar-type tensor-shape ["," memory-layout] ">"
     constant-or-dynamic         = integer-constant / "?"
     tensor-shape                = *("x" constant-or-dynamic)
 
