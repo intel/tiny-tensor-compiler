@@ -379,7 +379,8 @@ auto read_matrix_block_regular(block_builder &bb, matrix_block_description const
                 bb.assign(block[k + m_block * d.Kb], std::move(rhs));
             };
             if (enable_sub_group_reads && m_block < first_m_block_with_check) {
-                store(sub_group_block_read_helper(d.pointer, scalar_ty, d.as));
+                store(sub_group_block_read_helper(d.pointer + m_block * core_cfg.subgroup_size,
+                                                  scalar_ty, d.as));
             } else {
                 auto rhs = d.pointer[d.stride[M_mode] *
                                      (get_sub_group_local_id() + m_block * core_cfg.subgroup_size)];
