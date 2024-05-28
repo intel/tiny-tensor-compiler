@@ -10,7 +10,7 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 
-#include <cstddef>
+#include <cstdint>
 #include <list>
 
 namespace tinytc {

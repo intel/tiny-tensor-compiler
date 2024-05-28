@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "codegen_tools.hpp"
+#include "error.hpp"
 #include "scalar_type.hpp"
 #include "util.hpp"
 
@@ -12,12 +13,41 @@
 #include <clir/internal/expr_node.hpp>
 #include <clir/visit.hpp>
 
+#include <cassert>
 #include <memory>
 #include <utility>
 
 using namespace clir;
 
 namespace tinytc {
+
+expr as_type(builtin_type ty, expr e) {
+    switch (ty) {
+    case builtin_type::char_t:
+        return as_char(std::move(e));
+    case builtin_type::uchar_t:
+        return as_uchar(std::move(e));
+    case builtin_type::short_t:
+        return as_short(std::move(e));
+    case builtin_type::ushort_t:
+        return as_ushort(std::move(e));
+    case builtin_type::int_t:
+        return as_int(std::move(e));
+    case builtin_type::uint_t:
+        return as_uint(std::move(e));
+    case builtin_type::long_t:
+        return as_long(std::move(e));
+    case builtin_type::ulong_t:
+        return as_ulong(std::move(e));
+    case builtin_type::float_t:
+        return as_float(std::move(e));
+    case builtin_type::double_t:
+        return as_double(std::move(e));
+    default:
+        break;
+    }
+    return e;
+}
 
 expr vload_helper(short vec_size, expr offset, expr ptr) {
     switch (vec_size) {
@@ -37,6 +67,77 @@ expr vload_helper(short vec_size, expr offset, expr ptr) {
         break;
     };
     return nullptr;
+}
+
+builtin_type block_rw_op_type(builtin_type scalar_ty) {
+    switch (scalar_ty) {
+    case builtin_type::short_t:
+        return builtin_type::ushort_t;
+    case builtin_type::int_t:
+    case builtin_type::float_t:
+        return builtin_type::uint_t;
+    case builtin_type::long_t:
+    case builtin_type::double_t:
+        return builtin_type::ulong_t;
+    default:
+        break;
+    }
+    return scalar_ty;
+}
+
+expr sub_group_block_read_helper(expr pointer, builtin_type scalar_ty, address_space as) {
+    auto const make_read = [](builtin_type bt, expr pointer) -> expr {
+        switch (bt) {
+        case builtin_type::short_t:
+        case builtin_type::ushort_t:
+            return intel_sub_group_block_read_us(std::move(pointer));
+        case builtin_type::int_t:
+        case builtin_type::uint_t:
+        case builtin_type::float_t:
+            return intel_sub_group_block_read_ui(std::move(pointer));
+        case builtin_type::long_t:
+        case builtin_type::ulong_t:
+        case builtin_type::double_t:
+            return intel_sub_group_block_read_ul(std::move(pointer));
+        default:
+            break;
+        }
+        return pointer[get_sub_group_local_id()];
+    };
+    auto const bt = block_rw_op_type(scalar_ty);
+    pointer = cast(pointer_to(clir::data_type(bt, as)), std::move(pointer));
+    auto inst = make_read(bt, std::move(pointer));
+    if (bt != scalar_ty) {
+        return as_type(scalar_ty, std::move(inst));
+    }
+    return inst;
+}
+expr sub_group_block_write_helper(expr pointer, expr data, builtin_type scalar_ty,
+                                  address_space as) {
+    auto const make_write = [](builtin_type bt, expr pointer, expr data) -> expr {
+        switch (bt) {
+        case builtin_type::short_t:
+        case builtin_type::ushort_t:
+            return intel_sub_group_block_write_us(std::move(pointer), std::move(data));
+        case builtin_type::int_t:
+        case builtin_type::uint_t:
+        case builtin_type::float_t:
+            return intel_sub_group_block_write_ui(std::move(pointer), std::move(data));
+        case builtin_type::long_t:
+        case builtin_type::ulong_t:
+        case builtin_type::double_t:
+            return intel_sub_group_block_write_ul(std::move(pointer), std::move(data));
+        default:
+            break;
+        }
+        return pointer[get_sub_group_local_id()] = std::move(data);
+    };
+    auto const bt = block_rw_op_type(scalar_ty);
+    pointer = cast(pointer_to(clir::data_type(bt, as)), std::move(pointer));
+    if (bt != scalar_ty) {
+        data = as_type(bt, std::move(data));
+    }
+    return make_write(bt, std::move(pointer), std::move(data));
 }
 
 void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, address_space as,
@@ -227,6 +328,137 @@ void tile_loop_uniformly_dynamic(block_builder &bb, expr loop_trip_count, unsign
                .body([&](block_builder &bb) { body(bb, block, bs); })
                .attribute(opencl_unroll_hint(1))
                .get_product());
+}
+
+block_accessor_regular::block_accessor_regular(expr block, int Kb, expr offset)
+    : block_(std::move(block)), Kb_(Kb), offset_(std::move(offset)) {}
+auto block_accessor_regular::get(int m_block, int k) const -> expr {
+    const auto i = k + m_block * Kb_;
+    if (offset_) {
+        return block_[offset_ + i];
+    }
+    return block_[i];
+}
+
+block_accessor_vector::block_accessor_vector(expr block) : block_(std::move(block)) {}
+auto block_accessor_vector::get(int m_block, int k) const -> expr { return block_[m_block].s(k); }
+
+int matrix_block_description::first_block_with_check(std::int32_t subgroup_size) const {
+    int fb = 0;
+    dispatch_constant_dynamic(
+        M, [&](std::int64_t m) { fb = m / subgroup_size; }, [](expr const &) {});
+    return fb;
+}
+
+bool matrix_block_description::is_unit_stride(int mode) const {
+    bool is_unit = false;
+    dispatch_constant_dynamic(
+        stride[mode], [&](std::int64_t s) { is_unit = s == 1; }, [](expr const &) {});
+    return is_unit;
+}
+
+expr matrix_block_description::condition(int m_block, std::int32_t subgroup_size) const {
+    return get_sub_group_local_id() + m_block * subgroup_size < M;
+}
+
+auto read_matrix_block_regular(block_builder &bb, matrix_block_description const &d, int M_mode,
+                               core_config const &core_cfg, char const *block_name)
+    -> std::unique_ptr<block_accessor> {
+    assert(M_mode == 0 || M_mode == 1);
+
+    const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
+    auto const scalar_ty = to_clir_builtin_ty(d.ty);
+    auto block = bb.declare(array_of(clir::data_type(scalar_ty), m_blocks * d.Kb), block_name);
+
+    const int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);
+    const bool enable_sub_group_reads =
+        core_cfg.block_read_write_supported && d.is_unit_stride(M_mode);
+    for (int k = 0; k < d.Kb; ++k) {
+        for (int m_block = 0; m_block < m_blocks; ++m_block) {
+            auto const store = [&](expr rhs) {
+                bb.assign(block[k + m_block * d.Kb], std::move(rhs));
+            };
+            if (enable_sub_group_reads && m_block < first_m_block_with_check) {
+                store(sub_group_block_read_helper(d.pointer, scalar_ty, d.as));
+            } else {
+                auto rhs = d.pointer[d.stride[M_mode] *
+                                     (get_sub_group_local_id() + m_block * core_cfg.subgroup_size)];
+                if (m_block >= first_m_block_with_check) {
+                    rhs = ternary_conditional(d.condition(m_block, core_cfg.subgroup_size),
+                                              std::move(rhs), 0);
+                }
+                store(std::move(rhs));
+            }
+        }
+        bb.add(add_into(d.pointer, d.stride[1 - M_mode]));
+    }
+    return std::make_unique<block_accessor_regular>(std::move(block), d.Kb);
+}
+
+auto read_matrix_block_vector(block_builder &bb, matrix_block_description const &d, int M_mode,
+                              core_config const &core_cfg, char const *block_name)
+    -> std::unique_ptr<block_accessor> {
+    assert(M_mode == 0 || M_mode == 1);
+
+    const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
+    const auto dt = clir::data_type(to_clir_builtin_ty(d.ty), d.Kb);
+    auto block = bb.declare(array_of(dt, m_blocks), block_name);
+
+    int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);
+    for (int m_block = 0; m_block < m_blocks; ++m_block) {
+        auto rhs = vload_helper(d.Kb, 0,
+                                d.pointer + d.stride[M_mode] * (get_sub_group_local_id() +
+                                                                m_block * core_cfg.subgroup_size));
+        if (!bool(rhs)) {
+            throw internal_compiler_error();
+        }
+        if (m_block >= first_m_block_with_check) {
+            rhs = ternary_conditional(d.condition(m_block, core_cfg.subgroup_size), rhs,
+                                      init_vector(dt, {0}));
+        }
+        bb.assign(block[m_block], std::move(rhs));
+    }
+    bb.add(add_into(d.pointer, d.Kb * d.stride[1 - M_mode]));
+
+    return std::make_unique<block_accessor_vector>(std::move(block));
+}
+
+auto read_matrix_block(block_builder &bb, matrix_block_description const &d, int M_mode,
+                       core_config const &core_cfg, char const *block_name)
+    -> std::unique_ptr<block_accessor> {
+    assert(M_mode == 0 || M_mode == 1);
+
+    if (d.is_unit_stride(1 - M_mode) &&
+        (d.Kb == 2 || d.Kb == 3 || d.Kb == 4 || d.Kb == 8 || d.Kb == 16)) {
+        return read_matrix_block_vector(bb, d, M_mode, core_cfg, block_name);
+    }
+    return read_matrix_block_regular(bb, d, M_mode, core_cfg, block_name);
+}
+
+void write_matrix_block(block_builder &bb, block_accessor const &block,
+                        matrix_block_description const &d, bool is_atomic, expr alpha, expr beta,
+                        core_config const &core_cfg) {
+    const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
+
+    const int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);
+    for (int k = 0; k < d.Kb; ++k) {
+        for (int m_block = 0; m_block < m_blocks; ++m_block) {
+            const auto write = [&](block_builder &bb) {
+                store_helper(bb, is_atomic,
+                             d.pointer + d.stride[0] * (get_sub_group_local_id() +
+                                                        m_block * core_cfg.subgroup_size),
+                             d.ty, d.as, alpha * block.get(m_block, k), beta);
+            };
+            if (m_block >= first_m_block_with_check) {
+                bb.add(if_selection_builder(d.condition(m_block, core_cfg.subgroup_size))
+                           .then(write)
+                           .get_product());
+            } else {
+                write(bb);
+            }
+        }
+        bb.add(add_into(d.pointer, d.stride[1]));
+    }
 }
 
 } // namespace tinytc

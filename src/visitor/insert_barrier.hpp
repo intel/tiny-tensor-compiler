@@ -12,7 +12,6 @@
 #include "node/value_node.hpp"
 #include "visitor/aa_results.hpp"
 
-#include <cstdint>
 #include <unordered_set>
 
 namespace tinytc {

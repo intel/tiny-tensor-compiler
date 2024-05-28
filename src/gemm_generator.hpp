@@ -106,10 +106,10 @@ struct gemm_configuration {
  *
  * @return {number of row-blocks (block size = subgroup size), number of columns}
  */
-auto max_register_block_gemm(std::uint32_t C_scalar_type_size_in_bytes, std::uint32_t sgs,
-                             std::uint32_t register_space,
-                             std::pair<std::uint32_t, std::uint32_t> max_fill_fraction = {1, 2})
-    -> std::pair<std::uint32_t, std::uint32_t>;
+auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int32_t sgs,
+                             std::int32_t register_space,
+                             std::pair<std::int32_t, std::int32_t> max_fill_fraction = {1, 2})
+    -> std::pair<std::int32_t, std::int32_t>;
 
 } // namespace tinytc
 

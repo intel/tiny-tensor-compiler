@@ -8,7 +8,6 @@
 #include <clir/builtin_type.hpp>
 #include <clir/visit.hpp>
 
-#include <bit>
 #include <memory>
 #include <utility>
 #include <vector>

@@ -11,7 +11,6 @@
 #include "visitor/aa_results.hpp"
 
 #include <unordered_map>
-#include <vector>
 
 namespace tinytc {
 
