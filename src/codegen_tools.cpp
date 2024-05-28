@@ -21,6 +21,10 @@ using namespace clir;
 
 namespace tinytc {
 
+short bits(scalar_type ty) { return size(ty) * 8; }
+expr constant(scalar_type ty, std::int64_t value) { return expr(value, bits(ty)); }
+expr constant(scalar_type ty, double value) { return expr(value, bits(ty)); }
+
 expr as_type(builtin_type ty, expr e) {
     switch (ty) {
     case builtin_type::char_t:
@@ -69,75 +73,53 @@ expr vload_helper(short vec_size, expr offset, expr ptr) {
     return nullptr;
 }
 
-builtin_type block_rw_op_type(builtin_type scalar_ty) {
-    switch (scalar_ty) {
-    case builtin_type::short_t:
-        return builtin_type::ushort_t;
-    case builtin_type::int_t:
-    case builtin_type::float_t:
-        return builtin_type::uint_t;
-    case builtin_type::long_t:
-    case builtin_type::double_t:
-        return builtin_type::ulong_t;
+struct block_rw_config {
+    builtin_type cast_type;
+    expr (*sub_group_block_read)(expr);
+    expr (*sub_group_block_write)(expr, expr);
+    expr (*as_type)(expr);
+};
+
+auto get_block_rw_config(scalar_type ty) {
+    switch (ty) {
+    case scalar_type::i16:
+        return block_rw_config{builtin_type::ushort_t, &intel_sub_group_block_read_us,
+                               &intel_sub_group_block_write_us, &as_short};
+    case scalar_type::i32:
+        return block_rw_config{builtin_type::uint_t, &intel_sub_group_block_read_ui,
+                               &intel_sub_group_block_write_ui, &as_int};
+    case scalar_type::f32:
+        return block_rw_config{builtin_type::uint_t, &intel_sub_group_block_read_ui,
+                               &intel_sub_group_block_write_ui, &as_float};
+    case scalar_type::i64:
+        return block_rw_config{builtin_type::ulong_t, &intel_sub_group_block_read_ul,
+                               &intel_sub_group_block_write_ul, &as_long};
+    case scalar_type::f64:
+        return block_rw_config{builtin_type::ulong_t, &intel_sub_group_block_read_ul,
+                               &intel_sub_group_block_write_ul, &as_double};
     default:
         break;
     }
-    return scalar_ty;
+    return block_rw_config{builtin_type::void_t, nullptr, nullptr, nullptr};
 }
 
-expr sub_group_block_read_helper(expr pointer, builtin_type scalar_ty, address_space as) {
-    auto const make_read = [](builtin_type bt, expr pointer) -> expr {
-        switch (bt) {
-        case builtin_type::short_t:
-        case builtin_type::ushort_t:
-            return intel_sub_group_block_read_us(std::move(pointer));
-        case builtin_type::int_t:
-        case builtin_type::uint_t:
-        case builtin_type::float_t:
-            return intel_sub_group_block_read_ui(std::move(pointer));
-        case builtin_type::long_t:
-        case builtin_type::ulong_t:
-        case builtin_type::double_t:
-            return intel_sub_group_block_read_ul(std::move(pointer));
-        default:
-            break;
-        }
+expr sub_group_block_read_helper(expr pointer, scalar_type ty, address_space as) {
+    const auto cfg = get_block_rw_config(ty);
+    if (cfg.sub_group_block_read == nullptr) {
         return pointer[get_sub_group_local_id()];
-    };
-    auto const bt = block_rw_op_type(scalar_ty);
-    pointer = cast(pointer_to(clir::data_type(bt, as)), std::move(pointer));
-    auto inst = make_read(bt, std::move(pointer));
-    if (bt != scalar_ty) {
-        return as_type(scalar_ty, std::move(inst));
     }
-    return inst;
+    pointer = cast(pointer_to(clir::data_type(cfg.cast_type, as)), std::move(pointer));
+    auto inst = (*cfg.sub_group_block_read)(std::move(pointer));
+    return (*cfg.as_type)(std::move(inst));
 }
-expr sub_group_block_write_helper(expr pointer, expr data, builtin_type scalar_ty,
-                                  address_space as) {
-    auto const make_write = [](builtin_type bt, expr pointer, expr data) -> expr {
-        switch (bt) {
-        case builtin_type::short_t:
-        case builtin_type::ushort_t:
-            return intel_sub_group_block_write_us(std::move(pointer), std::move(data));
-        case builtin_type::int_t:
-        case builtin_type::uint_t:
-        case builtin_type::float_t:
-            return intel_sub_group_block_write_ui(std::move(pointer), std::move(data));
-        case builtin_type::long_t:
-        case builtin_type::ulong_t:
-        case builtin_type::double_t:
-            return intel_sub_group_block_write_ul(std::move(pointer), std::move(data));
-        default:
-            break;
-        }
+expr sub_group_block_write_helper(expr pointer, expr data, scalar_type ty, address_space as) {
+    const auto cfg = get_block_rw_config(ty);
+    if (cfg.sub_group_block_write == nullptr) {
         return pointer[get_sub_group_local_id()] = std::move(data);
-    };
-    auto const bt = block_rw_op_type(scalar_ty);
-    pointer = cast(pointer_to(clir::data_type(bt, as)), std::move(pointer));
-    if (bt != scalar_ty) {
-        data = as_type(bt, std::move(data));
     }
-    return make_write(bt, std::move(pointer), std::move(data));
+    pointer = cast(pointer_to(clir::data_type(cfg.cast_type, as)), std::move(pointer));
+    data = (*cfg.as_type)(std::move(data));
+    return (*cfg.sub_group_block_write)(std::move(pointer), std::move(data));
 }
 
 void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, address_space as,
@@ -367,8 +349,7 @@ auto read_matrix_block_regular(block_builder &bb, matrix_block_description const
     assert(M_mode == 0 || M_mode == 1);
 
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
-    auto const scalar_ty = to_clir_builtin_ty(d.ty);
-    auto block = bb.declare(array_of(clir::data_type(scalar_ty), m_blocks * d.Kb), block_name);
+    auto block = bb.declare(array_of(to_clir_ty(d.ty), m_blocks * d.Kb), block_name);
 
     const int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);
     const bool enable_sub_group_reads =
@@ -380,7 +361,7 @@ auto read_matrix_block_regular(block_builder &bb, matrix_block_description const
             };
             if (enable_sub_group_reads && m_block < first_m_block_with_check) {
                 store(sub_group_block_read_helper(d.pointer + m_block * core_cfg.subgroup_size,
-                                                  scalar_ty, d.as));
+                                                  d.ty, d.as));
             } else {
                 auto rhs = d.pointer[d.stride[M_mode] *
                                      (get_sub_group_local_id() + m_block * core_cfg.subgroup_size)];
@@ -402,7 +383,7 @@ auto read_matrix_block_vector(block_builder &bb, matrix_block_description const 
     assert(M_mode == 0 || M_mode == 1);
 
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
-    const auto dt = clir::data_type(to_clir_builtin_ty(d.ty), d.Kb);
+    const auto dt = to_clir_ty(d.ty, d.Kb);
     auto block = bb.declare(array_of(dt, m_blocks), block_name);
 
     int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);

@@ -32,7 +32,6 @@ set(SOURCES
     parser/parse_context.cpp
     parser.cpp
     passes.cpp
-    precision_helper.cpp
     prog.cpp
     recipe.cpp
     recipe/small_gemm_batched.cpp

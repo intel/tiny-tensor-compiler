@@ -20,12 +20,14 @@
 
 namespace tinytc {
 
+short bits(scalar_type ty);
+clir::expr constant(scalar_type ty, std::int64_t value);
+clir::expr constant(scalar_type ty, double value);
 clir::expr as_type(clir::builtin_type ty, clir::expr e);
 clir::expr vload_helper(short vec_size, clir::expr offset, clir::expr ptr);
-clir::expr sub_group_block_read_helper(clir::expr pointer, clir::builtin_type scalar_ty,
-                                       clir::address_space as);
-clir::expr sub_group_block_write_helper(clir::expr pointer, clir::expr data,
-                                        clir::builtin_type scalar_ty, clir::address_space as);
+clir::expr sub_group_block_read_helper(clir::expr pointer, scalar_type ty, clir::address_space as);
+clir::expr sub_group_block_write_helper(clir::expr pointer, clir::expr data, scalar_type ty,
+                                        clir::address_space as);
 
 void store_helper(clir::block_builder &bb, bool is_atomic, clir::expr dst, scalar_type ty,
                   clir::address_space as, clir::expr value, clir::expr beta);

@@ -12,9 +12,10 @@
 namespace tinytc {
 
 bool is_floating_type(scalar_type ty);
-clir::builtin_type to_clir_builtin_ty(scalar_type ty);
-clir::builtin_type to_clir_atomic_builtin_ty(scalar_type ty);
 clir::data_type to_clir_ty(scalar_type ty, clir::address_space as = clir::address_space::generic_t,
+                           clir::type_qualifier q = clir::type_qualifier::none);
+clir::data_type to_clir_ty(scalar_type ty, short size,
+                           clir::address_space as = clir::address_space::generic_t,
                            clir::type_qualifier q = clir::type_qualifier::none);
 clir::data_type to_clir_atomic_ty(scalar_type ty,
                                   clir::address_space as = clir::address_space::generic_t,

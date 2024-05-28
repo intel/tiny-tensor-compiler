@@ -21,52 +21,58 @@ bool is_floating_type(scalar_type ty) {
     return false;
 }
 
-clir::builtin_type to_clir_builtin_ty(scalar_type ty) {
-    switch (ty) {
-    case scalar_type::i1:
-        return clir::builtin_type::bool_t;
-    case scalar_type::i8:
-        return clir::builtin_type::char_t;
-    case scalar_type::i16:
-        return clir::builtin_type::short_t;
-    case scalar_type::i32:
-        return clir::builtin_type::int_t;
-    case scalar_type::i64:
-        return clir::builtin_type::long_t;
-    case scalar_type::index:
-        return clir::builtin_type::long_t;
-    case scalar_type::f32:
-        return clir::builtin_type::float_t;
-    case scalar_type::f64:
-        return clir::builtin_type::double_t;
-    }
-    return clir::builtin_type::void_t;
-}
-
 clir::data_type to_clir_ty(scalar_type ty, clir::address_space as, clir::type_qualifier q) {
-    return clir::data_type(to_clir_builtin_ty(ty), as, q);
+    return to_clir_ty(ty, 1, as, q);
 }
 
-clir::builtin_type to_clir_atomic_builtin_ty(scalar_type ty) {
-    switch (ty) {
-    case scalar_type::i32:
-        return clir::builtin_type::atomic_int_t;
-    case scalar_type::i64:
-        return clir::builtin_type::atomic_long_t;
-    case scalar_type::index:
-        return clir::builtin_type::atomic_long_t;
-    case scalar_type::f32:
-        return clir::builtin_type::atomic_float_t;
-    case scalar_type::f64:
-        return clir::builtin_type::atomic_double_t;
-    default:
-        break;
+clir::data_type to_clir_ty(scalar_type ty, short size, clir::address_space as,
+                           clir::type_qualifier q) {
+    const auto base_type = [](scalar_type ty) {
+        switch (ty) {
+        case scalar_type::i1:
+            return clir::builtin_type::bool_t;
+        case scalar_type::i8:
+            return clir::builtin_type::char_t;
+        case scalar_type::i16:
+            return clir::builtin_type::short_t;
+        case scalar_type::i32:
+            return clir::builtin_type::int_t;
+        case scalar_type::i64:
+            return clir::builtin_type::long_t;
+        case scalar_type::index:
+            return clir::builtin_type::long_t;
+        case scalar_type::f32:
+            return clir::builtin_type::float_t;
+        case scalar_type::f64:
+            return clir::builtin_type::double_t;
+        }
+        return clir::builtin_type::void_t;
+    };
+    if (size == 1) {
+        return clir::data_type(base_type(ty), as, q);
     }
-    return clir::builtin_type::void_t;
+    return clir::data_type(base_type(ty), size, as, q);
 }
 
 clir::data_type to_clir_atomic_ty(scalar_type ty, clir::address_space as, clir::type_qualifier q) {
-    return clir::data_type(to_clir_atomic_builtin_ty(ty), as, q);
+    auto const base_type = [](scalar_type ty) {
+        switch (ty) {
+        case scalar_type::i32:
+            return clir::builtin_type::atomic_int_t;
+        case scalar_type::i64:
+            return clir::builtin_type::atomic_long_t;
+        case scalar_type::index:
+            return clir::builtin_type::atomic_long_t;
+        case scalar_type::f32:
+            return clir::builtin_type::atomic_float_t;
+        case scalar_type::f64:
+            return clir::builtin_type::atomic_double_t;
+        default:
+            break;
+        }
+        return clir::builtin_type::void_t;
+    };
+    return clir::data_type(base_type(ty), as, q);
 }
 
 } // namespace tinytc

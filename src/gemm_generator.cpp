@@ -4,7 +4,6 @@
 #include "gemm_generator.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
-#include "precision_helper.hpp"
 #include "scalar_type.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
@@ -162,14 +161,14 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
         [&](expr) {});
     auto const Mb = my_row_blocks_in_register * core_cfg.subgroup_size;
 
-    auto Ab = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.A}.type(Aspace)), "Ab", A);
-    auto Bb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.B}.type(Bspace)), "Bb", B);
+    auto Ab = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.A, Aspace)), "Ab", A);
+    auto Bb = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.B, Bspace)), "Bb", B);
 
     auto c_block = block_accessor_regular(c, n_bs);
 
     for (int n = 0; n < n_bs; ++n) {
         for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
-            bb.assign(c_block.get(m_block, n), precision_helper{gemm_cfg.ty.C}.zero());
+            bb.assign(c_block.get(m_block, n), constant(gemm_cfg.ty.C, 0.0));
         }
     }
 
@@ -240,8 +239,7 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
                        .get_product());
         });
 
-    auto Cb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)), "Cb",
-                                C + C_offset);
+    auto Cb = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.C, Cspace)), "Cb", C + C_offset);
     auto const c_descr = matrix_block_description{gemm_cfg.ty.C, Cspace, Mb, 1, Cb, M, C_stride};
     auto n = var("n");
     bb.add(for_loop_builder(declaration_assignment(generic_short(), n, 0), n < N, ++n)
@@ -259,8 +257,8 @@ void generator::add_mloop(block_builder &bb, expr N, var A, var B, var C, expr C
         bb, MNK[0], core_cfg.subgroup_size * row_blocks_in_register, tiling.m_tiles(),
         std::move(sg_m), [&](block_builder &bb, expr block, bool, expr inner_trip_count) {
             auto Astride_m = gemm_cfg.transA == transpose::T ? A_stride[1] : A_stride[0];
-            auto Ab = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.A}.type(Aspace)),
-                                        "Ab", A + std::move(Astride_m) * block);
+            auto Ab = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.A, Aspace)), "Ab",
+                                        A + std::move(Astride_m) * block);
             add_microkernel(bb, std::move(inner_trip_count), N, std::move(Ab), B, C,
                             C_stride[0] * std::move(block) + C_offset, alpha, beta);
         });
@@ -292,20 +290,19 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
         cols_in_register =
             tile_loop_uniformly_max_block_size(gemm_cfg.N, cols_in_register, tiling.n_tiles());
     }
-    bb.declare(
-        array_of(precision_helper{gemm_cfg.ty.C}.type(), row_blocks_in_register * cols_in_register),
-        c);
+    bb.declare(array_of(to_clir_ty(gemm_cfg.ty.C), row_blocks_in_register * cols_in_register), c);
 
     auto sg_n = bb.declare_assign(generic_uint(), "sg_n", get_sub_group_id() / tiling.m_tiles());
-    tile_loop_uniformly(
-        bb, MNK[1], max_cols, tiling.n_tiles(), std::move(sg_n),
-        [&](block_builder &bb, expr block, expr inner_trip_count) {
-            auto Bstride_n = gemm_cfg.transB == transpose::T ? B_stride[0] : B_stride[1];
-            auto Bb = bb.declare_assign(pointer_to(precision_helper{gemm_cfg.ty.B}.type(Bspace)),
-                                        "Bb", B + std::move(Bstride_n) * block);
-            add_mloop(bb, std::move(inner_trip_count), A, std::move(Bb), C,
-                      C_stride[1] * std::move(block), alpha, beta);
-        });
+    tile_loop_uniformly(bb, MNK[1], max_cols, tiling.n_tiles(), std::move(sg_n),
+                        [&](block_builder &bb, expr block, expr inner_trip_count) {
+                            auto Bstride_n =
+                                gemm_cfg.transB == transpose::T ? B_stride[0] : B_stride[1];
+                            auto Bb =
+                                bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.B, Bspace)),
+                                                  "Bb", B + std::move(Bstride_n) * block);
+                            add_mloop(bb, std::move(inner_trip_count), A, std::move(Bb), C,
+                                      C_stride[1] * std::move(block), alpha, beta);
+                        });
 }
 
 ::clir::func generator::function(std::string_view name) {
@@ -314,11 +311,11 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
     auto C = var("C");
 
     auto fb = ::clir::function_builder{std::string(name)};
-    auto const scalar = [&](precision_helper const &fph, std::optional<double> const &val,
+    auto const scalar = [&](scalar_type ty, std::optional<double> const &val,
                             std::string const &prefix) -> expr {
         auto v = var{prefix};
-        fb.argument(fph.type(), v);
-        return val ? fph.constant(*val) : v;
+        fb.argument(to_clir_ty(ty), v);
+        return val ? constant(ty, *val) : v;
     };
     auto const shape = [&](std::int64_t shape, expr &target, std::string const &prefix) {
         auto v = var{prefix};
@@ -337,13 +334,13 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
     shape(gemm_cfg.M, MNK[0], "M");
     shape(gemm_cfg.N, MNK[1], "N");
     shape(gemm_cfg.K, MNK[2], "K");
-    expr alpha = scalar(precision_helper{gemm_cfg.ty.alpha}, gemm_cfg.alpha, "alpha");
-    fb.argument(pointer_to(precision_helper{gemm_cfg.ty.A}.type(Aspace)), A);
+    expr alpha = scalar(gemm_cfg.ty.alpha, gemm_cfg.alpha, "alpha");
+    fb.argument(pointer_to(to_clir_ty(gemm_cfg.ty.A, Aspace)), A);
     stride(gemm_cfg.A_stride, A_stride, "A_stride");
-    fb.argument(pointer_to(precision_helper{gemm_cfg.ty.B}.type(Bspace)), B);
+    fb.argument(pointer_to(to_clir_ty(gemm_cfg.ty.B, Bspace)), B);
     stride(gemm_cfg.B_stride, B_stride, "B_stride");
-    expr beta = scalar(precision_helper{gemm_cfg.ty.beta}, gemm_cfg.beta, "beta");
-    fb.argument(pointer_to(precision_helper{gemm_cfg.ty.C}.type(Cspace)), C);
+    expr beta = scalar(gemm_cfg.ty.beta, gemm_cfg.beta, "beta");
+    fb.argument(pointer_to(to_clir_ty(gemm_cfg.ty.C, Cspace)), C);
     stride(gemm_cfg.C_stride, C_stride, "C_stride");
 
     fb.body([&](block_builder &bb) { add_function_body(bb, A, B, C, alpha, beta); });
