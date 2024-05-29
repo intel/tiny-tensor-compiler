@@ -23,7 +23,7 @@ namespace tinytc {
 short bits(scalar_type ty);
 clir::expr constant(scalar_type ty, std::int64_t value);
 clir::expr constant(scalar_type ty, double value);
-clir::expr as_type(clir::builtin_type ty, clir::expr e);
+clir::expr complex_mul(scalar_type ty, clir::expr a, clir::expr b);
 clir::expr vload_helper(short vec_size, clir::expr offset, clir::expr ptr);
 clir::expr sub_group_block_read_helper(clir::expr pointer, scalar_type ty, clir::address_space as);
 clir::expr sub_group_block_write_helper(clir::expr pointer, clir::expr data, scalar_type ty,
@@ -71,14 +71,13 @@ class block_accessor {
 
 class block_accessor_regular : public block_accessor {
   public:
-    block_accessor_regular(clir::expr block, int Kb, clir::expr offset = clir::expr{nullptr});
+    block_accessor_regular(clir::expr block, int Kb);
     auto get(int m_block, int k) const -> clir::expr override;
-    inline auto offset(clir::expr offset) { offset_ = std::move(offset); }
+    inline void offset(clir::expr offset) { offset_ = std::move(offset); }
 
   private:
-    clir::expr block_;
+    clir::expr block_, offset_;
     int Kb_;
-    clir::expr offset_;
 };
 
 class block_accessor_vector : public block_accessor {
@@ -110,14 +109,16 @@ auto read_matrix_block_regular(clir::block_builder &bb, matrix_block_description
 auto read_matrix_block_vector(clir::block_builder &bb, matrix_block_description const &d,
                               int M_mode, core_config const &core_cfg, char const *block_name)
     -> std::unique_ptr<block_accessor>;
+
 // Read MbxKb block
 auto read_matrix_block(clir::block_builder &bb, matrix_block_description const &d, int M_mode,
                        core_config const &core_cfg, char const *block_name)
     -> std::unique_ptr<block_accessor>;
 
+// Write MbxKb block
 void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
-                        matrix_block_description const &d, bool is_atomic, clir::expr alpha,
-                        clir::expr beta, core_config const &core_cfg);
+                        matrix_block_description const &d, bool is_atomic, clir::expr beta,
+                        core_config const &core_cfg);
 
 } // namespace tinytc
 

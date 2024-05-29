@@ -12,6 +12,7 @@
 args arg_parser::parse_args(int argc, char **argv) {
     args a = {};
     a.internal_repetitions = 1;
+    a.ty = tinytc::scalar_type::f32;
     a.transA = tinytc::transpose::N;
     a.transB = tinytc::transpose::N;
     a.beta = 0.0;
@@ -42,10 +43,14 @@ args arg_parser::parse_args(int argc, char **argv) {
                 } else if (std::strcmp(argv[i], "-p") == 0 ||
                            std::strcmp(argv[i], "--precision") == 0) {
                     ++i;
-                    if (argv[i][0] == 'd') {
-                        a.double_precision = true;
-                    } else if (argv[i][0] == 's') {
-                        a.double_precision = false;
+                    if (argv[i][0] == 'd' || strcmp(argv[i], "f64") == 0) {
+                        a.ty = tinytc::scalar_type::f64;
+                    } else if (argv[i][0] == 's' || strcmp(argv[i], "f32") == 0) {
+                        a.ty = tinytc::scalar_type::f32;
+                    } else if (strcmp(argv[i], "c64") == 0) {
+                        a.ty = tinytc::scalar_type::c64;
+                    } else if (strcmp(argv[i], "c32") == 0) {
+                        a.ty = tinytc::scalar_type::c32;
                     } else {
                         fail();
                     }
@@ -83,7 +88,7 @@ positional arguments:
 optional arguments:
     -h, --help          Show help and quit
     -i, --internal-reps Number of GEMM repetitions inside kernel (default: 1)
-    -p, --precision     Precision (single = s, double = d)
+    -p, --precision     Precision (single = s or f32, double = d or f64, complex = c32, long complex = c64)
     --trans-a           Transpose A matrix
     --trans-b           Transpose B matrix
     -v, --verify        Verify optimized implementation

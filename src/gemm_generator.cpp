@@ -22,6 +22,7 @@
 
 #include <array>
 #include <bit>
+#include <cassert>
 #include <cstddef>
 #include <memory>
 #include <sstream>
@@ -128,6 +129,8 @@ class generator {
               core_config const &core_cfg, address_space As, address_space Bs, address_space Cs)
         : gemm_cfg(gemm_cfg), tiling(tiling), core_cfg(core_cfg), Aspace(As), Bspace(Bs),
           Cspace(Cs) {}
+    bool use_double_buffering() const;
+    void multiply_update(block_builder &bb, expr a, expr b, int n_offset, expr c, expr c_im);
     void add_microkernel(block_builder &bb, expr M, expr N, var A, var B, var C, expr C_offset,
                          expr alpha, expr beta);
     void add_mloop(block_builder &bb, expr N, var A, var B, var C, expr C_offset, expr alpha,
@@ -142,10 +145,42 @@ class generator {
     address_space Aspace, Bspace, Cspace;
     int row_blocks_in_register = 1;
     int cols_in_register = 1;
-    var c, m;
+    var c_acc, c_acc_im, m;
     std::array<expr, 3> MNK;
     std::array<expr, 2> A_stride, B_stride, C_stride;
 };
+
+bool generator::use_double_buffering() const {
+    return is_complex_type(gemm_cfg.ty.A) && is_complex_type(gemm_cfg.ty.B);
+}
+
+void generator::multiply_update(block_builder &bb, expr a, expr b, int n_offset, expr c,
+                                expr c_im) {
+    if (is_complex_type(gemm_cfg.ty.A)) {
+        if (is_complex_type(gemm_cfg.ty.B)) {
+            assert(use_double_buffering());
+            auto b_bc_re = sub_group_broadcast(b.s(0), n_offset);
+            auto b_bc_im = sub_group_broadcast(b.s(1), n_offset);
+            bb.add(add_into(c, a * b_bc_re));
+            bb.add(add_into(c_im, a * b_bc_im));
+        } else {
+            auto b_bc = sub_group_broadcast(b, n_offset);
+            bb.add(add_into(std::move(c), std::move(a) * std::move(b_bc)));
+        }
+    } else if (is_complex_type(gemm_cfg.ty.B)) {
+        auto b_bc_re = sub_group_broadcast(b.s(0), n_offset);
+        auto b_bc_im = sub_group_broadcast(b.s(1), n_offset);
+        bb.add(add_into(c.s(0), a * b_bc_re));
+        bb.add(add_into(c.s(1), a * b_bc_im));
+    } else {
+        auto b_bc = sub_group_broadcast(b, n_offset);
+        if (gemm_cfg.ty.A == gemm_cfg.ty.B && gemm_cfg.ty.B == gemm_cfg.ty.C) {
+            bb.assign(c, fma(std::move(a), std::move(b_bc), c));
+        } else {
+            bb.add(add_into(std::move(c), std::move(a) * std::move(b_bc)));
+        }
+    }
+}
 
 void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B, var C,
                                 expr C_offset, expr alpha, expr beta) {
@@ -164,57 +199,68 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
     auto Ab = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.A, Aspace)), "Ab", A);
     auto Bb = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.B, Bspace)), "Bb", B);
 
-    auto c_block = block_accessor_regular(c, n_bs);
+    auto c_block = block_accessor_regular(c_acc, n_bs);
+    auto c_block_im = block_accessor_regular(c_acc_im, n_bs);
 
     for (int n = 0; n < n_bs; ++n) {
         for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
             bb.assign(c_block.get(m_block, n), constant(gemm_cfg.ty.C, 0.0));
+            if (use_double_buffering()) {
+                bb.assign(c_block_im.get(m_block, n), constant(gemm_cfg.ty.C, 0.0));
+            }
         }
     }
 
     auto const compute_c = [&](block_builder &bb, int Kb, ::clir::expr K0, ::clir::expr K1) {
         auto kb = var("kb");
-        bb.add(for_loop_builder(declaration_assignment(generic_short(), kb, std::move(K0)),
-                                kb < std::move(K1), add_into(kb, Kb))
-                   .body([&](block_builder &bb) {
-                       auto const a_descr =
-                           matrix_block_description{gemm_cfg.ty.A, Aspace, Mb, Kb, Ab, M, A_stride};
-                       auto const am = gemm_cfg.transA == transpose::T ? 1 : 0;
-                       auto const a = read_matrix_block(bb, a_descr, am, core_cfg, "a");
+        bb.add(
+            for_loop_builder(declaration_assignment(generic_short(), kb, std::move(K0)),
+                             kb < std::move(K1), add_into(kb, Kb))
+                .body([&](block_builder &bb) {
+                    auto const a_descr =
+                        matrix_block_description{gemm_cfg.ty.A, Aspace, Mb, Kb, Ab, M, A_stride};
+                    auto const am = gemm_cfg.transA == transpose::T ? 1 : 0;
+                    auto const a = read_matrix_block(bb, a_descr, am, core_cfg, "a");
 
-                       auto const b_descr = matrix_block_description{
-                           gemm_cfg.ty.B, Bspace, n_bs, Kb, Bb, N, B_stride};
-                       auto const bn = gemm_cfg.transB == transpose::T ? 0 : 1;
-                       auto const b = read_matrix_block(bb, b_descr, bn, core_cfg, "b");
+                    auto const b_descr =
+                        matrix_block_description{gemm_cfg.ty.B, Bspace, n_bs, Kb, Bb, N, B_stride};
+                    auto const bn = gemm_cfg.transB == transpose::T ? 0 : 1;
+                    auto const b = read_matrix_block(bb, b_descr, bn, core_cfg, "b");
 
-                       const int nbb = 4;
-                       for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
-                           for (int nb = 0; nb < n_bs; nb += nbb) {
-                               for (int k = 0; k < Kb; ++k) {
-                                   for (int n = 0; n < nbb; ++n) {
-                                       if (nb + n < n_bs) {
-                                           auto const n_block = (nb + n) / core_cfg.subgroup_size;
-                                           auto const n_offset = (nb + n) % core_cfg.subgroup_size;
-                                           auto my_a = a->get(m_block, k);
-                                           auto my_b =
-                                               sub_group_broadcast(b->get(n_block, k), n_offset);
-                                           auto my_c = c_block.get(m_block, nb + n);
-                                           if (gemm_cfg.ty.A == gemm_cfg.ty.B &&
-                                               gemm_cfg.ty.B == gemm_cfg.ty.C) {
-                                               bb.assign(my_c, fma(std::move(my_a), std::move(my_b),
-                                                                   my_c));
-                                           } else {
-                                               bb.add(add_into(std::move(my_c),
-                                                               std::move(my_a) * std::move(my_b)));
-                                           }
-                                       }
-                                   }
-                               }
-                           }
-                       }
-                   })
-                   .attribute(opencl_unroll_hint(1))
-                   .get_product());
+                    const int nbb = 4;
+                    for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
+                        for (int nb = 0; nb < n_bs; nb += nbb) {
+                            for (int k = 0; k < Kb; ++k) {
+                                for (int n = 0; n < nbb; ++n) {
+                                    if (nb + n < n_bs) {
+                                        auto const n_block = (nb + n) / core_cfg.subgroup_size;
+                                        auto const n_offset = (nb + n) % core_cfg.subgroup_size;
+                                        /*auto my_a = a->get(m_block, k);
+                                        auto my_b =
+                                            sub_group_broadcast(b->get(n_block, k), n_offset);
+                                        auto my_c = c_block.get(m_block, nb + n);
+                                        if (gemm_cfg.ty.A == gemm_cfg.ty.B &&
+                                            gemm_cfg.ty.B == gemm_cfg.ty.C) {
+                                            bb.assign(my_c, fma(std::move(my_a), std::move(my_b),
+                                                                my_c));
+                                        } else {
+                                            bb.add(add_into(std::move(my_c),
+                                                            std::move(my_a) * std::move(my_b)));
+                                        }*/
+                                        auto my_a = a->get(m_block, k);
+                                        auto my_b = b->get(n_block, k);
+                                        auto c_re = c_block.get(m_block, nb + n);
+                                        auto c_im = c_block_im.get(m_block, nb + n);
+                                        multiply_update(bb, std::move(my_a), std::move(my_b),
+                                                        n_offset, std::move(c_re), std::move(c_im));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+                .attribute(opencl_unroll_hint(1))
+                .get_product());
     };
     dispatch_constant_dynamic(
         MNK[2],
@@ -242,10 +288,32 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
     auto Cb = bb.declare_assign(pointer_to(to_clir_ty(gemm_cfg.ty.C, Cspace)), "Cb", C + C_offset);
     auto const c_descr = matrix_block_description{gemm_cfg.ty.C, Cspace, Mb, 1, Cb, M, C_stride};
     auto n = var("n");
+    c_block.offset(n);
+    c_block_im.offset(n);
     bb.add(for_loop_builder(declaration_assignment(generic_short(), n, 0), n < N, ++n)
                .body([&](block_builder &bb) {
-                   c_block.offset(n);
-                   write_matrix_block(bb, c_block, c_descr, gemm_cfg.atomic, alpha, beta, core_cfg);
+                   if (use_double_buffering()) {
+                       for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
+                           auto c_im = c_block_im.get(m_block, 0);
+                           auto c_ty = to_clir_ty(gemm_cfg.ty.C);
+                           bb.add(add_into(c_block.get(m_block, 0),
+                                           init_vector(c_ty, {-c_im.s(1), c_im.s(0)})));
+                       }
+                   }
+                   for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
+                       if (is_complex_type(gemm_cfg.ty.alpha)) {
+                           auto c = c_block.get(m_block, 0);
+                           auto myalpha = gemm_cfg.alpha
+                                              ? bb.declare_assign(to_clir_ty(gemm_cfg.ty.alpha),
+                                                                  "alpha", alpha)
+                                              : alpha;
+                           bb.assign(c, complex_mul(gemm_cfg.ty.C, myalpha, c));
+
+                       } else {
+                           bb.add(multiply_into(c_block.get(m_block, 0), alpha));
+                       }
+                   }
+                   write_matrix_block(bb, c_block, c_descr, gemm_cfg.atomic, beta, core_cfg);
                })
                .get_product());
 }
@@ -266,10 +334,17 @@ void generator::add_mloop(block_builder &bb, expr N, var A, var B, var C, expr C
 
 void generator::add_function_body(block_builder &bb, var A, var B, var C, expr alpha, expr beta) {
     m = bb.declare_assign(generic_uint(), "m", get_sub_group_local_id());
-    c = var("c");
+    c_acc = var("c");
+    c_acc_im = var("c_im");
 
-    auto [max_row_blocks, max_cols] = max_register_block_gemm(
-        size(gemm_cfg.ty.C), core_cfg.subgroup_size, core_cfg.register_space);
+    auto register_space = core_cfg.register_space;
+    if (use_double_buffering()) {
+        // We buffer the real / imag part separately, so we only have half the register space
+        // available for one of the buffers
+        register_space /= 2;
+    }
+    auto [max_row_blocks, max_cols] =
+        max_register_block_gemm(size(gemm_cfg.ty.C), core_cfg.subgroup_size, register_space);
     row_blocks_in_register = max_row_blocks;
     cols_in_register = max_cols;
     if (!is_dynamic_value(gemm_cfg.M)) {
@@ -290,7 +365,12 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
         cols_in_register =
             tile_loop_uniformly_max_block_size(gemm_cfg.N, cols_in_register, tiling.n_tiles());
     }
-    bb.declare(array_of(to_clir_ty(gemm_cfg.ty.C), row_blocks_in_register * cols_in_register), c);
+    bb.declare(array_of(to_clir_ty(gemm_cfg.ty.C), row_blocks_in_register * cols_in_register),
+               c_acc);
+    if (use_double_buffering()) {
+        bb.declare(array_of(to_clir_ty(gemm_cfg.ty.C), row_blocks_in_register * cols_in_register),
+                   c_acc_im);
+    }
 
     auto sg_n = bb.declare_assign(generic_uint(), "sg_n", get_sub_group_id() / tiling.m_tiles());
     tile_loop_uniformly(bb, MNK[1], max_cols, tiling.n_tiles(), std::move(sg_n),

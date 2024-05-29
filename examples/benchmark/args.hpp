@@ -19,7 +19,7 @@ struct test_case {
 struct args {
     std::vector<test_case> tc;
     int internal_repetitions;
-    bool double_precision;
+    tinytc::scalar_type ty;
     bool help;
     tinytc::transpose transA;
     tinytc::transpose transB;

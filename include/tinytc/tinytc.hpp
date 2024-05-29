@@ -7,6 +7,7 @@
 #include "tinytc/tinytc.h"
 #include "tinytc/types.hpp"
 
+#include <complex>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -106,6 +107,14 @@ template <> struct to_scalar_type<float> {
 //! to_scalar_type specialization
 template <> struct to_scalar_type<double> {
     static constexpr scalar_type value = scalar_type::f64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::complex<float>> {
+    static constexpr scalar_type value = scalar_type::c32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::complex<double>> {
+    static constexpr scalar_type value = scalar_type::c64; ///< value
 };
 /**
  * Convenience variable for to_scalar_type.
