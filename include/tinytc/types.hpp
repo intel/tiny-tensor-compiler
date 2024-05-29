@@ -205,7 +205,9 @@ enum class scalar_type {
     i64 = tinytc_scalar_type_i64,     ///< Signed 64 bit integer
     index = tinytc_scalar_type_index, ///< Unsigned Integer type for indices
     f32 = tinytc_scalar_type_f32,     ///< Single precision floating point (32 bit)
-    f64 = tinytc_scalar_type_f64      ///< Double precision floating point (64 bit)
+    f64 = tinytc_scalar_type_f64,     ///< Double precision floating point (64 bit)
+    c32 = tinytc_scalar_type_c32,     ///< Single precision complex (2x32 bit)
+    c64 = tinytc_scalar_type_c64      ///< Double precision complex (2x64 bit)
 };
 
 //! Arithmetic operations

@@ -23,34 +23,15 @@ namespace tinytc {
 
 short bits(scalar_type ty) { return size(ty) * 8; }
 expr constant(scalar_type ty, std::int64_t value) { return expr(value, bits(ty)); }
-expr constant(scalar_type ty, double value) { return expr(value, bits(ty)); }
-
-expr as_type(builtin_type ty, expr e) {
-    switch (ty) {
-    case builtin_type::char_t:
-        return as_char(std::move(e));
-    case builtin_type::uchar_t:
-        return as_uchar(std::move(e));
-    case builtin_type::short_t:
-        return as_short(std::move(e));
-    case builtin_type::ushort_t:
-        return as_ushort(std::move(e));
-    case builtin_type::int_t:
-        return as_int(std::move(e));
-    case builtin_type::uint_t:
-        return as_uint(std::move(e));
-    case builtin_type::long_t:
-        return as_long(std::move(e));
-    case builtin_type::ulong_t:
-        return as_ulong(std::move(e));
-    case builtin_type::float_t:
-        return as_float(std::move(e));
-    case builtin_type::double_t:
-        return as_double(std::move(e));
-    default:
-        break;
+expr constant(scalar_type ty, double value) {
+    if (is_complex_type(ty)) {
+        const auto ety = element_type(ty);
+        return init_vector(to_clir_ty(ty), {constant(ety, value), constant(ety, 0.0)});
     }
-    return e;
+    return expr(value, bits(ty));
+}
+expr complex_mul(scalar_type ty, expr a, expr b) {
+    return a * b.s(0) + init_vector(to_clir_ty(ty), {-a.s(1), a.s(0)}) * b.s(1);
 }
 
 expr vload_helper(short vec_size, expr offset, expr ptr) {
@@ -127,7 +108,15 @@ void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, a
     if (is_atomic) {
         atomic_store_helper(bb, std::move(dst), ty, as, std::move(value), std::move(beta));
     } else {
-        bb.assign(dereference(dst), std::move(value) + std::move(beta) * dereference(dst));
+        auto c_scaled = clir::expr{nullptr};
+        if (is_complex_type(ty)) {
+            c_scaled = bb.declare_assign(to_clir_ty(ty), "c_scaled", dereference(dst));
+            auto beta1 = bb.declare_assign(to_clir_ty(ty), "beta", beta);
+            bb.assign(c_scaled, complex_mul(ty, beta1, c_scaled));
+        } else {
+            c_scaled = beta * dereference(dst);
+        }
+        bb.assign(dereference(dst), std::move(value) + std::move(c_scaled));
     }
 }
 
@@ -312,8 +301,8 @@ void tile_loop_uniformly_dynamic(block_builder &bb, expr loop_trip_count, unsign
                .get_product());
 }
 
-block_accessor_regular::block_accessor_regular(expr block, int Kb, expr offset)
-    : block_(std::move(block)), Kb_(Kb), offset_(std::move(offset)) {}
+block_accessor_regular::block_accessor_regular(expr block, int Kb)
+    : block_(std::move(block)), offset_{clir::expr{nullptr}}, Kb_(Kb) {}
 auto block_accessor_regular::get(int m_block, int k) const -> expr {
     const auto i = k + m_block * Kb_;
     if (offset_) {
@@ -410,7 +399,7 @@ auto read_matrix_block(block_builder &bb, matrix_block_description const &d, int
     -> std::unique_ptr<block_accessor> {
     assert(M_mode == 0 || M_mode == 1);
 
-    if (d.is_unit_stride(1 - M_mode) &&
+    if (d.is_unit_stride(1 - M_mode) && !is_complex_type(d.ty) &&
         (d.Kb == 2 || d.Kb == 3 || d.Kb == 4 || d.Kb == 8 || d.Kb == 16)) {
         return read_matrix_block_vector(bb, d, M_mode, core_cfg, block_name);
     }
@@ -418,7 +407,7 @@ auto read_matrix_block(block_builder &bb, matrix_block_description const &d, int
 }
 
 void write_matrix_block(block_builder &bb, block_accessor const &block,
-                        matrix_block_description const &d, bool is_atomic, expr alpha, expr beta,
+                        matrix_block_description const &d, bool is_atomic, expr beta,
                         core_config const &core_cfg) {
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
 
@@ -429,7 +418,7 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
                 store_helper(bb, is_atomic,
                              d.pointer + d.stride[0] * (get_sub_group_local_id() +
                                                         m_block * core_cfg.subgroup_size),
-                             d.ty, d.as, alpha * block.get(m_block, k), beta);
+                             d.ty, d.as, block.get(m_block, k), beta);
             };
             if (m_block >= first_m_block_with_check) {
                 bb.add(if_selection_builder(d.condition(m_block, core_cfg.subgroup_size))

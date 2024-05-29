@@ -220,7 +220,9 @@ typedef enum {
     tinytc_scalar_type_i64 = 4,   ///< Signed 64 bit integer
     tinytc_scalar_type_index = 5, ///< Integer type for indices
     tinytc_scalar_type_f32 = 6,   ///< Single precision floating point (32 bit)
-    tinytc_scalar_type_f64 = 7    ///< Double precision floating point (64 bit)
+    tinytc_scalar_type_f64 = 7,   ///< Double precision floating point (64 bit)
+    tinytc_scalar_type_c32 = 8,   ///< Single precision complex (2x32 bit)
+    tinytc_scalar_type_c64 = 9    ///< Double precision complex (2x64 bit)
 } tinytc_scalar_type_t;
 
 //! Arithmetic operations

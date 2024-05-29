@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <complex>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -129,8 +130,8 @@ template <typename T> void test(queue q, args &a) {
         q.copy(C, C_host, total_reals).wait();
         std::size_t num_err = 0;
         for (std::size_t i = 0; i < M * N * howmany; ++i) {
-            auto err = std::abs(C_host[i] - C_ref_host[i]);
-            if (err > 10.0 * std::numeric_limits<T>::epsilon()) {
+            const auto err = std::abs(C_host[i] - C_ref_host[i]);
+            if (err > 10.0 * std::numeric_limits<decltype(err)>::epsilon()) {
                 if (num_err < 10) {
                     std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]
                               << std::endl;
@@ -143,7 +144,6 @@ template <typename T> void test(queue q, args &a) {
         }
     };
 
-    auto const &type = typeid(T);
     for (auto &c : a.tc) {
         auto na = c.m * c.k;
         auto nb = c.k * c.n;
@@ -163,7 +163,7 @@ template <typename T> void test(queue q, args &a) {
                     auto c_ref = C_ref + batch * nc;
                     for (std::int64_t mb = m; mb < c.m; mb += 32) {
                         for (std::int64_t n = 0; n < c.n; ++n) {
-                            auto c_acc = 0.0f;
+                            auto c_acc = T(0.0);
                             for (std::int64_t k = 0; k < c.k; ++k) {
                                 c_acc += a[transa ? k + mb * c.k : mb + k * c.m] *
                                          b[transb ? n + k * c.n : k + n * c.k];
@@ -185,9 +185,10 @@ template <typename T> void test(queue q, args &a) {
         }
 
         double min_exec_time_ns = 0.0;
+        constexpr auto element_ty = to_scalar_type_v<T>;
         try {
             auto src = gemm_kernel_with_inner_repetition(
-                to_scalar_type_v<T>, a.transA, a.transB, a.atomic, c.m, c.n, c.k,
+                element_ty, a.transA, a.transB, a.atomic, c.m, c.n, c.k,
                 {1, a.transA == transpose::T ? c.k : c.m},
                 {1, a.transB == transpose::T ? c.n : c.k}, a.beta, {1, c.m}, a.internal_repetitions,
                 q);
@@ -209,14 +210,25 @@ template <typename T> void test(queue q, args &a) {
                      }).wait();
                 });
 
-                auto gflops =
-                    a.internal_repetitions * 2 * c.m * c.n * c.k * howmany / min_exec_time_ns;
+                auto ops_per_mnk = 0;
+                switch (element_ty) {
+                case scalar_type::c32:
+                case scalar_type::c64:
+                    ops_per_mnk = 8;
+                    break;
+                default:
+                    ops_per_mnk = 2;
+                    break;
+                }
+
+                auto gflops = a.internal_repetitions * ops_per_mnk * c.m * c.n * c.k * howmany /
+                              min_exec_time_ns;
                 auto roofline_gflops =
                     std::min(512 * 32 * 1.6e9, a.internal_repetitions * 2 * c.m * c.n * c.k /
                                                    (sizeof(T) * (na + nb + nc) / 1.1e12)) /
                     1e9;
-                std::cout << type.name() << "," << c.m << "," << c.n << "," << c.k << "," << howmany
-                          << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
+                std::cout << to_string(element_ty) << "," << c.m << "," << c.n << "," << c.k << ","
+                          << howmany << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
                           << roofline_gflops << "," << std::round(gflops / roofline_gflops * 100)
                           << "%," << a.internal_repetitions << std::endl;
             }
@@ -260,10 +272,21 @@ int main(int argc, char **argv) {
                  "repetitions"
               << std::endl;
     try {
-        if (a.double_precision) {
-            test<double>(std::move(q), a);
-        } else {
+        switch (a.ty) {
+        case scalar_type::f32:
             test<float>(std::move(q), a);
+            break;
+        case scalar_type::f64:
+            test<double>(std::move(q), a);
+            break;
+        case scalar_type::c32:
+            test<std::complex<float>>(std::move(q), a);
+            break;
+        case scalar_type::c64:
+            test<std::complex<double>>(std::move(q), a);
+            break;
+        default:
+            return -1;
         }
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

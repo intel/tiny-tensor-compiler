@@ -40,7 +40,7 @@ lex:
         global_identifier     = "@" identifier;
 
         integer_type          = "i" ("1" | "8" | "16" | "32" | "64") | "index";
-        floating_type         = "f" ("32" | "64");
+        floating_type         = ("f" | "c") ("32" | "64");
 
         digit                 = [0-9];
         hexdigit              = [0-9a-fA-F];
@@ -260,6 +260,8 @@ scalar_type lexer::lex_floating_type(char const *s, char const *) {
 
         "f32"  { return scalar_type::f32; }
         "f64"  { return scalar_type::f64; }
+        "c32"  { return scalar_type::c32; }
+        "c64"  { return scalar_type::c64; }
         $      { return {}; }
         *      { return {}; }
     */

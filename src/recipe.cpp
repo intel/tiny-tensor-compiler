@@ -32,6 +32,10 @@ auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_va
         return is_argument_zero<float>(arg_size, arg_value);
     case scalar_type::f64:
         return is_argument_zero<double>(arg_size, arg_value);
+    case scalar_type::c32:
+        //return is_argument_zero<float>(arg_size, arg_value);
+    case scalar_type::c64:
+        //return is_argument_zero<double>(arg_size, arg_value);
     case scalar_type::i1:
         break;
     };
