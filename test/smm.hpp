@@ -40,6 +40,10 @@
 
 #define TEST_PRECISIONS float, double
 
+template <typename T> struct is_complex : public std::false_type {};
+template <typename T> struct is_complex<std::complex<T>> : public std::true_type {};
+template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
+
 template <typename T>
 void small_gemm_batched_ref(tinytc::transpose transA, tinytc::transpose transB, T alpha,
                             tensor3<T> const &A, tensor3<T> const &B, T beta, tensor3<T> &C) {
@@ -111,7 +115,7 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
     };
 
     auto gpu_rt = std::make_shared<R>();
-    if constexpr (std::is_same_v<T, double>) {
+    if constexpr (std::is_same_v<T, double> || std::is_same_v<T, std::complex<double>>) {
         if (!gpu_rt->supports_fp64()) {
             WARN_MESSAGE(false, "Double precision tests need double precision device support");
             return;
@@ -122,7 +126,13 @@ void check_small_gemm_batched(tinytc::transpose transA, tinytc::transpose transB
         T *data = x.data();
         std::size_t n = x.size();
         for (std::size_t i = 0; i < n; ++i) {
-            data[i] = static_cast<T>(i % 101);
+            constexpr std::size_t prime = 101;
+            if constexpr (is_complex_v<T>) {
+                data[i] = T{static_cast<T::value_type>((2 * i) % prime),
+                            static_cast<T::value_type>((2 * i + 1) % prime)};
+            } else {
+                data[i] = static_cast<T>(i % prime);
+            }
         }
     };
 

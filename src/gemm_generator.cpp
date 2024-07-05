@@ -301,17 +301,8 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
                        }
                    }
                    for (int m_block = 0; m_block < my_row_blocks_in_register; ++m_block) {
-                       if (is_complex_type(gemm_cfg.ty.alpha)) {
-                           auto c = c_block.get(m_block, 0);
-                           auto myalpha = gemm_cfg.alpha
-                                              ? bb.declare_assign(to_clir_ty(gemm_cfg.ty.alpha),
-                                                                  "alpha", alpha)
-                                              : alpha;
-                           bb.assign(c, complex_mul(gemm_cfg.ty.C, myalpha, c));
-
-                       } else {
-                           bb.add(multiply_into(c_block.get(m_block, 0), alpha));
-                       }
+                       auto c = c_block.get(m_block, 0);
+                       bb.assign(c, multiply(gemm_cfg.ty.alpha, gemm_cfg.ty.C, alpha, c));
                    }
                    write_matrix_block(bb, c_block, c_descr, gemm_cfg.atomic, beta, core_cfg);
                })

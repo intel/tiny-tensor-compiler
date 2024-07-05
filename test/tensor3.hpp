@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <array>
+#include <complex>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -51,8 +52,8 @@ template <typename T> bool compare(tensor3<T> const &A, tensor3<T> const &B) {
     for (std::uint32_t k = 0; k < A.shape(2); ++k) {
         for (std::uint32_t j = 0; j < A.shape(1); ++j) {
             for (std::uint32_t i = 0; i < A.shape(0); ++i) {
-                constexpr auto eps = 10.0 * std::numeric_limits<T>::epsilon();
-                REQUIRE(A(i, j, k) == doctest::Approx(B(i, j, k)).epsilon(eps));
+                constexpr auto eps = 10.0 * std::numeric_limits<decltype(std::abs(T{}))>::epsilon();
+                REQUIRE(std::abs(A(i, j, k) - B(i, j, k)) == doctest::Approx(0.0).epsilon(eps));
             }
         }
     }

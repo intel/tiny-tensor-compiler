@@ -30,6 +30,13 @@ expr constant(scalar_type ty, double value) {
     }
     return expr(value, bits(ty));
 }
+expr multiply(scalar_type ty_a, scalar_type ty_b, expr a, expr b) {
+    if (is_complex_type(ty_a) && is_complex_type(ty_b)) {
+        return a * b.s(0) + init_vector(to_clir_ty(ty_a), {-a.s(1), a.s(0)}) * b.s(1);
+    }
+    return a * b;
+}
+
 expr complex_mul(scalar_type ty, expr a, expr b) {
     return a * b.s(0) + init_vector(to_clir_ty(ty), {-a.s(1), a.s(0)}) * b.s(1);
 }
