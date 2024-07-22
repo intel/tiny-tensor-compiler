@@ -304,7 +304,8 @@ void generator::add_microkernel(block_builder &bb, expr M, expr N, var A, var B,
                        auto c = c_block.get(m_block, 0);
                        bb.assign(c, multiply(gemm_cfg.ty.alpha, gemm_cfg.ty.C, alpha, c));
                    }
-                   write_matrix_block(bb, c_block, c_descr, gemm_cfg.atomic, beta, core_cfg);
+                   write_matrix_block(bb, c_block, c_descr, gemm_cfg.atomic, gemm_cfg.ty.beta, beta,
+                                      core_cfg);
                })
                .get_product());
 }

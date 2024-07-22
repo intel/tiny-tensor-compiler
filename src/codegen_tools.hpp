@@ -24,16 +24,16 @@ short bits(scalar_type ty);
 clir::expr constant(scalar_type ty, std::int64_t value);
 clir::expr constant(scalar_type ty, double value);
 clir::expr multiply(scalar_type ty_a, scalar_type ty_b, clir::expr a, clir::expr b);
-clir::expr complex_mul(scalar_type ty, clir::expr a, clir::expr b);
 clir::expr vload_helper(short vec_size, clir::expr offset, clir::expr ptr);
 clir::expr sub_group_block_read_helper(clir::expr pointer, scalar_type ty, clir::address_space as);
 clir::expr sub_group_block_write_helper(clir::expr pointer, clir::expr data, scalar_type ty,
                                         clir::address_space as);
 
 void store_helper(clir::block_builder &bb, bool is_atomic, clir::expr dst, scalar_type ty,
-                  clir::address_space as, clir::expr value, clir::expr beta);
+                  clir::address_space as, clir::expr value, scalar_type beta_ty, clir::expr beta);
 void atomic_store_helper(clir::block_builder &bb, clir::expr dst, scalar_type ty,
-                         clir::address_space as, clir::expr value, clir::expr beta);
+                         clir::address_space as, clir::expr value, scalar_type beta_ty,
+                         clir::expr beta);
 
 void dispatch_constant_dynamic(clir::expr e, std::function<void(std::int64_t)> const &const_case,
                                std::function<void(clir::expr)> const &dyn_case);
@@ -118,8 +118,8 @@ auto read_matrix_block(clir::block_builder &bb, matrix_block_description const &
 
 // Write MbxKb block
 void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
-                        matrix_block_description const &d, bool is_atomic, clir::expr beta,
-                        core_config const &core_cfg);
+                        matrix_block_description const &d, bool is_atomic, scalar_type beta_ty,
+                        clir::expr beta, core_config const &core_cfg);
 
 } // namespace tinytc
 

@@ -33,14 +33,16 @@ func @ger_atomic(%A: memref<f32x32>, %B: memref<f32x2>, %C: memref<f32x32x2>) {
     ger.atomic 1.0, %A, %B, 1.0, %C
         : f32, memref<f32x32>, memref<f32x2>, f32, memref<f32x32x2>
 ; CHECK:      global float* c = Cb + (blck1 + m) * 1;
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * A[(blck1 + m) * 1] * b, memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT: float ab = A[(blck1 + m) * 1] * b;
+; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * ab, memory_order_relaxed, memory_scope_work_group);
 }
 
 func @hadamard_atomic(%A: memref<f32x32>, %B: memref<f32x32>, %C: memref<f32x32>) {
     hadamard.atomic 1.0, %A, %B, 1.0, %C
         : f32, memref<f32x32>, memref<f32x32>, f32, memref<f32x32>
 ; CHECK:      global float* c = C + (blck + m) * 1;
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * A[(blck + m) * 1] * B[(blck + m) * 1], memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT: float ab = A[(blck + m) * 1] * B[(blck + m) * 1];
+; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * ab, memory_order_relaxed, memory_scope_work_group);
 }
 
 func @sum_atomic(%A: memref<f32x32>, %B: memref<f32>) {

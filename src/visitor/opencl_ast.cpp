@@ -232,6 +232,8 @@ std::vector<clir::stmt> opencl_ast::operator()(alloca_inst const &a) {
 std::vector<clir::stmt> opencl_ast::operator()(axpby_inst const &inst) {
     auto at = get_memref_type(*inst.A());
     auto bt = get_memref_type(*inst.B());
+    auto alpha_ty = get_scalar_type(*inst.alpha()->ty());
+    auto beta_ty = get_scalar_type(*inst.beta()->ty());
     auto &adv = get_dope_vector(inst.A().get());
     auto &bdv = get_dope_vector(inst.B().get());
 
@@ -249,8 +251,9 @@ std::vector<clir::stmt> opencl_ast::operator()(axpby_inst const &inst) {
                 auto const inner_loop = [&](clir::block_builder &bb) {
                     auto a = Ab[(block + m) * adv.stride(pA)];
                     auto b = bb.declare_assign((*this)(*bt), "b", Bb + (block + m) * bdv.stride(0));
+                    const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, std::move(a));
                     store_helper(bb, inst.atomic(), b, bt->element_ty(), bt->addrspace(),
-                                 alpha * std::move(a), beta);
+                                 std::move(a_scaled), beta_ty, beta);
                 };
                 if (is_remainder) {
                     bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))
@@ -266,8 +269,9 @@ std::vector<clir::stmt> opencl_ast::operator()(axpby_inst const &inst) {
     auto B = visit(*this, *inst.B());
     if (bt->dim() == 0) {
         auto bb = clir::block_builder{};
-        store_helper(bb, inst.atomic(), B, bt->element_ty(), bt->addrspace(),
-                     std::move(alpha) * A[0], std::move(beta));
+        const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, A[0]);
+        store_helper(bb, inst.atomic(), B, bt->element_ty(), bt->addrspace(), std::move(a_scaled),
+                     beta_ty, std::move(beta));
         return {bb.get_product()};
     }
 
@@ -317,7 +321,7 @@ std::vector<clir::stmt> opencl_ast::operator()(arith_inst const &a) {
         case arithmetic::sub:
             return std::move(a) - std::move(b);
         case arithmetic::mul:
-            return std::move(a) * std::move(b);
+            return multiply(sty, sty, std::move(a), std::move(b));
         case arithmetic::div:
             return std::move(a) / std::move(b);
         case arithmetic::rem:
@@ -686,6 +690,7 @@ std::vector<clir::stmt> opencl_ast::operator()(gemv_inst const &g) {
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(ger_inst const &g) {
+    auto at = get_memref_type(*g.A());
     auto bt = get_memref_type(*g.B());
     auto ct = get_memref_type(*g.C());
     auto &adv = get_dope_vector(g.A().get());
@@ -694,6 +699,8 @@ std::vector<clir::stmt> opencl_ast::operator()(ger_inst const &g) {
 
     auto alpha = visit(*this, *g.alpha());
     auto beta = visit(*this, *g.beta());
+    auto alpha_ty = get_scalar_type(*g.alpha()->ty());
+    auto beta_ty = get_scalar_type(*g.beta()->ty());
 
     auto A = visit(*this, *g.A());
     auto B = visit(*this, *g.B());
@@ -725,8 +732,14 @@ std::vector<clir::stmt> opencl_ast::operator()(ger_inst const &g) {
                                        auto a = A[(block + m) * adv.stride(0)];
                                        auto c = bb.declare_assign((*this)(*ct), "c",
                                                                   Cb + (block + m) * cdv.stride(0));
+                                       auto ab = bb.declare_assign(
+                                           to_clir_ty(ct->element_ty()), "ab",
+                                           multiply(at->element_ty(), bt->element_ty(),
+                                                    std::move(a), b));
+                                       const auto ab_scaled = multiply(alpha_ty, ct->element_ty(),
+                                                                       alpha, std::move(ab));
                                        store_helper(bb, g.atomic(), c, ct->element_ty(),
-                                                    ct->addrspace(), alpha * std::move(a) * b,
+                                                    ct->addrspace(), std::move(ab_scaled), beta_ty,
                                                     beta);
                                    };
                                    if (is_remainder) {
@@ -778,6 +791,8 @@ std::vector<clir::stmt> opencl_ast::operator()(foreach_inst const &p) {
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst const &g) {
+    auto at = get_memref_type(*g.A());
+    auto bt = get_memref_type(*g.B());
     auto ct = get_memref_type(*g.C());
     auto &adv = get_dope_vector(g.A().get());
     auto &bdv = get_dope_vector(g.B().get());
@@ -785,6 +800,8 @@ std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst const &g) {
 
     auto alpha = visit(*this, *g.alpha());
     auto beta = visit(*this, *g.beta());
+    auto alpha_ty = get_scalar_type(*g.alpha()->ty());
+    auto beta_ty = get_scalar_type(*g.beta()->ty());
 
     auto A = visit(*this, *g.A());
     auto B = visit(*this, *g.B());
@@ -793,26 +810,31 @@ std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst const &g) {
     auto bb = clir::block_builder{};
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
     auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
-    tile_loop_by_sgs(bb, cdv.shape(0), core_cfg_.subgroup_size,
-                     tiling_.m_tiles() * tiling_.n_tiles(), std::move(sg),
-                     [&](clir::block_builder &bb, clir::expr block, bool is_remainder,
-                         clir::expr inner_trip_count) {
-                         auto const inner_loop = [&](clir::block_builder &bb) {
-                             auto b = B[(block + m) * bdv.stride(0)];
-                             auto a = A[(block + m) * adv.stride(0)];
-                             auto c = bb.declare_assign((*this)(*ct), "c",
-                                                        C + (block + m) * cdv.stride(0));
-                             store_helper(bb, g.atomic(), c, ct->element_ty(), ct->addrspace(),
-                                          alpha * std::move(a) * std::move(b), beta);
-                         };
-                         if (is_remainder) {
-                             bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))
-                                        .then(inner_loop)
-                                        .get_product());
-                         } else {
-                             inner_loop(bb);
-                         }
-                     });
+    tile_loop_by_sgs(
+        bb, cdv.shape(0), core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(),
+        std::move(sg),
+        [&](clir::block_builder &bb, clir::expr block, bool is_remainder,
+            clir::expr inner_trip_count) {
+            auto const inner_loop = [&](clir::block_builder &bb) {
+                auto b = B[(block + m) * bdv.stride(0)];
+                auto a = A[(block + m) * adv.stride(0)];
+
+                auto c = bb.declare_assign((*this)(*ct), "c", C + (block + m) * cdv.stride(0));
+                auto ab = bb.declare_assign(
+                    to_clir_ty(ct->element_ty()), "ab",
+                    multiply(at->element_ty(), bt->element_ty(), std::move(a), b));
+                const auto ab_scaled = multiply(alpha_ty, ct->element_ty(), alpha, std::move(ab));
+                store_helper(bb, g.atomic(), c, ct->element_ty(), ct->addrspace(),
+                             std::move(ab_scaled), beta_ty, beta);
+            };
+            if (is_remainder) {
+                bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))
+                           .then(inner_loop)
+                           .get_product());
+            } else {
+                inner_loop(bb);
+            }
+        });
     return {bb.get_product()};
 }
 
@@ -919,6 +941,8 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst const &inst) {
 
     auto alpha = visit(*this, *inst.alpha());
     auto beta = visit(*this, *inst.beta());
+    auto alpha_ty = get_scalar_type(*inst.alpha()->ty());
+    auto beta_ty = get_scalar_type(*inst.beta()->ty());
 
     auto zero = clir::expr(0.0, static_cast<short>(size(at->element_ty()) * 8));
 
@@ -950,8 +974,9 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst const &inst) {
         bb.add(clir::if_selection_builder(clir::get_sub_group_id() == 0 &&
                                           clir::get_sub_group_local_id() == 0)
                    .then([&](clir::block_builder &bb) {
+                       const auto sum_scaled = multiply(alpha_ty, at->element_ty(), alpha, sum);
                        store_helper(bb, inst.atomic(), B, bt->element_ty(), bt->addrspace(),
-                                    alpha * sum, beta);
+                                    std::move(sum_scaled), beta_ty, beta);
                    })
                    .get_product());
     } else if (bt->dim() == 1) {
@@ -973,8 +998,9 @@ std::vector<clir::stmt> opencl_ast::operator()(sum_inst const &inst) {
                                })
                                .get_product());
                     auto b = bb.declare_assign((*this)(*bt), "b", B + (block + m) * bdv.stride(0));
+                    const auto sum_scaled = multiply(alpha_ty, at->element_ty(), alpha, acc);
                     store_helper(bb, inst.atomic(), b, bt->element_ty(), bt->addrspace(),
-                                 alpha * acc, beta);
+                                 std::move(sum_scaled), beta_ty, beta);
                 };
                 if (is_remainder) {
                     bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))

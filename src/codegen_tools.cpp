@@ -37,10 +37,6 @@ expr multiply(scalar_type ty_a, scalar_type ty_b, expr a, expr b) {
     return a * b;
 }
 
-expr complex_mul(scalar_type ty, expr a, expr b) {
-    return a * b.s(0) + init_vector(to_clir_ty(ty), {-a.s(1), a.s(0)}) * b.s(1);
-}
-
 expr vload_helper(short vec_size, expr offset, expr ptr) {
     switch (vec_size) {
     case 1:
@@ -111,24 +107,17 @@ expr sub_group_block_write_helper(expr pointer, expr data, scalar_type ty, addre
 }
 
 void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, address_space as,
-                  expr value, expr beta) {
+                  expr value, scalar_type beta_ty, expr beta) {
     if (is_atomic) {
-        atomic_store_helper(bb, std::move(dst), ty, as, std::move(value), std::move(beta));
+        atomic_store_helper(bb, std::move(dst), ty, as, std::move(value), beta_ty, std::move(beta));
     } else {
-        auto c_scaled = clir::expr{nullptr};
-        if (is_complex_type(ty)) {
-            c_scaled = bb.declare_assign(to_clir_ty(ty), "c_scaled", dereference(dst));
-            auto beta1 = bb.declare_assign(to_clir_ty(ty), "beta", beta);
-            bb.assign(c_scaled, complex_mul(ty, beta1, c_scaled));
-        } else {
-            c_scaled = beta * dereference(dst);
-        }
+        const auto c_scaled = multiply(ty, beta_ty, dereference(dst), beta);
         bb.assign(dereference(dst), std::move(value) + std::move(c_scaled));
     }
 }
 
 void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_space as, expr value,
-                         expr beta) {
+                         scalar_type beta_ty, expr beta) {
     int mode = -1;
     visit(overloaded{
               [&](clir::internal::int_imm &c) {
@@ -414,8 +403,8 @@ auto read_matrix_block(block_builder &bb, matrix_block_description const &d, int
 }
 
 void write_matrix_block(block_builder &bb, block_accessor const &block,
-                        matrix_block_description const &d, bool is_atomic, expr beta,
-                        core_config const &core_cfg) {
+                        matrix_block_description const &d, bool is_atomic, scalar_type beta_ty,
+                        expr beta, core_config const &core_cfg) {
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
 
     const int first_m_block_with_check = d.first_block_with_check(core_cfg.subgroup_size);
@@ -425,7 +414,7 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
                 store_helper(bb, is_atomic,
                              d.pointer + d.stride[0] * (get_sub_group_local_id() +
                                                         m_block * core_cfg.subgroup_size),
-                             d.ty, d.as, block.get(m_block, k), beta);
+                             d.ty, d.as, block.get(m_block, k), beta_ty, beta);
             };
             if (m_block >= first_m_block_with_check) {
                 bb.add(if_selection_builder(d.condition(m_block, core_cfg.subgroup_size))
