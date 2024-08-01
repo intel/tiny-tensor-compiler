@@ -50,10 +50,10 @@ Compilation with the Tiny Tensor Compiler generates the following OpenCL-C code
     kernel
     __attribute__((reqd_work_group_size(64,1,1)))
     __attribute__((intel_reqd_sub_group_size(32)))
-    fused_kernel(global float *K, global float *P, uint P_shape2, global float *global *A,
-                 global float *Q, uint Q_shape2) {
+    fused_kernel(global float *K, global float *P, long P_shape2, global float *global *A,
+                 global float *Q, long Q_shape2) {
         local uchar stack[2016] __attribute__((aligned(64)));
-        uint gid = get_global_id(2);
+        long gid = get_global_id(2);
         global float *p = P + 0ll * 1 + 0ll * 56 + gid * 504;
         global float *a = *(A + gid);
         global float *q = Q + 0ll * 1 + 0ll * 56 + gid * 504;

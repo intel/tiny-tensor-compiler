@@ -17,21 +17,19 @@ is called a **kernel**.
 Kernels are launched in batches, where each instance of the kernel is called a work-group.
 The kernel has access to its group id that is used to select the work done in the work group.
 Each work group consists of a fixed number of work-items that execute concurrently. 
-The language distinguishes between two kinds of instructions: *replicated* and *collective* instructions.
-It is distinguished between *mixed* and *spmd* regions.
-Mixed regions may contain replicated and collective instructions whereas spmd regions
-may only contain replicated instructions.
 
-A collective instruction distributes the work among the work-items.
-The instruction is responsible to distribute the work in a sensible manner. 
+The language distinguishes between *collective*, *SPMD*, and *mixed* instructions.
+A collective instruction distributes the work among the work-items in an implementation-defined manner.
+Local variables passed to or returned from a collective instruction are always uniform, meaning
+that each work-item holds the same value.
+An SPMD instruction follows the OpenCL execution model, where local variables may have a different value
+for each work-item.
+Mixed instructions accept both varying and uniform local variables.
 
-A replicated instruction replicates the work across all work-items.
-In a mixed region, the replicated instructions always operate on the same data.
-In spmd regions, the replicated instructions can operate on multiple data,
-but in these regions collective instructions are prohibited.
-
-Mixed regions can be nested whereas spmd regions must not be nested.
-A mixed region may be nested in a spmd region.
+Regions come in two different kinds: collective and SPMD.
+A collective instructions must only appear in a collective region, and an SPMD instruction
+must only appear in a in a SPMD region. Mixed instructions might appear in both kinds of regions.
+SPMD regions may be nested in collective regions but collective regions must not be nested in SPMD regions.
 
 Core rules
 ==========
@@ -244,81 +242,303 @@ Instructions
 
 .. code:: abnf
 
-    value-instruction           = local-identifier "=" (alloca-instruction
-                                  / arith-binary-instruction
-                                  / arith-unary-instruction
-                                  / cast-instruction
-                                  / comparison-instruction
-                                  / expand-instruction
-                                  / fuse-instruction
-                                  / group-id-instruction
-                                  / group-size-instruction
-                                  / load-instruction
-                                  / size-instruction
-                                  / subview-instruction)
-    multi-value-instruction     = [local-identifier-list "="] if-instruction
-    local-identifier-list       = local-identifier *("," local-identifier)
-    instruction                 = value-instruction
-                                  / multi-value-instruction
-                                  / axpby-instruction
-                                  / barrier-instruction
-                                  / for-instruction
-                                  / foreach-instruction
-                                  / lifetime-stop-instruction
-                                  / gemm-instruction
-                                  / gemv-instruction
-                                  / ger-instruction
-                                  / hadamard-product-instruction
-                                  / store-instruction
-                                  / sum-instruction
-                                  / yield-instruction
+    value-instruction-assignment        = local-identifier "=" value-instruction
+    multi-value-instruction-assignment  = [local-identifier-list "="] multi-value-instruction
+    local-identifier-list               = local-identifier *("," local-identifier)
+    instruction                         = value-instruction-assignment
+                                          / multi-value-instruction-assignment
+
+
+Collective instructions
+-----------------------
 
 Alloca
-------
+......
 
 .. code:: abnf
 
-    alloca-instruction          = "alloca" "->" memref-type
+    value-instruction   = "alloca" "->" memref-type
 
 Overview
-........
+~~~~~~~~
 
-*Collective instruction.*
 The alloca instruction allocates temporary memory that is freed automatically at the end of the block that contains the alloca.
 
 Returns
-.......
+~~~~~~~
 
 A memref of the memref-type.
 
 Restrictions
-............
+~~~~~~~~~~~~
 
 The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
 
-Arithmetic (binary)
--------------------
+Axpby
+.....
 
 .. code:: abnf
 
-    identifier-or-constant      = local-identifier / integer-constant / floating-constant
-    arith-binary-type           = ".add"  /
-                                  ".sub"  /
-                                  ".mul"  /
-                                  ".div" /
-                                  ".rem" /
-                                  ".shl"  /
-                                  ".shr" /
-                                  ".and"  /
-                                  ".or"   /
-                                  ".xor"
-    arith-binary-instruction    = "arith" arith-binary-type
-                                  identifier-or-constant "," identifier-or-constant ":" scalar-type
+    transpose       =  ".t" / ".n"
+    const-or-val    =  floating-constant / local-identifier
+    instruction     =/ "axpby" transpose [".atomic"]
+                               const-or-val "," local-identifier "," const-or-val "," local-identifier
+                               ":" scalar-type "," memref-type "," scalar-type "," memref-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
+Axpby implements
+
+.. math::
+
+    B := \alpha \text{op}(A) + \beta B
+
+for vectors and matrices.
+If the atomic flag is set, B is updated atomically.
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha`, and the third argument gives :math:`\beta`.
+The second and the fourth argument must have memref type and give A and B, respectively.
+
+The transpose modifier defines :math:`\text{op}` as following:
+
+.. math::
+
+    \text{op}_i(X) := \left\{
+                      \begin{array}{rcl}
+                        X^T & \text{ if } & \text{modifier}_i= t \wedge \text{order}(X) = 2,\\
+                        X   & \text{ else. }
+                      \end{array}
+                      \right.
+
+(Note that ".t" has no effect on vectors.)
+
+The shape of :math:`\text{op}(A)` and B must be identical and the order of A and B needs to be 1 (vector)
+or 2 (matrix).
+
+Foreach
+.......
+
+.. code:: abnf
+
+    instruction     =/ "foreach" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
+                       [":" integer-type] region
+
+Overview
+~~~~~~~~
+
+A foreach loop that executes the loop's range [from; to) without any sequence guarantee.
+The region of a foreach is a *spmd region*.
+
+The loop's range [from; to) is given by the first integer constant and second integer constant,
+and the trip count is stored in the local identifier.
+The integer type of the loop variable is given after the colon.
+The integer type of the loop variable and the loop bounds is given after the colon.
+The default integer type is ``index``.
+
+GEMM
+....
+
+.. code:: abnf
+
+    instruction     =/ "gemm" transpose transpose [".atomic"]
+                       "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+
+Overview
+~~~~~~~~
+
+GEMM implements the well-known GEMM BLAS-3 operation.
+
+.. math::
+
+    C := \alpha \text{op}_1(A) \text{op}_2(B) + \beta C
+
+If the atomic flag is set, C is updated atomically.
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
+The second, the third, and the fifth argument must have memref type and give
+A, B, and C, respectively.
+
+The first transpose modifier defines :math:`\text{op}_1` and the second transpose modifier
+defines :math:`\text{op}_2` as following:
+
+.. math::
+
+    \text{op}_i(X) := \left\{
+                      \begin{array}{rcl}
+                        X^T & \text{ if } & \text{modifier}_i = t,\\
+                        X   & \text{ if } & \text{modifier}_i = n.
+                      \end{array}
+                      \right.
+
+
+If :math:`\text{op}_1(A)` has the shape MxK and
+:math:`\text{op}_2(B)` has the shape KxN then C must have the shape MxN.
+
+GEMV
+....
+
+.. code:: abnf
+
+    instruction     =/ "gemv" transpose [".atomic"]
+                       "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+
+Overview
+~~~~~~~~
+
+GEMV implements the well-known GEMM BLAS-2 operation.
+
+.. math::
+
+    c := \alpha \text{op}_1(A) b + \beta C
+
+If the atomic flag is set, c is updated atomically.
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
+The second, the third, and the fifth argument must have memref type and give
+A, b, and c, respectively.
+
+The transpose modifier for A as in GEMM.
+
+:math:`\text{op}_1(A)` has the shape MxK and :math:`B` has the shape K then c must have the shape M.
+
+GER
+...
+
+.. code:: abnf
+
+    instruction     =/ "ger" [".atomic"]
+                       const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+
+Overview
+~~~~~~~~
+
+Computes the general rank-1 update:
+
+.. math::
+
+    C := \alpha a b^T + \beta C
+
+If the atomic flag is set, C is updated atomically.
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
+The second, the third, and the fifth argument must have memref type and give
+a, b, and C, respectively.
+
+a and b must be vectors. If the size of a is M and the size of b is N the shape of C must be :math:`M\times N`.
+
+
+Hadamard product
+................
+
+.. code:: abnf
+
+    instruction     =/ "hadamard_product" [".atomic"]
+                       const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+
+Overview
+~~~~~~~~
+
+Computes the Hadamard product of two tensors.
+That is, in index notation we have
+
+.. math::
+
+    c_{i} := \alpha a_{i} b_{i} + \beta c_{i}
+
+If the atomic flag is set, c is updated atomically.
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
+The second, the third, and the fifth argument must have memref type and give
+a, b, and c, respectively.
+
+a, b, and c must be vectors and have equal shape.
+
+Sum
+...
+
+.. code:: abnf
+
+    instruction     =/ "sum" transpose [".atomic"]
+                       "," const-or-val "," local-identifier "," const-or-val "," local-identifier
+                       ":" scalar-type "," memref-type "," scalar-type "," memref-type
+
+Overview
+~~~~~~~~
+
+Computes the matrix-vector product or the dot product of A with a vector of ones.
+That is, for matrices we have
+
+.. math::
+
+    B := \alpha \text{op}(A) \vec{1} + \beta B
+
+and for vectors we have
+
+.. math::
+
+    b := \alpha \left<a,\vec{1}\right> + \beta b
+
+If the atomic flag is set, B is updated atomically.
+
+
+Arguments
+~~~~~~~~~
+
+The first argument gives :math:`\alpha` and the third argument gives :math:`\beta`.
+The second and the fourth argument must have memref type and give A and B, respectively.
+If A is a matrix then B must be a vector.
+The first mode size of :math:`\text{op}(A)` must match the size of B.
+If A is a vector, then B must be a scalar memref.
+
+The transpose op is defined as in the axpby instruction.
+
+
+
+Mixed instructions
+------------------
+
+Arithmetic (binary)
+...................
+
+.. code:: abnf
+
+    identifier-or-constant  =  local-identifier / integer-constant / floating-constant
+    arith-binary-type       =  ".add"  /
+                               ".sub"  /
+                               ".mul"  /
+                               ".div" /
+                               ".rem" /
+                               ".shl"  /
+                               ".shr" /
+                               ".and"  /
+                               ".or"   /
+                               ".xor"
+    value-instruction       =/ "arith" arith-binary-type
+                               identifier-or-constant "," identifier-or-constant ":" scalar-type
+
+Overview
+~~~~~~~~
+
 Binary arithmetic operation on scalars.
 Both operands, as well as the returned type, have the same scalar type.
 
@@ -338,17 +558,16 @@ Op   Allowed type Description
 ==== ============ ==============================================================================
 
 Arithmetic (unary)
-------------------
+..................
 
 .. code:: abnf
 
-    arith-unary-type          = ".neg"  / ".not"
-    arith-unary-instruction   = "arith" arith-unary-type identifier-or-constant ":" scalar-type
+    arith-unary-type        =  ".neg"  / ".not"
+    value-instruction       =/ "arith" arith-unary-type identifier-or-constant ":" scalar-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Unary arithmetic operation on scalars.
 The returned value has the same type as the operand.
 
@@ -360,30 +579,28 @@ Op   Allowed type Description
 ==== ============ ==============================================================================
 
 Cast
-----
+....
 
 .. code:: abnf
 
-    cast-instruction            = "cast" identifier-or-constant ":" scalar-type "->" scalar-type
+    value-instruction       =/ "cast" identifier-or-constant ":" scalar-type "->" scalar-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Cast scalar values.
 
 Comparison
-----------
+..........
 
 .. code:: abnf
 
-    comparison-instruction      = "cmp" (".eq" / ".ne" / ".gt" / ".ge" / ".lt" / ".le")
-                                  identifier-or-constant "," identifier-or-constant ":" scalar-type
+    value-instruction       =/ "cmp" (".eq" / ".ne" / ".gt" / ".ge" / ".lt" / ".le")
+                               identifier-or-constant "," identifier-or-constant ":" scalar-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Scalar comparison.
 Both operands must have the same scalar type and the returned value is boolean.
 
@@ -399,22 +616,21 @@ Cond Description
 ==== =====================
 
 Expand
-------
+......
 
 .. code:: abnf
 
-    expand-instruction                = "expand" local-identifier "[" integer-constant "->" expand-shape "]" ":" memref-type
-    expand-shape                      = constant-or-dynamic-or-identifier 1*("x" constant-or-dynamic-or-identifier)
+    value-instruction       =/ "expand" local-identifier "[" integer-constant "->" expand-shape "]" ":" memref-type
+    expand-shape            =  constant-or-dynamic-or-identifier 1*("x" constant-or-dynamic-or-identifier)
     constant-or-dynamic-or-identifier = integer-constant / "?" / local-identifier
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 The expand instruction returns a view on a tensor with a mode viewed as higher-order mode.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first argument must point to a value of memref type.
 The integer constant in square brackets gives the mode that shall be expanded.
@@ -454,7 +670,7 @@ The output type is a memref type according to the following rules:
        expand %0[0->4x?] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x4x?,strided<2,8,?>>
 
 Restrictions
-............
+~~~~~~~~~~~~
 
 At most one mode in expand-shape must be dynamic.
 
@@ -462,20 +678,19 @@ The product of the expand shape must be the same as the mode size.
 If one entry in the expand shape is dynamic then the other must evenly divide the mode size.
 
 Fuse
-----
+....
 
 .. code:: abnf
 
-    fuse-instruction            = "fuse" local-identifier "[" integer-constant "," integer-constant "]" ":" memref-type
+    value-instruction       =& "fuse" local-identifier "[" integer-constant "," integer-constant "]" ":" memref-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 The fuse instruction returns a view on a tensor with two or more adjacent modes viewed as a single mode.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first argument must point to a value of memref type.
 The fused modes are specified as the interval [from, to], where from is given
@@ -504,7 +719,7 @@ The output type is a memref type according to the following rules:
        fuse %0[0,1] : memref<f32x8x?x32,strided<1,?,?>>            ; -> memref<f32x?x32,strided<1,?>>
 
 Restrictions
-............
+~~~~~~~~~~~~
 
 Let i be the first mode and j the last mode.
 The stride vector S and the shape vector s must satisify the following compatibility condition:
@@ -523,57 +738,91 @@ is undefined beheaviour.
 
 
 Group id
---------
+........
 
 .. code:: abnf
 
-    group-id-instruction        = "group_id"
+    value-instruction       =/ "group_id"
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Returns the group id, an integer of type "index" inbetween 0 and the group size - 1.
 
 Group size
-----------
+..........
 
 .. code:: abnf
 
-    group-size-instruction      = "group_size"
+    value-instruction       =/ "group_size"
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Returns the group size, an integer of type "index".
+
+If
+..
+
+.. code:: abnf
+
+    multi-value-instruction = "if" identifier-or-int-constant ["->" "(" scalar-type-list ")"]
+                              region ["else" region]
+    type-list               = scalar-type *("," scalar-type)
+
+Overview
+~~~~~~~~
+
+An if statement.
+Both regions are *mixed regions*.
+
+The condition must be of bool type.
+
+Arguments
+~~~~~~~~~
+
+The if instruction may return multiple values, where the number of values and the value types
+are given by the scalar-type-list.
+If values are returned, the last instruction in both the "then"-region and the "else"-region must
+be a yield instruction (the "else"-region cannot be omitted).
+
+Example:
+
+   .. code::
+
+       %1 = cmp.lt %0, 16 : i32
+       %x = if %1 -> (i32) {
+           yield %0 : i32
+       } else {
+           yield 16 : i32
+       }
 
 
 Load
-----
+....
 
 .. code:: abnf
 
-    load-instruction            = "load" local-identifier "[" [index-list] "]" ":" memref-or-group-type
-    index-list                  = identifier-or-int-constant *("," identifier-or-int-constant)
-    identifier-or-int-constant  = integer-constant / local-identifier
-    memref-or-group-type        = memref-type / group-type
+    value-instruction           =/ "load" local-identifier "[" [index-list] "]" ":" memref-or-group-type
+    index-list                  =  identifier-or-int-constant *("," identifier-or-int-constant)
+    identifier-or-int-constant  =  integer-constant / local-identifier
+    memref-or-group-type        =  memref-type / group-type
 
 Overview
-........
+~~~~~~~~
 
 Load the element given by the index list from a memref or group.
 The number of indices must match the order of the memref
 and a single index must be given for a group.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first operand must have memref or group type.
 The indices must be of ``index`` type.
 
 Returns
-.......
+~~~~~~~
 
 A value of the memref's element type or the group's memref type.
 Examples:
@@ -583,22 +832,42 @@ Examples:
 #. ``load %0[%1] : group<memref<f32x42>>`` returns a ``memref<f32x42>`` value.
 #. ``load %0[%1] : group<memref<f32x42>, offset: ?>`` returns a ``memref<f32x42>`` value.
 
-Size
-----
+For
+...
 
 .. code:: abnf
 
-    size-instruction            = "size" local-identifier "[" integer-constant "]" ":" memref-type
+    instruction     =/ "for" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
+                       ["," identifier-or-int-constant] [":" integer-type] region
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
+A for loop.
+Instructions in the for loop execute sequentially and its region is a *mixed region*.
+
+The loop's range [from; to) is given by the first integer constant and second integer constant,
+and the trip count is stored in the local identifier.
+A step size can be given with the third integer constant.
+The step size defaults to 1 if omitted.
+The integer type of the loop variable and the loop bounds is given after the colon.
+The default integer type is ``index``.
+
+Size
+....
+
+.. code:: abnf
+
+    value-instruction       =/ "size" local-identifier "[" integer-constant "]" ":" memref-type
+
+Overview
+~~~~~~~~
+
 The size instruction returns the i-th entry of the tensor's shape, where "i" is given by the integer
 constant in square brackets.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first argument must point to a value of memref type.
 The integer constant i gives the mode for which the size shall be returned.
@@ -612,22 +881,21 @@ The local identifier must have the memref type specified last.
 The instruction returns an integer of index type.
 
 Subview
--------
+.......
 
 .. code:: abnf
 
-    subview-instruction         = "subview" local-identifier "[" [index-or-slice-list] "]" ":" memref-type
-    index-or-slice-list         = index-or-slice *("," index-or-slice)
-    index-or-slice              = identifier-or-int-constant [":" (identifier-or-int-constant / "?")] / ":"
+    value-instruction       =/ "subview" local-identifier "[" [index-or-slice-list] "]" ":" memref-type
+    index-or-slice-list     =  index-or-slice *("," index-or-slice)
+    index-or-slice          =  identifier-or-int-constant [":" (identifier-or-int-constant / "?")] / ":"
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 The subview instruction returns a view on a tensor.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first argument must point to a value of memref type.
 The number of indices in square brackets must match the order of the memref.
@@ -687,279 +955,16 @@ The output type is a memref type according to the following rules:
        subview %0[5:?]             : memref<f32x16> ; Returns memref<f32x13>
        subview %0[%2:?]            : memref<f32x16> ; Returns memref<f32x?>
 
-If
---
-
-.. code:: abnf
-
-    if-instruction           = "if" identifier-or-int-constant ["->" "(" scalar-type-list ")"]
-                               region ["else" region]
-    type-list                = scalar-type *("," scalar-type)
-
-Overview
-........
-
-An if statement.
-Both regions are *mixed regions*.
-
-The condition must be of bool type.
-
-Arguments
-.........
-
-The if instruction may return multiple values, where the number of values and the value types
-are given by the scalar-type-list.
-If values are returned, the last instruction in both the "then"-region and the "else"-region must
-be a yield instruction (the "else"-region cannot be omitted).
-
-Example:
-
-   .. code::
-
-       %1 = cmp.lt %0, 16 : i32
-       %x = if %1 -> (i32) {
-           yield %0 : i32
-       } else {
-           yield 16 : i32
-       }
-
-Axpby
------
-
-.. code:: abnf
-
-    transpose                = ".t" / ".n"
-    const-or-val             = floating-constant / local-identifier
-    axpby-instruction        = "axpby" transpose [".atomic"]
-                               const-or-val "," local-identifier "," const-or-val "," local-identifier
-                               ":" scalar-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-*Collective instruction.*
-Axpby implements
-
-.. math::
-
-    B := \alpha \text{op}(A) + \beta B
-
-for vectors and matrices.
-If the atomic flag is set, B is updated atomically.
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha`, and the third argument gives :math:`\beta`.
-The second and the fourth argument must have memref type and give A and B, respectively.
-
-The transpose modifier defines :math:`\text{op}` as following:
-
-.. math::
-
-    \text{op}_i(X) := \left\{
-                      \begin{array}{rcl}
-                        X^T & \text{ if } & \text{modifier}_i= t \wedge \text{order}(X) = 2,\\
-                        X   & \text{ else. }
-                      \end{array}
-                      \right.
-
-(Note that ".t" has no effect on vectors.)
-
-The shape of :math:`\text{op}(A)` and B must be identical and the order of A and B needs to be 1 (vector)
-or 2 (matrix).
-
-
-For
----
-
-.. code:: abnf
-
-    for-instruction          = "for" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
-                                                          ["," identifier-or-int-constant] [":" integer-type] region
-
-Overview
-........
-
-A for loop.
-Instructions in the for loop execute sequentially and its region is a *mixed region*.
-
-The loop's range [from; to) is given by the first integer constant and second integer constant,
-and the trip count is stored in the local identifier.
-A step size can be given with the third integer constant.
-The step size defaults to 1 if omitted.
-The integer type of the loop variable and the loop bounds is given after the colon.
-The default integer type is ``index``.
-
-Foreach
--------
-
-.. code:: abnf
-
-    foreach-instruction      = "foreach" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
-                               [":" integer-type] region
-
-Overview
-........
-
-A foreach loop that executes the loop's range [from; to) without any sequence guarantee.
-The region of a foreach is a *spmd region*.
-
-The loop's range [from; to) is given by the first integer constant and second integer constant,
-and the trip count is stored in the local identifier.
-The integer type of the loop variable is given after the colon.
-The integer type of the loop variable and the loop bounds is given after the colon.
-The default integer type is ``index``.
-
-GEMM
-----
-
-.. code:: abnf
-
-    gemm-instruction         = "gemm" transpose transpose [".atomic"]
-                               "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
-                               ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-*Collective instruction.*
-GEMM implements the well-known GEMM BLAS-3 operation.
-
-.. math::
-
-    C := \alpha \text{op}_1(A) \text{op}_2(B) + \beta C
-
-If the atomic flag is set, C is updated atomically.
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-A, B, and C, respectively.
-
-The first transpose modifier defines :math:`\text{op}_1` and the second transpose modifier
-defines :math:`\text{op}_2` as following:
-
-.. math::
-
-    \text{op}_i(X) := \left\{
-                      \begin{array}{rcl}
-                        X^T & \text{ if } & \text{modifier}_i = t,\\
-                        X   & \text{ if } & \text{modifier}_i = n.
-                      \end{array}
-                      \right.
-
-
-If :math:`\text{op}_1(A)` has the shape MxK and
-:math:`\text{op}_2(B)` has the shape KxN then C must have the shape MxN.
-
-GEMV
-----
-
-.. code:: abnf
-
-    gemv-instruction         = "gemm" transpose [".atomic"]
-                               "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
-                               ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-*Collective instruction.*
-GEMV implements the well-known GEMM BLAS-2 operation.
-
-.. math::
-
-    c := \alpha \text{op}_1(A) b + \beta C
-
-If the atomic flag is set, c is updated atomically.
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-A, b, and c, respectively.
-
-The transpose modifier for A as in GEMM.
-
-:math:`\text{op}_1(A)` has the shape MxK and :math:`B` has the shape K then c must have the shape M.
-
-GER
----
-
-.. code:: abnf
-
-    ger-instruction          = "ger" [".atomic"]
-                                const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
-                                ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-Computes the general rank-1 update:
-
-.. math::
-
-    C := \alpha a b^T + \beta C
-
-If the atomic flag is set, C is updated atomically.
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-a, b, and C, respectively.
-
-a and b must be vectors. If the size of a is M and the size of b is N the shape of C must be :math:`M\times N`.
-
-
-Hadamard product
-----------------
-
-.. code:: abnf
-
-    hadamard-product-instruction = "hadamard_product" [".atomic"]
-                                   const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
-                                   ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-*Collective instruction.*
-Computes the Hadamard product of two tensors.
-That is, in index notation we have
-
-.. math::
-
-    c_{i} := \alpha a_{i} b_{i} + \beta c_{i}
-
-If the atomic flag is set, c is updated atomically.
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-a, b, and c, respectively.
-
-a, b, and c must be vectors and have equal shape.
-
-
 Store
------
+.....
 
 .. code:: abnf
 
-    store-instruction           = "store" local-identifier "," local-identifier "[" [index-list] "]" ":" memref-type
+    instruction     =/ "store" local-identifier "," local-identifier "[" [index-list] "]" ":" memref-type
 
 Overview
-........
+~~~~~~~~
 
-*Replicated instruction.*
 Store a scalar value in a memref at the position given by the index list.
 The number of indices must match the order of the memref.
 
@@ -967,77 +972,88 @@ The number of indices must match the order of the memref.
 from all work-items.
 
 Arguments
-.........
+~~~~~~~~~
 
 The first operand must have the same scalar type as the memref type.
 The indices must be of ``index`` type.
 
-Sum
----
-
-.. code:: abnf
-
-    sum-instruction          = "sum" transpose [".atomic"]
-                               "," const-or-val "," local-identifier "," const-or-val "," local-identifier
-                               ":" scalar-type "," memref-type "," scalar-type "," memref-type
-
-Overview
-........
-
-*Collective instruction.*
-Computes the matrix-vector product or the dot product of A with a vector of ones.
-That is, for matrices we have
-
-.. math::
-
-    B := \alpha \text{op}(A) \vec{1} + \beta B
-
-and for vectors we have
-
-.. math::
-
-    b := \alpha \left<a,\vec{1}\right> + \beta b
-
-If the atomic flag is set, B is updated atomically.
-
-
-Arguments
-.........
-
-The first argument gives :math:`\alpha` and the third argument gives :math:`\beta`.
-The second and the fourth argument must have memref type and give A and B, respectively.
-If A is a matrix then B must be a vector.
-The first mode size of :math:`\text{op}(A)` must match the size of B.
-If A is a vector, then B must be a scalar memref.
-
-The transpose op is defined as in the axpby instruction.
-
 Yield
------
+.....
 
 .. code:: abnf
 
-    yield-instruction           = "yield" [local-identifier-list]  ":" [scalar-type-list]
-    identifier-or-constant-list = identifier-or-constant *("," identifier-or-constant)
+    instruction                 =/ "yield" [local-identifier-list]  ":" [scalar-type-list]
+    identifier-or-constant-list =  identifier-or-constant *("," identifier-or-constant)
 
 Overview
-........
+~~~~~~~~
 
 Yield returns values from an if or for instruction.
 
 Arguments
-.........
+~~~~~~~~~
 
 The length of the local identifier list must equal the length of the scalar type list.
 
-
 Additional instructions
------------------------
+.......................
 
 .. code:: abnf
 
     barrier-instruction         = "barrier"
     lifetime-stop-instruction   = "lifetime_stop" local-identifier
+
+SPMD instructions
+-----------------
+
+Number of subgroups
+...................
+
+.. code:: abnf
+
+    value-instruction       =/ "num_subgroups"
+
+Overview
+~~~~~~~~
+
+Returns the number of subgroups the work-group is divided in; i32 integer.
+
+Subgroup id
+...........
+
+.. code:: abnf
+
+    value-instruction       =/ "subgroup_id"
+
+Overview
+~~~~~~~~
+
+Returns the subgroup id; i32 integer from 0 to num_subgroups - 1.
+
+Subgroup local id
+.................
+
+.. code:: abnf
+
+    value-instruction       =/ "subgroup_local_id"
+
+Overview
+~~~~~~~~
+
+Returns the work-item id within the sub-group; i32 integer from 0 to subgroup_size - 1.
+
+Subgroup size
+.............
+
+.. code:: abnf
+
+    value-instruction       =/ "subgroup_size"
+
+Overview
+~~~~~~~~
+
+Returns the subgroup size; i32 integer.
+
 
 Sample code
 ===========
