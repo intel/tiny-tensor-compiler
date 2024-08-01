@@ -112,6 +112,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Invalid arguments passed to kernel";
     case tinytc_status_unsupported_device:
         return "Unsupported device";
+    case tinytc_status_invalid_core_info:
+        return "Invalid core info object (e.g. max work group size is 0 or subgroup sizes vector is empty)";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";

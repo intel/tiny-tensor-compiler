@@ -81,9 +81,11 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         clGetDeviceInfo(device, CL_DEVICE_VENDOR_ID, sizeof(vendor_id), &vendor_id, nullptr));
 
     if (vendor_id == 0x8086) {
-        cl_version ip_ver;
-        cl_uint num_eus_per_subslice, num_threads_per_eu;
+        cl_device_type device_type;
         std::size_t subgroup_sizes_size = 0;
+
+        TINYTC_CL_CHECK_STATUS(
+            clGetDeviceInfo(device, CL_DEVICE_TYPE, sizeof(device_type), &device_type, nullptr));
 
         TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_SUB_GROUP_SIZES_INTEL, 0, nullptr,
                                                &subgroup_sizes_size));
@@ -95,19 +97,37 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         auto subgroup_sizes =
             std::vector<std::int32_t>(subgroup_sizes_long.begin(), subgroup_sizes_long.end());
 
-        TINYTC_CL_CHECK_STATUS(
-            clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL, sizeof(ip_ver), &ip_ver, nullptr));
+        if (device_type == CL_DEVICE_TYPE_GPU) {
+            cl_version ip_ver;
+            cl_uint num_eus_per_subslice, num_threads_per_eu;
 
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL,
-                                               sizeof(num_eus_per_subslice), &num_eus_per_subslice,
-                                               nullptr));
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_THREADS_PER_EU_INTEL,
-                                               sizeof(num_threads_per_eu), &num_threads_per_eu,
-                                               nullptr));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL,
+                                                   sizeof(ip_ver), &ip_ver, nullptr));
 
-        TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(info, ip_ver, num_eus_per_subslice,
-                                                          num_threads_per_eu, subgroup_sizes.size(),
-                                                          subgroup_sizes.data()));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL,
+                                                   sizeof(num_eus_per_subslice),
+                                                   &num_eus_per_subslice, nullptr));
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_THREADS_PER_EU_INTEL,
+                                                   sizeof(num_threads_per_eu), &num_threads_per_eu,
+                                                   nullptr));
+
+            TINYTC_CHECK_STATUS(tinytc_core_info_intel_create(
+                info, ip_ver, num_eus_per_subslice, num_threads_per_eu, subgroup_sizes.size(),
+                subgroup_sizes.data()));
+        } else if (device_type == CL_DEVICE_TYPE_CPU) {
+            // 32 zmm registers
+            // @todo: need to do something smarter here
+            std::uint32_t register_space = 32 * 64;
+            size_t max_work_group_size;
+            TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_MAX_WORK_GROUP_SIZE,
+                                                   sizeof(max_work_group_size),
+                                                   &max_work_group_size, nullptr));
+            TINYTC_CHECK_STATUS(
+                tinytc_core_info_generic_create(info, register_space, max_work_group_size,
+                                                subgroup_sizes.size(), subgroup_sizes.data()));
+        } else {
+            return tinytc_status_unsupported_device;
+        }
     } else if (vendor_id == 0x1002) {
         // 512 KB / 32 wavefronts
         // @todo: can this info be queried?

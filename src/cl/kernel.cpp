@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 extern "C" {
 
@@ -147,10 +148,24 @@ tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
     if (local_size == nullptr) {
         return tinytc_status_invalid_arguments;
     }
+    constexpr int short_dev_list = 4;
     cl_program p;
     cl_device_id d;
+    cl_uint num_devices;
     TINYTC_CL_CHECK_STATUS(clGetKernelInfo(kernel, CL_KERNEL_PROGRAM, sizeof(p), &p, nullptr));
-    TINYTC_CL_CHECK_STATUS(clGetProgramInfo(p, CL_PROGRAM_DEVICES, sizeof(d), &d, nullptr));
+    TINYTC_CL_CHECK_STATUS(
+        clGetProgramInfo(p, CL_PROGRAM_NUM_DEVICES, sizeof(num_devices), &num_devices, nullptr));
+    if (num_devices <= short_dev_list) {
+        cl_device_id dbuf[4];
+        TINYTC_CL_CHECK_STATUS(
+            clGetProgramInfo(p, CL_PROGRAM_DEVICES, sizeof(dbuf), &dbuf, nullptr));
+        d = dbuf[0];
+    } else {
+        auto dbuf = std::vector<cl_device_id>(num_devices);
+        TINYTC_CL_CHECK_STATUS(clGetProgramInfo(
+            p, CL_PROGRAM_DEVICES, num_devices * sizeof(cl_device_id), dbuf.data(), nullptr));
+        d = dbuf[0];
+    }
     return tinytc_cl_convert_status(
         clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
                                  3 * sizeof(std::size_t), local_size, nullptr));

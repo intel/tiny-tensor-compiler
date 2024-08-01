@@ -73,7 +73,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     std::int32_t source_id = 0;
     if (ctx) {
         TINYTC_CHECK_STATUS(
-            tinytc_source_context_add_source(ctx, "tall and skinny recipe", "", &source_id));
+            tinytc_source_context_add_source(ctx, "recipe/tall_and_skinny.cpp", "", &source_id));
     }
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
@@ -86,7 +86,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
         return l;
     };
 
-    if (M_block_size == 0u) {
+    if (M_block_size == 0) {
         TINYTC_CHECK_STATUS(tinytc_recipe_tall_and_skinny_suggest_block_size(info, &M_block_size));
     }
 
@@ -174,9 +174,12 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_co
     if (info == nullptr || M_block_size == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-
-    return tinytc::exception_to_status_code(
-        [&] { *M_block_size = std::min(128, info->minmax_work_group_size()); });
+    return tinytc::exception_to_status_code([&] {
+        if (info->minmax_work_group_size() <= 0) {
+            throw tinytc::status::invalid_core_info;
+        }
+        *M_block_size = std::min(128, info->minmax_work_group_size());
+    });
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
