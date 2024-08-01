@@ -20,18 +20,20 @@ namespace tinytc {
 
 //! Instruction classification
 enum class inst_kind {
-    replicated, ///< replicated instruction executed in every work-item
-    collective  ///< collective instruction distributed among work-items
+    mixed,      ///< mixed instruction on uniform or varying data
+    collective, ///< collective instruction on uniform data, distributed among work-items
+    spmd        ///< SPMD instruction on varying data
+
 };
 
-using inst_nodes =
-    clir::virtual_type_list<class alloca_inst, class axpby_inst, class barrier_inst,
-                            class arith_inst, class arith_unary_inst, class cast_inst,
-                            class compare_inst, class expand_inst, class fuse_inst, class load_inst,
-                            class group_id_inst, class group_size_inst, class lifetime_stop_inst,
-                            class gemm_inst, class gemv_inst, class ger_inst, class for_inst,
-                            class foreach_inst, class hadamard_inst, class if_inst, class size_inst,
-                            class subview_inst, class store_inst, class sum_inst, class yield_inst>;
+using inst_nodes = clir::virtual_type_list<
+    class alloca_inst, class axpby_inst, class barrier_inst, class arith_inst,
+    class arith_unary_inst, class cast_inst, class compare_inst, class expand_inst, class fuse_inst,
+    class load_inst, class group_id_inst, class group_size_inst, class lifetime_stop_inst,
+    class gemm_inst, class gemv_inst, class ger_inst, class for_inst, class foreach_inst,
+    class hadamard_inst, class if_inst, class num_subgroups_inst, class parallel_inst,
+    class size_inst, class subview_inst, class store_inst, class subgroup_id_inst,
+    class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst, class yield_inst>;
 
 } // namespace tinytc
 
@@ -148,7 +150,7 @@ class arith_inst : public clir::visitable<arith_inst, scalar_inst> {
     inline auto a() const -> value const & { return a_; }
     inline auto b() const -> value const & { return b_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     arithmetic op_;
@@ -162,7 +164,7 @@ class arith_unary_inst : public clir::visitable<arith_unary_inst, scalar_inst> {
     inline arithmetic_unary op() const { return op_; }
     inline auto a() const -> value const & { return a_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     arithmetic_unary op_;
@@ -180,7 +182,7 @@ class cast_inst : public clir::visitable<cast_inst, scalar_inst> {
     cast_inst(value a, scalar_type to_ty, location const &lc = {});
     inline auto a() const -> value const & { return a_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value a_, result_;
@@ -194,7 +196,7 @@ class compare_inst : public clir::visitable<compare_inst, scalar_inst> {
     inline auto a() const -> value const & { return a_; }
     inline auto b() const -> value const & { return b_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     cmp_condition cond_;
@@ -211,7 +213,7 @@ class expand_inst : public clir::visitable<expand_inst, inst_node> {
     inline auto expand_shape() const -> std::vector<value> const & { return expand_shape_; }
     inline auto expand_shape(std::int64_t i) const -> value const & { return expand_shape_[i]; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value op_, result_;
@@ -227,7 +229,7 @@ class fuse_inst : public clir::visitable<fuse_inst, inst_node> {
     inline std::int64_t from() const { return from_; }
     inline std::int64_t to() const { return to_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value op_, result_;
@@ -241,7 +243,7 @@ class load_inst : public clir::visitable<load_inst, inst_node> {
     inline auto operand() const -> value const & { return op_; }
     inline auto index_list() const -> std::vector<value> const & { return index_list_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value op_;
@@ -255,7 +257,7 @@ class group_id_inst : public clir::visitable<group_id_inst, scalar_inst> {
         loc(lc);
     }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value result_;
@@ -267,7 +269,7 @@ class group_size_inst : public clir::visitable<group_size_inst, scalar_inst> {
         loc(lc);
     }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value result_;
@@ -320,7 +322,7 @@ class for_inst : public clir::visitable<for_inst, loop_inst> {
   public:
     using super = clir::visitable<for_inst, loop_inst>;
     using super::super;
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 };
 
 class foreach_inst : public clir::visitable<foreach_inst, loop_inst> {
@@ -352,12 +354,36 @@ class if_inst : public clir::visitable<if_inst, inst_node> {
     inline auto num_results() const -> std::size_t override { return results_.size(); }
     inline auto results_ref() -> std::vector<value> & { return results_; }
     inline auto results_ref() const -> std::vector<value> const & { return results_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value condition_;
     region then_, otherwise_;
     std::vector<value> results_;
+};
+
+class num_subgroups_inst : public clir::visitable<num_subgroups_inst, scalar_inst> {
+  public:
+    inline num_subgroups_inst(location const &lc = {}) : result_{make_value(scalar_type::i32)} {
+        loc(lc);
+    }
+    inline value result() const override { return result_; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
+
+  private:
+    value result_;
+};
+
+class parallel_inst : public clir::visitable<parallel_inst, inst_node> {
+  public:
+    using super = clir::visitable<parallel_inst, loop_inst>;
+    inline parallel_inst(region body, location const &lc = {}) : body_(std::move(body)) { loc(lc); }
+    inline auto body() const -> region const & { return body_; }
+    inline inst_kind kind() const override { return inst_kind::collective; }
+    inline value result() const override { return value{}; }
+
+  private:
+    region body_;
 };
 
 class size_inst : public clir::visitable<size_inst, inst_node> {
@@ -367,11 +393,47 @@ class size_inst : public clir::visitable<size_inst, inst_node> {
     inline auto operand() const -> value const & { return op_; }
     inline std::int64_t mode() const { return mode_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value op_, result_;
     std::int64_t mode_;
+};
+
+class subgroup_id_inst : public clir::visitable<subgroup_id_inst, scalar_inst> {
+  public:
+    inline subgroup_id_inst(location const &lc = {}) : result_{make_value(scalar_type::i32)} {
+        loc(lc);
+    }
+    inline value result() const override { return result_; }
+    inline inst_kind kind() const override { return inst_kind::spmd; }
+
+  private:
+    value result_;
+};
+
+class subgroup_local_id_inst : public clir::visitable<subgroup_local_id_inst, scalar_inst> {
+  public:
+    inline subgroup_local_id_inst(location const &lc = {}) : result_{make_value(scalar_type::i32)} {
+        loc(lc);
+    }
+    inline value result() const override { return result_; }
+    inline inst_kind kind() const override { return inst_kind::spmd; }
+
+  private:
+    value result_;
+};
+
+class subgroup_size_inst : public clir::visitable<subgroup_size_inst, scalar_inst> {
+  public:
+    inline subgroup_size_inst(location const &lc = {}) : result_{make_value(scalar_type::i32)} {
+        loc(lc);
+    }
+    inline value result() const override { return result_; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
+
+  private:
+    value result_;
 };
 
 class subview_inst : public clir::visitable<subview_inst, inst_node> {
@@ -381,7 +443,7 @@ class subview_inst : public clir::visitable<subview_inst, inst_node> {
     inline auto slices() const -> std::vector<slice> const & { return slices_; }
     inline auto operand() const -> value const & { return op_; }
     inline value result() const override { return result_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value op_;
@@ -397,7 +459,7 @@ class store_inst : public clir::visitable<store_inst, inst_node> {
     inline auto operand() const -> value const & { return op_; }
     inline auto index_list() const -> std::vector<value> const & { return index_list_; }
     inline value result() const override { return {}; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     value val_, op_;
@@ -423,7 +485,7 @@ class yield_inst : public clir::visitable<yield_inst, inst_node> {
     }
     inline value result() const override { return value{}; }
     inline auto vals() const -> std::vector<value> const & { return vals_; }
-    inline inst_kind kind() const override { return inst_kind::replicated; }
+    inline inst_kind kind() const override { return inst_kind::mixed; }
 
   private:
     std::vector<value> vals_;

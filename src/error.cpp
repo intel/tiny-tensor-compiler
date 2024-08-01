@@ -113,7 +113,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_unsupported_device:
         return "Unsupported device";
     case tinytc_status_invalid_core_info:
-        return "Invalid core info object (e.g. max work group size is 0 or subgroup sizes vector is empty)";
+        return "Invalid core info object (e.g. max work group size is 0 or subgroup sizes vector "
+               "is empty)";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
@@ -153,6 +154,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Collective instruction must not be called from SPMD region";
     case tinytc_status_ir_fp_unsupported:
         return "Floating point type unsupported for instruction";
+    case tinytc_status_ir_spmd_called_from_collective:
+        return "SPMD instruction must not be called from collective region";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

@@ -91,7 +91,12 @@ class opencl_ast {
     std::vector<clir::stmt> operator()(foreach_inst const &in);
     std::vector<clir::stmt> operator()(hadamard_inst const &g);
     std::vector<clir::stmt> operator()(if_inst const &in);
+    std::vector<clir::stmt> operator()(num_subgroups_inst const &sg);
+    std::vector<clir::stmt> operator()(parallel_inst const &p);
     std::vector<clir::stmt> operator()(size_inst const &s);
+    std::vector<clir::stmt> operator()(subgroup_id_inst const &sg);
+    std::vector<clir::stmt> operator()(subgroup_local_id_inst const &sg);
+    std::vector<clir::stmt> operator()(subgroup_size_inst const &sg);
     std::vector<clir::stmt> operator()(subview_inst const &s);
     std::vector<clir::stmt> operator()(store_inst const &s);
     std::vector<clir::stmt> operator()(sum_inst const &s);

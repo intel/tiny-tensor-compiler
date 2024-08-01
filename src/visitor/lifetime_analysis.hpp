@@ -25,6 +25,7 @@ class find_alloca {
     value operator()(inst_node &);
     value operator()(alloca_inst &a);
     value operator()(for_inst &p);
+    value operator()(if_inst &p);
 
     /* Region nodes */
     value operator()(rgn &);
@@ -50,6 +51,7 @@ class lifetime_inserter {
     auto operator()(load_inst &e) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(if_inst &in) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(lifetime_stop_inst &) -> std::unordered_set<::tinytc_value const *>;
+    auto operator()(parallel_inst &p) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(size_inst &s) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(store_inst &s) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(subview_inst &s) -> std::unordered_set<::tinytc_value const *>;

@@ -1009,6 +1009,33 @@ inline inst make_hadamard(bool atomic, value const &alpha, value const &A, value
 }
 
 /**
+ * @brief Make num_subgroups instruction
+ *
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_num_subgroups(location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_num_subgroups_inst_create(&instr, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make parallel region
+ *
+ * @param body Loop body
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_parallel(region const &body, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_parallel_inst_create(&instr, body.get(), &loc), loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make size instruction
  *
  * @param a Operand
@@ -1020,6 +1047,45 @@ inline inst make_hadamard(bool atomic, value const &alpha, value const &A, value
 inline inst make_size(value const &a, std::int64_t mode, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a.get(), mode, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make subgroup_id instruction
+ *
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_id(location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_id_inst_create(&instr, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make subgroup_local_id instruction
+ *
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_local_id(location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_local_id_inst_create(&instr, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make subgroup_size instruction
+ *
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_size(location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_size_inst_create(&instr, &loc), loc);
     return inst(instr);
 }
 

@@ -139,8 +139,12 @@ lex:
         "for"               { adv_loc(); return parser::make_FOR(loc_); }
         "foreach"           { adv_loc(); return parser::make_FOREACH(loc_); }
         "if"                { adv_loc(); return parser::make_IF(loc_); }
+        "num_subgroups"     { adv_loc(); return parser::make_NUM_SUBGROUPS(loc_); }
+        "parallel"          { adv_loc(); return parser::make_PARALLEL(loc_); }
         "else"              { adv_loc(); return parser::make_ELSE(loc_); }
         "size"              { adv_loc(); return parser::make_SIZE(loc_); }
+        "subgroup_id"       { adv_loc(); return parser::make_SUBGROUP_ID(loc_); }
+        "subgroup_local_id" { adv_loc(); return parser::make_SUBGROUP_LOCAL_ID(loc_); }
         "subview"           { adv_loc(); return parser::make_SUBVIEW(loc_); }
         "store"             { adv_loc(); return parser::make_STORE(loc_); }
         "sum"               { adv_loc(); return parser::make_SUM(loc_); }

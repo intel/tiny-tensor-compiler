@@ -70,6 +70,7 @@ enum class status {
     ir_expand_shape_mismatch = tinytc_status_ir_expand_shape_mismatch,
     ir_collective_called_from_spmd = tinytc_status_ir_collective_called_from_spmd,
     ir_fp_unsupported = tinytc_status_ir_fp_unsupported,
+    ir_spmd_called_from_collective = tinytc_status_ir_spmd_called_from_collective,
     // Level Zero errors
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,

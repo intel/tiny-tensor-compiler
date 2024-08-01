@@ -306,9 +306,19 @@ Instruction
 
   * :ref:`make_load`
 
+  * :ref:`make_num_subgroups`
+
+  * :ref:`make_parallel`
+
   * :ref:`make_size`
 
   * :ref:`make_store`
+
+  * :ref:`make_subgroup_id`
+
+  * :ref:`make_subgroup_local_id`
+
+  * :ref:`make_subgroup_size`
 
   * :ref:`make_subview`
 
@@ -413,6 +423,16 @@ make_load
 
 .. doxygenfunction:: tinytc::make_load
 
+make_num_subgroups
+..................
+
+.. doxygenfunction:: tinytc::make_num_subgroups
+
+make_parallel
+.............
+
+.. doxygenfunction:: tinytc::make_parallel
+
 make_size
 .........
 
@@ -422,6 +442,21 @@ make_store
 ..........
 
 .. doxygenfunction:: tinytc::make_store
+
+make_subgroup_id
+................
+
+.. doxygenfunction:: tinytc::make_subgroup_id
+
+make_subgroup_local_id
+......................
+
+.. doxygenfunction:: tinytc::make_subgroup_local_id
+
+make_subgroup_size
+..................
+
+.. doxygenfunction:: tinytc::make_subgroup_size
 
 make_subview
 ............

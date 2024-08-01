@@ -18,6 +18,7 @@ class ir_checker {
     void operator()(for_inst const &p);
     void operator()(foreach_inst const &p);
     void operator()(if_inst const &in);
+    void operator()(parallel_inst const &p);
 
     /* Region nodes */
     void operator()(rgn const &b);

@@ -505,6 +505,36 @@ TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
     tinytc_value_t B, tinytc_value_t beta, tinytc_value_t C, const tinytc_location_t *loc);
 
 /**
+ * @brief Create num_subgroups instruction
+ *
+ * @code %value = num_subgroups @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
+                                                               const tinytc_location_t *loc);
+
+/**
+ * @brief Create parallel region
+ *
+ * @code
+ * parallel { %body }
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param body [in] loop body
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr,
+                                                          tinytc_region_t body,
+                                                          const tinytc_location_t *loc);
+
+/**
  * @brief Create size instruction
  *
  * @code %value = size %a[%mode] : type(%a) @endcode
@@ -518,6 +548,45 @@ TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
  */
 TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       int64_t mode, const tinytc_location_t *loc);
+
+/**
+ * @brief Create subgroup_id instruction
+ *
+ * @code %value = subgroup_id @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr,
+                                                             const tinytc_location_t *loc);
+
+/**
+ * @brief Create subgroup_local_id instruction
+ *
+ * @code %value = subgroup_local_id @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t *instr,
+                                                                   const tinytc_location_t *loc);
+
+/**
+ * @brief Create subgroup_size instruction
+ *
+ * @code %value = subgroup_size @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
+                                                               const tinytc_location_t *loc);
 
 /**
  * @brief Create subview instruction

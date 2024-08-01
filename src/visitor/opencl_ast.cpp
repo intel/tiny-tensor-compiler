@@ -856,12 +856,44 @@ std::vector<clir::stmt> opencl_ast::operator()(if_inst const &in) {
     return clinst;
 }
 
+std::vector<clir::stmt> opencl_ast::operator()(num_subgroups_inst const &sg) {
+    auto rhs = clir::get_num_sub_groups();
+    auto lhs = declare(*sg.result());
+    return {
+        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
+}
+
+std::vector<clir::stmt> opencl_ast::operator()(parallel_inst const &p) {
+    return {visit(*this, *p.body())};
+}
+
 std::vector<clir::stmt> opencl_ast::operator()(size_inst const &s) {
     auto v = declare(*s.result());
     auto &dv = get_dope_vector(s.operand().get());
 
     return {clir::declaration_assignment(visit(*this, *s.result()->ty()), std::move(v),
                                          dv.shape(s.mode()))};
+}
+
+std::vector<clir::stmt> opencl_ast::operator()(subgroup_id_inst const &sg) {
+    auto rhs = clir::get_sub_group_id();
+    auto lhs = declare(*sg.result());
+    return {
+        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
+}
+
+std::vector<clir::stmt> opencl_ast::operator()(subgroup_local_id_inst const &sg) {
+    auto rhs = clir::get_sub_group_local_id();
+    auto lhs = declare(*sg.result());
+    return {
+        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
+}
+
+std::vector<clir::stmt> opencl_ast::operator()(subgroup_size_inst const &sg) {
+    auto rhs = clir::get_sub_group_size();
+    auto lhs = declare(*sg.result());
+    return {
+        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(subview_inst const &s) {

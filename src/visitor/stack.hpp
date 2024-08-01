@@ -22,6 +22,7 @@ class stack_ptr {
     void operator()(alloca_inst &a);
     void operator()(lifetime_stop_inst &s);
     void operator()(for_inst &p);
+    void operator()(if_inst &in);
 
     /* Region nodes */
     void operator()(rgn &b);

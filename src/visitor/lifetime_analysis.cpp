@@ -26,6 +26,15 @@ value find_alloca::operator()(for_inst &p) {
     }
     return value{};
 }
+value find_alloca::operator()(if_inst &in) {
+    if (recursive_) {
+        visit(*this, *in.then());
+        if (in.otherwise()) {
+            visit(*this, *in.otherwise());
+        }
+    }
+    return value{};
+}
 
 /* Region nodes */
 value find_alloca::operator()(rgn &b) {
@@ -85,6 +94,10 @@ auto lifetime_inserter::operator()(if_inst &in) -> std::unordered_set<value_node
 auto lifetime_inserter::operator()(lifetime_stop_inst &ls)
     -> std::unordered_set<value_node const *> {
     return {ls.object().get()};
+}
+
+auto lifetime_inserter::operator()(parallel_inst &p) -> std::unordered_set<value_node const *> {
+    return visit(*this, *p.body());
 }
 
 auto lifetime_inserter::operator()(size_inst &s) -> std::unordered_set<value_node const *> {

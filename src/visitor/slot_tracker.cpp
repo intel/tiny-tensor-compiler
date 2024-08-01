@@ -37,6 +37,8 @@ void slot_tracker::operator()(if_inst const &in) {
     }
 }
 
+void slot_tracker::operator()(parallel_inst const &p) { return visit(*this, *p.body()); }
+
 /* Region nodes */
 void slot_tracker::operator()(rgn const &b) {
     for (auto const &s : b.insts()) {

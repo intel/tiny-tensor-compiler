@@ -85,6 +85,10 @@ std::unordered_set<value_node *> insert_barrier::operator()(if_inst &in) {
 
 std::unordered_set<value_node *> insert_barrier::operator()(lifetime_stop_inst &) { return {}; }
 
+std::unordered_set<value_node *> insert_barrier::operator()(parallel_inst &p) {
+    return visit(*this, *p.body());
+}
+
 std::unordered_set<value_node *> insert_barrier::operator()(size_inst &) { return {}; }
 
 std::unordered_set<value_node *> insert_barrier::operator()(store_inst &s) {

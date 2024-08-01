@@ -1,0 +1,8 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
+func @illegal_nesting() {
+    %0 = subgroup_id
+; CHECK: 6.10-20: SPMD instruction must not be called from collective region
+}

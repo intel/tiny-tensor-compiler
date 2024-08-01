@@ -1,0 +1,16 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc < %s | filecheck %s
+func @t1() {
+    parallel {
+        %0 = num_subgroups
+        %1 = subgroup_id
+        %2 = subgroup_local_id
+        %3 = subgroup_size
+    }
+; CHECK:      int x0 = get_num_sub_groups();
+; CHECK-NEXT: int x1 = get_sub_group_id();
+; CHECK-NEXT: int x2 = get_sub_group_local_id();
+; CHECK-NEXT: int x3 = get_sub_group_size();
+}

@@ -16,9 +16,10 @@ namespace tinytc {
 
 /* Stmt nodes */
 void ir_checker::operator()(inst_node const &in) {
-    bool ok = in.kind() != inst_kind::collective || !inside_spmd_region_;
-    if (!ok) {
+    if (in.kind() == inst_kind::collective && inside_spmd_region_) {
         throw compilation_error(in.loc(), status::ir_collective_called_from_spmd);
+    } else if (in.kind() == inst_kind::spmd && !inside_spmd_region_) {
+        throw compilation_error(in.loc(), status::ir_spmd_called_from_collective);
     }
 }
 void ir_checker::operator()(for_inst const &p) { return visit(*this, *p.body()); }
@@ -33,6 +34,12 @@ void ir_checker::operator()(if_inst const &in) {
     if (in.otherwise()) {
         visit(*this, *in.otherwise());
     }
+}
+void ir_checker::operator()(parallel_inst const &p) {
+    this->operator()(static_cast<inst_node const &>(p));
+    inside_spmd_region_ = true;
+    visit(*this, *p.body());
+    inside_spmd_region_ = false;
 }
 
 /* Region nodes */

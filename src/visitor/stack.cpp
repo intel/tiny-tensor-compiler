@@ -52,6 +52,13 @@ void stack_ptr::operator()(lifetime_stop_inst &s) {
 }
 void stack_ptr::operator()(for_inst &p) { visit(*this, *p.body()); }
 
+void stack_ptr::operator()(if_inst &in) {
+    visit(*this, *in.then());
+    if (in.otherwise()) {
+        visit(*this, *in.otherwise());
+    }
+}
+
 /* Region nodes */
 void stack_ptr::operator()(rgn &b) {
     for (auto &s : b.insts()) {

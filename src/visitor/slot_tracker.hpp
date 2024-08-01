@@ -21,6 +21,7 @@ class slot_tracker {
     void operator()(inst_node const &in);
     void operator()(loop_inst const &p);
     void operator()(if_inst const &in);
+    void operator()(parallel_inst const &p);
 
     /* Region nodes */
     void operator()(rgn const &b);

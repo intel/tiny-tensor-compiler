@@ -53,7 +53,12 @@ class ir_dumper {
     void operator()(foreach_inst const &p);
     void operator()(hadamard_inst const &g);
     void operator()(if_inst const &in);
+    void operator()(num_subgroups_inst const &sg);
+    void operator()(parallel_inst const &p);
     void operator()(size_inst const &s);
+    void operator()(subgroup_id_inst const &sg);
+    void operator()(subgroup_local_id_inst const &sg);
+    void operator()(subgroup_size_inst const &sg);
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);
     void operator()(sum_inst const &s);

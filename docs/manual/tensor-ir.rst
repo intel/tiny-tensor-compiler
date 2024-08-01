@@ -28,7 +28,7 @@ Mixed instructions accept both varying and uniform local variables.
 
 Regions come in two different kinds: collective and SPMD.
 A collective instructions must only appear in a collective region, and an SPMD instruction
-must only appear in a in a SPMD region. Mixed instructions might appear in both kinds of regions.
+must only appear in a SPMD region. Mixed instructions might appear in both kinds of regions.
 SPMD regions may be nested in collective regions but collective regions must not be nested in SPMD regions.
 
 Core rules
@@ -473,6 +473,18 @@ a, b, and c, respectively.
 
 a, b, and c must be vectors and have equal shape.
 
+Parallel
+........
+
+.. code:: abnf
+
+    instruction     =/ "parallel" region
+
+Overview
+~~~~~~~~
+
+Opens an *spmd region*.
+
 Sum
 ...
 
@@ -832,6 +844,18 @@ Examples:
 #. ``load %0[%1] : group<memref<f32x42>>`` returns a ``memref<f32x42>`` value.
 #. ``load %0[%1] : group<memref<f32x42>, offset: ?>`` returns a ``memref<f32x42>`` value.
 
+Number of subgroups
+...................
+
+.. code:: abnf
+
+    value-instruction       =/ "num_subgroups"
+
+Overview
+~~~~~~~~
+
+Returns the number of subgroups the work-group is divided in; i32 integer.
+
 For
 ...
 
@@ -879,6 +903,19 @@ It is required that
 
 The local identifier must have the memref type specified last.
 The instruction returns an integer of index type.
+
+Subgroup size
+.............
+
+.. code:: abnf
+
+    value-instruction       =/ "subgroup_size"
+
+Overview
+~~~~~~~~
+
+Returns the subgroup size; i32 integer.
+
 
 Subview
 .......
@@ -1006,18 +1043,6 @@ Additional instructions
 SPMD instructions
 -----------------
 
-Number of subgroups
-...................
-
-.. code:: abnf
-
-    value-instruction       =/ "num_subgroups"
-
-Overview
-~~~~~~~~
-
-Returns the number of subgroups the work-group is divided in; i32 integer.
-
 Subgroup id
 ...........
 
@@ -1041,19 +1066,6 @@ Overview
 ~~~~~~~~
 
 Returns the work-item id within the sub-group; i32 integer from 0 to subgroup_size - 1.
-
-Subgroup size
-.............
-
-.. code:: abnf
-
-    value-instruction       =/ "subgroup_size"
-
-Overview
-~~~~~~~~
-
-Returns the subgroup size; i32 integer.
-
 
 Sample code
 ===========

@@ -25,6 +25,7 @@ class work_group_size {
     void operator()(blas_a3_inst &in);
     void operator()(if_inst &in);
     void operator()(loop_inst &in);
+    void operator()(parallel_inst &p);
 
     /* Region nodes */
     void operator()(rgn &b);

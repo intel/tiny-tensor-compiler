@@ -41,6 +41,7 @@ class insert_barrier {
     std::unordered_set<value_node *> operator()(load_inst &e);
     std::unordered_set<value_node *> operator()(if_inst &in);
     std::unordered_set<value_node *> operator()(lifetime_stop_inst &);
+    std::unordered_set<value_node *> operator()(parallel_inst &p);
     std::unordered_set<value_node *> operator()(size_inst &s);
     std::unordered_set<value_node *> operator()(store_inst &s);
     std::unordered_set<value_node *> operator()(subview_inst &s);

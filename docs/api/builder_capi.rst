@@ -356,9 +356,19 @@ Instruction
 
   * :ref:`tinytc_load_inst_create`
 
+  * :ref:`tinytc_num_subgroups_inst_create`
+
+  * :ref:`tinytc_parallel_inst_create`
+
   * :ref:`tinytc_size_inst_create`
 
   * :ref:`tinytc_store_inst_create`
+
+  * :ref:`tinytc_subgroup_id_inst_create`
+
+  * :ref:`tinytc_subgroup_local_id_inst_create`
+
+  * :ref:`tinytc_subgroup_size_inst_create`
 
   * :ref:`tinytc_subview_inst_create`
 
@@ -467,6 +477,16 @@ tinytc_load_inst_create
 
 .. doxygenfunction:: tinytc_load_inst_create
 
+tinytc_num_subgroups_inst_create
+................................
+
+.. doxygenfunction:: tinytc_num_subgroups_inst_create
+
+tinytc_parallel_inst_create
+...........................
+
+.. doxygenfunction:: tinytc_parallel_inst_create
+
 tinytc_size_inst_create
 .......................
 
@@ -476,6 +496,21 @@ tinytc_store_inst_create
 ........................
 
 .. doxygenfunction:: tinytc_store_inst_create
+
+tinytc_subgroup_id_inst_create
+..............................
+
+.. doxygenfunction:: tinytc_subgroup_id_inst_create
+
+tinytc_subgroup_local_id_inst_create
+....................................
+
+.. doxygenfunction:: tinytc_subgroup_local_id_inst_create
+
+tinytc_subgroup_size_inst_create
+................................
+
+.. doxygenfunction:: tinytc_subgroup_size_inst_create
 
 tinytc_subview_inst_create
 ..........................

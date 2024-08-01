@@ -271,6 +271,16 @@ void ir_dumper::operator()(if_inst const &in) {
     }
 }
 
+void ir_dumper::operator()(num_subgroups_inst const &sg) {
+    visit(*this, *sg.result());
+    os_ << " = num_subgroups";
+}
+
+void ir_dumper::operator()(parallel_inst const &p) {
+    os_ << "parallel ";
+    visit(*this, *p.body());
+}
+
 void ir_dumper::operator()(size_inst const &s) {
     visit(*this, *s.result());
     os_ << " = size ";
@@ -278,6 +288,21 @@ void ir_dumper::operator()(size_inst const &s) {
     os_ << "[" << s.mode() << "]";
     os_ << " : ";
     visit(*this, *s.operand()->ty());
+}
+
+void ir_dumper::operator()(subgroup_id_inst const &sg) {
+    visit(*this, *sg.result());
+    os_ << " = subgroup_id";
+}
+
+void ir_dumper::operator()(subgroup_local_id_inst const &sg) {
+    visit(*this, *sg.result());
+    os_ << " = subgroup_local_id";
+}
+
+void ir_dumper::operator()(subgroup_size_inst const &sg) {
+    visit(*this, *sg.result());
+    os_ << " = subgroup_size";
 }
 
 void ir_dumper::operator()(subview_inst const &s) {

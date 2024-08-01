@@ -63,8 +63,13 @@ Builder C++-API:
       - tinytc::make_hadamard
       - tinytc::make_if
       - tinytc::make_load
+      - tinytc::make_num_subgroups
+      - tinytc::make_parallel
       - tinytc::make_size
       - tinytc::make_store
+      - tinytc::make_subgroup_id
+      - tinytc::make_subgroup_local_id
+      - tinytc::make_subgroup_size
       - tinytc::make_subview
       - tinytc::make_sum
       - tinytc::make_yield

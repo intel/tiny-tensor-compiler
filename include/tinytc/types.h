@@ -60,6 +60,7 @@ typedef enum {
     tinytc_status_ir_expand_shape_mismatch = 0x110,        ///< Invalid expand shape
     tinytc_status_ir_collective_called_from_spmd = 0x111,  ///< Collective instruction from SPMD
     tinytc_status_ir_fp_unsupported = 0x112, ///< Instruction does not support floating type
+    tinytc_status_ir_spmd_called_from_collective = 0x113, ///< SPMD instruction from collective
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST

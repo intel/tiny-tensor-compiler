@@ -123,11 +123,15 @@
     LOAD            "load"
     FOR             "for"
     FOREACH         "foreach"
-    IF              "if"
-    ELSE            "else"
     GROUP_ID        "group_id"
     GROUP_SIZE      "group_size"
+    IF              "if"
+    ELSE            "else"
+    NUM_SUBGROUPS   "num_subgroups"
+    PARALLEL        "parallel"
     SIZE            "size"
+    SUBGROUP_ID     "subgroup_id"
+    SUBGROUP_LOCAL_ID "subgroup_local_id"
     SUBVIEW         "subview"
     STORE           "store"
     SUM             "sum"
@@ -203,7 +207,12 @@
 %nterm <::tinytc::value> index_identifier_or_const
 %nterm <inst> group_id_inst
 %nterm <inst> group_size_inst
+%nterm <inst> num_subgroups_inst
+%nterm <inst> parallel_inst
 %nterm <inst> size_inst
+%nterm <inst> subgroup_id_inst
+%nterm <inst> subgroup_local_id_inst
+%nterm <inst> subgroup_size_inst
 %nterm <inst> store_inst
 %nterm <inst> subview_inst
 %nterm <std::vector<slice>> optional_slice_list
@@ -395,6 +404,7 @@ instruction:
   | foreach_inst
   | hadamard_inst
   | if_inst
+  | parallel_inst
   | var_definition
   | store_inst
   | sum_inst
@@ -674,11 +684,15 @@ valued_inst:
   | compare_inst
   | expand_inst
   | fuse_inst
-  | if_inst
-  | load_inst
   | group_id_inst
   | group_size_inst
+  | if_inst
+  | load_inst
+  | num_subgroups_inst
   | size_inst
+  | subgroup_id_inst
+  | subgroup_local_id_inst
+  | subgroup_size_inst
   | subview_inst
 ;
 
@@ -873,11 +887,11 @@ store_inst:
 ;
 
 group_id_inst:
-    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>().release()}; }
+    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>(@GROUP_ID).release()}; }
 ;
 
 group_size_inst:
-    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>().release()}; }
+    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>(@GROUP_SIZE).release()}; }
 ;
 
 if_inst:
@@ -911,6 +925,15 @@ scalar_type_list:
   | scalar_type_list COMMA scalar_type { $$ = std::move($1); $$.push_back($scalar_type); }
 ;
 
+num_subgroups_inst:
+    NUM_SUBGROUPS { $$ = inst{std::make_unique<num_subgroups_inst>(@NUM_SUBGROUPS).release()}; }
+;
+
+parallel_inst:
+    PARALLEL region {
+        $$ = inst{std::make_unique<parallel_inst>(std::move($region), @parallel_inst) .release()};
+    }
+;
 
 size_inst:
     SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON memref_type {
@@ -926,6 +949,18 @@ size_inst:
             YYERROR;
         }
     }
+;
+
+subgroup_id_inst:
+    SUBGROUP_ID { $$ = inst{std::make_unique<subgroup_id_inst>(@SUBGROUP_ID).release()}; }
+;
+
+subgroup_local_id_inst:
+    SUBGROUP_LOCAL_ID { $$ = inst{std::make_unique<subgroup_local_id_inst>(@SUBGROUP_LOCAL_ID).release()}; }
+;
+
+subgroup_size_inst:
+    SUBGROUP_SIZE { $$ = inst{std::make_unique<subgroup_size_inst>(@SUBGROUP_SIZE).release()}; }
 ;
 
 subview_inst:

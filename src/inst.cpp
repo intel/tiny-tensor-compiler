@@ -284,6 +284,25 @@ tinytc_status_t tinytc_hadamard_inst_create(tinytc_inst_t *instr, tinytc_bool_t 
     });
 }
 
+tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
+                                                 const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<num_subgroups_inst>(get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, tinytc_region_t body,
+                                            const tinytc_location_t *loc) {
+    if (instr == nullptr || body == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<parallel_inst>(region(body, true), get_optional(loc)).release();
+    });
+}
+
 tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t mode,
                                         const tinytc_location_t *loc) {
     if (instr == nullptr) {
@@ -292,6 +311,32 @@ tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     return exception_to_status_code([&] {
         *instr = std::make_unique<size_inst>(value(a, true), mode, get_optional(loc)).release();
     });
+}
+
+tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr, const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<subgroup_id_inst>(get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t *instr,
+                                                     const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<subgroup_local_id_inst>(get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
+                                                 const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<subgroup_size_inst>(get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,

@@ -48,6 +48,8 @@ void alias_analyser::operator()(if_inst const &in) {
     }
 }
 
+void alias_analyser::operator()(parallel_inst const &p) { visit(*this, *p.body()); }
+
 void alias_analyser::operator()(subview_inst const &s) {
     value_node const *source = s.operand().get();
     while (alias_.find(source) != alias_.end()) {

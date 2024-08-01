@@ -61,6 +61,7 @@ void work_group_size::operator()(if_inst &in) {
     }
 }
 void work_group_size::operator()(loop_inst &in) { visit(*this, *in.body()); }
+void work_group_size::operator()(parallel_inst &p) { visit(*this, *p.body()); }
 
 /* Region nodes */
 void work_group_size::operator()(rgn &b) {
