@@ -104,7 +104,9 @@ template <typename T> void test(queue q, args &a) {
         try {
             source_ctx = make_source_context();
             auto info = make_core_info(q.get_device());
-            info.set_core_features(tinytc_core_feature_flag_large_register_file);
+            if (a.large_GRF) {
+                info.set_core_features(tinytc_core_feature_flag_large_register_file);
+            }
 
             std::int64_t M = a.specialize_M ? c.m : dynamic;
             std::int64_t ldA = dynamic, ldB = dynamic, ldC = dynamic;

@@ -22,6 +22,7 @@ struct args {
     double beta;
     bool specialize_M;
     bool specialize_ld;
+    bool large_GRF;
 };
 
 class arg_parser {

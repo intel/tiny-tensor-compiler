@@ -14,6 +14,7 @@ args arg_parser::parse_args(int argc, char **argv) {
     a.beta = 0.0;
     a.specialize_M = false;
     a.specialize_ld = false;
+    a.large_GRF = true;
     auto num = std::vector<std::int64_t>(3);
     for (int i = 1; i < argc; ++i) {
         if (argv[i][0] == '-') {
@@ -29,6 +30,8 @@ args arg_parser::parse_args(int argc, char **argv) {
                 a.specialize_M = true;
             } else if (std::strcmp(argv[i], "--specialize-ld") == 0) {
                 a.specialize_ld = true;
+            } else if (std::strcmp(argv[i], "--small-grf") == 0) {
+                a.large_GRF = false;
             } else if (i + 1 < argc) {
                 if (std::strcmp(argv[i], "-b") == 0 || std::strcmp(argv[i], "--beta") == 0) {
                     ++i;
@@ -80,5 +83,6 @@ optional arguments:
     -v, --verify        Verify optimized implementation
     --specialize-M      Specialize M instead of using dynamic value
     --specialize-ld     Specialize ldA, ldB, ldC instead of using dynamic value
+    --small-grf         Request small GRF mode instead of large GRF mode
 )HELP";
 }

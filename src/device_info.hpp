@@ -91,6 +91,7 @@ class core_info_intel : public ::tinytc_core_info {
   private:
     auto num_reg_small_grf() const -> std::int32_t;
     auto num_reg_large_grf() const -> std::int32_t;
+    auto num_reg() const -> std::int32_t;
     auto max_work_group_size(std::int32_t subgroup_size) const -> std::int32_t;
 
     std::uint32_t ip_version_;
@@ -98,7 +99,6 @@ class core_info_intel : public ::tinytc_core_info {
     std::int32_t num_threads_per_eu_;
     std::vector<std::int32_t> subgroup_sizes_;
     std::int32_t register_size_;
-    std::int32_t num_registers_per_thread_;
     tinytc_core_feature_flags_t core_features_;
 };
 
