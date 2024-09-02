@@ -6,7 +6,6 @@
 
 %code requires {
     #include "node/function_node.hpp"
-    #include "slice.hpp"
     #include "tinytc/tinytc.hpp"
     #include "tinytc/types.hpp"
     #include <algorithm>
@@ -215,9 +214,9 @@
 %nterm <inst> subgroup_size_inst
 %nterm <inst> store_inst
 %nterm <inst> subview_inst
-%nterm <std::vector<slice>> optional_slice_list
-%nterm <std::vector<slice>> slice_list
-%nterm <slice> slice
+%nterm <std::pair<std::vector<::tinytc::value>, std::vector<::tinytc::value>>> optional_slice_list
+%nterm <std::pair<std::vector<::tinytc::value>, std::vector<::tinytc::value>>> slice_list
+%nterm <std::pair<::tinytc::value, ::tinytc::value>> slice
 %nterm <::tinytc::value> slice_size
 
 %%
@@ -972,8 +971,8 @@ subview_inst:
         }
         try {
             $$ = inst {
-                std::make_unique<subview_inst>(std::move($var), std::move($optional_slice_list),
-                                               @subview_inst)
+                std::make_unique<subview_inst>(std::move($var), $optional_slice_list.first,
+                                               $optional_slice_list.second, @subview_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -989,13 +988,20 @@ optional_slice_list:
 ;
 
 slice_list:
-    slice { $$.push_back($slice); }
-  | slice_list COMMA slice { $$ = std::move($1); $$.push_back($slice); }
+    slice {
+        $$.first.emplace_back(std::move($slice.first));
+        $$.second.emplace_back(std::move($slice.second));
+    }
+  | slice_list COMMA slice {
+        $$ = std::move($1);
+        $$.first.emplace_back(std::move($slice.first));
+        $$.second.emplace_back(std::move($slice.second));
+    }
 ;
 
 slice:
-    COLON { $$ = slice(make_index(0), make_dynamic()); }
-  | index_identifier_or_const slice_size { $$ = slice(std::move($1), std::move($2)); }
+    COLON { $$ = std::make_pair(make_index(0), make_dynamic()); }
+  | index_identifier_or_const slice_size { $$ = std::make_pair(std::move($1), std::move($2)); }
 ;
 
 slice_size:

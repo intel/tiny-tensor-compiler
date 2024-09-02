@@ -35,6 +35,8 @@ value_node *insert_barrier::operator()(val &v) {
 }
 
 /* Inst nodes */
+std::unordered_set<value_node *> insert_barrier::operator()(inst_node &) { return {}; }
+
 std::unordered_set<value_node *> insert_barrier::operator()(blas_a2_inst &g) {
     auto rw = std::unordered_set<value_node *>{};
     rw.emplace(visit(*this, *g.A()));
@@ -53,8 +55,6 @@ std::unordered_set<value_node *> insert_barrier::operator()(blas_a3_inst &inst) 
 std::unordered_set<value_node *> insert_barrier::operator()(loop_inst &p) {
     return visit(*this, *p.body());
 }
-
-std::unordered_set<value_node *> insert_barrier::operator()(scalar_inst &) { return {}; }
 
 std::unordered_set<value_node *> insert_barrier::operator()(alloca_inst &) { return {}; }
 

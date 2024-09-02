@@ -18,7 +18,7 @@
 
 namespace tinytc {
 
-scalar_data_type *get_scalar_type(location const &loc, value &v) {
+scalar_data_type *get_scalar_type(location const &loc, value const &v) {
     auto m = dynamic_cast<scalar_data_type *>(v->ty().get());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
@@ -26,7 +26,7 @@ scalar_data_type *get_scalar_type(location const &loc, value &v) {
     return m;
 }
 
-memref_data_type *get_memref_type(location const &loc, value &v) {
+memref_data_type *get_memref_type(location const &loc, value const &v) {
     auto m = dynamic_cast<memref_data_type *>(v->ty().get());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_memref);
@@ -35,27 +35,27 @@ memref_data_type *get_memref_type(location const &loc, value &v) {
 }
 
 blas_a2_inst::blas_a2_inst(value alpha, value A, value beta, value B, bool atomic)
-    : alpha_(std::move(alpha)), A_(std::move(A)), beta_(std::move(beta)), B_(std::move(B)),
+    : standard_inst{std::move(alpha), std::move(A), std::move(beta), std::move(B)},
       atomic_(atomic) {}
 
 blas_a3_inst::blas_a3_inst(value alpha, value A, value B, value beta, value C, bool atomic)
-    : alpha_(std::move(alpha)), A_(std::move(A)), B_(std::move(B)), beta_(std::move(beta)),
-      C_(std::move(C)), atomic_(atomic) {}
+    : standard_inst{std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C)},
+      atomic_(atomic) {}
 
 loop_inst::loop_inst(value loop_var, value from, value to, region body, location const &lc)
     : loop_inst(std::move(loop_var), std::move(from), std::move(to), {}, std::move(body), lc) {}
 
-loop_inst::loop_inst(value loop_var, value from, value to, value step, region body,
+loop_inst::loop_inst(value loop_var0, value from0, value to0, value step0, region body,
                      location const &lc)
-    : loop_var_(std::move(loop_var)), from_(std::move(from)), to_(std::move(to)),
-      step_(std::move(step)), body_(std::move(body)) {
+    : standard_inst{std::move(loop_var0), std::move(from0), std::move(to0), std::move(step0)},
+      body_(std::move(body)) {
     loc(lc);
-    auto lvt = get_scalar_type(loc(), loop_var_);
-    auto fromt = get_scalar_type(loc(), from_);
-    auto tot = get_scalar_type(loc(), to_);
+    auto lvt = get_scalar_type(loc(), loop_var());
+    auto fromt = get_scalar_type(loc(), from());
+    auto tot = get_scalar_type(loc(), to());
     bool step_ok = true;
-    if (step_) {
-        auto stept = get_scalar_type(loc(), step_);
+    if (step()) {
+        auto stept = get_scalar_type(loc(), step());
         step_ok = lvt->ty() == stept->ty();
     }
 
@@ -74,12 +74,12 @@ alloca_inst::alloca_inst(data_type ty, location const &lc)
     memref->addrspace(clir::address_space::local_t);
 }
 
-axpby_inst::axpby_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic,
+axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                        location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(beta), std::move(B), atomic), tA_(tA) {
+    : super(std::move(alpha0), std::move(A0), std::move(beta0), std::move(B0), atomic), tA_(tA) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
 
     bool shape_equal = false;
     if (tA_ == transpose::T && a->dim() == 2 && b->dim() == 2) {
@@ -97,18 +97,18 @@ axpby_inst::axpby_inst(transpose tA, value alpha, value A, value beta, value B, 
     }
 }
 
-arith_inst::arith_inst(arithmetic op, value a, value b, location const &lc)
-    : op_(op), a_(std::move(a)), b_(std::move(b)) {
+arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const &lc)
+    : super{std::move(a0), std::move(b0)}, operation_(operation) {
     loc(lc);
 
-    auto at = get_scalar_type(loc(), a_);
-    auto bt = get_scalar_type(loc(), b_);
+    auto at = get_scalar_type(loc(), a());
+    auto bt = get_scalar_type(loc(), b());
 
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
     bool inst_supports_fp = false;
-    switch (op) {
+    switch (operation) {
     case arithmetic::add:
     case arithmetic::sub:
     case arithmetic::mul:
@@ -130,13 +130,13 @@ arith_inst::arith_inst(arithmetic op, value a, value b, location const &lc)
     result_ = make_value(at->ty());
 }
 
-arith_unary_inst::arith_unary_inst(arithmetic_unary op, value a, location const &lc)
-    : op_(op), a_(std::move(a)) {
+arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, location const &lc)
+    : super{std::move(a0)}, operation_(operation) {
     loc(lc);
 
-    auto at = get_scalar_type(loc(), a_);
+    auto at = get_scalar_type(loc(), a());
     bool inst_supports_fp = false;
-    switch (op) {
+    switch (operation) {
     case arithmetic_unary::neg:
         inst_supports_fp = true;
         break;
@@ -151,30 +151,31 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary op, value a, location const 
 }
 
 cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
-    : a_(std::move(a)), result_{make_value(to_ty)} {
+    : super{std::move(a)}, result_{make_value(to_ty)} {
     loc(lc);
 }
 
-compare_inst::compare_inst(cmp_condition cond, value a, value b, location const &lc)
-    : cond_(cond), a_(std::move(a)), b_(std::move(b)), result_{make_value(scalar_type::i1)} {
+compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location const &lc)
+    : super{std::move(a0), std::move(b0)}, cond_(cond), result_{make_value(scalar_type::i1)} {
     loc(lc);
 
-    auto at = get_scalar_type(loc(), a_);
-    auto bt = get_scalar_type(loc(), b_);
+    auto at = get_scalar_type(loc(), a());
+    auto bt = get_scalar_type(loc(), b());
 
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 }
 
-gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
-                     bool atomic, location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C), atomic),
+gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha0, value A0, value B0, value beta0,
+                     value C0, bool atomic, location const &lc)
+    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
+            atomic),
       tA_(tA), tB_(tB) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
-    auto c = get_memref_type(loc(), C_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
 
     if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
         throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
@@ -196,14 +197,15 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, 
     }
 }
 
-gemv_inst::gemv_inst(transpose tA, value alpha, value A, value B, value beta, value C, bool atomic,
-                     location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C), atomic),
+gemv_inst::gemv_inst(transpose tA, value alpha0, value A0, value B0, value beta0, value C0,
+                     bool atomic, location const &lc)
+    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
+            atomic),
       tA_(tA) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
-    auto c = get_memref_type(loc(), C_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
 
     if (a->dim() != 2 || b->dim() != 1 || c->dim() != 1) {
         throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
@@ -223,13 +225,14 @@ gemv_inst::gemv_inst(transpose tA, value alpha, value A, value B, value beta, va
     }
 }
 
-ger_inst::ger_inst(value alpha, value A, value B, value beta, value C, bool atomic,
+ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
                    location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C), atomic) {
+    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
+            atomic) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
-    auto c = get_memref_type(loc(), C_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
 
     if (a->dim() != 1 || b->dim() != 1 || c->dim() != 2) {
         throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
@@ -248,13 +251,14 @@ ger_inst::ger_inst(value alpha, value A, value B, value beta, value C, bool atom
     }
 }
 
-hadamard_inst::hadamard_inst(value alpha, value A, value B, value beta, value C, bool atomic,
+hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
                              location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C), atomic) {
+    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
+            atomic) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
-    auto c = get_memref_type(loc(), C_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
 
     if (a->dim() != 1 || b->dim() != 1 || c->dim() != 1) {
         throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
@@ -272,25 +276,27 @@ hadamard_inst::hadamard_inst(value alpha, value A, value B, value beta, value C,
     }
 }
 
-expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_shape,
+expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const &expand_shape0,
                          location const &lc)
-    : op_(std::move(op)), mode_(mode), expand_shape_(std::move(expand_shape)) {
+    : super{std::move(op0)}, mode_(mode) {
     loc(lc);
 
-    auto m = get_memref_type(loc(), op_);
+    ops().insert(ops().end(), expand_shape0.begin(), expand_shape0.end());
+
+    auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    if (expand_shape_.size() < 2) {
+    if (expand_shape().size() < 2) {
         throw compilation_error(loc(), status::ir_expand_shape_order_too_small);
     }
 
     auto known_expand_shape = std::vector<std::int64_t>();
-    known_expand_shape.reserve(expand_shape_.size());
+    known_expand_shape.reserve(expand_shape().size());
     std::size_t dyn_count = 0, non_imm_count = 0;
-    for (auto &s : expand_shape_) {
+    for (auto &s : expand_shape()) {
         visit(overloaded{[&](int_imm &i) {
                              if (is_dynamic_value(i.value())) {
                                  known_expand_shape.push_back(dynamic);
@@ -328,7 +334,7 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
         if (dyn_mode >= 0) {
             std::int64_t const s = size / prod;
             known_expand_shape[dyn_mode] = s;
-            expand_shape_[dyn_mode] = make_imm(s);
+            expand_shape()[dyn_mode] = make_imm(s);
             prod *= s;
         }
         if (prod != size) {
@@ -363,10 +369,10 @@ expand_inst::expand_inst(value op, std::int64_t mode, std::vector<value> expand_
     result_ = make_value(data_type(r.release()));
 }
 
-fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc)
-    : op_(std::move(op)), from_(from), to_(to) {
+fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location const &lc)
+    : super{std::move(op0)}, from_(from), to_(to) {
     loc(lc);
-    auto m = get_memref_type(loc(), op_);
+    auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= from_ && from_ < to_ && to_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
@@ -402,37 +408,40 @@ fuse_inst::fuse_inst(value op, std::int64_t from, std::int64_t to, location cons
 
 if_inst::if_inst(value condition, region then, region otherwise,
                  std::vector<scalar_type> const &return_types, location const &lc)
-    : condition_(std::move(condition)), then_(std::move(then)), otherwise_(std::move(otherwise)) {
+    : super{std::move(condition)}, then_(std::move(then)), otherwise_(std::move(otherwise)) {
     loc(lc);
     for (auto &ty : return_types) {
         results_.push_back(make_value(ty));
     }
 }
 
-load_inst::load_inst(value op, std::vector<value> index_list, location const &lc)
-    : op_(std::move(op)), index_list_(std::move(index_list)) {
+load_inst::load_inst(value op0, std::vector<value> const &index_list0, location const &lc)
+    : super{std::move(op0)} {
     loc(lc);
+
+    ops().insert(ops().end(), index_list0.begin(), index_list0.end());
+
     visit(overloaded{
               [&](group_data_type &g) {
-                  if (static_cast<std::int64_t>(index_list_.size()) != 1) {
+                  if (static_cast<std::int64_t>(index_list().size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
                   result_ = make_value(g.ty());
               },
               [&](memref_data_type &m) {
-                  if (m.dim() != static_cast<std::int64_t>(index_list_.size())) {
+                  if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
                   result_ = make_value(m.element_ty());
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
-          *op_->ty());
+          *operand()->ty());
 }
 
-size_inst::size_inst(value op, std::int64_t mode, location const &lc)
-    : op_(std::move(op)), mode_(mode) {
+size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
+    : super{std::move(op0)}, mode_(mode) {
     loc(lc);
-    auto m = get_memref_type(loc(), op_);
+    auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
@@ -441,52 +450,60 @@ size_inst::size_inst(value op, std::int64_t mode, location const &lc)
     result_ = make_value(scalar_type::index);
 }
 
-subview_inst::subview_inst(value op, std::vector<slice> slices, location const &lc)
-    : op_(std::move(op)), slices_(std::move(slices)) {
+subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
+                           std::vector<value> const &size_list0, location const &lc)
+    : super{std::move(op0)} {
+
     loc(lc);
-    auto m = get_memref_type(loc(), op_);
-    if (m->dim() != static_cast<std::int64_t>(slices_.size())) {
+
+    auto m = get_memref_type(loc(), operand());
+    if (m->dim() != static_cast<std::int64_t>(offset_list0.size()) ||
+        m->dim() != static_cast<std::int64_t>(size_list0.size())) {
         throw compilation_error(loc(), status::ir_invalid_number_of_indices);
     }
+    ops().insert(ops().end(), offset_list0.begin(), offset_list0.end());
+    ops().insert(ops().end(), size_list0.begin(), size_list0.end());
 
     auto shape = std::vector<std::int64_t>{};
     auto stride = std::vector<std::int64_t>{};
     shape.reserve(m->dim());
     stride.reserve(m->dim());
     for (std::int64_t i = 0; i < m->dim(); ++i) {
-        auto &slice = slices_[i];
+        auto &offset = offset_list()[i];
+        auto &size = size_list()[i];
         visit(overloaded{[&](int_imm &i) {
                              if (i.value() < 0) {
                                  throw compilation_error(loc(), status::ir_invalid_slice);
                              }
                          },
                          [](auto &) {}},
-              *slice.first);
-        if (slice.second) { // if size is given
+              *offset);
+        if (size) { // if size is given
             visit(overloaded{[&](int_imm &i) {
                                  if (i.value() < 1 && !is_dynamic_value(i.value())) {
                                      throw compilation_error(loc(), status::ir_invalid_slice);
                                  }
                              },
                              [](auto &) {}},
-                  *slice.second);
-            auto size = visit(overloaded{[&](int_imm &offset, int_imm &size) -> std::int64_t {
-                                             if (is_dynamic_value(size.value())) {
-                                                 return is_dynamic_value(m->shape(i))
-                                                            ? dynamic
-                                                            : m->shape(i) - offset.value();
-                                             }
-                                             return size.value();
-                                         },
-                                         [&](val &, int_imm &size) -> std::int64_t {
-                                             if (is_dynamic_value(size.value())) {
-                                                 return dynamic;
-                                             }
-                                             return size.value();
-                                         },
-                                         [](auto &, auto &) -> std::int64_t { return dynamic; }},
-                              *slice.first, *slice.second);
-            shape.push_back(size);
+                  *size);
+            auto size_value =
+                visit(overloaded{[&](int_imm &offset, int_imm &size) -> std::int64_t {
+                                     if (is_dynamic_value(size.value())) {
+                                         return is_dynamic_value(m->shape(i))
+                                                    ? dynamic
+                                                    : m->shape(i) - offset.value();
+                                     }
+                                     return size.value();
+                                 },
+                                 [&](val &, int_imm &size) -> std::int64_t {
+                                     if (is_dynamic_value(size.value())) {
+                                         return dynamic;
+                                     }
+                                     return size.value();
+                                 },
+                                 [](auto &, auto &) -> std::int64_t { return dynamic; }},
+                      *offset, *size);
+            shape.push_back(size_value);
             stride.push_back(m->stride(i));
         }
     }
@@ -496,27 +513,31 @@ subview_inst::subview_inst(value op, std::vector<slice> slices, location const &
     result_ = make_value(data_type(r.release()));
 }
 
-store_inst::store_inst(value val, value op, std::vector<value> index_list, location const &lc)
-    : val_(std::move(val)), op_(std::move(op)), index_list_(std::move(index_list)) {
+store_inst::store_inst(value val0, value op0, std::vector<value> const &index_list0,
+                       location const &lc)
+    : super{std::move(val0), std::move(op0)} {
     loc(lc);
-    auto v = get_scalar_type(loc(), val_);
-    auto o = get_memref_type(loc(), op_);
+
+    ops().insert(ops().end(), index_list0.begin(), index_list0.end());
+
+    auto v = get_scalar_type(loc(), val());
+    auto o = get_memref_type(loc(), operand());
 
     if (v->ty() != o->element_ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 
-    if (o->dim() != static_cast<std::int64_t>(index_list_.size())) {
+    if (o->dim() != static_cast<std::int64_t>(index_list0.size())) {
         throw compilation_error(loc(), status::ir_invalid_number_of_indices);
     }
 }
 
-sum_inst::sum_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic,
+sum_inst::sum_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                    location const &lc)
-    : super(std::move(alpha), std::move(A), std::move(beta), std::move(B), atomic), tA_(tA) {
+    : super(std::move(alpha0), std::move(A0), std::move(beta0), std::move(B0), atomic), tA_(tA) {
     loc(lc);
-    auto a = get_memref_type(loc(), A_);
-    auto b = get_memref_type(loc(), B_);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
 
     bool const size_ok = (a->dim() == 2 && b->dim() == 1) || (a->dim() == 1 && b->dim() == 0);
     if (!size_ok) {

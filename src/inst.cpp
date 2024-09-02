@@ -4,7 +4,6 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/inst_node.hpp"
-#include "slice.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -348,13 +347,16 @@ tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto slice_vec = std::vector<slice>();
-        slice_vec.reserve(slice_list_size);
+        auto offset_vec = std::vector<value>();
+        auto size_vec = std::vector<value>();
+        offset_vec.reserve(slice_list_size);
+        size_vec.reserve(slice_list_size);
         for (uint32_t i = 0; i < slice_list_size; ++i) {
-            slice_vec.emplace_back(value(offset_list[i], true), value(size_list[i], true));
+            offset_vec.emplace_back(value(offset_list[i], true));
+            size_vec.emplace_back(value(size_list[i], true));
         }
         *instr =
-            std::make_unique<subview_inst>(value(a, true), std::move(slice_vec), get_optional(loc))
+            std::make_unique<subview_inst>(value(a, true), offset_vec, size_vec, get_optional(loc))
                 .release();
     });
 }

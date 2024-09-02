@@ -47,6 +47,10 @@ value find_alloca::operator()(rgn &b) {
 std::vector<value> find_alloca::allocas() const { return alloca_; }
 
 /* Inst nodes */
+auto lifetime_inserter::operator()(inst_node &) -> std::unordered_set<value_node const *> {
+    return {};
+}
+
 auto lifetime_inserter::operator()(blas_a2_inst &a) -> std::unordered_set<value_node const *> {
     return {a.A().get(), a.B().get()};
 }
@@ -57,10 +61,6 @@ auto lifetime_inserter::operator()(blas_a3_inst &inst) -> std::unordered_set<val
 
 auto lifetime_inserter::operator()(loop_inst &p) -> std::unordered_set<value_node const *> {
     return visit(*this, *p.body());
-}
-
-auto lifetime_inserter::operator()(scalar_inst &) -> std::unordered_set<value_node const *> {
-    return {};
 }
 
 auto lifetime_inserter::operator()(alloca_inst &a) -> std::unordered_set<value_node const *> {

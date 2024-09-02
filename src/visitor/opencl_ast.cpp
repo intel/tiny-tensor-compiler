@@ -6,7 +6,6 @@
 #include "error.hpp"
 #include "gemm_generator.hpp"
 #include "scalar_type.hpp"
-#include "slice.hpp"
 #include "tinytc/tinytc.hpp"
 #include "util.hpp"
 
@@ -222,7 +221,7 @@ std::vector<clir::stmt> opencl_ast::operator()(alloca_inst const &a) {
     stack_high_water_mark_ = std::max(stack_high_water_mark_,
                                       static_cast<std::size_t>(a.stack_ptr()) + t->size_in_bytes());
 
-    // no declarations are neceesary as alloca only accepts fixed-size memrefs
+    // no declarations are necessary as alloca only accepts fixed-size memrefs
     set_dope_vector(a.result().get(),
                     dope_vector::from_value(*a.result(), [](clir::data_type, clir::var,
                                                             dope_vector::type, std::int64_t) {}));
@@ -350,8 +349,9 @@ std::vector<clir::stmt> opencl_ast::operator()(arith_inst const &a) {
     };
     auto sty = get_scalar_type(*a.a()->ty());
     auto v = declare(*a.result());
-    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.op(), visit(*this, *a.a()), visit(*this, *a.b()), sty))};
+    return {declaration_assignment(
+        visit(*this, *a.result()->ty()), std::move(v),
+        make(a.operation(), visit(*this, *a.a()), visit(*this, *a.b()), sty))};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(arith_unary_inst const &a) {
@@ -370,7 +370,7 @@ std::vector<clir::stmt> opencl_ast::operator()(arith_unary_inst const &a) {
     auto sty = get_scalar_type(*a.a()->ty());
     auto v = declare(*a.result());
     return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.op(), visit(*this, *a.a()), sty))};
+                                   make(a.operation(), visit(*this, *a.a()), sty))};
 }
 
 std::vector<clir::stmt> opencl_ast::operator()(cast_inst const &c) {
@@ -407,7 +407,7 @@ std::vector<clir::stmt> opencl_ast::operator()(expand_inst const &e) {
     auto result_var = declare(*e.result());
     auto m = get_memref_type(*e.operand());
     auto &dv = get_dope_vector(e.operand().get());
-    auto &eshape = e.expand_shape();
+    auto eshape = e.expand_shape();
 
     auto rhs = visit(*this, *e.operand());
     auto clinst = std::vector<clir::stmt>{};
@@ -899,7 +899,7 @@ std::vector<clir::stmt> opencl_ast::operator()(subgroup_size_inst const &sg) {
 std::vector<clir::stmt> opencl_ast::operator()(subview_inst const &s) {
     auto result_var = declare(*s.result());
     auto t = get_memref_type(*s.operand());
-    if (t->dim() != static_cast<std::int64_t>(s.slices().size())) {
+    if (t->dim() != static_cast<std::int64_t>(s.num_indices())) {
         throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
     }
 
@@ -911,23 +911,23 @@ std::vector<clir::stmt> opencl_ast::operator()(subview_inst const &s) {
     auto stride_out = std::vector<clir::expr>{};
     shape_out.reserve(t->dim());
     stride_out.reserve(t->dim());
-    auto &slices = s.slices();
-    for (auto &slice : slices) {
-        auto offset = visit(*this, *slice.first);
-        rhs = rhs + std::move(offset) * dv.stride(j);
-        if (slice.second) {
+    for (std::int64_t i = 0; i < t->dim(); ++i) {
+        auto &offset = s.offset_list()[i];
+        auto &size = s.size_list()[i];
+        rhs = rhs + visit(*this, *offset) * dv.stride(j);
+        if (size) {
             bool is_size_unknown = visit(overloaded{[&](int_imm const &size) -> bool {
                                                         return is_dynamic_value(size.value());
                                                     },
                                                     [](auto const &) -> bool { return false; }},
-                                         *slice.second);
-            auto size = clir::expr{};
+                                         *size);
+            auto size_value = clir::expr{};
             if (is_size_unknown) {
-                size = dv.shape(j) - visit(*this, *slice.first);
+                size_value = dv.shape(j) - visit(*this, *offset);
             } else {
-                size = visit(*this, *slice.second);
+                size_value = visit(*this, *size);
             }
-            shape_out.emplace_back(size);
+            shape_out.emplace_back(size_value);
             stride_out.emplace_back(dv.stride(j));
         }
         ++j;

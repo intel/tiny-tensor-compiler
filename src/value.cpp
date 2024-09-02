@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
+#include "location.hpp"
 #include "node/value_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
@@ -37,12 +38,8 @@ tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *vl = std::make_unique<val>(data_type(type, true)).release();
-        if (lc) {
-            (*vl)->loc(*lc);
-        }
-    });
+    return exception_to_status_code(
+        [&] { *vl = std::make_unique<val>(data_type(type, true), get_optional(lc)).release(); });
 }
 
 tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm, tinytc_scalar_type_t type,

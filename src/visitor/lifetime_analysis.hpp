@@ -40,10 +40,10 @@ class find_alloca {
 class lifetime_inserter {
   public:
     /* Inst nodes */
+    auto operator()(inst_node &inst) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(blas_a2_inst &inst) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(blas_a3_inst &inst) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(loop_inst &p) -> std::unordered_set<::tinytc_value const *>;
-    auto operator()(scalar_inst &inst) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(alloca_inst &a) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(barrier_inst &b) -> std::unordered_set<::tinytc_value const *>;
     auto operator()(expand_inst &e) -> std::unordered_set<::tinytc_value const *>;

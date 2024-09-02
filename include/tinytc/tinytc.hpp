@@ -1465,7 +1465,9 @@ class region_builder {
     }
 
     /**
-     * @brief Build for-loop with functor f(region_builder&) -> void
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
+     *
+     * The loop trip count is passed as second argument to the functor.
      *
      * @tparam F Functor type
      * @param loop_var_ty Type of loop variable
@@ -1482,7 +1484,9 @@ class region_builder {
                     std::forward<F>(f), name, loc);
     }
     /**
-     * @brief Build for-loop with functor f(region_builder&) -> void
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
+     *
+     * The loop trip count is passed as second argument to the functor.
      *
      * @tparam F Functor type
      * @param loop_var_ty Type of loop variable
@@ -1501,7 +1505,7 @@ class region_builder {
             loop_var.name(name);
         }
         auto bb = region_builder{};
-        f(bb);
+        f(bb, loop_var);
         add(::tinytc::make_for(std::move(loop_var), from, to, step, bb.get_product(), loc));
     }
     /**

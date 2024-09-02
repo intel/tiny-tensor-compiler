@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/dump_ir.hpp"
-#include "slice.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <clir/visit.hpp>
@@ -122,7 +121,7 @@ void ir_dumper::operator()(axpby_inst const &a) {
 
 void ir_dumper::operator()(arith_inst const &a) {
     visit(*this, *a.result());
-    os_ << " = arith." << to_string(a.op()) << " ";
+    os_ << " = arith." << to_string(a.operation()) << " ";
     visit(*this, *a.a());
     os_ << ", ";
     visit(*this, *a.b());
@@ -132,7 +131,7 @@ void ir_dumper::operator()(arith_inst const &a) {
 
 void ir_dumper::operator()(arith_unary_inst const &a) {
     visit(*this, *a.result());
-    os_ << " = arith." << to_string(a.op()) << " ";
+    os_ << " = arith." << to_string(a.operation()) << " ";
     visit(*this, *a.a());
     os_ << " : ";
     visit(*this, *a.a()->ty());
@@ -310,11 +309,13 @@ void ir_dumper::operator()(subview_inst const &s) {
     os_ << " = subview ";
     visit(*this, *s.operand());
     os_ << "[";
-    do_with_infix(s.slices().begin(), s.slices().end(), [this](auto const &i) {
-        visit(*this, *i.first);
-        if (i.second) {
+    auto irange = std::ranges::iota_view{std::size_t{0}, s.offset_list().size()};
+    do_with_infix(irange.begin(), irange.end(), [&](auto const &i) {
+        visit(*this, *s.offset_list()[i]);
+        auto &size = s.size_list()[i];
+        if (size) {
             os_ << ":";
-            visit(*this, *i.second);
+            visit(*this, *size);
         }
     });
     os_ << "]";

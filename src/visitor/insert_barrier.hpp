@@ -30,10 +30,10 @@ class insert_barrier {
     value_node *operator()(val &v);
 
     /* Stmt nodes */
+    std::unordered_set<value_node *> operator()(inst_node &inst);
     std::unordered_set<value_node *> operator()(blas_a2_inst &inst);
     std::unordered_set<value_node *> operator()(blas_a3_inst &inst);
     std::unordered_set<value_node *> operator()(loop_inst &p);
-    std::unordered_set<value_node *> operator()(scalar_inst &inst);
     std::unordered_set<value_node *> operator()(alloca_inst &a);
     std::unordered_set<value_node *> operator()(barrier_inst &b);
     std::unordered_set<value_node *> operator()(expand_inst &e);
