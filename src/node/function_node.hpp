@@ -6,9 +6,8 @@
 
 #include "location.hpp"
 #include "reference_counted.hpp"
+#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
-
-#include <clir/virtual_type_list.hpp>
 
 #include <array>
 #include <cstdint>
@@ -17,17 +16,25 @@
 #include <vector>
 
 namespace tinytc {
-using function_nodes = clir::virtual_type_list<class prototype, class function>;
+using function_nodes = type_list<class prototype, class function>;
 }
 
-struct tinytc_func : tinytc::reference_counted, tinytc::function_nodes {
+struct tinytc_func : tinytc::reference_counted {
   public:
+    enum function_kind { FK_function, FK_prototype };
+    using leaves = tinytc::function_nodes;
+
+    inline tinytc_func(std::int64_t tid) : tid_(tid) {}
+    inline virtual ~tinytc_func() {}
+    inline auto type_id() const -> std::int64_t { return tid_; }
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     virtual auto name() const -> std::string_view = 0;
 
   private:
+    std::int64_t tid_;
     tinytc::location loc_;
 };
 
@@ -35,10 +42,11 @@ namespace tinytc {
 
 using function_node = ::tinytc_func;
 
-class prototype : public clir::visitable<prototype, function_node> {
+class prototype : public function_node {
   public:
+    inline static bool classof(function_node const &f) { return f.type_id() == FK_prototype; }
     inline prototype(std::string name, std::vector<value> args = {}, location const &lc = {})
-        : name_(std::move(name)), args_(std::move(args)) {
+        : function_node(FK_prototype), name_(std::move(name)), args_(std::move(args)) {
         loc(lc);
     }
 
@@ -50,11 +58,12 @@ class prototype : public clir::visitable<prototype, function_node> {
     std::vector<value> args_;
 };
 
-class function : public clir::visitable<function, function_node> {
+class function : public function_node {
   public:
+    inline static bool classof(function_node const &f) { return f.type_id() == FK_function; }
     inline function(func prototype, region body, location const &lc = {})
-        : prototype_(std::move(prototype)), body_(std::move(body)), work_group_size_{0, 0},
-          subgroup_size_{0} {
+        : function_node(FK_function), prototype_(std::move(prototype)), body_(std::move(body)),
+          work_group_size_{0, 0}, subgroup_size_{0} {
         loc(lc);
     }
 

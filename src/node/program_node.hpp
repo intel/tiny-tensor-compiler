@@ -6,23 +6,30 @@
 
 #include "location.hpp"
 #include "reference_counted.hpp"
+#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include <clir/virtual_type_list.hpp>
-
+#include <cstdint>
 #include <utility>
 #include <vector>
 
 namespace tinytc {
-using program_nodes = clir::virtual_type_list<class program>;
+using program_nodes = type_list<class program>;
 }
 
-struct tinytc_prog : tinytc::reference_counted, tinytc::program_nodes {
+struct tinytc_prog : tinytc::reference_counted {
   public:
+    enum prog_kind { PK_prog };
+    using leaves = tinytc::program_nodes;
+
+    inline tinytc_prog(std::int64_t tid) : tid_(tid) {}
+    inline auto type_id() const -> std::int64_t { return tid_; }
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
+    std::int64_t tid_;
     tinytc::location loc_;
 };
 
@@ -30,9 +37,11 @@ namespace tinytc {
 
 using program_node = ::tinytc_prog;
 
-class program : public clir::visitable<program, program_node> {
+class program : public program_node {
   public:
-    inline program(std::vector<func> decls, location const &lc = {}) : decls_(std::move(decls)) {
+    inline static bool classof(program_node const &p) { return p.type_id() == PK_prog; }
+    inline program(std::vector<func> decls, location const &lc = {})
+        : program_node(PK_prog), decls_(std::move(decls)) {
         loc(lc);
     }
     inline auto declarations() -> std::vector<func> & { return decls_; }

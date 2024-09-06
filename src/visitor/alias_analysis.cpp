@@ -4,21 +4,19 @@
 #include "visitor/alias_analysis.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "support/casting.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <clir/visit.hpp>
-
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 
 /* Stmt nodes */
 void alias_analyser::operator()(inst_node const &) {}
 void alias_analyser::operator()(alloca_inst const &a) {
-    auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
+    auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }

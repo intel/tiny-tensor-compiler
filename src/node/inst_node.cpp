@@ -6,11 +6,12 @@
 #include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
+#include "support/casting.hpp"
+#include "support/util.hpp"
+#include "support/visit.hpp"
 #include "tinytc/types.hpp"
-#include "util.hpp"
 
 #include <clir/builtin_type.hpp>
-#include <clir/visit.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -19,7 +20,7 @@
 namespace tinytc {
 
 scalar_data_type *get_scalar_type(location const &loc, value const &v) {
-    auto m = dynamic_cast<scalar_data_type *>(v->ty().get());
+    auto m = dyn_cast<scalar_data_type>(v->ty().get());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
     }
@@ -27,28 +28,39 @@ scalar_data_type *get_scalar_type(location const &loc, value const &v) {
 }
 
 memref_data_type *get_memref_type(location const &loc, value const &v) {
-    auto m = dynamic_cast<memref_data_type *>(v->ty().get());
+    auto m = dyn_cast<memref_data_type>(v->ty().get());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_memref);
     }
     return m;
 }
 
-blas_a2_inst::blas_a2_inst(value alpha, value A, value beta, value B, bool atomic)
-    : standard_inst{std::move(alpha), std::move(A), std::move(beta), std::move(B)},
-      atomic_(atomic) {}
+blas_a2_inst::blas_a2_inst(std::int64_t tid, value alpha, value A, value beta, value B, bool atomic)
+    : standard_inst{tid}, atomic_(atomic) {
+    op(op_alpha) = std::move(alpha);
+    op(op_A) = std::move(A);
+    op(op_beta) = std::move(beta);
+    op(op_B) = std::move(B);
+}
 
-blas_a3_inst::blas_a3_inst(value alpha, value A, value B, value beta, value C, bool atomic)
-    : standard_inst{std::move(alpha), std::move(A), std::move(B), std::move(beta), std::move(C)},
-      atomic_(atomic) {}
+blas_a3_inst::blas_a3_inst(std::int64_t tid, value alpha, value A, value B, value beta, value C,
+                           bool atomic)
+    : standard_inst{tid}, atomic_(atomic) {
+    op(op_alpha) = std::move(alpha);
+    op(op_A) = std::move(A);
+    op(op_B) = std::move(B);
+    op(op_beta) = std::move(beta);
+    op(op_C) = std::move(C);
+}
 
-loop_inst::loop_inst(value loop_var, value from, value to, region body, location const &lc)
-    : loop_inst(std::move(loop_var), std::move(from), std::move(to), {}, std::move(body), lc) {}
+loop_inst::loop_inst(std::int64_t tid, value loop_var0, value from0, value to0, value step0,
+                     region body, location const &lc)
+    : standard_inst{tid}, body_(std::move(body)) {
+    op(op_loop_var) = std::move(loop_var0);
+    op(op_from) = std::move(from0);
+    op(op_to) = std::move(to0);
+    op(op_step) = std::move(step0);
 
-loop_inst::loop_inst(value loop_var0, value from0, value to0, value step0, region body,
-                     location const &lc)
-    : standard_inst{std::move(loop_var0), std::move(from0), std::move(to0), std::move(step0)},
-      body_(std::move(body)) {
     loc(lc);
     auto lvt = get_scalar_type(loc(), loop_var());
     auto fromt = get_scalar_type(loc(), from());
@@ -65,9 +77,9 @@ loop_inst::loop_inst(value loop_var0, value from0, value to0, value step0, regio
 }
 
 alloca_inst::alloca_inst(data_type ty, location const &lc)
-    : result_{make_value(std::move(ty))}, stack_ptr_{-1} {
+    : standard_inst{IK_alloca}, result_{make_value(std::move(ty))}, stack_ptr_{-1} {
     loc(lc);
-    auto memref = dynamic_cast<memref_data_type *>(result_->ty().get());
+    auto memref = dyn_cast<memref_data_type>(result_->ty().get());
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -76,7 +88,9 @@ alloca_inst::alloca_inst(data_type ty, location const &lc)
 
 axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                        location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(beta0), std::move(B0), atomic), tA_(tA) {
+    : blas_a2_inst(IK_axpby_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
+                   std::move(B0), atomic),
+      tA_(tA) {
     loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
@@ -98,7 +112,9 @@ axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value 
 }
 
 arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const &lc)
-    : super{std::move(a0), std::move(b0)}, operation_(operation) {
+    : standard_inst{IK_arith}, operation_(operation) {
+    op(op_a) = std::move(a0);
+    op(op_b) = std::move(b0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -131,7 +147,8 @@ arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const 
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, location const &lc)
-    : super{std::move(a0)}, operation_(operation) {
+    : standard_inst{IK_arith_unary}, operation_(operation) {
+    op(op_a) = std::move(a0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -151,12 +168,15 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, locatio
 }
 
 cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
-    : super{std::move(a)}, result_{make_value(to_ty)} {
+    : standard_inst{IK_cast}, result_{make_value(to_ty)} {
+    op(op_a) = std::move(a);
     loc(lc);
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location const &lc)
-    : super{std::move(a0), std::move(b0)}, cond_(cond), result_{make_value(scalar_type::i1)} {
+    : standard_inst{IK_compare}, cond_(cond), result_{make_value(scalar_type::i1)} {
+    op(op_a) = std::move(a0);
+    op(op_b) = std::move(b0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -167,121 +187,14 @@ compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location cons
     }
 }
 
-gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha0, value A0, value B0, value beta0,
-                     value C0, bool atomic, location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
-            atomic),
-      tA_(tA), tB_(tB) {
-    loc(lc);
-    auto a = get_memref_type(loc(), A());
-    auto b = get_memref_type(loc(), B());
-    auto c = get_memref_type(loc(), C());
-
-    if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "gemm only supported for memref of order 2 (matrices)");
-    }
-
-    auto ak = tA_ == transpose::T ? 0 : 1;
-    auto bk = tB_ == transpose::T ? 1 : 0;
-    auto M = c->shape(0);
-    auto N = c->shape(1);
-    auto K = a->shape(ak);
-    if (a->shape(1 - ak) != M || b->shape(bk) != K || b->shape(1 - bk) != N) {
-        std::ostringstream oss;
-        oss << "Got ";
-        oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
-        oss << "B=" << b->shape(0) << "x" << b->shape(1) << ", ";
-        oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
-    }
-}
-
-gemv_inst::gemv_inst(transpose tA, value alpha0, value A0, value B0, value beta0, value C0,
-                     bool atomic, location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
-            atomic),
-      tA_(tA) {
-    loc(lc);
-    auto a = get_memref_type(loc(), A());
-    auto b = get_memref_type(loc(), B());
-    auto c = get_memref_type(loc(), C());
-
-    if (a->dim() != 2 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "gemv only supports matrix-vector products");
-    }
-
-    auto ak = tA_ == transpose::T ? 0 : 1;
-    auto M = c->shape(0);
-    auto K = a->shape(ak);
-    if (a->shape(1 - ak) != M || b->shape(0) != K) {
-        std::ostringstream oss;
-        oss << "Got ";
-        oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
-        oss << "b=" << b->shape(0) << ", ";
-        oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
-    }
-}
-
-ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
-                   location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
-            atomic) {
-    loc(lc);
-    auto a = get_memref_type(loc(), A());
-    auto b = get_memref_type(loc(), B());
-    auto c = get_memref_type(loc(), C());
-
-    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "ger requires two vectors as input and one matrix as output");
-    }
-
-    auto M = c->shape(0);
-    auto N = c->shape(1);
-    if (a->shape(0) != M || b->shape(0) != N) {
-        std::ostringstream oss;
-        oss << "Got ";
-        oss << "a=" << a->shape(0) << ", ";
-        oss << "b=" << b->shape(0) << ", ";
-        oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
-    }
-}
-
-hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
-                             location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(B0), std::move(beta0), std::move(C0),
-            atomic) {
-    loc(lc);
-    auto a = get_memref_type(loc(), A());
-    auto b = get_memref_type(loc(), B());
-    auto c = get_memref_type(loc(), C());
-
-    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "hadamard requires two vectors as input and one vector as output");
-    }
-
-    auto M = c->shape(0);
-    if (a->shape(0) != M || b->shape(0) != M) {
-        std::ostringstream oss;
-        oss << "Got ";
-        oss << "a=" << a->shape(0) << ", ";
-        oss << "b=" << b->shape(0) << ", ";
-        oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
-    }
-}
-
 expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const &expand_shape0,
                          location const &lc)
-    : super{std::move(op0)}, mode_(mode) {
+    : standard_inst{IK_expand, static_cast<std::int64_t>(1 + expand_shape0.size())}, mode_(mode) {
+    op(0) = std::move(op0);
+    for (std::size_t i = 0; i < expand_shape0.size(); ++i) {
+        op(1 + i) = expand_shape0[i];
+    }
     loc(lc);
-
-    ops().insert(ops().end(), expand_shape0.begin(), expand_shape0.end());
 
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
@@ -370,7 +283,8 @@ expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const 
 }
 
 fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location const &lc)
-    : super{std::move(op0)}, from_(from), to_(to) {
+    : standard_inst{IK_fuse}, from_(from), to_(to) {
+    op(0) = std::move(op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= from_ && from_ < to_ && to_ < m->dim();
@@ -406,20 +320,13 @@ fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location con
     result_ = make_value(data_type(r.release()));
 }
 
-if_inst::if_inst(value condition, region then, region otherwise,
-                 std::vector<scalar_type> const &return_types, location const &lc)
-    : super{std::move(condition)}, then_(std::move(then)), otherwise_(std::move(otherwise)) {
-    loc(lc);
-    for (auto &ty : return_types) {
-        results_.push_back(make_value(ty));
-    }
-}
-
 load_inst::load_inst(value op0, std::vector<value> const &index_list0, location const &lc)
-    : super{std::move(op0)} {
+    : standard_inst{IK_load, static_cast<std::int64_t>(1 + index_list0.size())} {
+    op(0) = std::move(op0);
+    for (std::size_t i = 0; i < index_list0.size(); ++i) {
+        op(1 + i) = index_list0[i];
+    }
     loc(lc);
-
-    ops().insert(ops().end(), index_list0.begin(), index_list0.end());
 
     visit(overloaded{
               [&](group_data_type &g) {
@@ -438,8 +345,129 @@ load_inst::load_inst(value op0, std::vector<value> const &index_list0, location 
           *operand()->ty());
 }
 
+gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha0, value A0, value B0, value beta0,
+                     value C0, bool atomic, location const &lc)
+    : blas_a3_inst(IK_gemm_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+                   std::move(beta0), std::move(C0), atomic),
+      tA_(tA), tB_(tB) {
+    loc(lc);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
+
+    if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "gemm only supported for memref of order 2 (matrices)");
+    }
+
+    auto ak = tA_ == transpose::T ? 0 : 1;
+    auto bk = tB_ == transpose::T ? 1 : 0;
+    auto M = c->shape(0);
+    auto N = c->shape(1);
+    auto K = a->shape(ak);
+    if (a->shape(1 - ak) != M || b->shape(bk) != K || b->shape(1 - bk) != N) {
+        std::ostringstream oss;
+        oss << "Got ";
+        oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
+        oss << "B=" << b->shape(0) << "x" << b->shape(1) << ", ";
+        oss << "C=" << c->shape(0) << "x" << c->shape(1);
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+    }
+}
+
+gemv_inst::gemv_inst(transpose tA, value alpha0, value A0, value B0, value beta0, value C0,
+                     bool atomic, location const &lc)
+    : blas_a3_inst(IK_gemv_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+                   std::move(beta0), std::move(C0), atomic),
+      tA_(tA) {
+    loc(lc);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
+
+    if (a->dim() != 2 || b->dim() != 1 || c->dim() != 1) {
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "gemv only supports matrix-vector products");
+    }
+
+    auto ak = tA_ == transpose::T ? 0 : 1;
+    auto M = c->shape(0);
+    auto K = a->shape(ak);
+    if (a->shape(1 - ak) != M || b->shape(0) != K) {
+        std::ostringstream oss;
+        oss << "Got ";
+        oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
+        oss << "b=" << b->shape(0) << ", ";
+        oss << "c=" << c->shape(0);
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+    }
+}
+
+ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
+                   location const &lc)
+    : blas_a3_inst(IK_ger_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+                   std::move(beta0), std::move(C0), atomic) {
+    loc(lc);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
+
+    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 2) {
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "ger requires two vectors as input and one matrix as output");
+    }
+
+    auto M = c->shape(0);
+    auto N = c->shape(1);
+    if (a->shape(0) != M || b->shape(0) != N) {
+        std::ostringstream oss;
+        oss << "Got ";
+        oss << "a=" << a->shape(0) << ", ";
+        oss << "b=" << b->shape(0) << ", ";
+        oss << "C=" << c->shape(0) << "x" << c->shape(1);
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+    }
+}
+
+hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
+                             location const &lc)
+    : blas_a3_inst(IK_hadamard_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+                   std::move(beta0), std::move(C0), atomic) {
+    loc(lc);
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+    auto c = get_memref_type(loc(), C());
+
+    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 1) {
+        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+                                "hadamard requires two vectors as input and one vector as output");
+    }
+
+    auto M = c->shape(0);
+    if (a->shape(0) != M || b->shape(0) != M) {
+        std::ostringstream oss;
+        oss << "Got ";
+        oss << "a=" << a->shape(0) << ", ";
+        oss << "b=" << b->shape(0) << ", ";
+        oss << "c=" << c->shape(0);
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+    }
+}
+
+if_inst::if_inst(value condition, region then, region otherwise,
+                 std::vector<scalar_type> const &return_types, location const &lc)
+    : standard_inst{IK_if, 1, static_cast<int64_t>(return_types.size())}, then_(std::move(then)),
+      otherwise_(std::move(otherwise)) {
+    op(0) = std::move(condition);
+    loc(lc);
+    for (auto &ty : return_types) {
+        results_.push_back(make_value(ty));
+    }
+}
+
 size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
-    : super{std::move(op0)}, mode_(mode) {
+    : standard_inst{IK_size}, mode_(mode) {
+    op(0) = std::move(op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
@@ -452,8 +480,18 @@ size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
 
 subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
                            std::vector<value> const &size_list0, location const &lc)
-    : super{std::move(op0)} {
-
+    : standard_inst{IK_subview,
+                    static_cast<std::int64_t>(1 + offset_list0.size() + size_list0.size())} {
+    op(0) = std::move(op0);
+    {
+        std::size_t i = 1;
+        for (auto const &val : offset_list0) {
+            op(i++) = val;
+        }
+        for (auto const &val : size_list0) {
+            op(i++) = val;
+        }
+    }
     loc(lc);
 
     auto m = get_memref_type(loc(), operand());
@@ -461,8 +499,6 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
         m->dim() != static_cast<std::int64_t>(size_list0.size())) {
         throw compilation_error(loc(), status::ir_invalid_number_of_indices);
     }
-    ops().insert(ops().end(), offset_list0.begin(), offset_list0.end());
-    ops().insert(ops().end(), size_list0.begin(), size_list0.end());
 
     auto shape = std::vector<std::int64_t>{};
     auto stride = std::vector<std::int64_t>{};
@@ -515,10 +551,16 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
 
 store_inst::store_inst(value val0, value op0, std::vector<value> const &index_list0,
                        location const &lc)
-    : super{std::move(val0), std::move(op0)} {
+    : standard_inst{IK_store, static_cast<std::int64_t>(2 + index_list0.size())} {
+    op(op_val) = std::move(val0);
+    op(op_operand) = std::move(op0);
+    {
+        std::size_t i = op_operand;
+        for (auto const &val : index_list0) {
+            op(++i) = val;
+        }
+    }
     loc(lc);
-
-    ops().insert(ops().end(), index_list0.begin(), index_list0.end());
 
     auto v = get_scalar_type(loc(), val());
     auto o = get_memref_type(loc(), operand());
@@ -534,7 +576,9 @@ store_inst::store_inst(value val0, value op0, std::vector<value> const &index_li
 
 sum_inst::sum_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                    location const &lc)
-    : super(std::move(alpha0), std::move(A0), std::move(beta0), std::move(B0), atomic), tA_(tA) {
+    : blas_a2_inst(IK_sum_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
+                   std::move(B0), atomic),
+      tA_(tA) {
     loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());

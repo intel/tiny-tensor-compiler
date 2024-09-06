@@ -5,20 +5,26 @@
 #define VALUE_NODE_20230309_HPP
 
 #include "reference_counted.hpp"
+#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
-
-#include <clir/virtual_type_list.hpp>
 
 #include <cstdint>
 #include <string>
 #include <utility>
 
 namespace tinytc {
-using value_nodes = clir::virtual_type_list<class float_imm, class int_imm, class val>;
+using value_nodes = type_list<class float_imm, class int_imm, class val>;
 }
 
-struct tinytc_value : tinytc::reference_counted, tinytc::value_nodes {
+struct tinytc_value : tinytc::reference_counted {
   public:
+    enum value_kind { VK_float, VK_int, VK_val };
+    using leaves = tinytc::value_nodes;
+
+    inline tinytc_value(std::int64_t tid) : tid_(tid) {}
+    inline virtual ~tinytc_value() {}
+    inline auto type_id() const -> std::int64_t { return tid_; }
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
@@ -29,6 +35,7 @@ struct tinytc_value : tinytc::reference_counted, tinytc::value_nodes {
     virtual auto has_name() const -> bool = 0;
 
   private:
+    std::int64_t tid_;
     tinytc::location loc_;
 };
 
@@ -36,10 +43,13 @@ namespace tinytc {
 
 using value_node = ::tinytc_value;
 
-class float_imm : public clir::visitable<float_imm, value_node> {
+class float_imm : public value_node {
   public:
-    inline float_imm(double v, scalar_type ty = scalar_type::f64)
-        : ty_{make_scalar(ty)}, value_(v) {}
+    inline static bool classof(value_node const &v) { return v.type_id() == VK_float; }
+    inline float_imm(double v, scalar_type ty = scalar_type::f64, location const &lc = {})
+        : value_node(VK_float), ty_{make_scalar(ty)}, value_(v) {
+        loc(lc);
+    }
 
     inline data_type ty() const override { return ty_; }
     inline void ty(data_type ty) override { ty_ = std::move(ty); }
@@ -54,10 +64,13 @@ class float_imm : public clir::visitable<float_imm, value_node> {
     double value_;
 };
 
-class int_imm : public clir::visitable<int_imm, value_node> {
+class int_imm : public value_node {
   public:
-    inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64)
-        : ty_{make_scalar(ty)}, value_(v) {}
+    inline static bool classof(value_node const &v) { return v.type_id() == VK_int; }
+    inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64, location const &lc = {})
+        : value_node(VK_int), ty_{make_scalar(ty)}, value_(v) {
+        loc(lc);
+    }
 
     inline data_type ty() const override { return ty_; }
     inline void ty(data_type ty) override { ty_ = std::move(ty); }
@@ -72,9 +85,12 @@ class int_imm : public clir::visitable<int_imm, value_node> {
     std::int64_t value_;
 };
 
-class val : public clir::visitable<val, value_node> {
+class val : public value_node {
   public:
-    inline val(data_type ty) : ty_(std::move(ty)) {}
+    inline static bool classof(value_node const &v) { return v.type_id() == VK_val; }
+    inline val(data_type ty, location const &lc = {}) : value_node(VK_val), ty_(std::move(ty)) {
+        loc(lc);
+    }
 
     inline data_type ty() const override { return ty_; }
     inline void ty(data_type ty) override { ty_ = std::move(ty); }

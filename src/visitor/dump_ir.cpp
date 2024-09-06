@@ -2,16 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/dump_ir.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-
-#include <clir/visit.hpp>
 
 #include <array>
 #include <cstdint>
 #include <string_view>
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 
@@ -345,10 +342,9 @@ void ir_dumper::operator()(sum_inst const &a) {
 
 void ir_dumper::operator()(yield_inst const &y) {
     os_ << "yield ";
-    do_with_infix(y.vals().begin(), y.vals().end(), [this](auto const &i) { visit(*this, *i); });
+    do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i); });
     os_ << " : ";
-    do_with_infix(y.vals().begin(), y.vals().end(),
-                  [this](auto const &i) { visit(*this, *i->ty()); });
+    do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); });
 }
 
 /* Region nodes */

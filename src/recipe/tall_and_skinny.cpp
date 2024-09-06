@@ -7,10 +7,10 @@
 #include "parser.hpp"
 #include "recipe.hpp"
 #include "reference_counted.hpp"
+#include "support/util.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
-#include "util.hpp"
 
 #include <algorithm>
 #include <array>

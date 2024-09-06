@@ -4,14 +4,11 @@
 #include "visitor/metadata.hpp"
 #include "node/function_node.hpp"
 #include "node/program_node.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-
-#include <clir/visit.hpp>
 
 #include <array>
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 

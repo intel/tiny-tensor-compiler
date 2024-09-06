@@ -4,6 +4,7 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/function_node.hpp"
+#include "support/casting.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -48,7 +49,7 @@ tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototy
 }
 
 tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, int32_t x, int32_t y) {
-    function *f = dynamic_cast<function *>(fun);
+    function *f = dyn_cast<function>(fun);
     if (f == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -56,7 +57,7 @@ tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, int32_t x
 }
 
 tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs) {
-    function *f = dynamic_cast<function *>(fun);
+    function *f = dyn_cast<function>(fun);
     if (f == nullptr) {
         return tinytc_status_invalid_arguments;
     }

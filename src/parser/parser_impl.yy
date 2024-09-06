@@ -30,9 +30,8 @@
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
     #include "passes.hpp"
-    #include "util.hpp"
-
-    #include <clir/visit.hpp>
+    #include "support/util.hpp"
+    #include "support/visit.hpp"
 
     #include <array>
     #include <cstdint>
@@ -44,7 +43,7 @@
     namespace tinytc {
     void check_scalar_type(value & val, scalar_type const& sty, location & loc1,
                            location & loc2) {
-        clir::visit(
+        visit(
             overloaded{[&](int_imm &i) { i.ty(make_scalar(sty)); },
                            [&](float_imm &i) { i.ty(make_scalar(sty)); },
                            [&](auto &) {

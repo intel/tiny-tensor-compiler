@@ -2,13 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/equal.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include <clir/visit.hpp>
-
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 

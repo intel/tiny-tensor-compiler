@@ -3,15 +3,12 @@
 
 #include "visitor/lifetime_analysis.hpp"
 #include "node/value_node.hpp"
+#include "support/visit.hpp"
 #include "visitor/alias_analysis.hpp"
-
-#include <clir/visit.hpp>
 
 #include <algorithm>
 #include <iterator>
 #include <memory>
-
-using clir::visit;
 
 namespace tinytc {
 

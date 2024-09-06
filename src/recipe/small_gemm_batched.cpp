@@ -6,11 +6,11 @@
 #include "parser.hpp"
 #include "recipe.hpp"
 #include "reference_counted.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util.hpp"
 
 #include <cstddef>
 #include <cstdint>

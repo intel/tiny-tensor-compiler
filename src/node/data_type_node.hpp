@@ -6,12 +6,12 @@
 
 #include "reference_counted.hpp"
 #include "scalar_type.hpp"
+#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>
-#include <clir/virtual_type_list.hpp>
 
 #include <algorithm>
 #include <cstdint>
@@ -19,16 +19,23 @@
 #include <vector>
 
 namespace tinytc {
-using data_type_nodes = clir::virtual_type_list<class void_data_type, class group_data_type,
-                                                class memref_data_type, class scalar_data_type>;
+using data_type_nodes = type_list<class void_data_type, class group_data_type,
+                                  class memref_data_type, class scalar_data_type>;
 }
 
-struct tinytc_data_type : tinytc::reference_counted, tinytc::data_type_nodes {
+struct tinytc_data_type : tinytc::reference_counted {
   public:
+    enum data_type_kind { DTK_group, DTK_memref, DTK_scalar, DTK_void };
+    using leaves = tinytc::data_type_nodes;
+
+    inline tinytc_data_type(std::int64_t tid) : tid_(tid) {}
+    inline auto type_id() const -> std::int64_t { return tid_; }
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
+    std::int64_t tid_;
     tinytc::location loc_;
 };
 
@@ -36,10 +43,11 @@ namespace tinytc {
 
 using data_type_node = ::tinytc_data_type;
 
-class group_data_type : public clir::visitable<group_data_type, data_type_node> {
+class group_data_type : public data_type_node {
   public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK_group; }
     inline group_data_type(data_type ty, std::int64_t offset = 0, location const &lc = {})
-        : ty_(std::move(ty)), offset_(offset) {
+        : data_type_node(DTK_group), ty_(std::move(ty)), offset_(offset) {
         loc(lc);
     }
 
@@ -51,10 +59,15 @@ class group_data_type : public clir::visitable<group_data_type, data_type_node> 
     std::int64_t offset_;
 };
 
-class void_data_type : public clir::visitable<void_data_type, data_type_node> {};
-
-class memref_data_type : public clir::visitable<memref_data_type, data_type_node> {
+class void_data_type : public data_type_node {
   public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK_void; }
+    inline void_data_type() : data_type_node(DTK_void) {}
+};
+
+class memref_data_type : public data_type_node {
+  public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK_memref; }
     memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                      std::vector<std::int64_t> stride = {}, location const &lc = {});
 
@@ -91,9 +104,13 @@ class memref_data_type : public clir::visitable<memref_data_type, data_type_node
     clir::address_space addrspace_ = clir::address_space::global_t;
 };
 
-class scalar_data_type : public clir::visitable<scalar_data_type, data_type_node> {
+class scalar_data_type : public data_type_node {
   public:
-    inline scalar_data_type(scalar_type type, location const &lc) : ty_(type) { loc(lc); }
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK_scalar; }
+    inline scalar_data_type(scalar_type type, location const &lc)
+        : data_type_node(DTK_scalar), ty_(type) {
+        loc(lc);
+    }
 
     inline scalar_type ty() const { return ty_; }
     inline clir::data_type clir_ty() const { return to_clir_ty(ty_); }

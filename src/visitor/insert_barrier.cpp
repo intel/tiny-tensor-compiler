@@ -2,17 +2,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/insert_barrier.hpp"
+#include "support/casting.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "visitor/alias_analysis.hpp"
 
 #include <clir/builtin_type.hpp>
-#include <clir/visit.hpp>
 
 #include <memory>
 #include <utility>
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 
@@ -68,7 +67,7 @@ std::unordered_set<value_node *> insert_barrier::operator()(fuse_inst &) { retur
 
 std::unordered_set<value_node *> insert_barrier::operator()(load_inst &e) {
     auto rw = std::unordered_set<value_node *>{};
-    auto t = dynamic_cast<memref_data_type *>(e.operand()->ty().get());
+    auto t = dyn_cast<memref_data_type>(e.operand()->ty().get());
     if (t) {
         rw.emplace(visit(*this, *e.operand()));
     }

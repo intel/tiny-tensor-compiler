@@ -6,22 +6,20 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
+#include "support/casting.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
-
-#include <clir/visit.hpp>
 
 #include <array>
 #include <stdexcept>
 #include <utility>
 #include <vector>
 
-using clir::visit;
-
 namespace tinytc {
 
 auto get_memref_type(value_node &v) {
-    auto t = dynamic_cast<memref_data_type *>(v.ty().get());
+    auto t = dyn_cast<memref_data_type>(v.ty().get());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }

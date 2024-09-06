@@ -77,7 +77,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                 auto c = bb.add(make_load(C, {gid}, my_loc()));
                 bb.for_loop(
                     scalar_type::index, make_index(0, my_loc()), make_index(repetitions, my_loc()),
-                    [&](region_builder &bb) {
+                    [&](region_builder &bb, value const &) {
                         bb.add(make_gemm(tA, tB, atomic, make_imm(1.0, ty, my_loc()), a, b,
                                          make_imm(beta, ty, my_loc()), c, my_loc()));
                     },

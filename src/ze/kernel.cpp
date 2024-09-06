@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "../util.hpp"
+#include "../support/util.hpp"
 #include "error.hpp"
 #include "opencl_cc.hpp"
 #include "tinytc/tinytc.h"

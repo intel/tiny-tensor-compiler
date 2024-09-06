@@ -6,8 +6,10 @@
 #include "error.hpp"
 #include "gemm_generator.hpp"
 #include "scalar_type.hpp"
+#include "support/casting.hpp"
+#include "support/util.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-#include "util.hpp"
 
 #include <clir/attr.hpp>
 #include <clir/attr_defs.hpp>
@@ -29,8 +31,6 @@
 #include <stdexcept>
 #include <string_view>
 
-using clir::visit;
-
 namespace tinytc {
 
 std::string var_name(std::string name) {
@@ -49,7 +49,7 @@ dope_vector dope_vector::from_value(value_node const &v, decl_fun_t declare) {
                          dt = to_clir_ty(scalar_type::index);
                      },
                      [&](group_data_type const &g) {
-                         m = dynamic_cast<memref_data_type *>(g.ty().get());
+                         m = dyn_cast<memref_data_type>(g.ty().get());
                          dt = clir::pointer_to(
                              to_clir_ty(scalar_type::index, clir::address_space::global_t));
                      },
@@ -142,7 +142,7 @@ clir::var opencl_ast::declare(value_node const &v) {
 }
 
 auto opencl_ast::get_memref_type(value_node const &v) const -> const memref_data_type * {
-    auto t = dynamic_cast<memref_data_type *>(v.ty().get());
+    auto t = dyn_cast<memref_data_type>(v.ty().get());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
@@ -166,12 +166,12 @@ clir::data_type opencl_ast::operator()(void_data_type const &) {
 }
 clir::data_type opencl_ast::operator()(group_data_type const &g) {
     auto ptr_ty = visit(*this, *g.ty());
-    ptr_ty = visit(overloaded{[](clir::internal::pointer &t) {
-                                  return clir::pointer_to(
-                                      clir::pointer_to(t.ty(), clir::address_space::global_t));
-                              },
-                              [](auto &) { return clir::data_type{}; }},
-                   *ptr_ty);
+    ptr_ty = clir::visit(overloaded{[](clir::internal::pointer &t) {
+                                        return clir::pointer_to(clir::pointer_to(
+                                            t.ty(), clir::address_space::global_t));
+                                    },
+                                    [](auto &) { return clir::data_type{}; }},
+                         *ptr_ty);
     if (!ptr_ty) {
         throw compilation_error(g.loc(), status::internal_compiler_error,
                                 "Could not determine OpenCL type of group type");
@@ -211,7 +211,7 @@ std::vector<clir::stmt> opencl_ast::operator()(alloca_inst const &a) {
                                 "Invalid stack_ptr in alloca. Did you run set_stack_ptrs?");
     }
     auto result_var = declare(*a.result());
-    auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
+    auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }
@@ -1052,13 +1052,13 @@ std::vector<clir::stmt> opencl_ast::operator()(yield_inst const &in) {
     if (yielded_vars_.empty()) {
         throw compilation_error(in.loc(), status::ir_unexpected_yield);
     }
-    if (yielded_vars_.back().size() != in.vals().size()) {
+    if (static_cast<std::int64_t>(yielded_vars_.back().size()) != in.num_operands()) {
         throw compilation_error(in.loc(), status::ir_yield_mismatch);
     }
     std::vector<clir::stmt> clinst;
-    for (std::size_t i = 0; i < in.vals().size(); ++i) {
+    for (std::int64_t i = 0; i < in.num_operands(); ++i) {
         clinst.push_back(clir::expression_statement(
-            clir::assignment(yielded_vars_.back()[i], visit(*this, *in.vals()[i]))));
+            clir::assignment(yielded_vars_.back()[i], visit(*this, *in.op(i)))));
     }
     return clinst;
 }

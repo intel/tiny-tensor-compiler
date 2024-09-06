@@ -2,14 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "visitor/slot_tracker.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-
-#include <clir/visit.hpp>
 
 #include <utility>
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 

@@ -4,11 +4,11 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/inst_node.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util.hpp"
 
 #include <algorithm>
 #include <cstdint>

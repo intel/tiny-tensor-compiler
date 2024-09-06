@@ -4,21 +4,19 @@
 #include "visitor/stack.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "support/casting.hpp"
+#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <clir/visit.hpp>
-
 #include <vector>
-
-using clir::visit;
 
 namespace tinytc {
 
 /* Inst nodes */
 void stack_ptr::operator()(inst_node &) {}
 void stack_ptr::operator()(alloca_inst &a) {
-    auto t = dynamic_cast<memref_data_type *>(a.result()->ty().get());
+    auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }
