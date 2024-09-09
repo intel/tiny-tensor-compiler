@@ -500,13 +500,10 @@ tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr, uint32_t *resu
         }
         auto const num = static_cast<std::uint32_t>(num_results);
         if (*result_list_size > 0) {
-            auto results = instr->results();
-            if (results.size() != num_results) {
-                throw internal_compiler_error();
-            }
+            auto results = instr->result_begin();
             auto const limit = std::min(num, *result_list_size);
             for (uint32_t i = 0; i < limit; ++i) {
-                result_list[i] = results[i].release();
+                result_list[i] = value(results[i]).release();
             }
         }
         *result_list_size = num;

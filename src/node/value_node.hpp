@@ -13,17 +13,17 @@
 #include <utility>
 
 namespace tinytc {
+enum class VK { float_, int_, val };
 using value_nodes = type_list<class float_imm, class int_imm, class val>;
-}
+} // namespace tinytc
 
 struct tinytc_value : tinytc::reference_counted {
   public:
-    enum value_kind { VK_float, VK_int, VK_val };
     using leaves = tinytc::value_nodes;
 
-    inline tinytc_value(std::int64_t tid) : tid_(tid) {}
+    inline tinytc_value(tinytc::VK tid) : tid_(tid) {}
     inline virtual ~tinytc_value() {}
-    inline auto type_id() const -> std::int64_t { return tid_; }
+    inline auto type_id() const -> tinytc::VK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
@@ -35,7 +35,7 @@ struct tinytc_value : tinytc::reference_counted {
     virtual auto has_name() const -> bool = 0;
 
   private:
-    std::int64_t tid_;
+    tinytc::VK tid_;
     tinytc::location loc_;
 };
 
@@ -45,9 +45,9 @@ using value_node = ::tinytc_value;
 
 class float_imm : public value_node {
   public:
-    inline static bool classof(value_node const &v) { return v.type_id() == VK_float; }
+    inline static bool classof(value_node const &v) { return v.type_id() == VK::float_; }
     inline float_imm(double v, scalar_type ty = scalar_type::f64, location const &lc = {})
-        : value_node(VK_float), ty_{make_scalar(ty)}, value_(v) {
+        : value_node(VK::float_), ty_{make_scalar(ty)}, value_(v) {
         loc(lc);
     }
 
@@ -66,9 +66,9 @@ class float_imm : public value_node {
 
 class int_imm : public value_node {
   public:
-    inline static bool classof(value_node const &v) { return v.type_id() == VK_int; }
+    inline static bool classof(value_node const &v) { return v.type_id() == VK::int_; }
     inline int_imm(std::int64_t v, scalar_type ty = scalar_type::i64, location const &lc = {})
-        : value_node(VK_int), ty_{make_scalar(ty)}, value_(v) {
+        : value_node(VK::int_), ty_{make_scalar(ty)}, value_(v) {
         loc(lc);
     }
 
@@ -87,8 +87,8 @@ class int_imm : public value_node {
 
 class val : public value_node {
   public:
-    inline static bool classof(value_node const &v) { return v.type_id() == VK_val; }
-    inline val(data_type ty, location const &lc = {}) : value_node(VK_val), ty_(std::move(ty)) {
+    inline static bool classof(value_node const &v) { return v.type_id() == VK::val; }
+    inline val(data_type ty, location const &lc = {}) : value_node(VK::val), ty_(std::move(ty)) {
         loc(lc);
     }
 

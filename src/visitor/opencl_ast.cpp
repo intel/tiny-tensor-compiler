@@ -841,7 +841,7 @@ std::vector<clir::stmt> opencl_ast::operator()(hadamard_inst const &g) {
 std::vector<clir::stmt> opencl_ast::operator()(if_inst const &in) {
     auto clinst = std::vector<clir::stmt>{};
     yielded_vars_.push_back(std::vector<clir::var>{});
-    for (auto const &r : in.results_ref()) {
+    for (auto const &r : in.results()) {
         auto v = declare(*r);
         clinst.emplace_back(clir::declaration(visit(*this, *r->ty()), v));
         yielded_vars_.back().emplace_back(std::move(v));

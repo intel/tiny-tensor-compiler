@@ -13,22 +13,22 @@
 #include <vector>
 
 namespace tinytc {
+enum class RK { rgn };
 using region_nodes = type_list<class rgn>;
-}
+} // namespace tinytc
 
 struct tinytc_region : tinytc::reference_counted {
   public:
-    enum region_kind { RK_rgn };
     using leaves = tinytc::region_nodes;
 
-    inline tinytc_region(std::int64_t tid) : tid_(tid) {}
-    inline auto type_id() const -> std::int64_t { return tid_; }
+    inline tinytc_region(tinytc::RK tid) : tid_(tid) {}
+    inline auto type_id() const -> tinytc::RK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
-    std::int64_t tid_;
+    tinytc::RK tid_;
     tinytc::location loc_;
 };
 
@@ -38,9 +38,9 @@ using region_node = ::tinytc_region;
 
 class rgn : public region_node {
   public:
-    inline static bool classof(region_node const &r) { return r.type_id() == RK_rgn; }
+    inline static bool classof(region_node const &r) { return r.type_id() == RK::rgn; }
     inline rgn(std::vector<inst> insts = {}, location const &lc = {})
-        : region_node(RK_rgn), insts_(std::move(insts)) {
+        : region_node(RK::rgn), insts_(std::move(insts)) {
         loc(lc);
     }
 

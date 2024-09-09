@@ -27,7 +27,47 @@ enum class inst_execution_kind {
     spmd        ///< SPMD instruction on varying data
 
 };
-
+enum class IK {
+    alloca,
+    arith,
+    arith_unary,
+    barrier,
+    cast,
+    compare,
+    expand,
+    fuse,
+    load,
+    group_id,
+    group_size,
+    lifetime_stop,
+    if_,
+    num_subgroups,
+    parallel,
+    size,
+    subgroup_id,
+    subgroup_local_id,
+    subgroup_size,
+    subview,
+    store,
+    yield,
+    // blas a2
+    blas_a2,
+    axpby_blas_a2,
+    sum_blas_a2,
+    last_blas_a2,
+    // blas a3
+    blas_a3,
+    gemm_blas_a3,
+    gemv_blas_a3,
+    ger_blas_a3,
+    hadamard_blas_a3,
+    last_blas_a3,
+    // loop inst
+    loop,
+    for_loop,
+    foreach_loop,
+    last_loop
+};
 using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class barrier_inst, class arith_inst,
               class arith_unary_inst, class cast_inst, class compare_inst, class expand_inst,
@@ -38,61 +78,19 @@ using inst_nodes =
               class store_inst, class subgroup_id_inst, class subgroup_local_id_inst,
               class subgroup_size_inst, class sum_inst, class yield_inst>;
 
-using op_range = iterator_range_wrapper<value *>;
-using const_op_range = iterator_range_wrapper<value const *>;
-using result_range = iterator_range_wrapper<value *>;
-using const_result_range = iterator_range_wrapper<value const *>;
+using value_range = iterator_range_wrapper<value *>;
+using const_value_range = iterator_range_wrapper<value const *>;
+using region_range = iterator_range_wrapper<region *>;
+using const_region_range = iterator_range_wrapper<region const *>;
 
 } // namespace tinytc
 
 struct tinytc_inst : tinytc::reference_counted {
   public:
-    enum inst_kind {
-        IK_alloca,
-        IK_arith,
-        IK_arith_unary,
-        IK_barrier,
-        IK_cast,
-        IK_compare,
-        IK_expand,
-        IK_fuse,
-        IK_load,
-        IK_group_id,
-        IK_group_size,
-        IK_lifetime_stop,
-        IK_if,
-        IK_num_subgroups,
-        IK_parallel,
-        IK_size,
-        IK_subgroup_id,
-        IK_subgroup_local_id,
-        IK_subgroup_size,
-        IK_subview,
-        IK_store,
-        IK_yield,
-        // blas a2
-        IK_blas_a2,
-        IK_axpby_blas_a2,
-        IK_sum_blas_a2,
-        IK_last_blas_a2,
-        // blas a3
-        IK_blas_a3,
-        IK_gemm_blas_a3,
-        IK_gemv_blas_a3,
-        IK_ger_blas_a3,
-        IK_hadamard_blas_a3,
-        IK_last_blas_a3,
-        // loop inst
-        IK_loop,
-        IK_for_loop,
-        IK_foreach_loop,
-        IK_last_loop
-    };
     using leaves = tinytc::inst_nodes;
 
-    inline tinytc_inst(std::int64_t tid) : tid_(tid), op_begin_(nullptr), op_end_(nullptr) {}
-    inline virtual ~tinytc_inst() {}
-    inline auto type_id() const -> std::int64_t { return tid_; }
+    inline tinytc_inst(tinytc::IK tid) : tid_(tid) {}
+    inline auto type_id() const -> tinytc::IK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
@@ -100,93 +98,192 @@ struct tinytc_inst : tinytc::reference_counted {
     // Iterator over operands
     inline auto op_begin() -> tinytc::value * { return op_begin_; }
     inline auto op_end() -> tinytc::value * { return op_end_; }
-    inline auto operands() -> tinytc::op_range { return tinytc::op_range{op_begin_, op_end_}; }
+    inline auto operands() -> tinytc::value_range {
+        return tinytc::value_range{op_begin_, op_end_};
+    }
     inline auto op_begin() const -> tinytc::value const * { return op_begin_; }
     inline auto op_end() const -> tinytc::value const * { return op_end_; }
-    inline auto operands() const -> tinytc::const_op_range {
-        return tinytc::const_op_range{op_begin_, op_end_};
+    inline auto operands() const -> tinytc::const_value_range {
+        return tinytc::const_value_range{op_begin_, op_end_};
     }
     inline auto op(std::size_t pos) -> tinytc::value & { return op_begin_[pos]; }
     inline auto op(std::size_t pos) const -> tinytc::value const & { return op_begin_[pos]; }
     inline auto num_operands() const -> std::int64_t { return op_end_ - op_begin_; }
 
-    virtual tinytc::value result() const = 0;
-    inline virtual auto results() const -> std::vector<tinytc::value> {
-        if (auto r = result(); r) {
-            return {std::move(r)};
-        }
-        return {};
+    // Iterator over results
+    inline auto result_begin() -> tinytc::value * { return result_begin_; }
+    inline auto result_end() -> tinytc::value * { return result_end_; }
+    inline auto results() -> tinytc::value_range {
+        return tinytc::value_range{result_begin_, result_end_};
     }
-    inline virtual auto num_results() const -> std::size_t { return result() ? 1u : 0u; }
-    virtual tinytc::inst_execution_kind kind() const = 0;
+    inline auto result_begin() const -> tinytc::value const * { return result_begin_; }
+    inline auto result_end() const -> tinytc::value const * { return result_end_; }
+    inline auto results() const -> tinytc::const_value_range {
+        return tinytc::const_value_range{result_begin_, result_end_};
+    }
+    inline auto result() const -> tinytc::value {
+        return num_results() > 0 ? result_begin_[0] : tinytc::value{};
+    }
+    inline auto result(std::size_t pos) -> tinytc::value & { return result_begin_[pos]; }
+    inline auto result(std::size_t pos) const -> tinytc::value const & {
+        return result_begin_[pos];
+    }
+    inline auto num_results() const -> std::int64_t { return result_end_ - result_begin_; }
+
+    // Iterator over regions
+    inline auto child_regions_begin() -> tinytc::region * { return child_regions_begin_; }
+    inline auto child_regions_end() -> tinytc::region * { return child_regions_end_; }
+    inline auto child_regions() -> tinytc::region_range {
+        return tinytc::region_range{child_regions_begin_, child_regions_end_};
+    }
+    inline auto child_regions_begin() const -> tinytc::region const * {
+        return child_regions_begin_;
+    }
+    inline auto child_regions_end() const -> tinytc::region const * { return child_regions_end_; }
+    inline auto child_regions() const -> tinytc::const_region_range {
+        return tinytc::const_region_range{child_regions_begin_, child_regions_end_};
+    }
+    inline auto child_region(std::size_t pos) -> tinytc::region & {
+        return child_regions_begin_[pos];
+    }
+    inline auto child_region(std::size_t pos) const -> tinytc::region const & {
+        return child_regions_begin_[pos];
+    }
+    inline auto num_child_regions() const -> std::int64_t {
+        return child_regions_end_ - child_regions_begin_;
+    }
+
+    inline constexpr auto kind() const -> tinytc::inst_execution_kind {
+        switch (type_id()) {
+        case tinytc::IK::alloca:
+        case tinytc::IK::barrier:
+        case tinytc::IK::lifetime_stop:
+        case tinytc::IK::foreach_loop:
+        case tinytc::IK::parallel:
+        case tinytc::IK::blas_a2:
+        case tinytc::IK::axpby_blas_a2:
+        case tinytc::IK::sum_blas_a2:
+        case tinytc::IK::last_blas_a2:
+        case tinytc::IK::blas_a3:
+        case tinytc::IK::gemm_blas_a3:
+        case tinytc::IK::gemv_blas_a3:
+        case tinytc::IK::ger_blas_a3:
+        case tinytc::IK::hadamard_blas_a3:
+        case tinytc::IK::last_blas_a3:
+            return tinytc::inst_execution_kind::collective;
+        case tinytc::IK::arith:
+        case tinytc::IK::arith_unary:
+        case tinytc::IK::cast:
+        case tinytc::IK::compare:
+        case tinytc::IK::expand:
+        case tinytc::IK::fuse:
+        case tinytc::IK::load:
+        case tinytc::IK::group_id:
+        case tinytc::IK::group_size:
+        case tinytc::IK::if_:
+        case tinytc::IK::num_subgroups:
+        case tinytc::IK::size:
+        case tinytc::IK::subgroup_size:
+        case tinytc::IK::subview:
+        case tinytc::IK::store:
+        case tinytc::IK::yield:
+        case tinytc::IK::loop:
+        case tinytc::IK::for_loop:
+        case tinytc::IK::last_loop:
+            return tinytc::inst_execution_kind::mixed;
+        case tinytc::IK::subgroup_id:
+        case tinytc::IK::subgroup_local_id:
+            return tinytc::inst_execution_kind::spmd;
+        };
+        throw tinytc::internal_compiler_error();
+    }
 
   protected:
     inline auto op_range(tinytc::value *begin, tinytc::value *end) {
         op_begin_ = begin;
         op_end_ = end;
     }
+    inline auto result_range(tinytc::value *begin, tinytc::value *end) {
+        result_begin_ = begin;
+        result_end_ = end;
+    }
+    inline auto child_regions_range(tinytc::region *begin, tinytc::region *end) {
+        child_regions_begin_ = begin;
+        child_regions_end_ = end;
+    }
 
   private:
-    std::int64_t tid_;
+    tinytc::IK tid_;
     tinytc::location loc_;
-    tinytc::value *op_begin_, *op_end_;
+    tinytc::value *op_begin_ = nullptr, *op_end_ = nullptr, *result_begin_ = nullptr,
+                  *result_end_ = nullptr;
+    tinytc::region *child_regions_begin_ = nullptr, *child_regions_end_ = nullptr;
 };
 
 namespace tinytc {
 
 using inst_node = ::tinytc_inst;
 
-template <std::int64_t NumValues> class value_container {
+template <typename T, std::int64_t NumObjects> class object_container {
   public:
-    value_container(std::int64_t num_values) {
-        if (num_values != NumValues) {
+    object_container(std::int64_t num_objects) {
+        if (num_objects != NumObjects) {
             throw internal_compiler_error();
         }
     }
-    inline auto get() -> tinytc::value * {
-        if constexpr (NumValues == 0) {
+    inline auto get() -> T * {
+        if constexpr (NumObjects == 0) {
             return nullptr;
         }
-        return ops_.data();
+        return objs_.data();
     }
 
   private:
-    std::array<value, NumValues> ops_;
+    std::array<T, NumObjects> objs_;
 };
 
-template <> class value_container<dynamic> {
+template <typename T> class object_container<T, dynamic> {
   public:
-    value_container(std::int64_t num_values) : ops_{std::make_unique<value[]>(num_values)} {}
+    object_container(std::int64_t num_objects) : objs_{std::make_unique<T[]>(num_objects)} {}
 
-    auto get() -> tinytc::value * { return ops_.get(); }
+    auto get() -> T * { return objs_.get(); }
 
   private:
-    std::unique_ptr<value[]> ops_;
+    std::unique_ptr<T[]> objs_;
 };
 
-template <std::int64_t NumOperands, std::int64_t NumResults>
+template <std::int64_t NumOperands, std::int64_t NumResults, std::int64_t NumChildRegions = 0>
 class standard_inst : public inst_node {
   public:
-    standard_inst(std::int64_t tid, std::int64_t num_operands = NumOperands,
-                  std::int64_t num_results = NumResults)
-        : inst_node{tid}, ops_{num_operands}, results_{num_results} {
+    standard_inst(IK tid, std::int64_t num_operands = NumOperands,
+                  std::int64_t num_results = NumResults,
+                  std::int64_t num_child_regions = NumChildRegions)
+        : inst_node{tid}, ops_{num_operands}, results_{num_results},
+          child_regions_{num_child_regions} {
         if (num_operands > 0) {
             op_range(ops_.get(), ops_.get() + num_operands);
         }
+        if (num_results > 0) {
+            result_range(results_.get(), results_.get() + num_results);
+        }
+        if (num_child_regions > 0) {
+            child_regions_range(child_regions_.get(), child_regions_.get() + num_child_regions);
+        }
     }
 
   private:
-    value_container<NumOperands> ops_;
-    value_container<NumResults> results_;
+    object_container<value, NumOperands> ops_;
+    object_container<value, NumResults> results_;
+    object_container<region, NumChildRegions> child_regions_;
 };
 
-class blas_a2_inst : public standard_inst<4, 1> {
+class blas_a2_inst : public standard_inst<4, 0> {
   public:
     inline static bool classof(inst_node const &i) {
-        return i.type_id() >= IK_blas_a2 && i.type_id() <= IK_last_blas_a2;
+        return i.type_id() >= IK::blas_a2 && i.type_id() <= IK::last_blas_a2;
     }
     enum op_number { op_alpha = 0, op_A = 1, op_beta = 2, op_B = 3 };
-    blas_a2_inst(std::int64_t tid, value alpha, value A, value beta, value B, bool atomic);
+    blas_a2_inst(IK tid, value alpha, value A, value beta, value B, bool atomic);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
@@ -194,20 +291,18 @@ class blas_a2_inst : public standard_inst<4, 1> {
     inline auto A() const -> value const & { return op(op_A); }
     inline auto beta() const -> value const & { return op(op_beta); }
     inline auto B() const -> value const & { return op(op_B); }
-    inline value result() const override { return value{}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
 
   protected:
     bool atomic_;
 };
 
-class blas_a3_inst : public standard_inst<5, 1> {
+class blas_a3_inst : public standard_inst<5, 0> {
   public:
     inline static bool classof(inst_node const &i) {
-        return i.type_id() >= IK_blas_a3 && i.type_id() <= IK_last_blas_a3;
+        return i.type_id() >= IK::blas_a3 && i.type_id() <= IK::last_blas_a3;
     }
     enum op_number { op_alpha = 0, op_A = 1, op_B = 2, op_beta = 3, op_C = 4 };
-    blas_a3_inst(std::int64_t tid, value alpha, value A, value B, value beta, value C, bool atomic);
+    blas_a3_inst(IK tid, value alpha, value A, value B, value beta, value C, bool atomic);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
@@ -216,50 +311,41 @@ class blas_a3_inst : public standard_inst<5, 1> {
     inline auto B() const -> value const & { return op(op_B); }
     inline auto beta() const -> value const & { return op(op_beta); }
     inline auto C() const -> value const & { return op(op_C); }
-    inline value result() const override { return value{}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
 
   protected:
     bool atomic_;
 };
 
-class loop_inst : public standard_inst<4, 1> {
+class loop_inst : public standard_inst<4, 0, 1> {
   public:
     inline static bool classof(inst_node const &i) {
-        return i.type_id() >= IK_loop && i.type_id() <= IK_last_loop;
+        return i.type_id() >= IK::loop && i.type_id() <= IK::last_loop;
     }
     enum op_number { op_loop_var = 0, op_from = 1, op_to = 2, op_step = 3 };
-    loop_inst(std::int64_t tid, value loop_var, value from, value to, value step, region body,
+    loop_inst(IK tid, value loop_var, value from, value to, value step, region body,
               location const &loc = {});
     inline auto loop_var() const -> value const & { return op(op_loop_var); }
     inline auto from() const -> value const & { return op(op_from); }
     inline auto to() const -> value const & { return op(op_to); }
     inline auto step() const -> value const & { return op(op_step); }
-    inline auto body() const -> region const & { return body_; }
-    inline value result() const override { return value{}; }
-
-  private:
-    region body_;
+    inline auto body() const -> region const & { return child_region(0); }
 };
 
 class alloca_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_alloca; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::alloca; }
     alloca_inst(data_type ty, location const &loc = {});
 
-    inline value result() const override { return result_; }
     inline std::int64_t stack_ptr() const { return stack_ptr_; }
     inline void stack_ptr(std::int64_t ptr) { stack_ptr_ = ptr; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
 
   private:
-    value result_;
     std::int64_t stack_ptr_;
 };
 
 class axpby_inst : public blas_a2_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_axpby_blas_a2; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::axpby_blas_a2; }
     axpby_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
                location const &lc = {});
 
@@ -271,79 +357,62 @@ class axpby_inst : public blas_a2_inst {
 
 class arith_inst : public standard_inst<2, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_arith; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::arith; }
     enum op_number { op_a = 0, op_b = 1 };
     arith_inst(arithmetic op, value a, value b, location const &lc = {});
 
     inline arithmetic operation() const { return operation_; }
     inline auto a() const -> value const & { return op(op_a); }
     inline auto b() const -> value const & { return op(op_b); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
     arithmetic operation_;
-    value result_;
 };
 
 class arith_unary_inst : public standard_inst<1, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_arith_unary; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::arith_unary; }
     enum op_number { op_a = 0 };
     arith_unary_inst(arithmetic_unary op, value a, location const &lc = {});
 
     inline arithmetic_unary operation() const { return operation_; }
     inline auto a() const -> value const & { return op(op_a); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
     arithmetic_unary operation_;
-    value result_;
 };
 
 class barrier_inst : public standard_inst<0, 0> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_barrier; }
-    inline barrier_inst() : standard_inst{IK_barrier} {}
-
-    inline value result() const override { return value{}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::barrier; }
+    inline barrier_inst() : standard_inst{IK::barrier} {}
 };
 
 class cast_inst : public standard_inst<1, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_cast; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::cast; }
     enum op_number { op_a = 0 };
     cast_inst(value a, scalar_type to_ty, location const &lc = {});
     inline auto a() const -> value const & { return op(op_a); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
 class compare_inst : public standard_inst<2, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_compare; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::compare; }
     enum op_number { op_a = 0, op_b = 1 };
     compare_inst(cmp_condition cond, value a, value b, location const &lc = {});
 
     inline cmp_condition cond() const { return cond_; }
     inline auto a() const -> value const & { return op(op_a); }
     inline auto b() const -> value const & { return op(op_b); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
     cmp_condition cond_;
-    value result_;
 };
 
 class expand_inst : public standard_inst<dynamic, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_expand; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::expand; }
     expand_inst(value op, std::int64_t mode, std::vector<value> const &expand_shape,
                 location const &lc = {});
 
@@ -352,86 +421,63 @@ class expand_inst : public standard_inst<dynamic, 1> {
     inline auto expand_shape() { return operands() | std::views::drop(1); }
     inline auto expand_shape() const { return operands() | std::views::drop(1); }
     inline auto expand_shape(std::int64_t i) const -> value const & { return op(i + 1); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
-    value result_;
     std::int64_t mode_;
 };
 
 class fuse_inst : public standard_inst<1, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_fuse; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::fuse; }
     fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc = {});
 
     inline auto operand() const -> value const & { return op(0); }
     inline std::int64_t from() const { return from_; }
     inline std::int64_t to() const { return to_; }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
-    value result_;
     std::int64_t from_, to_;
 };
 
 class load_inst : public standard_inst<dynamic, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_load; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::load; }
     load_inst(value op, std::vector<value> const &index_list, location const &lc = {});
 
     inline auto operand() const -> value const & { return op(0); }
     inline auto index_list() const { return operands() | std::views::drop(1); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
 class group_id_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_group_id; }
-    inline group_id_inst(location const &lc = {})
-        : standard_inst{IK_group_id}, result_{make_value(scalar_type::index)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_id; }
+    inline group_id_inst(location const &lc = {}) : standard_inst{IK::group_id} {
         loc(lc);
+        result(0) = make_value(scalar_type::index);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
 class group_size_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_group_size; }
-    inline group_size_inst(location const &lc = {})
-        : standard_inst{IK_group_size}, result_{make_value(scalar_type::index)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_size; }
+    inline group_size_inst(location const &lc = {}) : standard_inst{IK::group_size} {
         loc(lc);
+        result(0) = make_value(scalar_type::index);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
-class lifetime_stop_inst : public standard_inst<1, 1> {
+class lifetime_stop_inst : public standard_inst<1, 0> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_lifetime_stop; }
-    inline lifetime_stop_inst(value obj) : standard_inst{IK_lifetime_stop} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::lifetime_stop; }
+    inline lifetime_stop_inst(value obj) : standard_inst{IK::lifetime_stop} {
         op(0) = std::move(obj);
     }
     inline auto object() const -> value const & { return op(0); }
-    inline value result() const override { return value{}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
 };
 
 class gemm_inst : public blas_a3_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_gemm_blas_a3; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::gemm_blas_a3; }
     gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
               bool atomic = false, location const &lc = {});
 
@@ -444,7 +490,7 @@ class gemm_inst : public blas_a3_inst {
 
 class gemv_inst : public blas_a3_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_gemv_blas_a3; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::gemv_blas_a3; }
     gemv_inst(transpose tA, value alpha, value A, value B, value beta, value C, bool atomic = false,
               location const &lc = {});
 
@@ -456,162 +502,125 @@ class gemv_inst : public blas_a3_inst {
 
 class ger_inst : public blas_a3_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_ger_blas_a3; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::ger_blas_a3; }
     ger_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
              location const &lc = {});
 };
 
 class for_inst : public loop_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_for_loop; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
     inline for_inst(value loop_var, value from, value to, region body, location const &loc = {})
-        : loop_inst{
-              IK_for_loop, std::move(loop_var), std::move(from), std::move(to), {}, std::move(body),
-              loc} {}
-    inline for_inst(value loop_var, value from, value to, value step, region body,
-                    location const &loc = {})
-        : loop_inst{IK_for_loop,
-                    std::move(loop_var),
-                    std::move(from),
-                    std::move(to),
-                    std::move(step),
-                    std::move(body),
-                    loc} {}
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-};
-
-class foreach_inst : public loop_inst {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_foreach_loop; }
-    inline foreach_inst(value loop_var, value from, value to, region body, location const &loc = {})
-        : loop_inst{IK_foreach_loop,
+        : loop_inst{IK::for_loop,
                     std::move(loop_var),
                     std::move(from),
                     std::move(to),
                     {},
                     std::move(body),
                     loc} {}
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
+    inline for_inst(value loop_var, value from, value to, value step, region body,
+                    location const &loc = {})
+        : loop_inst{IK::for_loop,
+                    std::move(loop_var),
+                    std::move(from),
+                    std::move(to),
+                    std::move(step),
+                    std::move(body),
+                    loc} {}
+};
+
+class foreach_inst : public loop_inst {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::foreach_loop; }
+    inline foreach_inst(value loop_var, value from, value to, region body, location const &loc = {})
+        : loop_inst{IK::foreach_loop,
+                    std::move(loop_var),
+                    std::move(from),
+                    std::move(to),
+                    {},
+                    std::move(body),
+                    loc} {}
 };
 
 class hadamard_inst : public blas_a3_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_hadamard_blas_a3; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::hadamard_blas_a3; }
     hadamard_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
                   location const &lc = {});
 };
 
-class if_inst : public standard_inst<1, dynamic> {
+class if_inst : public standard_inst<1, dynamic, 2> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_if; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::if_; }
+    enum child_region_number { child_region_then = 0, child_region_otherwise = 1 };
     if_inst(value condition, region then, region otherwise = {},
             std::vector<scalar_type> const &return_types = {}, location const &lc = {});
     inline auto condition() const -> value const & { return op(0); }
-    inline auto then() const -> region const & { return then_; }
-    inline auto otherwise() const -> region const & { return otherwise_; }
-    inline value result() const override {
-        return results_.size() > 0 ? results_.front() : value{};
-    }
-    inline auto results() const -> std::vector<value> override { return results_; }
-    inline auto num_results() const -> std::size_t override { return results_.size(); }
-    inline auto results_ref() -> std::vector<value> & { return results_; }
-    inline auto results_ref() const -> std::vector<value> const & { return results_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    region then_, otherwise_;
-    std::vector<value> results_;
+    inline auto then() const -> region const & { return child_region(child_region_then); }
+    inline auto otherwise() const -> region const & { return child_region(child_region_otherwise); }
 };
 
 class num_subgroups_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_num_subgroups; }
-    inline num_subgroups_inst(location const &lc = {})
-        : standard_inst{IK_num_subgroups}, result_{make_value(scalar_type::i32)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::num_subgroups; }
+    inline num_subgroups_inst(location const &lc = {}) : standard_inst{IK::num_subgroups} {
         loc(lc);
+        result(0) = make_value(scalar_type::i32);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
-class parallel_inst : public standard_inst<0, 0> {
+class parallel_inst : public standard_inst<0, 0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_parallel; }
-    inline parallel_inst(region body, location const &lc = {})
-        : standard_inst{IK_parallel}, body_(std::move(body)) {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::parallel; }
+    inline parallel_inst(region body, location const &lc = {}) : standard_inst{IK::parallel} {
+        child_region(0) = std::move(body);
         loc(lc);
     }
-    inline auto body() const -> region const & { return body_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::collective; }
-    inline value result() const override { return value{}; }
-
-  private:
-    region body_;
+    inline auto body() const -> region const & { return child_region(0); }
 };
 
 class size_inst : public standard_inst<1, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_size; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::size; }
     size_inst(value op, std::int64_t mode, location const &lc = {});
 
     inline auto operand() const -> value const & { return op(0); }
     inline std::int64_t mode() const { return mode_; }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 
   private:
-    value result_;
     std::int64_t mode_;
 };
 
 class subgroup_id_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_subgroup_id; }
-    inline subgroup_id_inst(location const &lc = {})
-        : standard_inst{IK_subgroup_id}, result_{make_value(scalar_type::i32)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_id; }
+    inline subgroup_id_inst(location const &lc = {}) : standard_inst{IK::subgroup_id} {
         loc(lc);
+        result(0) = make_value(scalar_type::i32);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::spmd; }
-
-  private:
-    value result_;
 };
 
 class subgroup_local_id_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_subgroup_local_id; }
-    inline subgroup_local_id_inst(location const &lc = {})
-        : standard_inst{IK_subgroup_local_id}, result_{make_value(scalar_type::i32)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_local_id; }
+    inline subgroup_local_id_inst(location const &lc = {}) : standard_inst{IK::subgroup_local_id} {
         loc(lc);
+        result(0) = make_value(scalar_type::i32);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::spmd; }
-
-  private:
-    value result_;
 };
 
 class subgroup_size_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_subgroup_size; }
-    inline subgroup_size_inst(location const &lc = {})
-        : standard_inst{IK_subgroup_size}, result_{make_value(scalar_type::i32)} {
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_size; }
+    inline subgroup_size_inst(location const &lc = {}) : standard_inst{IK::subgroup_size} {
         loc(lc);
+        result(0) = make_value(scalar_type::i32);
     }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
 class subview_inst : public standard_inst<dynamic, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_subview; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
     subview_inst(value op, std::vector<value> const &offset_list,
                  std::vector<value> const &size_list, location const &lc = {});
 
@@ -622,29 +631,22 @@ class subview_inst : public standard_inst<dynamic, 1> {
         return operands() | std::views::drop(1) | std::views::take(num_indices());
     }
     inline auto size_list() const { return operands() | std::views::drop(1 + num_indices()); }
-    inline value result() const override { return result_; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
-
-  private:
-    value result_;
 };
 
 class store_inst : public standard_inst<dynamic, 0> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_store; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::store; }
     enum op_number { op_val = 0, op_operand = 1 };
     store_inst(value val, value op, std::vector<value> const &index_list, location const &lc = {});
 
     inline auto val() const -> value const & { return op(op_val); }
     inline auto operand() const -> value const & { return op(op_operand); }
     inline auto index_list() const { return operands() | std::views::drop(2); }
-    inline value result() const override { return {}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 };
 
 class sum_inst : public blas_a2_inst {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_sum_blas_a2; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::sum_blas_a2; }
     sum_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
              location const &lc = {});
 
@@ -656,16 +658,14 @@ class sum_inst : public blas_a2_inst {
 
 class yield_inst : public standard_inst<dynamic, 0> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK_yield; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::yield; }
     inline yield_inst(std::vector<value> const &vals, location const &lc = {})
-        : standard_inst{IK_yield, static_cast<std::int64_t>(vals.size())} {
+        : standard_inst{IK::yield, static_cast<std::int64_t>(vals.size())} {
         loc(lc);
         for (std::size_t i = 0; i < vals.size(); ++i) {
             op(i) = vals[i];
         }
     }
-    inline value result() const override { return value{}; }
-    inline inst_execution_kind kind() const override { return inst_execution_kind::mixed; }
 };
 
 } // namespace tinytc

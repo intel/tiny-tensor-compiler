@@ -43,9 +43,12 @@ constexpr auto unflatten(std::index_sequence<Size...>) {
 } // namespace detail
 
 template <typename T>
+concept type_id_return_type = std::is_integral_v<T> || std::is_enum_v<T>;
+
+template <typename T>
 concept visitable = requires(T ty) {
     typename T::leaves;
-    { ty.type_id() } -> std::integral;
+    { ty.type_id() } -> type_id_return_type;
 };
 
 /**

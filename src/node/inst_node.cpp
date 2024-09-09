@@ -35,7 +35,7 @@ memref_data_type *get_memref_type(location const &loc, value const &v) {
     return m;
 }
 
-blas_a2_inst::blas_a2_inst(std::int64_t tid, value alpha, value A, value beta, value B, bool atomic)
+blas_a2_inst::blas_a2_inst(IK tid, value alpha, value A, value beta, value B, bool atomic)
     : standard_inst{tid}, atomic_(atomic) {
     op(op_alpha) = std::move(alpha);
     op(op_A) = std::move(A);
@@ -43,8 +43,7 @@ blas_a2_inst::blas_a2_inst(std::int64_t tid, value alpha, value A, value beta, v
     op(op_B) = std::move(B);
 }
 
-blas_a3_inst::blas_a3_inst(std::int64_t tid, value alpha, value A, value B, value beta, value C,
-                           bool atomic)
+blas_a3_inst::blas_a3_inst(IK tid, value alpha, value A, value B, value beta, value C, bool atomic)
     : standard_inst{tid}, atomic_(atomic) {
     op(op_alpha) = std::move(alpha);
     op(op_A) = std::move(A);
@@ -53,13 +52,14 @@ blas_a3_inst::blas_a3_inst(std::int64_t tid, value alpha, value A, value B, valu
     op(op_C) = std::move(C);
 }
 
-loop_inst::loop_inst(std::int64_t tid, value loop_var0, value from0, value to0, value step0,
-                     region body, location const &lc)
-    : standard_inst{tid}, body_(std::move(body)) {
+loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step0, region body,
+                     location const &lc)
+    : standard_inst{tid} {
     op(op_loop_var) = std::move(loop_var0);
     op(op_from) = std::move(from0);
     op(op_to) = std::move(to0);
     op(op_step) = std::move(step0);
+    child_region(0) = std::move(body);
 
     loc(lc);
     auto lvt = get_scalar_type(loc(), loop_var());
@@ -77,9 +77,11 @@ loop_inst::loop_inst(std::int64_t tid, value loop_var0, value from0, value to0, 
 }
 
 alloca_inst::alloca_inst(data_type ty, location const &lc)
-    : standard_inst{IK_alloca}, result_{make_value(std::move(ty))}, stack_ptr_{-1} {
+    : standard_inst{IK::alloca}, stack_ptr_{-1} {
     loc(lc);
-    auto memref = dyn_cast<memref_data_type>(result_->ty().get());
+
+    result(0) = make_value(std::move(ty));
+    auto memref = dyn_cast<memref_data_type>(result(0)->ty().get());
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -88,7 +90,7 @@ alloca_inst::alloca_inst(data_type ty, location const &lc)
 
 axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                        location const &lc)
-    : blas_a2_inst(IK_axpby_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
+    : blas_a2_inst(IK::axpby_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
                    std::move(B0), atomic),
       tA_(tA) {
     loc(lc);
@@ -112,7 +114,7 @@ axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value 
 }
 
 arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const &lc)
-    : standard_inst{IK_arith}, operation_(operation) {
+    : standard_inst{IK::arith}, operation_(operation) {
     op(op_a) = std::move(a0);
     op(op_b) = std::move(b0);
     loc(lc);
@@ -143,11 +145,11 @@ arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const 
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result_ = make_value(at->ty());
+    result(0) = make_value(at->ty());
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, location const &lc)
-    : standard_inst{IK_arith_unary}, operation_(operation) {
+    : standard_inst{IK::arith_unary}, operation_(operation) {
     op(op_a) = std::move(a0);
     loc(lc);
 
@@ -164,17 +166,18 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, locatio
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result_ = make_value(at->ty());
+    result(0) = make_value(at->ty());
 }
 
-cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc)
-    : standard_inst{IK_cast}, result_{make_value(to_ty)} {
+cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc) : standard_inst{IK::cast} {
     op(op_a) = std::move(a);
     loc(lc);
+
+    result(0) = make_value(std::move(to_ty));
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location const &lc)
-    : standard_inst{IK_compare}, cond_(cond), result_{make_value(scalar_type::i1)} {
+    : standard_inst{IK::compare}, cond_(cond) {
     op(op_a) = std::move(a0);
     op(op_b) = std::move(b0);
     loc(lc);
@@ -185,11 +188,13 @@ compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location cons
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
+
+    result(0) = make_value(scalar_type::i1);
 }
 
 expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const &expand_shape0,
                          location const &lc)
-    : standard_inst{IK_expand, static_cast<std::int64_t>(1 + expand_shape0.size())}, mode_(mode) {
+    : standard_inst{IK::expand, static_cast<std::int64_t>(1 + expand_shape0.size())}, mode_(mode) {
     op(0) = std::move(op0);
     for (std::size_t i = 0; i < expand_shape0.size(); ++i) {
         op(1 + i) = expand_shape0[i];
@@ -279,11 +284,11 @@ expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const 
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = make_value(data_type(r.release()));
+    result(0) = make_value(data_type(r.release()));
 }
 
 fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location const &lc)
-    : standard_inst{IK_fuse}, from_(from), to_(to) {
+    : standard_inst{IK::fuse}, from_(from), to_(to) {
     op(0) = std::move(op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
@@ -317,11 +322,11 @@ fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location con
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = make_value(data_type(r.release()));
+    result(0) = make_value(data_type(r.release()));
 }
 
 load_inst::load_inst(value op0, std::vector<value> const &index_list0, location const &lc)
-    : standard_inst{IK_load, static_cast<std::int64_t>(1 + index_list0.size())} {
+    : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())} {
     op(0) = std::move(op0);
     for (std::size_t i = 0; i < index_list0.size(); ++i) {
         op(1 + i) = index_list0[i];
@@ -333,13 +338,13 @@ load_inst::load_inst(value op0, std::vector<value> const &index_list0, location 
                   if (static_cast<std::int64_t>(index_list().size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_ = make_value(g.ty());
+                  result(0) = make_value(g.ty());
               },
               [&](memref_data_type &m) {
                   if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result_ = make_value(m.element_ty());
+                  result(0) = make_value(m.element_ty());
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *operand()->ty());
@@ -347,7 +352,7 @@ load_inst::load_inst(value op0, std::vector<value> const &index_list0, location 
 
 gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha0, value A0, value B0, value beta0,
                      value C0, bool atomic, location const &lc)
-    : blas_a3_inst(IK_gemm_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+    : blas_a3_inst(IK::gemm_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
                    std::move(beta0), std::move(C0), atomic),
       tA_(tA), tB_(tB) {
     loc(lc);
@@ -377,7 +382,7 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, value alpha0, value A0, value B
 
 gemv_inst::gemv_inst(transpose tA, value alpha0, value A0, value B0, value beta0, value C0,
                      bool atomic, location const &lc)
-    : blas_a3_inst(IK_gemv_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+    : blas_a3_inst(IK::gemv_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
                    std::move(beta0), std::move(C0), atomic),
       tA_(tA) {
     loc(lc);
@@ -405,7 +410,7 @@ gemv_inst::gemv_inst(transpose tA, value alpha0, value A0, value B0, value beta0
 
 ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
                    location const &lc)
-    : blas_a3_inst(IK_ger_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+    : blas_a3_inst(IK::ger_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
                    std::move(beta0), std::move(C0), atomic) {
     loc(lc);
     auto a = get_memref_type(loc(), A());
@@ -431,7 +436,7 @@ ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool
 
 hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
                              location const &lc)
-    : blas_a3_inst(IK_hadamard_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
+    : blas_a3_inst(IK::hadamard_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
                    std::move(beta0), std::move(C0), atomic) {
     loc(lc);
     auto a = get_memref_type(loc(), A());
@@ -456,17 +461,18 @@ hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, valu
 
 if_inst::if_inst(value condition, region then, region otherwise,
                  std::vector<scalar_type> const &return_types, location const &lc)
-    : standard_inst{IK_if, 1, static_cast<int64_t>(return_types.size())}, then_(std::move(then)),
-      otherwise_(std::move(otherwise)) {
+    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
     op(0) = std::move(condition);
+    child_region(child_region_then) = std::move(then);
+    child_region(child_region_otherwise) = std::move(otherwise);
     loc(lc);
-    for (auto &ty : return_types) {
-        results_.push_back(make_value(ty));
+    for (std::size_t i = 0; i < return_types.size(); ++i) {
+        result(i) = make_value(return_types[i]);
     }
 }
 
 size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
-    : standard_inst{IK_size}, mode_(mode) {
+    : standard_inst{IK::size}, mode_(mode) {
     op(0) = std::move(op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
@@ -475,12 +481,12 @@ size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    result_ = make_value(scalar_type::index);
+    result(0) = make_value(scalar_type::index);
 }
 
 subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
                            std::vector<value> const &size_list0, location const &lc)
-    : standard_inst{IK_subview,
+    : standard_inst{IK::subview,
                     static_cast<std::int64_t>(1 + offset_list0.size() + size_list0.size())} {
     op(0) = std::move(op0);
     {
@@ -546,12 +552,12 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
     auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
     r->addrspace(m->addrspace());
-    result_ = make_value(data_type(r.release()));
+    result(0) = make_value(data_type(r.release()));
 }
 
 store_inst::store_inst(value val0, value op0, std::vector<value> const &index_list0,
                        location const &lc)
-    : standard_inst{IK_store, static_cast<std::int64_t>(2 + index_list0.size())} {
+    : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())} {
     op(op_val) = std::move(val0);
     op(op_operand) = std::move(op0);
     {
@@ -576,7 +582,7 @@ store_inst::store_inst(value val0, value op0, std::vector<value> const &index_li
 
 sum_inst::sum_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,
                    location const &lc)
-    : blas_a2_inst(IK_sum_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
+    : blas_a2_inst(IK::sum_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
                    std::move(B0), atomic),
       tA_(tA) {
     loc(lc);

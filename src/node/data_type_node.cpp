@@ -12,7 +12,7 @@ namespace tinytc {
 
 memref_data_type::memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, location const &lc)
-    : data_type_node(DTK_memref), element_ty_(std::move(type)), shape_(std::move(shape)),
+    : data_type_node(DTK::memref), element_ty_(std::move(type)), shape_(std::move(shape)),
       stride_(std::move(stride)) {
     loc(lc);
     for (auto const &s : shape_) {

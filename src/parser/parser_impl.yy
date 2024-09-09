@@ -595,13 +595,13 @@ var_definition:
             $$->result()->name($identifier_list[0]);
             ctx.val($identifier_list[0], $$->result(), @identifier_list);
         } else {
-            auto results = $$->results();
-            if (results.size() != $identifier_list.size()) {
+            auto results = $$->result_begin();
+            if ($$->num_results() != static_cast<std::int64_t>($identifier_list.size())) {
                 throw syntax_error(
                     @identifier_list,
                     "Number of identifiers does not equal number of returned values");
             }
-            for (std::size_t i = 0; i < results.size(); ++i) {
+            for (std::int64_t i = 0; i < $$->num_results(); ++i) {
                 results[i]->name($identifier_list[i]);
                 ctx.val($identifier_list[i], results[i], @identifier_list);
             }

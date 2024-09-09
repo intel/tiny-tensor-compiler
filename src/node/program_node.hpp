@@ -14,22 +14,22 @@
 #include <vector>
 
 namespace tinytc {
+enum class PK { prog };
 using program_nodes = type_list<class program>;
-}
+} // namespace tinytc
 
 struct tinytc_prog : tinytc::reference_counted {
   public:
-    enum prog_kind { PK_prog };
     using leaves = tinytc::program_nodes;
 
-    inline tinytc_prog(std::int64_t tid) : tid_(tid) {}
-    inline auto type_id() const -> std::int64_t { return tid_; }
+    inline tinytc_prog(tinytc::PK tid) : tid_(tid) {}
+    inline auto type_id() const -> tinytc::PK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
   private:
-    std::int64_t tid_;
+    tinytc::PK tid_;
     tinytc::location loc_;
 };
 
@@ -39,9 +39,9 @@ using program_node = ::tinytc_prog;
 
 class program : public program_node {
   public:
-    inline static bool classof(program_node const &p) { return p.type_id() == PK_prog; }
+    inline static bool classof(program_node const &p) { return p.type_id() == PK::prog; }
     inline program(std::vector<func> decls, location const &lc = {})
-        : program_node(PK_prog), decls_(std::move(decls)) {
+        : program_node(PK::prog), decls_(std::move(decls)) {
         loc(lc);
     }
     inline auto declarations() -> std::vector<func> & { return decls_; }
