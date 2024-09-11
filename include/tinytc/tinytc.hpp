@@ -1284,16 +1284,17 @@ constexpr bool func_reinterpret_allowed =
 } // namespace internal
 
 /**
- * @brief Make function prototype
+ * @brief Make function
  *
  * @param name Function name
  * @param arg_list Argument list
+ * @param body Function body
  * @param loc Source code location
  *
  * @return Function
  */
-inline func make_function_prototype(char const *name, std::vector<value> &arg_list,
-                                    location const &loc = {}) {
+inline func make_function(char const *name, std::vector<value> &arg_list, region const &body,
+                          location const &loc = {}) {
     static_assert(internal::value_reinterpret_allowed);
     tinytc_func_t fun;
     auto len = arg_list.size();
@@ -1301,22 +1302,7 @@ inline func make_function_prototype(char const *name, std::vector<value> &arg_li
         throw std::out_of_range("argument list too long");
     }
     tinytc_value_t *al = reinterpret_cast<tinytc_value_t *>(arg_list.data());
-    CHECK_STATUS_LOC(tinytc_function_prototype_create(&fun, name, len, al, &loc), loc);
-    return func(fun);
-}
-
-/**
- * @brief Make function
- *
- * @param prototype Function prototype
- * @param body Function body
- * @param loc Source code location
- *
- * @return Function
- */
-inline func make_function(func const &prototype, region const &body, location const &loc = {}) {
-    tinytc_func_t fun;
-    CHECK_STATUS_LOC(tinytc_function_create(&fun, prototype.get(), body.get(), &loc), loc);
+    CHECK_STATUS_LOC(tinytc_function_create(&fun, name, len, al, body.get(), &loc), loc);
     return func(fun);
 }
 
@@ -1599,8 +1585,7 @@ class function_builder {
      * @return Function
      */
     inline func get_product(location const &loc = {}) {
-        auto proto = make_function_prototype(name_.c_str(), arguments_, loc);
-        auto fun = make_function(proto, body_);
+        auto fun = make_function(name_.c_str(), arguments_, body_, loc);
         if (x_ > 0 && y_ > 0) {
             set_work_group_size(fun, x_, y_);
         }
@@ -2047,6 +2032,30 @@ inline auto make_binary(bundle_format format, std::size_t data_size, std::uint8_
     CHECK_STATUS(tinytc_binary_create(&bin, static_cast<tinytc_bundle_format_t>(format), data_size,
                                       data, core_features));
     return binary{bin};
+}
+
+/**
+ * @brief Run a function pass on every function of a program
+ *
+ * @param pass_name name of function pass; cf. list_function_passes
+ * @param prg tensor program; modified as compiler pass is run
+ * @param info core info object; might be nullptr if core info is not required for pass
+ * @param ctx source context object to save extended error messages that are
+ * enhanced with source code context
+ */
+inline void run_function_pass(char const *pass_name, prog prg, core_info info = {},
+                              source_context ctx = {}) {
+    CHECK_STATUS(tinytc_run_function_pass(pass_name, prg.get(), info.get(), ctx.get()));
+}
+
+/**
+ * @brief Get function pass names
+ *
+ * @param names_size Number of function pass names
+ * @param names Array of function pass names
+ */
+inline void list_function_passes(std::uint32_t &names_size, char const *const *&names) {
+    CHECK_STATUS(tinytc_list_function_passes(&names_size, &names));
 }
 
 /**

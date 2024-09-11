@@ -21,6 +21,8 @@ Core C++-API:
       - tinytc::binary
   Compiler:
     function:
+      - tinytc::run_function_pass
+      - tinytc::list_function_passes
       - tinytc::compile_to_opencl
   Device Info:
     enum:

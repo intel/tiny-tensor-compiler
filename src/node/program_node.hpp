@@ -6,7 +6,7 @@
 
 #include "location.hpp"
 #include "reference_counted.hpp"
-#include "support/type_list.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <cstdint>
@@ -14,42 +14,43 @@
 #include <vector>
 
 namespace tinytc {
-enum class PK { prog };
-using program_nodes = type_list<class program>;
+using func_range = iterator_range_wrapper<func *>;
+using const_func_range = iterator_range_wrapper<func const *>;
 } // namespace tinytc
 
 struct tinytc_prog : tinytc::reference_counted {
   public:
-    using leaves = tinytc::program_nodes;
-
-    inline tinytc_prog(tinytc::PK tid) : tid_(tid) {}
-    inline auto type_id() const -> tinytc::PK { return tid_; }
+    inline tinytc_prog(std::vector<tinytc::func> funcs, tinytc::location const &lc = {})
+        : funcs_(std::move(funcs)) {
+        loc(lc);
+    }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
+    inline auto begin() -> tinytc::func * { return funcs_.size() > 0 ? funcs_.data() : nullptr; }
+    inline auto end() -> tinytc::func * {
+        return funcs_.size() > 0 ? funcs_.data() + funcs_.size() : nullptr;
+    }
+    inline auto functions() -> tinytc::func_range { return tinytc::func_range{begin(), end()}; }
+    inline auto begin() const -> tinytc::func const * {
+        return funcs_.size() > 0 ? funcs_.data() : nullptr;
+    }
+    inline auto end() const -> tinytc::func const * {
+        return funcs_.size() > 0 ? funcs_.data() + funcs_.size() : nullptr;
+    }
+    inline auto functions() const -> tinytc::const_func_range {
+        return tinytc::const_func_range{begin(), end()};
+    }
+
   private:
-    tinytc::PK tid_;
+    std::vector<tinytc::func> funcs_;
     tinytc::location loc_;
 };
 
 namespace tinytc {
 
-using program_node = ::tinytc_prog;
-
-class program : public program_node {
-  public:
-    inline static bool classof(program_node const &p) { return p.type_id() == PK::prog; }
-    inline program(std::vector<func> decls, location const &lc = {})
-        : program_node(PK::prog), decls_(std::move(decls)) {
-        loc(lc);
-    }
-    inline auto declarations() -> std::vector<func> & { return decls_; }
-    inline auto declarations() const -> std::vector<func> const & { return decls_; }
-
-  private:
-    std::vector<func> decls_;
-};
+using program = ::tinytc_prog;
 
 } // namespace tinytc
 

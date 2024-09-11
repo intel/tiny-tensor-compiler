@@ -42,18 +42,21 @@ set(SOURCES
     source.cpp
     tiling.cpp
     value.cpp
-    visitor/aa_results.cpp
-    visitor/alias_analysis.cpp
-    visitor/check_ir.cpp
-    visitor/dump_ir.cpp
-    visitor/equal.cpp
-    visitor/insert_barrier.cpp
-    visitor/lifetime_analysis.cpp
-    visitor/metadata.cpp
-    visitor/opencl_ast.cpp
-    visitor/slot_tracker.cpp
-    visitor/stack.cpp
-    visitor/work_group_size.cpp
+    #pass/aa_results.cpp
+    #pass/alias_analysis.cpp
+    pass/check_ir.cpp
+    #pass/constant_propagation.cpp
+    pass/dump_ir.cpp
+    pass/equal.cpp
+    #pass/insert_barrier.cpp
+    #pass/lifetime_analysis.cpp
+    #pass/lower_linalg.cpp
+    #pass/metadata.cpp
+    #pass/opencl_ast.cpp
+    pass/slot_tracker.cpp
+    #pass/stack.cpp
+    #pass/work_group_size.cpp
+    support/walk.cpp
 )
 set(RE2C_SOURCES
     parser/lexer.re

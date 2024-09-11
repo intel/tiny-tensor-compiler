@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/aa_results.hpp"
+#include "pass/aa_results.hpp"
 #include "node/value_node.hpp"
 
 #include <utility>

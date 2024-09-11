@@ -44,7 +44,6 @@ Builder C-API:
   Function:
     function:
       - tinytc_function_create
-      - tinytc_function_prototype_create
       - tinytc_function_set_subgroup_size
       - tinytc_function_set_work_group_size
       - tinytc_func_release

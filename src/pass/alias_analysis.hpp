@@ -8,7 +8,7 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "visitor/aa_results.hpp"
+#include "pass/aa_results.hpp"
 
 #include <unordered_map>
 

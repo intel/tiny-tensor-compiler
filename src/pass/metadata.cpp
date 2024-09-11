@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/metadata.hpp"
+#include "pass/metadata.hpp"
 #include "node/function_node.hpp"
 #include "node/program_node.hpp"
 #include "support/visit.hpp"
@@ -13,8 +13,6 @@
 namespace tinytc {
 
 /* Function nodes */
-void metadata::operator()(prototype const &) {}
-
 void metadata::operator()(function const &fn) {
     auto m = kernel_metadata{};
     m.subgroup_size = fn.subgroup_size();
@@ -24,8 +22,8 @@ void metadata::operator()(function const &fn) {
 
 /* Program nodes */
 void metadata::operator()(program const &p) {
-    for (auto &decl : p.declarations()) {
-        visit(*this, *decl);
+    for (auto &fn : p.functions()) {
+        visit(*this, *fn);
     }
 }
 

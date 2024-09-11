@@ -25,8 +25,8 @@ class parse_context {
     void val(std::string const &id, value val, location const &l);
     value val(std::string const &id, location const &l);
 
-    void prototype(std::string const &id, func p);
-    func prototype(std::string const &id, location const &l);
+    void add_function(std::string const &id, func fn);
+    func get_function(std::string const &id, location const &l);
 
     void add_error(location const &loc, std::string const &what);
 
@@ -36,7 +36,7 @@ class parse_context {
 
   private:
     std::vector<std::unordered_map<std::string, value>> id_map_;
-    std::unordered_map<std::string, func> prototype_map_;
+    std::unordered_map<std::string, func> function_map_;
     prog program_;
     std::vector<std::pair<location, std::string>> errors_;
 };

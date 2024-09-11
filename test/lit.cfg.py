@@ -12,3 +12,4 @@ config.test_source_root = os.path.dirname(__file__)
 config.test_exec_root = config.my_exec_root
 
 config.substitutions.append(('%tinytc-oc', config.tinytc_oc_path))
+config.substitutions.append(('%tinytc-opt', config.tinytc_opt_path))

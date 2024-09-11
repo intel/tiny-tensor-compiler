@@ -38,7 +38,7 @@ set(LIT_COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)
 add_test(lit-check ${LIT_COMMAND})
 set_tests_properties(lit-check PROPERTIES LABELS "lit")
 add_custom_target(lit-check COMMAND ${LIT_COMMAND})
-add_dependencies(lit-check tinytc-oc)
+add_dependencies(lit-check tinytc-oc tinytc-opt)
 
 
 if(BUILD_OPENCL)

@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/work_group_size.hpp"
+#include "pass/work_group_size.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
@@ -121,8 +121,8 @@ void work_group_size::operator()(function &fn) {
 
 /* Program nodes */
 void work_group_size::operator()(program &p) {
-    for (auto &decl : p.declarations()) {
-        visit(*this, *decl);
+    for (auto &fn : p.functions()) {
+        visit(*this, *fn);
     }
 }
 

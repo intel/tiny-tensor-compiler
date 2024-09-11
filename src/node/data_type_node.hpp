@@ -20,8 +20,8 @@
 
 namespace tinytc {
 enum class DTK { group, memref, scalar, void_ };
-using data_type_nodes = type_list<class void_data_type, class group_data_type,
-                                  class memref_data_type, class scalar_data_type>;
+using data_type_nodes = type_list<class group_data_type, class memref_data_type,
+                                  class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
 struct tinytc_data_type : tinytc::reference_counted {
@@ -57,12 +57,6 @@ class group_data_type : public data_type_node {
   private:
     data_type ty_;
     std::int64_t offset_;
-};
-
-class void_data_type : public data_type_node {
-  public:
-    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::void_; }
-    inline void_data_type() : data_type_node(DTK::void_) {}
 };
 
 class memref_data_type : public data_type_node {
@@ -117,6 +111,12 @@ class scalar_data_type : public data_type_node {
 
   private:
     scalar_type ty_;
+};
+
+class void_data_type : public data_type_node {
+  public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::void_; }
+    inline void_data_type() : data_type_node(DTK::void_) {}
 };
 
 } // namespace tinytc

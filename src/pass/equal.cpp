@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/equal.hpp"
+#include "pass/equal.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 

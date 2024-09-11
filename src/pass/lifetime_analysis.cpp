@@ -1,10 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/lifetime_analysis.hpp"
+#include "pass/lifetime_analysis.hpp"
 #include "node/value_node.hpp"
+#include "pass/alias_analysis.hpp"
 #include "support/visit.hpp"
-#include "visitor/alias_analysis.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -163,8 +163,8 @@ void lifetime_inserter::operator()(function &fn) {
 }
 
 void lifetime_inserter::operator()(program &p) {
-    for (auto &decl : p.declarations()) {
-        visit(*this, *decl);
+    for (auto &fn : p.functions()) {
+        visit(*this, *fn);
     }
 }
 

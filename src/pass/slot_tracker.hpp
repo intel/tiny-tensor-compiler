@@ -17,21 +17,7 @@ namespace tinytc {
 
 class slot_tracker {
   public:
-    /* Stmt nodes */
-    void operator()(inst_node const &in);
-    void operator()(loop_inst const &p);
-    void operator()(if_inst const &in);
-    void operator()(parallel_inst const &p);
-
-    /* Region nodes */
-    void operator()(rgn const &b);
-
-    /* Func nodes */
-    void operator()(prototype const &);
-    void operator()(function const &fn);
-
-    /* Program nodes */
-    void operator()(program const &p);
+    void run_on_function(function &fn);
 
     auto get_slot(value_node const &v) -> std::int64_t;
 

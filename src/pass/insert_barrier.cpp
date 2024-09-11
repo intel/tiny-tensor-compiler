@@ -1,11 +1,11 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/insert_barrier.hpp"
+#include "pass/insert_barrier.hpp"
+#include "pass/alias_analysis.hpp"
 #include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-#include "visitor/alias_analysis.hpp"
 
 #include <clir/builtin_type.hpp>
 
@@ -148,8 +148,8 @@ void insert_barrier::operator()(function &fn) {
 
 /* Program nodes */
 void insert_barrier::operator()(program &p) {
-    for (auto &decl : p.declarations()) {
-        visit(*this, *decl);
+    for (auto &fn : p.functions()) {
+        visit(*this, *fn);
     }
 }
 

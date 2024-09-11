@@ -19,10 +19,10 @@ using namespace tinytc;
 
 extern "C" {
 
-tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fun, char const *name,
-                                                 uint32_t arg_list_size, tinytc_value_t *arg_list,
-                                                 const tinytc_location_t *loc) {
-    if (fun == nullptr || (arg_list_size > 0 && arg_list == nullptr)) {
+tinytc_status_t tinytc_function_create(tinytc_func_t *fun, char const *name, uint32_t arg_list_size,
+                                       tinytc_value_t *arg_list, tinytc_region_t body,
+                                       const tinytc_location_t *loc) {
+    if (fun == nullptr || (arg_list_size > 0 && arg_list == nullptr) || body == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
@@ -31,37 +31,18 @@ tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fun, char const 
         for (uint32_t i = 0; i < arg_list_size; ++i) {
             arg_vec.emplace_back(value(arg_list[i], true));
         }
-        *fun = std::make_unique<prototype>(std::string(name), std::move(arg_vec), get_optional(loc))
+        *fun = std::make_unique<function>(std::string(name), std::move(arg_vec), region{body, true},
+                                          get_optional(loc))
                    .release();
     });
 }
 
-tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototype,
-                                       tinytc_region_t body, const tinytc_location_t *loc) {
-    if (fun == nullptr || prototype == nullptr || body == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        *fun =
-            std::make_unique<function>(func{prototype, true}, region{body, true}, get_optional(loc))
-                .release();
-    });
-}
-
 tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t fun, int32_t x, int32_t y) {
-    function *f = dyn_cast<function>(fun);
-    if (f == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { f->work_group_size({x, y}); });
+    return exception_to_status_code([&] { fun->work_group_size({x, y}); });
 }
 
 tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs) {
-    function *f = dyn_cast<function>(fun);
-    if (f == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { f->subgroup_size(sgs); });
+    return exception_to_status_code([&] { fun->subgroup_size(sgs); });
 }
 
 tinytc_status_t tinytc_func_release(tinytc_func_t obj) {

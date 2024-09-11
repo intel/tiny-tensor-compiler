@@ -839,36 +839,21 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
 ////////////////////////////
 
 /**
- * @brief Create function prototype
+ * @brief Create function
  *
  * @param fun [out] pointer to the func object created
  * @param name [in] function name
  * @param arg_list_size [in] length of argument array
- * @param arg_list [in][range(0, arg_list_size)] argument array; can be nullptr if arg_list_size is
- * 0
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_function_prototype_create(tinytc_func_t *fun, char const *name,
-                                                               uint32_t arg_list_size,
-                                                               tinytc_value_t *arg_list,
-                                                               const tinytc_location_t *loc);
-
-/**
- * @brief Create function
- *
- * @param fun [out] pointer to the func object created
- * @param prototype [in] function prototype
+ * @param arg_list [in][range(0,arg_list_size)] argument array; can be nullptr if arg_list_size is 0
  * @param body [in] function body
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, tinytc_func_t prototype,
-                                                     tinytc_region_t body,
+TINYTC_EXPORT tinytc_status_t tinytc_function_create(tinytc_func_t *fun, char const *name,
+                                                     uint32_t arg_list_size,
+                                                     tinytc_value_t *arg_list, tinytc_region_t body,
                                                      const tinytc_location_t *loc);
-
 /**
  * @brief Set work-group size
  *
@@ -1228,6 +1213,33 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_retain(tinytc_source_context
 ////////////////////////////
 ///////// Compiler /////////
 ////////////////////////////
+
+/**
+ * @brief Run a function pass on every function of a program
+ *
+ * @param pass_name [in] name of function pass; cf. tinytc_list_function_passes
+ * @param prg [inout] tensor program; modified as compiler pass is run
+ * @param info [in][optional] core info object; might be nullptr if core info is not required for
+ * pass
+ * @param ctx [inout][optional] source context object to save extended error messages that are
+ * enhanced with source code context; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t prg,
+                                                       const_tinytc_core_info_t info,
+                                                       tinytc_source_context_t ctx);
+
+/**
+ * @brief List function passes
+ *
+ * @param names_size [out] pointer to number of function pass names
+ * @param names [out][range(0,names_size)] pointer to array of C-strings; array owned by tinytc
+ *
+ * @return
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_list_function_passes(uint32_t *names_size,
+                                                          char const *const **names);
 
 /**
  * @brief Compile tensor language to OpenCL-C

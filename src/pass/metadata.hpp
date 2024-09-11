@@ -16,7 +16,6 @@ namespace tinytc {
 class metadata {
   public:
     /* Func nodes */
-    void operator()(prototype const &p);
     void operator()(function const &fn);
 
     /* Program nodes */

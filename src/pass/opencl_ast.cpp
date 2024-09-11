@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/opencl_ast.hpp"
+#include "pass/opencl_ast.hpp"
 #include "codegen_tools.hpp"
 #include "error.hpp"
 #include "gemm_generator.hpp"
@@ -1143,14 +1143,14 @@ clir::prog opencl_ast::operator()(program const &p) {
         auto operator()(prototype const &p) -> std::string_view { return p.name(); }
     };
     reserved_names_.clear();
-    for (auto const &decl : p.declarations()) {
-        reserved_names_.insert(std::string(visit(name_visitor{}, *decl)));
+    for (auto const &fn : p.functions()) {
+        reserved_names_.insert(std::string(visit(name_visitor{}, *fn)));
     }
 
     prog_builder_ = clir::program_builder{};
-    for (auto const &decl : p.declarations()) {
+    for (auto const &fn : p.functions()) {
         stack_high_water_mark_ = 0;
-        prog_builder_.add(visit(*this, *decl));
+        prog_builder_.add(visit(*this, *fn));
     }
     return prog_builder_.get_product();
 }

@@ -40,6 +40,8 @@ Core C-API:
     enum:
       - tinytc_bundle_format_t
     function:
+      - tinytc_run_function_pass
+      - tinytc_list_function_passes
       - tinytc_prog_compile_to_opencl
   Device Info:
     enum:

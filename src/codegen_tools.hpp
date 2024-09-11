@@ -5,6 +5,7 @@
 #define CODEGEN_TOOLS_20240229_HPP
 
 #include "device_info.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <clir/builder.hpp>
@@ -120,6 +121,30 @@ auto read_matrix_block(clir::block_builder &bb, matrix_block_description const &
 void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
                         matrix_block_description const &d, bool is_atomic, scalar_type beta_ty,
                         clir::expr beta, core_config const &core_cfg);
+
+using sgs_loop_body_builder_new =
+    std::function<void(region_builder &, value const &, bool, value const &)>;
+using uniform_loop_body_builder_new =
+    std::function<void(region_builder &, value const &, value const &)>;
+
+void tile_loop_by_sgs_new(region_builder &bb, value const &loop_trip_count, int sgs, int num_tiles,
+                          value const &sg_id, sgs_loop_body_builder_new const &body);
+void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
+                                   int num_tiles, value const &sg_id,
+                                   sgs_loop_body_builder_new const &body);
+void tile_loop_by_sgs_new_dynamic(region_builder &bb, value const &loop_trip_count, int sgs,
+                                  int num_tiles, value const &sg_id,
+                                  sgs_loop_body_builder_new const &body);
+
+void tile_loop_uniformly_new(region_builder &bb, value const &loop_trip_count, int block_size,
+                             int num_tiles, value const &sg_id,
+                             uniform_loop_body_builder_new const &body);
+void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,
+                                      int block_size, int num_tiles, value const &sg_id,
+                                      uniform_loop_body_builder_new const &body);
+void tile_loop_uniformly_new_dynamic(region_builder &bb, value const &loop_trip_count,
+                                     int block_size, int num_tiles, value const &sg_id,
+                                     uniform_loop_body_builder_new const &body);
 
 } // namespace tinytc
 

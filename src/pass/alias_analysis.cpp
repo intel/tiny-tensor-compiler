@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/alias_analysis.hpp"
+#include "pass/alias_analysis.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "support/casting.hpp"

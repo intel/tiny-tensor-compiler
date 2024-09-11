@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "visitor/stack.hpp"
+#include "pass/stack.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "support/casting.hpp"
@@ -73,9 +73,9 @@ void stack_ptr::operator()(function &fn) {
 
 /* Program nodes */
 void stack_ptr::operator()(program &p) {
-    for (auto &decl : p.declarations()) {
+    for (auto &fn : p.functions()) {
         allocs_.clear();
-        visit(*this, *decl);
+        visit(*this, *fn);
     }
 }
 

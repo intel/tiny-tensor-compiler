@@ -1,0 +1,5 @@
+// Copyright (C) 2024 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+FUNCTION_PASS("check-ir", check_ir_pass{})
+FUNCTION_PASS("dump-ir", dump_ir_pass{std::cout})

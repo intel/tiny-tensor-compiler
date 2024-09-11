@@ -37,7 +37,6 @@ Builder C++-API:
   Function:
     function:
       - tinytc::make_function
-      - tinytc::make_function_prototype
       - tinytc::set_work_group_size
       - tinytc::set_subgroup_size
     class:

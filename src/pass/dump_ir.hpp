@@ -10,16 +10,16 @@
 #include "node/program_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "visitor/slot_tracker.hpp"
+#include "pass/slot_tracker.hpp"
 
 #include <ostream>
 #include <string>
 
 namespace tinytc {
 
-class ir_dumper {
+class dump_ir_pass {
   public:
-    ir_dumper(std::ostream &os);
+    dump_ir_pass(std::ostream &os);
 
     /* Data type nodes */
     void operator()(void_data_type const &);
@@ -64,17 +64,10 @@ class ir_dumper {
     void operator()(sum_inst const &s);
     void operator()(yield_inst const &y);
 
-    /* Region nodes */
-    void operator()(rgn const &b);
-
-    /* Func nodes */
-    void operator()(prototype const &p);
-    void operator()(function const &fn);
-
-    /* Program nodes */
-    void operator()(program const &p);
+    void run_on_function(function const &fn);
 
   private:
+    void dump_region(rgn const &reg);
     void dump_blas_a2(blas_a2_inst const &g);
     void dump_blas_a3(blas_a3_inst const &g);
 
@@ -82,13 +75,13 @@ class ir_dumper {
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {
         for (auto it = begin; it != end; ++it) {
             if (it != begin) {
-                os_ << infix;
+                *os_ << infix;
             }
             a(*it);
         }
     }
     inline auto indent() { return std::string(2 * lvl_, ' '); }
-    std::ostream &os_;
+    std::ostream *os_;
     int lvl_ = 0;
 
     slot_tracker tracker_;

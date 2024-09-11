@@ -237,15 +237,13 @@ func:
     } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
-        auto proto = func{
-            std::make_unique<prototype>($GLOBAL_IDENTIFIER, std::move($arguments), loc).release()};
-        ctx.prototype($GLOBAL_IDENTIFIER, proto);
         auto func_node =
-            std::make_unique<function>(std::move(proto), std::move($region), @func).release();
+            std::make_unique<function>($GLOBAL_IDENTIFIER, std::move($arguments), std::move($region), loc).release();
         for (auto &attr : $attributes) {
             attr(*func_node);
         }
         $func = func{func_node};
+        ctx.add_function($GLOBAL_IDENTIFIER, $func);
         ctx.pop_scope();
     }
 ;
