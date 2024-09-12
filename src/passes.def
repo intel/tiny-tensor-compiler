@@ -3,3 +3,6 @@
 
 FUNCTION_PASS("check-ir", check_ir_pass{})
 FUNCTION_PASS("dump-ir", dump_ir_pass{std::cout})
+FUNCTION_PASS("insert-lifetime-stop", insert_lifetime_stop_pass{})
+FUNCTION_PASS("set-stack-ptr", set_stack_ptr_pass{})
+FUNCTION_PASS_WITH_INFO("work-group-size", [](tinytc_core_info const* info) { return work_group_size_pass(info); })

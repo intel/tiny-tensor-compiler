@@ -1,0 +1,26 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -d pvc --work-group-size < %s | filecheck %s
+func @default_pvc() {
+; CHECK: func @default_pvc() subgroup_size(32) work_group_size(32,1) {
+}
+
+func @f32_blas() {
+; CHECK: func @f32_blas() subgroup_size(32) work_group_size(128,2) {
+    %0 = alloca -> memref<f32x128x37>
+    %1 = alloca -> memref<f32x128x37>
+    for %i=0,4 {
+        axpby.n 1.0, %0, 0.0, %1 : f32, memref<f32x128x37>, f32, memref<f32x128x37>
+    }
+}
+
+func @f64_blas() {
+; CHECK: func @f64_blas() subgroup_size(16) work_group_size(128,8) {
+    %0 = alloca -> memref<f64x128x128>
+    %1 = alloca -> memref<f64x128x128>
+    %2 = alloca -> memref<f64x128x128>
+    for %i=0,4 {
+        gemm.n.n 1.0, %0, %1, 0.0, %2 : f64, memref<f64x128x128>, memref<f64x128x128>, f64, memref<f64x128x128>
+    }
+}

@@ -1,0 +1,61 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt --insert-lifetime-stop < %s | filecheck %s
+func @basic() {
+    %0 = alloca -> memref<f32x5>
+; CHECK:      %0 = alloca -> memref<f32x5>
+; CHECK-NEXT: lifetime_stop %0
+}
+
+func @use1(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
+; CHECK-LABEL: func @use1{{.*}}
+    %B = alloca -> memref<f32x32x8>
+    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8>, f32, memref<f32x32x8>
+; CHECK:      gemm.n.n{{.*}}
+; CHECK-NEXT: lifetime_stop %B
+}
+
+func @use2(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
+; CHECK-LABEL: func @use2{{.*}}
+    %B = alloca -> memref<f32x32x8>
+    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8>, f32, memref<f32x32x8>
+    %B2 = alloca -> memref<f32x32x8>
+    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8>, f32, memref<f32x32x8>
+    gemm.n.n 1.0, %A, %B2, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8>, f32, memref<f32x32x8>
+; CHECK:      %B2 = {{.*}}
+; CHECK-NEXT: gemm.n.n{{.*}}
+; CHECK-NEXT: lifetime_stop %B
+; CHECK:      gemm.n.n{{.*}}
+; CHECK-NEXT: lifetime_stop %B2
+}
+
+func @use_alias(%A: memref<f32x8x8>, %C: memref<f32x8x8>) {
+; CHECK-LABEL: func @use_alias{{.*}}
+    %B = alloca -> memref<f32x32x2x2x2>
+    %0 = fuse %B[1,3] : memref<f32x32x2x2x2>
+    %1 = subview %0[0:8,:] : memref<f32x32x8>
+    gemm.n.n 1.0, %A, %1, 0.0, %C : f32, memref<f32x8x8>, memref<f32x8x8,strided<1,32>>, f32, memref<f32x8x8>
+; CHECK:      gemm.n.n{{.*}}
+; CHECK-NEXT: lifetime_stop %B
+}
+
+func @region1() {
+; CHECK-LABEL: func @region1{{.*}}
+    %0 = alloca -> memref<f32x8x8>
+    for %i=0,4 : index {
+        %1 = alloca -> memref<f32x8x8>
+        for %k=0,4 : index {
+            %2 = alloca -> memref<f32x8x8>
+            gemm.n.n 1.0, %0, %1, 0.0, %2 : f32, memref<f32x8x8>, memref<f32x8x8>, f32, memref<f32x8x8>
+            axpby.n 1.0, %0, 0.0, %1 : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+        }
+    }
+; CHECK:              gemm.n.n{{.*}}
+; CHECK-NEXT:         lifetime_stop %2
+; CHECK-NEXT:         axpby.n{{.*}}
+; CHECK-NEXT:     }
+; CHECK-NEXT:     lifetime_stop %1
+; CHECK-NEXT: }
+; CHECK-NEXT: lifetime_stop %0
+}

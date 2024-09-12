@@ -227,7 +227,9 @@ using inst_node = ::tinytc_inst;
 template <typename T, std::int64_t NumObjects> class object_container {
   public:
     object_container(std::int64_t num_objects) {
-        if (num_objects != NumObjects) {
+        // Check that num_objects is not larger than container size
+        // Smaller is ok too support optional arguments
+        if (num_objects > NumObjects) {
             throw internal_compiler_error();
         }
     }

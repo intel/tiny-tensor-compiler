@@ -54,7 +54,7 @@ blas_a3_inst::blas_a3_inst(IK tid, value alpha, value A, value B, value beta, va
 
 loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step0, region body,
                      location const &lc)
-    : standard_inst{tid} {
+    : standard_inst{tid, step0 ? 4 : 3} {
     op(op_loop_var) = std::move(loop_var0);
     op(op_from) = std::move(from0);
     op(op_to) = std::move(to0);
@@ -461,7 +461,7 @@ hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, valu
 
 if_inst::if_inst(value condition, region then, region otherwise,
                  std::vector<scalar_type> const &return_types, location const &lc)
-    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
+    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size()), otherwise ? 2 : 1} {
     op(0) = std::move(condition);
     child_region(child_region_then) = std::move(then);
     child_region(child_region_otherwise) = std::move(otherwise);

@@ -5,14 +5,18 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "support/casting.hpp"
 #include "support/visit.hpp"
+#include "support/walk.hpp"
+#include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <array>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -26,61 +30,43 @@ auto get_memref_type(value_node &v) {
     return t;
 }
 
-work_group_size::work_group_size(::tinytc_core_info const *info) : info_(std::move(info)) {
+work_group_size_pass::work_group_size_pass(::tinytc_core_info const *info)
+    : info_(std::move(info)) {
     if (info_ == nullptr) {
         throw std::invalid_argument("info must not be nullptr");
     }
 }
 
-/* Stmt nodes */
-void work_group_size::operator()(inst_node &) {}
-
-void work_group_size::operator()(blas_a2_inst &in) {
-    auto b = get_memref_type(*in.B());
-    if (b->dim() == 1) {
-        shapes_.insert({b->element_ty(), {b->shape(0), 0}});
-    } else if (b->dim() >= 2) {
-        shapes_.insert({b->element_ty(), {b->shape(0), b->shape(1)}});
-    }
-}
-void work_group_size::operator()(blas_a3_inst &in) {
-    auto c = get_memref_type(*in.C());
-    if (c->dim() == 1) {
-        shapes_.insert({c->element_ty(), {c->shape(0), 0}});
-    } else if (c->dim() >= 2) {
-        shapes_.insert({c->element_ty(), {c->shape(0), c->shape(1)}});
-    }
-}
-
-void work_group_size::operator()(if_inst &in) {
-    visit(*this, *in.then());
-    if (in.otherwise()) {
-        visit(*this, *in.otherwise());
-    }
-}
-void work_group_size::operator()(loop_inst &in) { visit(*this, *in.body()); }
-void work_group_size::operator()(parallel_inst &p) { visit(*this, *p.body()); }
-
-/* Region nodes */
-void work_group_size::operator()(rgn &b) {
-    for (auto &i : b.insts()) {
-        visit(*this, *i);
-    }
-}
-
-/* Function nodes */
-void work_group_size::operator()(prototype &) {}
-
-void work_group_size::operator()(function &fn) {
+void work_group_size_pass::run_on_function(function &fn) {
     auto subgroup_size = fn.subgroup_size();
     auto work_group_size = fn.work_group_size();
 
-    shapes_.clear();
-    if (subgroup_size == 0 || work_group_size[0] == 0 || work_group_size[1] == 0) {
-        visit(*this, *fn.prototype());
-        visit(*this, *fn.body());
+    auto shape_set = std::unordered_set<blas_shape>{};
 
-        auto const shapes = std::vector<blas_shape>(shapes_.begin(), shapes_.end());
+    if (subgroup_size == 0 || work_group_size[0] == 0 || work_group_size[1] == 0) {
+        walk<walk_order::pre_order>(fn, [&shape_set](inst_node &i) {
+            visit(
+                overloaded{[&shape_set](blas_a2_inst &in) {
+                               auto b = get_memref_type(*in.B());
+                               if (b->dim() == 1) {
+                                   shape_set.insert({b->element_ty(), {b->shape(0), 0}});
+                               } else if (b->dim() >= 2) {
+                                   shape_set.insert({b->element_ty(), {b->shape(0), b->shape(1)}});
+                               }
+                           },
+                           [&shape_set](blas_a3_inst &in) {
+                               auto c = get_memref_type(*in.C());
+                               if (c->dim() == 1) {
+                                   shape_set.insert({c->element_ty(), {c->shape(0), 0}});
+                               } else if (c->dim() >= 2) {
+                                   shape_set.insert({c->element_ty(), {c->shape(0), c->shape(1)}});
+                               }
+                           },
+                           [](inst_node &) {}},
+                i);
+        });
+
+        auto const shapes = std::vector<blas_shape>(shape_set.begin(), shape_set.end());
 
         if (subgroup_size == 0) {
             subgroup_size = suggest_subgroup_size(shapes, *info_);
@@ -116,13 +102,6 @@ void work_group_size::operator()(function &fn) {
     }
     if (work_group_size[0] * work_group_size[1] > cfg.max_work_group_size) {
         throw compilation_error(fn.loc(), status::unsupported_work_group_size);
-    }
-}
-
-/* Program nodes */
-void work_group_size::operator()(program &p) {
-    for (auto &fn : p.functions()) {
-        visit(*this, *fn);
     }
 }
 

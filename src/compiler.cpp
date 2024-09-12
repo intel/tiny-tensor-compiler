@@ -7,6 +7,9 @@
 #include "parser.hpp"
 #include "pass/check_ir.hpp"
 #include "pass/dump_ir.hpp"
+#include "pass/insert_lifetime_stop.hpp"
+#include "pass/stack.hpp"
+#include "pass/work_group_size.hpp"
 #include "passes.hpp"
 #include "reference_counted.hpp"
 #include "required_extensions.hpp"
@@ -41,8 +44,13 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
     if (strcmp(NAME, pass_name) == 0) {                                                            \
         return run_function_pass(CREATE_PASS, *prg);                                               \
     }
+#define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS)                                                 \
+    if (strcmp(NAME, pass_name) == 0) {                                                            \
+        return run_function_pass(CREATE_PASS(info), *prg);                                         \
+    }
 #include "passes.def"
 #undef FUNCTION_PASS
+#undef FUNCTION_PASS_WITH_INFO
         },
         ctx);
 }
@@ -52,10 +60,12 @@ tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *co
         return tinytc_status_invalid_arguments;
     }
 #define FUNCTION_PASS(NAME, CREATE_PASS) NAME,
+#define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS) NAME,
     static char const *const pass_names[] = {
 #include "passes.def"
     };
 #undef FUNCTION_PASS
+#undef FUNCTION_PASS_WITH_INFO
     *names_size = sizeof(pass_names) / sizeof(char const *);
     *names = pass_names;
 
@@ -72,10 +82,10 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
         [&] {
             // passes
             run_function_pass(check_ir_pass{}, *prg);
-            // insert_lifetime_stop_inst(*prg);
-            //  set_stack_ptrs(*prg);
+            run_function_pass(insert_lifetime_stop_pass{}, *prg);
+            run_function_pass(set_stack_ptr_pass{}, *prg);
             //  insert_barriers(*prg);
-            //  set_work_group_size(*prg, *info);
+            run_function_pass(work_group_size_pass{info}, *prg);
             //  lower_linalg(*prg, *info);
             run_function_pass(dump_ir_pass{std::cout}, *prg);
             // propagate_constants(*prg);

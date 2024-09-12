@@ -4,79 +4,66 @@
 #include "pass/stack.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "node/inst_node.hpp"
+#include "node/value_node.hpp"
 #include "support/casting.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
+#include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <vector>
+#include <cstdint>
+#include <list>
 
 namespace tinytc {
 
-/* Inst nodes */
-void stack_ptr::operator()(inst_node &) {}
-void stack_ptr::operator()(alloca_inst &a) {
-    auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
-    if (t == nullptr) {
-        throw compilation_error(a.loc(), status::ir_expected_memref);
-    }
-    auto size = t->size_in_bytes();
-    std::int64_t stack_ptr = 0;
-    auto it = allocs_.begin();
-    for (; it != allocs_.end(); ++it) {
-        if (it->start - stack_ptr >= size) {
-            break;
-        }
-        stack_ptr = it->stop;
-    }
-    allocs_.insert(it, allocation{a.result().get(), stack_ptr, stack_ptr + size});
-    a.stack_ptr(stack_ptr);
-}
-void stack_ptr::operator()(lifetime_stop_inst &s) {
-    int num = 0;
-    auto v = s.object().get();
-    for (auto it = allocs_.begin(); it != allocs_.end();) {
-        if (it->value == v) {
-            it = allocs_.erase(it);
-            ++num;
-        } else {
-            ++it;
-        }
-    }
-    if (num != 1) {
-        throw compilation_error(s.loc(), status::internal_compiler_error,
-                                "Incorrect lifetime_stop: value not found in list of allocations");
-    }
-}
-void stack_ptr::operator()(for_inst &p) { visit(*this, *p.body()); }
+void set_stack_ptr_pass::run_on_function(function &fn) {
+    struct allocation {
+        value_node *value;
+        std::int64_t start, stop;
+    };
+    std::list<allocation> allocs;
 
-void stack_ptr::operator()(if_inst &in) {
-    visit(*this, *in.then());
-    if (in.otherwise()) {
-        visit(*this, *in.otherwise());
-    }
-}
-
-/* Region nodes */
-void stack_ptr::operator()(rgn &b) {
-    for (auto &s : b.insts()) {
-        visit(*this, *s);
-    }
-}
-
-/* Function nodes */
-void stack_ptr::operator()(prototype &) {}
-void stack_ptr::operator()(function &fn) {
-    visit(*this, *fn.prototype());
-    visit(*this, *fn.body());
-}
-
-/* Program nodes */
-void stack_ptr::operator()(program &p) {
-    for (auto &fn : p.functions()) {
-        allocs_.clear();
-        visit(*this, *fn);
-    }
+    walk<walk_order::pre_order>(fn, [&allocs](inst_node &i) {
+        visit(overloaded{
+                  [&allocs](alloca_inst &a) {
+                      auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
+                      if (t == nullptr) {
+                          throw compilation_error(a.loc(), status::ir_expected_memref);
+                      }
+                      auto size = t->size_in_bytes();
+                      std::int64_t stack_ptr = 0;
+                      auto it = allocs.begin();
+                      for (; it != allocs.end(); ++it) {
+                          if (it->start - stack_ptr >= size) {
+                              break;
+                          }
+                          stack_ptr = it->stop;
+                      }
+                      allocs.insert(it, allocation{a.result().get(), stack_ptr, stack_ptr + size});
+                      a.stack_ptr(stack_ptr);
+                  },
+                  [&allocs](lifetime_stop_inst &s) {
+                      int num = 0;
+                      auto v = s.object().get();
+                      for (auto it = allocs.begin(); it != allocs.end();) {
+                          if (it->value == v) {
+                              it = allocs.erase(it);
+                              ++num;
+                          } else {
+                              ++it;
+                          }
+                      }
+                      if (num != 1) {
+                          throw compilation_error(
+                              s.loc(), status::internal_compiler_error,
+                              "Incorrect lifetime_stop: value not found in list of allocations");
+                      }
+                  },
+                  [](inst_node &) {}},
+              i);
+    });
 }
 
 } // namespace tinytc

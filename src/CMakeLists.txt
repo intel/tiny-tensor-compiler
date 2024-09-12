@@ -17,6 +17,8 @@ find_package(re2c REQUIRED)
 find_package(BISON 3.8.2 REQUIRED)
 
 set(SOURCES
+    analysis/aa_results.cpp
+    analysis/alias.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
@@ -31,6 +33,18 @@ set(SOURCES
     node/inst_node.cpp
     parser/parse_context.cpp
     parser.cpp
+    pass/check_ir.cpp
+    #pass/constant_propagation.cpp
+    pass/dump_ir.cpp
+    pass/equal.cpp
+    #pass/insert_barrier.cpp
+    pass/insert_lifetime_stop.cpp
+    #pass/lower_linalg.cpp
+    #pass/metadata.cpp
+    #pass/opencl_ast.cpp
+    pass/slot_tracker.cpp
+    pass/stack.cpp
+    pass/work_group_size.cpp
     passes.cpp
     prog.cpp
     recipe.cpp
@@ -42,20 +56,6 @@ set(SOURCES
     source.cpp
     tiling.cpp
     value.cpp
-    #pass/aa_results.cpp
-    #pass/alias_analysis.cpp
-    pass/check_ir.cpp
-    #pass/constant_propagation.cpp
-    pass/dump_ir.cpp
-    pass/equal.cpp
-    #pass/insert_barrier.cpp
-    #pass/lifetime_analysis.cpp
-    #pass/lower_linalg.cpp
-    #pass/metadata.cpp
-    #pass/opencl_ast.cpp
-    pass/slot_tracker.cpp
-    #pass/stack.cpp
-    #pass/work_group_size.cpp
     support/walk.cpp
 )
 set(RE2C_SOURCES

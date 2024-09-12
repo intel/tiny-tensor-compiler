@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "pass/aa_results.hpp"
+#include "analysis/aa_results.hpp"
 #include "node/value_node.hpp"
 
 #include <utility>
@@ -12,14 +12,14 @@ aa_results::aa_results(std::unordered_map<value_node const *, value_node const *
                        std::unordered_map<value_node const *, allocation> allocs)
     : alias_(std::move(alias)), allocs_(std::move(allocs)) {}
 
-auto aa_results::root(value_node const &a) -> value_node const * {
+auto aa_results::root(value_node const &a) const -> value_node const * {
     auto root = &a;
-    if (alias_.find(root) != alias_.end()) {
-        root = alias_[root];
+    if (auto it = alias_.find(root); it != alias_.end()) {
+        root = it->second;
     }
     return root;
 }
-bool aa_results::alias(value_node const &a, value_node const &b) {
+bool aa_results::alias(value_node const &a, value_node const &b) const {
     auto ra = root(a);
     auto rb = root(b);
     if (ra == rb) {
