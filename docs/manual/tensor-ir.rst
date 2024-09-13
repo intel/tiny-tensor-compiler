@@ -952,6 +952,15 @@ A dynamic size ("?") means that the size is the mode size inferred from the memr
 minus the offset.
 A plain colon is syntactic sugar for "0:?".
 
+Zero sizes are used to encode that a rank-reduction is required, that is,
+the rank of size 0 is removed from the output memref type.
+A single index is syntactic sugar for offset plus size 0, e.g. %0 is syntactic sugar for %0:0.
+(Note that a zero-size rank, e.g. in memref<f32x8x0>, is non-sense, because any multi-index passed
+to the memref would be out-of-bounds. However, a one-sized rank, e.g. memref<f32x8x1>, might be desirable.)
+A dynamic size of zero is undefined behaviour.
+
+
+
 There is no run-time check whether the indices are within bounds.
 Offset and size must be of index type.
 Offset must be non-negative and size must be positive.
@@ -966,11 +975,12 @@ The output type is a memref type according to the following rules:
        subview %0[4:8,8:4]  : memref<f32x32x16> ; Returns memref<f32x8x4,strided<1,32>>
 
 
-#. **Rank-reduction:** A mode accessed by a single constant or value is removed from the output tensor.
+#. **Rank-reduction:** A mode accessed by offset only or a mode with size statically known to be 0 is removed from the output tensor.
 
    .. code::
 
        subview %0[2:4, %1]   : memref<f32x16x8> ; Returns memref<f32x4,strided<1,16>>
+       subview %0[2:4, %1:0] : memref<f32x16x8> ; Returns memref<f32x4,strided<1,16>>
        subview %0[2:4, %1:1] : memref<f64x16x8> ; Returns memref<f64x4x1,strided<1,16>>
 
 #. **Output-mode size:** The size of the output mode is determined by the size field of a slice

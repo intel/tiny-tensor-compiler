@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "pass/equal.hpp"
+#include "analysis/equal.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -20,5 +20,7 @@ bool equal::operator()(memref_data_type const &a, memref_data_type const &b) {
 bool equal::operator()(scalar_data_type const &a, scalar_data_type const &b) {
     return a.ty() == b.ty();
 }
+
+bool is_equal(tinytc_data_type const &a, tinytc_data_type const &b) { return visit(equal{}, a, b); }
 
 } // namespace tinytc

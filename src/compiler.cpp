@@ -6,6 +6,7 @@
 #include "node/program_node.hpp"
 #include "parser.hpp"
 #include "pass/check_ir.hpp"
+#include "pass/convert_to_opencl.hpp"
 #include "pass/dump_ir.hpp"
 #include "pass/insert_lifetime_stop.hpp"
 #include "pass/stack.hpp"
@@ -91,7 +92,7 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             // propagate_constants(*prg);
             // dump_ir(std::cout, *prg);
             //  opencl
-            /*auto ast = generate_opencl_ast(*prg, *info);
+            auto ast = convert_to_opencl_pass{info}.run_on_program(*prg);
             clir::make_names_unique(ast);
 
             auto oss = std::ostringstream{};
@@ -104,7 +105,7 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
 
             *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(ext),
                                                      info->core_features())
-                       .release();*/
+                       .release();
         },
         ctx);
 }

@@ -2,9 +2,17 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: %tinytc-oc < %s | filecheck %s
-; CHECK: void kernel(global float* K0, long K0_shape0, long K0_shape1, long K0_stride1, long offset, long size)
 func @kernel(%K0: memref<f32x?x?>, %offset: index, %size: index) {
-  ; CHECK-NEXT: global float* x0 = K0 + 4ll * 1 + offset * K0_stride1;
-  ; CHECK-NEXT: long x0_shape0 = size;
   %0 = subview %K0[4:%size, %offset] : memref<f32x?x?>
+; CHECK: void kernel({{.*}}
+; CHECK-NEXT: global float* x0 = K0 + 4ll * 1 + offset * K0_stride1;
+; CHECK-NEXT: long x0_shape0 = size;
+}
+
+func @kernel2(%K0: memref<f32x?x?>, %offset: index, %size: index) {
+  %0 = subview %K0[%offset, 4:%size] : memref<f32x?x?>
+; CHECK: void kernel2({{.*}}
+; CHECK-NEXT: global float* x0 = K0 + offset * 1 + 4ll * K0_stride1;
+; CHECK-NEXT: long x0_shape0 = size;
+; CHECK-NEXT: long x0_stride0 = K0_stride1;
 }

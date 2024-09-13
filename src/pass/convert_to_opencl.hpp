@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef OPENCL_AST_20230309_HPP
-#define OPENCL_AST_20230309_HPP
+#ifndef CONVERT_TO_OPENCL_20240913_HPP
+#define CONVERT_TO_OPENCL_20240913_HPP
 
 #include "device_info.hpp"
 #include "node/data_type_node.hpp"
@@ -55,9 +55,9 @@ class dope_vector {
     clir::expr offset_ = clir::expr(std::int64_t(0));
 };
 
-class opencl_ast {
+class convert_to_opencl_pass {
   public:
-    opencl_ast(::tinytc_core_info const *info);
+    convert_to_opencl_pass(::tinytc_core_info const *info);
 
     /* Data type nodes */
     clir::data_type operator()(void_data_type const &);
@@ -102,17 +102,12 @@ class opencl_ast {
     std::vector<clir::stmt> operator()(sum_inst const &s);
     std::vector<clir::stmt> operator()(yield_inst const &in);
 
-    /* Region nodes */
-    clir::stmt operator()(rgn const &b);
-
-    /* Func nodes */
-    clir::func operator()(prototype const &p);
-    clir::func operator()(function const &fn);
-
-    /* Program nodes */
-    clir::prog operator()(program const &p);
+    auto run_on_program(program &p) -> clir::prog;
 
   private:
+    auto run_on_region(rgn &reg) -> clir::stmt;
+    auto run_on_function(function &fn) -> clir::func;
+
     auto get_dope_vector(value_node *v) -> dope_vector &;
     void set_dope_vector(value_node *v, dope_vector dv);
     clir::var declare(value_node const &v);
@@ -134,4 +129,4 @@ class opencl_ast {
 
 } // namespace tinytc
 
-#endif // OPENCL_AST_20230309_HPP
+#endif // CONVERT_TO_OPENCL_20240913_HPP

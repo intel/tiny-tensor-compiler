@@ -495,7 +495,7 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
             op(i++) = val;
         }
         for (auto const &val : size_list0) {
-            op(i++) = val;
+            op(i++) = val ? val : make_index(0);
         }
     }
     loc(lc);
@@ -520,31 +520,30 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
                          },
                          [](auto &) {}},
               *offset);
-        if (size) { // if size is given
-            visit(overloaded{[&](int_imm &i) {
-                                 if (i.value() < 1 && !is_dynamic_value(i.value())) {
-                                     throw compilation_error(loc(), status::ir_invalid_slice);
-                                 }
-                             },
-                             [](auto &) {}},
-                  *size);
-            auto size_value =
-                visit(overloaded{[&](int_imm &offset, int_imm &size) -> std::int64_t {
-                                     if (is_dynamic_value(size.value())) {
-                                         return is_dynamic_value(m->shape(i))
-                                                    ? dynamic
-                                                    : m->shape(i) - offset.value();
-                                     }
-                                     return size.value();
-                                 },
-                                 [&](val &, int_imm &size) -> std::int64_t {
-                                     if (is_dynamic_value(size.value())) {
-                                         return dynamic;
-                                     }
-                                     return size.value();
-                                 },
-                                 [](auto &, auto &) -> std::int64_t { return dynamic; }},
-                      *offset, *size);
+        visit(overloaded{[&](int_imm &i) {
+                             if (i.value() < 0 && !is_dynamic_value(i.value())) {
+                                 throw compilation_error(loc(), status::ir_invalid_slice);
+                             }
+                         },
+                         [](auto &) {}},
+              *size);
+        auto size_value = visit(overloaded{[&](int_imm &offset, int_imm &size) -> std::int64_t {
+                                               if (is_dynamic_value(size.value())) {
+                                                   return is_dynamic_value(m->shape(i))
+                                                              ? dynamic
+                                                              : m->shape(i) - offset.value();
+                                               }
+                                               return size.value();
+                                           },
+                                           [&](val &, int_imm &size) -> std::int64_t {
+                                               if (is_dynamic_value(size.value())) {
+                                                   return dynamic;
+                                               }
+                                               return size.value();
+                                           },
+                                           [](auto &, auto &) -> std::int64_t { return dynamic; }},
+                                *offset, *size);
+        if (size_value > 0 || is_dynamic_value(size_value)) {
             shape.push_back(size_value);
             stride.push_back(m->stride(i));
         }

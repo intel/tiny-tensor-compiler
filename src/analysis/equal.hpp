@@ -18,6 +18,8 @@ class equal {
     bool operator()(scalar_data_type const &a, scalar_data_type const &b);
 };
 
+bool is_equal(tinytc_data_type const &a, tinytc_data_type const &b);
+
 } // namespace tinytc
 
 #endif // EQUAL_20240208_HPP

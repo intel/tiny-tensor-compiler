@@ -21,6 +21,7 @@
 }
 
 %code {
+    #include "analysis/equal.hpp"
     #include "error.hpp"
     #include "node/data_type_node.hpp"
     #include "node/inst_node.hpp"
@@ -29,7 +30,6 @@
     #include "node/value_node.hpp"
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
-    #include "passes.hpp"
     #include "support/util.hpp"
     #include "support/visit.hpp"
 

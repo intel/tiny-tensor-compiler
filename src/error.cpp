@@ -145,7 +145,7 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_multiple_dynamic_modes:
         return "At most one mode must be dynamic ('?')";
     case tinytc_status_ir_invalid_slice:
-        return "Offset must be non-negative and must not be '?'; size must be positive or '?'";
+        return "Offset must be non-negative and must not be '?'; size must be non-negative or '?'";
     case tinytc_status_ir_expand_shape_order_too_small:
         return "Expand shape must have at least 2 entries";
     case tinytc_status_ir_expand_shape_mismatch:

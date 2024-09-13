@@ -4,6 +4,7 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/program_node.hpp"
+#include "pass/dump_ir.hpp"
 #include "passes.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
@@ -62,7 +63,7 @@ tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg) {
     if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { dump_ir(std::cerr, *prg); });
+    return exception_to_status_code([&] { run_function_pass(dump_ir_pass{std::cerr}, *prg); });
 }
 
 tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *filename) {
@@ -74,7 +75,7 @@ tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *f
         if (!stream.good()) {
             throw status::file_io_error;
         }
-        dump_ir(stream, *prg);
+        run_function_pass(dump_ir_pass{stream}, *prg);
     });
 }
 
@@ -85,7 +86,7 @@ tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str)
     return exception_to_status_code([&] {
         auto const text = [&] {
             auto oss = std::ostringstream{};
-            dump_ir(oss, *prg);
+            run_function_pass(dump_ir_pass{oss}, *prg);
             return std::move(oss).str();
         }();
         auto const length = text.size() + 1; // Need to include terminating null character
