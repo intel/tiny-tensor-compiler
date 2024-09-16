@@ -89,14 +89,17 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
                 auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A = fb.argument(make_memref(ty_, {selA(M, K), selA(K, M), dynamic},
-                                                 {1, ldA, strideA}, my_loc()),
-                                     "A", my_loc());
-                auto B = fb.argument(make_memref(ty_, {selB(K, N), selB(N, K), dynamic},
-                                                 {1, ldB, strideB}, my_loc()),
-                                     "B", my_loc());
+                auto A =
+                    fb.argument(make_memref(ty_, {selA(M, K), selA(K, M), dynamic},
+                                            {1, ldA, strideA}, address_space::global, my_loc()),
+                                "A", my_loc());
+                auto B =
+                    fb.argument(make_memref(ty_, {selB(K, N), selB(N, K), dynamic},
+                                            {1, ldB, strideB}, address_space::global, my_loc()),
+                                "B", my_loc());
                 auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C = fb.argument(make_memref(ty_, {M, N, dynamic}, {1, ldC, strideC}, my_loc()),
+                auto C = fb.argument(make_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
+                                                 address_space::global, my_loc()),
                                      "C", my_loc());
 
                 auto beta = is_beta_nonzero ? std::move(beta_arg) : make_imm(0.0, ty_, my_loc());

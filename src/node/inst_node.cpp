@@ -85,7 +85,9 @@ alloca_inst::alloca_inst(data_type ty, location const &lc)
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
-    memref->addrspace(clir::address_space::local_t);
+    if (memref->addrspace() != address_space::local) {
+        throw compilation_error(loc(), status::ir_expected_local_address_space);
+    }
 }
 
 axpby_inst::axpby_inst(transpose tA, value alpha0, value A0, value beta0, value B0, bool atomic,

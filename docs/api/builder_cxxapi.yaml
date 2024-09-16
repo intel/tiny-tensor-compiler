@@ -3,6 +3,7 @@
 Builder C++-API:
   Common:
     enum:
+      - tinytc::address_space
       - tinytc::arithmetic
       - tinytc::arithmetic_unary
       - tinytc::cmp_condition
@@ -10,6 +11,7 @@ Builder C++-API:
       - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
+      - tinytc::to_string(address_space)
       - tinytc::to_string(arithmetic)
       - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(cmp_condition)

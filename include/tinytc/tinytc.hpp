@@ -330,18 +330,21 @@ inline data_type make_scalar(scalar_type scalar_ty, location const &loc = {}) {
  * @param scalar_ty Element type
  * @param shape Tensor shape
  * @param stride Tensor stride
+ * @param addrspace Address space
  * @param loc Source code location
  *
  * @return Data type
  */
 inline data_type make_memref(scalar_type scalar_ty, std::vector<std::int64_t> const &shape,
                              std::vector<std::int64_t> const &stride = {},
+                             const address_space addrspace = address_space::global,
                              location const &loc = {}) {
     tinytc_data_type_t mt;
-    CHECK_STATUS_LOC(tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty),
-                                               shape.size(), shape.data(), stride.size(),
-                                               stride.data(), &loc),
-                     loc);
+    CHECK_STATUS_LOC(
+        tinytc_memref_type_create(&mt, static_cast<tinytc_scalar_type_t>(scalar_ty), shape.size(),
+                                  shape.data(), stride.size(), stride.data(),
+                                  static_cast<tinytc_address_space_t>(addrspace), &loc),
+        loc);
     return data_type{mt};
 }
 
@@ -461,8 +464,8 @@ inline auto make_imm(float imm, location const &loc = {}) -> value {
  *
  * @return Value
  */
-inline auto make_imm(double imm, scalar_type type = scalar_type::f64, location const &loc = {})
-    -> value {
+inline auto make_imm(double imm, scalar_type type = scalar_type::f64,
+                     location const &loc = {}) -> value {
     tinytc_value_t val;
     CHECK_STATUS_LOC(
         tinytc_float_imm_create(&val, imm, static_cast<tinytc_scalar_type_t>(type), &loc), loc);
@@ -578,6 +581,17 @@ inline auto make_dynamic(location const &loc = {}) -> value {
 ////////////////////////////
 /////////// Inst ///////////
 ////////////////////////////
+
+/**
+ * @brief Convert address space to string
+ *
+ * @param as Address space
+ *
+ * @return C-string
+ */
+inline char const *to_string(address_space as) {
+    return ::tinytc_address_space_to_string(static_cast<::tinytc_address_space_t>(as));
+}
 
 /**
  * @brief Convert arithmetic operation type to string
@@ -1437,8 +1451,8 @@ class region_builder {
      *
      * @return Values returned by instruction
      */
-    [[maybe_unused]] inline auto add_multivalued(inst i, std::string const &name = "")
-        -> std::vector<value> {
+    [[maybe_unused]] inline auto
+    add_multivalued(inst i, std::string const &name = "") -> std::vector<value> {
         auto results = i.get_values();
         if (name.size() > 0) {
             int counter = 0;
@@ -1553,8 +1567,8 @@ class region_builder {
      */
     template <typename F, typename G>
     auto ifelse(value const &condition, F &&then, G &&otherwise,
-                std::vector<scalar_type> const &return_type_list = {}, location const &loc = {})
-        -> std::vector<value> {
+                std::vector<scalar_type> const &return_type_list = {},
+                location const &loc = {}) -> std::vector<value> {
         auto bb1 = region_builder{};
         then(bb1);
         auto bb2 = region_builder{};
@@ -1792,8 +1806,8 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_
  * @return Core info
  */
 inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
-                                 std::int32_t num_threads_per_eu, std::vector<std::int32_t> sgs)
-    -> core_info {
+                                 std::int32_t num_threads_per_eu,
+                                 std::vector<std::int32_t> sgs) -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
                                                num_threads_per_eu, sgs.size(), sgs.data()));
@@ -2331,8 +2345,8 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int
 inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type ty, std::int64_t M,
                                              std::int64_t N, std::int64_t K, std::int64_t ldA,
                                              std::int64_t ldB, std::int64_t ldC,
-                                             std::int32_t M_block_size = 0, source_context ctx = {})
-    -> tall_and_skinny {
+                                             std::int32_t M_block_size = 0,
+                                             source_context ctx = {}) -> tall_and_skinny {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), M, N, K, ldA, ldB, ldC,

@@ -22,6 +22,7 @@ clir::data_type to_clir_ty(scalar_type ty, short size,
 clir::data_type to_clir_atomic_ty(scalar_type ty,
                                   clir::address_space as = clir::address_space::generic_t,
                                   clir::type_qualifier q = clir::type_qualifier::none);
+clir::address_space to_clir_address_space(address_space as);
 
 } // namespace tinytc
 

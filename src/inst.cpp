@@ -21,6 +21,17 @@
 using namespace tinytc;
 
 extern "C" {
+
+char const *tinytc_address_space_to_string(tinytc_address_space_t as) {
+    switch (as) {
+    case tinytc_address_space_global:
+        return "global";
+    case tinytc_address_space_local:
+        return "local";
+    }
+    return "unknown";
+}
+
 char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op) {
     switch (op) {
     case tinytc_arithmetic_add:

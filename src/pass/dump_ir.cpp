@@ -38,6 +38,9 @@ void dump_ir_pass::operator()(memref_data_type const &d) {
         do_with_infix(d.stride().begin(), d.stride().end(), [&](auto const &a) { val(a); });
         *os_ << ">";
     }
+    if (d.addrspace() != address_space::global) {
+        *os_ << "," << to_string(d.addrspace());
+    }
     *os_ << ">";
 }
 void dump_ir_pass::operator()(scalar_data_type const &s) { *os_ << to_string(s.ty()); }
@@ -134,7 +137,15 @@ void dump_ir_pass::operator()(arith_unary_inst const &a) {
     visit(*this, *a.a()->ty());
 }
 
-void dump_ir_pass::operator()(barrier_inst const &) { *os_ << "barrier"; }
+void dump_ir_pass::operator()(barrier_inst const &b) {
+    *os_ << "barrier";
+    if (b.has_fence(address_space::global)) {
+        *os_ << ".global";
+    }
+    if (b.has_fence(address_space::local)) {
+        *os_ << ".local";
+    }
+}
 
 void dump_ir_pass::operator()(cast_inst const &c) {
     visit(*this, *c.result());

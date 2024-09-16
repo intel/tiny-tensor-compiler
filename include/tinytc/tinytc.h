@@ -73,6 +73,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
  * @param stride_size [in][optional] number of elements in stride array; must be either 0 for
  * automatic stride calculation or must match shape_size; must be 0 if stride == nullptr
  * @param stride [in][optional][range(0, stride_size)] stride array
+ * @param addrspace [in][optional] Address space; default is tinytc_address_space_global
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -81,6 +82,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
                                                         tinytc_scalar_type_t scalar_ty,
                                                         uint32_t shape_size, const int64_t *shape,
                                                         uint32_t stride_size, const int64_t *stride,
+                                                        const tinytc_address_space_t addrspace,
                                                         const tinytc_location_t *loc);
 
 /**
@@ -207,6 +209,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, cha
 /////// Instructions ///////
 ////////////////////////////
 
+//! Convert address space to string
+TINYTC_EXPORT char const *tinytc_address_space_to_string(tinytc_address_space_t as);
 //! Convert arithmetic operation type to string
 TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
 //! Convert arithmetic operation type to string (unary)

@@ -8,6 +8,7 @@
 #include "pass/check_ir.hpp"
 #include "pass/convert_to_opencl.hpp"
 #include "pass/dump_ir.hpp"
+#include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"
 #include "pass/stack.hpp"
 #include "pass/work_group_size.hpp"
@@ -17,6 +18,7 @@
 #include "source.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <clir/visitor/codegen_opencl.hpp>
 #include <clir/visitor/unique_names.hpp>
@@ -52,6 +54,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
 #include "passes.def"
 #undef FUNCTION_PASS
 #undef FUNCTION_PASS_WITH_INFO
+            throw status::unknown_pass_name;
         },
         ctx);
 }

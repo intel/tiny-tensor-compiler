@@ -241,6 +241,10 @@ Compiler
 
 * Functions
 
+  * :ref:`tinytc_run_function_pass`
+
+  * :ref:`tinytc_list_function_passes`
+
   * :ref:`tinytc_prog_compile_to_opencl`
 
 Compiler Enumerations
@@ -253,6 +257,16 @@ tinytc_bundle_format_t
 
 Compiler Functions
 ------------------
+
+tinytc_run_function_pass
+........................
+
+.. doxygenfunction:: tinytc_run_function_pass
+
+tinytc_list_function_passes
+...........................
+
+.. doxygenfunction:: tinytc_list_function_passes
 
 tinytc_prog_compile_to_opencl
 .............................

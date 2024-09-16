@@ -126,7 +126,8 @@ auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int3
 class generator {
   public:
     generator(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
-              core_config const &core_cfg, address_space As, address_space Bs, address_space Cs)
+              core_config const &core_cfg, clir::address_space As, clir::address_space Bs,
+              clir::address_space Cs)
         : gemm_cfg(gemm_cfg), tiling(tiling), core_cfg(core_cfg), Aspace(As), Bspace(Bs),
           Cspace(Cs) {}
     bool use_double_buffering() const;
@@ -142,7 +143,7 @@ class generator {
     gemm_configuration const gemm_cfg;
     local_tiling const tiling;
     core_config const core_cfg;
-    address_space Aspace, Bspace, Cspace;
+    clir::address_space Aspace, Bspace, Cspace;
     int row_blocks_in_register = 1;
     int cols_in_register = 1;
     var c_acc, c_acc_im, m;
@@ -425,8 +426,8 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
 }
 
 ::clir::func generate_gemm(gemm_configuration const &gemm_cfg, local_tiling const &tiling,
-                           core_config const &core_cfg, std::string_view name, address_space As,
-                           address_space Bs, address_space Cs) {
+                           core_config const &core_cfg, std::string_view name,
+                           clir::address_space As, clir::address_space Bs, clir::address_space Cs) {
     return generator{gemm_cfg, tiling, core_cfg, As, Bs, Cs}.function(name);
 }
 

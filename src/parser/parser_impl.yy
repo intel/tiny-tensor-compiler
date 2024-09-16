@@ -103,12 +103,17 @@
     NOTRANS         ".n"
     TRANS           ".t"
     ATOMIC          ".atomic"
+    LOCAL           "local"
+    GLOBAL          "global"
+    LOCAL_ATTR      ".local"
+    GLOBAL_ATTR     ".global"
     MEMREF          "memref"
     GROUP           "group"
     OFFSET          "offset"
     STRIDED         "strided"
     AXPBY           "axpby"
     ARITH           "arith"
+    BARRIER         "barrier"
     GEMM            "gemm"
     GEMV            "gemv"
     GER             "ger"
@@ -155,6 +160,7 @@
 %nterm <data_type> data_type
 %nterm <scalar_type> scalar_type
 %nterm <data_type> memref_type
+%nterm <address_space> optional_address_space
 %nterm <std::vector<std::int64_t>> mode_list
 %nterm <std::vector<std::int64_t>> optional_stride_list
 %nterm <std::vector<std::int64_t>> stride_list
@@ -171,6 +177,9 @@
 %nterm <::tinytc::value> identifier_or_constant
 %nterm <std::vector<::tinytc::value>> optional_identifier_or_constant_list
 %nterm <std::vector<::tinytc::value>> identifier_or_constant_list
+%nterm <inst> barrier_inst
+%nterm <std::int32_t> optional_global_attr
+%nterm <std::int32_t> optional_local_attr
 %nterm <inst> gemm_inst
 %nterm <inst> gemv_inst
 %nterm <inst> ger_inst
@@ -302,11 +311,12 @@ scalar_type:
 ;
 
 memref_type:
-    MEMREF LCHEV scalar_type mode_list RCHEV {
+    MEMREF LCHEV scalar_type mode_list optional_address_space RCHEV {
         try {
             $$ = data_type {
                 std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
-                                                   std::vector<std::int64_t>{}, @memref_type)
+                                                   std::vector<std::int64_t>{}, $optional_address_space,
+                                                   @memref_type)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -314,7 +324,7 @@ memref_type:
             YYERROR;
         }
     }
-  | MEMREF LCHEV scalar_type mode_list COMMA STRIDED LCHEV optional_stride_list RCHEV RCHEV {
+  | MEMREF LCHEV scalar_type mode_list COMMA STRIDED LCHEV optional_stride_list RCHEV optional_address_space RCHEV {
         if ($mode_list.size() != $optional_stride_list.size()) {
             auto loc = @scalar_type;
             loc.end = @optional_stride_list.end;
@@ -323,7 +333,8 @@ memref_type:
         try {
             $$ = data_type {
                 std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
-                                                   std::move($optional_stride_list), @memref_type)
+                                                   std::move($optional_stride_list),
+                                                   $optional_address_space, @memref_type)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -336,6 +347,12 @@ memref_type:
 mode_list:
     %empty {}
   | mode_list TIMES constant_or_dynamic { $$ = std::move($1); $$.push_back($constant_or_dynamic); }
+;
+
+optional_address_space:
+    %empty { $$ = address_space::global; }
+  | COMMA GLOBAL { $$ = address_space::global; }
+  | COMMA LOCAL { $$ = address_space::local; }
 ;
 
 optional_stride_list:
@@ -393,6 +410,7 @@ instructions:
 
 instruction:
     axpby_inst
+  | barrier_inst
   | gemm_inst
   | gemv_inst
   | ger_inst
@@ -449,6 +467,30 @@ identifier_or_constant_list:
         $$ = std::move($1);
         $$.push_back(std::move($identifier_or_constant));
     }
+;
+
+barrier_inst:
+    BARRIER optional_global_attr optional_local_attr {
+        int32_t fence_flags = 0;
+        fence_flags |= $optional_global_attr;
+        fence_flags |= $optional_local_attr;
+        try {
+            $$ = inst { std::make_unique<barrier_inst>(fence_flags, @barrier_inst).release() };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
+optional_global_attr:
+    %empty { $$ = 0; }
+  | GLOBAL_ATTR { $$ = tinytc_address_space_global; }
+;
+
+optional_local_attr:
+    %empty { $$ = 0; }
+  | LOCAL_ATTR { $$ = tinytc_address_space_local; }
 ;
 
 gemm_inst:

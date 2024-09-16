@@ -89,7 +89,7 @@ auto get_block_rw_config(scalar_type ty) {
     return block_rw_config{builtin_type::void_t, nullptr, nullptr, nullptr};
 }
 
-expr sub_group_block_read_helper(expr pointer, scalar_type ty, address_space as) {
+expr sub_group_block_read_helper(expr pointer, scalar_type ty, clir::address_space as) {
     const auto cfg = get_block_rw_config(ty);
     if (cfg.sub_group_block_read == nullptr) {
         return pointer[get_sub_group_local_id()];
@@ -98,7 +98,7 @@ expr sub_group_block_read_helper(expr pointer, scalar_type ty, address_space as)
     auto inst = (*cfg.sub_group_block_read)(std::move(pointer));
     return (*cfg.as_type)(std::move(inst));
 }
-expr sub_group_block_write_helper(expr pointer, expr data, scalar_type ty, address_space as) {
+expr sub_group_block_write_helper(expr pointer, expr data, scalar_type ty, clir::address_space as) {
     const auto cfg = get_block_rw_config(ty);
     if (cfg.sub_group_block_write == nullptr) {
         return pointer[get_sub_group_local_id()] = std::move(data);
@@ -108,8 +108,8 @@ expr sub_group_block_write_helper(expr pointer, expr data, scalar_type ty, addre
     return (*cfg.sub_group_block_write)(std::move(pointer), std::move(data));
 }
 
-void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, address_space as,
-                  expr value, scalar_type beta_ty, expr beta) {
+void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty,
+                  clir::address_space as, expr value, scalar_type beta_ty, expr beta) {
     if (is_atomic) {
         atomic_store_helper(bb, std::move(dst), ty, as, std::move(value), beta_ty, std::move(beta));
     } else {
@@ -118,8 +118,8 @@ void store_helper(block_builder &bb, bool is_atomic, expr dst, scalar_type ty, a
     }
 }
 
-void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, address_space as, expr value,
-                         scalar_type beta_ty, expr beta) {
+void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, clir::address_space as,
+                         expr value, scalar_type beta_ty, expr beta) {
     int mode = -1;
     visit(overloaded{
               [&](clir::internal::int_imm &c) {
@@ -331,8 +331,8 @@ expr matrix_block_description::condition(int m_block, std::int32_t subgroup_size
 }
 
 auto read_matrix_block_regular(block_builder &bb, matrix_block_description const &d, int M_mode,
-                               core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor> {
+                               core_config const &core_cfg,
+                               char const *block_name) -> std::unique_ptr<block_accessor> {
     assert(M_mode == 0 || M_mode == 1);
 
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
@@ -365,8 +365,8 @@ auto read_matrix_block_regular(block_builder &bb, matrix_block_description const
 }
 
 auto read_matrix_block_vector(block_builder &bb, matrix_block_description const &d, int M_mode,
-                              core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor> {
+                              core_config const &core_cfg,
+                              char const *block_name) -> std::unique_ptr<block_accessor> {
     assert(M_mode == 0 || M_mode == 1);
 
     const int m_blocks = 1 + (d.Mb - 1) / core_cfg.subgroup_size;
@@ -393,8 +393,8 @@ auto read_matrix_block_vector(block_builder &bb, matrix_block_description const 
 }
 
 auto read_matrix_block(block_builder &bb, matrix_block_description const &d, int M_mode,
-                       core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor> {
+                       core_config const &core_cfg,
+                       char const *block_name) -> std::unique_ptr<block_accessor> {
     assert(M_mode == 0 || M_mode == 1);
 
     if (d.is_unit_stride(1 - M_mode) && !is_complex_type(d.ty) &&

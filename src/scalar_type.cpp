@@ -118,6 +118,16 @@ clir::data_type to_clir_atomic_ty(scalar_type ty, clir::address_space as, clir::
     return clir::data_type(base_type(ty), as, q);
 }
 
+clir::address_space to_clir_address_space(address_space as) {
+    switch (as) {
+    case address_space::global:
+        return clir::address_space::global_t;
+    case address_space::local:
+        return clir::address_space::local_t;
+    }
+    return clir::address_space::global_t;
+}
+
 } // namespace tinytc
 
 char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty) {

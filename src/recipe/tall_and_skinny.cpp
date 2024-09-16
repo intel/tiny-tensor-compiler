@@ -139,10 +139,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
                 auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A = fb.argument(make_memref(ty_, {M, K}, {1, ldA}, my_loc()), "A", my_loc());
-                auto B = fb.argument(make_memref(ty_, {K, N}, {1, ldB}, my_loc()), "B", my_loc());
+                auto A =
+                    fb.argument(make_memref(ty_, {M, K}, {1, ldA}, address_space::global, my_loc()),
+                                "A", my_loc());
+                auto B =
+                    fb.argument(make_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc()),
+                                "B", my_loc());
                 auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C = fb.argument(make_memref(ty_, {M, N}, {1, ldC}, my_loc()), "C", my_loc());
+                auto C =
+                    fb.argument(make_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc()),
+                                "C", my_loc());
                 fb.subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);

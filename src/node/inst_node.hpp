@@ -387,7 +387,19 @@ class arith_unary_inst : public standard_inst<1, 1> {
 class barrier_inst : public standard_inst<0, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::barrier; }
-    inline barrier_inst() : standard_inst{IK::barrier} {}
+    inline barrier_inst(std::int32_t fence_flags, location const &lc = {})
+        : standard_inst{IK::barrier}, fence_flags_(fence_flags) {
+        loc(lc);
+    }
+
+    inline auto fence_flags() const -> std::int32_t { return fence_flags_; }
+    inline auto fence_flags(std::int32_t fence_flags) { fence_flags_ = fence_flags; }
+    inline auto has_fence(address_space as) const {
+        return (fence_flags_ & static_cast<std::int32_t>(as)) > 0;
+    }
+
+  private:
+    std::int32_t fence_flags_;
 };
 
 class cast_inst : public standard_inst<1, 1> {

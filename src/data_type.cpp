@@ -4,11 +4,11 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/data_type_node.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "support/util.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -33,6 +33,7 @@ tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_
 tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt, tinytc_scalar_type_t scalar_ty,
                                           uint32_t shape_size, const int64_t *shape,
                                           uint32_t stride_size, const int64_t *stride,
+                                          const tinytc_address_space_t addrspace,
                                           const tinytc_location_t *loc) {
     if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -44,9 +45,9 @@ tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt, tinytc_scalar_
         if (stride_size > 0) {
             stride_vec.insert(stride_vec.end(), stride, stride + stride_size);
         }
-        *dt = std::make_unique<memref_data_type>(enum_cast<scalar_type>(scalar_ty),
-                                                 std::move(shape_vec), std::move(stride_vec),
-                                                 get_optional(loc))
+        *dt = std::make_unique<memref_data_type>(
+                  enum_cast<scalar_type>(scalar_ty), std::move(shape_vec), std::move(stride_vec),
+                  enum_cast<address_space>(addrspace), get_optional(loc))
                   .release();
     });
 }

@@ -116,10 +116,24 @@ Compiler
 
 * Functions
 
+  * :ref:`run_function_pass`
+
+  * :ref:`list_function_passes`
+
   * :ref:`compile_to_opencl`
 
 Compiler Functions
 ------------------
+
+run_function_pass
+.................
+
+.. doxygenfunction:: tinytc::run_function_pass
+
+list_function_passes
+....................
+
+.. doxygenfunction:: tinytc::list_function_passes
 
 compile_to_opencl
 .................

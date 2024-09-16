@@ -10,6 +10,8 @@ Common
 
 * Enumerations
 
+  * :ref:`address_space`
+
   * :ref:`arithmetic`
 
   * :ref:`arithmetic_unary`
@@ -23,6 +25,8 @@ Common
 * Functions
 
   * :ref:`is_dynamic_value`
+
+  * :ref:`to_string(address_space)`
 
   * :ref:`to_string(arithmetic)`
 
@@ -52,6 +56,11 @@ Common
 
 Common Enumerations
 -------------------
+
+address_space
+.............
+
+.. doxygenenum:: tinytc::address_space
 
 arithmetic
 ..........
@@ -85,6 +94,11 @@ is_dynamic_value
 ................
 
 .. doxygenfunction:: tinytc::is_dynamic_value
+
+to_string(address_space)
+........................
+
+.. doxygenfunction:: tinytc::to_string(address_space)
 
 to_string(arithmetic)
 .....................
@@ -217,8 +231,6 @@ Function
 
   * :ref:`make_function`
 
-  * :ref:`make_function_prototype`
-
   * :ref:`set_work_group_size`
 
   * :ref:`set_subgroup_size`
@@ -236,11 +248,6 @@ make_function
 .............
 
 .. doxygenfunction:: tinytc::make_function
-
-make_function_prototype
-.......................
-
-.. doxygenfunction:: tinytc::make_function_prototype
 
 set_work_group_size
 ...................

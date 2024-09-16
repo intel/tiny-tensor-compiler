@@ -181,10 +181,10 @@ clir::data_type convert_to_opencl_pass::operator()(group_data_type const &g) {
     return ptr_ty;
 }
 clir::data_type convert_to_opencl_pass::operator()(memref_data_type const &d) {
-    return clir::pointer_to(d.clir_element_ty());
+    return clir::pointer_to(to_clir_ty(d.element_ty(), to_clir_address_space(d.addrspace())));
 }
 clir::data_type convert_to_opencl_pass::operator()(scalar_data_type const &s) {
-    return s.clir_ty();
+    return to_clir_ty(s.ty());
 }
 
 /* Value nodes */
@@ -219,7 +219,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(alloca_inst const &a)
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }
-    auto ptr_ty = clir::pointer_to(t->clir_element_ty());
+    auto ptr_ty = operator()(*t);
     auto result = declaration_assignment(ptr_ty, std::move(result_var),
                                          clir::cast(ptr_ty, stack_ + a.stack_ptr()));
     stack_high_water_mark_ = std::max(stack_high_water_mark_,
@@ -255,8 +255,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
                     auto a = Ab[(block + m) * adv.stride(pA)];
                     auto b = bb.declare_assign((*this)(*bt), "b", Bb + (block + m) * bdv.stride(0));
                     const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, std::move(a));
-                    store_helper(bb, inst.atomic(), b, bt->element_ty(), bt->addrspace(),
-                                 std::move(a_scaled), beta_ty, beta);
+                    store_helper(bb, inst.atomic(), b, bt->element_ty(),
+                                 to_clir_address_space(bt->addrspace()), std::move(a_scaled),
+                                 beta_ty, beta);
                 };
                 if (is_remainder) {
                     bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))
@@ -273,8 +274,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
     if (bt->dim() == 0) {
         auto bb = clir::block_builder{};
         const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, A[0]);
-        store_helper(bb, inst.atomic(), B, bt->element_ty(), bt->addrspace(), std::move(a_scaled),
-                     beta_ty, std::move(beta));
+        store_helper(bb, inst.atomic(), B, bt->element_ty(), to_clir_address_space(bt->addrspace()),
+                     std::move(a_scaled), beta_ty, std::move(beta));
         return {bb.get_product()};
     }
 
@@ -311,9 +312,16 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
     throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
 }
 
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(barrier_inst const &) {
-    return {clir::expression_statement(clir::call_builtin(
-        clir::builtin_function::barrier, {clir::cl_mem_fence_flags::CLK_LOCAL_MEM_FENCE}))};
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(barrier_inst const &b) {
+    clir::expr fence = 0;
+    if (b.has_fence(address_space::global)) {
+        fence = fence | clir::cl_mem_fence_flags::CLK_GLOBAL_MEM_FENCE;
+    }
+    if (b.has_fence(address_space::local)) {
+        fence = fence | clir::cl_mem_fence_flags::CLK_LOCAL_MEM_FENCE;
+    }
+    return {clir::expression_statement(
+        clir::call_builtin(clir::builtin_function::barrier, {std::move(fence)}))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) {
@@ -630,8 +638,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
         name = cfg.identifier("gemm" + std::to_string(++name_counter));
     }
     if (has_gemm_.find(name) == has_gemm_.end()) {
-        auto f = generate_gemm(cfg, tiling_, core_cfg_, name, a->addrspace(), b->addrspace(),
-                               c->addrspace());
+        auto f = generate_gemm(cfg, tiling_, core_cfg_, name, to_clir_address_space(a->addrspace()),
+                               to_clir_address_space(b->addrspace()),
+                               to_clir_address_space(c->addrspace()));
         prog_builder_.add(std::move(f));
     }
     has_gemm_.emplace(name);
@@ -683,8 +692,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
         name = cfg.identifier("gemv" + std::to_string(++name_counter));
     }
     if (has_gemm_.find(name) == has_gemm_.end()) {
-        auto f = generate_gemm(cfg, tiling_, core_cfg_, name, a->addrspace(), b->addrspace(),
-                               c->addrspace());
+        auto f = generate_gemm(cfg, tiling_, core_cfg_, name, to_clir_address_space(a->addrspace()),
+                               to_clir_address_space(b->addrspace()),
+                               to_clir_address_space(c->addrspace()));
         prog_builder_.add(std::move(f));
     }
     has_gemm_.emplace(name);
@@ -745,8 +755,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
                                        const auto ab_scaled = multiply(alpha_ty, ct->element_ty(),
                                                                        alpha, std::move(ab));
                                        store_helper(bb, g.atomic(), c, ct->element_ty(),
-                                                    ct->addrspace(), std::move(ab_scaled), beta_ty,
-                                                    beta);
+                                                    to_clir_address_space(ct->addrspace()),
+                                                    std::move(ab_scaled), beta_ty, beta);
                                    };
                                    if (is_remainder) {
                                        bb.add(clir::if_selection_builder(
@@ -830,8 +840,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(hadamard_inst const &
                     to_clir_ty(ct->element_ty()), "ab",
                     multiply(at->element_ty(), bt->element_ty(), std::move(a), b));
                 const auto ab_scaled = multiply(alpha_ty, ct->element_ty(), alpha, std::move(ab));
-                store_helper(bb, g.atomic(), c, ct->element_ty(), ct->addrspace(),
-                             std::move(ab_scaled), beta_ty, beta);
+                store_helper(bb, g.atomic(), c, ct->element_ty(),
+                             to_clir_address_space(ct->addrspace()), std::move(ab_scaled), beta_ty,
+                             beta);
             };
             if (is_remainder) {
                 bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))
@@ -1016,8 +1027,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
                                           clir::get_sub_group_local_id() == 0)
                    .then([&](clir::block_builder &bb) {
                        const auto sum_scaled = multiply(alpha_ty, at->element_ty(), alpha, sum);
-                       store_helper(bb, inst.atomic(), B, bt->element_ty(), bt->addrspace(),
-                                    std::move(sum_scaled), beta_ty, beta);
+                       store_helper(bb, inst.atomic(), B, bt->element_ty(),
+                                    to_clir_address_space(bt->addrspace()), std::move(sum_scaled),
+                                    beta_ty, beta);
                    })
                    .get_product());
     } else if (bt->dim() == 1) {
@@ -1040,8 +1052,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
                                .get_product());
                     auto b = bb.declare_assign((*this)(*bt), "b", B + (block + m) * bdv.stride(0));
                     const auto sum_scaled = multiply(alpha_ty, at->element_ty(), alpha, acc);
-                    store_helper(bb, inst.atomic(), b, bt->element_ty(), bt->addrspace(),
-                                 std::move(sum_scaled), beta_ty, beta);
+                    store_helper(bb, inst.atomic(), b, bt->element_ty(),
+                                 to_clir_address_space(bt->addrspace()), std::move(sum_scaled),
+                                 beta_ty, beta);
                 };
                 if (is_remainder) {
                     bb.add(clir::if_selection_builder(m < std::move(inner_trip_count))

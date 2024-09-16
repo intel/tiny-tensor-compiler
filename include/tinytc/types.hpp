@@ -50,6 +50,7 @@ enum class status {
     invalid_kernel_arguments = tinytc_status_invalid_kernel_arguments,
     unsupported_device = tinytc_status_unsupported_device,
     invalid_core_info = tinytc_status_invalid_core_info,
+    unknown_pass_name = tinytc_status_unknown_pass_name,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,
@@ -71,7 +72,8 @@ enum class status {
     ir_collective_called_from_spmd = tinytc_status_ir_collective_called_from_spmd,
     ir_fp_unsupported = tinytc_status_ir_fp_unsupported,
     ir_spmd_called_from_collective = tinytc_status_ir_spmd_called_from_collective,
-    // Level Zero errors
+    ir_expected_local_address_space = tinytc_status_ir_expected_local_address_space,
+    ir_expected_global_address_space = tinytc_status_ir_expected_global_address_space,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,
@@ -244,6 +246,12 @@ enum class cmp_condition {
 enum class transpose {
     N = tinytc_transpose_N, ///< no transpose
     T = tinytc_transpose_T  ///< transpose
+};
+
+//! Address space
+enum class address_space {
+    global = tinytc_address_space_global, ///< Global memory
+    local = tinytc_address_space_local    ///< Local memory, returned by alloca
 };
 
 //! @brief Cf. @ref tinytc_core_feature_flag_t

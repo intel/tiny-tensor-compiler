@@ -88,6 +88,10 @@ lex:
         ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
+        "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
+        "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
+        ".local"             { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
+        ".global"            { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
 
         // constants
         "true"              { adv_loc(); return parser::make_INTEGER_CONSTANT(1, loc_); }
@@ -124,6 +128,7 @@ lex:
         // instructions
         "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }
         "arith"             { adv_loc(); return parser::make_ARITH(loc_); }
+        "barrier"           { adv_loc(); return parser::make_BARRIER(loc_); }
         "gemm"              { adv_loc(); return parser::make_GEMM(loc_); }
         "gemv"              { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"               { adv_loc(); return parser::make_GER(loc_); }

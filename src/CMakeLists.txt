@@ -38,10 +38,9 @@ set(SOURCES
     #pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
     pass/dump_ir.cpp
-    #pass/insert_barrier.cpp
+    pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
     #pass/lower_linalg.cpp
-    #pass/metadata.cpp
     pass/slot_tracker.cpp
     pass/stack.cpp
     pass/work_group_size.cpp

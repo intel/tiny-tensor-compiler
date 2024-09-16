@@ -10,6 +10,8 @@ Common
 
 * Enumerations
 
+  * :ref:`tinytc_address_space_t`
+
   * :ref:`tinytc_arithmetic_t`
 
   * :ref:`tinytc_arithmetic_unary_t`
@@ -25,6 +27,8 @@ Common
   * :ref:`TINYTC_DYNAMIC`
 
 * Functions
+
+  * :ref:`tinytc_address_space_to_string`
 
   * :ref:`tinytc_arithmetic_to_string`
 
@@ -75,6 +79,11 @@ Common
 Common Enumerations
 -------------------
 
+tinytc_address_space_t
+......................
+
+.. doxygenenum:: tinytc_address_space_t
+
 tinytc_arithmetic_t
 ...................
 
@@ -110,6 +119,11 @@ TINYTC_DYNAMIC
 
 Common Functions
 ----------------
+
+tinytc_address_space_to_string
+..............................
+
+.. doxygenfunction:: tinytc_address_space_to_string
 
 tinytc_arithmetic_to_string
 ...........................
@@ -272,8 +286,6 @@ Function
 
   * :ref:`tinytc_function_create`
 
-  * :ref:`tinytc_function_prototype_create`
-
   * :ref:`tinytc_function_set_subgroup_size`
 
   * :ref:`tinytc_function_set_work_group_size`
@@ -289,11 +301,6 @@ tinytc_function_create
 ......................
 
 .. doxygenfunction:: tinytc_function_create
-
-tinytc_function_prototype_create
-................................
-
-.. doxygenfunction:: tinytc_function_prototype_create
 
 tinytc_function_set_subgroup_size
 .................................

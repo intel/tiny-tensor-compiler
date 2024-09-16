@@ -151,9 +151,10 @@ Memref type
 
 .. code:: abnf
 
-    memref-type                 = "memref<" scalar-type tensor-shape ["," memory-layout] ">"
+    memref-type                 = "memref<" scalar-type tensor-shape ["," memory-layout] ["," address-space] ">"
     constant-or-dynamic         = integer-constant / "?"
     tensor-shape                = *("x" constant-or-dynamic)
+    address-space               = "global" / "local"
 
 A memref is a reference to a region of memory.
 In analogy to the C/C++-language, the memref can be thought of as a pointer,
@@ -179,6 +180,13 @@ The default memory layout is the packed dense layout.
 E.g. the memory layout of ``memref<f32x5x6x7>`` is ``strided<1,5,30>``.
 We note that ``memref<f32x5x6x7>`` and ``memref<f32x5x6x7,strided<1,5,30>>``
 are the same type.
+
+Memrefs have an optional address space attribute.
+The global address space referse to memory objects allocated from the global memory pool
+that is shared by all work groups.
+The local memory space is shared by all work-items of the work-group but inaccessible to another work-group.
+The default address space is "global", memrefs with "local" address space are returned by
+the alloca instruction.
 
 
 Memory layout
@@ -272,7 +280,8 @@ A memref of the memref-type.
 Restrictions
 ~~~~~~~~~~~~
 
-The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
+- The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
+- The address space must be "local".
 
 Axpby
 .....
@@ -589,6 +598,34 @@ Op   Allowed type Description
 .neg scalar-type  Negation
 .not integer-type Bitwise not
 ==== ============ ==============================================================================
+
+Barrier
+.......
+
+.. code:: abnf
+
+    barrier-instruction         = "barrier" [".global"] [".local"]
+
+Overview
+~~~~~~~~
+
+**Note:** Barriers are inserted automatically in collective regions, but not in SPMD regions.
+Manual barrier insertion should only be only necessesary in SPMD regions.
+
+
+Control barrier.
+The barrier must be encountered by all work-items.
+A work-item in a work-group is not allowed to continue until all work-items in the work-group
+have reached the barrier.
+
+Aditional memory fences are controlled by the following attributes:
+
+========= ======================================================================================
+Attribute Description
+========= ======================================================================================
+.global   Ensure that global memory accesses become visible to the work-group.
+.local    Ensure that local memory accesses become visible to the work-group.
+========= ======================================================================================
 
 Cast
 ....
@@ -1047,7 +1084,6 @@ Additional instructions
 
 .. code:: abnf
 
-    barrier-instruction         = "barrier"
     lifetime-stop-instruction   = "lifetime_stop" local-identifier
 
 SPMD instructions

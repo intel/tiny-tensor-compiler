@@ -40,6 +40,7 @@ typedef enum {
     tinytc_status_invalid_kernel_arguments = 0xd,    ///< Kernel got invalid arguments
     tinytc_status_unsupported_device = 0xe,          ///< Unsupported device
     tinytc_status_invalid_core_info = 0xf,           ///< Invalid core info object
+    tinytc_status_unknown_pass_name = 0x10,          ///< Invalid compiler pass name
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,             ///< Out of bounds access
     tinytc_status_ir_invalid_shape = 0x101,             ///< Invalid tensor shape
@@ -60,7 +61,9 @@ typedef enum {
     tinytc_status_ir_expand_shape_mismatch = 0x110,        ///< Invalid expand shape
     tinytc_status_ir_collective_called_from_spmd = 0x111,  ///< Collective instruction from SPMD
     tinytc_status_ir_fp_unsupported = 0x112, ///< Instruction does not support floating type
-    tinytc_status_ir_spmd_called_from_collective = 0x113, ///< SPMD instruction from collective
+    tinytc_status_ir_spmd_called_from_collective = 0x113,   ///< SPMD instruction from collective
+    tinytc_status_ir_expected_local_address_space = 0x114,  ///< Expected local address space
+    tinytc_status_ir_expected_global_address_space = 0x115, ///< Expected global address space
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST
@@ -262,6 +265,12 @@ typedef enum {
     tinytc_transpose_T = 1  ///< Transpose
 } tinytc_transpose_t;
 
+//! Address space
+typedef enum {
+    tinytc_address_space_global = 0x1, ///< Global memory
+    tinytc_address_space_local = 0x2   ///< Local memory, returned by alloca
+} tinytc_address_space_t;
+
 //! Core features that may be optionally enabled
 typedef enum {
     /**
@@ -276,6 +285,8 @@ typedef enum {
 
 //! Type for combination of core feature flags
 typedef uint32_t tinytc_core_feature_flags_t;
+
+//!
 
 /**
  * @brief IP versions for Intel GPUs

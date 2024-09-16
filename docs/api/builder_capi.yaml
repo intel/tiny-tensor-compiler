@@ -3,6 +3,7 @@
 Builder C-API:
   Common:
     enum:
+      - tinytc_address_space_t
       - tinytc_arithmetic_t
       - tinytc_arithmetic_unary_t
       - tinytc_cmp_condition_t
@@ -11,6 +12,7 @@ Builder C-API:
     define:
       - TINYTC_DYNAMIC
     function:
+      - tinytc_address_space_to_string
       - tinytc_arithmetic_to_string
       - tinytc_arithmetic_unary_to_string
       - tinytc_cmp_condition_to_string

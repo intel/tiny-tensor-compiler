@@ -2,7 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/insert_barrier.hpp"
-#include "pass/alias_analysis.hpp"
+#include "analysis/alias.hpp"
+#include "node/data_type_node.hpp"
+#include "node/inst_node.hpp"
+#include "node/value_node.hpp"
 #include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
@@ -15,142 +18,133 @@
 
 namespace tinytc {
 
-/* Data type nodes */
-bool insert_barrier::operator()(void_data_type &) { return false; }
-bool insert_barrier::operator()(group_data_type &b) { return visit(*this, *b.ty()); }
-bool insert_barrier::operator()(memref_data_type &m) {
-    return m.addrspace() == clir::address_space::local_t;
-}
-bool insert_barrier::operator()(scalar_data_type &) { return false; }
-
-/* Value nodes */
-value_node *insert_barrier::operator()(float_imm &) { return nullptr; }
-value_node *insert_barrier::operator()(int_imm &) { return nullptr; }
-value_node *insert_barrier::operator()(val &v) {
-    if (visit(*this, *v.ty())) {
-        return &v;
-    }
-    return nullptr;
-}
-
-/* Inst nodes */
-std::unordered_set<value_node *> insert_barrier::operator()(inst_node &) { return {}; }
-
-std::unordered_set<value_node *> insert_barrier::operator()(blas_a2_inst &g) {
-    auto rw = std::unordered_set<value_node *>{};
-    rw.emplace(visit(*this, *g.A()));
-    rw.emplace(visit(*this, *g.B()));
-    return rw;
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(blas_a3_inst &inst) {
-    auto rw = std::unordered_set<value_node *>{};
-    rw.emplace(visit(*this, *inst.A()));
-    rw.emplace(visit(*this, *inst.B()));
-    rw.emplace(visit(*this, *inst.C()));
-    return rw;
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(loop_inst &p) {
-    return visit(*this, *p.body());
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(alloca_inst &) { return {}; }
-
-std::unordered_set<value_node *> insert_barrier::operator()(barrier_inst &) {
-    last_instruction_was_barrier_ = true;
-    return {};
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(expand_inst &) { return {}; }
-std::unordered_set<value_node *> insert_barrier::operator()(fuse_inst &) { return {}; }
-
-std::unordered_set<value_node *> insert_barrier::operator()(load_inst &e) {
-    auto rw = std::unordered_set<value_node *>{};
-    auto t = dyn_cast<memref_data_type>(e.operand()->ty().get());
-    if (t) {
-        rw.emplace(visit(*this, *e.operand()));
-    }
-    return rw;
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(if_inst &in) {
-    auto s = visit(*this, *in.then());
-    if (in.otherwise()) {
-        s.merge(visit(*this, *in.otherwise()));
-    }
-    return s;
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(lifetime_stop_inst &) { return {}; }
-
-std::unordered_set<value_node *> insert_barrier::operator()(parallel_inst &p) {
-    return visit(*this, *p.body());
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(size_inst &) { return {}; }
-
-std::unordered_set<value_node *> insert_barrier::operator()(store_inst &s) {
-    auto rw = std::unordered_set<value_node *>{};
-    rw.emplace(visit(*this, *s.operand()));
-    return rw;
-}
-
-std::unordered_set<value_node *> insert_barrier::operator()(subview_inst &) { return {}; }
-std::unordered_set<value_node *> insert_barrier::operator()(yield_inst &) { return {}; }
-
-/* Region nodes */
-std::unordered_set<value_node *> insert_barrier::operator()(rgn &b) {
-    auto const intersects = [this](std::unordered_set<value_node *> const &a,
-                                   std::unordered_set<value_node *> const &b) {
-        for (auto &aa : a) {
-            if (aa != nullptr) {
-                for (auto &bb : b) {
-                    if (aa_.alias(*aa, *bb)) {
-                        return true;
-                    }
-                }
+auto intersects(std::unordered_set<::tinytc_value const *> const &a,
+                std::unordered_set<::tinytc_value const *> const &b, aa_results const &aa) {
+    for (auto &av : a) {
+        for (auto &bv : b) {
+            if (aa.alias(*av, *bv)) {
+                return true;
             }
         }
-        return false;
-    };
-
-    auto rw = std::unordered_set<value_node *>{};
-    auto insts = std::vector<inst>{};
-    insts.reserve(b.insts().size());
-    for (auto &s : b.insts()) {
-        auto my_rw = visit(*this, *s);
-        if (intersects(my_rw, rw)) {
-            insts.emplace_back(inst{std::make_unique<barrier_inst>().release()});
-            rw.clear();
-        }
-        insts.emplace_back(s);
-        if (last_instruction_was_barrier_) {
-            last_instruction_was_barrier_ = false;
-            rw.clear();
-        }
-        rw.merge(my_rw);
     }
-    b.insts(std::move(insts));
-    return rw;
+    return false;
+}
+
+void insert_barrier_pass::reads_writes::clear(address_space as) {
+    const auto space = address_space_to_index(as);
+    reads[space].clear();
+    writes[space].clear();
+}
+
+void insert_barrier_pass::reads_writes::merge(reads_writes &&other) {
+    for (std::size_t i = 0; i < reads.size(); ++i) {
+        reads[i].merge(std::move(other.reads[i]));
+    }
+    for (std::size_t i = 0; i < reads.size(); ++i) {
+        writes[i].merge(std::move(other.writes[i]));
+    }
+}
+
+void insert_barrier_pass::reads_writes::emplace_read(address_space as, ::tinytc_value const *val) {
+    const auto space = address_space_to_index(as);
+    reads[space].emplace(val);
+}
+void insert_barrier_pass::reads_writes::emplace_write(address_space as, ::tinytc_value const *val) {
+    const auto space = address_space_to_index(as);
+    writes[space].emplace(val);
+}
+
+bool insert_barrier_pass::reads_writes::raw(address_space as, reads_writes const &rw,
+                                            aa_results const &aa) {
+    const auto space = address_space_to_index(as);
+    return intersects(rw.reads[space], writes[space], aa);
+}
+bool insert_barrier_pass::reads_writes::war(address_space as, reads_writes const &rw,
+                                            aa_results const &aa) {
+    const auto space = address_space_to_index(as);
+    return intersects(rw.writes[space], reads[space], aa);
+}
+bool insert_barrier_pass::reads_writes::waw(address_space as, reads_writes const &rw,
+                                            aa_results const &aa) {
+    const auto space = address_space_to_index(as);
+    return intersects(rw.writes[space], writes[space], aa);
+}
+bool insert_barrier_pass::reads_writes::raw_war_or_waw(address_space as, reads_writes const &rw,
+                                                       aa_results const &aa) {
+    return raw(as, rw, aa) || war(as, rw, aa) || waw(as, rw, aa);
+}
+
+auto insert_barrier_pass::reads_writes::address_space_to_index(address_space as) -> std::size_t {
+    for (std::size_t i = 0; i < address_spaces.size(); ++i) {
+        if (as == address_spaces[i]) {
+            return i;
+        }
+    }
+    throw internal_compiler_error{};
+}
+
+auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa) -> reads_writes {
+    auto invisible_rw = reads_writes{};
+    for (auto it = reg.begin(); it != reg.end(); ++it) {
+        if (auto *barrier = dyn_cast<barrier_inst>(it->get()); barrier) {
+            for (auto &as : reads_writes::address_spaces) {
+                if (barrier->has_fence(as)) {
+                    invisible_rw.clear(as);
+                }
+            }
+        } else {
+            auto rw = reads_writes{};
+            for (auto &subreg : (*it)->child_regions()) {
+                rw.merge(run_on_region(*subreg, aa));
+            }
+
+            auto const emplace_read = [&rw](value const &v) {
+                if (auto *m = dyn_cast<memref_data_type>(v->ty().get()); m) {
+                    rw.emplace_read(m->addrspace(), v.get());
+                }
+            };
+            auto const emplace_write = [&rw](value const &v) {
+                if (auto *m = dyn_cast<memref_data_type>(v->ty().get()); m) {
+                    rw.emplace_write(m->addrspace(), v.get());
+                }
+            };
+            visit(overloaded{[&](blas_a2_inst &in) {
+                                 emplace_read(in.A());
+                                 emplace_write(in.B());
+                             },
+                             [&](blas_a3_inst &in) {
+                                 emplace_read(in.A());
+                                 emplace_read(in.B());
+                                 emplace_write(in.C());
+                             },
+                             [&](load_inst &in) { emplace_read(in.operand()); },
+                             [&](store_inst &in) { emplace_read(in.operand()); },
+                             [](inst_node &) {}},
+                  **it);
+
+            std::int32_t fence_flags = 0;
+            for (auto &as : reads_writes::address_spaces) {
+                if (invisible_rw.raw_war_or_waw(as, rw, aa)) {
+                    fence_flags |= static_cast<std::int32_t>(as);
+                    invisible_rw.clear(as);
+                }
+            }
+            if (fence_flags != 0) {
+                it = reg.insert(it, inst{std::make_unique<barrier_inst>(fence_flags).release()});
+                ++it; // skip over barrier
+            }
+
+            invisible_rw.merge(std::move(rw));
+        }
+    }
+
+    return invisible_rw;
 }
 
 /* Function nodes */
-void insert_barrier::operator()(prototype &) {}
-
-void insert_barrier::operator()(function &fn) {
-    auto aa = alias_analyser{};
-    aa(fn);
-    aa_ = aa.get_result();
-    visit(*this, *fn.prototype());
-    visit(*this, *fn.body());
-}
-
-/* Program nodes */
-void insert_barrier::operator()(program &p) {
-    for (auto &fn : p.functions()) {
-        visit(*this, *fn);
-    }
+void insert_barrier_pass::run_on_function(function &fn) {
+    auto aa = alias_analysis{}.run_on_function(fn);
+    run_on_region(*fn.body(), aa);
 }
 
 } // namespace tinytc

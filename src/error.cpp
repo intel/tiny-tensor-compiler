@@ -115,6 +115,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_invalid_core_info:
         return "Invalid core info object (e.g. max work group size is 0 or subgroup sizes vector "
                "is empty)";
+    case tinytc_status_unknown_pass_name:
+        return "Unknown compiler pass name";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
@@ -156,6 +158,10 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Floating point type unsupported for instruction";
     case tinytc_status_ir_spmd_called_from_collective:
         return "SPMD instruction must not be called from collective region";
+    case tinytc_status_ir_expected_local_address_space:
+        return "A memref with local address space is expected";
+    case tinytc_status_ir_expected_global_address_space:
+        return "A memref with global address space is expected";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";
