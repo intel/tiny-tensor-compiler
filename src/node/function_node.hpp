@@ -5,6 +5,7 @@
 #define FUNCTION_NODE_20230310_HPP
 
 #include "location.hpp"
+#include "node/region_node.hpp"
 #include "reference_counted.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
@@ -27,6 +28,7 @@ struct tinytc_func : tinytc::reference_counted {
         : name_(std::move(name)), args_(std::move(args)), body_(std::move(body)),
           work_group_size_{0, 0}, subgroup_size_{0} {
         loc(lc);
+        body_->kind(tinytc::region_kind::collective);
     }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }

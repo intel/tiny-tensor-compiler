@@ -12,15 +12,25 @@
 #include <utility>
 #include <vector>
 
+namespace tinytc {
+
+//! Instruction classification
+enum class region_kind { mixed, collective, spmd };
+
+} // namespace tinytc
+
 struct tinytc_region : tinytc::reference_counted {
   public:
     using iterator = std::vector<tinytc::inst>::iterator;
     using const_iterator = std::vector<tinytc::inst>::const_iterator;
 
     inline tinytc_region(std::vector<tinytc::inst> insts = {}, tinytc::location const &lc = {})
-        : insts_(std::move(insts)) {
+        : insts_(std::move(insts)), kind_(tinytc::region_kind::mixed) {
         loc(lc);
     }
+
+    inline auto kind() const noexcept -> tinytc::region_kind { return kind_; }
+    inline void kind(tinytc::region_kind kind) noexcept { kind_ = kind; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
@@ -45,6 +55,7 @@ struct tinytc_region : tinytc::reference_counted {
 
   private:
     std::vector<tinytc::inst> insts_;
+    tinytc::region_kind kind_;
     tinytc::location loc_;
 };
 

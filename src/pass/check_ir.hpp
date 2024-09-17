@@ -5,9 +5,6 @@
 #define CHECK_IR_20240222_HPP
 
 #include "node/function_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/program_node.hpp"
-#include "node/region_node.hpp"
 
 namespace tinytc {
 

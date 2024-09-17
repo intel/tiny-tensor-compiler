@@ -39,7 +39,8 @@ class insert_barrier_pass {
         std::array<std::unordered_set<::tinytc_value const *>, address_spaces.size()> reads, writes;
     };
 
-    auto run_on_region(rgn &reg, aa_results const &aa) -> reads_writes;
+    auto run_on_region(rgn &reg, aa_results const &aa,
+                       const bool insert_barriers = true) -> reads_writes;
 };
 
 } // namespace tinytc

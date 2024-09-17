@@ -5,6 +5,7 @@
 #define INST_NODE_20230327_HPP
 
 #include "error.hpp"
+#include "node/region_node.hpp"
 #include "reference_counted.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
@@ -25,8 +26,8 @@ enum class inst_execution_kind {
     mixed,      ///< mixed instruction on uniform or varying data
     collective, ///< collective instruction on uniform data, distributed among work-items
     spmd        ///< SPMD instruction on varying data
-
 };
+
 enum class IK {
     alloca,
     arith,
@@ -525,13 +526,7 @@ class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
     inline for_inst(value loop_var, value from, value to, region body, location const &loc = {})
-        : loop_inst{IK::for_loop,
-                    std::move(loop_var),
-                    std::move(from),
-                    std::move(to),
-                    {},
-                    std::move(body),
-                    loc} {}
+        : for_inst{std::move(loop_var), std::move(from), std::move(to), {}, std::move(body), loc} {}
     inline for_inst(value loop_var, value from, value to, value step, region body,
                     location const &loc = {})
         : loop_inst{IK::for_loop,
@@ -553,7 +548,9 @@ class foreach_inst : public loop_inst {
                     std::move(to),
                     {},
                     std::move(body),
-                    loc} {}
+                    loc} {
+        child_region(0)->kind(region_kind::spmd);
+    }
 };
 
 class hadamard_inst : public blas_a3_inst {
@@ -589,6 +586,8 @@ class parallel_inst : public standard_inst<0, 0, 1> {
     inline parallel_inst(region body, location const &lc = {}) : standard_inst{IK::parallel} {
         child_region(0) = std::move(body);
         loc(lc);
+
+        child_region(0)->kind(region_kind::spmd);
     }
     inline auto body() const -> region const & { return child_region(0); }
 };

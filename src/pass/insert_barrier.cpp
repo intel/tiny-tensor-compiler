@@ -83,10 +83,11 @@ auto insert_barrier_pass::reads_writes::address_space_to_index(address_space as)
     throw internal_compiler_error{};
 }
 
-auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa) -> reads_writes {
+auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa,
+                                        const bool insert_barriers) -> reads_writes {
     auto invisible_rw = reads_writes{};
     for (auto it = reg.begin(); it != reg.end(); ++it) {
-        if (auto *barrier = dyn_cast<barrier_inst>(it->get()); barrier) {
+        if (auto *barrier = dyn_cast<barrier_inst>(it->get()); insert_barriers && barrier) {
             for (auto &as : reads_writes::address_spaces) {
                 if (barrier->has_fence(as)) {
                     invisible_rw.clear(as);
@@ -95,7 +96,9 @@ auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa) -> reads
         } else {
             auto rw = reads_writes{};
             for (auto &subreg : (*it)->child_regions()) {
-                rw.merge(run_on_region(*subreg, aa));
+                const bool insert_barriers_sub =
+                    insert_barriers && subreg->kind() != region_kind::spmd;
+                rw.merge(run_on_region(*subreg, aa, insert_barriers_sub));
             }
 
             auto const emplace_read = [&rw](value const &v) {
@@ -118,20 +121,23 @@ auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa) -> reads
                                  emplace_write(in.C());
                              },
                              [&](load_inst &in) { emplace_read(in.operand()); },
-                             [&](store_inst &in) { emplace_read(in.operand()); },
+                             [&](store_inst &in) { emplace_write(in.operand()); },
                              [](inst_node &) {}},
                   **it);
 
-            std::int32_t fence_flags = 0;
-            for (auto &as : reads_writes::address_spaces) {
-                if (invisible_rw.raw_war_or_waw(as, rw, aa)) {
-                    fence_flags |= static_cast<std::int32_t>(as);
-                    invisible_rw.clear(as);
+            if (insert_barriers) {
+                std::int32_t fence_flags = 0;
+                for (auto &as : reads_writes::address_spaces) {
+                    if (invisible_rw.raw_war_or_waw(as, rw, aa)) {
+                        fence_flags |= static_cast<std::int32_t>(as);
+                        invisible_rw.clear(as);
+                    }
                 }
-            }
-            if (fence_flags != 0) {
-                it = reg.insert(it, inst{std::make_unique<barrier_inst>(fence_flags).release()});
-                ++it; // skip over barrier
+                if (fence_flags != 0) {
+                    it =
+                        reg.insert(it, inst{std::make_unique<barrier_inst>(fence_flags).release()});
+                    ++it; // skip over barrier
+                }
             }
 
             invisible_rw.merge(std::move(rw));
