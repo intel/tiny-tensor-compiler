@@ -15,7 +15,7 @@
 
 namespace tinytc {
 
-auto insert_lifetime_stop_pass::run_on_region(rgn &reg, aa_results const &aa)
+auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const &aa)
     -> std::unordered_set<value_node const *> {
     if (reg.empty()) {
         return {};
@@ -60,7 +60,7 @@ auto insert_lifetime_stop_pass::run_on_region(rgn &reg, aa_results const &aa)
     return rgn_ops;
 }
 
-void insert_lifetime_stop_pass::run_on_function(function &fn) {
+void insert_lifetime_stop_pass::run_on_function(function_node &fn) {
     auto aa = alias_analysis{}.run_on_function(fn);
     run_on_region(*fn.body(), aa);
 }

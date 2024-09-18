@@ -36,7 +36,7 @@ tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t fun_list_size
         for (uint32_t i = 0; i < fun_list_size; ++i) {
             fun_vec.emplace_back(func(fun_list[i], true));
         }
-        *prg = std::make_unique<program>(std::move(fun_vec), get_optional(loc)).release();
+        *prg = std::make_unique<program_node>(std::move(fun_vec), get_optional(loc)).release();
     });
 }
 

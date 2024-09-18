@@ -153,14 +153,14 @@ void constant_propagation::operator()(arith_inst &arith) {
 void constant_propagation::operator()(parallel_inst &p) { visit(*this, *p.body()); }
 
 /* Region nodes */
-void constant_propagation::operator()(rgn &b) {
+void constant_propagation::operator()(region_node &b) {
     for (auto &s : b.insts()) {
         visit(*this, *s);
     }
 }
 
 /* Function nodes */
-void constant_propagation::operator()(function &fn) { visit(*this, *fn.body()); }
+void constant_propagation::operator()(function_node &fn) { visit(*this, *fn.body()); }
 
 /* Program nodes */
 void constant_propagation::operator()(program &p) {

@@ -158,7 +158,7 @@ inst lower_linalg_pass::operator()(ger_inst &g) {
 }
 
 /* Region nodes */
-void lower_linalg_pass::operator()(rgn &b) {
+void lower_linalg_pass::operator()(region_node &b) {
     for (auto &s : b.insts()) {
         if (auto lowered_inst = visit(*this, *s); lowered_inst) {
             s = lowered_inst;
@@ -169,7 +169,7 @@ void lower_linalg_pass::operator()(rgn &b) {
 /* Function nodes */
 void lower_linalg_pass::operator()(prototype &) {}
 
-void lower_linalg_pass::operator()(function &fn) {
+void lower_linalg_pass::operator()(function_node &fn) {
     auto const subgroup_size = fn.subgroup_size();
     try {
         core_cfg_ = info_->get_core_config(subgroup_size);

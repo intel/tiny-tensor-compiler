@@ -29,7 +29,7 @@ tinytc_status_t tinytc_region_create(tinytc_region_t *reg, uint32_t instruction_
         for (uint32_t i = 0; i < instruction_list_size; ++i) {
             inst_vec.emplace_back(inst(instruction_list[i], true));
         }
-        *reg = std::make_unique<rgn>(std::move(inst_vec), get_optional(loc)).release();
+        *reg = std::make_unique<region_node>(std::move(inst_vec), get_optional(loc)).release();
     });
 }
 

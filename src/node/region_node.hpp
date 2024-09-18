@@ -60,7 +60,7 @@ struct tinytc_region : tinytc::reference_counted {
 };
 
 namespace tinytc {
-using rgn = ::tinytc_region;
+using region_node = ::tinytc_region;
 } // namespace tinytc
 
 #endif // REGION_NODE_20230908_HPP

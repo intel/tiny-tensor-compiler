@@ -37,7 +37,7 @@ work_group_size_pass::work_group_size_pass(::tinytc_core_info const *info)
     }
 }
 
-void work_group_size_pass::run_on_function(function &fn) {
+void work_group_size_pass::run_on_function(function_node &fn) {
     auto subgroup_size = fn.subgroup_size();
     auto work_group_size = fn.work_group_size();
 

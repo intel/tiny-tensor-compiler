@@ -10,7 +10,7 @@ namespace tinytc {
 
 class check_ir_pass {
   public:
-    void run_on_function(function &fn);
+    void run_on_function(function_node &fn);
 
   private:
     bool inside_spmd_region_ = false;

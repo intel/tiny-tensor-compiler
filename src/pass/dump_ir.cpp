@@ -358,7 +358,7 @@ void dump_ir_pass::operator()(yield_inst const &y) {
     do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); });
 }
 
-void dump_ir_pass::dump_region(rgn const &reg) {
+void dump_ir_pass::dump_region(region_node const &reg) {
     *os_ << "{" << std::endl;
     ++lvl_;
     auto ind = indent();
@@ -371,7 +371,7 @@ void dump_ir_pass::dump_region(rgn const &reg) {
     *os_ << indent() << "}";
 }
 
-void dump_ir_pass::run_on_function(function const &fn) {
+void dump_ir_pass::run_on_function(function_node const &fn) {
     *os_ << "func @" << fn.name() << "(";
     std::string infix = ",\n       ";
     infix += std::string(fn.name().size(), ' ');

@@ -59,13 +59,14 @@ template <walk_order Order> void walk(inst_node &i, std::function<void(region &r
 
 void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage)> callback);
 
-template <walk_order Order> void walk(function &fn, std::function<void(inst_node &i)> callback) {
+template <walk_order Order>
+void walk(function_node &fn, std::function<void(inst_node &i)> callback) {
     for (auto &i : *fn.body()) {
         walk<Order>(*i, callback);
     }
 }
 
-inline void walk(function &fn,
+inline void walk(function_node &fn,
                  std::function<void(inst_node &i, walk_stage const &stage)> callback) {
     for (auto &i : *fn.body()) {
         walk(*i, callback);

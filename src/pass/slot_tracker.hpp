@@ -17,7 +17,7 @@ namespace tinytc {
 
 class slot_tracker {
   public:
-    void run_on_function(function &fn);
+    void run_on_function(function_node &fn);
 
     auto get_slot(value_node const &v) -> std::int64_t;
 

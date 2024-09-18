@@ -72,7 +72,7 @@ struct tinytc_func : tinytc::reference_counted {
 
 namespace tinytc {
 
-using function = ::tinytc_func;
+using function_node = ::tinytc_func;
 
 } // namespace tinytc
 

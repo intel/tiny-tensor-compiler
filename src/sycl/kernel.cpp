@@ -72,8 +72,8 @@ auto make_kernel_bundle(context const &ctx, device const &dev, source const &src
                                               std::move(source_ctx));
 }
 auto make_kernel_bundle(context const &ctx, device const &dev, prog prg,
-                        tinytc_core_feature_flags_t core_features, source_context source_ctx)
-    -> kernel_bundle<bundle_state::executable> {
+                        tinytc_core_feature_flags_t core_features,
+                        source_context source_ctx) -> kernel_bundle<bundle_state::executable> {
     return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, std::move(prg),
                                               core_features, std::move(source_ctx));
 }
@@ -106,8 +106,8 @@ template <> struct kernel_dispatcher<backend::opencl> {
     }
 };
 
-auto make_kernel(kernel_bundle<bundle_state::executable> const &bundle, char const *name)
-    -> kernel {
+auto make_kernel(kernel_bundle<bundle_state::executable> const &bundle,
+                 char const *name) -> kernel {
     return dispatch<kernel_dispatcher>(bundle.get_backend(), bundle, name);
 }
 

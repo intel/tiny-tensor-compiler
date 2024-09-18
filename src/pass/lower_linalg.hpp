@@ -41,11 +41,10 @@ class lower_linalg_pass {
     inst operator()(parallel_inst &p);
 
     /* Region nodes */
-    void operator()(rgn &b);
+    void operator()(region_node &b);
 
     /* Func nodes */
-    void operator()(prototype &p);
-    void operator()(function &fn);
+    void operator()(function_node &fn);
 
     /* Program nodes */
     void operator()(program &p);

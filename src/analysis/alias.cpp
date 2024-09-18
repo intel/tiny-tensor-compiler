@@ -67,7 +67,7 @@ void alias_analysis_visitor::operator()(subview_inst const &s) {
     alias_[s.result().get()] = source;
 }
 
-auto alias_analysis::run_on_function(function &fn) -> aa_results {
+auto alias_analysis::run_on_function(function_node &fn) -> aa_results {
     auto visitor = alias_analysis_visitor{};
 
     walk<walk_order::pre_order>(fn, [&visitor](inst_node &i) { visit(visitor, i); });

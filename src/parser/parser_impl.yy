@@ -155,8 +155,8 @@
 %nterm <func> func
 %nterm <std::vector<::tinytc::value>> arguments
 %nterm <::tinytc::value> argument
-%nterm <std::vector<std::function<void(function&)>>> attributes
-%nterm <std::function<void(function&)>> attribute
+%nterm <std::vector<std::function<void(function_node&)>>> attributes
+%nterm <std::function<void(function_node&)>> attribute
 %nterm <data_type> data_type
 %nterm <scalar_type> scalar_type
 %nterm <data_type> memref_type
@@ -230,7 +230,7 @@
 %%
 prog:
     func_list {
-        auto p = prog { std::make_unique<program>(std::move($func_list), @prog).release() };
+        auto p = prog { std::make_unique<program_node>(std::move($func_list), @prog).release() };
         ctx.program(p);
         $$ = std::move(p);
     }
@@ -246,8 +246,9 @@ func:
     } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
-        auto func_node =
-            std::make_unique<function>($GLOBAL_IDENTIFIER, std::move($arguments), std::move($region), loc).release();
+        auto func_node = std::make_unique<function_node>($GLOBAL_IDENTIFIER, std::move($arguments),
+                                                         std::move($region), loc)
+                             .release();
         for (auto &attr : $attributes) {
             attr(*func_node);
         }
@@ -287,14 +288,14 @@ attribute:
         }
         auto const wgs = std::array<std::int32_t, 2>{static_cast<std::int32_t>($m),
                                                      static_cast<std::int32_t>($n)};
-        $$ = [=](function &f) { f.work_group_size(wgs); };
+        $$ = [=](function_node &f) { f.work_group_size(wgs); };
     }
   | SUBGROUP_SIZE LPAREN INTEGER_CONSTANT RPAREN {
         if ($INTEGER_CONSTANT <= 0) {
             throw parser::syntax_error(@INTEGER_CONSTANT, "Must be a non-negative number");
         }
         auto const sgs = static_cast<std::int32_t>($INTEGER_CONSTANT);
-        $$ = [=](function &f) { f.subgroup_size(sgs); };
+        $$ = [=](function_node &f) { f.subgroup_size(sgs); };
     }
 ;
 
@@ -391,7 +392,7 @@ region:
     LBRACE {
         ctx.push_scope();
     } instructions RBRACE {
-        $$ = region{std::make_unique<rgn>(std::move($instructions), @region).release()};
+        $$ = region{std::make_unique<region_node>(std::move($instructions), @region).release()};
         ctx.pop_scope();
     }
 ;

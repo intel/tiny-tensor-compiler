@@ -18,8 +18,8 @@ auto blas_shape::operator==(blas_shape const &other) const -> bool {
 }
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
-    -> std::int32_t {
+auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
+                           ::tinytc_core_info const &info) -> std::int32_t {
     std::size_t max_size = 1u;
     for (auto &shape : shapes) {
         max_size = std::max(max_size, size(shape.ty));
@@ -65,8 +65,8 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_
     return sensible_subgroup_sizes.back();
 }
 
-auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config const &core_cfg)
-    -> local_tiling {
+auto suggest_local_tiling(std::vector<blas_shape> const &shapes,
+                          core_config const &core_cfg) -> local_tiling {
     if (shapes.empty()) {
         return {1, 1};
     }

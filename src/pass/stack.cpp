@@ -18,7 +18,7 @@
 
 namespace tinytc {
 
-void set_stack_ptr_pass::run_on_function(function &fn) {
+void set_stack_ptr_pass::run_on_function(function_node &fn) {
     struct allocation {
         value_node *value;
         std::int64_t start, stop;

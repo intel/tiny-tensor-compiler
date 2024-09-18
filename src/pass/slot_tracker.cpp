@@ -17,7 +17,7 @@ void slot_tracker::set_slot(value_node const &v) {
     }
 }
 
-void slot_tracker::run_on_function(function &fn) {
+void slot_tracker::run_on_function(function_node &fn) {
     slot_ = 0;
     for (auto const &arg : fn.args()) {
         set_slot(*arg);

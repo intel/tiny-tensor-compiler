@@ -50,7 +50,7 @@ struct tinytc_prog : tinytc::reference_counted {
 
 namespace tinytc {
 
-using program = ::tinytc_prog;
+using program_node = ::tinytc_prog;
 
 } // namespace tinytc
 

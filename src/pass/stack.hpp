@@ -10,7 +10,7 @@ namespace tinytc {
 
 class set_stack_ptr_pass {
   public:
-    void run_on_function(function &fn);
+    void run_on_function(function_node &fn);
 };
 
 } // namespace tinytc

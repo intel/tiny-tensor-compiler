@@ -12,8 +12,8 @@
 namespace tinytc {
 
 template <typename F>
-auto exception_to_status_code_ze(F &&f, tinytc_source_context_t context = nullptr)
-    -> tinytc_status_t {
+auto exception_to_status_code_ze(F &&f,
+                                 tinytc_source_context_t context = nullptr) -> tinytc_status_t {
     try {
         f();
     } catch (status const &st) {

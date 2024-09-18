@@ -55,8 +55,8 @@ struct blas_shape {
  * @param shapes Shapes that occur in kernel
  * @param info Core info
  */
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes, ::tinytc_core_info const &info)
-    -> std::int32_t;
+auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
+                           ::tinytc_core_info const &info) -> std::int32_t;
 
 /**
  * @brief Suggest a local tiling based on blas size
@@ -75,8 +75,8 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
  *
  * @return
  */
-auto suggest_local_tiling(std::vector<blas_shape> const &shapes, core_config const &core_cfg)
-    -> local_tiling;
+auto suggest_local_tiling(std::vector<blas_shape> const &shapes,
+                          core_config const &core_cfg) -> local_tiling;
 
 /**
  * @brief Suggest both, subgroup size and tiling, based on blas sizes.

@@ -11,7 +11,7 @@ namespace tinytc {
 
 class alias_analysis {
   public:
-    auto run_on_function(function &fn) -> aa_results;
+    auto run_on_function(function_node &fn) -> aa_results;
 };
 
 } // namespace tinytc

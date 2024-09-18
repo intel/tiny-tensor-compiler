@@ -83,7 +83,7 @@ auto insert_barrier_pass::reads_writes::address_space_to_index(address_space as)
     throw internal_compiler_error{};
 }
 
-auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa,
+auto insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa,
                                         const bool insert_barriers) -> reads_writes {
     auto invisible_rw = reads_writes{};
     for (auto it = reg.begin(); it != reg.end(); ++it) {
@@ -148,7 +148,7 @@ auto insert_barrier_pass::run_on_region(rgn &reg, aa_results const &aa,
 }
 
 /* Function nodes */
-void insert_barrier_pass::run_on_function(function &fn) {
+void insert_barrier_pass::run_on_function(function_node &fn) {
     auto aa = alias_analysis{}.run_on_function(fn);
     run_on_region(*fn.body(), aa);
 }

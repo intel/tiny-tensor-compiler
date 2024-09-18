@@ -1086,7 +1086,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
 }
 
 /* Region nodes */
-clir::stmt convert_to_opencl_pass::run_on_region(rgn &reg) {
+clir::stmt convert_to_opencl_pass::run_on_region(region_node &reg) {
     declared_vars_.push_back({});
     auto bb = clir::block_builder{};
     for (auto &s : reg.insts()) {
@@ -1099,7 +1099,7 @@ clir::stmt convert_to_opencl_pass::run_on_region(rgn &reg) {
 }
 
 /* Function nodes */
-auto convert_to_opencl_pass::run_on_function(function &fn) -> clir::func {
+auto convert_to_opencl_pass::run_on_function(function_node &fn) -> clir::func {
     stack_high_water_mark_ = 0;
     auto const subgroup_size = fn.subgroup_size();
     try {
@@ -1156,7 +1156,7 @@ auto convert_to_opencl_pass::run_on_function(function &fn) -> clir::func {
 }
 
 /* Program nodes */
-auto convert_to_opencl_pass::run_on_program(program &p) -> clir::prog {
+auto convert_to_opencl_pass::run_on_program(program_node &p) -> clir::prog {
     reserved_names_.clear();
     for (auto const &fn : p.functions()) {
         reserved_names_.insert(std::string(fn->name()));

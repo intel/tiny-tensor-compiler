@@ -106,16 +106,16 @@ struct matrix_block_description {
 };
 
 auto read_matrix_block_regular(clir::block_builder &bb, matrix_block_description const &d,
-                               int M_mode, core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor>;
+                               int M_mode, core_config const &core_cfg,
+                               char const *block_name) -> std::unique_ptr<block_accessor>;
 auto read_matrix_block_vector(clir::block_builder &bb, matrix_block_description const &d,
-                              int M_mode, core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor>;
+                              int M_mode, core_config const &core_cfg,
+                              char const *block_name) -> std::unique_ptr<block_accessor>;
 
 // Read MbxKb block
 auto read_matrix_block(clir::block_builder &bb, matrix_block_description const &d, int M_mode,
-                       core_config const &core_cfg, char const *block_name)
-    -> std::unique_ptr<block_accessor>;
+                       core_config const &core_cfg,
+                       char const *block_name) -> std::unique_ptr<block_accessor>;
 
 // Write MbxKb block
 void write_matrix_block(clir::block_builder &bb, block_accessor const &block,

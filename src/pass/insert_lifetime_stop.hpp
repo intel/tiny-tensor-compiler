@@ -16,11 +16,11 @@ namespace tinytc {
 
 class insert_lifetime_stop_pass {
   public:
-    void run_on_function(function &fn);
+    void run_on_function(function_node &fn);
 
   private:
-    auto run_on_region(rgn &reg, aa_results const &aa)
-        -> std::unordered_set<::tinytc_value const *>;
+    auto run_on_region(region_node &reg,
+                       aa_results const &aa) -> std::unordered_set<::tinytc_value const *>;
 };
 
 } // namespace tinytc

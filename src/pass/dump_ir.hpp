@@ -64,10 +64,10 @@ class dump_ir_pass {
     void operator()(sum_inst const &s);
     void operator()(yield_inst const &y);
 
-    void run_on_function(function const &fn);
+    void run_on_function(function_node const &fn);
 
   private:
-    void dump_region(rgn const &reg);
+    void dump_region(region_node const &reg);
     void dump_blas_a2(blas_a2_inst const &g);
     void dump_blas_a3(blas_a3_inst const &g);
 

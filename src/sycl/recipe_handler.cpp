@@ -75,8 +75,8 @@ auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, reci
     return sycl_recipe_handler{handler};
 }
 
-auto make_recipe_handler(sycl::queue const &q, recipe const &rec, source_context source_ctx)
-    -> sycl_recipe_handler {
+auto make_recipe_handler(sycl::queue const &q, recipe const &rec,
+                         source_context source_ctx) -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(q.get_context(), q.get_device(), rec,
                                                    std::move(source_ctx))
@@ -104,8 +104,8 @@ auto sycl_recipe_handler::submit(sycl::queue q, sycl::event const &dep_event) ->
     });
 }
 
-auto sycl_recipe_handler::submit(sycl::queue q, std::vector<sycl::event> const &dep_events)
-    -> sycl::event {
+auto sycl_recipe_handler::submit(sycl::queue q,
+                                 std::vector<sycl::event> const &dep_events) -> sycl::event {
     return q.submit([&](sycl::handler &h) {
         h.depends_on(dep_events);
         parallel_for(h);
