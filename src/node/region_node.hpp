@@ -19,7 +19,7 @@ enum class region_kind { mixed, collective, spmd };
 
 } // namespace tinytc
 
-struct tinytc_region : tinytc::reference_counted {
+struct tinytc_region final : tinytc::reference_counted {
   public:
     using iterator = std::vector<tinytc::inst>::iterator;
     using const_iterator = std::vector<tinytc::inst>::const_iterator;

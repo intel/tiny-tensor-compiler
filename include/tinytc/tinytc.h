@@ -740,8 +740,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param yield_list_size [in] length of yielded values list; must be at least 1
- * @param yield_list [in][range(1, yield_list_size)] yielded values array
+ * @param yield_list_size [in] length of yielded values list
+ * @param yield_list [in][range(0, yield_list_size)] yielded values array; can be nullptr if
+ * yield_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise

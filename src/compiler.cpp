@@ -7,6 +7,7 @@
 #include "parser.hpp"
 #include "pass/check_ir.hpp"
 #include "pass/convert_to_opencl.hpp"
+#include "pass/dump_cfg.hpp"
 #include "pass/dump_ir.hpp"
 #include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"

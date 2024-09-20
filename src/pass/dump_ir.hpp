@@ -12,6 +12,7 @@
 #include "node/value_node.hpp"
 #include "pass/slot_tracker.hpp"
 
+#include <limits>
 #include <ostream>
 #include <string>
 
@@ -19,7 +20,7 @@ namespace tinytc {
 
 class dump_ir_pass {
   public:
-    dump_ir_pass(std::ostream &os);
+    dump_ir_pass(std::ostream &os, int level_limit = std::numeric_limits<int>::max());
 
     /* Data type nodes */
     void operator()(void_data_type const &);
@@ -65,6 +66,8 @@ class dump_ir_pass {
     void operator()(yield_inst const &y);
 
     void run_on_function(function_node const &fn);
+    void run_on_region(region_node const &reg);
+    void run_on_instruction(inst_node const &in);
 
   private:
     void dump_region(region_node const &reg);
@@ -82,6 +85,7 @@ class dump_ir_pass {
     }
     inline auto indent() { return std::string(2 * lvl_, ' '); }
     std::ostream *os_;
+    int lvl_limit_;
     int lvl_ = 0;
 
     slot_tracker tracker_;

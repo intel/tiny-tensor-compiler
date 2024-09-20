@@ -459,7 +459,7 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
 
 tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr, uint32_t yield_list_size,
                                          tinytc_value_t *yield_list, const tinytc_location_t *loc) {
-    if (instr == nullptr || yield_list_size == 0 || yield_list == nullptr) {
+    if (instr == nullptr || (yield_list_size != 0 && yield_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {

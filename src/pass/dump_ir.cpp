@@ -12,7 +12,7 @@
 
 namespace tinytc {
 
-dump_ir_pass::dump_ir_pass(std::ostream &os) : os_(&os) {}
+dump_ir_pass::dump_ir_pass(std::ostream &os, int level_limit) : os_(&os), lvl_limit_(level_limit) {}
 
 /* Data type nodes */
 void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
@@ -353,22 +353,31 @@ void dump_ir_pass::operator()(sum_inst const &a) {
 
 void dump_ir_pass::operator()(yield_inst const &y) {
     *os_ << "yield ";
-    do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i); });
-    *os_ << " : ";
-    do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); });
+    if (y.num_operands() > 0) {
+        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i); }, ", ");
+        *os_ << " : ";
+        do_with_infix(
+            y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); }, ", ");
+    } else {
+        *os_ << ":";
+    }
 }
 
 void dump_ir_pass::dump_region(region_node const &reg) {
-    *os_ << "{" << std::endl;
-    ++lvl_;
-    auto ind = indent();
-    for (auto const &i : reg) {
-        *os_ << ind;
-        visit(*this, *i);
-        *os_ << std::endl;
+    if (lvl_ < lvl_limit_) {
+        *os_ << "{" << std::endl;
+        ++lvl_;
+        auto ind = indent();
+        for (auto const &i : reg) {
+            *os_ << ind;
+            visit(*this, *i);
+            *os_ << std::endl;
+        }
+        --lvl_;
+        *os_ << indent() << "}";
+    } else {
+        *os_ << "{...}";
     }
-    --lvl_;
-    *os_ << indent() << "}";
 }
 
 void dump_ir_pass::run_on_function(function_node const &fn) {
@@ -395,5 +404,8 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     dump_region(*fn.body());
     *os_ << std::endl;
 }
+
+void dump_ir_pass::run_on_region(region_node const &reg) { dump_region(reg); }
+void dump_ir_pass::run_on_instruction(inst_node const &in) { visit(*this, in); }
 
 } // namespace tinytc

@@ -100,6 +100,29 @@ func @if(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<
 ; CHECK-NEXT:  axpby.n %a, %A, %b, %B{{.*}}
 }
 
+func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
+    %0 = cmp.gt %a, 42.0 : f32
+    axpby.n %a, %B, %b, %A : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+    if %0 {
+        axpby.n %a, %A, %b, %B : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+        axpby.n %a, %B, %b, %C : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+    } else {
+        axpby.n %a, %C, %b, %D : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+    }
+    axpby.n %a, %A, %b, %B : f32, memref<f32x8x8>, f32, memref<f32x8x8>
+; CHECK-LABEL: func @if({{.*}}
+; CHECK:       if %0 {
+; CHECK-NEXT:      barrier.global
+; CHECK-NEXT:      axpby.n %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:      barrier.global
+; CHECK-NEXT:      axpby.n %a, %B, %b, %C{{.*}}
+; CHECK-NEXT:  } else {
+; CHECK-NEXT:      axpby.n %a, %C, %b, %D{{.*}}
+; CHECK-NEXT:  }
+; CHECK-NEXT:  barrier.global
+; CHECK-NEXT:  axpby.n %a, %A, %b, %B{{.*}}
+}
+
 func @region1() {
     %0 = alloca -> memref<f32x8x8,local>
     for %i=0,4 : index {

@@ -19,6 +19,7 @@ find_package(BISON 3.8.2 REQUIRED)
 set(SOURCES
     analysis/aa_results.cpp
     analysis/alias.cpp
+    analysis/cfg.cpp
     analysis/equal.cpp
     binary.cpp
     codegen_tools.cpp
@@ -37,6 +38,7 @@ set(SOURCES
     pass/check_ir.cpp
     #pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
+    pass/dump_cfg.cpp
     pass/dump_ir.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp

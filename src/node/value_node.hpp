@@ -22,7 +22,7 @@ struct tinytc_value : tinytc::reference_counted {
     using leaves = tinytc::value_nodes;
 
     inline tinytc_value(tinytc::VK tid) : tid_(tid) {}
-    inline virtual ~tinytc_value() {}
+    virtual ~tinytc_value() = default;
     inline auto type_id() const -> tinytc::VK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }

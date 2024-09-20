@@ -775,6 +775,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
     auto clinst = std::vector<clir::stmt>{};
+    yielded_vars_.push_back(std::vector<clir::var>{});
 
     auto lv = declare(*p.loop_var());
     auto lv_ty = visit(*this, *p.loop_var()->ty());
@@ -785,6 +786,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
 
+    yielded_vars_.pop_back();
     return clinst;
 }
 

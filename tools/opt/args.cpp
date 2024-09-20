@@ -76,7 +76,7 @@ args arg_parser::parse_args(int argc, char **argv) {
         a.info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
     }
 
-    if (a.pass_names.empty() || std::strcmp(a.pass_names.back().c_str(), "dump-ir") != 0) {
+    if (a.pass_names.empty() || std::strncmp(a.pass_names.back().c_str(), "dump", 4) != 0) {
         a.pass_names.emplace_back(std::string("dump-ir"));
     }
 

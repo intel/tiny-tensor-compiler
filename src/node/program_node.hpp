@@ -18,7 +18,7 @@ using func_range = iterator_range_wrapper<func *>;
 using const_func_range = iterator_range_wrapper<func const *>;
 } // namespace tinytc
 
-struct tinytc_prog : tinytc::reference_counted {
+struct tinytc_prog final : tinytc::reference_counted {
   public:
     inline tinytc_prog(std::vector<tinytc::func> funcs, tinytc::location const &lc = {})
         : funcs_(std::move(funcs)) {

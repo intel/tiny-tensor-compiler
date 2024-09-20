@@ -52,14 +52,14 @@ blas_a3_inst::blas_a3_inst(IK tid, value alpha, value A, value B, value beta, va
     op(op_C) = std::move(C);
 }
 
-loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step0, region body,
+loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step0, region body0,
                      location const &lc)
     : standard_inst{tid, step0 ? 4 : 3} {
     op(op_loop_var) = std::move(loop_var0);
     op(op_from) = std::move(from0);
     op(op_to) = std::move(to0);
     op(op_step) = std::move(step0);
-    child_region(0) = std::move(body);
+    child_region(0) = std::move(body0);
 
     loc(lc);
     auto lvt = get_scalar_type(loc(), loop_var());
@@ -73,6 +73,11 @@ loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step
 
     if (lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() || !step_ok) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+
+    region_node &body = *child_region(0);
+    if (body.empty() || !isa<yield_inst>(**(body.end() - 1))) {
+        body.insert(body.end(), make_yield({}, lc));
     }
 }
 
@@ -461,15 +466,22 @@ hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, valu
     }
 }
 
-if_inst::if_inst(value condition, region then, region otherwise,
+if_inst::if_inst(value condition, region then0, region otherwise0,
                  std::vector<scalar_type> const &return_types, location const &lc)
-    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size()), otherwise ? 2 : 1} {
+    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size()), otherwise0 ? 2 : 1} {
     op(0) = std::move(condition);
-    child_region(child_region_then) = std::move(then);
-    child_region(child_region_otherwise) = std::move(otherwise);
+    child_region(child_region_then) = std::move(then0);
+    child_region(child_region_otherwise) = std::move(otherwise0);
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         result(i) = make_value(return_types[i]);
+    }
+
+    for (std::int64_t i = 0; i < num_child_regions(); ++i) {
+        region_node &body = *child_region(i);
+        if (body.empty() || !isa<yield_inst>(**(body.end() - 1))) {
+            body.insert(body.end(), make_yield({}, lc));
+        }
     }
 }
 

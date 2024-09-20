@@ -1262,7 +1262,7 @@ inline inst make_yield(std::vector<value> const &yield_list, location const &loc
     tinytc_inst_t instr;
     auto len = yield_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("slice list too long");
+        throw std::out_of_range("yield list too long");
     }
     tinytc_value_t *yl =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(yield_list.data()));

@@ -461,6 +461,7 @@ identifier_or_constant:
 optional_identifier_or_constant_list:
     %empty {}
   | identifier_or_constant_list { $$ = std::move($1); }
+;
 
 identifier_or_constant_list:
     identifier_or_constant { $$.push_back(std::move($identifier_or_constant)); }
@@ -629,23 +630,15 @@ for_loop_var_type:
 var_definition:
     identifier_list EQUALS valued_inst {
         $$ = std::move($valued_inst);
-        if ($identifier_list.size() == 1) {
-            if (!$$->result()) {
-                throw syntax_error(@identifier_list, "Instruction does not return value");
-            }
-            $$->result()->name($identifier_list[0]);
-            ctx.val($identifier_list[0], $$->result(), @identifier_list);
-        } else {
-            auto results = $$->result_begin();
-            if ($$->num_results() != static_cast<std::int64_t>($identifier_list.size())) {
-                throw syntax_error(
-                    @identifier_list,
-                    "Number of identifiers does not equal number of returned values");
-            }
-            for (std::int64_t i = 0; i < $$->num_results(); ++i) {
-                results[i]->name($identifier_list[i]);
-                ctx.val($identifier_list[i], results[i], @identifier_list);
-            }
+        if (static_cast<std::int64_t>($identifier_list.size()) != $$->num_results()) {
+            throw syntax_error(
+                @identifier_list,
+                "Number of identifiers does not equal number of returned values");
+        }
+        auto results = $$->result_begin();
+        for (std::int64_t i = 0; i < $$->num_results(); ++i) {
+            results[i]->name($identifier_list[i]);
+            ctx.val($identifier_list[i], results[i], @identifier_list);
         }
     }
 ;

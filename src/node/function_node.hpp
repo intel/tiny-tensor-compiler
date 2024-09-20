@@ -21,7 +21,7 @@ using value_range = iterator_range_wrapper<value *>;
 using const_value_range = iterator_range_wrapper<value const *>;
 } // namespace tinytc
 
-struct tinytc_func : tinytc::reference_counted {
+struct tinytc_func final : tinytc::reference_counted {
   public:
     inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc::region body,
                        tinytc::location const &lc = {})

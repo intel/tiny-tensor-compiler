@@ -9,11 +9,6 @@
 
 namespace tinytc {
 
-template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
 template <typename T, typename V> auto enum_cast(V val) {
     return T{std::underlying_type_t<T>(val)};
 }

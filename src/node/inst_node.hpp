@@ -91,6 +91,8 @@ struct tinytc_inst : tinytc::reference_counted {
     using leaves = tinytc::inst_nodes;
 
     inline tinytc_inst(tinytc::IK tid) : tid_(tid) {}
+    virtual ~tinytc_inst() = default;
+
     inline auto type_id() const -> tinytc::IK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }

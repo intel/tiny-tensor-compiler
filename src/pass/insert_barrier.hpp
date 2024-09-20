@@ -24,17 +24,20 @@ class insert_barrier_pass {
                                                                          address_space::local};
 
         void clear(address_space as);
+        void merge(reads_writes const &other);
         void merge(reads_writes &&other);
         void emplace_read(address_space as, ::tinytc_value const *val);
         void emplace_write(address_space as, ::tinytc_value const *val);
+        auto read_cardinal(address_space as) const -> std::size_t;
+        auto write_cardinal(address_space as) const -> std::size_t;
 
-        bool raw(address_space as, reads_writes const &rw, aa_results const &aa);
-        bool war(address_space as, reads_writes const &rw, aa_results const &aa);
-        bool waw(address_space as, reads_writes const &rw, aa_results const &aa);
-        bool raw_war_or_waw(address_space as, reads_writes const &rw, aa_results const &aa);
+        bool raw(address_space as, reads_writes const &rw, aa_results const &aa) const;
+        bool war(address_space as, reads_writes const &rw, aa_results const &aa) const;
+        bool waw(address_space as, reads_writes const &rw, aa_results const &aa) const;
+        bool raw_war_or_waw(address_space as, reads_writes const &rw, aa_results const &aa) const;
 
       private:
-        auto address_space_to_index(address_space as) -> std::size_t;
+        auto address_space_to_index(address_space as) const -> std::size_t;
 
         std::array<std::unordered_set<::tinytc_value const *>, address_spaces.size()> reads, writes;
     };

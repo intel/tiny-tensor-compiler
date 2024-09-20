@@ -26,6 +26,7 @@ struct tinytc_data_type : tinytc::reference_counted {
     using leaves = tinytc::data_type_nodes;
 
     inline tinytc_data_type(tinytc::DTK tid) : tid_(tid) {}
+    virtual ~tinytc_data_type() = default;
     inline auto type_id() const -> tinytc::DTK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
