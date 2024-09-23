@@ -5,7 +5,6 @@
 #define INST_NODE_20230327_HPP
 
 #include "error.hpp"
-#include "reference_counted.hpp"
 #include "support/ilist.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
@@ -86,7 +85,7 @@ using const_region_range = iterator_range_wrapper<region const *>;
 
 } // namespace tinytc
 
-struct tinytc_inst : tinytc::ilist_node<tinytc_inst>, tinytc::reference_counted {
+struct tinytc_inst : tinytc::ilist_node<tinytc_inst> {
   public:
     using leaves = tinytc::inst_nodes;
 
@@ -137,14 +136,14 @@ struct tinytc_inst : tinytc::ilist_node<tinytc_inst>, tinytc::reference_counted 
     inline auto child_regions_begin() -> tinytc::region * { return child_regions_begin_; }
     inline auto child_regions_end() -> tinytc::region * { return child_regions_end_; }
     inline auto child_regions() -> tinytc::region_range {
-        return tinytc::region_range{child_regions_begin_, child_regions_end_};
+        return tinytc::region_range{child_regions_begin(), child_regions_end()};
     }
     inline auto child_regions_begin() const -> tinytc::region const * {
         return child_regions_begin_;
     }
     inline auto child_regions_end() const -> tinytc::region const * { return child_regions_end_; }
     inline auto child_regions() const -> tinytc::const_region_range {
-        return tinytc::const_region_range{child_regions_begin_, child_regions_end_};
+        return tinytc::const_region_range{child_regions_begin(), child_regions_end()};
     }
     inline auto child_region(std::size_t pos) -> tinytc::region & {
         return child_regions_begin_[pos];
@@ -241,7 +240,7 @@ template <typename T, std::int64_t NumObjects> class object_container {
             throw internal_compiler_error();
         }
     }
-    inline auto get() -> T * {
+    auto get() -> T * {
         if constexpr (NumObjects == 0) {
             return nullptr;
         }
@@ -338,7 +337,8 @@ class loop_inst : public standard_inst<4, 0, 1> {
     inline auto from() const -> value const & { return op(op_from); }
     inline auto to() const -> value const & { return op(op_to); }
     inline auto step() const -> value const & { return op(op_step); }
-    inline auto body() const -> region const & { return child_region(0); }
+    inline auto body() -> tinytc_region & { return *child_region(0); }
+    inline auto body() const -> tinytc_region const & { return *child_region(0); }
 };
 
 class alloca_inst : public standard_inst<0, 1> {
@@ -565,8 +565,13 @@ class if_inst : public standard_inst<1, dynamic, 2> {
     if_inst(value condition, region then, region otherwise = {},
             std::vector<scalar_type> const &return_types = {}, location const &lc = {});
     inline auto condition() const -> value const & { return op(0); }
-    inline auto then() const -> region const & { return child_region(child_region_then); }
-    inline auto otherwise() const -> region const & { return child_region(child_region_otherwise); }
+    inline auto then() -> tinytc_region & { return *child_region(child_region_then); }
+    inline auto then() const -> tinytc_region const & { return *child_region(child_region_then); }
+    inline auto has_otherwise() const -> bool { return bool(child_region(child_region_otherwise)); }
+    inline auto otherwise() -> tinytc_region & { return *child_region(child_region_otherwise); }
+    inline auto otherwise() const -> tinytc_region const & {
+        return *child_region(child_region_otherwise);
+    }
 };
 
 class num_subgroups_inst : public standard_inst<0, 1> {
@@ -583,7 +588,8 @@ class parallel_inst : public standard_inst<0, 0, 1> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::parallel; }
     parallel_inst(region body, location const &lc = {});
 
-    inline auto body() const -> region const & { return child_region(0); }
+    inline auto body() -> tinytc_region & { return *child_region(0); }
+    inline auto body() const -> tinytc_region const & { return *child_region(0); }
 };
 
 class size_inst : public standard_inst<1, 1> {

@@ -5,7 +5,6 @@
 #define REGION_NODE_20230908_HPP
 
 #include "node/inst_node.hpp"
-#include "reference_counted.hpp"
 #include "support/ilist.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
@@ -21,7 +20,7 @@ enum class region_kind { mixed, collective, spmd };
 
 } // namespace tinytc
 
-struct tinytc_region final : tinytc::reference_counted {
+struct tinytc_region final {
   public:
     using iterator = tinytc::ilist<tinytc_inst>::iterator;
     using const_iterator = tinytc::ilist<tinytc_inst>::const_iterator;
@@ -59,7 +58,14 @@ struct tinytc_region final : tinytc::reference_counted {
 };
 
 namespace tinytc {
+
 using region_node = ::tinytc_region;
+
+template <> struct ilist_traits<region_node> {
+    static void on_insert(region_node *) {}
+    static void on_erase(region_node *node) { tinytc_region_destroy(node); }
+};
+
 } // namespace tinytc
 
 #endif // REGION_NODE_20230908_HPP

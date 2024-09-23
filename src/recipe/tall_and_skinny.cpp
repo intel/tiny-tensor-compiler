@@ -157,15 +157,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 fb.body([&](region_builder &bb) { body(bb, alpha, A, B, beta, C); }, my_loc());
             };
 
-            auto pb = program_builder{};
-            pb.create(
-                tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm),
-                [&](function_builder &fb) { kernel(fb, true); }, my_loc());
-            pb.create(
-                tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0),
-                [&](function_builder &fb) { kernel(fb, false); }, my_loc());
-
-            auto p = pb.get_product(my_loc());
+            auto p = [&] {
+                auto pb = program_builder{my_loc()};
+                pb.create(
+                    tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm),
+                    [&](function_builder &fb) { kernel(fb, true); }, my_loc());
+                pb.create(
+                    tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0),
+                    [&](function_builder &fb) { kernel(fb, false); }, my_loc());
+                return std::move(pb).get_product();
+            }();
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
             *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src), ty_, M,

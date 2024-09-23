@@ -31,8 +31,8 @@ tinytc_status_t tinytc_function_create(tinytc_func_t *fun, char const *name, uin
         for (uint32_t i = 0; i < arg_list_size; ++i) {
             arg_vec.emplace_back(value(arg_list[i], true));
         }
-        *fun = std::make_unique<function_node>(std::string(name), std::move(arg_vec),
-                                               region{body, true}, get_optional(loc))
+        *fun = std::make_unique<function_node>(std::string(name), std::move(arg_vec), region{body},
+                                               get_optional(loc))
                    .release();
     });
 }
@@ -45,22 +45,5 @@ tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs
     return exception_to_status_code([&] { fun->subgroup_size(sgs); });
 }
 
-tinytc_status_t tinytc_func_release(tinytc_func_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    auto ref_count = obj->dec_ref();
-    if (ref_count == 0) {
-        delete obj;
-    }
-    return tinytc_status_success;
-}
-
-tinytc_status_t tinytc_func_retain(tinytc_func_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    obj->inc_ref();
-    return tinytc_status_success;
-}
+void tinytc_func_destroy(tinytc_func_t obj) { delete obj; }
 }

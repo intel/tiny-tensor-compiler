@@ -309,7 +309,7 @@ tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, tinytc_region_
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<parallel_inst>(region(body, true), get_optional(loc)).release();
+        *instr = std::make_unique<parallel_inst>(region{body}, get_optional(loc)).release();
     });
 }
 
@@ -415,7 +415,7 @@ tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t loop
     return exception_to_status_code([&] {
         *instr =
             std::make_unique<for_inst>(value(loop_var, true), value(from, true), value(to, true),
-                                       value(step, true), region(body, true), get_optional(loc))
+                                       value(step, true), region{body}, get_optional(loc))
                 .release();
     });
 }
@@ -428,10 +428,9 @@ tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<foreach_inst>(value(loop_var, true), value(from, true),
-                                           value(to, true), region(body, true), get_optional(loc))
-                .release();
+        *instr = std::make_unique<foreach_inst>(value(loop_var, true), value(from, true),
+                                                value(to, true), region{body}, get_optional(loc))
+                     .release();
     });
 }
 
@@ -450,10 +449,9 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
         for (uint32_t i = 0; i < return_type_list_size; ++i) {
             rt.emplace_back(enum_cast<scalar_type>(return_type_list[i]));
         }
-        *instr =
-            std::make_unique<if_inst>(value(condition, true), region(then, true),
-                                      region(otherwise, true), std::move(rt), get_optional(loc))
-                .release();
+        *instr = std::make_unique<if_inst>(value(condition, true), region{then}, region{otherwise},
+                                           std::move(rt), get_optional(loc))
+                     .release();
     });
 }
 

@@ -43,16 +43,17 @@ template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node
     }
 }
 
-template <walk_order Order> void walk(inst_node &i, std::function<void(region &reg)> callback) {
+template <walk_order Order>
+void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
     for (auto &reg : i.child_regions()) {
         if constexpr (Order == walk_order::pre_order) {
-            callback(reg);
+            callback(*reg);
         }
         for (auto &j : *reg) {
             walk<Order>(j, callback);
         }
         if constexpr (Order == walk_order::post_order) {
-            callback(reg);
+            callback(*reg);
         }
     }
 }
@@ -61,14 +62,14 @@ void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage
 
 template <walk_order Order>
 void walk(function_node &fn, std::function<void(inst_node &i)> callback) {
-    for (auto &i : *fn.body()) {
+    for (auto &i : fn.body()) {
         walk<Order>(i, callback);
     }
 }
 
 inline void walk(function_node &fn,
                  std::function<void(inst_node &i, walk_stage const &stage)> callback) {
-    for (auto &i : *fn.body()) {
+    for (auto &i : fn.body()) {
         walk(i, callback);
     }
 }

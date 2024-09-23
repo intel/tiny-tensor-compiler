@@ -230,9 +230,12 @@
 %%
 prog:
     func_list {
-        auto p = prog { std::make_unique<program_node>(std::move($func_list), @prog).release() };
+        auto p = prog { std::make_unique<program_node>(@prog).release() };
         ctx.program(p);
         $$ = std::move(p);
+        for (auto& f : $func_list) {
+            $$.add_function(std::move(f));
+        }
     }
 ;
 
@@ -253,7 +256,6 @@ func:
             attr(*func_node);
         }
         $func = func{func_node};
-        ctx.add_function($GLOBAL_IDENTIFIER, $func);
         ctx.pop_scope();
     }
 ;

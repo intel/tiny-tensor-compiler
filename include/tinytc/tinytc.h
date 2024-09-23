@@ -524,12 +524,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *in
 /**
  * @brief Create parallel region
  *
+ * Takes ownership of region.
+ *
  * @code
  * parallel { %body }
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param body [in] loop body
+ * @param body [in,pass_ownership] loop body
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -662,6 +664,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
 /**
  * @brief Create for loop
  *
+ * Takes ownership of region.
+ *
  * @code
  * for %loop_var = %from, %to, %step : type(%loop_var) { %body }
  * ; type(%loop_var) == type(%from)
@@ -674,7 +678,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @param from [in] loop begion
  * @param to [in] loop bound
  * @param step [in][optional] loop step; can be nullptr
- * @param body [in] loop body
+ * @param body [in,pass_ownership] loop body
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -687,6 +691,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
 /**
  * @brief Create foreach loop
  *
+ * Takes ownership of region.
+ *
  * @code
  * foreach %loop_var = %from, %to : type(%loop_var) { %body }
  * ; type(%loop_var) == type(%from)
@@ -697,7 +703,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
  * @param loop_var [in] loop variable
  * @param from [in] loop begion
  * @param to [in] loop bound
- * @param body [in] loop body
+ * @param body [in,pass_ownership] loop body
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -711,14 +717,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr,
 /**
  * @brief Create if condition
  *
+ * Takes ownership of if and else region (if given).
+ *
  * @code
  * if %condition { %then } else { %otherwise }
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param condition [in] condition
- * @param then [in] region taken if condition is true
- * @param otherwise [in][optional] region taken if condition is false; can be nullptr
+ * @param then [in,pass_ownership] region taken if condition is true
+ * @param otherwise [in,pass_ownership][optional] region taken if condition is false; can be nullptr
  * @param return_type_list_size [in] length of return type array
  * @param return_type_list [in][range(0, return_type_list_size)] return type array; can be nullptr
  * if return_type_list_size is 0
@@ -817,24 +825,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg,
                                                             tinytc_inst_t instruction);
 
 /**
- * @brief Release region object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
+ * @brief Delete region object
  *
  * @param reg [inout] region object
- *
- * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_region_release(tinytc_region_t reg);
-
-/**
- * @brief Increase reference count of region object by 1
- *
- * @param reg [inout] region object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
+TINYTC_EXPORT void tinytc_region_destroy(tinytc_region_t reg);
 
 ////////////////////////////
 /////////// Func ///////////
@@ -843,11 +838,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_retain(tinytc_region_t reg);
 /**
  * @brief Create function
  *
+ * Function takes ownership of region.
+ *
  * @param fun [out] pointer to the func object created
  * @param name [in] function name
  * @param arg_list_size [in] length of argument array
  * @param arg_list [in][range(0,arg_list_size)] argument array; can be nullptr if arg_list_size is 0
- * @param body [in] function body
+ * @param body [in,pass_ownership] function body
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -878,24 +875,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_function_set_work_group_size(tinytc_func_t 
 TINYTC_EXPORT tinytc_status_t tinytc_function_set_subgroup_size(tinytc_func_t fun, int32_t sgs);
 
 /**
- * @brief Release function object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
+ * @brief Delete function object
  *
  * @param fun [inout] function object
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_func_release(tinytc_func_t fun);
-
-/**
- * @brief Increase reference count of function object by 1
- *
- * @param fun [inout] function object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_func_retain(tinytc_func_t fun);
+TINYTC_EXPORT void tinytc_func_destroy(tinytc_func_t fun);
 
 ////////////////////////////
 /////////// Prog ///////////
@@ -905,15 +891,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_retain(tinytc_func_t fun);
  * @brief Create program
  *
  * @param prg [out] pointer to the prog object created
- * @param fun_list_size [in] length of func array
- * @param fun_list [in][range(0, fun_list_size)] func array; can be nullptr if fun_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, uint32_t fun_list_size,
-                                                    tinytc_func_t *fun_list,
+TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg,
                                                     const tinytc_location_t *loc);
+
+/**
+ * @brief Append function to program
+ *
+ * The program takes ownership of the function.
+ * A function must not be added to multiple programs.
+ *
+ * @param prg [inout] program object
+ * @param fun [in,pass_ownership] function object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun);
 
 /**
  * @brief Release program object

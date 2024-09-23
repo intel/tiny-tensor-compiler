@@ -675,31 +675,20 @@ class inst : public unique_handle<tinytc_inst_t> {
     }
 };
 
-namespace internal {
-//! Is reinterpret_cast<tinytc_inst_t*>(&i) allowed, where i has type inst
-constexpr bool inst_reinterpret_allowed =
-    std::is_standard_layout_v<inst> && sizeof(inst) == sizeof(tinytc_inst_t);
-} // namespace internal
-
 ////////////////////////////
 ////////// Region //////////
 ////////////////////////////
 
 namespace internal {
-template <> struct shared_handle_traits<tinytc_region_t> {
-    static auto retain(tinytc_region_t handle) -> tinytc_status_t {
-        return tinytc_region_retain(handle);
-    }
-    static auto release(tinytc_region_t handle) -> tinytc_status_t {
-        return tinytc_region_release(handle);
-    }
+template <> struct unique_handle_traits<tinytc_region_t> {
+    static void destroy(tinytc_region_t handle) { return tinytc_region_destroy(handle); }
 };
 } // namespace internal
 
 //! @brief Reference-counting wrapper for tinytc_region_t
-class region : public shared_handle<tinytc_region_t> {
+class region : public unique_handle<tinytc_region_t> {
   public:
-    using shared_handle::shared_handle;
+    using unique_handle::unique_handle;
 
     /**
      * @brief Append instruction to region
@@ -1039,9 +1028,9 @@ inline inst make_num_subgroups(location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_parallel(region const &body, location const &loc = {}) {
+inline inst make_parallel(region body, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_parallel_inst_create(&instr, body.get(), &loc), loc);
+    CHECK_STATUS_LOC(tinytc_parallel_inst_create(&instr, body.release(), &loc), loc);
     return inst(instr);
 }
 
@@ -1187,10 +1176,10 @@ inline inst make_sum(transpose tA, bool atomic, value const &alpha, value const 
  * @return Instruction
  */
 inline inst make_for(value const &loop_var, value const &from, value const &to, value const &step,
-                     region const &body, location const &loc = {}) {
+                     region body, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_for_inst_create(&instr, loop_var.get(), from.get(), to.get(),
-                                            step.get(), body.get(), &loc),
+                                            step.get(), body.release(), &loc),
                      loc);
     return inst(instr);
 }
@@ -1206,12 +1195,12 @@ inline inst make_for(value const &loop_var, value const &from, value const &to, 
  *
  * @return Instruction
  */
-inline inst make_foreach(value const &loop_var, value const &from, value const &to,
-                         region const &body, location const &loc = {}) {
+inline inst make_foreach(value const &loop_var, value const &from, value const &to, region body,
+                         location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(), body.get(), &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr, loop_var.get(), from.get(), to.get(),
+                                                body.release(), &loc),
+                     loc);
     return inst(instr);
 }
 
@@ -1226,7 +1215,7 @@ inline inst make_foreach(value const &loop_var, value const &from, value const &
  *
  * @return Instruction
  */
-inline inst make_if(value const &condition, region const &then, region const &otherwise = region{},
+inline inst make_if(value const &condition, region then, region otherwise = region{},
                     std::vector<scalar_type> const &return_type_list = {},
                     location const &loc = {}) {
     tinytc_inst_t instr;
@@ -1239,8 +1228,8 @@ inline inst make_if(value const &condition, region const &then, region const &ot
     for (auto const &rt : return_type_list) {
         rl_vec.emplace_back(static_cast<tinytc_scalar_type_t>(rt));
     }
-    CHECK_STATUS_LOC(tinytc_if_inst_create(&instr, condition.get(), then.get(), otherwise.get(),
-                                           len, rl_vec.data(), &loc),
+    CHECK_STATUS_LOC(tinytc_if_inst_create(&instr, condition.get(), then.release(),
+                                           otherwise.release(), len, rl_vec.data(), &loc),
                      loc);
     return inst(instr);
 }
@@ -1271,27 +1260,16 @@ inline inst make_yield(std::vector<value> const &yield_list, location const &loc
 ////////////////////////////
 
 namespace internal {
-template <> struct shared_handle_traits<tinytc_func_t> {
-    static auto retain(tinytc_func_t handle) -> tinytc_status_t {
-        return tinytc_func_retain(handle);
-    }
-    static auto release(tinytc_func_t handle) -> tinytc_status_t {
-        return tinytc_func_release(handle);
-    }
+template <> struct unique_handle_traits<tinytc_func_t> {
+    static void destroy(tinytc_func_t handle) { return tinytc_func_destroy(handle); }
 };
 } // namespace internal
 
 //! @brief Reference-counting wrapper for tinytc_func_t
-class func : public shared_handle<tinytc_func_t> {
+class func : public unique_handle<tinytc_func_t> {
   public:
-    using shared_handle::shared_handle;
+    using unique_handle::unique_handle;
 };
-
-namespace internal {
-//! Is reinterpret_cast<tinytc_func_t*>(&f) allowed, where f has type func
-constexpr bool func_reinterpret_allowed =
-    std::is_standard_layout_v<func> && sizeof(func) == sizeof(tinytc_func_t);
-} // namespace internal
 
 /**
  * @brief Make function
@@ -1303,7 +1281,7 @@ constexpr bool func_reinterpret_allowed =
  *
  * @return Function
  */
-inline func make_function(char const *name, std::vector<value> &arg_list, region const &body,
+inline func make_function(char const *name, std::vector<value> &arg_list, region body,
                           location const &loc = {}) {
     static_assert(internal::value_reinterpret_allowed);
     tinytc_func_t fun;
@@ -1312,7 +1290,7 @@ inline func make_function(char const *name, std::vector<value> &arg_list, region
         throw std::out_of_range("argument list too long");
     }
     tinytc_value_t *al = reinterpret_cast<tinytc_value_t *>(arg_list.data());
-    CHECK_STATUS_LOC(tinytc_function_create(&fun, name, len, al, body.get(), &loc), loc);
+    CHECK_STATUS_LOC(tinytc_function_create(&fun, name, len, al, body.release(), &loc), loc);
     return func(fun);
 }
 
@@ -1361,6 +1339,15 @@ class prog : public shared_handle<tinytc_prog_t> {
     using shared_handle::shared_handle;
 
     /**
+     * @brief Append function to program
+     *
+     * @param fun function
+     */
+    inline void add_function(func fun) {
+        CHECK_STATUS(tinytc_prog_add_function(get(), fun.release()));
+    }
+
+    /**
      * @brief Dump program to stderr
      */
     void dump() const { CHECK_STATUS(tinytc_prog_dump(obj_)); }
@@ -1387,20 +1374,13 @@ class prog : public shared_handle<tinytc_prog_t> {
 /**
  * @brief Make program
  *
- * @param fun_list Vector of functions
  * @param loc Source code location
  *
  * @return Program
  */
-inline prog make_program(std::vector<func> &fun_list, location const &loc = {}) {
+inline prog make_program(location const &loc = {}) {
     tinytc_prog_t prg;
-    static_assert(internal::func_reinterpret_allowed);
-    auto len = fun_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("function list too long");
-    }
-    tinytc_func_t *fl = reinterpret_cast<tinytc_func_t *>(fun_list.data());
-    CHECK_STATUS_LOC(tinytc_program_create(&prg, len, fl, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_program_create(&prg, &loc), loc);
     return prog{prg};
 }
 
@@ -1591,7 +1571,8 @@ class function_builder {
      *
      * @param name Function name
      */
-    inline function_builder(std::string name) : name_(std::move(name)), body_{nullptr} {}
+    inline function_builder(std::string name, location const &loc = {})
+        : name_(std::move(name)), body_{nullptr}, loc_(loc) {}
 
     /**
      * @brief Returns built product
@@ -1600,8 +1581,8 @@ class function_builder {
      *
      * @return Function
      */
-    inline func get_product(location const &loc = {}) {
-        auto fun = make_function(name_.c_str(), arguments_, body_, loc);
+    inline func get_product() && {
+        auto fun = make_function(name_.c_str(), arguments_, std::move(body_), loc_);
         if (x_ > 0 && y_ > 0) {
             set_work_group_size(fun, x_, y_);
         }
@@ -1663,6 +1644,7 @@ class function_builder {
   private:
     std::string name_;
     region body_;
+    location loc_;
     std::vector<value> arguments_;
     std::int32_t x_ = 0, y_ = 0, sgs_ = 0;
 };
@@ -1670,6 +1652,13 @@ class function_builder {
 //! Builder for programs
 class program_builder {
   public:
+    /**
+     * @brief ctor
+     *
+     * @param loc Source code location
+     */
+    program_builder(location const &loc = {}) : prg_{make_program(loc)} {}
+
     /**
      * @brief create function \@name with functor f(function_builder&) -> void
      *
@@ -1679,16 +1668,16 @@ class program_builder {
      * @param loc Source code location
      */
     template <typename F> void create(std::string name, F &&f, location const &loc = {}) {
-        auto fb = function_builder(std::move(name));
+        auto fb = function_builder(std::move(name), loc);
         f(fb);
-        add(fb.get_product(loc));
+        add(std::move(fb).get_product());
     }
     /**
      * @brief Add function
      *
      * @param f function
      */
-    inline void add(func f) { functions_.emplace_back(std::move(f)); }
+    inline void add(func f) { prg_.add_function(std::move(f)); }
     /**
      * @brief Returns built product
      *
@@ -1696,10 +1685,10 @@ class program_builder {
      *
      * @return Program
      */
-    inline prog get_product(location const &loc = {}) { return make_program(functions_, loc); }
+    inline prog get_product() && { return std::move(prg_); }
 
   private:
-    std::vector<func> functions_;
+    prog prg_;
 };
 
 ////////////////////////////

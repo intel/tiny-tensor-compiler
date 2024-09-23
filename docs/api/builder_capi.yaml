@@ -48,8 +48,7 @@ Builder C-API:
       - tinytc_function_create
       - tinytc_function_set_subgroup_size
       - tinytc_function_set_work_group_size
-      - tinytc_func_release
-      - tinytc_func_retain
+      - tinytc_func_destroy
   Instruction:
     function:
       - tinytc_alloca_inst_create
@@ -86,6 +85,7 @@ Builder C-API:
   Program:
     function:
       - tinytc_program_create
+      - tinytc_prog_add_function
       - tinytc_prog_dump
       - tinytc_prog_print_to_file
       - tinytc_prog_print_to_string
@@ -95,8 +95,7 @@ Builder C-API:
     function:
       - tinytc_region_create
       - tinytc_region_add_instruction
-      - tinytc_region_release
-      - tinytc_region_retain
+      - tinytc_region_destroy
   Value:
     function:
       - tinytc_float_imm_create

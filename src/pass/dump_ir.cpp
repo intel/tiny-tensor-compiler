@@ -246,7 +246,7 @@ void dump_ir_pass::operator()(for_inst const &p) {
     *os_ << " : ";
     visit(*this, *p.loop_var()->ty());
     *os_ << " ";
-    dump_region(*p.body());
+    dump_region(p.body());
 }
 
 void dump_ir_pass::operator()(foreach_inst const &p) {
@@ -259,7 +259,7 @@ void dump_ir_pass::operator()(foreach_inst const &p) {
     *os_ << " : ";
     visit(*this, *p.loop_var()->ty());
     *os_ << " ";
-    dump_region(*p.body());
+    dump_region(p.body());
 }
 
 void dump_ir_pass::operator()(hadamard_inst const &g) {
@@ -271,10 +271,10 @@ void dump_ir_pass::operator()(if_inst const &in) {
     *os_ << "if ";
     visit(*this, *in.condition());
     *os_ << " ";
-    dump_region(*in.then());
-    if (in.otherwise()) {
+    dump_region(in.then());
+    if (in.has_otherwise()) {
         *os_ << " else ";
-        dump_region(*in.otherwise());
+        dump_region(in.otherwise());
     }
 }
 
@@ -285,7 +285,7 @@ void dump_ir_pass::operator()(num_subgroups_inst const &sg) {
 
 void dump_ir_pass::operator()(parallel_inst const &p) {
     *os_ << "parallel ";
-    dump_region(*p.body());
+    dump_region(p.body());
 }
 
 void dump_ir_pass::operator()(size_inst const &s) {
@@ -401,7 +401,7 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     if (wgs[0] != 0 && wgs[1] != 0) {
         *os_ << "work_group_size(" << wgs[0] << "," << wgs[1] << ") ";
     }
-    dump_region(*fn.body());
+    dump_region(fn.body());
     *os_ << std::endl;
 }
 

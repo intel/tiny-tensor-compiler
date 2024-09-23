@@ -20,10 +20,7 @@ using const_func_range = iterator_range_wrapper<func const *>;
 
 struct tinytc_prog final : tinytc::reference_counted {
   public:
-    inline tinytc_prog(std::vector<tinytc::func> funcs, tinytc::location const &lc = {})
-        : funcs_(std::move(funcs)) {
-        loc(lc);
-    }
+    inline tinytc_prog(tinytc::location const &lc = {}) { loc(lc); }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
@@ -42,6 +39,7 @@ struct tinytc_prog final : tinytc::reference_counted {
     inline auto functions() const -> tinytc::const_func_range {
         return tinytc::const_func_range{begin(), end()};
     }
+    inline void push_back(tinytc::func fun) { funcs_.push_back(std::move(fun)); }
 
   private:
     std::vector<tinytc::func> funcs_;

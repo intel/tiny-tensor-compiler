@@ -32,22 +32,5 @@ tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg, tinytc_inst_t
     return exception_to_status_code([&] { reg->push_back(instruction); });
 }
 
-tinytc_status_t tinytc_region_release(tinytc_region_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    auto ref_count = obj->dec_ref();
-    if (ref_count == 0) {
-        delete obj;
-    }
-    return tinytc_status_success;
-}
-
-tinytc_status_t tinytc_region_retain(tinytc_region_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    obj->inc_ref();
-    return tinytc_status_success;
-}
+void tinytc_region_destroy(tinytc_region_t obj) { delete obj; }
 }

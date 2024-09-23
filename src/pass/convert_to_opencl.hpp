@@ -102,11 +102,11 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(sum_inst const &s);
     std::vector<clir::stmt> operator()(yield_inst const &in);
 
-    auto run_on_program(program_node &p) -> clir::prog;
+    auto run_on_program(program_node const &p) -> clir::prog;
 
   private:
-    auto run_on_region(region_node &reg) -> clir::stmt;
-    auto run_on_function(function_node &fn) -> clir::func;
+    auto run_on_region(region_node const &reg) -> clir::stmt;
+    auto run_on_function(function_node const &fn) -> clir::func;
 
     auto get_dope_vector(value_node *v) -> dope_vector &;
     void set_dope_vector(value_node *v, dope_vector dv);

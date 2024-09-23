@@ -52,7 +52,7 @@ inst lower_linalg_pass::operator()(loop_inst &p) {
 
 inst lower_linalg_pass::operator()(if_inst &in) {
     visit(*this, *in.then());
-    if (in.otherwise()) {
+    if (in.has_otherwise()) {
         visit(*this, *in.otherwise());
     }
     return inst{nullptr};

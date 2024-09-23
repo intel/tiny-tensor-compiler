@@ -290,9 +290,7 @@ Function
 
   * :ref:`tinytc_function_set_work_group_size`
 
-  * :ref:`tinytc_func_release`
-
-  * :ref:`tinytc_func_retain`
+  * :ref:`tinytc_func_destroy`
 
 Function Functions
 ------------------
@@ -312,15 +310,10 @@ tinytc_function_set_work_group_size
 
 .. doxygenfunction:: tinytc_function_set_work_group_size
 
-tinytc_func_release
+tinytc_func_destroy
 ...................
 
-.. doxygenfunction:: tinytc_func_release
-
-tinytc_func_retain
-..................
-
-.. doxygenfunction:: tinytc_func_retain
+.. doxygenfunction:: tinytc_func_destroy
 
 Instruction
 ===========
@@ -554,6 +547,8 @@ Program
 
   * :ref:`tinytc_program_create`
 
+  * :ref:`tinytc_prog_add_function`
+
   * :ref:`tinytc_prog_dump`
 
   * :ref:`tinytc_prog_print_to_file`
@@ -571,6 +566,11 @@ tinytc_program_create
 .....................
 
 .. doxygenfunction:: tinytc_program_create
+
+tinytc_prog_add_function
+........................
+
+.. doxygenfunction:: tinytc_prog_add_function
 
 tinytc_prog_dump
 ................
@@ -606,9 +606,7 @@ Region
 
   * :ref:`tinytc_region_add_instruction`
 
-  * :ref:`tinytc_region_release`
-
-  * :ref:`tinytc_region_retain`
+  * :ref:`tinytc_region_destroy`
 
 Region Functions
 ----------------
@@ -623,15 +621,10 @@ tinytc_region_add_instruction
 
 .. doxygenfunction:: tinytc_region_add_instruction
 
-tinytc_region_release
+tinytc_region_destroy
 .....................
 
-.. doxygenfunction:: tinytc_region_release
-
-tinytc_region_retain
-....................
-
-.. doxygenfunction:: tinytc_region_retain
+.. doxygenfunction:: tinytc_region_destroy
 
 Value
 =====

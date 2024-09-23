@@ -63,7 +63,7 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
 
 void insert_lifetime_stop_pass::run_on_function(function_node &fn) {
     auto aa = alias_analysis{}.run_on_function(fn);
-    run_on_region(*fn.body(), aa);
+    run_on_region(fn.body(), aa);
 }
 
 } // namespace tinytc

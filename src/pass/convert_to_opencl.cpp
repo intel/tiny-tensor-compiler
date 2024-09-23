@@ -782,7 +782,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
     auto start = clir::declaration_assignment(std::move(lv_ty), lv, visit(*this, *p.from()));
     auto condition = lv < visit(*this, *p.to());
     auto step = p.step() ? clir::add_into(lv, visit(*this, *p.step())) : ++lv;
-    auto body = run_on_region(*p.body());
+    auto body = run_on_region(p.body());
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
 
@@ -803,7 +803,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p
         bb, trip_count, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(),
         std::move(sg), [&](clir::block_builder &bb, clir::expr block, bool, clir::expr) {
             bb.add(clir::declaration_assignment(lv_ty, lv, std::move(block) + m + from));
-            bb.add(run_on_region(*p.body()));
+            bb.add(run_on_region(p.body()));
         });
     return {bb.get_product()};
 }
@@ -866,9 +866,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(if_inst const &in) {
         yielded_vars_.back().emplace_back(std::move(v));
     }
     auto ib = clir::if_selection_builder(visit(*this, *in.condition()));
-    ib.set_then(run_on_region(*in.then()));
-    if (in.otherwise()) {
-        ib.set_otherwise(run_on_region(*in.otherwise()));
+    ib.set_then(run_on_region(in.then()));
+    if (in.has_otherwise()) {
+        ib.set_otherwise(run_on_region(in.otherwise()));
     }
     yielded_vars_.pop_back();
     clinst.emplace_back(ib.get_product());
@@ -883,7 +883,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(num_subgroups_inst co
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(parallel_inst const &p) {
-    return {run_on_region(*p.body())};
+    return {run_on_region(p.body())};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(size_inst const &s) {
@@ -1088,7 +1088,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
 }
 
 /* Region nodes */
-clir::stmt convert_to_opencl_pass::run_on_region(region_node &reg) {
+clir::stmt convert_to_opencl_pass::run_on_region(region_node const &reg) {
     declared_vars_.push_back({});
     auto bb = clir::block_builder{};
     for (auto &s : reg.insts()) {
@@ -1101,7 +1101,7 @@ clir::stmt convert_to_opencl_pass::run_on_region(region_node &reg) {
 }
 
 /* Function nodes */
-auto convert_to_opencl_pass::run_on_function(function_node &fn) -> clir::func {
+auto convert_to_opencl_pass::run_on_function(function_node const &fn) -> clir::func {
     stack_high_water_mark_ = 0;
     auto const subgroup_size = fn.subgroup_size();
     try {
@@ -1140,7 +1140,7 @@ auto convert_to_opencl_pass::run_on_function(function_node &fn) -> clir::func {
     fb.attribute(clir::reqd_work_group_size(work_group_size[0], work_group_size[1], 1));
     fb.attribute(clir::intel_reqd_sub_group_size(subgroup_size));
 
-    auto body = run_on_region(*fn.body());
+    auto body = run_on_region(fn.body());
 
     if (stack_high_water_mark_ > 0) {
         auto bb = dynamic_cast<clir::internal::block *>(body.get());
@@ -1158,7 +1158,7 @@ auto convert_to_opencl_pass::run_on_function(function_node &fn) -> clir::func {
 }
 
 /* Program nodes */
-auto convert_to_opencl_pass::run_on_program(program_node &p) -> clir::prog {
+auto convert_to_opencl_pass::run_on_program(program_node const &p) -> clir::prog {
     reserved_names_.clear();
     for (auto const &fn : p.functions()) {
         reserved_names_.insert(std::string(fn->name()));

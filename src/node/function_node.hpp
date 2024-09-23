@@ -6,7 +6,6 @@
 
 #include "location.hpp"
 #include "node/region_node.hpp"
-#include "reference_counted.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -21,7 +20,7 @@ using value_range = iterator_range_wrapper<value *>;
 using const_value_range = iterator_range_wrapper<value const *>;
 } // namespace tinytc
 
-struct tinytc_func final : tinytc::reference_counted {
+struct tinytc_func final {
   public:
     inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc::region body,
                        tinytc::location const &lc = {})
@@ -52,7 +51,7 @@ struct tinytc_func final : tinytc::reference_counted {
     }
 
     inline auto name() const -> std::string_view { return name_; }
-    inline auto body() const -> tinytc::region const & { return body_; }
+    inline auto body() const -> tinytc_region & { return *body_; }
 
     inline auto work_group_size() const -> std::array<std::int32_t, 2> { return work_group_size_; }
     inline void work_group_size(std::array<std::int32_t, 2> const &work_group_size) {

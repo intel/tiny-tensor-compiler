@@ -18,7 +18,7 @@ void dump_cfg_pass::run_on_function(function_node const &fn) {
 
     *os_ << "digraph " << fn.name() << " {" << std::endl;
 
-    auto cfg = get_control_flow_graph(*fn.body());
+    auto cfg = get_control_flow_graph(fn.body());
     auto q = cfg.node_queue();
     for (; !q.empty(); q.pop()) {
         auto &node = q.front();
