@@ -5,8 +5,8 @@
 #define INST_NODE_20230327_HPP
 
 #include "error.hpp"
-#include "node/region_node.hpp"
 #include "reference_counted.hpp"
+#include "support/ilist.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
@@ -86,7 +86,7 @@ using const_region_range = iterator_range_wrapper<region const *>;
 
 } // namespace tinytc
 
-struct tinytc_inst : tinytc::reference_counted {
+struct tinytc_inst : tinytc::ilist_node<tinytc_inst>, tinytc::reference_counted {
   public:
     using leaves = tinytc::inst_nodes;
 
@@ -226,6 +226,11 @@ struct tinytc_inst : tinytc::reference_counted {
 namespace tinytc {
 
 using inst_node = ::tinytc_inst;
+
+template <> struct ilist_traits<inst_node> {
+    static void on_insert(inst_node *) {}
+    static void on_erase(inst_node *node) { tinytc_inst_destroy(node); }
+};
 
 template <typename T, std::int64_t NumObjects> class object_container {
   public:
@@ -543,16 +548,7 @@ class for_inst : public loop_inst {
 class foreach_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::foreach_loop; }
-    inline foreach_inst(value loop_var, value from, value to, region body, location const &loc = {})
-        : loop_inst{IK::foreach_loop,
-                    std::move(loop_var),
-                    std::move(from),
-                    std::move(to),
-                    {},
-                    std::move(body),
-                    loc} {
-        child_region(0)->kind(region_kind::spmd);
-    }
+    foreach_inst(value loop_var, value from, value to, region body, location const &loc = {});
 };
 
 class hadamard_inst : public blas_a3_inst {
@@ -585,12 +581,8 @@ class num_subgroups_inst : public standard_inst<0, 1> {
 class parallel_inst : public standard_inst<0, 0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::parallel; }
-    inline parallel_inst(region body, location const &lc = {}) : standard_inst{IK::parallel} {
-        child_region(0) = std::move(body);
-        loc(lc);
+    parallel_inst(region body, location const &lc = {});
 
-        child_region(0)->kind(region_kind::spmd);
-    }
     inline auto body() const -> region const & { return child_region(0); }
 };
 

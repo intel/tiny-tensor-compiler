@@ -387,9 +387,7 @@ Instruction
 
   * :ref:`tinytc_inst_get_values`
 
-  * :ref:`tinytc_inst_release`
-
-  * :ref:`tinytc_inst_retain`
+  * :ref:`tinytc_inst_destroy`
 
 Instruction Functions
 ---------------------
@@ -544,15 +542,10 @@ tinytc_inst_get_values
 
 .. doxygenfunction:: tinytc_inst_get_values
 
-tinytc_inst_release
+tinytc_inst_destroy
 ...................
 
-.. doxygenfunction:: tinytc_inst_release
-
-tinytc_inst_retain
-..................
-
-.. doxygenfunction:: tinytc_inst_retain
+.. doxygenfunction:: tinytc_inst_destroy
 
 Program
 =======
@@ -611,6 +604,8 @@ Region
 
   * :ref:`tinytc_region_create`
 
+  * :ref:`tinytc_region_add_instruction`
+
   * :ref:`tinytc_region_release`
 
   * :ref:`tinytc_region_retain`
@@ -622,6 +617,11 @@ tinytc_region_create
 ....................
 
 .. doxygenfunction:: tinytc_region_create
+
+tinytc_region_add_instruction
+.............................
+
+.. doxygenfunction:: tinytc_region_add_instruction
 
 tinytc_region_release
 .....................

@@ -17,20 +17,19 @@ using namespace tinytc;
 
 extern "C" {
 
-tinytc_status_t tinytc_region_create(tinytc_region_t *reg, uint32_t instruction_list_size,
-                                     tinytc_inst_t *instruction_list,
-                                     const tinytc_location_t *loc) {
-    if (reg == nullptr || (instruction_list_size > 0 && instruction_list == nullptr)) {
+tinytc_status_t tinytc_region_create(tinytc_region_t *reg, const tinytc_location_t *loc) {
+    if (reg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        auto inst_vec = std::vector<inst>();
-        inst_vec.reserve(instruction_list_size);
-        for (uint32_t i = 0; i < instruction_list_size; ++i) {
-            inst_vec.emplace_back(inst(instruction_list[i], true));
-        }
-        *reg = std::make_unique<region_node>(std::move(inst_vec), get_optional(loc)).release();
-    });
+    return exception_to_status_code(
+        [&] { *reg = std::make_unique<region_node>(get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg, tinytc_inst_t instruction) {
+    if (reg == nullptr || instruction == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { reg->push_back(instruction); });
 }
 
 tinytc_status_t tinytc_region_release(tinytc_region_t obj) {

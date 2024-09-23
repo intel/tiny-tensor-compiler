@@ -4,6 +4,7 @@
 #include "node/inst_node.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
@@ -76,8 +77,8 @@ loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step
     }
 
     region_node &body = *child_region(0);
-    if (body.empty() || !isa<yield_inst>(**(body.end() - 1))) {
-        body.insert(body.end(), make_yield({}, lc));
+    if (body.empty() || !isa<yield_inst>(*(--body.end()))) {
+        body.insert(body.end(), std::make_unique<yield_inst>(std::vector<value>{}, lc).release());
     }
 }
 
@@ -441,6 +442,17 @@ ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool
     }
 }
 
+foreach_inst::foreach_inst(value loop_var, value from, value to, region body, location const &loc)
+    : loop_inst{IK::foreach_loop,
+                std::move(loop_var),
+                std::move(from),
+                std::move(to),
+                {},
+                std::move(body),
+                loc} {
+    child_region(0)->kind(region_kind::spmd);
+}
+
 hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
                              location const &lc)
     : blas_a3_inst(IK::hadamard_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
@@ -479,10 +491,18 @@ if_inst::if_inst(value condition, region then0, region otherwise0,
 
     for (std::int64_t i = 0; i < num_child_regions(); ++i) {
         region_node &body = *child_region(i);
-        if (body.empty() || !isa<yield_inst>(**(body.end() - 1))) {
-            body.insert(body.end(), make_yield({}, lc));
+        if (body.empty() || !isa<yield_inst>(*(--body.end()))) {
+            body.insert(body.end(),
+                        std::make_unique<yield_inst>(std::vector<value>{}, lc).release());
         }
     }
+}
+
+parallel_inst::parallel_inst(region body, location const &lc) : standard_inst{IK::parallel} {
+    child_region(0) = std::move(body);
+    loc(lc);
+
+    child_region(0)->kind(region_kind::spmd);
 }
 
 size_inst::size_inst(value op0, std::int64_t mode, location const &lc)

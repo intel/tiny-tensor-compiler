@@ -392,7 +392,10 @@ region:
     LBRACE {
         ctx.push_scope();
     } instructions RBRACE {
-        $$ = region{std::make_unique<region_node>(std::move($instructions), @region).release()};
+        $$ = region{std::make_unique<region_node>(@region).release()};
+        for (auto& i : $instructions) {
+            $$.add_instruction(std::move(i));
+        }
         ctx.pop_scope();
     }
 ;
@@ -410,20 +413,20 @@ instructions:
 ;
 
 instruction:
-    axpby_inst
-  | barrier_inst
-  | gemm_inst
-  | gemv_inst
-  | ger_inst
-  | for_inst
-  | foreach_inst
-  | hadamard_inst
-  | if_inst
-  | parallel_inst
-  | var_definition
-  | store_inst
-  | sum_inst
-  | yield_inst
+    axpby_inst      { $$ = std::move($1); }
+  | barrier_inst    { $$ = std::move($1); }
+  | gemm_inst       { $$ = std::move($1); }
+  | gemv_inst       { $$ = std::move($1); }
+  | ger_inst        { $$ = std::move($1); }
+  | for_inst        { $$ = std::move($1); }
+  | foreach_inst    { $$ = std::move($1); }
+  | hadamard_inst   { $$ = std::move($1); }
+  | if_inst         { $$ = std::move($1); }
+  | parallel_inst   { $$ = std::move($1); }
+  | var_definition  { $$ = std::move($1); }
+  | store_inst      { $$ = std::move($1); }
+  | sum_inst        { $$ = std::move($1); }
+  | yield_inst      { $$ = std::move($1); }
 ;
 
 axpby_inst:
@@ -709,23 +712,23 @@ yield_inst:
 ;
 
 valued_inst:
-    alloca_inst
-  | arith_inst
-  | arith_unary_inst
-  | cast_inst
-  | compare_inst
-  | expand_inst
-  | fuse_inst
-  | group_id_inst
-  | group_size_inst
-  | if_inst
-  | load_inst
-  | num_subgroups_inst
-  | size_inst
-  | subgroup_id_inst
-  | subgroup_local_id_inst
-  | subgroup_size_inst
-  | subview_inst
+    alloca_inst             { $$ = std::move($1); }
+  | arith_inst              { $$ = std::move($1); }               
+  | arith_unary_inst        { $$ = std::move($1); }
+  | cast_inst               { $$ = std::move($1); }
+  | compare_inst            { $$ = std::move($1); }
+  | expand_inst             { $$ = std::move($1); }
+  | fuse_inst               { $$ = std::move($1); }
+  | group_id_inst           { $$ = std::move($1); }
+  | group_size_inst         { $$ = std::move($1); }
+  | if_inst                 { $$ = std::move($1); }
+  | load_inst               { $$ = std::move($1); }
+  | num_subgroups_inst      { $$ = std::move($1); }
+  | size_inst               { $$ = std::move($1); }
+  | subgroup_id_inst        { $$ = std::move($1); }
+  | subgroup_local_id_inst  { $$ = std::move($1); }
+  | subgroup_size_inst      { $$ = std::move($1); }
+  | subview_inst            { $$ = std::move($1); }
 ;
 
 alloca_inst:

@@ -25,25 +25,25 @@ auto get_control_flow_graph(region_node &topreg) -> control_flow_graph {
             return {};
         }
 
-        auto start = reg.begin()->get();
+        auto start = reg.begin().get();
         cfg.add_node(start);
 
         auto pred_nodes = std::queue<inst_node *>{};
         pred_nodes.push(start);
 
-        for (auto it = reg.begin() + 1; it != reg.end(); ++it) {
-            inst_node *node = it->get();
+        for (auto it = ++reg.begin(); it != reg.end(); ++it) {
+            inst_node *node = it.get();
             cfg.add_node(node);
 
             for (; !pred_nodes.empty(); pred_nodes.pop()) {
                 cfg.add_edge(pred_nodes.front(), node);
             }
 
-            if ((*it)->num_child_regions() > 0) {
-                for (auto &subreg : (*it)->child_regions()) {
+            if (it->num_child_regions() > 0) {
+                for (auto &subreg : it->child_regions()) {
                     auto [substart, subexit] = add_region_ref(*subreg, add_region_ref);
                     cfg.add_edge(node, substart);
-                    if (isa<loop_inst>(**it)) {
+                    if (isa<loop_inst>(*it)) {
                         cfg.add_edge(subexit, node);
                         pred_nodes.push(node);
                     } else {

@@ -638,20 +638,15 @@ inline char const *to_string(transpose t) {
 }
 
 namespace internal {
-template <> struct shared_handle_traits<tinytc_inst_t> {
-    static auto retain(tinytc_inst_t handle) -> tinytc_status_t {
-        return tinytc_inst_retain(handle);
-    }
-    static auto release(tinytc_inst_t handle) -> tinytc_status_t {
-        return tinytc_inst_release(handle);
-    }
+template <> struct unique_handle_traits<tinytc_inst_t> {
+    static void destroy(tinytc_inst_t handle) { return tinytc_inst_destroy(handle); }
 };
 } // namespace internal
 
 //! @brief Reference-counting wrapper for tinytc_inst_t
-class inst : public shared_handle<tinytc_inst_t> {
+class inst : public unique_handle<tinytc_inst_t> {
   public:
-    using shared_handle::shared_handle;
+    using unique_handle::unique_handle;
 
     /**
      * @brief Get result value
@@ -705,26 +700,27 @@ template <> struct shared_handle_traits<tinytc_region_t> {
 class region : public shared_handle<tinytc_region_t> {
   public:
     using shared_handle::shared_handle;
+
+    /**
+     * @brief Append instruction to region
+     *
+     * @param instruction instruction; region takes ownership
+     */
+    inline void add_instruction(inst instruction) {
+        CHECK_STATUS(tinytc_region_add_instruction(get(), instruction.release()));
+    }
 };
 
 /**
  * @brief Make region
  *
- * @param instructions Vector of instructions
  * @param loc Source code location
  *
  * @return Region
  */
-inline region make_region(std::vector<inst> &instructions, location const &loc = {}) {
+inline region make_region(location const &loc = {}) {
     tinytc_region_t reg;
-    static_assert(internal::inst_reinterpret_allowed);
-    if (instructions.size() > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("Instruction list too long");
-    }
-    CHECK_STATUS_LOC(tinytc_region_create(&reg, instructions.size(),
-                                          reinterpret_cast<tinytc_inst_t *>(instructions.data()),
-                                          &loc),
-                     loc);
+    CHECK_STATUS_LOC(tinytc_region_create(&reg, &loc), loc);
     return region{reg};
 }
 
@@ -1416,15 +1412,18 @@ inline prog make_program(std::vector<func> &fun_list, location const &loc = {}) 
 class region_builder {
   public:
     /**
-     * @brief Returns built product
+     * @brief ctor
      *
      * @param loc Source code location
+     */
+    region_builder(location const &loc = {}) : reg_{make_region(loc)} {}
+
+    /**
+     * @brief Returns built product
      *
      * @return Region
      */
-    inline auto get_product(location const &loc = {}) -> region {
-        return make_region(instructions_, loc);
-    }
+    inline auto get_product() && -> region { return std::move(reg_); }
 
     /**
      * @brief Add instruction
@@ -1439,7 +1438,7 @@ class region_builder {
         if (result && name.size() > 0) {
             result.name(name);
         }
-        instructions_.emplace_back(std::move(i));
+        reg_.add_instruction(std::move(i));
         return result;
     }
 
@@ -1460,7 +1459,7 @@ class region_builder {
                 result.name(name + std::to_string(counter++));
             }
         }
-        instructions_.emplace_back(std::move(i));
+        reg_.add_instruction(std::move(i));
         return results;
     }
 
@@ -1506,7 +1505,8 @@ class region_builder {
         }
         auto bb = region_builder{};
         f(bb, loop_var);
-        add(::tinytc::make_for(std::move(loop_var), from, to, step, bb.get_product(), loc));
+        add(::tinytc::make_for(std::move(loop_var), from, to, step, std::move(bb).get_product(),
+                               loc));
     }
     /**
      * @brief Build foreach-loop with functor f(region_builder&) -> void
@@ -1528,7 +1528,8 @@ class region_builder {
         }
         auto bb = region_builder{};
         f(bb);
-        add(::tinytc::make_foreach(std::move(loop_var), from, to, bb.get_product(), loc));
+        add(::tinytc::make_foreach(std::move(loop_var), from, to, std::move(bb).get_product(),
+                                   loc));
     }
 
     /**
@@ -1548,8 +1549,8 @@ class region_builder {
                       location const &loc = {}) -> std::vector<value> {
         auto bb = region_builder{};
         then(bb);
-        return add_multivalued(::tinytc::make_if(std::move(condition), bb.get_product(), region{},
-                                                 return_type_list, loc));
+        return add_multivalued(::tinytc::make_if(std::move(condition), std::move(bb).get_product(),
+                                                 region{}, return_type_list, loc));
     }
     /**
      * @brief Build if/else with functors then(region_builder&) -> void and
@@ -1573,12 +1574,13 @@ class region_builder {
         then(bb1);
         auto bb2 = region_builder{};
         otherwise(bb2);
-        return add_multivalued(::tinytc::make_if(std::move(condition), bb1.get_product(),
-                                                 bb2.get_product(), return_type_list, loc));
+        return add_multivalued(::tinytc::make_if(std::move(condition), std::move(bb1).get_product(),
+                                                 std::move(bb2).get_product(), return_type_list,
+                                                 loc));
     }
 
   private:
-    std::vector<inst> instructions_;
+    region reg_;
 };
 
 //! Builder for functions
@@ -1653,9 +1655,9 @@ class function_builder {
      * @param loc Source code location
      */
     template <typename F> void body(F &&f, location const &loc = {}) {
-        auto bb = region_builder{};
+        auto bb = region_builder{loc};
         f(bb);
-        body_ = bb.get_product(loc);
+        body_ = std::move(bb).get_product();
     }
 
   private:

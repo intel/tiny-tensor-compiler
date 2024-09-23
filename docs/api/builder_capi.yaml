@@ -82,8 +82,7 @@ Builder C-API:
       - tinytc_yield_inst_create
       - tinytc_inst_get_value
       - tinytc_inst_get_values
-      - tinytc_inst_release
-      - tinytc_inst_retain
+      - tinytc_inst_destroy
   Program:
     function:
       - tinytc_program_create
@@ -95,6 +94,7 @@ Builder C-API:
   Region:
     function:
       - tinytc_region_create
+      - tinytc_region_add_instruction
       - tinytc_region_release
       - tinytc_region_retain
   Value:

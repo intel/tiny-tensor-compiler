@@ -1092,7 +1092,7 @@ clir::stmt convert_to_opencl_pass::run_on_region(region_node &reg) {
     declared_vars_.push_back({});
     auto bb = clir::block_builder{};
     for (auto &s : reg.insts()) {
-        for (auto &cs : visit(*this, *s)) {
+        for (auto &cs : visit(*this, s)) {
             bb.add(cs);
         }
     }

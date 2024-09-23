@@ -753,24 +753,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
                                                        const tinytc_location_t *loc);
 
 /**
- * @brief Release inst object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
+ * @brief Delete inst object
  *
  * @param instr [inout] inst object
- *
- * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_release(tinytc_inst_t instr);
-
-/**
- * @brief Increase reference count of inst object by 1
- *
- * @param instr [inout] inst object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_retain(tinytc_inst_t instr);
+TINYTC_EXPORT void tinytc_inst_destroy(tinytc_inst_t instr);
 
 /**
  * @brief Get value produced by instruction
@@ -808,17 +795,27 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr,
  * @brief Create region
  *
  * @param reg [out] pointer to the region object created
- * @param instruction_list_size [in] length of instruction array
- * @param instruction_list [in][range(0, instruction_list_size)] instruction array; can be nullptr
- * if instruction_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_create(tinytc_region_t *reg,
-                                                   uint32_t instruction_list_size,
-                                                   tinytc_inst_t *instruction_list,
                                                    const tinytc_location_t *loc);
+
+/**
+ * @brief Append instruction to region
+ *
+ * The region takes ownership of the instruction.
+ * An instruction must not be added to multiple regions.
+ *
+ * @param reg [inout] region object
+ * @param instruction [in,pass_ownership] instruction
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg,
+                                                            tinytc_inst_t instruction);
+
 /**
  * @brief Release region object
  *

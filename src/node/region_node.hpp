@@ -4,7 +4,9 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
+#include "node/inst_node.hpp"
 #include "reference_counted.hpp"
+#include "support/ilist.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -21,11 +23,10 @@ enum class region_kind { mixed, collective, spmd };
 
 struct tinytc_region final : tinytc::reference_counted {
   public:
-    using iterator = std::vector<tinytc::inst>::iterator;
-    using const_iterator = std::vector<tinytc::inst>::const_iterator;
+    using iterator = tinytc::ilist<tinytc_inst>::iterator;
+    using const_iterator = tinytc::ilist<tinytc_inst>::const_iterator;
 
-    inline tinytc_region(std::vector<tinytc::inst> insts = {}, tinytc::location const &lc = {})
-        : insts_(std::move(insts)), kind_(tinytc::region_kind::mixed) {
+    inline tinytc_region(tinytc::location const &lc = {}) : kind_(tinytc::region_kind::mixed) {
         loc(lc);
     }
 
@@ -43,19 +44,17 @@ struct tinytc_region final : tinytc::reference_counted {
     inline auto insts() const -> tinytc::iterator_range_wrapper<const_iterator> {
         return {begin(), end()};
     }
-    inline void insts(std::vector<tinytc::inst> insts) { insts_ = std::move(insts); }
+    inline void push_back(tinytc_inst_t i) { insts_.push_back(i); }
     inline auto erase(iterator pos) -> iterator { return insts_.erase(pos); }
-    inline auto insert(iterator pos, tinytc::inst const &i) -> iterator {
-        return insts_.insert(pos, i);
-    }
-    inline auto insert(iterator pos, tinytc::inst &&i) -> iterator {
-        return insts_.insert(pos, std::move(i));
+    inline auto insert(iterator pos, tinytc_inst_t i) -> iterator { return insts_.insert(pos, i); }
+    inline auto insert_after(iterator pos, tinytc_inst_t i) -> iterator {
+        return insts_.insert_after(pos, i);
     }
     inline auto empty() const -> bool { return insts_.empty(); }
 
   private:
-    std::vector<tinytc::inst> insts_;
     tinytc::region_kind kind_;
+    tinytc::ilist<tinytc_inst> insts_;
     tinytc::location loc_;
 };
 

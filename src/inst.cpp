@@ -472,24 +472,7 @@ tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr, uint32_t yield_li
     });
 }
 
-tinytc_status_t tinytc_inst_release(tinytc_inst_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    auto ref_count = obj->dec_ref();
-    if (ref_count == 0) {
-        delete obj;
-    }
-    return tinytc_status_success;
-}
-
-tinytc_status_t tinytc_inst_retain(tinytc_inst_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    obj->inc_ref();
-    return tinytc_status_success;
-}
+void tinytc_inst_destroy(tinytc_inst_t obj) { delete obj; }
 
 tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr, tinytc_value_t *result) {
     if (instr == nullptr || result == nullptr) {

@@ -370,7 +370,7 @@ void dump_ir_pass::dump_region(region_node const &reg) {
         auto ind = indent();
         for (auto const &i : reg) {
             *os_ << ind;
-            visit(*this, *i);
+            visit(*this, i);
             *os_ << std::endl;
         }
         --lvl_;
