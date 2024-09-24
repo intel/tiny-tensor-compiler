@@ -3,15 +3,13 @@
 
 #include "error.hpp"
 #include "location.hpp"
+#include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "support/ilist.hpp"
 #include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
-#include <cstdint>
 #include <memory>
-#include <utility>
-#include <vector>
 
 using namespace tinytc;
 

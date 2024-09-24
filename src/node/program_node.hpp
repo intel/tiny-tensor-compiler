@@ -4,13 +4,13 @@
 #ifndef PROGRAM_NODE_20240208_HPP
 #define PROGRAM_NODE_20240208_HPP
 
-#include "location.hpp"
+#include "compiler_context.hpp"
+#include "node/function_node.hpp"
 #include "reference_counted.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 
-#include <cstdint>
-#include <utility>
 #include <vector>
 
 namespace tinytc {

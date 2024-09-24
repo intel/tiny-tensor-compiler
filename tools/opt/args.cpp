@@ -4,6 +4,7 @@
 #include "args.hpp"
 #include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <cstring>
 #include <sstream>
 #include <stdexcept>

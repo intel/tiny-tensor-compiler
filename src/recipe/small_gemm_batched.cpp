@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "small_gemm_batched.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
-#include "parser.hpp"
 #include "recipe.hpp"
 #include "reference_counted.hpp"
 #include "support/util.hpp"

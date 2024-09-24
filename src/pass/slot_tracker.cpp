@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/slot_tracker.hpp"
-#include "support/visit.hpp"
+#include "node/inst_node.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <utility>
-#include <vector>
 
 namespace tinytc {
 

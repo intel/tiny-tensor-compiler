@@ -7,9 +7,10 @@
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "support/ilist_base.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <functional>
-#include <type_traits>
 
 namespace tinytc {
 

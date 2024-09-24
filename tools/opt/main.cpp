@@ -8,8 +8,8 @@
 #include <exception>
 #include <iostream>
 #include <stdexcept>
-#include <string_view>
-#include <utility>
+#include <string>
+#include <vector>
 
 using namespace tinytc;
 

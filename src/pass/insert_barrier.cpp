@@ -4,16 +4,21 @@
 #include "pass/insert_barrier.hpp"
 #include "analysis/alias.hpp"
 #include "analysis/cfg.hpp"
+#include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 
-#include <clir/builtin_type.hpp>
-
+#include <algorithm>
+#include <cstdint>
 #include <memory>
+#include <queue>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

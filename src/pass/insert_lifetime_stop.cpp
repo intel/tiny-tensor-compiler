@@ -6,10 +6,11 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
-#include "support/visit.hpp"
+#include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
+#include "tinytc/tinytc.hpp"
 
-#include <algorithm>
-#include <iterator>
 #include <memory>
 #include <vector>
 

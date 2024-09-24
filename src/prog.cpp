@@ -1,8 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "location.hpp"
+#include "node/function_node.hpp"
 #include "node/program_node.hpp"
 #include "pass/dump_ir.hpp"
 #include "passes.hpp"
@@ -11,7 +13,6 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
@@ -19,7 +20,6 @@
 #include <memory>
 #include <sstream>
 #include <utility>
-#include <vector>
 
 using namespace tinytc;
 

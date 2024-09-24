@@ -8,10 +8,8 @@
 #include "node/region_node.hpp"
 #include "support/util.hpp"
 
-#include <algorithm>
 #include <queue>
 #include <unordered_map>
-#include <utility>
 #include <vector>
 
 namespace tinytc {

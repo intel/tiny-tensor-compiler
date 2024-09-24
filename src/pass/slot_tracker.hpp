@@ -5,9 +5,6 @@
 #define SLOT_TRACKER_20240418_HPP
 
 #include "node/function_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/program_node.hpp"
-#include "node/region_node.hpp"
 #include "node/value_node.hpp"
 
 #include <cstdint>

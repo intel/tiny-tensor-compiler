@@ -7,7 +7,10 @@
 #include "analysis/aa_results.hpp"
 #include "node/function_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
+#include "tinytc/types.hpp"
 
+#include <array>
 #include <cstddef>
 #include <unordered_set>
 

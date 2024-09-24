@@ -2,15 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context.hpp"
-
-#include "compiler_context.hpp"
 #include "error.hpp"
-#include "location.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <iostream>
+#include <memory>
 
 namespace tinytc {
 void default_error_reporter(char const *what, const tinytc_location_t *, void *) {

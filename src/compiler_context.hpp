@@ -5,9 +5,10 @@
 #define COMPILER_CONTEXT_20240924_HPP
 
 #include "reference_counted.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>

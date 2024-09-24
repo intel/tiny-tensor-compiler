@@ -3,8 +3,8 @@
 
 #include "parser.hpp"
 
+#include "compiler_context.hpp"
 #include "error.hpp"
-#include "location.hpp"
 #include "parser/lexer.hpp"
 #include "parser/parse_context.hpp"
 #include "parser/parser_impl.hpp"
@@ -17,7 +17,7 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
-#include <memory>
+#include <string>
 #include <utility>
 
 namespace tinytc {

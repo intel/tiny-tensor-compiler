@@ -4,7 +4,11 @@
 #include "analysis/cfg.hpp"
 #include "node/inst_node.hpp"
 #include "support/casting.hpp"
-#include "support/visit.hpp"
+#include "support/ilist_base.hpp"
+#include "tinytc/tinytc.hpp"
+
+#include <algorithm>
+#include <utility>
 
 namespace tinytc {
 

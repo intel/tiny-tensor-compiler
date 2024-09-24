@@ -4,7 +4,6 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "node/program_node.hpp"
-#include "parser.hpp"
 #include "pass/check_ir.hpp"
 #include "pass/convert_to_opencl.hpp"
 #include "pass/dump_cfg.hpp"
@@ -24,10 +23,10 @@
 #include <clir/visitor/codegen_opencl.hpp>
 #include <clir/visitor/unique_names.hpp>
 
+#include <cstdint>
 #include <cstring>
 #include <iostream>
 #include <memory>
-#include <sstream>
 #include <utility>
 #include <vector>
 

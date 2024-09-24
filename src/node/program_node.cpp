@@ -3,6 +3,9 @@
 
 #include "node/program_node.hpp"
 #include "node/function_node.hpp"
+#include "tinytc/tinytc.h"
+
+#include <utility>
 
 using namespace tinytc;
 

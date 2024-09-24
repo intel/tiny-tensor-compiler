@@ -6,13 +6,12 @@
 
 #include "node/inst_node.hpp"
 #include "support/ilist.hpp"
-#include "support/util.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/tinytc.h"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <type_traits>
-#include <utility>
-#include <vector>
 
 namespace tinytc {
 

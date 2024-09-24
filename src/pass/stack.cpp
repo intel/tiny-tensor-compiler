@@ -7,7 +7,6 @@
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "support/casting.hpp"
-#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
@@ -15,6 +14,7 @@
 
 #include <cstdint>
 #include <list>
+#include <memory>
 
 namespace tinytc {
 

@@ -4,10 +4,13 @@
 #include "pass/dump_cfg.hpp"
 #include "analysis/cfg.hpp"
 #include "pass/dump_ir.hpp"
-#include "tinytc/tinytc.hpp"
+#include "support/util.hpp"
 
 #include <cstdint>
 #include <ostream>
+#include <queue>
+#include <string_view>
+#include <vector>
 
 namespace tinytc {
 

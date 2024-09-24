@@ -7,6 +7,7 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <complex>
 #include <cstring>
 
 namespace tinytc {

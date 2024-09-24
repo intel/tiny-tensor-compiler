@@ -5,7 +5,6 @@
 #define DATA_TYPE_NODE_20230309_HPP
 
 #include "reference_counted.hpp"
-#include "scalar_type.hpp"
 #include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
