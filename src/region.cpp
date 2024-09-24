@@ -29,7 +29,7 @@ tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg, tinytc_inst_t
     if (reg == nullptr || instruction == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { reg->push_back(instruction); });
+    return exception_to_status_code([&] { reg->insts().push_back(instruction); });
 }
 
 void tinytc_region_destroy(tinytc_region_t obj) { delete obj; }

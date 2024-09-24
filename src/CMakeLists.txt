@@ -33,6 +33,8 @@ set(SOURCES
     location.cpp
     node/data_type_node.cpp
     node/inst_node.cpp
+    node/region_node.cpp
+    node/program_node.cpp
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp

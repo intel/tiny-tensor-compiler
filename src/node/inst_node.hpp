@@ -85,7 +85,7 @@ using const_region_range = iterator_range_wrapper<region const *>;
 
 } // namespace tinytc
 
-struct tinytc_inst : tinytc::ilist_node<tinytc_inst> {
+struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> {
   public:
     using leaves = tinytc::inst_nodes;
 
@@ -225,11 +225,6 @@ struct tinytc_inst : tinytc::ilist_node<tinytc_inst> {
 namespace tinytc {
 
 using inst_node = ::tinytc_inst;
-
-template <> struct ilist_traits<inst_node> {
-    static void on_insert(inst_node *) {}
-    static void on_erase(inst_node *node) { tinytc_inst_destroy(node); }
-};
 
 template <typename T, std::int64_t NumObjects> class object_container {
   public:

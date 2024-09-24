@@ -75,11 +75,6 @@ loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step
     if (lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() || !step_ok) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-
-    region_node &body = *child_region(0);
-    if (body.empty() || !isa<yield_inst>(*(--body.end()))) {
-        body.insert(body.end(), std::make_unique<yield_inst>(std::vector<value>{}, lc).release());
-    }
 }
 
 alloca_inst::alloca_inst(data_type ty, location const &lc)
@@ -487,14 +482,6 @@ if_inst::if_inst(value condition, region then0, region otherwise0,
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         result(i) = make_value(return_types[i]);
-    }
-
-    for (std::int64_t i = 0; i < num_child_regions(); ++i) {
-        region_node &body = *child_region(i);
-        if (body.empty() || !isa<yield_inst>(*(--body.end()))) {
-            body.insert(body.end(),
-                        std::make_unique<yield_inst>(std::vector<value>{}, lc).release());
-        }
     }
 }
 

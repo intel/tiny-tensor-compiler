@@ -11,19 +11,33 @@
 
 namespace tinytc {
 
-template <typename T> class ilist_node {
+template <typename NodeT, bool IsConst> class ilist_iterator;
+
+template <typename NodeT> class ilist_node {
   public:
-    auto prev() const -> T * { return prev_; }
-    void prev(T *prev) { prev_ = prev; }
-    auto next() const -> T * { return next_; }
-    void next(T *next) { next_ = next; }
+    auto prev() const -> NodeT * { return prev_; }
+    void prev(NodeT *prev) { prev_ = prev; }
+    auto next() const -> NodeT * { return next_; }
+    void next(NodeT *next) { next_ = next; }
 
     auto sentinel() const -> bool { return sentinel_; }
     void set_sentinel() { sentinel_ = true; }
 
+    auto iterator() -> ilist_iterator<NodeT, false> { return {this}; }
+
   private:
-    T *prev_ = nullptr, *next_ = nullptr;
+    NodeT *prev_ = nullptr, *next_ = nullptr;
     bool sentinel_ = false;
+};
+
+template <typename NodeT, typename ParentT>
+class ilist_node_with_parent : public ilist_node<NodeT> {
+  public:
+    auto parent() const -> ParentT * { return parent_; }
+    void parent(ParentT *parent) { parent_ = parent; }
+
+  private:
+    ParentT *parent_ = nullptr;
 };
 
 template <typename NodeT, bool IsConst> class ilist_iterator {
@@ -67,17 +81,17 @@ template <typename NodeT, bool IsConst> class ilist_iterator {
 };
 
 template <typename NodeT> struct ilist_dummy_callback {
-    static void on_insert(NodeT *) {}
-    static void on_erase(NodeT *) {}
+    void node_added(NodeT *) {}
+    void node_removed(NodeT *) {}
 };
 
 template <typename NodeT, typename IListCallback = ilist_dummy_callback<NodeT>>
-requires requires(NodeT *node) {
+requires requires(IListCallback &cb, NodeT *node) {
     std::is_base_of_v<ilist_node<NodeT>, NodeT>;
-    IListCallback::on_insert(node);
-    IListCallback::on_erase(node);
+    cb.node_added(node);
+    cb.node_removed(node);
 }
-class ilist_base {
+class ilist_base : protected IListCallback {
   public:
     using value_type = NodeT;
     using size_type = std::size_t;
@@ -133,7 +147,7 @@ class ilist_base {
         // |0| (it -> s) : node{prev->s,next->s}, s{prev->n0,next->n0}
         // |1| (it -> n0): node{prev->s,next->n0}, n0{prev->node,next->s}, s{prev->n0,next->node}
         // |1| (it -> s) : n0{prev->s,next->node}, node{prev->n0,next->s}, s{prev->node,next->n0}
-        IListCallback::on_insert(node);
+        this->node_added(node);
         return iterator{node};
     }
     template <typename ItT> auto insert(iterator it, ItT begin, ItT end) -> iterator {
@@ -165,7 +179,7 @@ class ilist_base {
         // |1| (it -> n0): s{prev->s,next->s}
         // |2| (it -> n0): n1{prev->s,next->s}, s{prev->n1,next->n1}
         // |2| (it -> n1): n0{prev->s,next->s}, s{prev->n0,next->n0}
-        IListCallback::on_erase(it.get());
+        this->node_removed(it.get());
         return iterator{next};
     }
     auto erase(iterator begin, iterator end) -> iterator {

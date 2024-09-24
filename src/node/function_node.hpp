@@ -22,16 +22,16 @@ using const_value_range = iterator_range_wrapper<value const *>;
 
 struct tinytc_func final {
   public:
-    inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc::region body,
-                       tinytc::location const &lc = {})
-        : name_(std::move(name)), args_(std::move(args)), body_(std::move(body)),
+    inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc_region_t body,
+                       tinytc_location const &lc = {})
+        : name_(std::move(name)), args_(std::move(args)), body_(tinytc::region{body}),
           work_group_size_{0, 0}, subgroup_size_{0} {
         loc(lc);
         body_->kind(tinytc::region_kind::collective);
     }
 
-    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
+    inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
+    inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
 
     inline auto arg_begin() -> tinytc::value * { return args_.size() > 0 ? args_.data() : nullptr; }
     inline auto arg_end() -> tinytc::value * {
@@ -66,7 +66,7 @@ struct tinytc_func final {
     tinytc::region body_;
     std::array<std::int32_t, 2> work_group_size_;
     std::int32_t subgroup_size_;
-    tinytc::location loc_;
+    tinytc_location loc_;
 };
 
 namespace tinytc {

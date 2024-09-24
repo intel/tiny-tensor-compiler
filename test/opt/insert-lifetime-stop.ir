@@ -54,10 +54,8 @@ func @region1() {
 ; CHECK:              gemm.n.n{{.*}}
 ; CHECK-NEXT:         lifetime_stop %2
 ; CHECK-NEXT:         axpby.n{{.*}}
-; CHECK-NEXT:         yield :
 ; CHECK-NEXT:     }
 ; CHECK-NEXT:     lifetime_stop %1
-; CHECK-NEXT:     yield :
 ; CHECK-NEXT: }
 ; CHECK-NEXT: lifetime_stop %0
 }

@@ -110,7 +110,7 @@ func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref
         axpby.n %a, %C, %b, %D : f32, memref<f32x8x8>, f32, memref<f32x8x8>
     }
     axpby.n %a, %A, %b, %B : f32, memref<f32x8x8>, f32, memref<f32x8x8>
-; CHECK-LABEL: func @if({{.*}}
+; CHECK-LABEL: func @if2({{.*}}
 ; CHECK:       if %0 {
 ; CHECK-NEXT:      barrier.global
 ; CHECK-NEXT:      axpby.n %a, %A, %b, %B{{.*}}

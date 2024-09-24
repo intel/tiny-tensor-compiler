@@ -23,9 +23,11 @@ class insert_barrier_pass {
         constexpr static std::array<address_space, 2u> address_spaces = {address_space::global,
                                                                          address_space::local};
 
+        void clear();
         void clear(address_space as);
         void merge(reads_writes const &other);
         void merge(reads_writes &&other);
+        void merge(address_space as, reads_writes const &other);
         void emplace_read(address_space as, ::tinytc_value const *val);
         void emplace_write(address_space as, ::tinytc_value const *val);
         auto read_cardinal(address_space as) const -> std::size_t;
@@ -37,13 +39,12 @@ class insert_barrier_pass {
         bool raw_war_or_waw(address_space as, reads_writes const &rw, aa_results const &aa) const;
 
       private:
-        auto address_space_to_index(address_space as) const -> std::size_t;
+        static auto address_space_to_index(address_space as) -> std::size_t;
 
         std::array<std::unordered_set<::tinytc_value const *>, address_spaces.size()> reads, writes;
     };
 
-    auto run_on_region(region_node &reg, aa_results const &aa,
-                       const bool insert_barriers = true) -> reads_writes;
+    void run_on_region(region_node &reg, aa_results const &aa);
 };
 
 } // namespace tinytc

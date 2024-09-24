@@ -31,7 +31,7 @@ tinytc_status_t tinytc_function_create(tinytc_func_t *fun, char const *name, uin
         for (uint32_t i = 0; i < arg_list_size; ++i) {
             arg_vec.emplace_back(value(arg_list[i], true));
         }
-        *fun = std::make_unique<function_node>(std::string(name), std::move(arg_vec), region{body},
+        *fun = std::make_unique<function_node>(std::string(name), std::move(arg_vec), body,
                                                get_optional(loc))
                    .release();
     });

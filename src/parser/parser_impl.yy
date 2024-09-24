@@ -250,7 +250,7 @@ func:
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
         auto func_node = std::make_unique<function_node>($GLOBAL_IDENTIFIER, std::move($arguments),
-                                                         std::move($region), loc)
+                                                         $region.release(), loc)
                              .release();
         for (auto &attr : $attributes) {
             attr(*func_node);

@@ -49,7 +49,7 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
         auto alloca_it = allocas.begin();
         while (alloca_it != allocas.end()) {
             if (rgn_ops.contains(alloca_it->get())) {
-                prev_it = reg.insert_after(
+                prev_it = reg.insts().insert_after(
                     prev_it, std::make_unique<lifetime_stop_inst>(*alloca_it).release());
                 --prev_it;
                 alloca_it = allocas.erase(alloca_it);

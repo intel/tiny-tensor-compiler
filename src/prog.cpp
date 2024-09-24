@@ -37,7 +37,7 @@ tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun) {
     if (prg == nullptr || fun == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { prg->push_back(func{fun}); });
+    return exception_to_status_code([&] { prg->push_back(fun); });
 }
 
 tinytc_status_t tinytc_prog_release(tinytc_prog_t obj) {
