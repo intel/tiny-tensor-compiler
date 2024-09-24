@@ -24,10 +24,8 @@ tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt, tinytc_scalar_
         return tinytc_status_invalid_arguments;
     }
 
-    return exception_to_status_code([&] {
-        *dt = std::make_unique<scalar_data_type>(enum_cast<scalar_type>(type), get_optional(loc))
-                  .release();
-    });
+    return exception_to_status_code(
+        [&] { *dt = std::make_unique<scalar_data_type>(enum_cast<scalar_type>(type)).release(); });
 }
 
 tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt, tinytc_scalar_type_t scalar_ty,

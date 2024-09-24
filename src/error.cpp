@@ -162,6 +162,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "A memref with local address space is expected";
     case tinytc_status_ir_expected_global_address_space:
         return "A memref with global address space is expected";
+    case tinytc_status_ir_invalid_offset:
+        return "Offset must be non-negative or dynamic";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

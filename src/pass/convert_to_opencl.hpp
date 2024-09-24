@@ -112,7 +112,7 @@ class convert_to_opencl_pass {
     void set_dope_vector(value_node *v, dope_vector dv);
     clir::var declare(value_node const &v);
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
-    static auto get_scalar_type(data_type_node const &ty) -> scalar_type;
+    static auto get_scalar_type(value_node const &v) -> scalar_type;
 
     ::tinytc_core_info const *info_;
     clir::program_builder prog_builder_;

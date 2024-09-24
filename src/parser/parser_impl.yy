@@ -303,7 +303,7 @@ attribute:
 
 
 data_type:
-    scalar_type { $$ = make_scalar($scalar_type); $$->loc(@scalar_type); }
+    scalar_type { $$ = make_scalar($scalar_type); }
   | memref_type
   | group_type
 ;
@@ -375,8 +375,7 @@ constant_or_dynamic:
 
 group_type:
     GROUP LCHEV memref_type group_offset RCHEV {
-        $$ = make_group(std::move($memref_type), $group_offset);
-        $$->loc(@group_type);
+        $$ = make_group(std::move($memref_type), $group_offset, @group_type);
     }
 ;
 

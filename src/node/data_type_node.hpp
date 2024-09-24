@@ -28,12 +28,8 @@ struct tinytc_data_type : tinytc::reference_counted {
     virtual ~tinytc_data_type() = default;
     inline auto type_id() const -> tinytc::DTK { return tid_; }
 
-    inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
-
   private:
     tinytc::DTK tid_;
-    tinytc::location loc_;
 };
 
 namespace tinytc {
@@ -43,10 +39,7 @@ using data_type_node = ::tinytc_data_type;
 class group_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::group; }
-    inline group_data_type(data_type ty, std::int64_t offset = 0, location const &lc = {})
-        : data_type_node(DTK::group), ty_(std::move(ty)), offset_(offset) {
-        loc(lc);
-    }
+    group_data_type(data_type ty, std::int64_t offset = 0, location const &lc = {});
 
     inline auto ty() const -> data_type const & { return ty_; }
     inline auto offset() const -> std::int64_t { return offset_; }
@@ -95,10 +88,7 @@ class memref_data_type : public data_type_node {
 class scalar_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::scalar; }
-    inline scalar_data_type(scalar_type type, location const &lc)
-        : data_type_node(DTK::scalar), ty_(type) {
-        loc(lc);
-    }
+    inline scalar_data_type(scalar_type type) : data_type_node(DTK::scalar), ty_(type) {}
 
     inline scalar_type ty() const { return ty_; }
 

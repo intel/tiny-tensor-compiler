@@ -151,15 +151,15 @@ auto convert_to_opencl_pass::get_memref_type(value_node const &v) const
     return t;
 }
 
-auto convert_to_opencl_pass::get_scalar_type(data_type_node const &ty) -> scalar_type {
+auto convert_to_opencl_pass::get_scalar_type(value_node const &v) -> scalar_type {
     return visit(overloaded{[](scalar_data_type const &i) -> scalar_type { return i.ty(); },
                             [](memref_data_type const &i) -> scalar_type { return i.element_ty(); },
-                            [&](auto const &i) -> scalar_type {
-                                throw compilation_error(i.loc(),
+                            [&](auto const &) -> scalar_type {
+                                throw compilation_error(v.loc(),
                                                         status::ir_expected_memref_or_scalar);
                                 return scalar_type{};
                             }},
-                 ty);
+                 *v.ty());
 };
 
 /* Data type nodes */
@@ -175,7 +175,7 @@ clir::data_type convert_to_opencl_pass::operator()(group_data_type const &g) {
                                     [](auto &) { return clir::data_type{}; }},
                          *ptr_ty);
     if (!ptr_ty) {
-        throw compilation_error(g.loc(), status::internal_compiler_error,
+        throw compilation_error(location{}, status::internal_compiler_error,
                                 "Could not determine OpenCL type of group type");
     }
     return ptr_ty;
@@ -189,11 +189,11 @@ clir::data_type convert_to_opencl_pass::operator()(scalar_data_type const &s) {
 
 /* Value nodes */
 clir::expr convert_to_opencl_pass::operator()(float_imm const &v) {
-    auto ty = get_scalar_type(*v.ty());
+    auto ty = get_scalar_type(v);
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
 clir::expr convert_to_opencl_pass::operator()(int_imm const &v) {
-    auto ty = get_scalar_type(*v.ty());
+    auto ty = get_scalar_type(v);
     return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
 }
 clir::expr convert_to_opencl_pass::operator()(val const &v) {
@@ -235,8 +235,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(alloca_inst const &a)
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &inst) {
     auto at = get_memref_type(*inst.A());
     auto bt = get_memref_type(*inst.B());
-    auto alpha_ty = get_scalar_type(*inst.alpha()->ty());
-    auto beta_ty = get_scalar_type(*inst.beta()->ty());
+    auto alpha_ty = get_scalar_type(*inst.alpha());
+    auto beta_ty = get_scalar_type(*inst.beta());
     auto &adv = get_dope_vector(inst.A().get());
     auto &bdv = get_dope_vector(inst.B().get());
 
@@ -359,7 +359,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
         }
         return {};
     };
-    auto sty = get_scalar_type(*a.a()->ty());
+    auto sty = get_scalar_type(*a.a());
     auto v = declare(*a.result());
     return {declaration_assignment(
         visit(*this, *a.result()->ty()), std::move(v),
@@ -379,7 +379,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
         }
         return {};
     };
-    auto sty = get_scalar_type(*a.a()->ty());
+    auto sty = get_scalar_type(*a.a());
     auto v = declare(*a.result());
     return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
                                    make(a.operation(), visit(*this, *a.a()), sty))};
@@ -617,9 +617,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
             *v);
     };
 
-    auto gemm_ty =
-        gemm_scalar_type{get_scalar_type(*g.alpha()->ty()), a->element_ty(), b->element_ty(),
-                         get_scalar_type(*g.beta()->ty()), c->element_ty()};
+    auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
+                                    get_scalar_type(*g.beta()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   g.tB(),
@@ -671,9 +670,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
             *v);
     };
 
-    auto gemm_ty =
-        gemm_scalar_type{get_scalar_type(*g.alpha()->ty()), a->element_ty(), b->element_ty(),
-                         get_scalar_type(*g.beta()->ty()), c->element_ty()};
+    auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
+                                    get_scalar_type(*g.beta()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   transpose::N,
@@ -715,8 +713,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
 
     auto alpha = visit(*this, *g.alpha());
     auto beta = visit(*this, *g.beta());
-    auto alpha_ty = get_scalar_type(*g.alpha()->ty());
-    auto beta_ty = get_scalar_type(*g.beta()->ty());
+    auto alpha_ty = get_scalar_type(*g.alpha());
+    auto beta_ty = get_scalar_type(*g.beta());
 
     auto A = visit(*this, *g.A());
     auto B = visit(*this, *g.B());
@@ -818,8 +816,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(hadamard_inst const &
 
     auto alpha = visit(*this, *g.alpha());
     auto beta = visit(*this, *g.beta());
-    auto alpha_ty = get_scalar_type(*g.alpha()->ty());
-    auto beta_ty = get_scalar_type(*g.beta()->ty());
+    auto alpha_ty = get_scalar_type(*g.alpha());
+    auto beta_ty = get_scalar_type(*g.beta());
 
     auto A = visit(*this, *g.A());
     auto B = visit(*this, *g.B());
@@ -995,8 +993,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
 
     auto alpha = visit(*this, *inst.alpha());
     auto beta = visit(*this, *inst.beta());
-    auto alpha_ty = get_scalar_type(*inst.alpha()->ty());
-    auto beta_ty = get_scalar_type(*inst.beta()->ty());
+    auto alpha_ty = get_scalar_type(*inst.alpha());
+    auto beta_ty = get_scalar_type(*inst.beta());
 
     auto zero = clir::expr(0.0, static_cast<short>(size(at->element_ty()) * 8));
 
