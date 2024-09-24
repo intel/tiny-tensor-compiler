@@ -48,7 +48,7 @@ Common
 
   * :ref:`tinytc_source_t`
 
-  * :ref:`tinytc_source_context_t`
+  * :ref:`tinytc_compiler_context_t`
 
   * :ref:`const_tinytc_binary_t`
 
@@ -60,7 +60,9 @@ Common
 
   * :ref:`const_tinytc_source_t`
 
-  * :ref:`const_tinytc_source_context_t`
+  * :ref:`const_tinytc_compiler_context_t`
+
+  * :ref:`tinytc_error_reporter_t`
 
 Common Enumerations
 -------------------
@@ -154,10 +156,10 @@ tinytc_source_t
 
 .. doxygentypedef:: tinytc_source_t
 
-tinytc_source_context_t
-.......................
+tinytc_compiler_context_t
+.........................
 
-.. doxygentypedef:: tinytc_source_context_t
+.. doxygentypedef:: tinytc_compiler_context_t
 
 const_tinytc_binary_t
 .....................
@@ -184,10 +186,15 @@ const_tinytc_source_t
 
 .. doxygentypedef:: const_tinytc_source_t
 
-const_tinytc_source_context_t
-.............................
+const_tinytc_compiler_context_t
+...............................
 
-.. doxygentypedef:: const_tinytc_source_context_t
+.. doxygentypedef:: const_tinytc_compiler_context_t
+
+tinytc_error_reporter_t
+.......................
+
+.. doxygentypedef:: tinytc_error_reporter_t
 
 Binary
 ======
@@ -272,6 +279,56 @@ tinytc_prog_compile_to_opencl
 .............................
 
 .. doxygenfunction:: tinytc_prog_compile_to_opencl
+
+Compiler Context
+================
+
+* Functions
+
+  * :ref:`tinytc_compiler_context_create`
+
+  * :ref:`tinytc_compiler_context_add_source`
+
+  * :ref:`tinytc_compiler_context_set_error_reporter`
+
+  * :ref:`tinytc_compiler_context_report_error`
+
+  * :ref:`tinytc_compiler_context_release`
+
+  * :ref:`tinytc_compiler_context_retain`
+
+Compiler Context Functions
+--------------------------
+
+tinytc_compiler_context_create
+..............................
+
+.. doxygenfunction:: tinytc_compiler_context_create
+
+tinytc_compiler_context_add_source
+..................................
+
+.. doxygenfunction:: tinytc_compiler_context_add_source
+
+tinytc_compiler_context_set_error_reporter
+..........................................
+
+.. doxygenfunction:: tinytc_compiler_context_set_error_reporter
+
+tinytc_compiler_context_report_error
+....................................
+
+.. doxygenfunction:: tinytc_compiler_context_report_error
+
+tinytc_compiler_context_release
+...............................
+
+.. doxygenfunction:: tinytc_compiler_context_release
+
+tinytc_compiler_context_retain
+..............................
+
+.. doxygenfunction:: tinytc_compiler_context_retain
 
 Device Info
 ===========
@@ -564,54 +621,4 @@ tinytc_source_retain
 ....................
 
 .. doxygenfunction:: tinytc_source_retain
-
-Source Context
-==============
-
-* Functions
-
-  * :ref:`tinytc_source_context_create`
-
-  * :ref:`tinytc_source_context_add_source`
-
-  * :ref:`tinytc_source_context_get_error_log`
-
-  * :ref:`tinytc_source_context_report_error`
-
-  * :ref:`tinytc_source_context_release`
-
-  * :ref:`tinytc_source_context_retain`
-
-Source Context Functions
-------------------------
-
-tinytc_source_context_create
-............................
-
-.. doxygenfunction:: tinytc_source_context_create
-
-tinytc_source_context_add_source
-................................
-
-.. doxygenfunction:: tinytc_source_context_add_source
-
-tinytc_source_context_get_error_log
-...................................
-
-.. doxygenfunction:: tinytc_source_context_get_error_log
-
-tinytc_source_context_report_error
-..................................
-
-.. doxygenfunction:: tinytc_source_context_report_error
-
-tinytc_source_context_release
-.............................
-
-.. doxygenfunction:: tinytc_source_context_release
-
-tinytc_source_context_retain
-............................
-
-.. doxygenfunction:: tinytc_source_context_retain
 

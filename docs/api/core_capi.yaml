@@ -22,13 +22,14 @@ Core C-API:
       - tinytc_recipe_t
       - tinytc_recipe_handler_t
       - tinytc_source_t
-      - tinytc_source_context_t
+      - tinytc_compiler_context_t
       - const_tinytc_binary_t
       - const_tinytc_core_info_t
       - const_tinytc_recipe_t
       - const_tinytc_recipe_handler_t
       - const_tinytc_source_t
-      - const_tinytc_source_context_t
+      - const_tinytc_compiler_context_t
+      - tinytc_error_reporter_t
   Binary:
     function:
       - tinytc_binary_create
@@ -43,6 +44,14 @@ Core C-API:
       - tinytc_run_function_pass
       - tinytc_list_function_passes
       - tinytc_prog_compile_to_opencl
+  Compiler Context:
+    function:
+      - tinytc_compiler_context_create
+      - tinytc_compiler_context_add_source
+      - tinytc_compiler_context_set_error_reporter
+      - tinytc_compiler_context_report_error
+      - tinytc_compiler_context_release
+      - tinytc_compiler_context_retain
   Device Info:
     enum:
       - tinytc_core_feature_flag_t
@@ -89,11 +98,3 @@ Core C-API:
       - tinytc_source_get_extensions
       - tinytc_source_release
       - tinytc_source_retain
-  Source Context:
-    function:
-      - tinytc_source_context_create
-      - tinytc_source_context_add_source
-      - tinytc_source_context_get_error_log
-      - tinytc_source_context_report_error
-      - tinytc_source_context_release
-      - tinytc_source_context_retain

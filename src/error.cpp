@@ -74,7 +74,7 @@ auto report_error_with_context(char const *code, std::size_t code_len, std::stri
     oerr << file_name << ":";
     print_range(oerr, l.begin, l.end);
     oerr << ": " << what;
-    return oerr.str();
+    return std::move(oerr).str();
 }
 
 } // namespace tinytc

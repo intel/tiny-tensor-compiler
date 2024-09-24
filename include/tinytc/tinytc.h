@@ -891,11 +891,13 @@ TINYTC_EXPORT void tinytc_func_destroy(tinytc_func_t fun);
  * @brief Create program
  *
  * @param prg [out] pointer to the prog object created
+ * @param ctx [in] compiler context object
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg,
+                                                    tinytc_compiler_context_t ctx,
                                                     const tinytc_location_t *loc);
 
 /**
@@ -910,6 +912,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_program_create(tinytc_prog_t *prg,
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun);
+
+/**
+ * @brief Get context object from program object
+ *
+ * @param prg [in] program object
+ * @param ctx [out] pointer to context object; reference count is increased so the user needs to
+ * call tinytc_compiler_context_release to clean up
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_get_compiler_context(const_tinytc_prog_t prg,
+                                                               tinytc_compiler_context_t *ctx);
 
 /**
  * @brief Release program object
@@ -1100,22 +1114,22 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj);
  *
  * @param prg [out] pointer to prog object created
  * @param filename [in] path to source file
- * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_parse_file(tinytc_prog_t *prg, char const *filename,
-                                                tinytc_source_context_t ctx);
+                                                tinytc_compiler_context_t ctx);
 
 /**
  * @brief Parser tensor language source from stdin and create prog
  *
  * @param prg [out] pointer to prog object created
- * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_source_context_t ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_compiler_context_t ctx);
 
 /**
  * @brief Parser tensor language source from string and create prog
@@ -1123,90 +1137,88 @@ TINYTC_EXPORT tinytc_status_t tinytc_parse_stdin(tinytc_prog_t *prg, tinytc_sour
  * @param prg [out] pointer to prog object created
  * @param source_size [in] length of source string
  * @param source [in] source string
- * @param ctx [inout][optional] source context object; stores error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_parse_string(tinytc_prog_t *prg, size_t source_size,
-                                                  char const *source, tinytc_source_context_t ctx);
+                                                  char const *source,
+                                                  tinytc_compiler_context_t ctx);
 /**
- * @brief Create source context
+ * @brief Create context
  *
- * The source context stores the tensor language source and enhaces error messages with
- * source code context.
+ * The context stores the tensor language source and reports enhaces error messages with
+ * source code context. Moreover, the context caches data such as types and constants.
  *
- * @param ctx [out] pointer to the source context object created
+ * @param ctx [out] pointer to the context object created
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_create(tinytc_source_context_t *ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_create(tinytc_compiler_context_t *ctx);
 
 /**
  * @brief Add source context
  *
- * Manually add a source file to the source context that can be referenced in a tinytc_location.
+ * Manually add a source file to the context that can be referenced in a tinytc_location.
  * Useful to enhance error messages when using the builder methods and classes.
  *
- * @param ctx [in] source context object
+ * @param ctx [in] context object
  * @param name [in] source name
  * @param text [in] source text
  * @param source_id [out] pointer to source id
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_add_source(tinytc_source_context_t ctx,
-                                                               char const *name, char const *text,
-                                                               int32_t *source_id);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_add_source(tinytc_compiler_context_t ctx,
+                                                                 char const *name, char const *text,
+                                                                 int32_t *source_id);
 
 /**
- * @brief Get error log
+ * @brief Set error reporter
  *
- * The string's memory is owned by source context.
- * Note that the pointer may invalidated by any function call involving the source context object,
- * so the string should be copied or printed right after a call to this function.
+ * Error reporting function that is called whenever an error occurs in the parser or the builder.
  *
- * @param ctx [in] source context object
- * @param log [out] pointer to string
+ * @param ctx [in] context object
+ * @param reporter [in] error reporting callback; set to nullptr to disable reporting
+ * @param user_data [in][optional] pointer to user data that is passed to the callback; can be
+ * nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_get_error_log(const_tinytc_source_context_t ctx,
-                                                                  char const **log);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_error_reporter(
+    tinytc_compiler_context_t ctx, tinytc_error_reporter_t reporter, void *user_data);
 
 /**
  * @brief Report an error and augment the error with source context
  *
- * @param ctx [in] source context object
+ * @param ctx [in] context object
  * @param location [in] source location
  * @param what [in] error description
- * @param append [in] true: append to error log, false: clear error log
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_report_error(tinytc_source_context_t ctx,
-                                                                 const tinytc_location_t *location,
-                                                                 char const *what,
-                                                                 tinytc_bool_t append);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_report_error(
+    tinytc_compiler_context_t ctx, const tinytc_location_t *location, char const *what);
 
 /**
- * @brief Release source context object
+ * @brief Release context object
  *
  * Decreases reference count by 1, free memory if reference count is 0.
  *
- * @param obj [inout] source context object
+ * @param obj [inout] context object
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_release(tinytc_source_context_t obj);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_release(tinytc_compiler_context_t obj);
 
 /**
- * @brief Increase reference count of source context object by 1
+ * @brief Increase reference count of context object by 1
  *
- * @param obj [inout] source context object
+ * @param obj [inout] context object
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_source_context_retain(tinytc_source_context_t obj);
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_retain(tinytc_compiler_context_t obj);
 
 ////////////////////////////
 ///////// Compiler /////////
@@ -1219,14 +1231,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_context_retain(tinytc_source_context
  * @param prg [inout] tensor program; modified as compiler pass is run
  * @param info [in][optional] core info object; might be nullptr if core info is not required for
  * pass
- * @param ctx [inout][optional] source context object to save extended error messages that are
- * enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t prg,
-                                                       const_tinytc_core_info_t info,
-                                                       tinytc_source_context_t ctx);
+                                                       const_tinytc_core_info_t info);
 
 /**
  * @brief List function passes
@@ -1245,14 +1254,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_list_function_passes(uint32_t *names_size,
  * @param src [out] pointer to the source object created
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param info [in] core info object
- * @param ctx [inout][optional] source context object to save extended error messages that are
- * enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                                            const_tinytc_core_info_t info,
-                                                            tinytc_source_context_t ctx);
+                                                            const_tinytc_core_info_t info);
 
 /**
  * @brief Get source text
@@ -1424,7 +1430,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_retain(tinytc_binary_t bin);
  * @param strideB [in] Number of elements between B-matrices
  * @param ldC [in] Leading dimension of C
  * @param strideC [in] Number of elements between C-matrices
- * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1432,7 +1438,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
     tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
     int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC,
-    tinytc_source_context_t ctx);
+    tinytc_compiler_context_t ctx);
 
 /**
  * @brief Set kernel arguments for small GEMM batched recipe
@@ -1488,13 +1494,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @param K [in] Number columns of A, number of rows of B
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
  * parameter auto-selected
- * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t N,
-    int64_t K, int32_t M_block_size, tinytc_source_context_t ctx);
+    int64_t K, int32_t M_block_size, tinytc_compiler_context_t ctx);
 
 /**
  * @brief Returns a tall and skinny recipe with additional specialization constants
@@ -1526,14 +1532,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
  * parameter auto-selected
- * @param ctx [inout][optional] source context object; saves error log; can be nullptr
+ * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
     int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
-    tinytc_source_context_t ctx);
+    tinytc_compiler_context_t ctx);
 
 /**
  * @brief Suggest an M block size for tall and skinny recipe

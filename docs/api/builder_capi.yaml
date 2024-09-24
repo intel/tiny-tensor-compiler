@@ -87,6 +87,7 @@ Builder C-API:
       - tinytc_program_create
       - tinytc_prog_add_function
       - tinytc_prog_dump
+      - tinytc_prog_get_compiler_context
       - tinytc_prog_print_to_file
       - tinytc_prog_print_to_string
       - tinytc_prog_release

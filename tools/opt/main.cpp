@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    auto ctx = source_context{};
+    auto ctx = compiler_context{};
     try {
-        ctx = make_source_context();
+        ctx = make_compiler_context();
         auto p = prog{};
         if (!a.filename) {
             p = parse_stdin(ctx);
@@ -40,11 +40,10 @@ int main(int argc, char **argv) {
         }
 
         for (auto const &pass_name : a.pass_names) {
-            run_function_pass(pass_name.c_str(), p, a.info, ctx);
+            run_function_pass(pass_name.c_str(), p, a.info);
         }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
-        std::cerr << "Error log: " << std::endl << ctx.get_error_log() << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

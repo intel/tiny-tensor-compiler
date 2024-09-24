@@ -46,12 +46,11 @@ auto small_gemm_batched_recipe::kernel_name(int kernel_num) const -> char const 
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t
-tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_core_info_t info,
-                                        tinytc_scalar_type_t ty, tinytc_transpose_t tA,
-                                        tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K,
-                                        int64_t ldA, int64_t strideA, int64_t ldB, int64_t strideB,
-                                        int64_t ldC, int64_t strideC, tinytc_source_context_t ctx) {
+tinytc_status_t tinytc_recipe_small_gemm_batched_create(
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
+    tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
+    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC,
+    tinytc_compiler_context_t ctx) {
     if (recipe == nullptr || info == nullptr || M == TINYTC_DYNAMIC || N == TINYTC_DYNAMIC ||
         K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC || strideA == TINYTC_DYNAMIC ||
         ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC || ldC == TINYTC_DYNAMIC ||
@@ -59,11 +58,10 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
         return tinytc_status_invalid_arguments;
     }
 
+    auto ctx_ = ctx ? compiler_context{ctx} : make_compiler_context();
     std::int32_t source_id = 0;
-    if (ctx) {
-        TINYTC_CHECK_STATUS(
-            tinytc_source_context_add_source(ctx, "recipe/small_gemm_batched.cpp", "", &source_id));
-    }
+    TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(
+        ctx_.get(), "recipe/small_gemm_batched.cpp", "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -119,7 +117,7 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
                     my_loc());
             };
             auto p = [&] {
-                auto pb = program_builder{my_loc()};
+                auto pb = program_builder{ctx_, my_loc()};
                 pb.create(
                     small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm),
                     [&](function_builder &fb) { kernel(fb, true); }, my_loc());
@@ -130,11 +128,11 @@ tinytc_recipe_small_gemm_batched_create(tinytc_recipe_t *recipe, const_tinytc_co
                 return std::move(pb).get_product();
             }();
             tinytc_source_t src;
-            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
+            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
             *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src), ty_)
                           .release();
         },
-        ctx);
+        ctx_.get());
 }
 
 tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(

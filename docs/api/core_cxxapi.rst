@@ -28,6 +28,10 @@ Common
 
   * :ref:`unique_handle`
 
+* Typedefs
+
+  * :ref:`error_reporter_t`
+
 Common Enumerations
 -------------------
 
@@ -71,6 +75,14 @@ unique_handle
 .............
 
 .. doxygenclass:: tinytc::unique_handle
+
+Common Typedefs
+---------------
+
+error_reporter_t
+................
+
+.. doxygentypedef:: tinytc::error_reporter_t
 
 Binary
 ======
@@ -139,6 +151,33 @@ compile_to_opencl
 .................
 
 .. doxygenfunction:: tinytc::compile_to_opencl
+
+Compiler Context
+================
+
+* Functions
+
+  * :ref:`make_compiler_context`
+
+* Classes
+
+  * :ref:`compiler_context`
+
+Compiler Context Functions
+--------------------------
+
+make_compiler_context
+.....................
+
+.. doxygenfunction:: tinytc::make_compiler_context
+
+Compiler Context Classes
+------------------------
+
+compiler_context
+................
+
+.. doxygenclass:: tinytc::compiler_context
 
 Device Info
 ===========
@@ -362,31 +401,4 @@ source
 ......
 
 .. doxygenclass:: tinytc::source
-
-Source Context
-==============
-
-* Functions
-
-  * :ref:`make_source_context`
-
-* Classes
-
-  * :ref:`source_context`
-
-Source Context Functions
-------------------------
-
-make_source_context
-...................
-
-.. doxygenfunction:: tinytc::make_source_context
-
-Source Context Classes
-----------------------
-
-source_context
-..............
-
-.. doxygenclass:: tinytc::source_context
 

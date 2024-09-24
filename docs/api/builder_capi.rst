@@ -551,6 +551,8 @@ Program
 
   * :ref:`tinytc_prog_dump`
 
+  * :ref:`tinytc_prog_get_compiler_context`
+
   * :ref:`tinytc_prog_print_to_file`
 
   * :ref:`tinytc_prog_print_to_string`
@@ -576,6 +578,11 @@ tinytc_prog_dump
 ................
 
 .. doxygenfunction:: tinytc_prog_dump
+
+tinytc_prog_get_compiler_context
+................................
+
+.. doxygenfunction:: tinytc_prog_get_compiler_context
 
 tinytc_prog_print_to_file
 .........................

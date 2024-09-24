@@ -24,6 +24,7 @@ set(SOURCES
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
+    compiler_context.cpp
     data_type.cpp
     device_info.cpp
     error.cpp

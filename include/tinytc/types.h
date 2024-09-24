@@ -394,13 +394,13 @@ typedef struct tinytc_source *tinytc_source_t;
 //! @brief const source handle
 typedef const struct tinytc_source *const_tinytc_source_t;
 
-//! @struct tintyc_source_context
-//! @brief Opaque struct for source context
-struct tinytc_source_context;
-//! @brief source_context handle
-typedef struct tinytc_source_context *tinytc_source_context_t;
-//! @brief const source_context handle
-typedef const struct tinytc_source_context *const_tinytc_source_context_t;
+//! @struct tintyc_compiler_context
+//! @brief Opaque struct for compiler context
+struct tinytc_compiler_context;
+//! @brief compiler_context handle
+typedef struct tinytc_compiler_context *tinytc_compiler_context_t;
+//! @brief const compiler_context handle
+typedef const struct tinytc_compiler_context *const_tinytc_compiler_context_t;
 
 //! @struct tinytc_binary;
 //! @brief Opaque struct for a binary
@@ -442,6 +442,20 @@ typedef struct tinytc_location {
     tinytc_position_t begin; ///< Starting position
     tinytc_position_t end;   ///< End position
 } tinytc_location_t;
+
+////////////////////////////
+///////// Callbacks ////////
+////////////////////////////
+
+/**
+ * @brief Signature for error reporting callback
+ *
+ * @param what Error description
+ * @param location Source code location
+ * @param user_data user data that is passed on to callback
+ */
+typedef void (*tinytc_error_reporter_t)(char const *what, const tinytc_location_t *location,
+                                        void *user_data);
 
 #ifdef __cplusplus
 }

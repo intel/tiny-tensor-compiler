@@ -12,6 +12,8 @@ Core C++-API:
     class:
       - tinytc::shared_handle
       - tinytc::unique_handle
+    typedef:
+      - tinytc::error_reporter_t
   Binary:
     enum:
       - tinytc::bundle_format
@@ -24,6 +26,11 @@ Core C++-API:
       - tinytc::run_function_pass
       - tinytc::list_function_passes
       - tinytc::compile_to_opencl
+  Compiler Context:
+    function:
+      - tinytc::make_compiler_context
+    class:
+      - tinytc::compiler_context
   Device Info:
     enum:
       - tinytc::core_feature_flag
@@ -61,8 +68,3 @@ Core C++-API:
   Source:
     class:
       - tinytc::source
-  Source Context:
-    function:
-      - tinytc::make_source_context
-    class:
-      - tinytc::source_context

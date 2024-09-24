@@ -25,20 +25,18 @@
 #include <clir/visitor/unique_names.hpp>
 
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <utility>
 #include <vector>
-
-#include <iostream>
 
 using namespace tinytc;
 
 extern "C" {
 
 tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t prg,
-                                         const_tinytc_core_info_t info,
-                                         tinytc_source_context_t ctx) {
+                                         const_tinytc_core_info_t info) {
     if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -57,7 +55,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
 #undef FUNCTION_PASS_WITH_INFO
             throw status::unknown_pass_name;
         },
-        ctx);
+        prg->get_context());
 }
 
 tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *const **names) {
@@ -78,8 +76,7 @@ tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *co
 }
 
 tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                              const_tinytc_core_info_t info,
-                                              tinytc_source_context_t ctx) {
+                                              const_tinytc_core_info_t info) {
     if (src == nullptr || prg == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -111,6 +108,6 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
                                                      info->core_features())
                        .release();
         },
-        ctx);
+        prg->get_context());
 }
 }

@@ -36,8 +36,8 @@ value parse_context::val(std::string const &id, location const &l) {
     throw parser::syntax_error(l, "Undefined identifier %" + id);
 }
 
-void parse_context::add_error(location const &loc, std::string const &what) {
-    errors_.emplace_back(std::make_pair(loc, what));
+void parse_context::report_error(location const &loc, std::string const &what) {
+    compiler_ctx_->report_error(loc, what.c_str());
 }
 
 } // namespace tinytc

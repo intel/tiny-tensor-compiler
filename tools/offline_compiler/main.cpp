@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    auto ctx = source_context{};
+    auto ctx = compiler_context{};
     try {
-        ctx = make_source_context();
+        ctx = make_compiler_context();
         auto p = prog{};
         if (!a.filename) {
             p = parse_stdin(ctx);
@@ -39,11 +39,10 @@ int main(int argc, char **argv) {
             p = parse_file(a.filename, ctx);
         }
 
-        auto src = compile_to_opencl(std::move(p), a.info, ctx);
+        auto src = compile_to_opencl(std::move(p), a.info);
         std::cout << src.get_code();
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
-        std::cerr << "Error log: " << std::endl << ctx.get_error_log() << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

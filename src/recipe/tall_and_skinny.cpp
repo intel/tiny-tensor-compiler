@@ -56,7 +56,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      const_tinytc_core_info_t info,
                                                      tinytc_scalar_type_t ty, int64_t N, int64_t K,
                                                      int32_t M_block_size,
-                                                     tinytc_source_context_t ctx) {
+                                                     tinytc_compiler_context_t ctx) {
     return tinytc_recipe_tall_and_skinny_create_specialized(recipe, info, ty, TINYTC_DYNAMIC, N, K,
                                                             TINYTC_DYNAMIC, TINYTC_DYNAMIC,
                                                             TINYTC_DYNAMIC, M_block_size, ctx);
@@ -65,16 +65,15 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
 tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
     int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
-    tinytc_source_context_t ctx) {
+    tinytc_compiler_context_t ctx) {
     if (recipe == nullptr || info == nullptr || N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 
+    auto ctx_ = ctx ? compiler_context{ctx} : make_compiler_context();
     std::int32_t source_id = 0;
-    if (ctx) {
-        TINYTC_CHECK_STATUS(
-            tinytc_source_context_add_source(ctx, "recipe/tall_and_skinny.cpp", "", &source_id));
-    }
+    TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(ctx_.get(), "recipe/tall_and_skinny.cpp",
+                                                           "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -158,7 +157,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             };
 
             auto p = [&] {
-                auto pb = program_builder{my_loc()};
+                auto pb = program_builder{ctx_, my_loc()};
                 pb.create(
                     tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm),
                     [&](function_builder &fb) { kernel(fb, true); }, my_loc());
@@ -168,12 +167,12 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 return std::move(pb).get_product();
             }();
             tinytc_source_t src;
-            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info, ctx));
+            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
             *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src), ty_, M,
                                                                ldA, ldB, ldC, M_block_size)
                           .release();
         },
-        ctx);
+        ctx_.get());
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_core_info_t info,

@@ -294,6 +294,8 @@ enum class support_level {
 using position = ::tinytc_position;
 //! @brief Alias for tinytc_location in namespace tinytc
 using location = ::tinytc_location;
+//! @brief Alias for tinytc_error_reporter_t in namespace tinytc
+using error_reporter_t = ::tinytc_error_reporter_t;
 
 } // namespace tinytc
 

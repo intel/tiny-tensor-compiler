@@ -7,6 +7,7 @@
 #include "location.hpp"
 #include "reference_counted.hpp"
 #include "support/util.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <cstdint>
 #include <utility>
@@ -19,8 +20,10 @@ using const_func_range = iterator_range_wrapper<const_tinytc_func_t *>;
 
 struct tinytc_prog final : tinytc::reference_counted {
   public:
-    inline tinytc_prog(tinytc_location const &lc = {}) { loc(lc); }
+    tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc = {});
     ~tinytc_prog();
+
+    inline auto get_context() const -> tinytc_compiler_context_t { return ctx_.get(); }
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
@@ -43,6 +46,7 @@ struct tinytc_prog final : tinytc::reference_counted {
     inline void push_back(tinytc_func_t fun) { funcs_.push_back(fun); }
 
   private:
+    tinytc::compiler_context ctx_;
     std::vector<tinytc_func_t> funcs_;
     tinytc_location loc_;
 };

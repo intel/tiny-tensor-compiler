@@ -25,12 +25,15 @@ using namespace tinytc;
 
 extern "C" {
 
-tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, const tinytc_location_t *loc) {
+tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, tinytc_compiler_context_t ctx,
+                                      const tinytc_location_t *loc) {
     if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *prg = std::make_unique<program_node>(get_optional(loc)).release(); });
+    return exception_to_status_code([&] {
+        *prg = std::make_unique<program_node>(compiler_context{ctx, true}, get_optional(loc))
+                   .release();
+    });
 }
 
 tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun) {
@@ -64,6 +67,15 @@ tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { run_function_pass(dump_ir_pass{std::cerr}, *prg); });
+}
+
+tinytc_status_t tinytc_prog_get_compiler_context(const_tinytc_prog_t prg,
+                                                 tinytc_compiler_context_t *ctx) {
+    if (prg == nullptr || ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return tinytc::exception_to_status_code(
+        [&] { *ctx = tinytc::compiler_context(prg->get_context()).release(); });
 }
 
 tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *filename) {

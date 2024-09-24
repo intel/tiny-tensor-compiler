@@ -282,6 +282,75 @@ template <typename T> class unique_handle {
 };
 
 ////////////////////////////
+///// Compiler context /////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_compiler_context_t> {
+    static auto retain(tinytc_compiler_context_t handle) -> tinytc_status_t {
+        return tinytc_compiler_context_retain(handle);
+    }
+    static auto release(tinytc_compiler_context_t handle) -> tinytc_status_t {
+        return tinytc_compiler_context_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_compiler_context_t
+class compiler_context : public shared_handle<tinytc_compiler_context_t> {
+  public:
+    using shared_handle::shared_handle;
+
+    /**
+     * @brief Add compiler to context
+     *
+     * @param name File name
+     * @param text Source text
+     *
+     * @return Source id (should be set in position.source_id)
+     */
+    inline auto add_source(char const *name, char const *text) -> std::int32_t {
+        std::int32_t source_id;
+        CHECK_STATUS(tinytc_compiler_context_add_source(obj_, name, text, &source_id));
+        return source_id;
+    }
+    /**
+     * @brief Set error reporter
+     *
+     * Error reporting function that is called whenever an error occurs in the parser or the
+     * builder.
+     *
+     * @param reporter error reporting callback
+     * @param user_data pointer to user data that is passed to the callback
+     *
+     * @return tinytc_status_success on success and error otherwise
+     */
+    inline void set_error_reporter(error_reporter_t reporter, void *user_data) {
+        CHECK_STATUS(tinytc_compiler_context_set_error_reporter(obj_, reporter, user_data));
+    }
+    /**
+     * @brief Enhance error message with compiler context; useful when builder is used
+     *
+     * @param loc Source location
+     * @param what Error description
+     */
+    inline void report_error(location const &loc, char const *what) {
+        CHECK_STATUS(tinytc_compiler_context_report_error(obj_, &loc, what));
+    }
+};
+
+/**
+ * @brief Create compiler context
+ *
+ * @return Compiler context
+ */
+inline auto make_compiler_context() -> compiler_context {
+    tinytc_compiler_context_t ctx;
+    CHECK_STATUS(tinytc_compiler_context_create(&ctx));
+    return compiler_context{ctx};
+}
+
+////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
 
@@ -1352,6 +1421,16 @@ class prog : public shared_handle<tinytc_prog_t> {
      */
     void dump() const { CHECK_STATUS(tinytc_prog_dump(obj_)); }
     /**
+     * @brief Get context
+     *
+     * @return Compiler context
+     */
+    auto get_compiler_context() const -> compiler_context {
+        tinytc_compiler_context_t ctx;
+        CHECK_STATUS(tinytc_prog_get_compiler_context(obj_, &ctx));
+        return compiler_context{ctx};
+    }
+    /**
      * @brief Dump program to file
      *
      * @param filename Path to file
@@ -1374,13 +1453,14 @@ class prog : public shared_handle<tinytc_prog_t> {
 /**
  * @brief Make program
  *
+ * @param ctx Compiler context
  * @param loc Source code location
  *
  * @return Program
  */
-inline prog make_program(location const &loc = {}) {
+inline prog make_program(compiler_context const &ctx, location const &loc = {}) {
     tinytc_prog_t prg;
-    CHECK_STATUS_LOC(tinytc_program_create(&prg, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_program_create(&prg, ctx.get(), &loc), loc);
     return prog{prg};
 }
 
@@ -1570,14 +1650,14 @@ class function_builder {
      * @brief creates function \@name
      *
      * @param name Function name
+     * @param loc Source code location
+     *
      */
     inline function_builder(std::string name, location const &loc = {})
         : name_(std::move(name)), body_{nullptr}, loc_(loc) {}
 
     /**
      * @brief Returns built product
-     *
-     * @param loc Source code location
      *
      * @return Function
      */
@@ -1655,9 +1735,12 @@ class program_builder {
     /**
      * @brief ctor
      *
+     * @param ctx Compiler context
      * @param loc Source code location
+     *
      */
-    program_builder(location const &loc = {}) : prg_{make_program(loc)} {}
+    program_builder(compiler_context const &ctx, location const &loc = {})
+        : prg_{make_program(ctx, loc)} {}
 
     /**
      * @brief create function \@name with functor f(function_builder&) -> void
@@ -1680,8 +1763,6 @@ class program_builder {
     inline void add(func f) { prg_.add_function(std::move(f)); }
     /**
      * @brief Returns built product
-     *
-     * @param loc Source code location
      *
      * @return Program
      */
@@ -1809,112 +1890,43 @@ inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
 ////////// Parser //////////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_source_context_t> {
-    static auto retain(tinytc_source_context_t handle) -> tinytc_status_t {
-        return tinytc_source_context_retain(handle);
-    }
-    static auto release(tinytc_source_context_t handle) -> tinytc_status_t {
-        return tinytc_source_context_release(handle);
-    }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_source_context_t
-class source_context : public shared_handle<tinytc_source_context_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Add source to context
-     *
-     * @param name File name
-     * @param text Source text
-     *
-     * @return Source id (should be set in position.source_id)
-     */
-    inline auto add_source(char const *name, char const *text) -> std::int32_t {
-        std::int32_t source_id;
-        CHECK_STATUS(tinytc_source_context_add_source(obj_, name, text, &source_id));
-        return source_id;
-    }
-    /**
-     * @brief Get error log
-     *
-     * @return C-string that is valid as long as source_context is not modified; empty string if
-     * source_context is empty
-     */
-    inline auto get_error_log() const noexcept -> char const * {
-        if (obj_) {
-            char const *log;
-            // No need to call CHECK_STATUS, as the only possible error code is
-            // tinytc_status_invalid_arguments but we only pass valid arguments
-            tinytc_source_context_get_error_log(obj_, &log);
-            return log;
-        }
-        return "";
-    }
-    /**
-     * @brief Enhance error message with source context; useful when builder is used
-     *
-     * @param loc Source location
-     * @param what Error description
-     * @param append True: append to error log; false: clear error log
-     */
-    inline void report_error(location const &loc, char const *what, bool append = true) {
-        CHECK_STATUS(tinytc_source_context_report_error(obj_, &loc, what,
-                                                        static_cast<tinytc_bool_t>(append)));
-    }
-};
-
-/**
- * @brief Create source context
- *
- * @return Source context
- */
-inline auto make_source_context() -> source_context {
-    tinytc_source_context_t ctx;
-    CHECK_STATUS(tinytc_source_context_create(&ctx));
-    return source_context{ctx};
-}
-
 /**
  * @brief Parse source text from file
  *
  * @param filename Filename
- * @param source_ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Program
  */
-inline auto parse_file(char const *filename, source_context source_ctx = {}) -> prog {
+inline auto parse_file(char const *filename, compiler_context ctx = {}) -> prog {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_file(&prg, filename, source_ctx.get()));
+    CHECK_STATUS(tinytc_parse_file(&prg, filename, ctx.get()));
     return prog(prg);
 }
 
 /**
  * @brief Parse source text from stdin
  *
- * @param source_ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Program
  */
-inline auto parse_stdin(source_context source_ctx = {}) -> prog {
+inline auto parse_stdin(compiler_context ctx = {}) -> prog {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_stdin(&prg, source_ctx.get()));
+    CHECK_STATUS(tinytc_parse_stdin(&prg, ctx.get()));
     return prog(prg);
 }
 /**
  * @brief Parse source text from string
  *
  * @param src Source text
- * @param source_ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Porgram
  */
-inline auto parse_string(std::string const &src, source_context source_ctx = {}) -> prog {
+inline auto parse_string(std::string const &src, compiler_context ctx = {}) -> prog {
     tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), source_ctx.get()));
+    CHECK_STATUS(tinytc_parse_string(&prg, src.size(), src.c_str(), ctx.get()));
     return prog(prg);
 }
 
@@ -2045,12 +2057,9 @@ inline auto make_binary(bundle_format format, std::size_t data_size, std::uint8_
  * @param pass_name name of function pass; cf. list_function_passes
  * @param prg tensor program; modified as compiler pass is run
  * @param info core info object; might be nullptr if core info is not required for pass
- * @param ctx source context object to save extended error messages that are
- * enhanced with source code context
  */
-inline void run_function_pass(char const *pass_name, prog prg, core_info info = {},
-                              source_context ctx = {}) {
-    CHECK_STATUS(tinytc_run_function_pass(pass_name, prg.get(), info.get(), ctx.get()));
+inline void run_function_pass(char const *pass_name, prog prg, core_info info = {}) {
+    CHECK_STATUS(tinytc_run_function_pass(pass_name, prg.get(), info.get()));
 }
 
 /**
@@ -2068,13 +2077,12 @@ inline void list_function_passes(std::uint32_t &names_size, char const *const *&
  *
  * @param prg Program
  * @param info Core info
- * @param ctx Source context for improved error reporting
  *
  * @return Source
  */
-inline auto compile_to_opencl(prog prg, core_info const &info, source_context ctx = {}) -> source {
+inline auto compile_to_opencl(prog prg, core_info const &info) -> source {
     tinytc_source_t src;
-    CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get(), ctx.get()));
+    CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get()));
     return source{src};
 }
 
@@ -2245,7 +2253,7 @@ class small_gemm_batched : public recipe {
  * @param strideB Stride of B-matrices
  * @param ldC Leading dimension of an C matrix
  * @param strideC Stride of C-matrices
- * @param ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Small GEMM batched recipe
  */
@@ -2253,7 +2261,7 @@ inline auto make_small_gemm_batched(core_info const &info, scalar_type ty, trans
                                     transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
                                     std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
                                     std::int64_t strideB, std::int64_t ldC, std::int64_t strideC,
-                                    source_context ctx = {}) -> small_gemm_batched {
+                                    compiler_context ctx = {}) -> small_gemm_batched {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty),
@@ -2302,13 +2310,13 @@ class tall_and_skinny : public recipe {
  * @param N Number of columns of B and C
  * @param K Number of columns of A, number of rows of B
  * @param M_block_size Chunk size for M-mode
- * @param ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Tall and skinny recipe
  */
 inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int64_t N,
                                  std::int64_t K, std::int32_t M_block_size = 0,
-                                 source_context ctx = {}) -> tall_and_skinny {
+                                 compiler_context ctx = {}) -> tall_and_skinny {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), N, K, M_block_size, ctx.get()));
@@ -2329,7 +2337,7 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int
  * @param ldB Leading dimension of B; can be dynamic
  * @param ldC Leading dimension of C; can be dynamic
  * @param M_block_size Chunk size for M-mode
- * @param ctx Source context for improved error reporting
+ * @param ctx Compiler context
  *
  * @return Tall and skinny recipe
  */
@@ -2337,7 +2345,7 @@ inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type 
                                              std::int64_t N, std::int64_t K, std::int64_t ldA,
                                              std::int64_t ldB, std::int64_t ldC,
                                              std::int32_t M_block_size = 0,
-                                             source_context ctx = {}) -> tall_and_skinny {
+                                             compiler_context ctx = {}) -> tall_and_skinny {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
         &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), M, N, K, ldA, ldB, ldC,

@@ -230,7 +230,7 @@
 %%
 prog:
     func_list {
-        auto p = prog { std::make_unique<program_node>(@prog).release() };
+        auto p = prog { std::make_unique<program_node>(ctx.get_compiler_context(), @prog).release() };
         ctx.program(p);
         $$ = std::move(p);
         for (auto& f : $func_list) {
@@ -1052,6 +1052,6 @@ slice_size:
 
 namespace tinytc {
 void parser::error(location_type const& l, std::string const& m) {
-    ctx.add_error(l, m);
+    ctx.report_error(l, m);
 }
 }
