@@ -38,11 +38,9 @@ Builder C-API:
       - const_tinytc_region_t
   Data Type:
     function:
-      - tinytc_group_type_create
-      - tinytc_memref_type_create
-      - tinytc_scalar_type_create
-      - tinytc_data_type_release
-      - tinytc_data_type_retain
+      - tinytc_group_type_get
+      - tinytc_memref_type_get
+      - tinytc_scalar_type_get
   Function:
     function:
       - tinytc_function_create

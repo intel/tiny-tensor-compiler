@@ -50,22 +50,23 @@ TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
 ////////////////////////////
 
 /**
- * @brief Create scalar data type
+ * @brief Get scalar data type
  *
  * @param dt [out] pointer to the data type object created
+ * @param ctx [inout] compiler context
  * @param type [in] scalar type
- * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
-                                                        tinytc_scalar_type_t type,
-                                                        const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
+                                                     tinytc_compiler_context_t ctx,
+                                                     tinytc_scalar_type_t type);
 
 /**
- * @brief Create memref data type
+ * @brief Get memref data type
  *
  * @param dt [out] pointer to the data type object created
+ * @param ctx [inout] compiler context
  * @param scalar_ty [in] element type
  * @param shape_size [in] tensor order; number of elements in shape array, must be 0 if shape ==
  * nullptr
@@ -78,46 +79,26 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_create(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_memref_type_create(tinytc_data_type_t *dt,
-                                                        tinytc_scalar_type_t scalar_ty,
-                                                        uint32_t shape_size, const int64_t *shape,
-                                                        uint32_t stride_size, const int64_t *stride,
-                                                        const tinytc_address_space_t addrspace,
-                                                        const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(
+    tinytc_data_type_t *dt, tinytc_compiler_context_t ctx, tinytc_scalar_type_t scalar_ty,
+    uint32_t shape_size, const int64_t *shape, uint32_t stride_size, const int64_t *stride,
+    const tinytc_address_space_t addrspace, const tinytc_location_t *loc);
 
 /**
- * @brief Create group data type
+ * @brief Get group data type
  *
  * @param dt [out] pointer to the data type object created
+ * @param ctx [inout] compiler context
  * @param memref_ty [in] memref data type object
  * @param offset [in][optional] offset parameter; pass 0 for default
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_group_type_create(tinytc_data_type_t *dt,
-                                                       tinytc_data_type_t memref_ty, int64_t offset,
-                                                       const tinytc_location_t *loc);
-
-/**
- * @brief Release data type object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
- *
- * @param dt [inout] data type object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_data_type_release(tinytc_data_type_t dt);
-
-/**
- * @brief Increase reference count of data type object by 1
- *
- * @param dt [inout] data type object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_data_type_retain(tinytc_data_type_t dt);
+TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
+                                                    tinytc_compiler_context_t ctx,
+                                                    tinytc_data_type_t memref_ty, int64_t offset,
+                                                    const tinytc_location_t *loc);
 
 ////////////////////////////
 /////////// Value //////////
@@ -146,7 +127,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_dat
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm,
-                                                      tinytc_scalar_type_t type,
+                                                      tinytc_data_type_t type,
                                                       const tinytc_location_t *loc);
 /**
  * @brief Create integer immediate value
@@ -159,7 +140,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm,
-                                                    tinytc_scalar_type_t type,
+                                                    tinytc_data_type_t type,
                                                     const tinytc_location_t *loc);
 
 /**
@@ -386,11 +367,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tiny
  * @code %value = group_id @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr,
+                                                          tinytc_compiler_context_t ctx,
                                                           const tinytc_location_t *loc);
 
 /**
@@ -399,11 +382,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr,
  * @code %value = group_size @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_compiler_context_t ctx,
                                                             const tinytc_location_t *loc);
 
 /**
@@ -514,11 +499,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
  * @code %value = num_subgroups @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
+                                                               tinytc_compiler_context_t ctx,
                                                                const tinytc_location_t *loc);
 
 /**
@@ -561,11 +548,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
  * @code %value = subgroup_id @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr,
+                                                             tinytc_compiler_context_t ctx,
                                                              const tinytc_location_t *loc);
 
 /**
@@ -574,11 +563,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *inst
  * @code %value = subgroup_local_id @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t *instr,
+                                                                   tinytc_compiler_context_t ctx,
                                                                    const tinytc_location_t *loc);
 
 /**
@@ -587,11 +578,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t
  * @code %value = subgroup_size @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param ctx [in] compiler context
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
+                                                               tinytc_compiler_context_t ctx,
                                                                const tinytc_location_t *loc);
 
 /**
@@ -737,7 +730,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr,
 TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
                                                     tinytc_region_t then, tinytc_region_t otherwise,
                                                     uint32_t return_type_list_size,
-                                                    tinytc_scalar_type_t *return_type_list,
+                                                    tinytc_data_type_t *return_type_list,
                                                     const tinytc_location_t *loc);
 
 /**

@@ -4,13 +4,13 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
-#include "reference_counted.hpp"
 #include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <cstdint>
+#include <span>
 #include <utility>
 #include <vector>
 
@@ -20,16 +20,19 @@ using data_type_nodes = type_list<class group_data_type, class memref_data_type,
                                   class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
-struct tinytc_data_type : tinytc::reference_counted {
+struct tinytc_data_type {
   public:
     using leaves = tinytc::data_type_nodes;
 
-    inline tinytc_data_type(tinytc::DTK tid) : tid_(tid) {}
+    inline tinytc_data_type(tinytc::DTK tid, tinytc_compiler_context_t ctx)
+        : tid_(tid), ctx_(ctx) {}
     virtual ~tinytc_data_type() = default;
     inline auto type_id() const -> tinytc::DTK { return tid_; }
+    inline auto context() const -> tinytc_compiler_context_t { return ctx_; }
 
   private:
     tinytc::DTK tid_;
+    tinytc_compiler_context_t ctx_;
 };
 
 namespace tinytc {
@@ -39,22 +42,29 @@ using data_type_node = ::tinytc_data_type;
 class group_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::group; }
-    group_data_type(data_type ty, std::int64_t offset = 0, location const &lc = {});
+    static auto get(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t offset,
+                    location const &lc = {}) -> tinytc_data_type_t;
 
-    inline auto ty() const -> data_type const & { return ty_; }
+    inline auto ty() const -> tinytc_data_type_t { return ty_; }
     inline auto offset() const -> std::int64_t { return offset_; }
 
+  protected:
+    group_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t offset = 0,
+                    location const &lc = {});
+
   private:
-    data_type ty_;
+    tinytc_data_type_t ty_;
     std::int64_t offset_;
 };
 
 class memref_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::memref; }
-    memref_data_type(scalar_type type, std::vector<std::int64_t> shape,
-                     std::vector<std::int64_t> stride = {},
-                     address_space addrspace = address_space::global, location const &lc = {});
+    static auto canonical_stride(std::span<const std::int64_t> shape) -> std::vector<std::int64_t>;
+    static auto get(tinytc_compiler_context_t ctx, scalar_type element_ty,
+                    std::span<const std::int64_t> shape, std::span<const std::int64_t> stride,
+                    address_space addrspace = address_space::global,
+                    location const &lc = {}) -> tinytc_data_type_t;
 
     inline scalar_type element_ty() const { return element_ty_; }
     inline std::int64_t dim() const { return shape_.size(); }
@@ -75,22 +85,38 @@ class memref_data_type : public data_type_node {
         return std::any_of(stride_.begin(), stride_.end(), is_dynamic_value);
     }
     inline bool is_dynamic() const { return is_dynamic_shape() || is_dynamic_stride(); }
-    inline bool is_canonical_stride() const { return stride_ == canonical_stride(); }
+    inline bool is_canonical_stride() const { return stride_ == canonical_stride(shape_); }
 
-  private:
-    auto canonical_stride() const -> std::vector<std::int64_t>;
+  protected:
+    memref_data_type(tinytc_compiler_context_t ctx, scalar_type type,
+                     std::vector<std::int64_t> shape, std::vector<std::int64_t> stride,
+                     address_space addrspace = address_space::global, location const &lc = {});
 
     scalar_type element_ty_;
     std::vector<std::int64_t> shape_, stride_;
     address_space addrspace_ = address_space::global;
 };
 
+struct memref_data_type_key {
+    scalar_type element_ty;
+    std::span<const std::int64_t> shape, stride;
+    address_space addrspace;
+
+    auto hash() -> std::uint64_t;
+    auto operator==(memref_data_type const &mt) -> bool;
+};
+
 class scalar_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::scalar; }
-    inline scalar_data_type(scalar_type type) : data_type_node(DTK::scalar), ty_(type) {}
+    static auto get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_data_type_t;
 
     inline scalar_type ty() const { return ty_; }
+
+  protected:
+    inline scalar_data_type(tinytc_compiler_context_t ctx, scalar_type type)
+        : data_type_node(DTK::scalar, ctx), ty_(type) {}
+    friend class compiler_context_cache;
 
   private:
     scalar_type ty_;
@@ -99,7 +125,9 @@ class scalar_data_type : public data_type_node {
 class void_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::void_; }
-    inline void_data_type() : data_type_node(DTK::void_) {}
+
+  protected:
+    inline void_data_type(tinytc_compiler_context_t ctx) : data_type_node(DTK::void_, ctx) {}
 };
 
 } // namespace tinytc

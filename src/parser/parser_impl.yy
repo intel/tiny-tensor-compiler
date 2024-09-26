@@ -21,7 +21,6 @@
 }
 
 %code {
-    #include "analysis/equal.hpp"
     #include "error.hpp"
     #include "node/data_type_node.hpp"
     #include "node/inst_node.hpp"
@@ -37,34 +36,32 @@
     #include <cstdint>
     #include <cstdlib>
     #include <memory>
-    #include <vector>
     #include <utility>
+    #include <vector>
 
     namespace tinytc {
-    void check_scalar_type(value & val, scalar_type const& sty, location & loc1,
-                           location & loc2) {
-        visit(
-            overloaded{[&](int_imm &i) { i.ty(make_scalar(sty)); },
-                           [&](float_imm &i) { i.ty(make_scalar(sty)); },
-                           [&](auto &) {
-                               if (!val->ty() || !is_equal(*val->ty(), *make_scalar(sty))) {
-                                   auto loc = loc1;
-                                   loc.end = loc2.end;
-                                   throw parser::syntax_error(
-                                       loc, "Type of SSA value does not match operand type");
-                               }
-                           }},
-            *val);
+    void check_scalar_type(compiler_context const &ctx, value &val, scalar_type const &sty,
+                           location &loc1, location &loc2) {
+        visit(overloaded{[&](int_imm &i) { i.ty(get_scalar(ctx, sty)); },
+                         [&](float_imm &i) { i.ty(get_scalar(ctx, sty)); },
+                         [&](auto &) {
+                             if (val->ty() != get_scalar(ctx, sty)) {
+                                 auto loc = loc1;
+                                 loc.end = loc2.end;
+                                 throw parser::syntax_error(
+                                     loc, "Type of SSA value does not match operand type");
+                             }
+                         }},
+              *val);
     }
-    void check_type(value & val, data_type & ty, location & loc1,
-                    location & loc2) {
-        if (!val->ty() || !is_equal(*val->ty(), *ty)) {
+    void check_type(value &val, tinytc_data_type_t ty, location &loc1, location &loc2) {
+        if (val->ty() != ty) {
             auto loc = loc1;
             loc.end = loc2.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
     };
-    }
+    } // namespace tinytc
 }
 
 %header
@@ -157,17 +154,17 @@
 %nterm <::tinytc::value> argument
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
-%nterm <data_type> data_type
+%nterm <tinytc_data_type_t> data_type
 %nterm <scalar_type> scalar_type
-%nterm <data_type> memref_type
+%nterm <tinytc_data_type_t> memref_type
 %nterm <address_space> optional_address_space
 %nterm <std::vector<std::int64_t>> mode_list
 %nterm <std::vector<std::int64_t>> optional_stride_list
 %nterm <std::vector<std::int64_t>> stride_list
 %nterm <std::int64_t> constant_or_dynamic
-%nterm <data_type> group_type
+%nterm <tinytc_data_type_t> group_type
 %nterm <std::int64_t> group_offset
-%nterm <data_type> memref_or_group_type
+%nterm <tinytc_data_type_t> memref_or_group_type
 %nterm <region> region
 %nterm <::tinytc::value> var
 %nterm <std::vector<inst>> instructions
@@ -189,9 +186,9 @@
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
 %nterm <inst> if_inst
-%nterm <std::vector<scalar_type>> optional_returned_values
-%nterm <std::vector<scalar_type>> optional_scalar_type_list
-%nterm <std::vector<scalar_type>> scalar_type_list
+%nterm <std::vector<tinytc_data_type_t>> optional_returned_values
+%nterm <std::vector<tinytc_data_type_t>> optional_scalar_type_list
+%nterm <std::vector<tinytc_data_type_t>> scalar_type_list
 %nterm <region> else_region
 %nterm <inst> sum_inst
 %nterm <inst> yield_inst
@@ -230,7 +227,7 @@
 %%
 prog:
     func_list {
-        auto p = prog { std::make_unique<program_node>(ctx.get_compiler_context(), @prog).release() };
+        auto p = prog { std::make_unique<program_node>(ctx.cctx(), @prog).release() };
         ctx.program(p);
         $$ = std::move(p);
         for (auto& f : $func_list) {
@@ -303,7 +300,7 @@ attribute:
 
 
 data_type:
-    scalar_type { $$ = make_scalar($scalar_type); }
+    scalar_type { $$ = get_scalar(ctx.cctx(), $scalar_type); }
   | memref_type
   | group_type
 ;
@@ -316,12 +313,8 @@ scalar_type:
 memref_type:
     MEMREF LCHEV scalar_type mode_list optional_address_space RCHEV {
         try {
-            $$ = data_type {
-                std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
-                                                   std::vector<std::int64_t>{}, $optional_address_space,
-                                                   @memref_type)
-                    .release()
-            };
+            $$ =
+                get_memref(ctx.cctx(), $scalar_type, $mode_list, {}, $optional_address_space, @memref_type);
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -334,12 +327,8 @@ memref_type:
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
         try {
-            $$ = data_type {
-                std::make_unique<memref_data_type>($scalar_type, std::move($mode_list),
-                                                   std::move($optional_stride_list),
-                                                   $optional_address_space, @memref_type)
-                    .release()
-            };
+            $$ = get_memref(ctx.cctx(), $scalar_type, $mode_list, $optional_stride_list,
+                            $optional_address_space, @memref_type);
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
@@ -375,7 +364,7 @@ constant_or_dynamic:
 
 group_type:
     GROUP LCHEV memref_type group_offset RCHEV {
-        $$ = make_group(std::move($memref_type), $group_offset, @group_type);
+        $$ = get_group(ctx.cctx(), std::move($memref_type), $group_offset, @group_type);
     }
 ;
 
@@ -434,9 +423,9 @@ axpby_inst:
     AXPBY transpose[ta] atomic
           identifier_or_constant[alpha] COMMA var[a] COMMA identifier_or_constant[beta] COMMA var[b]
           COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($b, $mb, @b, @mb);
         try {
             $$ = inst {
@@ -458,8 +447,16 @@ atomic:
 
 identifier_or_constant:
     var { $$ = $var; }
-  | INTEGER_CONSTANT { $$ = make_imm($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
-  | FLOATING_CONSTANT { $$ = make_imm($FLOATING_CONSTANT); $$->loc(@FLOATING_CONSTANT); }
+  | INTEGER_CONSTANT { 
+        auto i64_ty = get_scalar(ctx.cctx(), scalar_type::i64);
+        $$ = make_imm($INTEGER_CONSTANT, i64_ty);
+        $$->loc(@INTEGER_CONSTANT);
+    }
+  | FLOATING_CONSTANT {
+        auto f64_ty = get_scalar(ctx.cctx(), scalar_type::f64);
+        $$ = make_fimm($FLOATING_CONSTANT, f64_ty);
+        $$->loc(@FLOATING_CONSTANT);
+    }
 ;
 
 optional_identifier_or_constant_list:
@@ -504,10 +501,10 @@ gemm_inst:
          identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
         check_type($b, $mb, @b, @mb);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
@@ -528,10 +525,10 @@ gemv_inst:
          identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
         check_type($b, $mb, @b, @mb);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
@@ -556,10 +553,10 @@ ger_inst:
          identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
         check_type($b, $mb, @b, @mb);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
@@ -578,12 +575,12 @@ for_inst:
     FOR LOCAL_IDENTIFIER[loop_var]
         EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] optional_step
         for_loop_var_type {
-        check_scalar_type($from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_scalar_type($to, $for_loop_var_type, @to, @for_loop_var_type);
+        check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
+        check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
         if ($optional_step) {
-            check_scalar_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
+            check_scalar_type(ctx.cctx(), $optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
-        auto v = make_value($for_loop_var_type);
+        auto v = make_value(get_scalar(ctx.cctx(), $for_loop_var_type));
         v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
@@ -607,9 +604,9 @@ optional_step:
 foreach_inst:
     FOREACH LOCAL_IDENTIFIER[loop_var]
         EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] for_loop_var_type {
-        check_scalar_type($from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_scalar_type($to, $for_loop_var_type, @to, @for_loop_var_type);
-        auto v = make_value($for_loop_var_type);
+        check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
+        check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
+        auto v = make_value(get_scalar(ctx.cctx(), $for_loop_var_type));
         v.name($loop_var);
         ctx.val($loop_var, std::move(v), @loop_var);
     } region {
@@ -658,10 +655,10 @@ hadamard_inst:
          identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
         check_type($b, $mb, @b, @mb);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($c, $mc, @c, @mc);
         try {
             $$ = inst {
@@ -681,9 +678,9 @@ sum_inst:
     SUM transpose[ta] atomic
           identifier_or_constant[alpha] COMMA var[a] COMMA identifier_or_constant[beta] COMMA var[b]
           COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
-        check_scalar_type($alpha, $falpha, @alpha, @falpha);
+        check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
-        check_scalar_type($beta, $fbeta, @beta, @fbeta);
+        check_scalar_type(ctx.cctx(), $beta, $fbeta, @beta, @fbeta);
         check_type($b, $mb, @b, @mb);
         try {
             $$ = inst {
@@ -706,7 +703,11 @@ yield_inst:
             throw syntax_error(loc, "Identifier and scalar type list must have the same length");
         }
         for (std::size_t i = 0; i < $vals.size(); ++i) {
-            check_scalar_type($vals[i], $tys[i], @vals, @tys);
+            if (auto ty = dyn_cast<scalar_data_type>($tys[i]); ty) {
+                check_scalar_type(ctx.cctx(), $vals[i], ty->ty(), @vals, @tys);
+            } else {
+                throw syntax_error(@tys, "Yield only accepts scalar types");
+            }
         }
         $$ = inst{std::make_unique<yield_inst>(std::move($vals)).release()};
     }
@@ -747,8 +748,8 @@ alloca_inst:
 
 arith_inst:
     ARITH ARITHMETIC identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
-        check_scalar_type($a, $ty, @a, @ty);
-        check_scalar_type($b, $ty, @b, @ty);
+        check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
+        check_scalar_type(ctx.cctx(), $b, $ty, @b, @ty);
         try {
             $$ = inst {
                 std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), @arith_inst)
@@ -763,7 +764,7 @@ arith_inst:
 
 arith_unary_inst:
     ARITH ARITHMETIC_UNARY identifier_or_constant[a] COLON scalar_type[ty] {
-        check_scalar_type($a, $ty, @a, @ty);
+        check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
         try {
             $$ = inst {
                 std::make_unique<arith_unary_inst>($ARITHMETIC_UNARY, std::move($a),
@@ -780,7 +781,7 @@ arith_unary_inst:
 
 cast_inst:
     CAST identifier_or_constant[a] COLON scalar_type[from] RETURNS scalar_type[to] {
-        check_scalar_type($a, $from, @a, @from);
+        check_scalar_type(ctx.cctx(), $a, $from, @a, @from);
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {
@@ -792,8 +793,8 @@ cast_inst:
 
 compare_inst:
     CMP CMP_CONDITION identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
-        check_scalar_type($a, $ty, @a, @ty);
-        check_scalar_type($b, $ty, @b, @ty);
+        check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
+        check_scalar_type(ctx.cctx(), $b, $ty, @b, @ty);
         try {
             $$ = inst {
                 std::make_unique<compare_inst>($CMP_CONDITION, std::move($a), std::move($b),
@@ -809,7 +810,7 @@ compare_inst:
 
 expand_inst:
     EXPAND var LSQBR INTEGER_CONSTANT[mode] RETURNS expand_shape RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
+        if ($var->ty() != $memref_type) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -836,16 +837,20 @@ expand_shape:
 
 constant_or_dynamic_or_identifier:
     var {
-        check_scalar_type($var, scalar_type::index, @var, @var);
+        check_scalar_type(ctx.cctx(), $var, scalar_type::index, @var, @var);
         $$ = $var;
     }
-  | INTEGER_CONSTANT { $$ = make_index($INTEGER_CONSTANT); $$->loc(@INTEGER_CONSTANT); }
-  | DYNAMIC { $$ = make_dynamic(); $$->loc(@DYNAMIC); }
+  | INTEGER_CONSTANT {
+        auto index_ty = get_scalar(ctx.cctx(), scalar_type::index);
+        $$ = make_imm($INTEGER_CONSTANT, index_ty);
+        $$->loc(@INTEGER_CONSTANT);
+    }
+  | DYNAMIC { $$ = make_imm(dynamic, get_scalar(ctx.cctx(), scalar_type::i64)); $$->loc(@DYNAMIC); }
 ;
 
 fuse_inst:
     FUSE var LSQBR INTEGER_CONSTANT[from] COMMA INTEGER_CONSTANT[to] RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
+        if ($var->ty() != $memref_type) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -863,7 +868,7 @@ fuse_inst:
 
 load_inst:
     LOAD var LSQBR optional_index_list RSQBR COLON memref_or_group_type {
-        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_or_group_type)) {
+        if ($var->ty() != $memref_or_group_type) {
             auto loc = @var;
             loc.end = @memref_or_group_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -893,18 +898,18 @@ index_list:
 
 index_identifier_or_const:
     var {
-        check_scalar_type($var, scalar_type::index, @var, @var);
+        check_scalar_type(ctx.cctx(), $var, scalar_type::index, @var, @var);
         $$ = $var;
     }
   | INTEGER_CONSTANT {
-        $$ = make_index($INTEGER_CONSTANT);
+        $$ = make_imm($INTEGER_CONSTANT, get_scalar(ctx.cctx(), scalar_type::index));
         $$->loc(@INTEGER_CONSTANT);
     }
 ;
 
 store_inst:
     STORE var[a] COMMA var[b] LSQBR optional_index_list RSQBR COLON memref_type {
-        if (!$b->ty() || !is_equal(*$b->ty(), *$memref_type)) {
+        if ($b->ty() != $memref_type) {
             auto loc = @b;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -923,16 +928,16 @@ store_inst:
 ;
 
 group_id_inst:
-    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>(@GROUP_ID).release()}; }
+    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>(ctx.cctx().get(), @GROUP_ID).release()}; }
 ;
 
 group_size_inst:
-    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>(@GROUP_SIZE).release()}; }
+    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>(ctx.cctx().get(), @GROUP_SIZE).release()}; }
 ;
 
 if_inst:
     IF identifier_or_constant[condition] optional_returned_values region else_region {
-        check_scalar_type($condition, scalar_type::i1, @condition, @condition);
+        check_scalar_type(ctx.cctx(), $condition, scalar_type::i1, @condition, @condition);
         $$ = inst{std::make_unique<if_inst>(std::move($condition), std::move($region),
                                             std::move($else_region),
                                             std::move($optional_returned_values))
@@ -957,12 +962,14 @@ optional_scalar_type_list:
 ;
 
 scalar_type_list:
-    scalar_type { $$.push_back($scalar_type); }
-  | scalar_type_list COMMA scalar_type { $$ = std::move($1); $$.push_back($scalar_type); }
+    scalar_type { $$.push_back(get_scalar(ctx.cctx(), $scalar_type)); }
+  | scalar_type_list COMMA scalar_type {
+        $$ = std::move($1); $$.push_back(get_scalar(ctx.cctx(), $scalar_type));
+    }
 ;
 
 num_subgroups_inst:
-    NUM_SUBGROUPS { $$ = inst{std::make_unique<num_subgroups_inst>(@NUM_SUBGROUPS).release()}; }
+    NUM_SUBGROUPS { $$ = inst{std::make_unique<num_subgroups_inst>(ctx.cctx().get(), @NUM_SUBGROUPS).release()}; }
 ;
 
 parallel_inst:
@@ -973,7 +980,7 @@ parallel_inst:
 
 size_inst:
     SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
+        if ($var->ty() != $memref_type) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -988,20 +995,22 @@ size_inst:
 ;
 
 subgroup_id_inst:
-    SUBGROUP_ID { $$ = inst{std::make_unique<subgroup_id_inst>(@SUBGROUP_ID).release()}; }
+    SUBGROUP_ID { $$ = inst{std::make_unique<subgroup_id_inst>(ctx.cctx().get(), @SUBGROUP_ID).release()}; }
 ;
 
 subgroup_local_id_inst:
-    SUBGROUP_LOCAL_ID { $$ = inst{std::make_unique<subgroup_local_id_inst>(@SUBGROUP_LOCAL_ID).release()}; }
+    SUBGROUP_LOCAL_ID {
+        $$ = inst{std::make_unique<subgroup_local_id_inst>(ctx.cctx().get(), @SUBGROUP_LOCAL_ID).release()};
+    }
 ;
 
 subgroup_size_inst:
-    SUBGROUP_SIZE { $$ = inst{std::make_unique<subgroup_size_inst>(@SUBGROUP_SIZE).release()}; }
+    SUBGROUP_SIZE { $$ = inst{std::make_unique<subgroup_size_inst>(ctx.cctx().get(), @SUBGROUP_SIZE).release()}; }
 ;
 
 subview_inst:
     SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type {
-        if (!$var->ty() || !is_equal(*$var->ty(), *$memref_type)) {
+        if ($var->ty() != $memref_type) {
             auto loc = @var;
             loc.end = @memref_type.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
@@ -1037,14 +1046,18 @@ slice_list:
 ;
 
 slice:
-    COLON { $$ = std::make_pair(make_index(0), make_dynamic()); }
+    COLON {
+        auto index_ty = get_scalar(ctx.cctx(), scalar_type::index);
+        auto i64_ty = get_scalar(ctx.cctx(), scalar_type::i64);
+        $$ = std::make_pair(make_imm(0, index_ty), make_imm(dynamic, i64_ty));
+    }
   | index_identifier_or_const slice_size { $$ = std::make_pair(std::move($1), std::move($2)); }
 ;
 
 slice_size:
     %empty { $$ = {}; }
   | COLON index_identifier_or_const { $$ = $2; }
-  | COLON DYNAMIC { $$ = make_dynamic(); }
+  | COLON DYNAMIC { $$ = make_imm(dynamic, get_scalar(ctx.cctx(), scalar_type::i64)); }
 ;
 
 %%

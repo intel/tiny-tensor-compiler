@@ -35,7 +35,7 @@ class alias_analysis_visitor {
 void alias_analysis_visitor::operator()(inst_node const &) {}
 void alias_analysis_visitor::operator()(alloca_inst const &a) {
     if (a.stack_ptr() >= 0) {
-        auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
+        auto t = dyn_cast<memref_data_type>(a.result()->ty());
         if (t == nullptr) {
             throw compilation_error(a.loc(), status::ir_expected_memref);
         }

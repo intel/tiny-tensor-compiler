@@ -5,6 +5,7 @@
 #define INST_NODE_20230327_HPP
 
 #include "error.hpp"
+#include "node/data_type_node.hpp"
 #include "support/ilist.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
@@ -339,7 +340,7 @@ class loop_inst : public standard_inst<4, 0, 1> {
 class alloca_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::alloca; }
-    alloca_inst(data_type ty, location const &loc = {});
+    alloca_inst(tinytc_data_type_t ty, location const &loc = {});
 
     inline std::int64_t stack_ptr() const { return stack_ptr_; }
     inline void stack_ptr(std::int64_t ptr) { stack_ptr_ = ptr; }
@@ -468,18 +469,20 @@ class load_inst : public standard_inst<dynamic, 1> {
 class group_id_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_id; }
-    inline group_id_inst(location const &lc = {}) : standard_inst{IK::group_id} {
+    inline group_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::group_id} {
         loc(lc);
-        result(0) = make_value(scalar_type::index);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::index));
     }
 };
 
 class group_size_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_size; }
-    inline group_size_inst(location const &lc = {}) : standard_inst{IK::group_size} {
+    inline group_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::group_size} {
         loc(lc);
-        result(0) = make_value(scalar_type::index);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::index));
     }
 };
 
@@ -558,7 +561,7 @@ class if_inst : public standard_inst<1, dynamic, 2> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::if_; }
     enum child_region_number { child_region_then = 0, child_region_otherwise = 1 };
     if_inst(value condition, region then, region otherwise = {},
-            std::vector<scalar_type> const &return_types = {}, location const &lc = {});
+            std::vector<tinytc_data_type_t> const &return_types = {}, location const &lc = {});
     inline auto condition() const -> value const & { return op(0); }
     inline auto then() -> tinytc_region & { return *child_region(child_region_then); }
     inline auto then() const -> tinytc_region const & { return *child_region(child_region_then); }
@@ -572,9 +575,10 @@ class if_inst : public standard_inst<1, dynamic, 2> {
 class num_subgroups_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::num_subgroups; }
-    inline num_subgroups_inst(location const &lc = {}) : standard_inst{IK::num_subgroups} {
+    inline num_subgroups_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::num_subgroups} {
         loc(lc);
-        result(0) = make_value(scalar_type::i32);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
     }
 };
 
@@ -602,27 +606,30 @@ class size_inst : public standard_inst<1, 1> {
 class subgroup_id_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_id; }
-    inline subgroup_id_inst(location const &lc = {}) : standard_inst{IK::subgroup_id} {
+    inline subgroup_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::subgroup_id} {
         loc(lc);
-        result(0) = make_value(scalar_type::i32);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
     }
 };
 
 class subgroup_local_id_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_local_id; }
-    inline subgroup_local_id_inst(location const &lc = {}) : standard_inst{IK::subgroup_local_id} {
+    inline subgroup_local_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::subgroup_local_id} {
         loc(lc);
-        result(0) = make_value(scalar_type::i32);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
     }
 };
 
 class subgroup_size_inst : public standard_inst<0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_size; }
-    inline subgroup_size_inst(location const &lc = {}) : standard_inst{IK::subgroup_size} {
+    inline subgroup_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
+        : standard_inst{IK::subgroup_size} {
         loc(lc);
-        result(0) = make_value(scalar_type::i32);
+        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
     }
 };
 

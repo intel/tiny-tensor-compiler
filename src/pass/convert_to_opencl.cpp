@@ -31,6 +31,8 @@
 #include <stdexcept>
 #include <string_view>
 
+#include <iostream>
+
 namespace tinytc {
 
 std::string var_name(std::string name) {
@@ -49,7 +51,7 @@ dope_vector dope_vector::from_value(value_node const &v, decl_fun_t declare) {
                          dt = to_clir_ty(scalar_type::index);
                      },
                      [&](group_data_type const &g) {
-                         m = dyn_cast<memref_data_type>(g.ty().get());
+                         m = dyn_cast<memref_data_type>(g.ty());
                          dt = clir::pointer_to(
                              to_clir_ty(scalar_type::index, clir::address_space::global_t));
                      },
@@ -144,7 +146,7 @@ clir::var convert_to_opencl_pass::declare(value_node const &v) {
 
 auto convert_to_opencl_pass::get_memref_type(value_node const &v) const
     -> const memref_data_type * {
-    auto t = dyn_cast<memref_data_type>(v.ty().get());
+    auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
@@ -215,7 +217,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(alloca_inst const &a)
                                 "Invalid stack_ptr in alloca. Did you run set_stack_ptrs?");
     }
     auto result_var = declare(*a.result());
-    auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
+    auto t = dyn_cast<memref_data_type>(a.result()->ty());
     if (t == nullptr) {
         throw compilation_error(a.loc(), status::ir_expected_memref);
     }
@@ -567,7 +569,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
           *e.operand()->ty());
 
     auto lhs = declare(*e.result());
-    auto result_type = e.result()->ty().get();
+    auto result_type = e.result()->ty();
     if (result_type == nullptr) {
         throw compilation_error(e.loc(), status::internal_compiler_error, "Expected type");
     }

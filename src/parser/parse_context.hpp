@@ -29,7 +29,7 @@ class parse_context {
 
     void report_error(location const &loc, std::string const &what);
 
-    auto get_compiler_context() -> compiler_context const & { return compiler_ctx_; }
+    auto cctx() -> compiler_context const & { return compiler_ctx_; }
 
   private:
     compiler_context compiler_ctx_;

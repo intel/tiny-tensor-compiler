@@ -88,7 +88,7 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             //  insert_barriers(*prg);
             run_function_pass(work_group_size_pass{info}, *prg);
             //  lower_linalg(*prg, *info);
-            run_function_pass(dump_ir_pass{std::cout}, *prg);
+            //run_function_pass(dump_ir_pass{std::cout}, *prg);
             // propagate_constants(*prg);
             // dump_ir(std::cout, *prg);
             //  opencl

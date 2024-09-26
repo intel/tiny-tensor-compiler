@@ -91,9 +91,12 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
     return exception_to_status_code(
         [&] {
-            auto const ty_ = enum_cast<scalar_type>(ty);
+            auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
+            auto const index_ty = get_scalar(ctx_, scalar_type::index);
+            auto const i64_ty = get_scalar(ctx_, scalar_type::i64);
 
-            auto const shapes = std::vector{blas_shape{ty_, {M_block_size, N}}};
+            auto const shapes =
+                std::vector{blas_shape{enum_cast<scalar_type>(ty), {M_block_size, N}}};
             auto [sgs, tiling] = suggest_subgroup_size_and_tiling(shapes, *info);
 
             // We want to avoid working on too many columns in parallel as there is a high
@@ -106,29 +109,30 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                                   value &C) {
                 auto const gemm = [&](region_builder &bb, std::vector<value> const &offsets,
                                       value const &block_size) {
-                    auto a = bb.add(
-                        make_subview(A, offsets, {block_size, make_index(K, my_loc())}, my_loc()));
-                    auto c = bb.add(
-                        make_subview(C, offsets, {block_size, make_index(N, my_loc())}, my_loc()));
+                    auto a = bb.add(make_subview(
+                        A, offsets, {block_size, make_imm(K, index_ty, my_loc())}, my_loc()));
+                    auto c = bb.add(make_subview(
+                        C, offsets, {block_size, make_imm(N, index_ty, my_loc())}, my_loc()));
                     bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                      my_loc()));
                 };
 
-                auto const block_size_imm = make_index(M_block_size, my_loc());
-                auto gid = bb.add(make_group_id(my_loc()));
-                auto m = bb.add(
-                    make_arith(arithmetic::mul, gid, make_index(M_block_size, my_loc()), my_loc()));
-                auto const offsets = std::vector<value>{m, make_index(0, my_loc())};
+                auto const block_size_imm = make_imm(M_block_size, index_ty, my_loc());
+                auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                auto m = bb.add(make_arith(arithmetic::mul, gid,
+                                           make_imm(M_block_size, index_ty, my_loc()), my_loc()));
+                auto const offsets = std::vector<value>{m, make_imm(0, index_ty, my_loc())};
 
                 if (!is_dynamic_value(M) && M % M_block_size == 0) {
                     gemm(bb, offsets, block_size_imm);
                 } else {
-                    auto M_val =
-                        is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc())) : make_index(M);
+                    auto M_val = is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc()))
+                                                     : make_imm(M, index_ty);
                     auto M_val_sub_m = bb.add(make_arith(arithmetic::sub, M_val, m, my_loc()));
-                    auto cond = bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
-                                                make_index(M_block_size, my_loc()), my_loc()));
-                    auto const dynamic_imm = make_dynamic(my_loc());
+                    auto cond =
+                        bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
+                                        make_imm(M_block_size, index_ty, my_loc()), my_loc()));
+                    auto const dynamic_imm = make_imm(dynamic, i64_ty, my_loc());
                     bb.ifelse(
                         cond, [&](region_builder &bb) { gemm(bb, offsets, dynamic_imm); },
                         [&](region_builder &bb) { gemm(bb, offsets, block_size_imm); }, {},
@@ -137,22 +141,22 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             };
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A =
-                    fb.argument(make_memref(ty_, {M, K}, {1, ldA}, address_space::global, my_loc()),
-                                "A", my_loc());
-                auto B =
-                    fb.argument(make_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc()),
-                                "B", my_loc());
-                auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C =
-                    fb.argument(make_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc()),
-                                "C", my_loc());
+                auto alpha = fb.argument(ty_, "alpha", my_loc());
+                auto A = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, K}, {1, ldA},
+                                                address_space::global, my_loc()),
+                                     "A", my_loc());
+                auto B = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {K, N}, {1, ldB},
+                                                address_space::global, my_loc()),
+                                     "B", my_loc());
+                auto beta_arg = fb.argument(ty_, "beta", my_loc());
+                auto C = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N}, {1, ldC},
+                                                address_space::global, my_loc()),
+                                     "C", my_loc());
                 fb.subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);
 
-                auto beta = is_beta_nonzero ? beta_arg : make_imm(0.0, ty_, my_loc());
+                auto beta = is_beta_nonzero ? beta_arg : make_fimm(0.0, ty_, my_loc());
                 fb.body([&](region_builder &bb) { body(bb, alpha, A, B, beta, C); }, my_loc());
             };
 
@@ -168,8 +172,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             }();
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
-            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src), ty_, M,
-                                                               ldA, ldB, ldC, M_block_size)
+            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src),
+                                                               enum_cast<scalar_type>(ty), M, ldA,
+                                                               ldB, ldC, M_block_size)
                           .release();
         },
         ctx_.get());

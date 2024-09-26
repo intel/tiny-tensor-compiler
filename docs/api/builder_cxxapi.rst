@@ -164,15 +164,11 @@ Data Type
 
 * Functions
 
-  * :ref:`make_memref`
+  * :ref:`get_memref`
 
-  * :ref:`make_group`
+  * :ref:`get_group`
 
-  * :ref:`make_scalar`
-
-* Classes
-
-  * :ref:`data_type`
+  * :ref:`get_scalar`
 
 * Structures
 
@@ -185,28 +181,20 @@ Data Type
 Data Type Functions
 -------------------
 
-make_memref
-...........
-
-.. doxygenfunction:: tinytc::make_memref
-
-make_group
+get_memref
 ..........
 
-.. doxygenfunction:: tinytc::make_group
+.. doxygenfunction:: tinytc::get_memref
 
-make_scalar
-...........
-
-.. doxygenfunction:: tinytc::make_scalar
-
-Data Type Classes
------------------
-
-data_type
+get_group
 .........
 
-.. doxygenclass:: tinytc::data_type
+.. doxygenfunction:: tinytc::get_group
+
+get_scalar
+..........
+
+.. doxygenfunction:: tinytc::get_scalar
 
 Data Type Structures
 --------------------
@@ -561,27 +549,11 @@ Value
 
 * Functions
 
-  * :ref:`make_dynamic(location const&)`
+  * :ref:`make_fimm`
 
-  * :ref:`make_imm(float,location const&)`
+  * :ref:`make_imm`
 
-  * :ref:`make_imm(double,scalar_type,location const&)`
-
-  * :ref:`make_imm(std::int8_t,location const&)`
-
-  * :ref:`make_imm(std::int16_t,location const&)`
-
-  * :ref:`make_imm(std::int32_t,location const&)`
-
-  * :ref:`make_imm(std::int64_t,scalar_type,location const&)`
-
-  * :ref:`make_index(std::int32_t,location const&)`
-
-  * :ref:`make_index(std::int64_t,location const&)`
-
-  * :ref:`make_value(data_type const&,location const&)`
-
-  * :ref:`make_value(scalar_type,location const&)`
+  * :ref:`make_value`
 
 * Classes
 
@@ -590,60 +562,20 @@ Value
 Value Functions
 ---------------
 
-make_dynamic(location const&)
-.............................
+make_fimm
+.........
 
-.. doxygenfunction:: tinytc::make_dynamic(location const&)
+.. doxygenfunction:: tinytc::make_fimm
 
-make_imm(float,location const&)
-...............................
+make_imm
+........
 
-.. doxygenfunction:: tinytc::make_imm(float,location const&)
+.. doxygenfunction:: tinytc::make_imm
 
-make_imm(double,scalar_type,location const&)
-............................................
+make_value
+..........
 
-.. doxygenfunction:: tinytc::make_imm(double,scalar_type,location const&)
-
-make_imm(std::int8_t,location const&)
-.....................................
-
-.. doxygenfunction:: tinytc::make_imm(std::int8_t,location const&)
-
-make_imm(std::int16_t,location const&)
-......................................
-
-.. doxygenfunction:: tinytc::make_imm(std::int16_t,location const&)
-
-make_imm(std::int32_t,location const&)
-......................................
-
-.. doxygenfunction:: tinytc::make_imm(std::int32_t,location const&)
-
-make_imm(std::int64_t,scalar_type,location const&)
-..................................................
-
-.. doxygenfunction:: tinytc::make_imm(std::int64_t,scalar_type,location const&)
-
-make_index(std::int32_t,location const&)
-........................................
-
-.. doxygenfunction:: tinytc::make_index(std::int32_t,location const&)
-
-make_index(std::int64_t,location const&)
-........................................
-
-.. doxygenfunction:: tinytc::make_index(std::int64_t,location const&)
-
-make_value(data_type const&,location const&)
-............................................
-
-.. doxygenfunction:: tinytc::make_value(data_type const&,location const&)
-
-make_value(scalar_type,location const&)
-.......................................
-
-.. doxygenfunction:: tinytc::make_value(scalar_type,location const&)
+.. doxygenfunction:: tinytc::make_value
 
 Value Classes
 -------------

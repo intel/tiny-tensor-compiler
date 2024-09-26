@@ -241,43 +241,29 @@ Data Type
 
 * Functions
 
-  * :ref:`tinytc_group_type_create`
+  * :ref:`tinytc_group_type_get`
 
-  * :ref:`tinytc_memref_type_create`
+  * :ref:`tinytc_memref_type_get`
 
-  * :ref:`tinytc_scalar_type_create`
-
-  * :ref:`tinytc_data_type_release`
-
-  * :ref:`tinytc_data_type_retain`
+  * :ref:`tinytc_scalar_type_get`
 
 Data Type Functions
 -------------------
 
-tinytc_group_type_create
-........................
+tinytc_group_type_get
+.....................
 
-.. doxygenfunction:: tinytc_group_type_create
+.. doxygenfunction:: tinytc_group_type_get
 
-tinytc_memref_type_create
-.........................
+tinytc_memref_type_get
+......................
 
-.. doxygenfunction:: tinytc_memref_type_create
+.. doxygenfunction:: tinytc_memref_type_get
 
-tinytc_scalar_type_create
-.........................
+tinytc_scalar_type_get
+......................
 
-.. doxygenfunction:: tinytc_scalar_type_create
-
-tinytc_data_type_release
-........................
-
-.. doxygenfunction:: tinytc_data_type_release
-
-tinytc_data_type_retain
-.......................
-
-.. doxygenfunction:: tinytc_data_type_retain
+.. doxygenfunction:: tinytc_scalar_type_get
 
 Function
 ========

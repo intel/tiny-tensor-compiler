@@ -229,6 +229,7 @@ typedef enum {
     tinytc_scalar_type_c32 = 8,   ///< Single precision complex (2x32 bit)
     tinytc_scalar_type_c64 = 9    ///< Double precision complex (2x64 bit)
 } tinytc_scalar_type_t;
+#define TINYTC_NUMBER_OF_SCALAR_TYPES 10 // @todo Keep up to date with tinytc_scalar_type_t
 
 //! Arithmetic operations
 typedef enum {

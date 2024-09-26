@@ -81,33 +81,36 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     };
     return exception_to_status_code(
         [&] {
-            auto const ty_ = enum_cast<scalar_type>(ty);
+            auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
+            auto const index_ty = get_scalar(ctx_, scalar_type::index);
+            auto const i64_ty = get_scalar(ctx_, scalar_type::i64);
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(make_scalar(ty_, my_loc()), "alpha", my_loc());
-                auto A =
-                    fb.argument(make_memref(ty_, {selA(M, K), selA(K, M), dynamic},
-                                            {1, ldA, strideA}, address_space::global, my_loc()),
-                                "A", my_loc());
-                auto B =
-                    fb.argument(make_memref(ty_, {selB(K, N), selB(N, K), dynamic},
-                                            {1, ldB, strideB}, address_space::global, my_loc()),
-                                "B", my_loc());
-                auto beta_arg = fb.argument(make_scalar(ty_, my_loc()), "beta", my_loc());
-                auto C = fb.argument(make_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
-                                                 address_space::global, my_loc()),
+                auto alpha = fb.argument(ty_, "alpha");
+                auto A = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty),
+                                                {selA(M, K), selA(K, M), dynamic},
+                                                {1, ldA, strideA}, address_space::global, my_loc()),
+                                     "A", my_loc());
+                auto B = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty),
+                                                {selB(K, N), selB(N, K), dynamic},
+                                                {1, ldB, strideB}, address_space::global, my_loc()),
+                                     "B", my_loc());
+                auto beta_arg = fb.argument(ty_, "beta");
+                auto C = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N, dynamic},
+                                                {1, ldC, strideC}, address_space::global, my_loc()),
                                      "C", my_loc());
 
-                auto beta = is_beta_nonzero ? std::move(beta_arg) : make_imm(0.0, ty_, my_loc());
+                auto beta = is_beta_nonzero ? std::move(beta_arg) : make_fimm(0.0, ty_, my_loc());
                 fb.body(
                     [&](region_builder &bb) {
-                        auto gid = bb.add(make_group_id(my_loc()));
-                        auto offsets = std::vector<value>{make_index(0, my_loc()),
-                                                          make_index(0, my_loc()), gid};
-                        auto size = std::vector<value>{make_dynamic(my_loc()),
-                                                       make_dynamic(my_loc()), value{}};
+                        auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                        auto offsets = std::vector<value>{make_imm(0, index_ty, my_loc()),
+                                                          make_imm(0, index_ty, my_loc()), gid};
+                        auto size =
+                            std::vector<value>{make_imm(dynamic, i64_ty, my_loc()),
+                                               make_imm(dynamic, i64_ty, my_loc()), value{}};
                         auto a = bb.add(make_subview(A, offsets, size, my_loc()));
                         auto b = bb.add(make_subview(B, offsets, size, my_loc()));
                         auto c = bb.add(make_subview(C, offsets, size, my_loc()));
@@ -129,7 +132,8 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             }();
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
-            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src), ty_)
+            *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src),
+                                                                  enum_cast<scalar_type>(ty))
                           .release();
         },
         ctx_.get());

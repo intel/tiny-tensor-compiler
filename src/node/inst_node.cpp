@@ -21,7 +21,7 @@
 namespace tinytc {
 
 scalar_data_type *get_scalar_type(location const &loc, value const &v) {
-    auto m = dyn_cast<scalar_data_type>(v->ty().get());
+    auto m = dyn_cast<scalar_data_type>(v->ty());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
     }
@@ -29,7 +29,7 @@ scalar_data_type *get_scalar_type(location const &loc, value const &v) {
 }
 
 memref_data_type *get_memref_type(location const &loc, value const &v) {
-    auto m = dyn_cast<memref_data_type>(v->ty().get());
+    auto m = dyn_cast<memref_data_type>(v->ty());
     if (m == nullptr) {
         throw compilation_error(loc, status::ir_expected_memref);
     }
@@ -77,12 +77,12 @@ loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step
     }
 }
 
-alloca_inst::alloca_inst(data_type ty, location const &lc)
+alloca_inst::alloca_inst(tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::alloca}, stack_ptr_{-1} {
     loc(lc);
 
     result(0) = make_value(std::move(ty));
-    auto memref = dyn_cast<memref_data_type>(result(0)->ty().get());
+    auto memref = dyn_cast<memref_data_type>(result(0)->ty());
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -148,7 +148,7 @@ arith_inst::arith_inst(arithmetic operation, value a0, value b0, location const 
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result(0) = make_value(at->ty());
+    result(0) = make_value(at);
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, location const &lc)
@@ -169,14 +169,14 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, value a0, locatio
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result(0) = make_value(at->ty());
+    result(0) = make_value(at);
 }
 
 cast_inst::cast_inst(value a, scalar_type to_ty, location const &lc) : standard_inst{IK::cast} {
     op(op_a) = std::move(a);
     loc(lc);
 
-    result(0) = make_value(std::move(to_ty));
+    result(0) = make_value(scalar_data_type::get(op(op_a)->context(), std::move(to_ty)));
 }
 
 compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location const &lc)
@@ -192,7 +192,7 @@ compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location cons
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 
-    result(0) = make_value(scalar_type::i1);
+    result(0) = make_value(scalar_data_type::get(at->context(), scalar_type::i1));
 }
 
 expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const &expand_shape0,
@@ -255,7 +255,8 @@ expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const 
         if (dyn_mode >= 0) {
             std::int64_t const s = size / prod;
             known_expand_shape[dyn_mode] = s;
-            expand_shape()[dyn_mode] = make_imm(s);
+            expand_shape()[dyn_mode] =
+                make_imm(s, scalar_data_type::get(m->context(), scalar_type::i64));
             prod *= s;
         }
         if (prod != size) {
@@ -284,10 +285,9 @@ expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const 
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
-    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
-    r->addrspace(m->addrspace());
-    result(0) = make_value(data_type(r.release()));
+    result(0) = make_value(
+        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace()));
 }
 
 fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location const &lc)
@@ -322,10 +322,9 @@ fuse_inst::fuse_inst(value op0, std::int64_t from, std::int64_t to, location con
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
-    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
-    r->addrspace(m->addrspace());
-    result(0) = make_value(data_type(r.release()));
+    result(0) = make_value(
+        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace()));
 }
 
 load_inst::load_inst(value op0, std::vector<value> const &index_list0, location const &lc)
@@ -347,7 +346,7 @@ load_inst::load_inst(value op0, std::vector<value> const &index_list0, location 
                   if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result(0) = make_value(m.element_ty());
+                  result(0) = make_value(scalar_data_type::get(m.context(), m.element_ty()));
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *operand()->ty());
@@ -474,7 +473,7 @@ hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, valu
 }
 
 if_inst::if_inst(value condition, region then0, region otherwise0,
-                 std::vector<scalar_type> const &return_types, location const &lc)
+                 std::vector<tinytc_data_type_t> const &return_types, location const &lc)
     : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size()), otherwise0 ? 2 : 1} {
     op(0) = std::move(condition);
     child_region(child_region_then) = std::move(then0);
@@ -502,7 +501,7 @@ size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    result(0) = make_value(scalar_type::index);
+    result(0) = make_value(scalar_data_type::get(op(0)->context(), scalar_type::index));
 }
 
 subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
@@ -515,8 +514,9 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
         for (auto const &val : offset_list0) {
             op(i++) = val;
         }
+        auto index_ty = scalar_data_type::get(op(0)->context(), scalar_type::index);
         for (auto const &val : size_list0) {
-            op(i++) = val ? val : make_index(0);
+            op(i++) = val ? val : make_imm(0, index_ty);
         }
     }
     loc(lc);
@@ -569,10 +569,9 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
             stride.push_back(m->stride(i));
         }
     }
-    auto r = std::make_unique<memref_data_type>(m->element_ty(), shape, stride);
 
-    r->addrspace(m->addrspace());
-    result(0) = make_value(data_type(r.release()));
+    result(0) = make_value(
+        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace()));
 }
 
 store_inst::store_inst(value val0, value op0, std::vector<value> const &index_list0,

@@ -27,11 +27,9 @@ Builder C++-API:
       - tinytc::dynamic
   Data Type:
     function:
-      - tinytc::make_memref
-      - tinytc::make_group
-      - tinytc::make_scalar
-    class:
-      - tinytc::data_type
+      - tinytc::get_memref
+      - tinytc::get_group
+      - tinytc::get_scalar
     struct:
       - tinytc::to_scalar_type
     variable:
@@ -90,16 +88,8 @@ Builder C++-API:
       - tinytc::region_builder
   Value:
     function:
-      - tinytc::make_dynamic(location const&)
-      - tinytc::make_imm(float,location const&)
-      - tinytc::make_imm(double,scalar_type,location const&)
-      - tinytc::make_imm(std::int8_t,location const&)
-      - tinytc::make_imm(std::int16_t,location const&)
-      - tinytc::make_imm(std::int32_t,location const&)
-      - tinytc::make_imm(std::int64_t,scalar_type,location const&)
-      - tinytc::make_index(std::int32_t,location const&)
-      - tinytc::make_index(std::int64_t,location const&)
-      - tinytc::make_value(data_type const&,location const&)
-      - tinytc::make_value(scalar_type,location const&)
+      - tinytc::make_fimm
+      - tinytc::make_imm
+      - tinytc::make_value
     class:
       - tinytc::value

@@ -28,7 +28,7 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
     walk<walk_order::pre_order>(fn, [&allocs](inst_node &i) {
         visit(overloaded{
                   [&allocs](alloca_inst &a) {
-                      auto t = dyn_cast<memref_data_type>(a.result()->ty().get());
+                      auto t = dyn_cast<memref_data_type>(a.result()->ty());
                       if (t == nullptr) {
                           throw compilation_error(a.loc(), status::ir_expected_memref);
                       }

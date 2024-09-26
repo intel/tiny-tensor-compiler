@@ -151,9 +151,8 @@ tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<alloca_inst>(data_type(ty, true), get_optional(loc)).release();
-    });
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<alloca_inst>(ty, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
@@ -216,20 +215,22 @@ tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
     });
 }
 
-tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr, const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr, tinytc_compiler_context_t ctx,
+                                            const tinytc_location_t *loc) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<group_id_inst>(get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<group_id_inst>(ctx, get_optional(loc)).release(); });
 }
 
-tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr, const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr, tinytc_compiler_context_t ctx,
+                                              const tinytc_location_t *loc) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<group_size_inst>(get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<group_size_inst>(ctx, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
@@ -295,12 +296,13 @@ tinytc_status_t tinytc_hadamard_inst_create(tinytc_inst_t *instr, tinytc_bool_t 
 }
 
 tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
+                                                 tinytc_compiler_context_t ctx,
                                                  const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<num_subgroups_inst>(get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<num_subgroups_inst>(ctx, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, tinytc_region_t body,
@@ -323,30 +325,34 @@ tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     });
 }
 
-tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr, const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr, tinytc_compiler_context_t ctx,
+                                               const tinytc_location_t *loc) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<subgroup_id_inst>(get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<subgroup_id_inst>(ctx, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t *instr,
+                                                     tinytc_compiler_context_t ctx,
                                                      const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *instr = std::make_unique<subgroup_local_id_inst>(get_optional(loc)).release(); });
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<subgroup_local_id_inst>(ctx, get_optional(loc)).release();
+    });
 }
 
 tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
+                                                 tinytc_compiler_context_t ctx,
                                                  const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+    if (instr == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<subgroup_size_inst>(get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<subgroup_size_inst>(ctx, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
@@ -437,17 +443,17 @@ tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t 
 tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
                                       tinytc_region_t then, tinytc_region_t otherwise,
                                       uint32_t return_type_list_size,
-                                      tinytc_scalar_type_t *return_type_list,
+                                      tinytc_data_type_t *return_type_list,
                                       const tinytc_location_t *loc) {
     if (instr == nullptr || condition == nullptr || then == nullptr ||
         (return_type_list_size > 0 && return_type_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto rt = std::vector<scalar_type>();
+        auto rt = std::vector<tinytc_data_type_t>();
         rt.reserve(return_type_list_size);
         for (uint32_t i = 0; i < return_type_list_size; ++i) {
-            rt.emplace_back(enum_cast<scalar_type>(return_type_list[i]));
+            rt.emplace_back(return_type_list[i]);
         }
         *instr = std::make_unique<if_inst>(value(condition, true), region{then}, region{otherwise},
                                            std::move(rt), get_optional(loc))

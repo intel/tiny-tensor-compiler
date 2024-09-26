@@ -25,6 +25,7 @@ set(SOURCES
     codegen_tools.cpp
     compiler.cpp
     compiler_context.cpp
+    compiler_context_cache.cpp
     data_type.cpp
     device_info.cpp
     error.cpp

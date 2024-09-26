@@ -15,6 +15,6 @@ func @kernel1(%a: memref<f32>, %b: memref<f32x10x?>, %c: group<memref<f32x42>>) 
 
 func @kernel2(%c: group<memref<f32x42>, offset: 21>) {
     %0 = group_id
-    %1 = load %c[%0] : group<memref<f32x42>>
+    %1 = load %c[%0] : group<memref<f32x42>, offset: 21>
     ; CHECK: global float* x1 = *(c + x0) + 21;
 }

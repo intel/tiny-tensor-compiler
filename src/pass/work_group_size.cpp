@@ -23,7 +23,7 @@
 namespace tinytc {
 
 auto get_memref_type(value_node &v) {
-    auto t = dyn_cast<memref_data_type>(v.ty().get());
+    auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }

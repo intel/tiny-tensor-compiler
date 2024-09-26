@@ -2,24 +2,26 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context.hpp"
+#include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <iostream>
-#include <memory>
 
 namespace tinytc {
 void default_error_reporter(char const *what, const tinytc_location_t *, void *) {
     std::cerr << what << std::endl;
 }
-
 } // namespace tinytc
 
 using namespace tinytc;
 
 extern "C" {
+
+tinytc_compiler_context::tinytc_compiler_context()
+    : cache_{std::make_unique<compiler_context_cache>(this)} {}
 
 auto tinytc_compiler_context::source_name(std::int32_t source_id)
     -> std::pair<char const *, std::size_t> {
