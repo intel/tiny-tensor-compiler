@@ -11,18 +11,20 @@ func @basic() {
 func @use1(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 ; CHECK-LABEL: func @use1{{.*}}
     %B = alloca -> memref<f32x32x8,local>
-    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
+    %one = constant 1.0 -> f32
+    gemm.n.n %one, %A, %B, %one, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
 ; CHECK:      gemm.n.n{{.*}}
 ; CHECK-NEXT: lifetime_stop %B
 }
 
 func @use2(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 ; CHECK-LABEL: func @use2{{.*}}
+    %one = constant 1.0 -> f32
     %B = alloca -> memref<f32x32x8,local>
-    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
+    gemm.n.n %one, %A, %B, %one, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
     %B2 = alloca -> memref<f32x32x8,local>
-    gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
-    gemm.n.n 1.0, %A, %B2, 0.0, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
+    gemm.n.n %one, %A, %B, %one, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
+    gemm.n.n %one, %A, %B2, %one, %C : f32, memref<f32x32x32>, memref<f32x32x8,local>, f32, memref<f32x32x8>
 ; CHECK:      %B2 = {{.*}}
 ; CHECK-NEXT: gemm.n.n{{.*}}
 ; CHECK-NEXT: lifetime_stop %B
@@ -30,26 +32,29 @@ func @use2(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 ; CHECK-NEXT: lifetime_stop %B2
 }
 
-func @use_alias(%A: memref<f32x8x8>, %C: memref<f32x8x8>) {
+func @use_alias(%a: f32, %A: memref<f32x8x8>, %C: memref<f32x8x8>) {
 ; CHECK-LABEL: func @use_alias{{.*}}
     %B = alloca -> memref<f32x32x2x2x2,local>
     %0 = fuse %B[1,3] : memref<f32x32x2x2x2,local>
-    %1 = subview %0[0:8,:] : memref<f32x32x8,local>
-    gemm.n.n 1.0, %A, %1, 0.0, %C : f32, memref<f32x8x8>, memref<f32x8x8,strided<1,32>,local>, f32, memref<f32x8x8>
+    %1 = subview %0[0:8,0:8] : memref<f32x32x8,local>
+    gemm.n.n %a, %A, %1, %a, %C : f32, memref<f32x8x8>, memref<f32x8x8,strided<1,32>,local>, f32, memref<f32x8x8>
 ; CHECK:      gemm.n.n{{.*}}
 ; CHECK-NEXT: lifetime_stop %B
 }
 
 func @region1() {
 ; CHECK-LABEL: func @region1{{.*}}
+    %one = constant 1.0 -> f32
     %0 = alloca -> memref<f32x8x8,local>
-    for %i=0,4 : index {
+    %lb = constant 0 -> index
+    %ub = constant 4 -> index
+    for %i=%lb,%ub : index {
         %1 = alloca -> memref<f32x8x8,local>
-        for %k=0,4 : index {
+        for %k=%lb,%ub : index {
             %2 = alloca -> memref<f32x8x8,local>
-            gemm.n.n 1.0, %0, %1, 0.0, %2
+            gemm.n.n %one, %0, %1, %one, %2
                 : f32, memref<f32x8x8,local>, memref<f32x8x8,local>, f32, memref<f32x8x8,local>
-            axpby.n 1.0, %0, 0.0, %1 : f32, memref<f32x8x8,local>, f32, memref<f32x8x8,local>
+            axpby.n %one, %0, %one, %1 : f32, memref<f32x8x8,local>, f32, memref<f32x8x8,local>
         }
     }
 ; CHECK:              gemm.n.n{{.*}}

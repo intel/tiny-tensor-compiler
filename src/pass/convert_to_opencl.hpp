@@ -78,6 +78,7 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(arith_unary_inst const &a);
     std::vector<clir::stmt> operator()(cast_inst const &c);
     std::vector<clir::stmt> operator()(compare_inst const &c);
+    std::vector<clir::stmt> operator()(constant_inst const &c);
     std::vector<clir::stmt> operator()(expand_inst const &e);
     std::vector<clir::stmt> operator()(fuse_inst const &f);
     std::vector<clir::stmt> operator()(load_inst const &e);

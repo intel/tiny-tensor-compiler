@@ -55,7 +55,7 @@ typedef enum {
     tinytc_status_ir_expected_vector_or_matrix = 0x10a,    ///< Expected a vector or marix
     tinytc_status_ir_unexpected_yield = 0x10b,             ///< Unexpected yield instruction
     tinytc_status_ir_yield_mismatch = 0x10c,               ///< Wrong number of yielded values
-    tinytc_status_ir_multiple_dynamic_modes = 0x10d,       ///< At most one mode must be dynamic
+    tinytc_status_ir_subview_mismatch = 0x10d,             ///< Mismatch in subview
     tinytc_status_ir_invalid_slice = 0x10e,                ///< Invalid slice
     tinytc_status_ir_expand_shape_order_too_small = 0x10f, ///< Expand shape too small
     tinytc_status_ir_expand_shape_mismatch = 0x110,        ///< Invalid expand shape

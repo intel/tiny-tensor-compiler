@@ -61,8 +61,9 @@ Constants
 
 .. code:: abnf
 
-    sign                        = "-" / "+"
+    constant                    = floating-constant / integer-constant
     integer-constant            = "true" / "false" / [sign] 1*DIGIT
+    sign                        = "-" / "+"
     floating-constant           = [sign] *DIGIT "." 1*DIGIT ["e" [sign] 1*DIGIT]
     mantissa-dec                = *DIGIT "." 1*DIGIT / 1*DIGIT "."
     mantissa-hex                = *HEXDIG "." 1*HEXDIG / 1*HEXDIG "."
@@ -289,9 +290,8 @@ Axpby
 .. code:: abnf
 
     transpose       =  ".t" / ".n"
-    const-or-val    =  floating-constant / local-identifier
     instruction     =/ "axpby" transpose [".atomic"]
-                               const-or-val "," local-identifier "," const-or-val "," local-identifier
+                               local-identifier "," local-identifier "," local-identifier "," local-identifier
                                ":" scalar-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -333,7 +333,7 @@ Foreach
 
 .. code:: abnf
 
-    instruction     =/ "foreach" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
+    instruction     =/ "foreach" local-identifier "=" local-identifier "," local-identifier
                        [":" integer-type] region
 
 Overview
@@ -342,9 +342,8 @@ Overview
 A foreach loop that executes the loop's range [from; to) without any sequence guarantee.
 The region of a foreach is a *spmd region*.
 
-The loop's range [from; to) is given by the first integer constant and second integer constant,
+The loop's range [from; to) is given by the first integer value and second integer value,
 and the trip count is stored in the local identifier.
-The integer type of the loop variable is given after the colon.
 The integer type of the loop variable and the loop bounds is given after the colon.
 The default integer type is ``index``.
 
@@ -354,7 +353,7 @@ GEMM
 .. code:: abnf
 
     instruction     =/ "gemm" transpose transpose [".atomic"]
-                       "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
                        ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -397,7 +396,7 @@ GEMV
 .. code:: abnf
 
     instruction     =/ "gemv" transpose [".atomic"]
-                       "," const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
                        ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -428,7 +427,7 @@ GER
 .. code:: abnf
 
     instruction     =/ "ger" [".atomic"]
-                       const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
                        ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -458,7 +457,7 @@ Hadamard product
 .. code:: abnf
 
     instruction     =/ "hadamard_product" [".atomic"]
-                       const-or-val "," local-identifier "," local-identifier "," const-or-val "," local-identifier
+                       local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
                        ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -500,7 +499,7 @@ Sum
 .. code:: abnf
 
     instruction     =/ "sum" transpose [".atomic"]
-                       "," const-or-val "," local-identifier "," const-or-val "," local-identifier
+                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier
                        ":" scalar-type "," memref-type "," scalar-type "," memref-type
 
 Overview
@@ -543,7 +542,6 @@ Arithmetic (binary)
 
 .. code:: abnf
 
-    identifier-or-constant  =  local-identifier / integer-constant / floating-constant
     arith-binary-type       =  ".add"  /
                                ".sub"  /
                                ".mul"  /
@@ -554,8 +552,7 @@ Arithmetic (binary)
                                ".and"  /
                                ".or"   /
                                ".xor"
-    value-instruction       =/ "arith" arith-binary-type
-                               identifier-or-constant "," identifier-or-constant ":" scalar-type
+    value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier ":" scalar-type
 
 Overview
 ~~~~~~~~
@@ -584,7 +581,7 @@ Arithmetic (unary)
 .. code:: abnf
 
     arith-unary-type        =  ".neg"  / ".not"
-    value-instruction       =/ "arith" arith-unary-type identifier-or-constant ":" scalar-type
+    value-instruction       =/ "arith" arith-unary-type local-identifier ":" scalar-type
 
 Overview
 ~~~~~~~~
@@ -632,7 +629,7 @@ Cast
 
 .. code:: abnf
 
-    value-instruction       =/ "cast" identifier-or-constant ":" scalar-type "->" scalar-type
+    value-instruction       =/ "cast" local-identifier ":" scalar-type "->" scalar-type
 
 Overview
 ~~~~~~~~
@@ -645,7 +642,7 @@ Comparison
 .. code:: abnf
 
     value-instruction       =/ "cmp" (".eq" / ".ne" / ".gt" / ".ge" / ".lt" / ".le")
-                               identifier-or-constant "," identifier-or-constant ":" scalar-type
+                               local-identifier "," local-identifier ":" scalar-type
 
 Overview
 ~~~~~~~~
@@ -664,14 +661,28 @@ Cond Description
 .le  Less than or equal
 ==== =====================
 
+Constant
+........
+
+.. code:: abnf
+
+    value-instruction       =/ "constant" constant "->" scalar-type
+
+Overview
+~~~~~~~~
+
+Sets the result value to a constant value.
+The type of the constant must match the scalar type
+(e.g. an integer type requires an integer-constant and a floating type requires a floating-constant).
+
 Expand
 ......
 
 .. code:: abnf
 
     value-instruction       =/ "expand" local-identifier "[" integer-constant "->" expand-shape "]" ":" memref-type
-    expand-shape            =  constant-or-dynamic-or-identifier 1*("x" constant-or-dynamic-or-identifier)
-    constant-or-dynamic-or-identifier = integer-constant / "?" / local-identifier
+    expand-shape            =  integer-constant-or-identifier 1*("x" integer-constant-or-identifier)
+    integer-constant-or-identifier = integer-constant / local-identifier
 
 Overview
 ~~~~~~~~
@@ -682,49 +693,51 @@ Arguments
 ~~~~~~~~~
 
 The first argument must point to a value of memref type.
-The integer constant in square brackets gives the mode that shall be expanded.
-The expand shape gives the new shape of the mode.
-Values in the expand shape must have index type.
+The first integer constant before "->" gives the mode that shall be expanded.
+The expand shape coming after "->" gives the new shape of the mode.
+Dynamic values in the expand shape must have index type.
 
 The output type is a memref type according to the following rules:
 
-#. **Shape:** The mode size is replaced with the expand shape. If one entry in expand shape is dynamic,
-   then either its size is inferred automatically if the mode size is known, or it determined automatically
-   at run-time if the mode size is dynamic.
+#. **Shape:** The mode size is replaced with the expand shape.
+   The product of the expand shape must equal the size of the expanded mode.
 
    .. code::
 
-       expand %0[1 -> 2x8]  : memref<f32x32x16x8> ; -> memref<f32x32x2x8x8>
-       expand %0[1 -> 2x?]  : memref<f32x32x16x8> ; -> memref<f32x32x2x8x8>
-       expand %0[1 -> ?x8]  : memref<f32x32x16x8> ; -> memref<f32x32x2x8x8>
-       expand %0[1 -> 2x?]  : memref<f32x32x?x8>  ; -> memref<f32x32x2x?x8>
-       expand %0[1 -> ?x8]  : memref<f32x32x?x8>  ; -> memref<f32x32x?x8x8>
+       expand %0[1 -> 2x8]      : memref<f32x32x16x8> ; -> memref<f32x32x2x8x8>
+       expand %0[1 -> 2x2x2x2]  : memref<f32x32x16x8> ; -> memref<f32x32x2x2x2x2x8>
 
 #. **Identifiers:** Local identifiers in the expand shape are dynamic in the resulting memref type.
+   The product of the dynamic expand shape must equal the size of the expanded mode.
 
    .. code::
 
-       expand %0[1 -> %1 x ?]  : memref<f32x32x?>  ; -> memref<f32x32x?x?>
-       expand %0[1 -> %1 x ?]  : memref<f32x32x16> ; -> memref<f32x32x?x?>
-       expand %0[1 -> %1 x %2] : memref<f32x32x?>  ; -> memref<f32x32x?x?>
-       expand %0[1 -> 4 x %1]  : memref<f32x32x?>  ; -> memref<f32x32x4x?>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x?>  ; -> memref<f32x32x?x2>
+       expand %0[1 -> 2 x %1]      : memref<f32x32x?>  ; -> memref<f32x32x2x?>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x16> ; -> memref<f32x32x?x2>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x?>  ; -> memref<f32x32x?x2>
+       expand %0[1 -> %1 x %2 x 2] : memref<f32x32x16> ; -> memref<f32x32x?x?x2>
+       expand %0[1 -> %2 x 2 x %1] : memref<f32x32x16> ; -> memref<f32x32x?x2x?>
+       expand %0[1 -> %1 x %2]     : memref<f32x32x?>  ; -> memref<f32x32x?x?>
+       expand %0[1 -> %1 x %2]     : memref<f32x32x16> ; -> memref<f32x32x?x?>
+
+   *Note:* In the third example above, %1 must be equal to 8.
+   The output mode corresponding to %1 is still dynamic.
 
 #. **Stride:** A new stride entry is entered that follows the canonical stride computation.
 
    .. code::
 
-       expand %0[0->4x8] : memref<f32x32x7,strided<2,64>> ; -> memref<f32x4x8x7,strided<2,8,64>>
-       expand %0[0->4x?] : memref<f32x32x7,strided<2,64>> ; -> memref<f32x4x8x7,strided<2,8,64>>
-       expand %0[0->?x4] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x?x8,strided<2,?,?>>
-       expand %0[0->4x?] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x4x?,strided<2,8,?>>
+       expand %0[0->4 x 8] : memref<f32x32x7,strided<2,64>> ; -> memref<f32x4x8x7,strided<2,8,64>>
+       expand %0[0->%1 x 4] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x?x4x7,strided<2,?,?>>
+       expand %0[0->4 x %1] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x4x?x7,strided<2,8,?>>
 
 Restrictions
 ~~~~~~~~~~~~
 
-At most one mode in expand-shape must be dynamic.
-
 The product of the expand shape must be the same as the mode size.
-If one entry in the expand shape is dynamic then the other must evenly divide the mode size.
+If the product of the expand shape is only known at runtime, then it is undefined behaviour
+if the dynamic product does not match the mode size.
 
 Fuse
 ....
@@ -815,7 +828,7 @@ If
 
 .. code:: abnf
 
-    multi-value-instruction = "if" identifier-or-int-constant ["->" "(" scalar-type-list ")"]
+    multi-value-instruction = "if" local-identifier ["->" "(" scalar-type-list ")"]
                               region ["else" region]
     type-list               = scalar-type *("," scalar-type)
 
@@ -852,9 +865,7 @@ Load
 
 .. code:: abnf
 
-    value-instruction           =/ "load" local-identifier "[" [index-list] "]" ":" memref-or-group-type
-    index-list                  =  identifier-or-int-constant *("," identifier-or-int-constant)
-    identifier-or-int-constant  =  integer-constant / local-identifier
+    value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]" ":" memref-or-group-type
     memref-or-group-type        =  memref-type / group-type
 
 Overview
@@ -898,8 +909,8 @@ For
 
 .. code:: abnf
 
-    instruction     =/ "for" local-identifier "=" identifier-or-int-constant "," identifier-or-int-constant
-                       ["," identifier-or-int-constant] [":" integer-type] region
+    instruction     =/ "for" local-identifier "=" local-identifier "," local-identifier
+                       ["," local-identifier] [":" integer-type] region
 
 Overview
 ~~~~~~~~
@@ -961,7 +972,7 @@ Subview
 
     value-instruction       =/ "subview" local-identifier "[" [index-or-slice-list] "]" ":" memref-type
     index-or-slice-list     =  index-or-slice *("," index-or-slice)
-    index-or-slice          =  identifier-or-int-constant [":" (identifier-or-int-constant / "?")] / ":"
+    index-or-slice          =  integer-constant-or-identifier [":" integer-constant-or-identifier]
 
 Overview
 ~~~~~~~~
@@ -984,10 +995,6 @@ to the index interval [%0, %0 + %1).
     However, then the compiler needs to figure out whether %1 - %0 is constant or not in order
     to determine whether the mode size is known at compile-time or not.
     Therefore, we prefer the offset plus size notation.
-
-A dynamic size ("?") means that the size is the mode size inferred from the memref type
-minus the offset.
-A plain colon is syntactic sugar for "0:?".
 
 Zero sizes are used to encode that a rank-reduction is required, that is,
 the rank of size 0 is removed from the output memref type.
@@ -1016,8 +1023,8 @@ The output type is a memref type according to the following rules:
 
    .. code::
 
-       subview %0[2:4, %1]   : memref<f32x16x8> ; Returns memref<f32x4,strided<1,16>>
-       subview %0[2:4, %1:0] : memref<f32x16x8> ; Returns memref<f32x4,strided<1,16>>
+       subview %0[2:4, %1]   : memref<f32x16x8> ; Returns memref<f32x4>
+       subview %0[2:4, %1:0] : memref<f32x16x8> ; Returns memref<f32x4>
        subview %0[2:4, %1:1] : memref<f64x16x8> ; Returns memref<f64x4x1,strided<1,16>>
 
 #. **Output-mode size:** The size of the output mode is determined by the size field of a slice
@@ -1030,21 +1037,12 @@ The output type is a memref type according to the following rules:
        subview %0[2:4, %2:%2, 6:7] : memref<f32x16x42x13> ; Returns memref<f32x4x?x7,strided<1,16,672>
        subview %0[2:4, %2:%2, 6:7] : memref<f32x16x42x13,strided<1,?,?>> ; Returns memref<f32x4x?x7,strided<1,?,?>
 
-#. **Dynamic size:**
-
-   .. code::
-
-       subview %0[:]               : memref<f32x16> ; Returns memref<f32x16>
-       subview %0[:]               : memref<f32x?>  ; Returns memref<f32x?>
-       subview %0[5:?]             : memref<f32x16> ; Returns memref<f32x13>
-       subview %0[%2:?]            : memref<f32x16> ; Returns memref<f32x?>
-
 Store
 .....
 
 .. code:: abnf
 
-    instruction     =/ "store" local-identifier "," local-identifier "[" [index-list] "]" ":" memref-type
+    instruction     =/ "store" local-identifier "," local-identifier "[" [local-identifier-list] "]" ":" memref-type
 
 Overview
 ~~~~~~~~
@@ -1067,7 +1065,6 @@ Yield
 .. code:: abnf
 
     instruction                 =/ "yield" [local-identifier-list]  ":" [scalar-type-list]
-    identifier-or-constant-list =  identifier-or-constant *("," identifier-or-constant)
 
 Overview
 ~~~~~~~~
@@ -1139,8 +1136,10 @@ where B and C are constant matrices and A and D are matrix batches.
       %1 = load %A[%0]        : group<memref<f32x16x8>> ; Returns memref<f32x16x8>
       %2 = subview %D[:,:,%0] : memref<f32x16x16x?>     ; Returns memref<f32x16x16>
       %tmp0 = alloca -> memref<f32x16x8>
-      gemm.n.t 1.0, %1, %B, 0.0, %tmp0
+      %zero = constant 0.0 : f32
+      %one = constant 1.0 : f32
+      gemm.n.t %one, %1, %B, %zero, %tmp0
          : f32, memref<f32x16x8>, memref<f32x8x8>, f32, memref<f32x16x8>
-      gemm.n.n %alpha, %tmp0, %C, 1.0, %2
+      gemm.n.n %alpha, %tmp0, %C, %one, %2
          : f32, memref<f32x16x8>, memref<f32x8x16>, f32, memref<f32x16x16>
     }

@@ -30,8 +30,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string_view>
-
-#include <iostream>
+#include <variant>
 
 namespace tinytc {
 
@@ -417,11 +416,22 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c
                                    make(c.cond(), visit(*this, *c.a()), visit(*this, *c.b())))};
 }
 
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &c) {
+    auto v = declare(*c.result());
+    auto ty = get_scalar_type(*c.result());
+    auto rhs = std::visit(
+        overloaded{[&](std::int64_t i) { return clir::expr(i, static_cast<short>(size(ty) * 8)); },
+                   [&](double d) { return clir::expr(d, static_cast<short>(size(ty) * 8)); }},
+        c.value());
+    return {declaration_assignment(visit(*this, *c.result()->ty()), std::move(v), std::move(rhs))};
+}
+
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e) {
     auto result_var = declare(*e.result());
     auto m = get_memref_type(*e.operand());
     auto &dv = get_dope_vector(e.operand().get());
-    auto eshape = e.expand_shape();
+    auto static_shape = e.static_expand_shape();
+    auto dyn_shape = e.expand_shape();
 
     auto rhs = visit(*this, *e.operand());
     auto clinst = std::vector<clir::stmt>{};
@@ -430,48 +440,32 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
 
     auto shape = std::vector<clir::expr>{};
     auto stride = std::vector<clir::expr>{};
-    shape.reserve(m->dim() + eshape.size() - 1);
-    stride.reserve(m->dim() + eshape.size() - 1);
+    shape.reserve(m->dim() + static_shape.size() - 1);
+    stride.reserve(m->dim() + static_shape.size() - 1);
     std::int64_t i = 0;
-    for (; i < e.mode(); ++i) {
+    for (; i < e.expanded_mode(); ++i) {
         shape.push_back(dv.shape(i));
         stride.push_back(dv.stride(i));
     }
 
     auto eshape_cl = std::vector<clir::expr>{};
-    eshape_cl.reserve(eshape.size());
-    for (auto &s : eshape) {
-        eshape_cl.push_back(visit(*this, *s));
-    }
-
-    auto const get_shape = [&](std::size_t j) -> clir::expr {
-        auto is_dynamic =
-            visit(overloaded{[&](int_imm const &i) { return is_dynamic_value(i.value()); },
-                             [](auto const &) { return false; }},
-                  *eshape[j]);
-        if (is_dynamic) {
-            clir::expr prod = 1;
-            for (std::size_t k = 0; k < eshape_cl.size(); ++k) {
-                if (j != k) {
-                    prod = prod * eshape_cl[k];
-                }
-            }
-            auto inferred_size = clir::var("inferred_size");
-            clinst.emplace_back(clir::declaration_assignment(to_clir_ty(scalar_type::index),
-                                                             inferred_size,
-                                                             std::move(prod) / dv.shape(e.mode())));
-            return inferred_size;
+    eshape_cl.reserve(static_shape.size());
+    int j = 0;
+    for (auto &s : static_shape) {
+        if (is_dynamic_value(s)) {
+            eshape_cl.emplace_back(visit(*this, *dyn_shape[j++]));
+        } else {
+            eshape_cl.emplace_back(clir::expr(s, static_cast<short>(size(scalar_type::index) * 8)));
         }
-        return eshape_cl[j];
-    };
-
-    stride.push_back(m->stride(e.mode()));
-    shape.push_back(get_shape(0));
-    for (std::size_t j = 1; j < eshape.size(); ++j) {
-        stride.push_back(stride.back() * shape.back());
-        shape.push_back(get_shape(j));
     }
-    for (i = e.mode() + 1; i < m->dim(); ++i) {
+
+    stride.push_back(m->stride(e.expanded_mode()));
+    shape.push_back(eshape_cl[0]);
+    for (std::size_t j = 1; j < eshape_cl.size(); ++j) {
+        stride.push_back(stride.back() * shape.back());
+        shape.push_back(eshape_cl[j]);
+    }
+    for (i = e.expanded_mode() + 1; i < m->dim(); ++i) {
         shape.push_back(dv.shape(i));
         stride.push_back(dv.stride(i));
     }
@@ -918,10 +912,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subgroup_size_inst co
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s) {
     auto result_var = declare(*s.result());
     auto t = get_memref_type(*s.operand());
-    if (t->dim() != static_cast<std::int64_t>(s.num_indices())) {
-        throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
-    }
-
     auto &dv = get_dope_vector(s.operand().get());
 
     auto rhs = visit(*this, *s.operand());
@@ -930,25 +920,30 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
     auto stride_out = std::vector<clir::expr>{};
     shape_out.reserve(t->dim());
     stride_out.reserve(t->dim());
-    for (std::int64_t i = 0; i < t->dim(); ++i) {
-        auto &offset = s.offset_list()[i];
-        auto &size = s.size_list()[i];
-        rhs = rhs + visit(*this, *offset) * dv.stride(j);
+    auto dyn_offsets = s.offsets();
+    auto dyn_sizes = s.sizes();
+    for (std::int64_t i = 0, joffset = 0, jsize = 0; i < t->dim(); ++i) {
+        auto offset = s.static_offsets()[i];
 
-        auto size_value =
-            visit(overloaded{[&](int_imm &s) -> clir::expr {
-                                 if (s.value() == 0) {
-                                     return nullptr;
-                                 } else if (is_dynamic_value(s.value())) {
-                                     return dv.shape(j) - visit(*this, *offset);
-                                 }
-                                 return this->operator()(s);
-                             },
-                             [&](value_node &s) -> clir::expr { return visit(*this, s); }},
-                  *size);
+        auto offset_cl = clir::expr{};
+        if (is_dynamic_value(offset)) {
+            offset_cl = visit(*this, *dyn_offsets[joffset++]);
+        } else {
+            offset_cl =
+                clir::expr(offset, static_cast<short>(tinytc::size(scalar_type::index) * 8));
+        }
+        rhs = rhs + offset_cl * dv.stride(j);
 
-        if (size_value) {
-            shape_out.emplace_back(size_value);
+        auto size = s.static_sizes()[i];
+        if (size > 0 || is_dynamic_value(size)) {
+            auto size_cl = clir::expr{};
+            if (is_dynamic_value(size)) {
+                size_cl = visit(*this, *dyn_sizes[jsize++]);
+            } else {
+                size_cl =
+                    clir::expr(size, static_cast<short>(tinytc::size(scalar_type::index) * 8));
+            }
+            shape_out.emplace_back(size_cl);
             stride_out.emplace_back(dv.stride(j));
         }
 

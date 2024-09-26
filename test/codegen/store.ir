@@ -3,9 +3,10 @@
 
 ; RUN: %tinytc-oc < %s | filecheck %s
 func @kernel(%a: memref<f32>, %b: memref<f32x10x?>, %c: f32) {
+    %c5 = constant 5 -> index
     %1 = group_id
     store %c, %a[] : memref<f32>
-    store %c, %b[5, %1] : memref<f32x10x?>
+    store %c, %b[%c5, %1] : memref<f32x10x?>
     ; CHECK:      *a = c;
-    ; CHECK-NEXT: *(b + 5ll * 1 + x1 * 10) = c;
+    ; CHECK-NEXT: *(b + c5 * 1 + x1 * 10) = c;
 }

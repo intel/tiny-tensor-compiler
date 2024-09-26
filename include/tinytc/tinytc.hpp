@@ -758,23 +758,32 @@ inline inst make_axpby(transpose tA, bool atomic, value const &alpha, value cons
  * @brief Make expand instruction
  *
  * @param a Operand
- * @param mode Expanded mode
- * @param expand_shape New shape of mode
+ * @param expanded_mode Expanded mode
+ * @param static_expand_shape Static expand shape
+ * @param expand_shape Dynamic expand shape
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_expand(value const &a, std::int64_t mode, std::vector<value> const &expand_shape,
-                        location const &loc = {}) {
+inline inst make_expand(value const &a, std::int64_t expanded_mode,
+                        std::vector<std::int64_t> const &static_expand_shape,
+                        std::vector<value> const &expand_shape, location const &loc = {}) {
     static_assert(internal::value_reinterpret_allowed);
     tinytc_inst_t instr;
+    auto static_len = static_expand_shape.size();
+    if (static_len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("static expand shape too large");
+    }
     auto len = expand_shape.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("expand shape too large");
     }
     tinytc_value_t *eshape =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(expand_shape.data()));
-    CHECK_STATUS_LOC(tinytc_expand_inst_create(&instr, a.get(), mode, len, eshape, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_expand_inst_create(
+                         &instr, a.get(), expanded_mode, static_len,
+                         const_cast<std::int64_t *>(static_expand_shape.data()), len, eshape, &loc),
+                     loc);
     return inst(instr);
 }
 
@@ -1029,28 +1038,48 @@ inline inst make_subgroup_size(compiler_context const &ctx, location const &loc 
  * @brief Make subview instruction
  *
  * @param a Operand
- * @param offset_list Vector of offsets
- * @param size_list Vector of sizes; initialize with empty value if only offset is required
+ * @param static_offset_list Static offsets
+ * @param static_size_list Static sizes
+ * @param offset_list Vector of offsets; need to add dynamic offsets here if static_offset_list
+ * contains "dynamic"
+ * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
+ * "dynamic"
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_subview(value const &a, std::vector<value> const &offset_list,
-                         std::vector<value> const &size_list, location const &loc = {}) {
+inline inst make_subview(value const &a, std::vector<std::int64_t> const &static_offset_list,
+                         std::vector<std::int64_t> const &static_size_list,
+                         std::vector<value> const &offset_list, std::vector<value> const &size_list,
+                         location const &loc = {}) {
     static_assert(internal::value_reinterpret_allowed);
     tinytc_inst_t instr;
-    if (offset_list.size() != size_list.size()) {
-        throw std::invalid_argument("offset list must have the same length as the size list");
+    if (static_offset_list.size() != static_size_list.size()) {
+        throw std::invalid_argument(
+            "static offset list must have the same length as the static size list");
     }
-    auto len = offset_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("slice list too long");
+    auto static_len = static_offset_list.size();
+    if (static_len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("static slice list too long");
+    }
+    auto offset_len = offset_list.size();
+    if (offset_len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("dynamic offset list too long");
+    }
+    auto size_len = offset_list.size();
+    if (size_len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("dynamic size list too long");
     }
     tinytc_value_t *ol =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(offset_list.data()));
     tinytc_value_t *sl =
         const_cast<tinytc_value_t *>(reinterpret_cast<tinytc_value_t const *>(size_list.data()));
-    CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a.get(), len, ol, sl, &loc), loc);
+    CHECK_STATUS_LOC(
+        tinytc_subview_inst_create(&instr, a.get(), static_len,
+                                   const_cast<std::int64_t *>(static_offset_list.data()),
+                                   const_cast<std::int64_t *>(static_size_list.data()), offset_len,
+                                   ol, size_len, sl, &loc),
+        loc);
     return inst(instr);
 }
 

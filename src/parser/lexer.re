@@ -136,6 +136,7 @@ lex:
         "alloca"            { adv_loc(); return parser::make_ALLOCA(loc_); }
         "cast"              { adv_loc(); return parser::make_CAST(loc_); }
         "cmp"               { adv_loc(); return parser::make_CMP(loc_); }
+        "constant"          { adv_loc(); return parser::make_CONSTANT(loc_); }
         "expand"            { adv_loc(); return parser::make_EXPAND(loc_); }
         "fuse"              { adv_loc(); return parser::make_FUSE(loc_); }
         "load"              { adv_loc(); return parser::make_LOAD(loc_); }

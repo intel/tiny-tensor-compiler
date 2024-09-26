@@ -3,10 +3,14 @@
 
 ; RUN: %tinytc-oc < %s | filecheck %s
 func @for1() {
-  for %0 = 0,10 {
-  ; CHECK: for (long x0 = 0ll; x0 < 10ll; ++x0)
+  %lb0 = constant 0 -> index
+  %ub0 = constant 10 -> index
+  for %0 = %lb0,%ub0 {
+  ; CHECK: for (long x0 = lb0; x0 < ub0; ++x0)
   }
-  for %1 = -2,2 : i16 {
-  ; CHECK: for (short x1 = -2; x1 < 2; ++x1)
+  %lb1 = constant -2 -> i16
+  %ub1 = constant 2 -> i16
+  for %1 = %lb1,%ub1 : i16 {
+  ; CHECK: for (short x1 = lb1; x1 < ub1; ++x1)
   }
 }

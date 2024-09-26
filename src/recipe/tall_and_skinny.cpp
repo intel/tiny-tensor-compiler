@@ -93,7 +93,6 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
         [&] {
             auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
             auto const index_ty = get_scalar(ctx_, scalar_type::index);
-            auto const i64_ty = get_scalar(ctx_, scalar_type::i64);
 
             auto const shapes =
                 std::vector{blas_shape{enum_cast<scalar_type>(ty), {M_block_size, N}}};
@@ -107,24 +106,38 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
             auto const body = [&](region_builder &bb, value &alpha, value &A, value &B, value &beta,
                                   value &C) {
-                auto const gemm = [&](region_builder &bb, std::vector<value> const &offsets,
-                                      value const &block_size) {
-                    auto a = bb.add(make_subview(
-                        A, offsets, {block_size, make_imm(K, index_ty, my_loc())}, my_loc()));
-                    auto c = bb.add(make_subview(
-                        C, offsets, {block_size, make_imm(N, index_ty, my_loc())}, my_loc()));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
-                                     my_loc()));
-                };
-
                 auto const block_size_imm = make_imm(M_block_size, index_ty, my_loc());
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
                 auto m = bb.add(make_arith(arithmetic::mul, gid,
                                            make_imm(M_block_size, index_ty, my_loc()), my_loc()));
-                auto const offsets = std::vector<value>{m, make_imm(0, index_ty, my_loc())};
+
+                auto const static_offsets = std::vector<std::int64_t>{dynamic, 0};
+                auto const offsets = std::vector<value>{m};
+
+                auto const static_gemm = [&](region_builder &bb) {
+                    auto const A_static_sizes = std::vector<std::int64_t>{M_block_size, K};
+                    auto const C_static_sizes = std::vector<std::int64_t>{M_block_size, N};
+                    auto a = bb.add(
+                        make_subview(A, static_offsets, A_static_sizes, offsets, {}, my_loc()));
+                    auto c = bb.add(
+                        make_subview(C, static_offsets, C_static_sizes, offsets, {}, my_loc()));
+                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
+                                     my_loc()));
+                };
+                auto const dynamic_gemm = [&](region_builder &bb, value const &dyn_block_size) {
+                    auto const A_static_sizes = std::vector<std::int64_t>{dynamic, K};
+                    auto const C_static_sizes = std::vector<std::int64_t>{dynamic, N};
+                    auto const sizes = std::vector<value>{dyn_block_size};
+                    auto a = bb.add(
+                        make_subview(A, static_offsets, A_static_sizes, offsets, sizes, my_loc()));
+                    auto c = bb.add(
+                        make_subview(C, static_offsets, C_static_sizes, offsets, sizes, my_loc()));
+                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
+                                     my_loc()));
+                };
 
                 if (!is_dynamic_value(M) && M % M_block_size == 0) {
-                    gemm(bb, offsets, block_size_imm);
+                    static_gemm(bb);
                 } else {
                     auto M_val = is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc()))
                                                      : make_imm(M, index_ty);
@@ -132,11 +145,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto cond =
                         bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
                                         make_imm(M_block_size, index_ty, my_loc()), my_loc()));
-                    auto const dynamic_imm = make_imm(dynamic, i64_ty, my_loc());
                     bb.ifelse(
-                        cond, [&](region_builder &bb) { gemm(bb, offsets, dynamic_imm); },
-                        [&](region_builder &bb) { gemm(bb, offsets, block_size_imm); }, {},
-                        my_loc());
+                        cond, [&](region_builder &bb) { dynamic_gemm(bb, M_val_sub_m); },
+                        [&](region_builder &bb) { static_gemm(bb); }, {}, my_loc());
                 }
             };
 

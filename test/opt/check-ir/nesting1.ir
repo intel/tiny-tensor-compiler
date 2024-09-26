@@ -3,9 +3,11 @@
 
 ; RUN: not %tinytc-opt --check-ir < %s 2>&1 | filecheck %s
 func @illegal_nesting() {
-    foreach %i=1,16 {
-        foreach %j=1,16 {
+    %lb = constant 1 -> index
+    %ub = constant 16 -> index
+    foreach %i=%lb,%ub {
+        foreach %j=%lb,%ub {
         }
-; CHECK: 7.9-8.9: Collective instruction must not be called from SPMD region
+; CHECK: 9.9-10.9: Collective instruction must not be called from SPMD region
     }
 }

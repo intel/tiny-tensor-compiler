@@ -144,14 +144,15 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Yield encountered in non-yielding region";
     case tinytc_status_ir_yield_mismatch:
         return "Number of yielded values does not match number of values yielded by region";
-    case tinytc_status_ir_multiple_dynamic_modes:
-        return "At most one mode must be dynamic ('?')";
+    case tinytc_status_ir_subview_mismatch:
+        return "Number of dynamic offsets and sizes must match number of dynamic operands";
     case tinytc_status_ir_invalid_slice:
-        return "Offset must be non-negative and must not be '?'; size must be non-negative or '?'";
+        return "Static offset and size must be non-negative or dynamic ('?')";
     case tinytc_status_ir_expand_shape_order_too_small:
         return "Expand shape must have at least 2 entries";
     case tinytc_status_ir_expand_shape_mismatch:
-        return "Product of expand shape must equal mode size";
+        return "Number of dynamic expand shape operands must equal number of dynamic modes in "
+               "static expand shape";
     case tinytc_status_ir_collective_called_from_spmd:
         return "Collective instruction must not be called from SPMD region";
     case tinytc_status_ir_fp_unsupported:

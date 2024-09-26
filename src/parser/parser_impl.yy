@@ -17,6 +17,8 @@
     namespace tinytc {
         class parse_context;
         class lexer;
+
+        using int_or_val = std::variant<std::int64_t, ::tinytc::value>;
     }
 }
 
@@ -37,6 +39,7 @@
     #include <cstdlib>
     #include <memory>
     #include <utility>
+    #include <variant>
     #include <vector>
 
     namespace tinytc {
@@ -118,6 +121,7 @@
     ALLOCA          "alloca"
     CAST            "cast"
     CMP             "cmp"
+    CONSTANT        "constant"
     EXPAND          "expand"
     FUSE            "fuse"
     LOAD            "load"
@@ -171,9 +175,8 @@
 %nterm <inst> instruction
 %nterm <inst> axpby_inst
 %nterm <bool> atomic
-%nterm <::tinytc::value> identifier_or_constant
-%nterm <std::vector<::tinytc::value>> optional_identifier_or_constant_list
-%nterm <std::vector<::tinytc::value>> identifier_or_constant_list
+%nterm <std::vector<::tinytc::value>> optional_value_list
+%nterm <std::vector<::tinytc::value>> value_list
 %nterm <inst> barrier_inst
 %nterm <std::int32_t> optional_global_attr
 %nterm <std::int32_t> optional_local_attr
@@ -201,14 +204,12 @@
 %nterm <inst> arith_unary_inst
 %nterm <inst> cast_inst
 %nterm <inst> compare_inst
+%nterm <inst> constant_inst
 %nterm <inst> expand_inst
-%nterm <::tinytc::value> constant_or_dynamic_or_identifier
-%nterm <std::vector<::tinytc::value>> expand_shape
+%nterm <int_or_val> integer_constant_or_identifier
+%nterm <std::vector<int_or_val>> expand_shape
 %nterm <inst> fuse_inst
 %nterm <inst> load_inst
-%nterm <std::vector<::tinytc::value>> optional_index_list
-%nterm <std::vector<::tinytc::value>> index_list
-%nterm <::tinytc::value> index_identifier_or_const
 %nterm <inst> group_id_inst
 %nterm <inst> group_size_inst
 %nterm <inst> num_subgroups_inst
@@ -219,10 +220,10 @@
 %nterm <inst> subgroup_size_inst
 %nterm <inst> store_inst
 %nterm <inst> subview_inst
-%nterm <std::pair<std::vector<::tinytc::value>, std::vector<::tinytc::value>>> optional_slice_list
-%nterm <std::pair<std::vector<::tinytc::value>, std::vector<::tinytc::value>>> slice_list
-%nterm <std::pair<::tinytc::value, ::tinytc::value>> slice
-%nterm <::tinytc::value> slice_size
+%nterm <std::vector<std::pair<int_or_val,int_or_val>>> optional_slice_list
+%nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
+%nterm <std::pair<int_or_val,int_or_val>> slice
+%nterm <int_or_val> slice_size
 
 %%
 prog:
@@ -421,7 +422,7 @@ instruction:
 
 axpby_inst:
     AXPBY transpose[ta] atomic
-          identifier_or_constant[alpha] COMMA var[a] COMMA identifier_or_constant[beta] COMMA var[b]
+          var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b]
           COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
@@ -445,30 +446,16 @@ atomic:
   | ATOMIC { $$ = true; }
 ;
 
-identifier_or_constant:
-    var { $$ = $var; }
-  | INTEGER_CONSTANT { 
-        auto i64_ty = get_scalar(ctx.cctx(), scalar_type::i64);
-        $$ = make_imm($INTEGER_CONSTANT, i64_ty);
-        $$->loc(@INTEGER_CONSTANT);
-    }
-  | FLOATING_CONSTANT {
-        auto f64_ty = get_scalar(ctx.cctx(), scalar_type::f64);
-        $$ = make_fimm($FLOATING_CONSTANT, f64_ty);
-        $$->loc(@FLOATING_CONSTANT);
-    }
-;
-
-optional_identifier_or_constant_list:
+optional_value_list:
     %empty {}
-  | identifier_or_constant_list { $$ = std::move($1); }
+  | value_list { $$ = std::move($1); }
 ;
 
-identifier_or_constant_list:
-    identifier_or_constant { $$.push_back(std::move($identifier_or_constant)); }
-  | identifier_or_constant_list COMMA identifier_or_constant {
+value_list:
+    var { $$.push_back(std::move($var)); }
+  | value_list COMMA var {
         $$ = std::move($1);
-        $$.push_back(std::move($identifier_or_constant));
+        $$.push_back(std::move($var));
     }
 ;
 
@@ -498,7 +485,7 @@ optional_local_attr:
 
 gemm_inst:
     GEMM transpose[ta] transpose[tb] atomic
-         identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
+         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
@@ -522,7 +509,7 @@ gemm_inst:
 
 gemv_inst:
     GEMV transpose[ta] atomic
-         identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
+         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
@@ -550,7 +537,7 @@ transpose:
 
 ger_inst:
     GER atomic
-         identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
+         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
@@ -573,7 +560,7 @@ ger_inst:
 
 for_inst:
     FOR LOCAL_IDENTIFIER[loop_var]
-        EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] optional_step
+        EQUALS var[from] COMMA var[to] optional_step
         for_loop_var_type {
         check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
         check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
@@ -599,11 +586,11 @@ for_inst:
 
 optional_step:
     %empty { $$ = {}; }
-  | COMMA identifier_or_constant { $$ = $identifier_or_constant; }
+  | COMMA var { $$ = $var; }
 
 foreach_inst:
     FOREACH LOCAL_IDENTIFIER[loop_var]
-        EQUALS identifier_or_constant[from] COMMA identifier_or_constant[to] for_loop_var_type {
+        EQUALS var[from] COMMA var[to] for_loop_var_type {
         check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
         check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
         auto v = make_value(get_scalar(ctx.cctx(), $for_loop_var_type));
@@ -652,7 +639,7 @@ identifier_list:
 
 hadamard_inst:
     HADAMARD atomic
-         identifier_or_constant[alpha] COMMA var[a] COMMA var[b] COMMA identifier_or_constant[beta] COMMA var[c]
+         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
          COMMA memref_type[mc] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
@@ -676,7 +663,7 @@ hadamard_inst:
 
 sum_inst:
     SUM transpose[ta] atomic
-          identifier_or_constant[alpha] COMMA var[a] COMMA identifier_or_constant[beta] COMMA var[b]
+          var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b]
           COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
         check_scalar_type(ctx.cctx(), $alpha, $falpha, @alpha, @falpha);
         check_type($a, $ma, @a, @ma);
@@ -696,7 +683,7 @@ sum_inst:
 ;
 
 yield_inst:
-    YIELD optional_identifier_or_constant_list[vals] COLON optional_scalar_type_list[tys] {
+    YIELD optional_value_list[vals] COLON optional_scalar_type_list[tys] {
         if ($vals.size() != $tys.size()) {
             location loc = @vals;
             loc.end = @tys.end;
@@ -719,6 +706,7 @@ valued_inst:
   | arith_unary_inst        { $$ = std::move($1); }
   | cast_inst               { $$ = std::move($1); }
   | compare_inst            { $$ = std::move($1); }
+  | constant_inst           { $$ = std::move($1); }
   | expand_inst             { $$ = std::move($1); }
   | fuse_inst               { $$ = std::move($1); }
   | group_id_inst           { $$ = std::move($1); }
@@ -747,7 +735,7 @@ alloca_inst:
 ;
 
 arith_inst:
-    ARITH ARITHMETIC identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
+    ARITH ARITHMETIC var[a] COMMA var[b] COLON scalar_type[ty] {
         check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
         check_scalar_type(ctx.cctx(), $b, $ty, @b, @ty);
         try {
@@ -763,7 +751,7 @@ arith_inst:
 ;
 
 arith_unary_inst:
-    ARITH ARITHMETIC_UNARY identifier_or_constant[a] COLON scalar_type[ty] {
+    ARITH ARITHMETIC_UNARY var[a] COLON scalar_type[ty] {
         check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
         try {
             $$ = inst {
@@ -780,7 +768,7 @@ arith_unary_inst:
 
 
 cast_inst:
-    CAST identifier_or_constant[a] COLON scalar_type[from] RETURNS scalar_type[to] {
+    CAST var[a] COLON scalar_type[from] RETURNS scalar_type[to] {
         check_scalar_type(ctx.cctx(), $a, $from, @a, @from);
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
@@ -792,7 +780,7 @@ cast_inst:
 ;
 
 compare_inst:
-    CMP CMP_CONDITION identifier_or_constant[a] COMMA identifier_or_constant[b] COLON scalar_type[ty] {
+    CMP CMP_CONDITION var[a] COMMA var[b] COLON scalar_type[ty] {
         check_scalar_type(ctx.cctx(), $a, $ty, @a, @ty);
         check_scalar_type(ctx.cctx(), $b, $ty, @b, @ty);
         try {
@@ -808,18 +796,21 @@ compare_inst:
     }
 ;
 
-expand_inst:
-    EXPAND var LSQBR INTEGER_CONSTANT[mode] RETURNS expand_shape RSQBR COLON memref_type {
-        if ($var->ty() != $memref_type) {
-            auto loc = @var;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+constant_inst:
+    CONSTANT FLOATING_CONSTANT RETURNS data_type {
         try {
             $$ = inst {
-                std::make_unique<expand_inst>(std::move($var), $mode, std::move($expand_shape),
-                                              @expand_inst)
-                    .release()
+                std::make_unique<constant_inst>($FLOATING_CONSTANT, $data_type, @constant_inst).release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+  | CONSTANT INTEGER_CONSTANT RETURNS data_type {
+        try {
+            $$ = inst {
+                std::make_unique<constant_inst>($INTEGER_CONSTANT, $data_type, @constant_inst).release()
             };
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
@@ -828,24 +819,56 @@ expand_inst:
     }
 ;
 
-expand_shape:
-    constant_or_dynamic_or_identifier[a] TIMES constant_or_dynamic_or_identifier[b] {
-        $$ = std::vector<value>{$a, $b};
+expand_inst:
+    EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] RETURNS expand_shape RSQBR COLON memref_type {
+        if ($var->ty() != $memref_type) {
+            auto loc = @var;
+            loc.end = @memref_type.end;
+            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
+        }
+        try {
+            auto static_shape = std::vector<std::int64_t>{};
+            static_shape.reserve($expand_shape.size());
+            auto dynamic_shape = std::vector<value>{};
+            dynamic_shape.reserve($expand_shape.size());
+            for (auto &s : $expand_shape) {
+                std::visit(overloaded{
+                    [&](std::int64_t i) { static_shape.push_back(i); },
+                    [&](value const &v) {
+                        static_shape.push_back(dynamic);
+                        dynamic_shape.push_back(v);
+                    },
+                }, s);
+            }
+            $$ = inst {
+                std::make_unique<expand_inst>(std::move($var), $expanded_mode, std::move(static_shape),
+                                              std::move(dynamic_shape), @expand_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        } catch (std::exception const& e) {
+            error(@expand_inst, e.what());
+        }
     }
-  | expand_shape TIMES constant_or_dynamic_or_identifier[a] { $$ = std::move($1); $$.push_back($a); }
 ;
 
-constant_or_dynamic_or_identifier:
+expand_shape:
+    integer_constant_or_identifier[a] TIMES integer_constant_or_identifier[b] {
+        $$ = std::vector<std::variant<std::int64_t,value>>{$a, $b};
+    }
+  | expand_shape TIMES integer_constant_or_identifier[a] { $$ = std::move($1); $$.push_back($a); }
+;
+
+integer_constant_or_identifier:
     var {
         check_scalar_type(ctx.cctx(), $var, scalar_type::index, @var, @var);
         $$ = $var;
     }
   | INTEGER_CONSTANT {
-        auto index_ty = get_scalar(ctx.cctx(), scalar_type::index);
-        $$ = make_imm($INTEGER_CONSTANT, index_ty);
-        $$->loc(@INTEGER_CONSTANT);
+        $$ = $INTEGER_CONSTANT;
     }
-  | DYNAMIC { $$ = make_imm(dynamic, get_scalar(ctx.cctx(), scalar_type::i64)); $$->loc(@DYNAMIC); }
 ;
 
 fuse_inst:
@@ -867,7 +890,7 @@ fuse_inst:
 ;
 
 load_inst:
-    LOAD var LSQBR optional_index_list RSQBR COLON memref_or_group_type {
+    LOAD var LSQBR optional_value_list RSQBR COLON memref_or_group_type {
         if ($var->ty() != $memref_or_group_type) {
             auto loc = @var;
             loc.end = @memref_or_group_type.end;
@@ -875,7 +898,7 @@ load_inst:
         }
         try {
             $$ = inst {
-                std::make_unique<load_inst>(std::move($var), std::move($optional_index_list),
+                std::make_unique<load_inst>(std::move($var), std::move($optional_value_list),
                                             @load_inst)
                     .release()
             };
@@ -886,29 +909,8 @@ load_inst:
     }
 ;
 
-optional_index_list:
-    %empty {}
-  | index_list { $$ = std::move($1); }
-;
-
-index_list:
-    index_identifier_or_const { $$.push_back($index_identifier_or_const); }
-  | index_list COMMA index_identifier_or_const { $$ = std::move($1); $$.push_back($index_identifier_or_const); }
-;
-
-index_identifier_or_const:
-    var {
-        check_scalar_type(ctx.cctx(), $var, scalar_type::index, @var, @var);
-        $$ = $var;
-    }
-  | INTEGER_CONSTANT {
-        $$ = make_imm($INTEGER_CONSTANT, get_scalar(ctx.cctx(), scalar_type::index));
-        $$->loc(@INTEGER_CONSTANT);
-    }
-;
-
 store_inst:
-    STORE var[a] COMMA var[b] LSQBR optional_index_list RSQBR COLON memref_type {
+    STORE var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON memref_type {
         if ($b->ty() != $memref_type) {
             auto loc = @b;
             loc.end = @memref_type.end;
@@ -917,7 +919,7 @@ store_inst:
         try {
             $$ = inst {
                 std::make_unique<store_inst>(std::move($a), std::move($b),
-                                             std::move($optional_index_list), @store_inst)
+                                             std::move($optional_value_list), @store_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -936,7 +938,7 @@ group_size_inst:
 ;
 
 if_inst:
-    IF identifier_or_constant[condition] optional_returned_values region else_region {
+    IF var[condition] optional_returned_values region else_region {
         check_scalar_type(ctx.cctx(), $condition, scalar_type::i1, @condition, @condition);
         $$ = inst{std::make_unique<if_inst>(std::move($condition), std::move($region),
                                             std::move($else_region),
@@ -1016,15 +1018,42 @@ subview_inst:
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
         try {
+            auto static_offsets = std::vector<std::int64_t>{};
+            auto static_sizes = std::vector<std::int64_t>{};
+            auto offsets = std::vector<value>{};
+            auto sizes = std::vector<value>{};
+            static_offsets.reserve($optional_slice_list.size());
+            static_sizes.reserve($optional_slice_list.size());
+            offsets.reserve($optional_slice_list.size());
+            sizes.reserve($optional_slice_list.size());
+            for (auto &s : $optional_slice_list) {
+                std::visit(overloaded{
+                    [&](std::int64_t i) { static_offsets.push_back(i); },
+                    [&](value const &v) {
+                        static_offsets.push_back(dynamic);
+                        offsets.push_back(v);
+                    },
+                }, s.first);
+                std::visit(overloaded{
+                    [&](std::int64_t i) { static_sizes.push_back(i); },
+                    [&](value const &v) {
+                        static_sizes.push_back(dynamic);
+                        sizes.push_back(v);
+                    },
+                }, s.second);
+            }
             $$ = inst {
-                std::make_unique<subview_inst>(std::move($var), $optional_slice_list.first,
-                                               $optional_slice_list.second, @subview_inst)
+                std::make_unique<subview_inst>(std::move($var), std::move(static_offsets), std::move(static_sizes),
+                                               std::move(offsets), std::move(sizes), @subview_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
+        } catch (std::exception const& e) {
+            error(@subview_inst, e.what());
         }
+
     }
 ;
 
@@ -1035,29 +1064,21 @@ optional_slice_list:
 
 slice_list:
     slice {
-        $$.first.emplace_back(std::move($slice.first));
-        $$.second.emplace_back(std::move($slice.second));
+        $$.emplace_back(std::move($slice));
     }
   | slice_list COMMA slice {
         $$ = std::move($1);
-        $$.first.emplace_back(std::move($slice.first));
-        $$.second.emplace_back(std::move($slice.second));
+        $$.emplace_back(std::move($slice));
     }
 ;
 
 slice:
-    COLON {
-        auto index_ty = get_scalar(ctx.cctx(), scalar_type::index);
-        auto i64_ty = get_scalar(ctx.cctx(), scalar_type::i64);
-        $$ = std::make_pair(make_imm(0, index_ty), make_imm(dynamic, i64_ty));
-    }
-  | index_identifier_or_const slice_size { $$ = std::make_pair(std::move($1), std::move($2)); }
+    integer_constant_or_identifier slice_size { $$ = std::make_pair(std::move($1), std::move($2)); }
 ;
 
 slice_size:
     %empty { $$ = {}; }
-  | COLON index_identifier_or_const { $$ = $2; }
-  | COLON DYNAMIC { $$ = make_imm(dynamic, get_scalar(ctx.cctx(), scalar_type::i64)); }
+  | COLON integer_constant_or_identifier { $$ = $2; }
 ;
 
 %%

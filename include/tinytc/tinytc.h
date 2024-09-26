@@ -314,17 +314,20 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
- * @param mode [in] expanded mode
- * @param expand_shape_size [in] dimension of expand shape; must be at least 2
- * @param expand_shape [in][range(2, expand_shape_size)] expand shape array
+ * @param expanded_mode [in] expanded mode
+ * @param static_expand_shape_size [in] dimension of static expand shape; must be at least 2
+ * @param static_expand_shape [in][range(2, static expand_shape_size)] static expand shape array
+ * @param expand_shape_size [in][optional] dimension of expand shape; must match number of entries
+ * equal to TINYTC_DYNAMIC in static_expand_shape array; can be 0
+ * @param expand_shape [in][optional][range(0, expand_shape_size)] expand shape array
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                        int64_t mode, uint32_t expand_shape_size,
-                                                        tinytc_value_t *expand_shape,
-                                                        const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t a, int64_t expanded_mode,
+    uint32_t static_expand_shape_size, int64_t *static_expand_shape, uint32_t expand_shape_size,
+    tinytc_value_t *expand_shape, const tinytc_location_t *loc);
 
 /**
  * @brief Create fuse instruction
@@ -594,21 +597,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *in
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
- * @param slice_list_size [in] number of slices
- * @param offset_list [in][range(0, slice_list_size)] offset array; may be nullptr if
- * slice_list_size is 0
- * @param size_list [in][range(0, slice_list_size)] size array; may be nullptr if slice_list_size
- * is 0; size_list[i] may be nullptr if a single offset shall be passed instead of a range for the
- * i-th mode
+ * @param static_list_size [in] number of slices
+ * @param static_offset_list [in][range(0, static_list_size)] offsets (need to add value to
+ * offset_list if static_offset_list[i] == TINYTC_DYNAMIC); may be nullptr if static_offset_list = 0
+ * @param static_size_list [in][range(0, static_list_size)] sizes (need to add value to size_list
+ * if static_size_list[i] == TINYTC_DYNAMIC); may be nullptr if static_offset_list = 0
+ * @param offset_list_size [in] number of dynamic offsets
+ * @param offset_list [in][range(0, offset_list_size)] offset array; may be nullptr if
+ * offset_list_size is 0
+ * @param size_list_size [in] number of dynamic sizes
+ * @param size_list [in][range(0, size_list_size)] size array; may be nullptr if size_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                         uint32_t slice_list_size,
-                                                         tinytc_value_t *offset_list,
-                                                         tinytc_value_t *size_list,
-                                                         const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size, int64_t *static_offset_list,
+    int64_t *static_size_list, uint32_t offset_list_size, tinytc_value_t *offset_list,
+    uint32_t size_list_size, tinytc_value_t *size_list, const tinytc_location_t *loc);
 
 /**
  * @brief Create store instruction

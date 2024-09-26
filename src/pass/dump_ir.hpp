@@ -41,6 +41,7 @@ class dump_ir_pass {
     void operator()(barrier_inst const &b);
     void operator()(cast_inst const &c);
     void operator()(compare_inst const &c);
+    void operator()(constant_inst const &c);
     void operator()(expand_inst const &e);
     void operator()(fuse_inst const &f);
     void operator()(load_inst const &e);

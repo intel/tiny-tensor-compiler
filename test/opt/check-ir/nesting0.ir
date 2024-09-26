@@ -2,9 +2,11 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: not %tinytc-opt --check-ir < %s 2>&1 | filecheck %s
-func @illegal_nesting(%A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>) {
-    foreach %i=1,16 {
-        gemm.n.n 1.0, %A, %B, 0.0, %C : f32, memref<f32x4x4>, memref<f32x4x4>, f32, memref<f32x4x4>
+func @illegal_nesting(%c: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>) {
+    %lb = constant 1 -> index
+    %ub = constant 16 -> index
+    foreach %i=%lb,%ub {
+        gemm.n.n %c, %A, %B, %c, %C : f32, memref<f32x4x4>, memref<f32x4x4>, f32, memref<f32x4x4>
     }
-; CHECK: 7.9-99: Collective instruction must not be called from SPMD region
+; CHECK: 9.9-97: Collective instruction must not be called from SPMD region
 }

@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <string_view>
+#include <variant>
 #include <vector>
 
 namespace tinytc {
@@ -167,14 +168,43 @@ void dump_ir_pass::operator()(compare_inst const &a) {
     visit(*this, *a.a()->ty());
 }
 
+void dump_ir_pass::operator()(constant_inst const &c) {
+    visit(*this, *c.result());
+    *os_ << " = constant ";
+    std::visit(overloaded{[&](std::int64_t i) {
+                              if (is_dynamic_value(i)) {
+                                  *os_ << "?";
+                              } else {
+                                  *os_ << i;
+                              }
+                          },
+                          [&](double d) {
+                              auto flags = os_->flags();
+                              *os_ << std::hexfloat << d;
+                              os_->flags(flags);
+                          }},
+               c.value());
+    *os_ << " -> ";
+    visit(*this, *c.result()->ty());
+}
+
 void dump_ir_pass::operator()(expand_inst const &e) {
     visit(*this, *e.result());
     *os_ << " = expand ";
     visit(*this, *e.operand());
-    *os_ << "[" << e.mode() << "->";
-    do_with_infix(
-        e.expand_shape().begin(), e.expand_shape().end(),
-        [this](auto const &i) { visit(*this, *i); }, "x");
+    *os_ << "[" << e.expanded_mode() << "->";
+    auto const &ses = e.static_expand_shape();
+    auto es = e.expand_shape();
+    for (std::size_t i = 0, j = 0; i < ses.size(); ++i) {
+        if (i != 0) {
+            *os_ << " x ";
+        }
+        if (is_dynamic_value(ses[i])) {
+            visit(*this, *es[j++]);
+        } else {
+            *os_ << ses[i];
+        }
+    }
     *os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
@@ -317,15 +347,28 @@ void dump_ir_pass::operator()(subview_inst const &s) {
     *os_ << " = subview ";
     visit(*this, *s.operand());
     *os_ << "[";
-    auto irange = std::ranges::iota_view{std::size_t{0}, s.offset_list().size()};
-    do_with_infix(irange.begin(), irange.end(), [&](auto const &i) {
-        visit(*this, *s.offset_list()[i]);
-        auto &size = s.size_list()[i];
-        if (size) {
-            *os_ << ":";
-            visit(*this, *size);
+    auto dyn_offsets = s.offsets();
+    auto dyn_sizes = s.sizes();
+    for (std::size_t i = 0, joffset = 0, jsize = 0; i < s.static_offsets().size(); ++i) {
+        if (i != 0) {
+            *os_ << ",";
         }
-    });
+        auto offset = s.static_offsets()[i];
+        if (is_dynamic_value(offset)) {
+            visit(*this, *dyn_offsets[joffset++]);
+        } else {
+            *os_ << offset;
+        }
+        auto size = s.static_sizes()[i];
+        if (size > 0 || is_dynamic_value(size)) {
+            *os_ << ":";
+            if (is_dynamic_value(size)) {
+                visit(*this, *dyn_sizes[jsize++]);
+            } else {
+                *os_ << size;
+            }
+        }
+    }
     *os_ << "]";
     *os_ << " : ";
     visit(*this, *s.operand()->ty());

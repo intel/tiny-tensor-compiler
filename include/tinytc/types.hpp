@@ -65,7 +65,7 @@ enum class status {
     ir_expected_vector_or_matrix = tinytc_status_ir_expected_vector_or_matrix,
     ir_unexpected_yield = tinytc_status_ir_unexpected_yield,
     ir_yield_mismatch = tinytc_status_ir_yield_mismatch,
-    ir_multiple_dynamic_modes = tinytc_status_ir_multiple_dynamic_modes,
+    ir_subview_mismatch = tinytc_status_ir_subview_mismatch,
     ir_invalid_slice = tinytc_status_ir_invalid_slice,
     ir_expand_shape_order_too_small = tinytc_status_ir_expand_shape_order_too_small,
     ir_expand_shape_mismatch = tinytc_status_ir_expand_shape_mismatch,

@@ -14,6 +14,7 @@
 
 #include <clir/builtin_type.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <memory>
 #include <sstream>
@@ -195,9 +196,28 @@ compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location cons
     result(0) = make_value(scalar_data_type::get(at->context(), scalar_type::i1));
 }
 
-expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const &expand_shape0,
-                         location const &lc)
-    : standard_inst{IK::expand, static_cast<std::int64_t>(1 + expand_shape0.size())}, mode_(mode) {
+constant_inst::constant_inst(std::variant<std::int64_t, double> const &value, tinytc_data_type_t ty,
+                             location const &lc)
+    : standard_inst{IK::constant}, value_(value) {
+    loc(lc);
+
+    if (auto st = dyn_cast<scalar_data_type>(ty); st) {
+        if ((is_floating_type(st->ty()) && std::holds_alternative<std::int64_t>(value_)) ||
+            (!is_floating_type(st->ty()) && std::holds_alternative<double>(value_))) {
+            throw compilation_error(loc(), status::ir_scalar_mismatch);
+        }
+    } else {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+
+    result(0) = make_value(ty);
+}
+
+expand_inst::expand_inst(value op0, std::int64_t expanded_mode,
+                         std::vector<std::int64_t> static_expand_shape0,
+                         std::vector<value> const &expand_shape0, location const &lc)
+    : standard_inst{IK::expand, static_cast<std::int64_t>(1 + expand_shape0.size())},
+      expanded_mode_(expanded_mode), static_expand_shape_(std::move(static_expand_shape0)) {
     op(0) = std::move(op0);
     for (std::size_t i = 0; i < expand_shape0.size(); ++i) {
         op(1 + i) = expand_shape0[i];
@@ -205,83 +225,37 @@ expand_inst::expand_inst(value op0, std::int64_t mode, std::vector<value> const 
     loc(lc);
 
     auto m = get_memref_type(loc(), operand());
-    bool const range_ok = 0 <= mode_ && mode_ < m->dim();
+    bool const range_ok = 0 <= expanded_mode_ && expanded_mode_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    if (expand_shape().size() < 2) {
+    if (static_expand_shape_.size() < 2) {
         throw compilation_error(loc(), status::ir_expand_shape_order_too_small);
     }
-
-    auto known_expand_shape = std::vector<std::int64_t>();
-    known_expand_shape.reserve(expand_shape().size());
-    std::size_t dyn_count = 0, non_imm_count = 0;
-    for (auto &s : expand_shape()) {
-        visit(overloaded{[&](int_imm &i) {
-                             if (is_dynamic_value(i.value())) {
-                                 known_expand_shape.push_back(dynamic);
-                                 ++dyn_count;
-                                 return;
-                             }
-                             if (i.value() < 0) {
-                                 throw compilation_error(loc(), status::ir_invalid_shape);
-                             }
-                             known_expand_shape.push_back(i.value());
-                         },
-                         [&](auto &) {
-                             known_expand_shape.push_back(dynamic);
-                             ++non_imm_count;
-                         }},
-              *s);
-    }
-
-    if (dyn_count > 1) {
-        throw compilation_error(loc(), status::ir_multiple_dynamic_modes);
-    }
-
-    auto size = m->shape(mode_);
-    if (!is_dynamic_value(size) && non_imm_count == 0) {
-        std::int64_t prod = 1;
-        std::int64_t dyn_mode = -1;
-        for (std::size_t i = 0; i < known_expand_shape.size(); ++i) {
-            auto const s = known_expand_shape[i];
-            if (is_dynamic_value(s)) {
-                dyn_mode = i;
-            } else {
-                prod *= s;
-            }
-        }
-        if (dyn_mode >= 0) {
-            std::int64_t const s = size / prod;
-            known_expand_shape[dyn_mode] = s;
-            expand_shape()[dyn_mode] =
-                make_imm(s, scalar_data_type::get(m->context(), scalar_type::i64));
-            prod *= s;
-        }
-        if (prod != size) {
-            throw compilation_error(loc(), status::ir_expand_shape_mismatch);
-        }
+    if (std::count(static_expand_shape_.begin(), static_expand_shape_.end(), dynamic) !=
+        num_operands() - 1) {
+        throw compilation_error(loc(), status::ir_expand_shape_mismatch);
     }
 
     auto shape = std::vector<std::int64_t>{};
     auto stride = std::vector<std::int64_t>{};
-    shape.reserve(m->dim() + known_expand_shape.size() - 1);
-    stride.reserve(m->dim() + known_expand_shape.size() - 1);
-    for (std::int64_t i = 0; i < mode_; ++i) {
+    shape.reserve(m->dim() + static_expand_shape_.size() - 1);
+    stride.reserve(m->dim() + static_expand_shape_.size() - 1);
+    for (std::int64_t i = 0; i < expanded_mode_; ++i) {
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
 
-    stride.push_back(m->stride(mode_));
-    shape.push_back(known_expand_shape[0]);
-    for (std::size_t j = 1; j < known_expand_shape.size(); ++j) {
+    stride.push_back(m->stride(expanded_mode_));
+    shape.push_back(static_expand_shape_[0]);
+    for (std::size_t j = 1; j < static_expand_shape_.size(); ++j) {
         stride.push_back(is_dynamic_value(stride.back()) || is_dynamic_value(shape.back())
                              ? dynamic
                              : stride.back() * shape.back());
-        shape.push_back(known_expand_shape[j]);
+        shape.push_back(static_expand_shape_[j]);
     }
-    for (std::int64_t i = mode_ + 1; i < m->dim(); ++i) {
+    for (std::int64_t i = expanded_mode_ + 1; i < m->dim(); ++i) {
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
@@ -504,27 +478,34 @@ size_inst::size_inst(value op0, std::int64_t mode, location const &lc)
     result(0) = make_value(scalar_data_type::get(op(0)->context(), scalar_type::index));
 }
 
-subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
-                           std::vector<value> const &size_list0, location const &lc)
-    : standard_inst{IK::subview,
-                    static_cast<std::int64_t>(1 + offset_list0.size() + size_list0.size())} {
+subview_inst::subview_inst(value op0, std::vector<std::int64_t> static_offsets0,
+                           std::vector<std::int64_t> static_sizes0,
+                           std::vector<value> const &offsets0, std::vector<value> const &sizes0,
+                           location const &lc)
+    : standard_inst{IK::subview, static_cast<std::int64_t>(1 + offsets0.size() + sizes0.size())},
+      static_offsets_(std::move(static_offsets0)), static_sizes_(std::move(static_sizes0)) {
     op(0) = std::move(op0);
     {
         std::size_t i = 1;
-        for (auto const &val : offset_list0) {
+        for (auto const &val : offsets0) {
             op(i++) = val;
         }
-        auto index_ty = scalar_data_type::get(op(0)->context(), scalar_type::index);
-        for (auto const &val : size_list0) {
-            op(i++) = val ? val : make_imm(0, index_ty);
+        num_dyn_offsets_ = i - 1;
+        for (auto const &val : sizes0) {
+            op(i++) = val;
         }
     }
     loc(lc);
 
     auto m = get_memref_type(loc(), operand());
-    if (m->dim() != static_cast<std::int64_t>(offset_list0.size()) ||
-        m->dim() != static_cast<std::int64_t>(size_list0.size())) {
+    if (m->dim() != static_cast<std::int64_t>(static_offsets_.size()) ||
+        m->dim() != static_cast<std::int64_t>(static_sizes_.size())) {
         throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+    }
+    if (std::count(static_offsets_.begin(), static_offsets_.end(), dynamic) != num_dyn_offsets_ ||
+        std::count(static_sizes_.begin(), static_sizes_.end(), dynamic) !=
+            num_operands() - num_dyn_offsets_ - 1) {
+        throw compilation_error(loc(), status::ir_subview_mismatch);
     }
 
     auto shape = std::vector<std::int64_t>{};
@@ -532,40 +513,13 @@ subview_inst::subview_inst(value op0, std::vector<value> const &offset_list0,
     shape.reserve(m->dim());
     stride.reserve(m->dim());
     for (std::int64_t i = 0; i < m->dim(); ++i) {
-        auto &offset = offset_list()[i];
-        auto &size = size_list()[i];
-        visit(overloaded{[&](int_imm &i) {
-                             if (i.value() < 0) {
-                                 throw compilation_error(loc(), status::ir_invalid_slice);
-                             }
-                         },
-                         [](auto &) {}},
-              *offset);
-        visit(overloaded{[&](int_imm &i) {
-                             if (i.value() < 0 && !is_dynamic_value(i.value())) {
-                                 throw compilation_error(loc(), status::ir_invalid_slice);
-                             }
-                         },
-                         [](auto &) {}},
-              *size);
-        auto size_value = visit(overloaded{[&](int_imm &offset, int_imm &size) -> std::int64_t {
-                                               if (is_dynamic_value(size.value())) {
-                                                   return is_dynamic_value(m->shape(i))
-                                                              ? dynamic
-                                                              : m->shape(i) - offset.value();
-                                               }
-                                               return size.value();
-                                           },
-                                           [&](val &, int_imm &size) -> std::int64_t {
-                                               if (is_dynamic_value(size.value())) {
-                                                   return dynamic;
-                                               }
-                                               return size.value();
-                                           },
-                                           [](auto &, auto &) -> std::int64_t { return dynamic; }},
-                                *offset, *size);
-        if (size_value > 0 || is_dynamic_value(size_value)) {
-            shape.push_back(size_value);
+        auto offset = static_offsets_[i];
+        auto size = static_sizes_[i];
+        if ((offset < 0 && !is_dynamic_value(offset)) || (size < 0 && !is_dynamic_value(size))) {
+            throw compilation_error(loc(), status::ir_invalid_slice);
+        }
+        if (size > 0 || is_dynamic_value(size)) {
+            shape.push_back(size);
             stride.push_back(m->stride(i));
         }
     }

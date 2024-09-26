@@ -3,6 +3,7 @@
 
 ; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
 func @axpby(%alpha: f32, %A: memref<f32x8x16>, %B: memref<f32x8x8>) {
-    axpby.n %alpha, %A, 0.0, %B : f32, memref<f32x8x16>, f32, memref<f32x8x8>
-; CHECK: 6.5-77: Incompatible tensor shapes
+    %zero = constant 0.0 -> f32
+    axpby.n %alpha, %A, %zero, %B : f32, memref<f32x8x16>, f32, memref<f32x8x8>
+; CHECK: 7.5-79: Incompatible tensor shapes
 }

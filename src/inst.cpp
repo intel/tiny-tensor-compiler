@@ -170,21 +170,30 @@ tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_
     });
 }
 
-tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t mode,
-                                          uint32_t expand_shape_size, tinytc_value_t *expand_shape,
+tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
+                                          int64_t expanded_mode, uint32_t static_expand_shape_size,
+                                          int64_t *static_expand_shape, uint32_t expand_shape_size,
+                                          tinytc_value_t *expand_shape,
                                           const tinytc_location_t *loc) {
-    if (instr == nullptr || expand_shape == nullptr) {
+    if (instr == nullptr || static_expand_shape == nullptr ||
+        (expand_shape_size > 0 && expand_shape == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto eshape_vec = std::vector<value>();
-        eshape_vec.reserve(expand_shape_size);
-        for (uint32_t i = 0; i < expand_shape_size; ++i) {
-            eshape_vec.emplace_back(value(expand_shape[i], true));
+        auto static_shape = std::vector<std::int64_t>{};
+        static_shape.reserve(static_expand_shape_size);
+        for (uint32_t i = 0; i < static_expand_shape_size; ++i) {
+            static_shape.emplace_back(static_expand_shape[i]);
         }
-        *instr = std::make_unique<expand_inst>(value(a, true), mode, std::move(eshape_vec),
-                                               get_optional(loc))
-                     .release();
+        auto dynamic_shape = std::vector<value>{};
+        dynamic_shape.reserve(expand_shape_size);
+        for (uint32_t i = 0; i < expand_shape_size; ++i) {
+            dynamic_shape.emplace_back(value(expand_shape[i], true));
+        }
+        *instr =
+            std::make_unique<expand_inst>(value(a, true), expanded_mode, std::move(static_shape),
+                                          std::move(dynamic_shape), get_optional(loc))
+                .release();
     });
 }
 
@@ -356,25 +365,40 @@ tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
 }
 
 tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                           uint32_t slice_list_size, tinytc_value_t *offset_list,
+                                           uint32_t static_list_size, int64_t *static_offset_list,
+                                           int64_t *static_size_list, uint32_t offset_list_size,
+                                           tinytc_value_t *offset_list, uint32_t size_list_size,
                                            tinytc_value_t *size_list,
                                            const tinytc_location_t *loc) {
     if (instr == nullptr ||
-        (slice_list_size > 0 && (offset_list == nullptr || size_list == nullptr))) {
+        (static_list_size > 0 && (static_offset_list == nullptr || static_size_list == nullptr)) ||
+        (offset_list_size > 0 && offset_list == nullptr) ||
+        (size_list_size > 0 && size_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
+        auto static_offset_vec =
+            static_list_size > 0
+                ? std::vector(static_offset_list, static_offset_list + static_list_size)
+                : std::vector<int64_t>{};
+        auto static_size_vec =
+            static_list_size > 0
+                ? std::vector(static_size_list, static_size_list + static_list_size)
+                : std::vector<int64_t>{};
         auto offset_vec = std::vector<value>();
         auto size_vec = std::vector<value>();
-        offset_vec.reserve(slice_list_size);
-        size_vec.reserve(slice_list_size);
-        for (uint32_t i = 0; i < slice_list_size; ++i) {
+        offset_vec.reserve(offset_list_size);
+        size_vec.reserve(size_list_size);
+        for (uint32_t i = 0; i < offset_list_size; ++i) {
             offset_vec.emplace_back(value(offset_list[i], true));
+        }
+        for (uint32_t i = 0; i < size_list_size; ++i) {
             size_vec.emplace_back(value(size_list[i], true));
         }
-        *instr =
-            std::make_unique<subview_inst>(value(a, true), offset_vec, size_vec, get_optional(loc))
-                .release();
+        *instr = std::make_unique<subview_inst>(value(a, true), std::move(static_offset_vec),
+                                                std::move(static_size_vec), std::move(offset_vec),
+                                                std::move(size_vec), get_optional(loc))
+                     .release();
     });
 }
 

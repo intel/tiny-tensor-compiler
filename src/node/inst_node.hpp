@@ -17,6 +17,7 @@
 #include <cstdint>
 #include <ranges>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace tinytc {
@@ -35,6 +36,7 @@ enum class IK {
     barrier,
     cast,
     compare,
+    constant,
     expand,
     fuse,
     load,
@@ -71,13 +73,14 @@ enum class IK {
 };
 using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class barrier_inst, class arith_inst,
-              class arith_unary_inst, class cast_inst, class compare_inst, class expand_inst,
-              class fuse_inst, class load_inst, class group_id_inst, class group_size_inst,
-              class lifetime_stop_inst, class gemm_inst, class gemv_inst, class ger_inst,
-              class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
-              class num_subgroups_inst, class parallel_inst, class size_inst, class subview_inst,
-              class store_inst, class subgroup_id_inst, class subgroup_local_id_inst,
-              class subgroup_size_inst, class sum_inst, class yield_inst>;
+              class arith_unary_inst, class cast_inst, class compare_inst, class constant_inst,
+              class expand_inst, class fuse_inst, class load_inst, class group_id_inst,
+              class group_size_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
+              class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
+              class if_inst, class num_subgroups_inst, class parallel_inst, class size_inst,
+              class subview_inst, class store_inst, class subgroup_id_inst,
+              class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst,
+              class yield_inst>;
 
 using value_range = iterator_range_wrapper<value *>;
 using const_value_range = iterator_range_wrapper<value const *>;
@@ -178,6 +181,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
         case tinytc::IK::arith_unary:
         case tinytc::IK::cast:
         case tinytc::IK::compare:
+        case tinytc::IK::constant:
         case tinytc::IK::expand:
         case tinytc::IK::fuse:
         case tinytc::IK::load:
@@ -428,20 +432,37 @@ class compare_inst : public standard_inst<2, 1> {
     cmp_condition cond_;
 };
 
+class constant_inst : public standard_inst<0, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::constant; }
+    constant_inst(std::variant<std::int64_t, double> const &value, tinytc_data_type_t ty,
+                  location const &lc = {});
+
+    auto value() const -> std::variant<std::int64_t, double> const & { return value_; }
+
+  private:
+    std::variant<std::int64_t, double> value_;
+};
+
 class expand_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::expand; }
-    expand_inst(value op, std::int64_t mode, std::vector<value> const &expand_shape,
-                location const &lc = {});
+    expand_inst(value op, std::int64_t expanded_mode, std::vector<std::int64_t> static_expand_shape,
+                std::vector<value> const &expand_shape, location const &lc = {});
+
+    inline std::int64_t expanded_mode() const { return expanded_mode_; }
+    inline auto static_expand_shape() const -> std::vector<std::int64_t> const & {
+        return static_expand_shape_;
+    }
 
     inline auto operand() const -> value const & { return op(0); }
-    inline std::int64_t mode() const { return mode_; }
     inline auto expand_shape() { return operands() | std::views::drop(1); }
     inline auto expand_shape() const { return operands() | std::views::drop(1); }
     inline auto expand_shape(std::int64_t i) const -> value const & { return op(i + 1); }
 
   private:
-    std::int64_t mode_;
+    std::int64_t expanded_mode_;
+    std::vector<std::int64_t> static_expand_shape_;
 };
 
 class fuse_inst : public standard_inst<1, 1> {
@@ -636,16 +657,24 @@ class subgroup_size_inst : public standard_inst<0, 1> {
 class subview_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
-    subview_inst(value op, std::vector<value> const &offset_list,
-                 std::vector<value> const &size_list, location const &lc = {});
+    subview_inst(value op, std::vector<std::int64_t> static_offsets,
+                 std::vector<std::int64_t> static_sizes, std::vector<value> const &offsets,
+                 std::vector<value> const &sizes, location const &lc = {});
+
+    inline auto static_offsets() const -> std::vector<std::int64_t> const & {
+        return static_offsets_;
+    }
+    inline auto static_sizes() const -> std::vector<std::int64_t> const & { return static_sizes_; }
 
     inline auto operand() const -> value const & { return op(0); }
-    // We have num_operands() = 1 + 2 * num_indices()
-    inline auto num_indices() const { return (num_operands() - 1) / 2; }
-    inline auto offset_list() const {
-        return operands() | std::views::drop(1) | std::views::take(num_indices());
+    inline auto offsets() const {
+        return operands() | std::views::drop(1) | std::views::take(num_dyn_offsets_);
     }
-    inline auto size_list() const { return operands() | std::views::drop(1 + num_indices()); }
+    inline auto sizes() const { return operands() | std::views::drop(1 + num_dyn_offsets_); }
+
+  private:
+    std::vector<std::int64_t> static_offsets_, static_sizes_;
+    std::int32_t num_dyn_offsets_;
 };
 
 class store_inst : public standard_inst<dynamic, 0> {

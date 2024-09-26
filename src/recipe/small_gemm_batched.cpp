@@ -84,8 +84,6 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
-            auto const index_ty = get_scalar(ctx_, scalar_type::index);
-            auto const i64_ty = get_scalar(ctx_, scalar_type::i64);
 
             auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
                 auto alpha = fb.argument(ty_, "alpha");
@@ -106,14 +104,16 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 fb.body(
                     [&](region_builder &bb) {
                         auto gid = bb.add(make_group_id(ctx_, my_loc()));
-                        auto offsets = std::vector<value>{make_imm(0, index_ty, my_loc()),
-                                                          make_imm(0, index_ty, my_loc()), gid};
-                        auto size =
-                            std::vector<value>{make_imm(dynamic, i64_ty, my_loc()),
-                                               make_imm(dynamic, i64_ty, my_loc()), value{}};
-                        auto a = bb.add(make_subview(A, offsets, size, my_loc()));
-                        auto b = bb.add(make_subview(B, offsets, size, my_loc()));
-                        auto c = bb.add(make_subview(C, offsets, size, my_loc()));
+                        auto const static_offsets = std::vector<std::int64_t>{0, 0};
+                        auto const A_static_sizes = std::vector<std::int64_t>{M, K};
+                        auto const B_static_sizes = std::vector<std::int64_t>{K, N};
+                        auto const C_static_sizes = std::vector<std::int64_t>{M, N};
+                        auto a = bb.add(
+                            make_subview(A, static_offsets, A_static_sizes, {}, {}, my_loc()));
+                        auto b = bb.add(
+                            make_subview(B, static_offsets, B_static_sizes, {}, {}, my_loc()));
+                        auto c = bb.add(
+                            make_subview(C, static_offsets, C_static_sizes, {}, {}, my_loc()));
                         bb.add(make_gemm(tA_, tB_, false, alpha, std::move(a), std::move(b), beta,
                                          std::move(c), my_loc()));
                     },
