@@ -47,19 +47,7 @@ void dump_ir_pass::operator()(memref_data_type const &d) {
 void dump_ir_pass::operator()(scalar_data_type const &s) { *os_ << to_string(s.ty()); }
 
 /* Value nodes */
-void dump_ir_pass::operator()(float_imm const &v) {
-    auto flags = os_->flags();
-    *os_ << std::hexfloat << v.value();
-    os_->flags(flags);
-}
-void dump_ir_pass::operator()(int_imm const &v) {
-    if (is_dynamic_value(v.value())) {
-        *os_ << "?";
-    } else {
-        *os_ << v.value();
-    }
-}
-void dump_ir_pass::operator()(val const &v) {
+void dump_ir_pass::dump_val(value_node const &v) {
     *os_ << "%" << v.name();
     auto const slot = tracker_.get_slot(v);
     if (slot >= 0) {
@@ -69,13 +57,13 @@ void dump_ir_pass::operator()(val const &v) {
 
 /* Inst nodes */
 void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
-    visit(*this, *g.alpha());
+    dump_val(*g.alpha());
     *os_ << ", ";
-    visit(*this, *g.A());
+    dump_val(*g.A());
     *os_ << ", ";
-    visit(*this, *g.beta());
+    dump_val(*g.beta());
     *os_ << ", ";
-    visit(*this, *g.B());
+    dump_val(*g.B());
     *os_ << " : ";
     visit(*this, *g.alpha()->ty());
     *os_ << ", ";
@@ -87,15 +75,15 @@ void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
 }
 
 void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
-    visit(*this, *g.alpha());
+    dump_val(*g.alpha());
     *os_ << ", ";
-    visit(*this, *g.A());
+    dump_val(*g.A());
     *os_ << ", ";
-    visit(*this, *g.B());
+    dump_val(*g.B());
     *os_ << ", ";
-    visit(*this, *g.beta());
+    dump_val(*g.beta());
     *os_ << ", ";
-    visit(*this, *g.C());
+    dump_val(*g.C());
     *os_ << " : ";
     visit(*this, *g.alpha()->ty());
     *os_ << ", ";
@@ -109,7 +97,7 @@ void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
 }
 
 void dump_ir_pass::operator()(alloca_inst const &a) {
-    visit(*this, *a.result());
+    dump_val(*a.result());
     *os_ << " = alloca -> ";
     visit(*this, *a.result()->ty());
 }
@@ -121,19 +109,19 @@ void dump_ir_pass::operator()(axpby_inst const &a) {
 }
 
 void dump_ir_pass::operator()(arith_inst const &a) {
-    visit(*this, *a.result());
+    dump_val(*a.result());
     *os_ << " = arith." << to_string(a.operation()) << " ";
-    visit(*this, *a.a());
+    dump_val(*a.a());
     *os_ << ", ";
-    visit(*this, *a.b());
+    dump_val(*a.b());
     *os_ << " : ";
     visit(*this, *a.a()->ty());
 }
 
 void dump_ir_pass::operator()(arith_unary_inst const &a) {
-    visit(*this, *a.result());
+    dump_val(*a.result());
     *os_ << " = arith." << to_string(a.operation()) << " ";
-    visit(*this, *a.a());
+    dump_val(*a.a());
     *os_ << " : ";
     visit(*this, *a.a()->ty());
 }
@@ -149,9 +137,9 @@ void dump_ir_pass::operator()(barrier_inst const &b) {
 }
 
 void dump_ir_pass::operator()(cast_inst const &c) {
-    visit(*this, *c.result());
+    dump_val(*c.result());
     *os_ << " = cast ";
-    visit(*this, *c.a());
+    dump_val(*c.a());
     *os_ << " : ";
     visit(*this, *c.a()->ty());
     *os_ << " -> ";
@@ -159,17 +147,17 @@ void dump_ir_pass::operator()(cast_inst const &c) {
 }
 
 void dump_ir_pass::operator()(compare_inst const &a) {
-    visit(*this, *a.result());
+    dump_val(*a.result());
     *os_ << " = cmp." << to_string(a.cond()) << " ";
-    visit(*this, *a.a());
+    dump_val(*a.a());
     *os_ << ", ";
-    visit(*this, *a.b());
+    dump_val(*a.b());
     *os_ << " : ";
     visit(*this, *a.a()->ty());
 }
 
 void dump_ir_pass::operator()(constant_inst const &c) {
-    visit(*this, *c.result());
+    dump_val(*c.result());
     *os_ << " = constant ";
     std::visit(overloaded{
                    [&](std::int64_t i) {
@@ -196,9 +184,9 @@ void dump_ir_pass::operator()(constant_inst const &c) {
 }
 
 void dump_ir_pass::operator()(expand_inst const &e) {
-    visit(*this, *e.result());
+    dump_val(*e.result());
     *os_ << " = expand ";
-    visit(*this, *e.operand());
+    dump_val(*e.operand());
     *os_ << "[" << e.expanded_mode() << "->";
     auto const &ses = e.static_expand_shape();
     auto es = e.expand_shape();
@@ -207,7 +195,7 @@ void dump_ir_pass::operator()(expand_inst const &e) {
             *os_ << " x ";
         }
         if (is_dynamic_value(ses[i])) {
-            visit(*this, *es[j++]);
+            dump_val(*es[j++]);
         } else {
             *os_ << ses[i];
         }
@@ -217,38 +205,38 @@ void dump_ir_pass::operator()(expand_inst const &e) {
 }
 
 void dump_ir_pass::operator()(fuse_inst const &f) {
-    visit(*this, *f.result());
+    dump_val(*f.result());
     *os_ << " = fuse ";
-    visit(*this, *f.operand());
+    dump_val(*f.operand());
     *os_ << "[" << f.from() << "," << f.to() << "]";
     *os_ << " : ";
     visit(*this, *f.operand()->ty());
 }
 
 void dump_ir_pass::operator()(load_inst const &e) {
-    visit(*this, *e.result());
+    dump_val(*e.result());
     *os_ << " = load ";
-    visit(*this, *e.operand());
+    dump_val(*e.operand());
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { visit(*this, *i); });
+                  [this](auto const &i) { dump_val(*i); });
     *os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
 
 void dump_ir_pass::operator()(group_id_inst const &g) {
-    visit(*this, *g.result());
+    dump_val(*g.result());
     *os_ << " = group_id";
 }
 
 void dump_ir_pass::operator()(group_size_inst const &g) {
-    visit(*this, *g.result());
+    dump_val(*g.result());
     *os_ << " = group_size";
 }
 
 void dump_ir_pass::operator()(lifetime_stop_inst const &l) {
     *os_ << "lifetime_stop ";
-    visit(*this, *l.object());
+    dump_val(*l.object());
 }
 
 void dump_ir_pass::operator()(gemm_inst const &g) {
@@ -271,14 +259,14 @@ void dump_ir_pass::operator()(ger_inst const &g) {
 
 void dump_ir_pass::operator()(for_inst const &p) {
     *os_ << "for ";
-    visit(*this, *p.loop_var());
+    dump_val(*p.loop_var());
     *os_ << "=";
-    visit(*this, *p.from());
+    dump_val(*p.from());
     *os_ << ",";
-    visit(*this, *p.to());
+    dump_val(*p.to());
     if (p.step()) {
         *os_ << ",";
-        visit(*this, *p.step());
+        dump_val(*p.step());
     }
     *os_ << " : ";
     visit(*this, *p.loop_var()->ty());
@@ -288,11 +276,11 @@ void dump_ir_pass::operator()(for_inst const &p) {
 
 void dump_ir_pass::operator()(foreach_inst const &p) {
     *os_ << "foreach ";
-    visit(*this, *p.loop_var());
+    dump_val(*p.loop_var());
     *os_ << "=";
-    visit(*this, *p.from());
+    dump_val(*p.from());
     *os_ << ",";
-    visit(*this, *p.to());
+    dump_val(*p.to());
     *os_ << " : ";
     visit(*this, *p.loop_var()->ty());
     *os_ << " ";
@@ -306,7 +294,7 @@ void dump_ir_pass::operator()(hadamard_inst const &g) {
 
 void dump_ir_pass::operator()(if_inst const &in) {
     *os_ << "if ";
-    visit(*this, *in.condition());
+    dump_val(*in.condition());
     *os_ << " ";
     dump_region(in.then());
     if (in.has_otherwise()) {
@@ -316,7 +304,7 @@ void dump_ir_pass::operator()(if_inst const &in) {
 }
 
 void dump_ir_pass::operator()(num_subgroups_inst const &sg) {
-    visit(*this, *sg.result());
+    dump_val(*sg.result());
     *os_ << " = num_subgroups";
 }
 
@@ -326,33 +314,33 @@ void dump_ir_pass::operator()(parallel_inst const &p) {
 }
 
 void dump_ir_pass::operator()(size_inst const &s) {
-    visit(*this, *s.result());
+    dump_val(*s.result());
     *os_ << " = size ";
-    visit(*this, *s.operand());
+    dump_val(*s.operand());
     *os_ << "[" << s.mode() << "]";
     *os_ << " : ";
     visit(*this, *s.operand()->ty());
 }
 
 void dump_ir_pass::operator()(subgroup_id_inst const &sg) {
-    visit(*this, *sg.result());
+    dump_val(*sg.result());
     *os_ << " = subgroup_id";
 }
 
 void dump_ir_pass::operator()(subgroup_local_id_inst const &sg) {
-    visit(*this, *sg.result());
+    dump_val(*sg.result());
     *os_ << " = subgroup_local_id";
 }
 
 void dump_ir_pass::operator()(subgroup_size_inst const &sg) {
-    visit(*this, *sg.result());
+    dump_val(*sg.result());
     *os_ << " = subgroup_size";
 }
 
 void dump_ir_pass::operator()(subview_inst const &s) {
-    visit(*this, *s.result());
+    dump_val(*s.result());
     *os_ << " = subview ";
-    visit(*this, *s.operand());
+    dump_val(*s.operand());
     *os_ << "[";
     auto dyn_offsets = s.offsets();
     auto dyn_sizes = s.sizes();
@@ -362,7 +350,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         }
         auto offset = s.static_offsets()[i];
         if (is_dynamic_value(offset)) {
-            visit(*this, *dyn_offsets[joffset++]);
+            dump_val(*dyn_offsets[joffset++]);
         } else {
             *os_ << offset;
         }
@@ -370,7 +358,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         if (size > 0 || is_dynamic_value(size)) {
             *os_ << ":";
             if (is_dynamic_value(size)) {
-                visit(*this, *dyn_sizes[jsize++]);
+                dump_val(*dyn_sizes[jsize++]);
             } else {
                 *os_ << size;
             }
@@ -385,12 +373,12 @@ void dump_ir_pass::operator()(subview_inst const &s) {
 
 void dump_ir_pass::operator()(store_inst const &e) {
     *os_ << "store ";
-    visit(*this, *e.val());
+    dump_val(*e.val());
     *os_ << ", ";
-    visit(*this, *e.operand());
+    dump_val(*e.operand());
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { visit(*this, *i); });
+                  [this](auto const &i) { dump_val(*i); });
     *os_ << "] : ";
     visit(*this, *e.operand()->ty());
 }
@@ -404,7 +392,7 @@ void dump_ir_pass::operator()(sum_inst const &a) {
 void dump_ir_pass::operator()(yield_inst const &y) {
     *os_ << "yield ";
     if (y.num_operands() > 0) {
-        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i); }, ", ");
+        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { dump_val(*i); }, ", ");
         *os_ << " : ";
         do_with_infix(
             y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); }, ", ");
@@ -437,7 +425,7 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     do_with_infix(
         fn.args().begin(), fn.args().end(),
         [this](auto const &a) {
-            visit(*this, *a);
+            dump_val(*a);
             *os_ << ": ";
             visit(*this, *a->ty());
         },

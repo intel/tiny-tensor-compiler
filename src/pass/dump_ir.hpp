@@ -28,11 +28,6 @@ class dump_ir_pass {
     void operator()(memref_data_type const &m);
     void operator()(scalar_data_type const &s);
 
-    /* Var nodes */
-    void operator()(float_imm const &v);
-    void operator()(int_imm const &v);
-    void operator()(val const &v);
-
     /* Inst nodes */
     void operator()(alloca_inst const &a);
     void operator()(axpby_inst const &a);
@@ -74,6 +69,7 @@ class dump_ir_pass {
     void dump_region(region_node const &reg);
     void dump_blas_a2(blas_a2_inst const &g);
     void dump_blas_a3(blas_a3_inst const &g);
+    void dump_val(value_node const &v);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

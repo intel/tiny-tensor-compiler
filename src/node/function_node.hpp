@@ -25,8 +25,7 @@ struct tinytc_func final {
     inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc_region_t body,
                        tinytc_location const &lc = {})
         : name_(std::move(name)), args_(std::move(args)), body_(tinytc::region{body}),
-          work_group_size_{0, 0}, subgroup_size_{0} {
-        loc(lc);
+          work_group_size_{0, 0}, subgroup_size_{0}, loc_{lc} {
         body_->kind(tinytc::region_kind::collective);
     }
 

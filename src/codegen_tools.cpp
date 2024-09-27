@@ -432,17 +432,8 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
 
 void tile_loop_by_sgs_new(region_builder &bb, value const &loop_trip_count, int sgs, int num_tiles,
                           value const &sg_id, sgs_loop_body_builder_new const &body) {
-    visit(overloaded{
-              [&](int_imm &c) {
-                  tile_loop_by_sgs_new_constant(bb, c.value(), sgs, num_tiles, std::move(sg_id),
-                                                body);
-              },
-              [&](auto &) {
-                  tile_loop_by_sgs_new_dynamic(bb, std::move(loop_trip_count), sgs, num_tiles,
-                                               std::move(sg_id), body);
-              },
-          },
-          *loop_trip_count);
+    tile_loop_by_sgs_new_dynamic(bb, std::move(loop_trip_count), sgs, num_tiles, std::move(sg_id),
+                                 body);
 }
 
 void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
@@ -506,18 +497,8 @@ void tile_loop_by_sgs_new_dynamic(region_builder &bb, value const &loop_trip_cou
 void tile_loop_uniformly_new(region_builder &bb, value const &loop_trip_count, int block_size,
                              int num_tiles, value const &sg_id,
                              uniform_loop_body_builder_new const &body) {
-    visit(
-        overloaded{
-            //[&](int_imm &c) {
-            // tile_loop_uniformly_new_constant(bb, c.value(), block_size, num_tiles,
-            // std::move(sg_id), body);
-            //},
-            [&](auto &) {
-                tile_loop_uniformly_new_dynamic(bb, std::move(loop_trip_count), block_size,
-                                                num_tiles, std::move(sg_id), body);
-            },
-        },
-        *loop_trip_count);
+    tile_loop_uniformly_new_dynamic(bb, std::move(loop_trip_count), block_size, num_tiles,
+                                    std::move(sg_id), body);
 }
 
 void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,

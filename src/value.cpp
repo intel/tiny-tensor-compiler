@@ -23,7 +23,7 @@ tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *vl = std::make_unique<val>(type, get_optional(lc)).release(); });
+        [&] { *vl = std::make_unique<value_node>(type, get_optional(lc)).release(); });
 }
 
 tinytc_status_t tinytc_value_release(tinytc_value_t obj) {

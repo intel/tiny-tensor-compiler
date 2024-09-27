@@ -45,17 +45,11 @@
     namespace tinytc {
     void check_scalar_type(compiler_context const &ctx, value &val, scalar_type const &sty,
                            location &loc1, location &loc2) {
-        visit(overloaded{[&](int_imm &i) { i.ty(get_scalar(ctx, sty)); },
-                         [&](float_imm &i) { i.ty(get_scalar(ctx, sty)); },
-                         [&](auto &) {
-                             if (val->ty() != get_scalar(ctx, sty)) {
-                                 auto loc = loc1;
-                                 loc.end = loc2.end;
-                                 throw parser::syntax_error(
-                                     loc, "Type of SSA value does not match operand type");
-                             }
-                         }},
-              *val);
+         if (val->ty() != get_scalar(ctx, sty)) {
+             auto loc = loc1;
+             loc.end = loc2.end;
+             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
+         }
     }
     void check_type(value &val, tinytc_data_type_t ty, location &loc1, location &loc2) {
         if (val->ty() != ty) {

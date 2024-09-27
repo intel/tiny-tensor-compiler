@@ -65,11 +65,6 @@ class convert_to_opencl_pass {
     clir::data_type operator()(memref_data_type const &m);
     clir::data_type operator()(scalar_data_type const &s);
 
-    /* Var nodes */
-    clir::expr operator()(float_imm const &v);
-    clir::expr operator()(int_imm const &v);
-    clir::expr operator()(val const &v);
-
     /* Inst nodes */
     std::vector<clir::stmt> operator()(alloca_inst const &a);
     std::vector<clir::stmt> operator()(axpby_inst const &a);
@@ -108,6 +103,7 @@ class convert_to_opencl_pass {
   private:
     auto run_on_region(region_node const &reg) -> clir::stmt;
     auto run_on_function(function_node const &fn) -> clir::func;
+    auto val(value_node const &v) -> clir::expr;
 
     auto get_dope_vector(value_node *v) -> dope_vector &;
     void set_dope_vector(value_node *v, dope_vector dv);

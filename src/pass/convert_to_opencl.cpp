@@ -189,15 +189,7 @@ clir::data_type convert_to_opencl_pass::operator()(scalar_data_type const &s) {
 }
 
 /* Value nodes */
-clir::expr convert_to_opencl_pass::operator()(float_imm const &v) {
-    auto ty = get_scalar_type(v);
-    return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
-}
-clir::expr convert_to_opencl_pass::operator()(int_imm const &v) {
-    auto ty = get_scalar_type(v);
-    return clir::expr(v.value(), static_cast<short>(size(ty) * 8));
-}
-clir::expr convert_to_opencl_pass::operator()(val const &v) {
+auto convert_to_opencl_pass::val(value_node const &v) -> clir::expr {
     uintptr_t u = std::bit_cast<uintptr_t>(&v);
     for (auto it = declared_vars_.rbegin(); it != declared_vars_.rend(); ++it) {
         if (auto j = it->find(u); j != it->end()) {
@@ -243,8 +235,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
 
     auto pA = inst.tA() == transpose::T && at->dim() == 2 ? 1 : 0;
 
-    auto alpha = visit(*this, *inst.alpha());
-    auto beta = visit(*this, *inst.beta());
+    auto alpha = val(*inst.alpha());
+    auto beta = val(*inst.beta());
     auto const inner_loop = [&](clir::block_builder &bb, clir::expr Ab, clir::expr Bb,
                                 clir::expr trip_count, std::size_t num_tiles, clir::var sg_id) {
         auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
@@ -270,8 +262,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
             });
     };
 
-    auto A = visit(*this, *inst.A());
-    auto B = visit(*this, *inst.B());
+    auto A = val(*inst.A());
+    auto B = val(*inst.B());
     if (bt->dim() == 0) {
         auto bb = clir::block_builder{};
         const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, A[0]);
@@ -362,9 +354,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
     };
     auto sty = get_scalar_type(*a.a());
     auto v = declare(*a.result());
-    return {declaration_assignment(
-        visit(*this, *a.result()->ty()), std::move(v),
-        make(a.operation(), visit(*this, *a.a()), visit(*this, *a.b()), sty))};
+    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
+                                   make(a.operation(), val(*a.a()), val(*a.b()), sty))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst const &a) {
@@ -383,13 +374,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
     auto sty = get_scalar_type(*a.a());
     auto v = declare(*a.result());
     return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.operation(), visit(*this, *a.a()), sty))};
+                                   make(a.operation(), val(*a.a()), sty))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cast_inst const &c) {
     auto v = declare(*c.result());
     auto result_ty = visit(*this, *c.result()->ty());
-    auto cst = cast(result_ty, visit(*this, *c.a()));
+    auto cst = cast(result_ty, val(*c.a()));
     return {declaration_assignment(std::move(result_ty), std::move(v), std::move(cst))};
 }
 
@@ -413,7 +404,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c
     };
     auto v = declare(*c.result());
     return {declaration_assignment(visit(*this, *c.result()->ty()), std::move(v),
-                                   make(c.cond(), visit(*this, *c.a()), visit(*this, *c.b())))};
+                                   make(c.cond(), val(*c.a()), val(*c.b())))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &c) {
@@ -440,7 +431,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
     auto static_shape = e.static_expand_shape();
     auto dyn_shape = e.expand_shape();
 
-    auto rhs = visit(*this, *e.operand());
+    auto rhs = val(*e.operand());
     auto clinst = std::vector<clir::stmt>{};
     clinst.emplace_back(
         clir::declaration_assignment(this->operator()(*m), std::move(result_var), std::move(rhs)));
@@ -460,7 +451,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
     int j = 0;
     for (auto &s : static_shape) {
         if (is_dynamic_value(s)) {
-            eshape_cl.emplace_back(visit(*this, *dyn_shape[j++]));
+            eshape_cl.emplace_back(val(*dyn_shape[j++]));
         } else {
             eshape_cl.emplace_back(clir::expr(s, static_cast<short>(size(scalar_type::index) * 8)));
         }
@@ -491,7 +482,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(fuse_inst const &f) {
     auto m = get_memref_type(*f.operand());
     auto &dv = get_dope_vector(f.operand().get());
 
-    auto rhs = visit(*this, *f.operand());
+    auto rhs = val(*f.operand());
     auto shape = std::vector<clir::expr>{};
     auto stride = std::vector<clir::expr>{};
     shape.reserve(m->dim());
@@ -528,7 +519,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(fuse_inst const &f) {
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
     auto op_val = e.operand();
-    auto rhs = visit(*this, *op_val);
+    auto rhs = val(*op_val);
 
     auto clinst = std::vector<clir::stmt>{};
 
@@ -537,7 +528,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
 
-                         auto idx = visit(*this, *e.index_list().front());
+                         auto idx = val(*e.index_list().front());
                          rhs = rhs + idx;
 
                          auto &dv = get_dope_vector(e.operand().get());
@@ -560,7 +551,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                          }
                          auto &dv = get_dope_vector(e.operand().get());
                          for (std::int64_t i = 0; i < m.dim(); ++i) {
-                             rhs = rhs + visit(*this, *e.index_list()[i]) * dv.stride(i);
+                             rhs = rhs + val(*e.index_list()[i]) * dv.stride(i);
                          }
                          rhs = clir::dereference(std::move(rhs));
                      },
@@ -612,14 +603,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
 
-    auto const get_fixed = [](value const &v) {
-        return visit(
-            overloaded{[&](int_imm const &i) -> std::optional<double> { return i.value(); },
-                       [&](float_imm const &i) -> std::optional<double> { return i.value(); },
-                       [](auto const &) -> std::optional<double> { return std::nullopt; }},
-            *v);
-    };
-
     auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
                                     get_scalar_type(*g.beta()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
@@ -631,8 +614,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
                                   {a->stride(0), a->stride(1)},
                                   {b->stride(0), b->stride(1)},
                                   {c->stride(0), c->stride(1)},
-                                  get_fixed(g.alpha()),
-                                  get_fixed(g.beta()),
+                                  std::nullopt,
+                                  std::nullopt,
                                   g.atomic()};
     auto name = cfg.identifier();
     int name_counter = 0;
@@ -647,10 +630,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
     }
     has_gemm_.emplace(name);
     return {clir::expression_statement(clir::call(
-        std::move(name),
-        {cdv.shape(0), cdv.shape(1), adv.shape(ak), visit(*this, *g.alpha()), visit(*this, *g.A()),
-         adv.stride(0), adv.stride(1), visit(*this, *g.B()), bdv.stride(0), bdv.stride(1),
-         visit(*this, *g.beta()), visit(*this, *g.C()), cdv.stride(0), cdv.stride(1)}))};
+        std::move(name), {cdv.shape(0), cdv.shape(1), adv.shape(ak), val(*g.alpha()), val(*g.A()),
+                          adv.stride(0), adv.stride(1), val(*g.B()), bdv.stride(0), bdv.stride(1),
+                          val(*g.beta()), val(*g.C()), cdv.stride(0), cdv.stride(1)}))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
@@ -664,14 +646,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
     auto const M = c->shape(0);
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
-    auto const N = 1;
-    auto const get_fixed = [](value const &v) {
-        return visit(
-            overloaded{[&](int_imm const &i) -> std::optional<double> { return i.value(); },
-                       [&](float_imm const &i) -> std::optional<double> { return i.value(); },
-                       [](auto const &) -> std::optional<double> { return std::nullopt; }},
-            *v);
-    };
+    constexpr auto N = 1;
 
     auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
                                     get_scalar_type(*g.beta()), c->element_ty()};
@@ -684,8 +659,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
                                   {a->stride(0), a->stride(1)},
                                   {b->stride(0), 0},
                                   {c->stride(0), 0},
-                                  get_fixed(g.alpha()),
-                                  get_fixed(g.beta()),
+                                  std::nullopt,
+                                  std::nullopt,
                                   g.atomic()};
     auto name = cfg.identifier("gemv");
     int name_counter = 0;
@@ -700,10 +675,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
     }
     has_gemm_.emplace(name);
     return {clir::expression_statement(
-        clir::call(std::move(name),
-                   {cdv.shape(0), 1, adv.shape(ak), visit(*this, *g.alpha()), visit(*this, *g.A()),
-                    adv.stride(0), adv.stride(1), visit(*this, *g.B()), bdv.stride(0), 0,
-                    visit(*this, *g.beta()), visit(*this, *g.C()), cdv.stride(0), 0}))};
+        clir::call(std::move(name), {cdv.shape(0), 1, adv.shape(ak), val(*g.alpha()), val(*g.A()),
+                                     adv.stride(0), adv.stride(1), val(*g.B()), bdv.stride(0), 0,
+                                     val(*g.beta()), val(*g.C()), cdv.stride(0), 0}))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
@@ -714,14 +688,14 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
     auto &bdv = get_dope_vector(g.B().get());
     auto &cdv = get_dope_vector(g.C().get());
 
-    auto alpha = visit(*this, *g.alpha());
-    auto beta = visit(*this, *g.beta());
+    auto alpha = val(*g.alpha());
+    auto beta = val(*g.beta());
     auto alpha_ty = get_scalar_type(*g.alpha());
     auto beta_ty = get_scalar_type(*g.beta());
 
-    auto A = visit(*this, *g.A());
-    auto B = visit(*this, *g.B());
-    auto C = visit(*this, *g.C());
+    auto A = val(*g.A());
+    auto B = val(*g.B());
+    auto C = val(*g.C());
 
     auto bb = clir::block_builder{};
     auto sg_n = bb.declare_assign(clir::generic_uint(), "sg_n",
@@ -780,9 +754,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
 
     auto lv = declare(*p.loop_var());
     auto lv_ty = visit(*this, *p.loop_var()->ty());
-    auto start = clir::declaration_assignment(std::move(lv_ty), lv, visit(*this, *p.from()));
-    auto condition = lv < visit(*this, *p.to());
-    auto step = p.step() ? clir::add_into(lv, visit(*this, *p.step())) : ++lv;
+    auto start = clir::declaration_assignment(std::move(lv_ty), lv, val(*p.from()));
+    auto condition = lv < val(*p.to());
+    auto step = p.step() ? clir::add_into(lv, val(*p.step())) : ++lv;
     auto body = run_on_region(p.body());
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
@@ -794,8 +768,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p) {
     auto lv = declare(*p.loop_var());
     auto lv_ty = visit(*this, *p.loop_var()->ty());
-    auto from = visit(*this, *p.from());
-    auto to = visit(*this, *p.to());
+    auto from = val(*p.from());
+    auto to = val(*p.to());
     auto bb = clir::block_builder{};
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
     auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
@@ -817,14 +791,14 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(hadamard_inst const &
     auto &bdv = get_dope_vector(g.B().get());
     auto &cdv = get_dope_vector(g.C().get());
 
-    auto alpha = visit(*this, *g.alpha());
-    auto beta = visit(*this, *g.beta());
+    auto alpha = val(*g.alpha());
+    auto beta = val(*g.beta());
     auto alpha_ty = get_scalar_type(*g.alpha());
     auto beta_ty = get_scalar_type(*g.beta());
 
-    auto A = visit(*this, *g.A());
-    auto B = visit(*this, *g.B());
-    auto C = visit(*this, *g.C());
+    auto A = val(*g.A());
+    auto B = val(*g.B());
+    auto C = val(*g.C());
 
     auto bb = clir::block_builder{};
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
@@ -866,7 +840,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(if_inst const &in) {
         clinst.emplace_back(clir::declaration(visit(*this, *r->ty()), v));
         yielded_vars_.back().emplace_back(std::move(v));
     }
-    auto ib = clir::if_selection_builder(visit(*this, *in.condition()));
+    auto ib = clir::if_selection_builder(val(*in.condition()));
     ib.set_then(run_on_region(in.then()));
     if (in.has_otherwise()) {
         ib.set_otherwise(run_on_region(in.otherwise()));
@@ -921,7 +895,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
     auto t = get_memref_type(*s.operand());
     auto &dv = get_dope_vector(s.operand().get());
 
-    auto rhs = visit(*this, *s.operand());
+    auto rhs = val(*s.operand());
     int j = 0;
     auto shape_out = std::vector<clir::expr>{};
     auto stride_out = std::vector<clir::expr>{};
@@ -934,7 +908,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
 
         auto offset_cl = clir::expr{};
         if (is_dynamic_value(offset)) {
-            offset_cl = visit(*this, *dyn_offsets[joffset++]);
+            offset_cl = val(*dyn_offsets[joffset++]);
         } else {
             offset_cl =
                 clir::expr(offset, static_cast<short>(tinytc::size(scalar_type::index) * 8));
@@ -945,7 +919,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
         if (size > 0 || is_dynamic_value(size)) {
             auto size_cl = clir::expr{};
             if (is_dynamic_value(size)) {
-                size_cl = visit(*this, *dyn_sizes[jsize++]);
+                size_cl = val(*dyn_sizes[jsize++]);
             } else {
                 size_cl =
                     clir::expr(size, static_cast<short>(tinytc::size(scalar_type::index) * 8));
@@ -978,13 +952,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(store_inst const &s) 
         throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
     }
 
-    auto lhs = visit(*this, *s.operand());
+    auto lhs = val(*s.operand());
     auto &dv = get_dope_vector(s.operand().get());
     for (std::int64_t i = 0; i < ot->dim(); ++i) {
-        lhs = lhs + visit(*this, *s.index_list()[i]) * dv.stride(i);
+        lhs = lhs + val(*s.index_list()[i]) * dv.stride(i);
     }
 
-    auto rhs = visit(*this, *s.val());
+    auto rhs = val(*s.val());
     auto st = assignment(dereference(std::move(lhs)), std::move(rhs));
     return {expression_statement(std::move(st))};
 }
@@ -995,15 +969,15 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
     auto &adv = get_dope_vector(inst.A().get());
     auto &bdv = get_dope_vector(inst.B().get());
 
-    auto alpha = visit(*this, *inst.alpha());
-    auto beta = visit(*this, *inst.beta());
+    auto alpha = val(*inst.alpha());
+    auto beta = val(*inst.beta());
     auto alpha_ty = get_scalar_type(*inst.alpha());
     auto beta_ty = get_scalar_type(*inst.beta());
 
     auto zero = clir::expr(0.0, static_cast<short>(size(at->element_ty()) * 8));
 
-    auto A = visit(*this, *inst.A());
-    auto B = visit(*this, *inst.B());
+    auto A = val(*inst.A());
+    auto B = val(*inst.B());
     auto bb = clir::block_builder{};
     auto acc = bb.declare_assign(to_clir_ty(at->element_ty()), "acc", std::move(zero));
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
@@ -1083,8 +1057,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
     }
     std::vector<clir::stmt> clinst;
     for (std::int64_t i = 0; i < in.num_operands(); ++i) {
-        clinst.push_back(clir::expression_statement(
-            clir::assignment(yielded_vars_.back()[i], visit(*this, *in.op(i)))));
+        clinst.push_back(
+            clir::expression_statement(clir::assignment(yielded_vars_.back()[i], val(*in.op(i)))));
     }
     return clinst;
 }
