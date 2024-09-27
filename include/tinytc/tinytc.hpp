@@ -479,36 +479,6 @@ inline auto make_value(tinytc_data_type_t ty, location const &loc = {}) -> value
     return value{val};
 }
 
-/**
- * @brief Make immediate value
- *
- * @param imm Float value
- * @param type Type of immediate value
- * @param loc Source code location
- *
- * @return Value
- */
-inline auto make_fimm(double imm, tinytc_data_type_t type, location const &loc = {}) -> value {
-    tinytc_value_t val;
-    CHECK_STATUS_LOC(tinytc_float_imm_create(&val, imm, type, &loc), loc);
-    return value{val};
-}
-
-/**
- * @brief Make immediate value
- *
- * @param imm Int value
- * @param type Type of immediate value
- * @param loc Source code location
- *
- * @return Value
- */
-inline auto make_imm(std::int64_t imm, tinytc_data_type_t type, location const &loc = {}) -> value {
-    tinytc_value_t val;
-    CHECK_STATUS_LOC(tinytc_int_imm_create(&val, imm, type, &loc), loc);
-    return value{val};
-}
-
 ////////////////////////////
 /////////// Inst ///////////
 ////////////////////////////
@@ -715,6 +685,69 @@ inline inst make_cmp(cmp_condition cond, value const &a, value const &b, locatio
     CHECK_STATUS_LOC(tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond),
                                             a.get(), b.get(), &loc),
                      loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make complex constant
+ *
+ * @param value_re Real part
+ * @param value_im Imaginary part
+ * @param ty Data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant(std::complex<double> value, tinytc_data_type_t ty,
+                          location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_constant_inst_create_complex(&instr, value.real(), value.imag(), ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make floating constant
+ *
+ * @param value Constant
+ * @param ty Data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant(double value, tinytc_data_type_t ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_float(&instr, value, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make integer constant
+ *
+ * @param value Constant
+ * @param ty Data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant(std::int32_t value, tinytc_data_type_t ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make integer constant
+ *
+ * @param value Constant
+ * @param ty Data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant(std::int64_t value, tinytc_data_type_t ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
     return inst(instr);
 }
 

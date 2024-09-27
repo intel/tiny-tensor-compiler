@@ -11,6 +11,7 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <complex>
 #include <cstdint>
 #include <limits>
 #include <memory>
@@ -144,6 +145,39 @@ tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_conditio
                                                 value(b, true), get_optional(loc))
                      .release();
     });
+}
+
+tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr, double value_re,
+                                                    double value_im, tinytc_data_type_t ty,
+                                                    const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<constant_inst>(std::complex<double>(value_re, value_im), ty,
+                                                 get_optional(loc))
+                     .release();
+    });
+}
+
+tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
+                                                  tinytc_data_type_t ty,
+                                                  const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<constant_inst>(value, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
+                                                tinytc_data_type_t ty,
+                                                const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<constant_inst>(value, ty, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type_t ty,

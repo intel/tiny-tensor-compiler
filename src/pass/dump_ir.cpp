@@ -171,18 +171,25 @@ void dump_ir_pass::operator()(compare_inst const &a) {
 void dump_ir_pass::operator()(constant_inst const &c) {
     visit(*this, *c.result());
     *os_ << " = constant ";
-    std::visit(overloaded{[&](std::int64_t i) {
-                              if (is_dynamic_value(i)) {
-                                  *os_ << "?";
-                              } else {
-                                  *os_ << i;
-                              }
-                          },
-                          [&](double d) {
-                              auto flags = os_->flags();
-                              *os_ << std::hexfloat << d;
-                              os_->flags(flags);
-                          }},
+    std::visit(overloaded{
+                   [&](std::int64_t i) {
+                       if (is_dynamic_value(i)) {
+                           *os_ << "?";
+                       } else {
+                           *os_ << i;
+                       }
+                   },
+                   [&](double d) {
+                       auto flags = os_->flags();
+                       *os_ << std::hexfloat << d;
+                       os_->flags(flags);
+                   },
+                   [&](std::complex<double> d) {
+                       auto flags = os_->flags();
+                       *os_ << std::hexfloat << "[" << d.real() << "," << d.imag() << "]";
+                       os_->flags(flags);
+                   },
+               },
                c.value());
     *os_ << " -> ";
     visit(*this, *c.result()->ty());

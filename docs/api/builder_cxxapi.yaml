@@ -50,6 +50,10 @@ Builder C++-API:
       - tinytc::make_arith(arithmetic_unary,value const&,location const&)
       - tinytc::make_cast
       - tinytc::make_cmp
+      - tinytc::make_constant(std::complex<double>,tinytc_data_type_t,location const&)
+      - tinytc::make_constant(double,tinytc_data_type_t,location const&)
+      - tinytc::make_constant(std::int32_t,tinytc_data_type_t,location const&)
+      - tinytc::make_constant(std::int64_t,tinytc_data_type_t,location const&)
       - tinytc::make_expand
       - tinytc::make_for
       - tinytc::make_foreach
@@ -88,8 +92,6 @@ Builder C++-API:
       - tinytc::region_builder
   Value:
     function:
-      - tinytc::make_fimm
-      - tinytc::make_imm
       - tinytc::make_value
     class:
       - tinytc::value

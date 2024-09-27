@@ -55,6 +55,9 @@ Builder C-API:
       - tinytc_arith_unary_inst_create
       - tinytc_cast_inst_create
       - tinytc_cmp_inst_create
+      - tinyc_constant_inst_create_complex
+      - tinyc_constant_inst_create_float
+      - tinyc_constant_inst_create_int
       - tinytc_expand_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create
@@ -97,8 +100,6 @@ Builder C-API:
       - tinytc_region_destroy
   Value:
     function:
-      - tinytc_float_imm_create
-      - tinytc_int_imm_create
       - tinytc_value_create
       - tinytc_value_get_name
       - tinytc_value_set_name

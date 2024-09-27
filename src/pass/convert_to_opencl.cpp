@@ -419,10 +419,17 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &c) {
     auto v = declare(*c.result());
     auto ty = get_scalar_type(*c.result());
-    auto rhs = std::visit(
-        overloaded{[&](std::int64_t i) { return clir::expr(i, static_cast<short>(size(ty) * 8)); },
-                   [&](double d) { return clir::expr(d, static_cast<short>(size(ty) * 8)); }},
-        c.value());
+    auto ty_bits = static_cast<short>(size(ty) * 8);
+    auto rhs =
+        std::visit(overloaded{
+                       [&](std::int64_t i) { return clir::expr(i, ty_bits); },
+                       [&](double d) { return clir::expr(d, ty_bits); },
+                       [&](std::complex<double> d) {
+                           return init_vector(to_clir_ty(ty), {clir::expr(d.real(), ty_bits),
+                                                               clir::expr(d.imag(), ty_bits)});
+                       },
+                   },
+                   c.value());
     return {declaration_assignment(visit(*this, *c.result()->ty()), std::move(v), std::move(rhs))};
 }
 

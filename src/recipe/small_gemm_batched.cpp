@@ -100,7 +100,6 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                                 {1, ldC, strideC}, address_space::global, my_loc()),
                                      "C", my_loc());
 
-                auto beta = is_beta_nonzero ? std::move(beta_arg) : make_fimm(0.0, ty_, my_loc());
                 fb.body(
                     [&](region_builder &bb) {
                         auto gid = bb.add(make_group_id(ctx_, my_loc()));
@@ -114,6 +113,8 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                             make_subview(B, static_offsets, B_static_sizes, {}, {}, my_loc()));
                         auto c = bb.add(
                             make_subview(C, static_offsets, C_static_sizes, {}, {}, my_loc()));
+                        auto beta = is_beta_nonzero ? std::move(beta_arg)
+                                                    : bb.add(make_constant(0.0, ty_, my_loc()));
                         bb.add(make_gemm(tA_, tB_, false, alpha, std::move(a), std::move(b), beta,
                                          std::move(c), my_loc()));
                     },

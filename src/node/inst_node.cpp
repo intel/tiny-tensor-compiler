@@ -196,14 +196,30 @@ compare_inst::compare_inst(cmp_condition cond, value a0, value b0, location cons
     result(0) = make_value(scalar_data_type::get(at->context(), scalar_type::i1));
 }
 
-constant_inst::constant_inst(std::variant<std::int64_t, double> const &value, tinytc_data_type_t ty,
-                             location const &lc)
+constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::constant}, value_(value) {
     loc(lc);
 
     if (auto st = dyn_cast<scalar_data_type>(ty); st) {
-        if ((is_floating_type(st->ty()) && std::holds_alternative<std::int64_t>(value_)) ||
-            (!is_floating_type(st->ty()) && std::holds_alternative<double>(value_))) {
+        const auto type_ok = [](value_type const &val, scalar_type ty) {
+            switch (ty) {
+            case scalar_type::i1:
+            case scalar_type::i8:
+            case scalar_type::i16:
+            case scalar_type::i32:
+            case scalar_type::i64:
+            case scalar_type::index:
+                return std::holds_alternative<std::int64_t>(val);
+            case scalar_type::f32:
+            case scalar_type::f64:
+                return std::holds_alternative<double>(val);
+            case scalar_type::c32:
+            case scalar_type::c64:
+                return std::holds_alternative<std::complex<double>>(val);
+            }
+            return false;
+        };
+        if (!type_ok(value_, st->ty())) {
             throw compilation_error(loc(), status::ir_scalar_mismatch);
         }
     } else {

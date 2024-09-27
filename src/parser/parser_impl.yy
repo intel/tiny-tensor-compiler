@@ -797,7 +797,18 @@ compare_inst:
 ;
 
 constant_inst:
-    CONSTANT FLOATING_CONSTANT RETURNS data_type {
+    CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR RETURNS data_type {
+        try {
+            $$ = inst {
+                std::make_unique<constant_inst>(std::complex<double>{$re, $im}, $data_type, @constant_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+  | CONSTANT FLOATING_CONSTANT RETURNS data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($FLOATING_CONSTANT, $data_type, @constant_inst).release()

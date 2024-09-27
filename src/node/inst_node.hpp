@@ -13,6 +13,7 @@
 #include "tinytc/types.hpp"
 
 #include <array>
+#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <ranges>
@@ -434,14 +435,15 @@ class compare_inst : public standard_inst<2, 1> {
 
 class constant_inst : public standard_inst<0, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::constant; }
-    constant_inst(std::variant<std::int64_t, double> const &value, tinytc_data_type_t ty,
-                  location const &lc = {});
+    using value_type = std::variant<std::int64_t, double, std::complex<double>>;
 
-    auto value() const -> std::variant<std::int64_t, double> const & { return value_; }
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::constant; }
+    constant_inst(value_type const &value, tinytc_data_type_t ty, location const &lc = {});
+
+    auto value() const -> value_type const & { return value_; }
 
   private:
-    std::variant<std::int64_t, double> value_;
+    value_type value_;
 };
 
 class expand_inst : public standard_inst<dynamic, 1> {

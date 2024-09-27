@@ -104,12 +104,12 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 tiling[1] /= 2;
             }
 
-            auto const body = [&](region_builder &bb, value &alpha, value &A, value &B, value &beta,
-                                  value &C) {
-                auto const block_size_imm = make_imm(M_block_size, index_ty, my_loc());
+            auto const body = [&](region_builder &bb, value &alpha, value &A, value &B,
+                                  bool is_beta_nonzero, value &beta_arg, value &C) {
+                auto c_M_block_size = bb.add(make_constant(M_block_size, index_ty, my_loc()));
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
-                auto m = bb.add(make_arith(arithmetic::mul, gid,
-                                           make_imm(M_block_size, index_ty, my_loc()), my_loc()));
+                auto m = bb.add(make_arith(arithmetic::mul, gid, c_M_block_size, my_loc()));
+                auto beta = is_beta_nonzero ? beta_arg : bb.add(make_constant(0.0, ty_, my_loc()));
 
                 auto const static_offsets = std::vector<std::int64_t>{dynamic, 0};
                 auto const offsets = std::vector<value>{m};
@@ -140,11 +140,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     static_gemm(bb);
                 } else {
                     auto M_val = is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc()))
-                                                     : make_imm(M, index_ty);
+                                                     : bb.add(make_constant(M, index_ty));
                     auto M_val_sub_m = bb.add(make_arith(arithmetic::sub, M_val, m, my_loc()));
                     auto cond =
-                        bb.add(make_cmp(cmp_condition::lt, M_val_sub_m,
-                                        make_imm(M_block_size, index_ty, my_loc()), my_loc()));
+                        bb.add(make_cmp(cmp_condition::lt, M_val_sub_m, c_M_block_size, my_loc()));
                     bb.ifelse(
                         cond, [&](region_builder &bb) { dynamic_gemm(bb, M_val_sub_m); },
                         [&](region_builder &bb) { static_gemm(bb); }, {}, my_loc());
@@ -167,8 +166,11 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto const wgs = tiling.work_group_size(sgs);
                 fb.work_group_size(wgs[0], wgs[1]);
 
-                auto beta = is_beta_nonzero ? beta_arg : make_fimm(0.0, ty_, my_loc());
-                fb.body([&](region_builder &bb) { body(bb, alpha, A, B, beta, C); }, my_loc());
+                fb.body(
+                    [&](region_builder &bb) {
+                        body(bb, alpha, A, B, is_beta_nonzero, beta_arg, C);
+                    },
+                    my_loc());
             };
 
             auto p = [&] {

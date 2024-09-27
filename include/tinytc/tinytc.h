@@ -117,33 +117,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_dat
                                                   const tinytc_location_t *loc);
 
 /**
- * @brief Create floating point immediate value
- *
- * @param vl [out] pointer to the value object created
- * @param imm [in] immediate value
- * @param type [in] type of immediate value
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_float_imm_create(tinytc_value_t *vl, double imm,
-                                                      tinytc_data_type_t type,
-                                                      const tinytc_location_t *loc);
-/**
- * @brief Create integer immediate value
- *
- * @param vl [out] pointer to the value object created
- * @param imm [in] immediate value
- * @param type [in] type of immediate value
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_int_imm_create(tinytc_value_t *vl, int64_t imm,
-                                                    tinytc_data_type_t type,
-                                                    const tinytc_location_t *loc);
-
-/**
  * @brief Release value object
  *
  * Decreases reference count by 1, free memory if reference count is 0.
@@ -268,6 +241,50 @@ TINYTC_EXPORT tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr,
                                                      tinytc_cmp_condition_t cond, tinytc_value_t a,
                                                      tinytc_value_t b,
                                                      const tinytc_location_t *loc);
+
+/**
+ * @brief Create complex constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value_re [in] constant value (real part)
+ * @param value_im [in] constant value (imaginary part)
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr,
+                                                                  double value_re, double value_im,
+                                                                  tinytc_data_type_t ty,
+                                                                  const tinytc_location_t *loc);
+
+/**
+ * @brief Create floating constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
+                                                                tinytc_data_type_t ty,
+                                                                const tinytc_location_t *loc);
+
+/**
+ * @brief Create integer constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc);
 
 /**
  * @brief Create alloca instruction
