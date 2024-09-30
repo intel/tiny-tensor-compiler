@@ -37,6 +37,7 @@ set(SOURCES
     node/inst_node.cpp
     node/region_node.cpp
     node/program_node.cpp
+    node/value_node.cpp
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp

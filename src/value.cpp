@@ -17,34 +17,6 @@
 using namespace tinytc;
 
 extern "C" {
-tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
-                                    const tinytc_location_t *lc) {
-    if (vl == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code(
-        [&] { *vl = std::make_unique<value_node>(type, get_optional(lc)).release(); });
-}
-
-tinytc_status_t tinytc_value_release(tinytc_value_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    auto ref_count = obj->dec_ref();
-    if (ref_count == 0) {
-        delete obj;
-    }
-    return tinytc_status_success;
-}
-
-tinytc_status_t tinytc_value_retain(tinytc_value_t obj) {
-    if (obj == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    obj->inc_ref();
-    return tinytc_status_success;
-}
-
 tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char const *name) {
     if (vl == nullptr) {
         return tinytc_status_invalid_arguments;

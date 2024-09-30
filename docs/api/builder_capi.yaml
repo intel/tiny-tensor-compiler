@@ -103,9 +103,6 @@ Builder C-API:
       - tinytc_region_get_parameters
   Value:
     function:
-      - tinytc_value_create
       - tinytc_value_get_name
       - tinytc_value_set_name
       - tinytc_value_set_name_n
-      - tinytc_value_release
-      - tinytc_value_retain

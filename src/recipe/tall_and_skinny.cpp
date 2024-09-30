@@ -104,16 +104,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 tiling[1] /= 2;
             }
 
-            auto const body = [&](region_builder &bb, value const &alpha, value const &A,
-                                  value const &B, bool is_beta_nonzero, value const &beta_arg,
-                                  value const &C) {
+            auto const body = [&](region_builder &bb, tinytc_value_t alpha, tinytc_value_t A,
+                                  tinytc_value_t B, bool is_beta_nonzero, tinytc_value_t beta_arg,
+                                  tinytc_value_t C) {
                 auto c_M_block_size = bb.add(make_constant(M_block_size, index_ty, my_loc()));
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
                 auto m = bb.add(make_arith(arithmetic::mul, gid, c_M_block_size, my_loc()));
                 auto beta = is_beta_nonzero ? beta_arg : bb.add(make_constant(0.0, ty_, my_loc()));
 
                 auto const static_offsets = std::vector<std::int64_t>{dynamic, 0};
-                auto const offsets = std::vector<value>{m};
+                auto const offsets = array_view<tinytc_value_t>{m};
 
                 auto const static_gemm = [&](region_builder &bb) {
                     auto const A_static_sizes = std::vector<std::int64_t>{M_block_size, K};
@@ -125,10 +125,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                      my_loc()));
                 };
-                auto const dynamic_gemm = [&](region_builder &bb, value const &dyn_block_size) {
+                auto const dynamic_gemm = [&](region_builder &bb, tinytc_value_t dyn_block_size) {
                     auto const A_static_sizes = std::vector<std::int64_t>{dynamic, K};
                     auto const C_static_sizes = std::vector<std::int64_t>{dynamic, N};
-                    auto const sizes = std::vector<value>{dyn_block_size};
+                    auto const sizes = array_view<tinytc_value_t>{dyn_block_size};
                     auto a = bb.add(
                         make_subview(A, static_offsets, A_static_sizes, offsets, sizes, my_loc()));
                     auto c = bb.add(
@@ -175,8 +175,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 f.set_work_group_size(wgs[0], wgs[1]);
 
                 auto bb = region_builder{fn_body};
-                body(bb, value{alpha, true}, value{A, true}, value{B, true}, is_beta_nonzero,
-                     value{beta, true}, value{C, true});
+                body(bb, alpha, A, B, is_beta_nonzero, beta, C);
                 return f;
             };
 

@@ -115,17 +115,17 @@ convert_to_opencl_pass::convert_to_opencl_pass(::tinytc_core_info const *info)
     declared_vars_.push_back({});
 }
 
-auto convert_to_opencl_pass::get_dope_vector(value_node *v) -> dope_vector & {
-    auto dv = dope_vector_.find(std::bit_cast<std::uintptr_t>(v));
+auto convert_to_opencl_pass::get_dope_vector(value_node const &v) -> dope_vector & {
+    auto dv = dope_vector_.find(std::bit_cast<std::uintptr_t>(&v));
     if (dv == dope_vector_.end()) {
-        throw compilation_error(v->loc(), status::internal_compiler_error,
+        throw compilation_error(v.loc(), status::internal_compiler_error,
                                 "Dope vector for value is missing");
     }
     return dv->second;
 }
 
-void convert_to_opencl_pass::set_dope_vector(value_node *v, dope_vector dv) {
-    uintptr_t u = std::bit_cast<uintptr_t>(v);
+void convert_to_opencl_pass::set_dope_vector(value_node const &v, dope_vector dv) {
+    uintptr_t u = std::bit_cast<uintptr_t>(&v);
     dope_vector_[u] = std::move(dv);
 }
 
@@ -219,24 +219,24 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(alloca_inst const &a)
                                       static_cast<std::size_t>(a.stack_ptr()) + t->size_in_bytes());
 
     // no declarations are necessary as alloca only accepts fixed-size memrefs
-    set_dope_vector(a.result().get(),
+    set_dope_vector(a.result(0),
                     dope_vector::from_value(*a.result(), [](clir::data_type, clir::var,
                                                             dope_vector::type, std::int64_t) {}));
     return {std::move(result)};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &inst) {
-    auto at = get_memref_type(*inst.A());
-    auto bt = get_memref_type(*inst.B());
-    auto alpha_ty = get_scalar_type(*inst.alpha());
-    auto beta_ty = get_scalar_type(*inst.beta());
-    auto &adv = get_dope_vector(inst.A().get());
-    auto &bdv = get_dope_vector(inst.B().get());
+    auto at = get_memref_type(inst.A());
+    auto bt = get_memref_type(inst.B());
+    auto alpha_ty = get_scalar_type(inst.alpha());
+    auto beta_ty = get_scalar_type(inst.beta());
+    auto &adv = get_dope_vector(inst.A());
+    auto &bdv = get_dope_vector(inst.B());
 
     auto pA = inst.tA() == transpose::T && at->dim() == 2 ? 1 : 0;
 
-    auto alpha = val(*inst.alpha());
-    auto beta = val(*inst.beta());
+    auto alpha = val(inst.alpha());
+    auto beta = val(inst.beta());
     auto const inner_loop = [&](clir::block_builder &bb, clir::expr Ab, clir::expr Bb,
                                 clir::expr trip_count, std::size_t num_tiles, clir::var sg_id) {
         auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
@@ -262,8 +262,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
             });
     };
 
-    auto A = val(*inst.A());
-    auto B = val(*inst.B());
+    auto A = val(inst.A());
+    auto B = val(inst.B());
     if (bt->dim() == 0) {
         auto bb = clir::block_builder{};
         const auto a_scaled = multiply(alpha_ty, at->element_ty(), alpha, A[0]);
@@ -352,10 +352,10 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
         }
         return {};
     };
-    auto sty = get_scalar_type(*a.a());
+    auto sty = get_scalar_type(a.a());
     auto v = declare(*a.result());
     return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.operation(), val(*a.a()), val(*a.b()), sty))};
+                                   make(a.operation(), val(a.a()), val(a.b()), sty))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst const &a) {
@@ -371,16 +371,16 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
         }
         return {};
     };
-    auto sty = get_scalar_type(*a.a());
+    auto sty = get_scalar_type(a.a());
     auto v = declare(*a.result());
     return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.operation(), val(*a.a()), sty))};
+                                   make(a.operation(), val(a.a()), sty))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cast_inst const &c) {
     auto v = declare(*c.result());
     auto result_ty = visit(*this, *c.result()->ty());
-    auto cst = cast(result_ty, val(*c.a()));
+    auto cst = cast(result_ty, val(c.a()));
     return {declaration_assignment(std::move(result_ty), std::move(v), std::move(cst))};
 }
 
@@ -404,12 +404,12 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c
     };
     auto v = declare(*c.result());
     return {declaration_assignment(visit(*this, *c.result()->ty()), std::move(v),
-                                   make(c.cond(), val(*c.a()), val(*c.b())))};
+                                   make(c.cond(), val(c.a()), val(c.b())))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &c) {
-    auto v = declare(*c.result());
-    auto ty = get_scalar_type(*c.result());
+    auto v = declare(c.result(0));
+    auto ty = get_scalar_type(c.result(0));
     auto ty_bits = static_cast<short>(size(ty) * 8);
     auto rhs =
         std::visit(overloaded{
@@ -426,12 +426,12 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e) {
     auto result_var = declare(*e.result());
-    auto m = get_memref_type(*e.operand());
-    auto &dv = get_dope_vector(e.operand().get());
+    auto m = get_memref_type(e.operand());
+    auto &dv = get_dope_vector(e.operand());
     auto static_shape = e.static_expand_shape();
     auto dyn_shape = e.expand_shape();
 
-    auto rhs = val(*e.operand());
+    auto rhs = val(e.operand());
     auto clinst = std::vector<clir::stmt>{};
     clinst.emplace_back(
         clir::declaration_assignment(this->operator()(*m), std::move(result_var), std::move(rhs)));
@@ -468,7 +468,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
         stride.push_back(dv.stride(i));
     }
 
-    set_dope_vector(e.result().get(),
+    set_dope_vector(e.result(0),
                     dope_vector::from_value(*e.result(), [&](clir::data_type a, clir::var b,
                                                              dope_vector::type t, std::int64_t j) {
                         auto init = t == dope_vector::type::stride ? stride[j] : shape[j];
@@ -479,10 +479,10 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
 }
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(fuse_inst const &f) {
     auto result_var = declare(*f.result());
-    auto m = get_memref_type(*f.operand());
-    auto &dv = get_dope_vector(f.operand().get());
+    auto m = get_memref_type(f.operand());
+    auto &dv = get_dope_vector(f.operand());
 
-    auto rhs = val(*f.operand());
+    auto rhs = val(f.operand());
     auto shape = std::vector<clir::expr>{};
     auto stride = std::vector<clir::expr>{};
     shape.reserve(m->dim());
@@ -507,7 +507,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(fuse_inst const &f) {
     clinst.emplace_back(
         clir::declaration_assignment(this->operator()(*m), std::move(result_var), std::move(rhs)));
 
-    set_dope_vector(f.result().get(),
+    set_dope_vector(*f.result(),
                     dope_vector::from_value(*f.result(), [&](clir::data_type a, clir::var b,
                                                              dope_vector::type t, std::int64_t j) {
                         auto init = t == dope_vector::type::stride ? stride[j] : shape[j];
@@ -518,8 +518,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(fuse_inst const &f) {
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
-    auto op_val = e.operand();
-    auto rhs = val(*op_val);
+    auto rhs = val(e.operand());
 
     auto clinst = std::vector<clir::stmt>{};
 
@@ -531,11 +530,11 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                          auto idx = val(*e.index_list().front());
                          rhs = rhs + idx;
 
-                         auto &dv = get_dope_vector(e.operand().get());
+                         auto &dv = get_dope_vector(e.operand());
                          rhs = clir::dereference(std::move(rhs)) + dv.offset();
 
                          set_dope_vector(
-                             e.result().get(),
+                             *e.result(),
                              dope_vector::from_value(
                                  *e.result(), [&](clir::data_type a, clir::var b,
                                                   dope_vector::type t, std::int64_t j) {
@@ -549,7 +548,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                          if (static_cast<std::int64_t>(e.index_list().size()) != m.dim()) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
-                         auto &dv = get_dope_vector(e.operand().get());
+                         auto &dv = get_dope_vector(e.operand());
                          for (std::int64_t i = 0; i < m.dim(); ++i) {
                              rhs = rhs + val(*e.index_list()[i]) * dv.stride(i);
                          }
@@ -558,7 +557,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                      [&e](auto const &) {
                          throw compilation_error(e.loc(), status::ir_expected_memref_or_group);
                      }},
-          *e.operand()->ty());
+          *e.operand().ty());
 
     auto lhs = declare(*e.result());
     auto result_type = e.result()->ty();
@@ -591,20 +590,20 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(lifetime_stop_inst co
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
-    auto a = get_memref_type(*g.A());
-    auto b = get_memref_type(*g.B());
-    auto c = get_memref_type(*g.C());
-    auto &adv = get_dope_vector(g.A().get());
-    auto &bdv = get_dope_vector(g.B().get());
-    auto &cdv = get_dope_vector(g.C().get());
+    auto a = get_memref_type(g.A());
+    auto b = get_memref_type(g.B());
+    auto c = get_memref_type(g.C());
+    auto &adv = get_dope_vector(g.A());
+    auto &bdv = get_dope_vector(g.B());
+    auto &cdv = get_dope_vector(g.C());
 
     auto const M = c->shape(0);
     auto const N = c->shape(1);
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
 
-    auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
-                                    get_scalar_type(*g.beta()), c->element_ty()};
+    auto gemm_ty = gemm_scalar_type{get_scalar_type(g.alpha()), a->element_ty(), b->element_ty(),
+                                    get_scalar_type(g.beta()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   g.tB(),
@@ -630,26 +629,26 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemm_inst const &g) {
     }
     has_gemm_.emplace(name);
     return {clir::expression_statement(clir::call(
-        std::move(name), {cdv.shape(0), cdv.shape(1), adv.shape(ak), val(*g.alpha()), val(*g.A()),
-                          adv.stride(0), adv.stride(1), val(*g.B()), bdv.stride(0), bdv.stride(1),
-                          val(*g.beta()), val(*g.C()), cdv.stride(0), cdv.stride(1)}))};
+        std::move(name), {cdv.shape(0), cdv.shape(1), adv.shape(ak), val(g.alpha()), val(g.A()),
+                          adv.stride(0), adv.stride(1), val(g.B()), bdv.stride(0), bdv.stride(1),
+                          val(g.beta()), val(g.C()), cdv.stride(0), cdv.stride(1)}))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
-    auto a = get_memref_type(*g.A());
-    auto b = get_memref_type(*g.B());
-    auto c = get_memref_type(*g.C());
-    auto &adv = get_dope_vector(g.A().get());
-    auto &bdv = get_dope_vector(g.B().get());
-    auto &cdv = get_dope_vector(g.C().get());
+    auto a = get_memref_type(g.A());
+    auto b = get_memref_type(g.B());
+    auto c = get_memref_type(g.C());
+    auto &adv = get_dope_vector(g.A());
+    auto &bdv = get_dope_vector(g.B());
+    auto &cdv = get_dope_vector(g.C());
 
     auto const M = c->shape(0);
     auto const ak = g.tA() == transpose::T ? 0 : 1;
     auto const K = a->shape(ak);
     constexpr auto N = 1;
 
-    auto gemm_ty = gemm_scalar_type{get_scalar_type(*g.alpha()), a->element_ty(), b->element_ty(),
-                                    get_scalar_type(*g.beta()), c->element_ty()};
+    auto gemm_ty = gemm_scalar_type{get_scalar_type(g.alpha()), a->element_ty(), b->element_ty(),
+                                    get_scalar_type(g.beta()), c->element_ty()};
     auto cfg = gemm_configuration{std::move(gemm_ty),
                                   g.tA(),
                                   transpose::N,
@@ -675,27 +674,27 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(gemv_inst const &g) {
     }
     has_gemm_.emplace(name);
     return {clir::expression_statement(
-        clir::call(std::move(name), {cdv.shape(0), 1, adv.shape(ak), val(*g.alpha()), val(*g.A()),
-                                     adv.stride(0), adv.stride(1), val(*g.B()), bdv.stride(0), 0,
-                                     val(*g.beta()), val(*g.C()), cdv.stride(0), 0}))};
+        clir::call(std::move(name), {cdv.shape(0), 1, adv.shape(ak), val(g.alpha()), val(g.A()),
+                                     adv.stride(0), adv.stride(1), val(g.B()), bdv.stride(0), 0,
+                                     val(g.beta()), val(g.C()), cdv.stride(0), 0}))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
-    auto at = get_memref_type(*g.A());
-    auto bt = get_memref_type(*g.B());
-    auto ct = get_memref_type(*g.C());
-    auto &adv = get_dope_vector(g.A().get());
-    auto &bdv = get_dope_vector(g.B().get());
-    auto &cdv = get_dope_vector(g.C().get());
+    auto at = get_memref_type(g.A());
+    auto bt = get_memref_type(g.B());
+    auto ct = get_memref_type(g.C());
+    auto &adv = get_dope_vector(g.A());
+    auto &bdv = get_dope_vector(g.B());
+    auto &cdv = get_dope_vector(g.C());
 
-    auto alpha = val(*g.alpha());
-    auto beta = val(*g.beta());
-    auto alpha_ty = get_scalar_type(*g.alpha());
-    auto beta_ty = get_scalar_type(*g.beta());
+    auto alpha = val(g.alpha());
+    auto beta = val(g.beta());
+    auto alpha_ty = get_scalar_type(g.alpha());
+    auto beta_ty = get_scalar_type(g.beta());
 
-    auto A = val(*g.A());
-    auto B = val(*g.B());
-    auto C = val(*g.C());
+    auto A = val(g.A());
+    auto B = val(g.B());
+    auto C = val(g.C());
 
     auto bb = clir::block_builder{};
     auto sg_n = bb.declare_assign(clir::generic_uint(), "sg_n",
@@ -752,11 +751,11 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
     auto clinst = std::vector<clir::stmt>{};
     yielded_vars_.push_back(std::vector<clir::var>{});
 
-    auto lv = declare(*p.loop_var());
-    auto lv_ty = visit(*this, *p.loop_var()->ty());
-    auto start = clir::declaration_assignment(std::move(lv_ty), lv, val(*p.from()));
-    auto condition = lv < val(*p.to());
-    auto step = p.step() ? clir::add_into(lv, val(*p.step())) : ++lv;
+    auto lv = declare(p.loop_var());
+    auto lv_ty = visit(*this, *p.loop_var().ty());
+    auto start = clir::declaration_assignment(std::move(lv_ty), lv, val(p.from()));
+    auto condition = lv < val(p.to());
+    auto step = p.has_step() ? clir::add_into(lv, val(p.step())) : ++lv;
     auto body = run_on_region(p.body());
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
@@ -766,10 +765,10 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p) {
-    auto lv = declare(*p.loop_var());
-    auto lv_ty = visit(*this, *p.loop_var()->ty());
-    auto from = val(*p.from());
-    auto to = val(*p.to());
+    auto lv = declare(p.loop_var());
+    auto lv_ty = visit(*this, *p.loop_var().ty());
+    auto from = val(p.from());
+    auto to = val(p.to());
     auto bb = clir::block_builder{};
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
     auto m = bb.declare_assign(clir::generic_uint(), "m", clir::get_sub_group_local_id());
@@ -784,21 +783,21 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(hadamard_inst const &g) {
-    auto at = get_memref_type(*g.A());
-    auto bt = get_memref_type(*g.B());
-    auto ct = get_memref_type(*g.C());
-    auto &adv = get_dope_vector(g.A().get());
-    auto &bdv = get_dope_vector(g.B().get());
-    auto &cdv = get_dope_vector(g.C().get());
+    auto at = get_memref_type(g.A());
+    auto bt = get_memref_type(g.B());
+    auto ct = get_memref_type(g.C());
+    auto &adv = get_dope_vector(g.A());
+    auto &bdv = get_dope_vector(g.B());
+    auto &cdv = get_dope_vector(g.C());
 
-    auto alpha = val(*g.alpha());
-    auto beta = val(*g.beta());
-    auto alpha_ty = get_scalar_type(*g.alpha());
-    auto beta_ty = get_scalar_type(*g.beta());
+    auto alpha = val(g.alpha());
+    auto beta = val(g.beta());
+    auto alpha_ty = get_scalar_type(g.alpha());
+    auto beta_ty = get_scalar_type(g.beta());
 
-    auto A = val(*g.A());
-    auto B = val(*g.B());
-    auto C = val(*g.C());
+    auto A = val(g.A());
+    auto B = val(g.B());
+    auto C = val(g.C());
 
     auto bb = clir::block_builder{};
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
@@ -836,11 +835,11 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(if_inst const &in) {
     auto clinst = std::vector<clir::stmt>{};
     yielded_vars_.push_back(std::vector<clir::var>{});
     for (auto const &r : in.results()) {
-        auto v = declare(*r);
-        clinst.emplace_back(clir::declaration(visit(*this, *r->ty()), v));
+        auto v = declare(r);
+        clinst.emplace_back(clir::declaration(visit(*this, *r.ty()), v));
         yielded_vars_.back().emplace_back(std::move(v));
     }
-    auto ib = clir::if_selection_builder(val(*in.condition()));
+    auto ib = clir::if_selection_builder(val(in.condition()));
     ib.set_then(run_on_region(in.then()));
     if (!in.is_otherwise_empty()) {
         ib.set_otherwise(run_on_region(in.otherwise()));
@@ -863,7 +862,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(parallel_inst const &
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(size_inst const &s) {
     auto v = declare(*s.result());
-    auto &dv = get_dope_vector(s.operand().get());
+    auto &dv = get_dope_vector(s.operand());
 
     return {clir::declaration_assignment(visit(*this, *s.result()->ty()), std::move(v),
                                          dv.shape(s.mode()))};
@@ -892,10 +891,10 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subgroup_size_inst co
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s) {
     auto result_var = declare(*s.result());
-    auto t = get_memref_type(*s.operand());
-    auto &dv = get_dope_vector(s.operand().get());
+    auto t = get_memref_type(s.operand());
+    auto &dv = get_dope_vector(s.operand());
 
-    auto rhs = val(*s.operand());
+    auto rhs = val(s.operand());
     int j = 0;
     auto shape_out = std::vector<clir::expr>{};
     auto stride_out = std::vector<clir::expr>{};
@@ -935,7 +934,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
     clinst.emplace_back(
         clir::declaration_assignment(this->operator()(*t), std::move(result_var), std::move(rhs)));
 
-    set_dope_vector(s.result().get(),
+    set_dope_vector(*s.result(),
                     dope_vector::from_value(*s.result(), [&](clir::data_type a, clir::var b,
                                                              dope_vector::type t, std::int64_t j) {
                         auto init = t == dope_vector::type::stride ? stride_out[j] : shape_out[j];
@@ -946,38 +945,38 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(store_inst const &s) {
-    auto ot = get_memref_type(*s.operand());
+    auto ot = get_memref_type(s.operand());
 
     if (static_cast<std::int64_t>(s.index_list().size()) != ot->dim()) {
         throw compilation_error(s.loc(), status::ir_invalid_number_of_indices);
     }
 
-    auto lhs = val(*s.operand());
-    auto &dv = get_dope_vector(s.operand().get());
+    auto lhs = val(s.operand());
+    auto &dv = get_dope_vector(s.operand());
     for (std::int64_t i = 0; i < ot->dim(); ++i) {
         lhs = lhs + val(*s.index_list()[i]) * dv.stride(i);
     }
 
-    auto rhs = val(*s.val());
+    auto rhs = val(s.val());
     auto st = assignment(dereference(std::move(lhs)), std::move(rhs));
     return {expression_statement(std::move(st))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst) {
-    auto at = get_memref_type(*inst.A());
-    auto bt = get_memref_type(*inst.B());
-    auto &adv = get_dope_vector(inst.A().get());
-    auto &bdv = get_dope_vector(inst.B().get());
+    auto at = get_memref_type(inst.A());
+    auto bt = get_memref_type(inst.B());
+    auto &adv = get_dope_vector(inst.A());
+    auto &bdv = get_dope_vector(inst.B());
 
-    auto alpha = val(*inst.alpha());
-    auto beta = val(*inst.beta());
-    auto alpha_ty = get_scalar_type(*inst.alpha());
-    auto beta_ty = get_scalar_type(*inst.beta());
+    auto alpha = val(inst.alpha());
+    auto beta = val(inst.beta());
+    auto alpha_ty = get_scalar_type(inst.alpha());
+    auto beta_ty = get_scalar_type(inst.beta());
 
     auto zero = clir::expr(0.0, static_cast<short>(size(at->element_ty()) * 8));
 
-    auto A = val(*inst.A());
-    auto B = val(*inst.B());
+    auto A = val(inst.A());
+    auto B = val(inst.B());
     auto bb = clir::block_builder{};
     auto acc = bb.declare_assign(to_clir_ty(at->element_ty()), "acc", std::move(zero));
     auto sg = bb.declare_assign(clir::generic_uint(), "sg", clir::get_sub_group_id());
@@ -1057,8 +1056,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
     }
     std::vector<clir::stmt> clinst;
     for (std::int64_t i = 0; i < in.num_operands(); ++i) {
-        clinst.push_back(
-            clir::expression_statement(clir::assignment(yielded_vars_.back()[i], val(*in.op(i)))));
+        auto assign_yielded_var = clir::assignment(yielded_vars_.back()[i], val(*in.op(i)));
+        clinst.push_back(clir::expression_statement(std::move(assign_yielded_var)));
     }
     return clinst;
 }
@@ -1094,22 +1093,22 @@ auto convert_to_opencl_pass::run_on_function(function_node const &fn) -> clir::f
     // Create prototype
     auto fb = clir::kernel_builder(std::string(fn.name()));
     for (auto const &v : fn.params()) {
-        fb.argument(visit(*this, *v->ty()), declare(*v));
+        fb.argument(visit(*this, *v.ty()), declare(v));
         auto dv = visit(
             overloaded{[&fb, &v](memref_data_type const &) -> std::optional<dope_vector> {
                            return std::make_optional(dope_vector::from_value(
-                               *v, [&](clir::data_type a, clir::var b, dope_vector::type,
-                                       std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
+                               v, [&](clir::data_type a, clir::var b, dope_vector::type,
+                                      std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
                        },
                        [&fb, &v](group_data_type const &) -> std::optional<dope_vector> {
                            return std::make_optional(dope_vector::from_value(
-                               *v, [&](clir::data_type a, clir::var b, dope_vector::type,
-                                       std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
+                               v, [&](clir::data_type a, clir::var b, dope_vector::type,
+                                      std::int64_t) { fb.argument(std::move(a), std::move(b)); }));
                        },
                        [](auto const &) { return std::nullopt; }},
-            *v->ty());
+            *v.ty());
         if (dv) {
-            set_dope_vector(v.get(), std::move(*dv));
+            set_dope_vector(v, std::move(*dv));
         }
     }
 

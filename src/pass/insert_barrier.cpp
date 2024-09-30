@@ -128,14 +128,14 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
 
     auto const get_rw = [](inst_node &in) -> reads_writes {
         auto rw = reads_writes{};
-        auto const emplace_read = [&rw](value const &v) {
-            if (auto *m = dyn_cast<memref_data_type>(v->ty()); m) {
-                rw.emplace_read(m->addrspace(), v.get());
+        auto const emplace_read = [&rw](value_node const &v) {
+            if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
+                rw.emplace_read(m->addrspace(), &v);
             }
         };
-        auto const emplace_write = [&rw](value const &v) {
-            if (auto *m = dyn_cast<memref_data_type>(v->ty()); m) {
-                rw.emplace_write(m->addrspace(), v.get());
+        auto const emplace_write = [&rw](value_node const &v) {
+            if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
+                rw.emplace_write(m->addrspace(), &v);
             }
         };
 

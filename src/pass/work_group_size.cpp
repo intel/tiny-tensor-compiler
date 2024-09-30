@@ -22,7 +22,7 @@
 
 namespace tinytc {
 
-auto get_memref_type(value_node &v) {
+auto get_memref_type(value_node const &v) {
     auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
@@ -47,7 +47,7 @@ void work_group_size_pass::run_on_function(function_node &fn) {
         walk<walk_order::pre_order>(fn, [&shape_set](inst_node &i) {
             visit(
                 overloaded{[&shape_set](blas_a2_inst &in) {
-                               auto b = get_memref_type(*in.B());
+                               auto b = get_memref_type(in.B());
                                if (b->dim() == 1) {
                                    shape_set.insert({b->element_ty(), {b->shape(0), 0}});
                                } else if (b->dim() >= 2) {
@@ -55,7 +55,7 @@ void work_group_size_pass::run_on_function(function_node &fn) {
                                }
                            },
                            [&shape_set](blas_a3_inst &in) {
-                               auto c = get_memref_type(*in.C());
+                               auto c = get_memref_type(in.C());
                                if (c->dim() == 1) {
                                    shape_set.insert({c->element_ty(), {c->shape(0), 0}});
                                } else if (c->dim() >= 2) {

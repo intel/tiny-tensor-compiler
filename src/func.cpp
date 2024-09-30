@@ -20,7 +20,7 @@ using namespace tinytc;
 extern "C" {
 
 tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length, char const *name,
-                                   uint32_t num_params, tinytc_data_type_t *param_type_list,
+                                   uint32_t num_params, const tinytc_data_type_t *param_type_list,
                                    const tinytc_location_t *loc) {
     if (fun == nullptr || (num_params > 0 && param_type_list == nullptr)) {
         return tinytc_status_invalid_arguments;

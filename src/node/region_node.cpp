@@ -21,17 +21,16 @@ void ilist_callbacks<tinytc_inst>::node_removed(tinytc_inst_t node) { tinytc_ins
 using namespace tinytc;
 
 tinytc_region::tinytc_region(array_view<tinytc_data_type_t> param_types, location const &lc)
-    : kind_(region_kind::mixed) {
+    : kind_(region_kind::mixed), params_{param_types.size()} {
     loc(lc);
 
-    params_.reserve(param_types.size());
-    for (auto &param_ty : param_types) {
-        params_.push_back(make_value(param_ty));
-    }
+    set_params(std::move(param_types), lc);
 }
 tinytc_region::~tinytc_region() {}
 
-void tinytc_region::add_param(tinytc_data_type_t param_type) {
-    params_.push_back(make_value(param_type));
+void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types, location const &lc) {
+    params_.resize(param_types.size());
+    for (std::size_t i = 0; i < param_types.size(); ++i) {
+        params_[i] = tinytc_value{param_types[i], lc};
+    }
 }
-

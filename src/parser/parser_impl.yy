@@ -21,7 +21,7 @@
         class parse_context;
         class lexer;
 
-        using int_or_val = std::variant<std::int64_t, ::tinytc::value>;
+        using int_or_val = std::variant<std::int64_t, tinytc_value_t>;
         using unique_ptr_to_if_inst = std::unique_ptr<if_inst>;
     }
 }
@@ -45,7 +45,7 @@
 
     namespace tinytc {
 
-    void check_scalar_type(compiler_context const &ctx, value &val, scalar_type const &sty,
+    void check_scalar_type(compiler_context const &ctx, tinytc_value_t val, scalar_type const &sty,
                            location &loc1, location &loc2) {
          if (val->ty() != get_scalar(ctx, sty)) {
              auto loc = loc1;
@@ -53,7 +53,7 @@
              throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
          }
     }
-    void check_type(value &val, tinytc_data_type_t ty, location &loc1, location &loc2) {
+    void check_type(tinytc_value_t val, tinytc_data_type_t ty, location &loc1, location &loc2) {
         if (val->ty() != ty) {
             auto loc = loc1;
             loc.end = loc2.end;
@@ -165,12 +165,12 @@
 %nterm <tinytc_data_type_t> group_type
 %nterm <std::int64_t> group_offset
 %nterm <tinytc_data_type_t> memref_or_group_type
-%nterm <::tinytc::value> var
+%nterm <tinytc_value_t> var
 %nterm <inst> instruction
 %nterm <inst> axpby_inst
 %nterm <bool> atomic
-%nterm <std::vector<::tinytc::value>> optional_value_list
-%nterm <std::vector<::tinytc::value>> value_list
+%nterm <std::vector<tinytc_value_t>> optional_value_list
+%nterm <std::vector<tinytc_value_t>> value_list
 %nterm <inst> barrier_inst
 %nterm <std::int32_t> optional_global_attr
 %nterm <std::int32_t> optional_local_attr
@@ -179,7 +179,7 @@
 %nterm <inst> ger_inst
 %nterm <transpose> transpose
 %nterm <inst> for_inst
-%nterm <::tinytc::value> optional_step
+%nterm <tinytc_value_t> optional_step
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
 %nterm <inst> if_inst
@@ -577,9 +577,9 @@ for_inst:
             loc.end = @for_loop_var_type.end;
             auto inode = std::make_unique<for_inst>($from, $to, $optional_step, $for_loop_var_type, loc);
             ctx.push_scope();
-            auto loop_var = inode->loop_var();
-            loop_var->name($loop_var);
-            ctx.val($loop_var, std::move(loop_var), @loop_var);
+            auto &loop_var = inode->loop_var();
+            loop_var.name($loop_var);
+            ctx.val($loop_var, loop_var, @loop_var);
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
@@ -607,9 +607,9 @@ foreach_inst:
             auto inode =
                 std::make_unique<foreach_inst>($from, $to, $for_loop_var_type, loc);
             ctx.push_scope();
-            auto loop_var = inode->loop_var();
-            loop_var->name($loop_var);
-            ctx.val($loop_var, std::move(loop_var), @loop_var);
+            auto &loop_var = inode->loop_var();
+            loop_var.name($loop_var);
+            ctx.val($loop_var, loop_var, @loop_var);
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
@@ -638,7 +638,7 @@ var_definition:
         }
         auto results = $$->result_begin();
         for (std::int64_t i = 0; i < $$->num_results(); ++i) {
-            results[i]->name($identifier_list[i]);
+            results[i].name($identifier_list[i]);
             ctx.val($identifier_list[i], results[i], @identifier_list);
         }
     }
@@ -853,12 +853,12 @@ expand_inst:
         try {
             auto static_shape = std::vector<std::int64_t>{};
             static_shape.reserve($expand_shape.size());
-            auto dynamic_shape = std::vector<value>{};
+            auto dynamic_shape = std::vector<tinytc_value_t>{};
             dynamic_shape.reserve($expand_shape.size());
             for (auto &s : $expand_shape) {
                 std::visit(overloaded{
                     [&](std::int64_t i) { static_shape.push_back(i); },
-                    [&](value const &v) {
+                    [&](tinytc_value_t v) {
                         static_shape.push_back(dynamic);
                         dynamic_shape.push_back(v);
                     },
@@ -880,7 +880,7 @@ expand_inst:
 
 expand_shape:
     integer_constant_or_identifier[a] TIMES integer_constant_or_identifier[b] {
-        $$ = std::vector<std::variant<std::int64_t,value>>{$a, $b};
+        $$ = std::vector<int_or_val>{$a, $b};
     }
   | expand_shape TIMES integer_constant_or_identifier[a] { $$ = std::move($1); $$.push_back($a); }
 ;
@@ -1066,8 +1066,8 @@ subview_inst:
         try {
             auto static_offsets = std::vector<std::int64_t>{};
             auto static_sizes = std::vector<std::int64_t>{};
-            auto offsets = std::vector<value>{};
-            auto sizes = std::vector<value>{};
+            auto offsets = std::vector<tinytc_value_t>{};
+            auto sizes = std::vector<tinytc_value_t>{};
             static_offsets.reserve($optional_slice_list.size());
             static_sizes.reserve($optional_slice_list.size());
             offsets.reserve($optional_slice_list.size());
@@ -1075,14 +1075,14 @@ subview_inst:
             for (auto &s : $optional_slice_list) {
                 std::visit(overloaded{
                     [&](std::int64_t i) { static_offsets.push_back(i); },
-                    [&](value const &v) {
+                    [&](tinytc_value_t v) {
                         static_offsets.push_back(dynamic);
                         offsets.push_back(v);
                     },
                 }, s.first);
                 std::visit(overloaded{
                     [&](std::int64_t i) { static_sizes.push_back(i); },
-                    [&](value const &v) {
+                    [&](tinytc_value_t v) {
                         static_sizes.push_back(dynamic);
                         sizes.push_back(v);
                     },

@@ -105,8 +105,8 @@ class convert_to_opencl_pass {
     auto run_on_function(function_node const &fn) -> clir::func;
     auto val(value_node const &v) -> clir::expr;
 
-    auto get_dope_vector(value_node *v) -> dope_vector &;
-    void set_dope_vector(value_node *v, dope_vector dv);
+    auto get_dope_vector(value_node const &v) -> dope_vector &;
+    void set_dope_vector(value_node const &v, dope_vector dv);
     clir::var declare(value_node const &v);
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
     static auto get_scalar_type(value_node const &v) -> scalar_type;

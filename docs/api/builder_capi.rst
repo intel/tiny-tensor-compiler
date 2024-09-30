@@ -666,25 +666,14 @@ Value
 
 * Functions
 
-  * :ref:`tinytc_value_create`
-
   * :ref:`tinytc_value_get_name`
 
   * :ref:`tinytc_value_set_name`
 
   * :ref:`tinytc_value_set_name_n`
 
-  * :ref:`tinytc_value_release`
-
-  * :ref:`tinytc_value_retain`
-
 Value Functions
 ---------------
-
-tinytc_value_create
-...................
-
-.. doxygenfunction:: tinytc_value_create
 
 tinytc_value_get_name
 .....................
@@ -700,14 +689,4 @@ tinytc_value_set_name_n
 .......................
 
 .. doxygenfunction:: tinytc_value_set_name_n
-
-tinytc_value_release
-....................
-
-.. doxygenfunction:: tinytc_value_release
-
-tinytc_value_retain
-...................
-
-.. doxygenfunction:: tinytc_value_retain
 

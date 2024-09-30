@@ -4,6 +4,7 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
+#include "node/value_node.hpp"
 #include "support/ilist.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.h"
@@ -56,12 +57,13 @@ struct tinytc_region final {
     inline auto params() { return tinytc::iterator_range_wrapper{param_begin(), param_end()}; }
     inline auto param_begin() const { return params_.begin(); }
     inline auto param_end() const { return params_.end(); }
-    inline auto param(std::int64_t pos) const -> tinytc::value const & { return params_[pos]; }
+    inline auto param(std::int64_t pos) -> tinytc_value & { return params_[pos]; }
+    inline auto param(std::int64_t pos) const -> tinytc_value const & { return params_[pos]; }
     inline auto params() const {
         return tinytc::iterator_range_wrapper{param_begin(), param_end()};
     }
     inline auto num_params() const noexcept -> std::int64_t { return params_.size(); }
-    void add_param(tinytc_data_type_t param_type);
+    void set_params(tinytc::array_view<tinytc_data_type_t> param_types, tinytc::location const &lc);
 
   private:
     static auto inst_list_offset() -> std::size_t {
@@ -71,8 +73,8 @@ struct tinytc_region final {
     friend struct tinytc::ilist_callbacks<tinytc_inst>;
 
     tinytc::region_kind kind_;
-    std::vector<tinytc::value> params_;
     tinytc::ilist<tinytc_inst> insts_;
+    std::vector<tinytc_value> params_;
     tinytc::location loc_;
 };
 

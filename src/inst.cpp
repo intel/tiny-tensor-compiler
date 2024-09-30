@@ -104,8 +104,7 @@ tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<arith_inst>(enum_cast<arithmetic>(op), value(a, true),
-                                              value(b, true), get_optional(loc))
+        *instr = std::make_unique<arith_inst>(enum_cast<arithmetic>(op), a, b, get_optional(loc))
                      .release();
     });
 }
@@ -116,7 +115,7 @@ tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr, tinytc_arit
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<arith_unary_inst>(enum_cast<arithmetic_unary>(op), value(a, true),
+        *instr = std::make_unique<arith_unary_inst>(enum_cast<arithmetic_unary>(op), a,
                                                     get_optional(loc))
                      .release();
     });
@@ -128,8 +127,7 @@ tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cast_inst>(value(a, true), enum_cast<scalar_type>(to_ty),
-                                             get_optional(loc))
+        *instr = std::make_unique<cast_inst>(a, enum_cast<scalar_type>(to_ty), get_optional(loc))
                      .release();
     });
 }
@@ -141,9 +139,9 @@ tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_conditio
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<compare_inst>(enum_cast<cmp_condition>(cond), value(a, true),
-                                                value(b, true), get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<compare_inst>(enum_cast<cmp_condition>(cond), a, b, get_optional(loc))
+                .release();
     });
 }
 
@@ -197,8 +195,7 @@ tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<axpby_inst>(enum_cast<transpose>(tA), value(alpha, true),
-                                              value(A, true), value(beta, true), value(B, true),
+        *instr = std::make_unique<axpby_inst>(enum_cast<transpose>(tA), alpha, A, beta, B,
                                               bool(atomic), get_optional(loc))
                      .release();
     });
@@ -206,28 +203,19 @@ tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_
 
 tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                           int64_t expanded_mode, uint32_t static_expand_shape_size,
-                                          int64_t *static_expand_shape, uint32_t expand_shape_size,
-                                          tinytc_value_t *expand_shape,
+                                          const int64_t *static_expand_shape,
+                                          uint32_t expand_shape_size,
+                                          const tinytc_value_t *expand_shape,
                                           const tinytc_location_t *loc) {
     if (instr == nullptr || static_expand_shape == nullptr ||
         (expand_shape_size > 0 && expand_shape == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto static_shape = std::vector<std::int64_t>{};
-        static_shape.reserve(static_expand_shape_size);
-        for (uint32_t i = 0; i < static_expand_shape_size; ++i) {
-            static_shape.emplace_back(static_expand_shape[i]);
-        }
-        auto dynamic_shape = std::vector<value>{};
-        dynamic_shape.reserve(expand_shape_size);
-        for (uint32_t i = 0; i < expand_shape_size; ++i) {
-            dynamic_shape.emplace_back(value(expand_shape[i], true));
-        }
-        *instr =
-            std::make_unique<expand_inst>(value(a, true), expanded_mode, std::move(static_shape),
-                                          std::move(dynamic_shape), get_optional(loc))
-                .release();
+        *instr = std::make_unique<expand_inst>(
+                     a, expanded_mode, array_view{static_expand_shape, static_expand_shape_size},
+                     array_view{expand_shape, expand_shape_size}, get_optional(loc))
+                     .release();
     });
 }
 
@@ -236,24 +224,19 @@ tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<fuse_inst>(value(a, true), from, to, get_optional(loc)).release();
-    });
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<fuse_inst>(a, from, to, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                        uint32_t index_list_size, tinytc_value_t *index_list,
+                                        uint32_t index_list_size, const tinytc_value_t *index_list,
                                         const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto il_vec = std::vector<value>();
-        il_vec.reserve(index_list_size);
-        for (uint32_t i = 0; i < index_list_size; ++i) {
-            il_vec.emplace_back(value(index_list[i], true));
-        }
-        *instr = std::make_unique<load_inst>(value(a, true), std::move(il_vec), get_optional(loc))
+        *instr = std::make_unique<load_inst>(a, array_view{index_list, index_list_size},
+                                             get_optional(loc))
                      .release();
     });
 }
@@ -286,9 +269,7 @@ tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tinytc_transpose_t
     }
     return exception_to_status_code([&] {
         *instr = std::make_unique<gemm_inst>(enum_cast<transpose>(tA), enum_cast<transpose>(tB),
-                                             value(alpha, true), value(A, true), value(B, true),
-                                             value(beta, true), value(C, true), bool(atomic),
-                                             get_optional(loc))
+                                             alpha, A, B, beta, C, bool(atomic), get_optional(loc))
                      .release();
     });
 }
@@ -301,9 +282,8 @@ tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tinytc_transpose_t
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<gemv_inst>(enum_cast<transpose>(tA), value(alpha, true),
-                                             value(A, true), value(B, true), value(beta, true),
-                                             value(C, true), bool(atomic), get_optional(loc))
+        *instr = std::make_unique<gemv_inst>(enum_cast<transpose>(tA), alpha, A, B, beta, C,
+                                             bool(atomic), get_optional(loc))
                      .release();
     });
 }
@@ -316,9 +296,7 @@ tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomi
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<ger_inst>(value(alpha, true), value(A, true), value(B, true),
-                                            value(beta, true), value(C, true), bool(atomic),
-                                            get_optional(loc))
+        *instr = std::make_unique<ger_inst>(alpha, A, B, beta, C, bool(atomic), get_optional(loc))
                      .release();
     });
 }
@@ -331,10 +309,9 @@ tinytc_status_t tinytc_hadamard_inst_create(tinytc_inst_t *instr, tinytc_bool_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<hadamard_inst>(value(alpha, true), value(A, true), value(B, true),
-                                                 value(beta, true), value(C, true), bool(atomic),
-                                                 get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<hadamard_inst>(alpha, A, B, beta, C, bool(atomic), get_optional(loc))
+                .release();
     });
 }
 
@@ -361,9 +338,8 @@ tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<size_inst>(value(a, true), mode, get_optional(loc)).release();
-    });
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<size_inst>(a, mode, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr, tinytc_compiler_context_t ctx,
@@ -396,12 +372,12 @@ tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
         [&] { *instr = std::make_unique<subgroup_size_inst>(ctx, get_optional(loc)).release(); });
 }
 
-tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                           uint32_t static_list_size, int64_t *static_offset_list,
-                                           int64_t *static_size_list, uint32_t offset_list_size,
-                                           tinytc_value_t *offset_list, uint32_t size_list_size,
-                                           tinytc_value_t *size_list,
-                                           const tinytc_location_t *loc) {
+tinytc_status_t
+tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
+                           const int64_t *static_offset_list, const int64_t *static_size_list,
+                           uint32_t offset_list_size, const tinytc_value_t *offset_list,
+                           uint32_t size_list_size, const tinytc_value_t *size_list,
+                           const tinytc_location_t *loc) {
     if (instr == nullptr ||
         (static_list_size > 0 && (static_offset_list == nullptr || static_size_list == nullptr)) ||
         (offset_list_size > 0 && offset_list == nullptr) ||
@@ -409,44 +385,23 @@ tinytc_status_t tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto static_offset_vec =
-            static_list_size > 0
-                ? std::vector(static_offset_list, static_offset_list + static_list_size)
-                : std::vector<int64_t>{};
-        auto static_size_vec =
-            static_list_size > 0
-                ? std::vector(static_size_list, static_size_list + static_list_size)
-                : std::vector<int64_t>{};
-        auto offset_vec = std::vector<value>();
-        auto size_vec = std::vector<value>();
-        offset_vec.reserve(offset_list_size);
-        size_vec.reserve(size_list_size);
-        for (uint32_t i = 0; i < offset_list_size; ++i) {
-            offset_vec.emplace_back(value(offset_list[i], true));
-        }
-        for (uint32_t i = 0; i < size_list_size; ++i) {
-            size_vec.emplace_back(value(size_list[i], true));
-        }
-        *instr = std::make_unique<subview_inst>(value(a, true), std::move(static_offset_vec),
-                                                std::move(static_size_vec), std::move(offset_vec),
-                                                std::move(size_vec), get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<subview_inst>(a, array_view{static_offset_list, static_list_size},
+                                           array_view{static_size_list, static_list_size},
+                                           array_view{offset_list, offset_list_size},
+                                           array_view{size_list, size_list_size}, get_optional(loc))
+                .release();
     });
 }
 
 tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_value_t val, tinytc_value_t a,
-                                         uint32_t index_list_size, tinytc_value_t *index_list,
+                                         uint32_t index_list_size, const tinytc_value_t *index_list,
                                          const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto il_vec = std::vector<value>();
-        il_vec.reserve(index_list_size);
-        for (uint32_t i = 0; i < index_list_size; ++i) {
-            il_vec.emplace_back(value(index_list[i], true));
-        }
-        *instr = std::make_unique<store_inst>(value(val, true), value(a, true), std::move(il_vec),
+        *instr = std::make_unique<store_inst>(val, a, array_view{index_list, index_list_size},
                                               get_optional(loc))
                      .release();
     });
@@ -460,8 +415,7 @@ tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<sum_inst>(enum_cast<transpose>(tA), value(alpha, true),
-                                            value(A, true), value(beta, true), value(B, true),
+        *instr = std::make_unique<sum_inst>(enum_cast<transpose>(tA), alpha, A, beta, B,
                                             bool(atomic), get_optional(loc))
                      .release();
     });
@@ -474,9 +428,8 @@ tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<for_inst>(value(from, true), value(to, true), value(step, true),
-                                            loop_var_type, get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<for_inst>(from, to, step, loop_var_type, get_optional(loc)).release();
     });
 }
 
@@ -487,15 +440,14 @@ tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t 
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<foreach_inst>(value(from, true), value(to, true), loop_var_type,
-                                                get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<foreach_inst>(from, to, loop_var_type, get_optional(loc)).release();
     });
 }
 
 tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
                                       uint32_t return_type_list_size,
-                                      tinytc_data_type_t *return_type_list,
+                                      const tinytc_data_type_t *return_type_list,
                                       const tinytc_location_t *loc) {
     if (instr == nullptr || condition == nullptr ||
         (return_type_list_size > 0 && return_type_list == nullptr)) {
@@ -507,36 +459,33 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
         for (uint32_t i = 0; i < return_type_list_size; ++i) {
             rt.emplace_back(return_type_list[i]);
         }
-        *instr = std::make_unique<if_inst>(value(condition, true), std::move(rt), get_optional(loc))
-                     .release();
+        *instr = std::make_unique<if_inst>(condition, std::move(rt), get_optional(loc)).release();
     });
 }
 
 tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr, uint32_t yield_list_size,
-                                         tinytc_value_t *yield_list, const tinytc_location_t *loc) {
+                                         const tinytc_value_t *yield_list,
+                                         const tinytc_location_t *loc) {
     if (instr == nullptr || (yield_list_size != 0 && yield_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto yl = std::vector<value>();
-        yl.reserve(yield_list_size);
-        for (uint32_t i = 0; i < yield_list_size; ++i) {
-            yl.emplace_back(value(yield_list[i], true));
-        }
-        *instr = std::make_unique<yield_inst>(std::move(yl), get_optional(loc)).release();
+        *instr =
+            std::make_unique<yield_inst>(array_view{yield_list, yield_list_size}, get_optional(loc))
+                .release();
     });
 }
 
 void tinytc_inst_destroy(tinytc_inst_t obj) { delete obj; }
 
-tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr, tinytc_value_t *result) {
+tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result) {
     if (instr == nullptr || result == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *result = instr->result().release(); });
+    return exception_to_status_code([&] { *result = instr->result(); });
 }
 
-tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr, uint32_t *result_list_size,
+tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_list_size,
                                        tinytc_value_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||
         (*result_list_size > 0 && result_list == nullptr)) {
@@ -552,7 +501,7 @@ tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr, uint32_t *resu
             auto results = instr->result_begin();
             auto const limit = std::min(num, *result_list_size);
             for (uint32_t i = 0; i < limit; ++i) {
-                result_list[i] = value(results[i]).release();
+                result_list[i] = &results[i];
             }
         }
         *result_list_size = num;

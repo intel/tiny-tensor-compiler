@@ -105,38 +105,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
 ////////////////////////////
 
 /**
- * @brief Create value
- *
- * @param vl [out] pointer to the value object created
- * @param type [in] data type object
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_value_create(tinytc_value_t *vl, tinytc_data_type_t type,
-                                                  const tinytc_location_t *loc);
-
-/**
- * @brief Release value object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
- *
- * @param vl [inout] value object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_value_release(tinytc_value_t vl);
-
-/**
- * @brief Increase reference count of value object by 1
- *
- * @param vl [inout] value object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_value_retain(tinytc_value_t vl);
-
-/**
  * @brief Set name of value
  *
  * @param vl [inout] value object
@@ -355,8 +323,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  */
 TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(
     tinytc_inst_t *instr, tinytc_value_t a, int64_t expanded_mode,
-    uint32_t static_expand_shape_size, int64_t *static_expand_shape, uint32_t expand_shape_size,
-    tinytc_value_t *expand_shape, const tinytc_location_t *loc);
+    uint32_t static_expand_shape_size, const int64_t *static_expand_shape,
+    uint32_t expand_shape_size, const tinytc_value_t *expand_shape, const tinytc_location_t *loc);
 
 /**
  * @brief Create fuse instruction
@@ -391,7 +359,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
  */
 TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       uint32_t index_list_size,
-                                                      tinytc_value_t *index_list,
+                                                      const tinytc_value_t *index_list,
                                                       const tinytc_location_t *loc);
 /**
  * @brief Create group_id instruction
@@ -639,9 +607,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *in
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size, int64_t *static_offset_list,
-    int64_t *static_size_list, uint32_t offset_list_size, tinytc_value_t *offset_list,
-    uint32_t size_list_size, tinytc_value_t *size_list, const tinytc_location_t *loc);
+    tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
+    const int64_t *static_offset_list, const int64_t *static_size_list, uint32_t offset_list_size,
+    const tinytc_value_t *offset_list, uint32_t size_list_size, const tinytc_value_t *size_list,
+    const tinytc_location_t *loc);
 
 /**
  * @brief Create store instruction
@@ -660,7 +629,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
  */
 TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_value_t val,
                                                        tinytc_value_t a, uint32_t index_list_size,
-                                                       tinytc_value_t *index_list,
+                                                       const tinytc_value_t *index_list,
                                                        const tinytc_location_t *loc);
 
 /**
@@ -757,7 +726,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, t
  */
 TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
                                                     uint32_t return_type_list_size,
-                                                    tinytc_data_type_t *return_type_list,
+                                                    const tinytc_data_type_t *return_type_list,
                                                     const tinytc_location_t *loc);
 
 /**
@@ -777,7 +746,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
  */
 TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
                                                        uint32_t yield_list_size,
-                                                       tinytc_value_t *yield_list,
+                                                       const tinytc_value_t *yield_list,
                                                        const tinytc_location_t *loc);
 
 /**
@@ -795,8 +764,7 @@ TINYTC_EXPORT void tinytc_inst_destroy(tinytc_inst_t instr);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr,
-                                                    tinytc_value_t *result);
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result);
 
 /**
  * @brief Get values produced by instruction
@@ -811,7 +779,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(const_tinytc_inst_t instr,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr,
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      uint32_t *result_list_size,
                                                      tinytc_value_t *result_list);
 
@@ -912,7 +880,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length,
                                                  char const *name, uint32_t num_params,
-                                                 tinytc_data_type_t *param_type_list,
+                                                 const tinytc_data_type_t *param_type_list,
                                                  const tinytc_location_t *loc);
 
 /**

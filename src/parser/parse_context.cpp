@@ -22,7 +22,7 @@ void parse_context::pop_region() { regions_.pop(); }
 auto parse_context::top_region() -> tinytc_region_t { return regions_.top(); }
 auto parse_context::has_regions() -> bool { return !regions_.empty(); }
 
-void parse_context::val(std::string const &id, value val, location const &l) {
+void parse_context::val(std::string const &id, tinytc_value &val, location const &l) {
     if (id_map_.empty()) {
         throw parser::syntax_error(l, "No active variable scope");
     }
@@ -33,11 +33,11 @@ void parse_context::val(std::string const &id, value val, location const &l) {
             throw parser::syntax_error(l, oss.str());
         }
     }
-    val->loc(l);
-    id_map_.back()[id] = std::move(val);
+    val.loc(l);
+    id_map_.back()[id] = &val;
 }
 
-value parse_context::val(std::string const &id, location const &l) {
+auto parse_context::val(std::string const &id, location const &l) -> tinytc_value_t {
     for (auto it = id_map_.rbegin(); it != id_map_.rend(); ++it) {
         if (auto j = it->find(id); j != it->end()) {
             return j->second;

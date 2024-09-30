@@ -21,8 +21,8 @@ class parse_context {
     inline auto program() { return program_; }
     inline void program(prog p) { program_ = std::move(p); }
 
-    void val(std::string const &id, value val, location const &l);
-    value val(std::string const &id, location const &l);
+    void val(std::string const &id, tinytc_value &val, location const &l);
+    auto val(std::string const &id, location const &l) -> tinytc_value_t;
 
     void report_error(location const &loc, std::string const &what);
 
@@ -38,7 +38,7 @@ class parse_context {
 
   private:
     compiler_context compiler_ctx_;
-    std::vector<std::unordered_map<std::string, value>> id_map_;
+    std::vector<std::unordered_map<std::string, tinytc_value_t>> id_map_;
     std::stack<tinytc_region_t> regions_;
     prog program_;
 };

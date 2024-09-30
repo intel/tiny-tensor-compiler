@@ -43,8 +43,8 @@ Builder C++-API:
     function:
       - tinytc::make_alloca
       - tinytc::make_axpby
-      - tinytc::make_arith(arithmetic,value const&,value const&,location const&)
-      - tinytc::make_arith(arithmetic_unary,value const&,location const&)
+      - tinytc::make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
+      - tinytc::make_arith(arithmetic_unary,tinytc_value_t,location const&)
       - tinytc::make_cast
       - tinytc::make_cmp
       - tinytc::make_constant(std::complex<double>,tinytc_data_type_t,location const&)
@@ -91,7 +91,4 @@ Builder C++-API:
   Value:
     function:
       - tinytc::get_name
-      - tinytc::make_value
       - tinytc::set_name
-    class:
-      - tinytc::value

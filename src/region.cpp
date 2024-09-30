@@ -27,7 +27,7 @@ tinytc_status_t tinytc_region_get_parameter(tinytc_region_t reg, uint32_t param_
     if (reg == nullptr || result == nullptr || param_no >= reg->num_params()) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { *result = reg->param(param_no).get(); });
+    return exception_to_status_code([&] { *result = &reg->param(param_no); });
 }
 
 tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, uint32_t *result_list_size,
@@ -47,7 +47,7 @@ tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, uint32_t *resu
             auto results = reg->param_begin();
             auto const limit = std::min(num, *result_list_size);
             for (uint32_t i = 0; i < limit; ++i) {
-                result_list[i] = results[i].get();
+                result_list[i] = &results[i];
             }
         }
         *result_list_size = num;

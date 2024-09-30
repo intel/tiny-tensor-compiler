@@ -39,31 +39,31 @@ void alias_analysis_visitor::operator()(alloca_inst const &a) {
         if (t == nullptr) {
             throw compilation_error(a.loc(), status::ir_expected_memref);
         }
-        allocs_[a.result().get()] =
+        allocs_[a.result()] =
             aa_results::allocation{a.stack_ptr(), a.stack_ptr() + t->size_in_bytes()};
     }
 }
 void alias_analysis_visitor::operator()(expand_inst const &e) {
-    value_node const *source = e.operand().get();
+    value_node const *source = &e.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[e.result().get()] = source;
+    alias_[e.result()] = source;
 }
 void alias_analysis_visitor::operator()(fuse_inst const &f) {
-    value_node const *source = f.operand().get();
+    value_node const *source = &f.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[f.result().get()] = source;
+    alias_[f.result()] = source;
 }
 
 void alias_analysis_visitor::operator()(subview_inst const &s) {
-    value_node const *source = s.operand().get();
+    value_node const *source = &s.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[s.result().get()] = source;
+    alias_[s.result()] = source;
 }
 
 auto alias_analysis::run_on_function(function_node &fn) -> aa_results {

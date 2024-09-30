@@ -22,10 +22,10 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
         return {};
     }
 
-    auto allocas = std::vector<value>{};
+    auto allocas = std::vector<tinytc_value_t>{};
     for (auto &i : reg) {
         if (auto alloca = dyn_cast<alloca_inst>(&i); alloca != nullptr) {
-            allocas.emplace_back(alloca->result(0));
+            allocas.emplace_back(&alloca->result(0));
         }
     }
 
@@ -42,14 +42,14 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
             }
         }
         for (auto &v : i.results()) {
-            if (isa<memref_data_type>(*v->ty())) {
-                rgn_ops.insert(aa.root(*v));
+            if (isa<memref_data_type>(*v.ty())) {
+                rgn_ops.insert(aa.root(v));
             }
         }
 
         auto alloca_it = allocas.begin();
         while (alloca_it != allocas.end()) {
-            if (rgn_ops.contains(alloca_it->get())) {
+            if (rgn_ops.contains(*alloca_it)) {
                 prev_it = reg.insts().insert_after(
                     prev_it, std::make_unique<lifetime_stop_inst>(*alloca_it).release());
                 --prev_it;

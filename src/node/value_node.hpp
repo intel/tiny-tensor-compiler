@@ -6,22 +6,20 @@
 
 #include "location.hpp"
 #include "node/data_type_node.hpp"
-#include "reference_counted.hpp"
 #include "tinytc/types.h"
 
 #include <cstdint>
 #include <string>
 #include <utility>
 
-struct tinytc_value final : tinytc::reference_counted {
+struct tinytc_value final {
   public:
-    inline tinytc_value(tinytc_data_type_t ty, tinytc::location const &lc = {})
-        : ty_{std::move(ty)}, loc_{lc} {}
+    tinytc_value(tinytc_data_type_t ty = nullptr, tinytc::location const &lc = {});
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
-    inline tinytc_data_type_t ty() const { return ty_; }
+    inline auto ty() const -> tinytc_data_type_t { return ty_; }
 
     inline auto context() const -> tinytc_compiler_context_t { return ty_->context(); }
 

@@ -41,14 +41,14 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                           }
                           stack_ptr = it->stop;
                       }
-                      allocs.insert(it, allocation{a.result().get(), stack_ptr, stack_ptr + size});
+                      allocs.insert(it, allocation{a.result(), stack_ptr, stack_ptr + size});
                       a.stack_ptr(stack_ptr);
                   },
                   [&allocs](lifetime_stop_inst &s) {
                       int num = 0;
-                      auto v = s.object().get();
+                      auto v = s.object();
                       for (auto it = allocs.begin(); it != allocs.end();) {
-                          if (it->value == v) {
+                          if (it->value == &v) {
                               it = allocs.erase(it);
                               ++num;
                           } else {

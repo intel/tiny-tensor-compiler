@@ -7,6 +7,7 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "support/ilist.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
@@ -17,10 +18,10 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <ranges>
 #include <utility>
 #include <variant>
-#include <vector>
 
 namespace tinytc {
 
@@ -84,8 +85,11 @@ using inst_nodes =
               class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst,
               class yield_inst>;
 
-using value_range = iterator_range_wrapper<value *>;
-using const_value_range = iterator_range_wrapper<value const *>;
+using op_range = iterator_range_wrapper<tinytc_value_t *>;
+using const_op_range = iterator_range_wrapper<const tinytc_value_t *>;
+
+using result_range = iterator_range_wrapper<tinytc_value_t>;
+using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
 
 using region_range = iterator_range_wrapper<tinytc_region_t>;
 using const_region_range = iterator_range_wrapper<const_tinytc_region_t>;
@@ -99,44 +103,41 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline tinytc_inst(tinytc::IK tid) : tid_(tid) {}
     virtual ~tinytc_inst() = default;
 
+    tinytc_inst(tinytc_inst const &other) = delete;
+    tinytc_inst(tinytc_inst &&other) = delete;
+    tinytc_inst &operator=(tinytc_inst const &other) = delete;
+    tinytc_inst &operator=(tinytc_inst &&other) = delete;
+
     inline auto type_id() const -> tinytc::IK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     // Iterator over operands
-    inline auto op_begin() -> tinytc::value * { return op_begin_; }
-    inline auto op_end() -> tinytc::value * { return op_end_; }
-    inline auto operands() -> tinytc::value_range {
-        return tinytc::value_range{op_begin_, op_end_};
-    }
-    inline auto op_begin() const -> tinytc::value const * { return op_begin_; }
-    inline auto op_end() const -> tinytc::value const * { return op_end_; }
-    inline auto operands() const -> tinytc::const_value_range {
-        return tinytc::const_value_range{op_begin_, op_end_};
-    }
-    inline auto op(std::size_t pos) -> tinytc::value & { return op_begin_[pos]; }
-    inline auto op(std::size_t pos) const -> tinytc::value const & { return op_begin_[pos]; }
+    inline auto op_begin() -> tinytc_value_t * { return op_begin_; }
+    inline auto op_end() -> tinytc_value_t * { return op_end_; }
+    inline auto operands() -> tinytc::op_range { return {op_begin_, op_end_}; }
+    inline auto op_begin() const -> const tinytc_value_t * { return op_begin_; }
+    inline auto op_end() const -> const tinytc_value_t * { return op_end_; }
+    inline auto operands() const -> tinytc::const_op_range { return {op_begin_, op_end_}; }
+    inline auto op(std::size_t pos) -> tinytc_value_t & { return op_begin_[pos]; }
+    inline auto op(std::size_t pos) const -> tinytc_value_t const & { return op_begin_[pos]; }
     inline auto num_operands() const -> std::int64_t { return op_end_ - op_begin_; }
 
     // Iterator over results
-    inline auto result_begin() -> tinytc::value * { return result_begin_; }
-    inline auto result_end() -> tinytc::value * { return result_end_; }
-    inline auto results() -> tinytc::value_range {
-        return tinytc::value_range{result_begin_, result_end_};
+    inline auto result_begin() -> tinytc_value_t { return result_begin_; }
+    inline auto result_end() -> tinytc_value_t { return result_end_; }
+    inline auto results() -> tinytc::result_range { return {result_begin_, result_end_}; }
+    inline auto result_begin() const -> const_tinytc_value_t { return result_begin_; }
+    inline auto result_end() const -> const_tinytc_value_t { return result_end_; }
+    inline auto results() const -> tinytc::const_result_range {
+        return {result_begin_, result_end_};
     }
-    inline auto result_begin() const -> tinytc::value const * { return result_begin_; }
-    inline auto result_end() const -> tinytc::value const * { return result_end_; }
-    inline auto results() const -> tinytc::const_value_range {
-        return tinytc::const_value_range{result_begin_, result_end_};
+    inline auto result() const -> tinytc_value_t {
+        return num_results() > 0 ? result_begin_ : nullptr;
     }
-    inline auto result() const -> tinytc::value {
-        return num_results() > 0 ? result_begin_[0] : tinytc::value{};
-    }
-    inline auto result(std::size_t pos) -> tinytc::value & { return result_begin_[pos]; }
-    inline auto result(std::size_t pos) const -> tinytc::value const & {
-        return result_begin_[pos];
-    }
+    inline auto result(std::size_t pos) -> tinytc_value & { return result_begin_[pos]; }
+    inline auto result(std::size_t pos) const -> tinytc_value const & { return result_begin_[pos]; }
     inline auto num_results() const -> std::int64_t { return result_end_ - result_begin_; }
 
     // Iterator over regions
@@ -207,11 +208,11 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     }
 
   protected:
-    inline auto op_range(tinytc::value *begin, tinytc::value *end) {
+    inline auto op_range(tinytc_value_t *begin, tinytc_value_t *end) {
         op_begin_ = begin;
         op_end_ = end;
     }
-    inline auto result_range(tinytc::value *begin, tinytc::value *end) {
+    inline auto result_range(tinytc_value_t begin, tinytc_value_t end) {
         result_begin_ = begin;
         result_end_ = end;
     }
@@ -223,8 +224,8 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
   private:
     tinytc::IK tid_;
     tinytc::location loc_;
-    tinytc::value *op_begin_ = nullptr, *op_end_ = nullptr, *result_begin_ = nullptr,
-                  *result_end_ = nullptr;
+    tinytc_value_t *op_begin_ = nullptr, *op_end_ = nullptr;
+    tinytc_value_t result_begin_ = nullptr, result_end_ = nullptr;
     tinytc_region_t child_regions_begin_ = nullptr, child_regions_end_ = nullptr;
 };
 
@@ -282,8 +283,8 @@ class standard_inst : public inst_node {
     }
 
   private:
-    object_container<value, NumOperands> ops_;
-    object_container<value, NumResults> results_;
+    object_container<tinytc_value_t, NumOperands> ops_;
+    object_container<tinytc_value, NumResults> results_;
     object_container<tinytc_region, NumChildRegions> child_regions_;
 };
 
@@ -293,14 +294,15 @@ class blas_a2_inst : public standard_inst<4, 0> {
         return i.type_id() >= IK::blas_a2 && i.type_id() <= IK::last_blas_a2;
     }
     enum op_number { op_alpha = 0, op_A = 1, op_beta = 2, op_B = 3 };
-    blas_a2_inst(IK tid, value alpha, value A, value beta, value B, bool atomic);
+    blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
+                 tinytc_value_t B, bool atomic);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
-    inline auto alpha() const -> value const & { return op(op_alpha); }
-    inline auto A() const -> value const & { return op(op_A); }
-    inline auto beta() const -> value const & { return op(op_beta); }
-    inline auto B() const -> value const & { return op(op_B); }
+    inline auto alpha() const -> tinytc_value const & { return *op(op_alpha); }
+    inline auto A() const -> tinytc_value const & { return *op(op_A); }
+    inline auto beta() const -> tinytc_value const & { return *op(op_beta); }
+    inline auto B() const -> tinytc_value const & { return *op(op_B); }
 
   protected:
     bool atomic_;
@@ -312,15 +314,16 @@ class blas_a3_inst : public standard_inst<5, 0> {
         return i.type_id() >= IK::blas_a3 && i.type_id() <= IK::last_blas_a3;
     }
     enum op_number { op_alpha = 0, op_A = 1, op_B = 2, op_beta = 3, op_C = 4 };
-    blas_a3_inst(IK tid, value alpha, value A, value B, value beta, value C, bool atomic);
+    blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
+                 tinytc_value_t beta, tinytc_value_t C, bool atomic);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
-    inline auto alpha() const -> value const & { return op(op_alpha); }
-    inline auto A() const -> value const & { return op(op_A); }
-    inline auto B() const -> value const & { return op(op_B); }
-    inline auto beta() const -> value const & { return op(op_beta); }
-    inline auto C() const -> value const & { return op(op_C); }
+    inline auto alpha() const -> tinytc_value const & { return *op(op_alpha); }
+    inline auto A() const -> tinytc_value const & { return *op(op_A); }
+    inline auto B() const -> tinytc_value const & { return *op(op_B); }
+    inline auto beta() const -> tinytc_value const & { return *op(op_beta); }
+    inline auto C() const -> tinytc_value const & { return *op(op_C); }
 
   protected:
     bool atomic_;
@@ -332,14 +335,16 @@ class loop_inst : public standard_inst<3, 0, 1> {
         return i.type_id() >= IK::loop && i.type_id() <= IK::last_loop;
     }
     enum op_number { op_from = 0, op_to = 1, op_step = 2 };
-    loop_inst(IK tid, value from, value to, value step, tinytc_data_type_t loop_var_type,
-              location const &loc = {});
-    inline auto from() const -> value const & { return op(op_from); }
-    inline auto to() const -> value const & { return op(op_to); }
-    inline auto step() const -> value const & { return op(op_step); }
+    loop_inst(IK tid, tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+              tinytc_data_type_t loop_var_type, location const &loc = {});
+    inline auto from() const -> tinytc_value const & { return *op(op_from); }
+    inline auto to() const -> tinytc_value const & { return *op(op_to); }
+    inline auto has_step() const -> bool { return op(op_step) != nullptr; }
+    inline auto step() const -> tinytc_value const & { return *op(op_step); }
     inline auto body() -> tinytc_region & { return child_region(0); }
     inline auto body() const -> tinytc_region const & { return child_region(0); }
-    inline auto loop_var() const -> value const & { return body().param(0); }
+    inline auto loop_var() -> tinytc_value & { return body().param(0); }
+    inline auto loop_var() const -> tinytc_value const & { return body().param(0); }
 };
 
 class alloca_inst : public standard_inst<0, 1> {
@@ -357,8 +362,8 @@ class alloca_inst : public standard_inst<0, 1> {
 class axpby_inst : public blas_a2_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::axpby_blas_a2; }
-    axpby_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
-               location const &lc = {});
+    axpby_inst(transpose tA, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
+               tinytc_value_t B, bool atomic = false, location const &lc = {});
 
     inline transpose tA() const { return tA_; }
 
@@ -370,11 +375,11 @@ class arith_inst : public standard_inst<2, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::arith; }
     enum op_number { op_a = 0, op_b = 1 };
-    arith_inst(arithmetic op, value a, value b, location const &lc = {});
+    arith_inst(arithmetic op, tinytc_value_t a, tinytc_value_t b, location const &lc = {});
 
     inline arithmetic operation() const { return operation_; }
-    inline auto a() const -> value const & { return op(op_a); }
-    inline auto b() const -> value const & { return op(op_b); }
+    inline auto a() const -> tinytc_value const & { return *op(op_a); }
+    inline auto b() const -> tinytc_value const & { return *op(op_b); }
 
   private:
     arithmetic operation_;
@@ -384,10 +389,10 @@ class arith_unary_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::arith_unary; }
     enum op_number { op_a = 0 };
-    arith_unary_inst(arithmetic_unary op, value a, location const &lc = {});
+    arith_unary_inst(arithmetic_unary op, tinytc_value_t a, location const &lc = {});
 
     inline arithmetic_unary operation() const { return operation_; }
-    inline auto a() const -> value const & { return op(op_a); }
+    inline auto a() const -> tinytc_value const & { return *op(op_a); }
 
   private:
     arithmetic_unary operation_;
@@ -415,19 +420,19 @@ class cast_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::cast; }
     enum op_number { op_a = 0 };
-    cast_inst(value a, scalar_type to_ty, location const &lc = {});
-    inline auto a() const -> value const & { return op(op_a); }
+    cast_inst(tinytc_value_t a, scalar_type to_ty, location const &lc = {});
+    inline auto a() const -> tinytc_value const & { return *op(op_a); }
 };
 
 class compare_inst : public standard_inst<2, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::compare; }
     enum op_number { op_a = 0, op_b = 1 };
-    compare_inst(cmp_condition cond, value a, value b, location const &lc = {});
+    compare_inst(cmp_condition cond, tinytc_value_t a, tinytc_value_t b, location const &lc = {});
 
     inline cmp_condition cond() const { return cond_; }
-    inline auto a() const -> value const & { return op(op_a); }
-    inline auto b() const -> value const & { return op(op_b); }
+    inline auto a() const -> tinytc_value const & { return *op(op_a); }
+    inline auto b() const -> tinytc_value const & { return *op(op_b); }
 
   private:
     cmp_condition cond_;
@@ -449,18 +454,19 @@ class constant_inst : public standard_inst<0, 1> {
 class expand_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::expand; }
-    expand_inst(value op, std::int64_t expanded_mode, std::vector<std::int64_t> static_expand_shape,
-                std::vector<value> const &expand_shape, location const &lc = {});
+    expand_inst(tinytc_value_t op, std::int64_t expanded_mode,
+                array_view<std::int64_t> static_expand_shape,
+                array_view<tinytc_value_t> expand_shape, location const &lc = {});
 
     inline std::int64_t expanded_mode() const { return expanded_mode_; }
-    inline auto static_expand_shape() const -> std::vector<std::int64_t> const & {
+    inline auto static_expand_shape() const -> array_view<std::int64_t> {
         return static_expand_shape_;
     }
 
-    inline auto operand() const -> value const & { return op(0); }
+    inline auto operand() const -> tinytc_value const & { return *op(0); }
     inline auto expand_shape() { return operands() | std::views::drop(1); }
     inline auto expand_shape() const { return operands() | std::views::drop(1); }
-    inline auto expand_shape(std::int64_t i) const -> value const & { return op(i + 1); }
+    inline auto expand_shape(std::int64_t i) const -> tinytc_value const & { return *op(i + 1); }
 
   private:
     std::int64_t expanded_mode_;
@@ -470,9 +476,9 @@ class expand_inst : public standard_inst<dynamic, 1> {
 class fuse_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::fuse; }
-    fuse_inst(value op, std::int64_t from, std::int64_t to, location const &lc = {});
+    fuse_inst(tinytc_value_t op, std::int64_t from, std::int64_t to, location const &lc = {});
 
-    inline auto operand() const -> value const & { return op(0); }
+    inline auto operand() const -> tinytc_value const & { return *op(0); }
     inline std::int64_t from() const { return from_; }
     inline std::int64_t to() const { return to_; }
 
@@ -483,9 +489,9 @@ class fuse_inst : public standard_inst<1, 1> {
 class load_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::load; }
-    load_inst(value op, std::vector<value> const &index_list, location const &lc = {});
+    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, location const &lc = {});
 
-    inline auto operand() const -> value const & { return op(0); }
+    inline auto operand() const -> tinytc_value const & { return *op(0); }
     inline auto index_list() const { return operands() | std::views::drop(1); }
 };
 
@@ -495,7 +501,7 @@ class group_id_inst : public standard_inst<0, 1> {
     inline group_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::group_id} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::index));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::index), lc};
     }
 };
 
@@ -505,24 +511,24 @@ class group_size_inst : public standard_inst<0, 1> {
     inline group_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::group_size} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::index));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::index), lc};
     }
 };
 
 class lifetime_stop_inst : public standard_inst<1, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::lifetime_stop; }
-    inline lifetime_stop_inst(value obj) : standard_inst{IK::lifetime_stop} {
+    inline lifetime_stop_inst(tinytc_value_t obj) : standard_inst{IK::lifetime_stop} {
         op(0) = std::move(obj);
     }
-    inline auto object() const -> value const & { return op(0); }
+    inline auto object() const -> tinytc_value const & { return *op(0); }
 };
 
 class gemm_inst : public blas_a3_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::gemm_blas_a3; }
-    gemm_inst(transpose tA, transpose tB, value alpha, value A, value B, value beta, value C,
-              bool atomic = false, location const &lc = {});
+    gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
+              tinytc_value_t beta, tinytc_value_t C, bool atomic = false, location const &lc = {});
 
     inline transpose tA() const { return tA_; }
     inline transpose tB() const { return tB_; }
@@ -534,8 +540,8 @@ class gemm_inst : public blas_a3_inst {
 class gemv_inst : public blas_a3_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::gemv_blas_a3; }
-    gemv_inst(transpose tA, value alpha, value A, value B, value beta, value C, bool atomic = false,
-              location const &lc = {});
+    gemv_inst(transpose tA, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
+              tinytc_value_t beta, tinytc_value_t C, bool atomic = false, location const &lc = {});
 
     inline transpose tA() const { return tA_; }
 
@@ -546,18 +552,18 @@ class gemv_inst : public blas_a3_inst {
 class ger_inst : public blas_a3_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::ger_blas_a3; }
-    ger_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
-             location const &lc = {});
+    ger_inst(tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B, tinytc_value_t beta,
+             tinytc_value_t C, bool atomic = false, location const &lc = {});
 };
 
 class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
-    inline for_inst(value from, value to, tinytc_data_type_t loop_var_type,
+    inline for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
                     location const &loc = {})
         : for_inst{std::move(from), std::move(to), {}, loop_var_type, loc} {}
-    inline for_inst(value from, value to, value step, tinytc_data_type_t loop_var_type,
-                    location const &loc = {})
+    inline for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+                    tinytc_data_type_t loop_var_type, location const &loc = {})
         : loop_inst{IK::for_loop,    std::move(from), std::move(to),
                     std::move(step), loop_var_type,   loc} {}
 };
@@ -565,23 +571,24 @@ class for_inst : public loop_inst {
 class foreach_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::foreach_loop; }
-    foreach_inst(value from, value to, tinytc_data_type_t loop_var_type, location const &loc = {});
+    foreach_inst(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
+                 location const &loc = {});
 };
 
 class hadamard_inst : public blas_a3_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::hadamard_blas_a3; }
-    hadamard_inst(value alpha, value A, value B, value beta, value C, bool atomic = false,
-                  location const &lc = {});
+    hadamard_inst(tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B, tinytc_value_t beta,
+                  tinytc_value_t C, bool atomic = false, location const &lc = {});
 };
 
 class if_inst : public standard_inst<1, dynamic, 2> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::if_; }
     enum child_region_number { child_region_then = 0, child_region_otherwise = 1 };
-    if_inst(value condition, std::vector<tinytc_data_type_t> const &return_types = {},
+    if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return_types = {},
             location const &lc = {});
-    inline auto condition() const -> value const & { return op(0); }
+    inline auto condition() const -> tinytc_value const & { return *op(0); }
     inline auto then() -> tinytc_region & { return child_region(child_region_then); }
     inline auto then() const -> tinytc_region const & { return child_region(child_region_then); }
     inline auto otherwise() -> tinytc_region & { return child_region(child_region_otherwise); }
@@ -597,7 +604,7 @@ class num_subgroups_inst : public standard_inst<0, 1> {
     inline num_subgroups_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::num_subgroups} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), lc};
     }
 };
 
@@ -613,9 +620,9 @@ class parallel_inst : public standard_inst<0, 0, 1> {
 class size_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::size; }
-    size_inst(value op, std::int64_t mode, location const &lc = {});
+    size_inst(tinytc_value_t op, std::int64_t mode, location const &lc = {});
 
-    inline auto operand() const -> value const & { return op(0); }
+    inline auto operand() const -> tinytc_value const & { return *op(0); }
     inline std::int64_t mode() const { return mode_; }
 
   private:
@@ -628,7 +635,7 @@ class subgroup_id_inst : public standard_inst<0, 1> {
     inline subgroup_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::subgroup_id} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), lc};
     }
 };
 
@@ -638,7 +645,7 @@ class subgroup_local_id_inst : public standard_inst<0, 1> {
     inline subgroup_local_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::subgroup_local_id} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), lc};
     }
 };
 
@@ -648,23 +655,21 @@ class subgroup_size_inst : public standard_inst<0, 1> {
     inline subgroup_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
         : standard_inst{IK::subgroup_size} {
         loc(lc);
-        result(0) = make_value(scalar_data_type::get(ctx, scalar_type::i32));
+        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), lc};
     }
 };
 
 class subview_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
-    subview_inst(value op, std::vector<std::int64_t> static_offsets,
-                 std::vector<std::int64_t> static_sizes, std::vector<value> const &offsets,
-                 std::vector<value> const &sizes, location const &lc = {});
+    subview_inst(tinytc_value_t op, array_view<std::int64_t> static_offsets,
+                 array_view<std::int64_t> static_sizes, array_view<tinytc_value_t> offsets,
+                 array_view<tinytc_value_t> sizes, location const &lc = {});
 
-    inline auto static_offsets() const -> std::vector<std::int64_t> const & {
-        return static_offsets_;
-    }
-    inline auto static_sizes() const -> std::vector<std::int64_t> const & { return static_sizes_; }
+    inline auto static_offsets() const -> array_view<std::int64_t> { return static_offsets_; }
+    inline auto static_sizes() const -> array_view<std::int64_t> { return static_sizes_; }
 
-    inline auto operand() const -> value const & { return op(0); }
+    inline auto operand() const -> tinytc_value const & { return *op(0); }
     inline auto offsets() const {
         return operands() | std::views::drop(1) | std::views::take(num_dyn_offsets_);
     }
@@ -679,18 +684,19 @@ class store_inst : public standard_inst<dynamic, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::store; }
     enum op_number { op_val = 0, op_operand = 1 };
-    store_inst(value val, value op, std::vector<value> const &index_list, location const &lc = {});
+    store_inst(tinytc_value_t val, tinytc_value_t op, array_view<tinytc_value_t> index_list,
+               location const &lc = {});
 
-    inline auto val() const -> value const & { return op(op_val); }
-    inline auto operand() const -> value const & { return op(op_operand); }
+    inline auto val() const -> tinytc_value const & { return *op(op_val); }
+    inline auto operand() const -> tinytc_value const & { return *op(op_operand); }
     inline auto index_list() const { return operands() | std::views::drop(2); }
 };
 
 class sum_inst : public blas_a2_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::sum_blas_a2; }
-    sum_inst(transpose tA, value alpha, value A, value beta, value B, bool atomic = false,
-             location const &lc = {});
+    sum_inst(transpose tA, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
+             tinytc_value_t B, bool atomic = false, location const &lc = {});
 
     inline transpose tA() const { return tA_; }
 
@@ -701,7 +707,7 @@ class sum_inst : public blas_a2_inst {
 class yield_inst : public standard_inst<dynamic, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::yield; }
-    inline yield_inst(std::vector<value> const &vals, location const &lc = {})
+    inline yield_inst(array_view<tinytc_value_t> vals, location const &lc = {})
         : standard_inst{IK::yield, static_cast<std::int64_t>(vals.size())} {
         loc(lc);
         for (std::size_t i = 0; i < vals.size(); ++i) {

@@ -248,9 +248,9 @@ Instruction
 
   * :ref:`make_axpby`
 
-  * :ref:`make_arith(arithmetic,value const&,value const&,location const&)`
+  * :ref:`make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)`
 
-  * :ref:`make_arith(arithmetic_unary,value const&,location const&)`
+  * :ref:`make_arith(arithmetic_unary,tinytc_value_t,location const&)`
 
   * :ref:`make_cast`
 
@@ -325,15 +325,15 @@ make_axpby
 
 .. doxygenfunction:: tinytc::make_axpby
 
-make_arith(arithmetic,value const&,value const&,location const&)
-................................................................
+make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
+....................................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic,value const&,value const&,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
 
-make_arith(arithmetic_unary,value const&,location const&)
-.........................................................
+make_arith(arithmetic_unary,tinytc_value_t,location const&)
+...........................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value const&,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,tinytc_value_t,location const&)
 
 make_cast
 .........
@@ -565,13 +565,7 @@ Value
 
   * :ref:`get_name`
 
-  * :ref:`make_value`
-
   * :ref:`set_name`
-
-* Classes
-
-  * :ref:`value`
 
 Value Functions
 ---------------
@@ -581,21 +575,8 @@ get_name
 
 .. doxygenfunction:: tinytc::get_name
 
-make_value
-..........
-
-.. doxygenfunction:: tinytc::make_value
-
 set_name
 ........
 
 .. doxygenfunction:: tinytc::set_name
-
-Value Classes
--------------
-
-value
-.....
-
-.. doxygenclass:: tinytc::value
 
