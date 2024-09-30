@@ -38,23 +38,28 @@ auto get_control_flow_graph(region_node &topreg) -> control_flow_graph {
 
         auto pred_nodes = std::queue<inst_node *>{};
         const auto visit_inst = [&](inst_node *node) {
+            bool empty_child_regions = true;
             if (node->num_child_regions() > 0) {
                 for (auto &subreg : node->child_regions()) {
                     auto [substart, subexits] =
-                        add_region_ref(*subreg, std::max(kind_max, subreg->kind()), add_region_ref);
-                    cfg.add_edge(node, substart);
-                    if (isa<loop_inst>(*node)) {
-                        for (; !subexits.empty(); subexits.pop()) {
-                            cfg.add_edge(subexits.front(), node);
-                        }
-                        pred_nodes.push(node);
-                    } else {
-                        for (; !subexits.empty(); subexits.pop()) {
-                            pred_nodes.push(subexits.front());
+                        add_region_ref(subreg, std::max(kind_max, subreg.kind()), add_region_ref);
+                    if (substart != nullptr && !subexits.empty()) {
+                        empty_child_regions = false;
+                        cfg.add_edge(node, substart);
+                        if (isa<loop_inst>(*node)) {
+                            for (; !subexits.empty(); subexits.pop()) {
+                                cfg.add_edge(subexits.front(), node);
+                            }
+                            pred_nodes.push(node);
+                        } else {
+                            for (; !subexits.empty(); subexits.pop()) {
+                                pred_nodes.push(subexits.front());
+                            }
                         }
                     }
                 }
-            } else {
+            }
+            if (empty_child_regions) {
                 pred_nodes.push(node);
             }
         };

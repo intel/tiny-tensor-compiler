@@ -18,7 +18,7 @@ void slot_tracker::set_slot(value_node const &v) {
 
 void slot_tracker::run_on_function(function_node &fn) {
     slot_ = 0;
-    for (auto const &arg : fn.args()) {
+    for (auto const &arg : fn.params()) {
         set_slot(*arg);
     }
     walk<walk_order::pre_order>(fn, [this](inst_node const &i) {

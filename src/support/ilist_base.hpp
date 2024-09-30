@@ -15,18 +15,20 @@ template <typename NodeT, bool IsConst> class ilist_iterator;
 
 template <typename NodeT> class ilist_node {
   public:
-    auto prev() const -> NodeT * { return prev_; }
-    void prev(NodeT *prev) { prev_ = prev; }
-    auto next() const -> NodeT * { return next_; }
-    void next(NodeT *next) { next_ = next; }
+    using node_type = NodeT;
+
+    auto prev() const -> ilist_node<NodeT> * { return prev_; }
+    void prev(ilist_node<NodeT> *prev) { prev_ = prev; }
+    auto next() const -> ilist_node<NodeT> * { return next_; }
+    void next(ilist_node<NodeT> *next) { next_ = next; }
 
     auto sentinel() const -> bool { return sentinel_; }
     void set_sentinel() { sentinel_ = true; }
 
-    auto iterator() -> ilist_iterator<NodeT, false> { return {this}; }
+    auto iterator() -> ilist_iterator<ilist_node<NodeT>, false> { return {this}; }
 
   private:
-    NodeT *prev_ = nullptr, *next_ = nullptr;
+    ilist_node<NodeT> *prev_ = nullptr, *next_ = nullptr;
     bool sentinel_ = false;
 };
 
@@ -40,11 +42,12 @@ class ilist_node_with_parent : public ilist_node<NodeT> {
     ParentT *parent_ = nullptr;
 };
 
-template <typename NodeT, bool IsConst> class ilist_iterator {
+template <typename IListNodeT, bool IsConst> class ilist_iterator {
   public:
-    using base_type = std::conditional_t<IsConst, const ilist_node<NodeT>, ilist_node<NodeT>>;
+    using base_type = std::conditional_t<IsConst, const IListNodeT, IListNodeT>;
     using base_pointer = base_type *;
-    using value_type = std::conditional_t<IsConst, const NodeT, NodeT>;
+    using node_type = typename IListNodeT::node_type;
+    using value_type = std::conditional_t<IsConst, const node_type, node_type>;
     using pointer = value_type *;
     using reference = value_type &;
     using difference_type = std::ptrdiff_t;
@@ -55,22 +58,23 @@ template <typename NodeT, bool IsConst> class ilist_iterator {
     auto operator*() const -> reference { return *static_cast<pointer>(pos_); }
     auto operator->() const -> pointer { return get(); }
     auto get() const -> pointer { return static_cast<pointer>(pos_); }
+    auto get_base() const -> base_pointer { return pos_; }
     auto &operator++() {
-        pos_ = static_cast<base_pointer>(pos_->next());
+        pos_ = pos_->next();
         return *this;
     }
     auto operator++(int) {
         auto old_pos = pos_;
-        pos_ = static_cast<base_pointer>(pos_->next());
+        pos_ = pos_->next();
         return ilist_iterator{old_pos};
     }
     auto &operator--() {
-        pos_ = static_cast<base_pointer>(pos_->prev());
+        pos_ = pos_->prev();
         return *this;
     }
     auto operator--(int) {
         auto old_pos = pos_;
-        pos_ = static_cast<base_pointer>(pos_->prev());
+        pos_ = pos_->prev();
         return ilist_iterator{old_pos};
     }
     auto operator==(ilist_iterator const &other) const -> bool { return pos_ == other.pos_; }
@@ -80,12 +84,7 @@ template <typename NodeT, bool IsConst> class ilist_iterator {
     base_pointer pos_;
 };
 
-template <typename NodeT> struct ilist_dummy_callback {
-    void node_added(NodeT *) {}
-    void node_removed(NodeT *) {}
-};
-
-template <typename NodeT, typename IListCallback = ilist_dummy_callback<NodeT>>
+template <typename NodeT, typename IListCallback>
 requires requires(IListCallback &cb, NodeT *node) {
     std::is_base_of_v<ilist_node<NodeT>, NodeT>;
     cb.node_added(node);
@@ -93,21 +92,23 @@ requires requires(IListCallback &cb, NodeT *node) {
 }
 class ilist_base : protected IListCallback {
   public:
+    using base_type = ilist_node<NodeT>;
+    using base_pointer = base_type *;
     using value_type = NodeT;
     using size_type = std::size_t;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type *;
     using reference = value_type &;
     using const_reference = const value_type &;
-    using iterator = ilist_iterator<value_type, false>;
-    using const_iterator = ilist_iterator<value_type, true>;
+    using iterator = ilist_iterator<base_type, false>;
+    using const_iterator = ilist_iterator<base_type, true>;
     static_assert(std::bidirectional_iterator<iterator>);
 
     ilist_base() {
         sentinel_.set_sentinel();
         // let's go in a circle - yay!
-        sentinel_.prev(static_cast<NodeT *>(&sentinel_));
-        sentinel_.next(static_cast<NodeT *>(&sentinel_));
+        sentinel_.prev(&sentinel_);
+        sentinel_.next(&sentinel_);
     }
     ~ilist_base() { clear(); }
 
@@ -139,7 +140,7 @@ class ilist_base : protected IListCallback {
         // let s = sentinel
         // |0|: s{prev->s,next->s}
         // |1|: n0{prev->s,next->s}, s{prev->n0,next->n0}
-        pointer prev = it->prev();
+        base_pointer prev = it.get_base()->prev();
         prev->next(node);
         node->prev(prev);
         node->next(it.get());
@@ -169,17 +170,17 @@ class ilist_base : protected IListCallback {
         // |0|: s{prev->s,next->s}
         // |1|: n0{prev->s,next->s}, s{prev->n0,next->n0}
         // |2|: n0{prev->s,next->n1}, n1{prev->n0,next->s}, s{prev->n1,next->n0}
-        pointer prev = it->prev();
-        pointer next = it->prev();
+        base_pointer prev = it.get_base()->prev();
+        base_pointer next = it.get_base()->prev();
         prev->prev(next);
         next->prev(prev);
-        it->prev(nullptr);
-        it->next(nullptr);
+        it.get_base()->prev(nullptr);
+        it.get_base()->next(nullptr);
         // |0| (it -> s) : s{prev->s,next->s}
         // |1| (it -> n0): s{prev->s,next->s}
         // |2| (it -> n0): n1{prev->s,next->s}, s{prev->n1,next->n1}
         // |2| (it -> n1): n0{prev->s,next->s}, s{prev->n0,next->n0}
-        this->node_removed(it.get());
+        // this->node_removed(&*it);
         return iterator{next};
     }
     auto erase(iterator begin, iterator end) -> iterator {
@@ -190,7 +191,7 @@ class ilist_base : protected IListCallback {
     }
 
   private:
-    ilist_node<NodeT> sentinel_;
+    base_type sentinel_;
 };
 
 } // namespace tinytc

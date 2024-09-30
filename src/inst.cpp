@@ -348,14 +348,12 @@ tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
         [&] { *instr = std::make_unique<num_subgroups_inst>(ctx, get_optional(loc)).release(); });
 }
 
-tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, tinytc_region_t body,
-                                            const tinytc_location_t *loc) {
-    if (instr == nullptr || body == nullptr) {
+tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, const tinytc_location_t *loc) {
+    if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<parallel_inst>(region{body}, get_optional(loc)).release();
-    });
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<parallel_inst>(get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t mode,
@@ -469,41 +467,37 @@ tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t 
     });
 }
 
-tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t loop_var,
-                                       tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                                       tinytc_region_t body, const tinytc_location_t *loc) {
-    if (instr == nullptr || loop_var == nullptr || from == nullptr || to == nullptr ||
-        body == nullptr) {
+tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from, tinytc_value_t to,
+                                       tinytc_value_t step, tinytc_data_type_t loop_var_type,
+                                       const tinytc_location_t *loc) {
+    if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<for_inst>(value(loop_var, true), value(from, true), value(to, true),
-                                       value(step, true), region{body}, get_optional(loc))
-                .release();
+        *instr = std::make_unique<for_inst>(value(from, true), value(to, true), value(step, true),
+                                            loop_var_type, get_optional(loc))
+                     .release();
     });
 }
 
-tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t loop_var,
-                                           tinytc_value_t from, tinytc_value_t to,
-                                           tinytc_region_t body, const tinytc_location_t *loc) {
-    if (instr == nullptr || loop_var == nullptr || from == nullptr || to == nullptr ||
-        body == nullptr) {
+tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
+                                           tinytc_value_t to, tinytc_data_type_t loop_var_type,
+                                           const tinytc_location_t *loc) {
+    if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<foreach_inst>(value(loop_var, true), value(from, true),
-                                                value(to, true), region{body}, get_optional(loc))
+        *instr = std::make_unique<foreach_inst>(value(from, true), value(to, true), loop_var_type,
+                                                get_optional(loc))
                      .release();
     });
 }
 
 tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condition,
-                                      tinytc_region_t then, tinytc_region_t otherwise,
                                       uint32_t return_type_list_size,
                                       tinytc_data_type_t *return_type_list,
                                       const tinytc_location_t *loc) {
-    if (instr == nullptr || condition == nullptr || then == nullptr ||
+    if (instr == nullptr || condition == nullptr ||
         (return_type_list_size > 0 && return_type_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
@@ -513,8 +507,7 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
         for (uint32_t i = 0; i < return_type_list_size; ++i) {
             rt.emplace_back(return_type_list[i]);
         }
-        *instr = std::make_unique<if_inst>(value(condition, true), region{then}, region{otherwise},
-                                           std::move(rt), get_optional(loc))
+        *instr = std::make_unique<if_inst>(value(condition, true), std::move(rt), get_optional(loc))
                      .release();
     });
 }
@@ -560,6 +553,37 @@ tinytc_status_t tinytc_inst_get_values(const_tinytc_inst_t instr, uint32_t *resu
             auto const limit = std::min(num, *result_list_size);
             for (uint32_t i = 0; i < limit; ++i) {
                 result_list[i] = value(results[i]).release();
+            }
+        }
+        *result_list_size = num;
+    });
+}
+
+tinytc_status_t tinytc_inst_get_region(tinytc_inst_t instr, uint32_t region_no,
+                                       tinytc_region_t *result) {
+    if (instr == nullptr || result == nullptr || region_no >= instr->num_child_regions()) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *result = &instr->child_region(region_no); });
+}
+
+tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_list_size,
+                                        tinytc_region_t *result_list) {
+    if (instr == nullptr || result_list_size == nullptr ||
+        (*result_list_size > 0 && result_list == nullptr)) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        auto const num_results = instr->num_child_regions();
+        if (num_results > std::numeric_limits<std::uint32_t>::max()) {
+            throw std::out_of_range("too many results");
+        }
+        auto const num = static_cast<std::uint32_t>(num_results);
+        if (*result_list_size > 0) {
+            auto results = instr->child_regions_begin();
+            auto const limit = std::min(num, *result_list_size);
+            for (uint32_t i = 0; i < limit; ++i) {
+                result_list[i] = &results[i];
             }
         }
         *result_list_size = num;

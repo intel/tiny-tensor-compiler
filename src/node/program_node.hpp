@@ -11,43 +11,30 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
+#include <memory>
 #include <vector>
-
-namespace tinytc {
-using func_range = iterator_range_wrapper<tinytc_func_t *>;
-using const_func_range = iterator_range_wrapper<const_tinytc_func_t *>;
-} // namespace tinytc
 
 struct tinytc_prog final : tinytc::reference_counted {
   public:
+    using iterator = tinytc::indirect_iterator<std::vector<tinytc::func>::iterator>;
+    using const_iterator = tinytc::indirect_iterator<std::vector<tinytc::func>::const_iterator>;
+
     tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc = {});
-    ~tinytc_prog();
 
     inline auto get_context() const -> tinytc_compiler_context_t { return ctx_.get(); }
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
 
-    inline auto begin() -> tinytc_func_t * { return funcs_.size() > 0 ? funcs_.data() : nullptr; }
-    inline auto end() -> tinytc_func_t * {
-        return funcs_.size() > 0 ? funcs_.data() + funcs_.size() : nullptr;
-    }
-    inline auto functions() -> tinytc::func_range { return tinytc::func_range{begin(), end()}; }
-    inline auto begin() const -> const_tinytc_func_t * {
-        return funcs_.size() > 0 ? const_cast<const_tinytc_func_t *>(funcs_.data()) : nullptr;
-    }
-    inline auto end() const -> const_tinytc_func_t * {
-        return funcs_.size() > 0 ? const_cast<const_tinytc_func_t *>(funcs_.data()) + funcs_.size()
-                                 : nullptr;
-    }
-    inline auto functions() const -> tinytc::const_func_range {
-        return tinytc::const_func_range{begin(), end()};
-    }
-    inline void push_back(tinytc_func_t fun) { funcs_.push_back(fun); }
+    inline auto begin() -> iterator { return iterator{funcs_.begin()}; }
+    inline auto end() -> iterator { return iterator{funcs_.end()}; }
+    inline auto begin() const -> const_iterator { return const_iterator{funcs_.begin()}; }
+    inline auto end() const -> const_iterator { return const_iterator{funcs_.end()}; }
+    inline void push_back(tinytc::func fun) { funcs_.push_back(std::move(fun)); }
 
   private:
     tinytc::compiler_context ctx_;
-    std::vector<tinytc_func_t> funcs_;
+    std::vector<tinytc::func> funcs_;
     tinytc_location loc_;
 };
 

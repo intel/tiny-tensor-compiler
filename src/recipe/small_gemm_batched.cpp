@@ -85,52 +85,53 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
 
-            auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(ty_, "alpha");
-                auto A = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty),
-                                                {selA(M, K), selA(K, M), dynamic},
-                                                {1, ldA, strideA}, address_space::global, my_loc()),
-                                     "A", my_loc());
-                auto B = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty),
-                                                {selB(K, N), selB(N, K), dynamic},
-                                                {1, ldB, strideB}, address_space::global, my_loc()),
-                                     "B", my_loc());
-                auto beta_arg = fb.argument(ty_, "beta");
-                auto C = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N, dynamic},
-                                                {1, ldC, strideC}, address_space::global, my_loc()),
-                                     "C", my_loc());
+            auto const kernel = [&](char const *name, bool is_beta_nonzero) {
+                auto A_ty =
+                    get_memref(ctx_, enum_cast<scalar_type>(ty), {selA(M, K), selA(K, M), dynamic},
+                               {1, ldA, strideA}, address_space::global, my_loc());
+                auto B_ty =
+                    get_memref(ctx_, enum_cast<scalar_type>(ty), {selB(K, N), selB(N, K), dynamic},
+                               {1, ldB, strideB}, address_space::global, my_loc());
+                auto C_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N, dynamic},
+                                       {1, ldC, strideC}, address_space::global, my_loc());
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
+                auto fn_body = f.get_body();
+                auto alpha = get_parameter(fn_body, 0);
+                set_name(alpha, "alpha");
+                auto A = get_parameter(fn_body, 1);
+                set_name(A, "A");
+                auto B = get_parameter(fn_body, 2);
+                set_name(B, "B");
+                auto beta = get_parameter(fn_body, 3);
+                set_name(beta, "beta");
+                auto C = get_parameter(fn_body, 4);
+                set_name(C, "C");
 
-                fb.body(
-                    [&](region_builder &bb) {
-                        auto gid = bb.add(make_group_id(ctx_, my_loc()));
-                        auto const static_offsets = std::vector<std::int64_t>{0, 0};
-                        auto const A_static_sizes = std::vector<std::int64_t>{M, K};
-                        auto const B_static_sizes = std::vector<std::int64_t>{K, N};
-                        auto const C_static_sizes = std::vector<std::int64_t>{M, N};
-                        auto a = bb.add(
-                            make_subview(A, static_offsets, A_static_sizes, {}, {}, my_loc()));
-                        auto b = bb.add(
-                            make_subview(B, static_offsets, B_static_sizes, {}, {}, my_loc()));
-                        auto c = bb.add(
-                            make_subview(C, static_offsets, C_static_sizes, {}, {}, my_loc()));
-                        auto beta = is_beta_nonzero ? std::move(beta_arg)
-                                                    : bb.add(make_constant(0.0, ty_, my_loc()));
-                        bb.add(make_gemm(tA_, tB_, false, alpha, std::move(a), std::move(b), beta,
-                                         std::move(c), my_loc()));
-                    },
-                    my_loc());
+                auto bb = region_builder{fn_body};
+
+                auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                auto const static_offsets = std::vector<std::int64_t>{0, 0};
+                auto const A_static_sizes = std::vector<std::int64_t>{M, K};
+                auto const B_static_sizes = std::vector<std::int64_t>{K, N};
+                auto const C_static_sizes = std::vector<std::int64_t>{M, N};
+                auto a = bb.add(
+                    make_subview(value{A, true}, static_offsets, A_static_sizes, {}, {}, my_loc()));
+                auto b = bb.add(
+                    make_subview(value{B, true}, static_offsets, B_static_sizes, {}, {}, my_loc()));
+                auto c = bb.add(
+                    make_subview(value{C, true}, static_offsets, C_static_sizes, {}, {}, my_loc()));
+                auto beta_val =
+                    is_beta_nonzero ? value{beta, true} : bb.add(make_constant(0.0, ty_, my_loc()));
+                bb.add(make_gemm(tA_, tB_, false, value{alpha, true}, std::move(a), std::move(b),
+                                 beta_val, std::move(c), my_loc()));
+
+                return f;
             };
-            auto p = [&] {
-                auto pb = program_builder{ctx_, my_loc()};
-                pb.create(
-                    small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm),
-                    [&](function_builder &fb) { kernel(fb, true); }, my_loc());
-                pb.create(
-                    small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0),
-                    [&](function_builder &fb) { kernel(fb, false); }, my_loc());
-
-                return std::move(pb).get_product();
-            }();
+            auto p = make_prog(ctx_, my_loc());
+            p.add_function(
+                kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));
+            p.add_function(kernel(
+                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0), false));
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
             *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), source(src),

@@ -10,14 +10,14 @@
 namespace tinytc {
 
 template <typename FunctionPass> void run_function_pass(FunctionPass &&pass, tinytc_prog &p) {
-    for (auto &fun : p.functions()) {
-        pass.run_on_function(*fun);
+    for (auto &fun : p) {
+        pass.run_on_function(fun);
     }
 }
 
 template <typename FunctionPass> void run_function_pass(FunctionPass &&pass, tinytc_prog const &p) {
-    for (auto const &fun : p.functions()) {
-        pass.run_on_function(*fun);
+    for (auto const &fun : p) {
+        pass.run_on_function(fun);
     }
 }
 

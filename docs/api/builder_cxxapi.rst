@@ -217,35 +217,19 @@ Function
 
 * Functions
 
-  * :ref:`make_function`
-
-  * :ref:`set_work_group_size`
-
-  * :ref:`set_subgroup_size`
+  * :ref:`make_func`
 
 * Classes
 
   * :ref:`func`
 
-  * :ref:`function_builder`
-
 Function Functions
 ------------------
 
-make_function
-.............
+make_func
+.........
 
-.. doxygenfunction:: tinytc::make_function
-
-set_work_group_size
-...................
-
-.. doxygenfunction:: tinytc::set_work_group_size
-
-set_subgroup_size
-.................
-
-.. doxygenfunction:: tinytc::set_subgroup_size
+.. doxygenfunction:: tinytc::make_func
 
 Function Classes
 ----------------
@@ -254,11 +238,6 @@ func
 ....
 
 .. doxygenclass:: tinytc::func
-
-function_builder
-................
-
-.. doxygenclass:: tinytc::function_builder
 
 Instruction
 ===========
@@ -276,6 +255,14 @@ Instruction
   * :ref:`make_cast`
 
   * :ref:`make_cmp`
+
+  * :ref:`make_constant(std::complex\<double\>,tinytc_data_type_t,location const&)`
+
+  * :ref:`make_constant(double,tinytc_data_type_t,location const&)`
+
+  * :ref:`make_constant(std::int32_t,tinytc_data_type_t,location const&)`
+
+  * :ref:`make_constant(std::int64_t,tinytc_data_type_t,location const&)`
 
   * :ref:`make_expand`
 
@@ -357,6 +344,26 @@ make_cmp
 ........
 
 .. doxygenfunction:: tinytc::make_cmp
+
+make_constant(std::complex<double>,tinytc_data_type_t,location const&)
+......................................................................
+
+.. doxygenfunction:: tinytc::make_constant(std::complex<double>,tinytc_data_type_t,location const&)
+
+make_constant(double,tinytc_data_type_t,location const&)
+........................................................
+
+.. doxygenfunction:: tinytc::make_constant(double,tinytc_data_type_t,location const&)
+
+make_constant(std::int32_t,tinytc_data_type_t,location const&)
+..............................................................
+
+.. doxygenfunction:: tinytc::make_constant(std::int32_t,tinytc_data_type_t,location const&)
+
+make_constant(std::int64_t,tinytc_data_type_t,location const&)
+..............................................................
+
+.. doxygenfunction:: tinytc::make_constant(std::int64_t,tinytc_data_type_t,location const&)
 
 make_expand
 ...........
@@ -481,21 +488,19 @@ Program
 
 * Functions
 
-  * :ref:`make_program`
+  * :ref:`make_prog`
 
 * Classes
 
   * :ref:`prog`
 
-  * :ref:`program_builder`
-
 Program Functions
 -----------------
 
-make_program
-............
+make_prog
+.........
 
-.. doxygenfunction:: tinytc::make_program
+.. doxygenfunction:: tinytc::make_prog
 
 Program Classes
 ---------------
@@ -505,39 +510,48 @@ prog
 
 .. doxygenclass:: tinytc::prog
 
-program_builder
-...............
-
-.. doxygenclass:: tinytc::program_builder
-
 Region
 ======
 
 * Functions
 
-  * :ref:`make_region`
+  * :ref:`add_instruction`
+
+  * :ref:`get_num_parameters`
+
+  * :ref:`get_parameter`
+
+  * :ref:`get_parameters`
 
 * Classes
-
-  * :ref:`region`
 
   * :ref:`region_builder`
 
 Region Functions
 ----------------
 
-make_region
-...........
+add_instruction
+...............
 
-.. doxygenfunction:: tinytc::make_region
+.. doxygenfunction:: tinytc::add_instruction
+
+get_num_parameters
+..................
+
+.. doxygenfunction:: tinytc::get_num_parameters
+
+get_parameter
+.............
+
+.. doxygenfunction:: tinytc::get_parameter
+
+get_parameters
+..............
+
+.. doxygenfunction:: tinytc::get_parameters
 
 Region Classes
 --------------
-
-region
-......
-
-.. doxygenclass:: tinytc::region
 
 region_builder
 ..............
@@ -549,11 +563,11 @@ Value
 
 * Functions
 
-  * :ref:`make_fimm`
-
-  * :ref:`make_imm`
+  * :ref:`get_name`
 
   * :ref:`make_value`
+
+  * :ref:`set_name`
 
 * Classes
 
@@ -562,20 +576,20 @@ Value
 Value Functions
 ---------------
 
-make_fimm
-.........
-
-.. doxygenfunction:: tinytc::make_fimm
-
-make_imm
+get_name
 ........
 
-.. doxygenfunction:: tinytc::make_imm
+.. doxygenfunction:: tinytc::get_name
 
 make_value
 ..........
 
 .. doxygenfunction:: tinytc::make_value
+
+set_name
+........
+
+.. doxygenfunction:: tinytc::set_name
 
 Value Classes
 -------------

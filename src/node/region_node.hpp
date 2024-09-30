@@ -4,24 +4,26 @@
 #ifndef REGION_NODE_20230908_HPP
 #define REGION_NODE_20230908_HPP
 
-#include "node/inst_node.hpp"
 #include "support/ilist.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <type_traits>
+#include <vector>
 
 namespace tinytc {
 
 //! Instruction classification
 enum class region_kind { mixed = 0x0, collective = 0x1, spmd = 0x2 };
 
-template <> struct ilist_traits<inst_node> {
+template <> struct ilist_callbacks<tinytc_inst> {
     auto get_parent_region() -> tinytc_region *;
-    void node_added(inst_node *node) { node->parent(get_parent_region()); }
-    void node_removed(inst_node *node) { tinytc_inst_destroy(node); }
+    void node_added(tinytc_inst_t node);
+    void node_removed(tinytc_inst_t node);
 };
 
 } // namespace tinytc
@@ -31,9 +33,9 @@ struct tinytc_region final {
     using iterator = tinytc::ilist<tinytc_inst>::iterator;
     using const_iterator = tinytc::ilist<tinytc_inst>::const_iterator;
 
-    inline tinytc_region(tinytc::location const &lc = {}) : kind_(tinytc::region_kind::mixed) {
-        loc(lc);
-    }
+    tinytc_region(tinytc::array_view<tinytc_data_type_t> param_types = {},
+                  tinytc::location const &lc = {});
+    ~tinytc_region();
 
     inline auto kind() const noexcept -> tinytc::region_kind { return kind_; }
     inline void kind(tinytc::region_kind kind) noexcept { kind_ = kind; }
@@ -49,14 +51,27 @@ struct tinytc_region final {
     inline auto insts() const -> tinytc::ilist<tinytc_inst> const & { return insts_; }
     inline auto empty() const -> bool { return insts_.empty(); }
 
+    inline auto param_begin() { return params_.begin(); }
+    inline auto param_end() { return params_.end(); }
+    inline auto params() { return tinytc::iterator_range_wrapper{param_begin(), param_end()}; }
+    inline auto param_begin() const { return params_.begin(); }
+    inline auto param_end() const { return params_.end(); }
+    inline auto param(std::int64_t pos) const -> tinytc::value const & { return params_[pos]; }
+    inline auto params() const {
+        return tinytc::iterator_range_wrapper{param_begin(), param_end()};
+    }
+    inline auto num_params() const noexcept -> std::int64_t { return params_.size(); }
+    void add_param(tinytc_data_type_t param_type);
+
   private:
     static auto inst_list_offset() -> std::size_t {
         static_assert(std::is_standard_layout_v<tinytc_region>, "offsetof not guaranteed to work");
         return offsetof(tinytc_region, insts_);
     }
-    friend struct tinytc::ilist_traits<tinytc_inst>;
+    friend struct tinytc::ilist_callbacks<tinytc_inst>;
 
     tinytc::region_kind kind_;
+    std::vector<tinytc::value> params_;
     tinytc::ilist<tinytc_inst> insts_;
     tinytc::location loc_;
 };

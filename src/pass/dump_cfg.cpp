@@ -16,7 +16,7 @@ namespace tinytc {
 
 dump_cfg_pass::dump_cfg_pass(std::ostream &os) : os_(&os) {}
 
-void dump_cfg_pass::run_on_function(function_node const &fn) {
+void dump_cfg_pass::run_on_function(function_node &fn) {
     auto dump_ir = dump_ir_pass(*os_, 0);
 
     *os_ << "digraph " << fn.name() << " {" << std::endl;

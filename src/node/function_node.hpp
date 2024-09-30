@@ -13,44 +13,26 @@
 #include <cstdint>
 #include <string>
 #include <utility>
-#include <vector>
-
-namespace tinytc {
-using value_range = iterator_range_wrapper<value *>;
-using const_value_range = iterator_range_wrapper<value const *>;
-} // namespace tinytc
 
 struct tinytc_func final {
   public:
-    inline tinytc_func(std::string name, std::vector<tinytc::value> args, tinytc_region_t body,
+    inline tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
                        tinytc_location const &lc = {})
-        : name_(std::move(name)), args_(std::move(args)), body_(tinytc::region{body}),
-          work_group_size_{0, 0}, subgroup_size_{0}, loc_{lc} {
-        body_->kind(tinytc::region_kind::collective);
+        : name_(std::move(name)), body_(std::move(params)), work_group_size_{0, 0},
+          subgroup_size_{0}, loc_{lc} {
+        body_.kind(tinytc::region_kind::collective);
     }
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
 
-    inline auto arg_begin() -> tinytc::value * { return args_.size() > 0 ? args_.data() : nullptr; }
-    inline auto arg_end() -> tinytc::value * {
-        return args_.size() > 0 ? args_.data() + args_.size() : nullptr;
-    }
-    inline auto args() -> tinytc::value_range {
-        return tinytc::value_range{arg_begin(), arg_end()};
-    }
-    inline auto arg_begin() const -> tinytc::value const * {
-        return args_.size() > 0 ? args_.data() : nullptr;
-    }
-    inline auto arg_end() const -> tinytc::value const * {
-        return args_.size() > 0 ? args_.data() + args_.size() : nullptr;
-    }
-    inline auto args() const -> tinytc::const_value_range {
-        return tinytc::const_value_range{arg_begin(), arg_end()};
-    }
+    inline auto params() { return body_.params(); }
+    inline auto params() const { return body_.params(); }
+    inline auto num_params() const noexcept { return body_.num_params(); }
 
     inline auto name() const -> std::string_view { return name_; }
-    inline auto body() const -> tinytc_region & { return *body_; }
+    inline auto body() -> tinytc_region & { return body_; }
+    inline auto body() const -> tinytc_region const & { return body_; }
 
     inline auto work_group_size() const -> std::array<std::int32_t, 2> { return work_group_size_; }
     inline void work_group_size(std::array<std::int32_t, 2> const &work_group_size) {
@@ -61,8 +43,7 @@ struct tinytc_func final {
 
   private:
     std::string name_;
-    std::vector<tinytc::value> args_;
-    tinytc::region body_;
+    tinytc_region body_;
     std::array<std::int32_t, 2> work_group_size_;
     std::int32_t subgroup_size_;
     tinytc_location loc_;

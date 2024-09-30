@@ -14,7 +14,7 @@ class dump_cfg_pass {
   public:
     dump_cfg_pass(std::ostream &os);
 
-    void run_on_function(function_node const &fn);
+    void run_on_function(function_node &fn);
 
   private:
     std::ostream *os_;

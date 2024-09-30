@@ -123,9 +123,9 @@ void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
                         clir::expr beta, core_config const &core_cfg);
 
 using sgs_loop_body_builder_new =
-    std::function<void(region_builder &, value const &, bool, value const &)>;
+    std::function<void(region_builder &, tinytc_value_t, bool, tinytc_value_t)>;
 using uniform_loop_body_builder_new =
-    std::function<void(region_builder &, value const &, value const &)>;
+    std::function<void(region_builder &, tinytc_value_t, tinytc_value_t)>;
 
 void tile_loop_by_sgs_new(region_builder &bb, value const &loop_trip_count, int sgs, int num_tiles,
                           value const &sg_id, sgs_loop_body_builder_new const &body);

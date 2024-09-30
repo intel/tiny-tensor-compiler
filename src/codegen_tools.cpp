@@ -439,7 +439,7 @@ void tile_loop_by_sgs_new(region_builder &bb, value const &loop_trip_count, int 
 void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
                                    int num_tiles, value const &sg_id,
                                    sgs_loop_body_builder_new const &body) {
-    auto index_ty = get_scalar(bb.context(), scalar_type::index);
+    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
     std::int64_t blocks = loop_trip_count / sgs;
     std::int64_t rem = loop_trip_count % sgs;
 
@@ -453,22 +453,23 @@ void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_co
     if (blocks > 0) {
         auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
         bb.for_loop(
-            scalar_type::index, std::move(block_start), c_sgs_blocks, c_sgs_tiles,
-            [&](region_builder &bb, value const &block) { body(bb, block, false, c_sgs); },
+            std::move(block_start), c_sgs_blocks, c_sgs_tiles, index_ty,
+            [&](region_builder &bb, tinytc_value_t block) { body(bb, block, false, c_sgs.get()); },
             "block");
     }
 
     if (rem > 0) {
         auto condition = bb.add(make_cmp(cmp_condition::eq, sg_id_index, c_tiles_1));
-        bb.if_condition(condition,
-                        [&](region_builder &bb) { body(bb, c_sgs_blocks, true, c_rem); });
+        bb.if_condition(condition, [&](region_builder &bb) {
+            body(bb, c_sgs_blocks.get(), true, c_rem.get());
+        });
     }
 }
 
 void tile_loop_by_sgs_new_dynamic(region_builder &bb, value const &loop_trip_count, int sgs,
                                   int num_tiles, value const &sg_id,
                                   sgs_loop_body_builder_new const &body) {
-    auto index_ty = get_scalar(bb.context(), scalar_type::index);
+    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
     auto c_sgs = bb.add(make_constant(sgs, index_ty));
     auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, index_ty));
     auto c0 = bb.add(make_constant(0, index_ty));
@@ -481,15 +482,16 @@ void tile_loop_by_sgs_new_dynamic(region_builder &bb, value const &loop_trip_cou
     auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
     auto block_end = bb.add(make_arith(arithmetic::mul, c_sgs, blocks));
     bb.for_loop(
-        scalar_type::index, std::move(block_start), std::move(block_end), c_sgs_tiles,
-        [&](region_builder &bb, value const &block) { body(bb, block, false, c_sgs); }, "block");
+        std::move(block_start), std::move(block_end), c_sgs_tiles, index_ty,
+        [&](region_builder &bb, tinytc_value_t block) { body(bb, block, false, c_sgs.get()); },
+        "block");
 
     auto condition0 = bb.add(make_cmp(cmp_condition::gt, rem, c0));
     bb.if_condition(condition0, [&](region_builder &bb) {
         auto condition1 = bb.add(make_cmp(cmp_condition::eq, sg_id_index, c_tiles_1));
         bb.if_condition(condition1, [&](region_builder &bb) {
             auto block = bb.add(make_arith(arithmetic::mul, blocks, c_sgs));
-            body(bb, block, true, rem);
+            body(bb, block.get(), true, rem.get());
         });
     });
 }
@@ -504,7 +506,7 @@ void tile_loop_uniformly_new(region_builder &bb, value const &loop_trip_count, i
 void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,
                                       int block_size, int num_tiles, value const &sg_id,
                                       uniform_loop_body_builder_new const &body) {
-    auto index_ty = get_scalar(bb.context(), scalar_type::index);
+    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
     // Find minimum number of blocks such that the block sizes are smaller or equal block_size
     std::int64_t blocks = 1 + (loop_trip_count - 1) / block_size;
     // Increase the number of blocks if such that the number of blocks is a multiple
@@ -527,8 +529,9 @@ void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip
     if (rem > 0) {
         auto block_start = bb.add(make_arith(arithmetic::mul, c_bs_1, sg_id_index));
         bb.for_loop(
-            scalar_type::index, std::move(block_start), c_bs_1_rem, c_bs_1_tiles,
-            [&](region_builder &bb, value const &block) { body(bb, block, c_bs_1); }, "block");
+            std::move(block_start), c_bs_1_rem, c_bs_1_tiles, index_ty,
+            [&](region_builder &bb, tinytc_value_t block) { body(bb, block, c_bs_1.get()); },
+            "block");
     }
 
     auto tmp = bb.add(make_arith(arithmetic::add, sg_id_index, c_rem_mod_tiles));
@@ -536,14 +539,14 @@ void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip
     auto tmp2 = bb.add(make_arith(arithmetic::mul, c_bs, sg_id_1));
     auto block_start = bb.add(make_arith(arithmetic::add, c_bs_1_rem, tmp2));
     bb.for_loop(
-        scalar_type::index, std::move(block_start), c_loop_trip_count, c_bs_tiles,
-        [&](region_builder &bb, value const &block) { body(bb, block, c_bs); }, "block");
+        std::move(block_start), c_loop_trip_count, c_bs_tiles, index_ty,
+        [&](region_builder &bb, tinytc_value_t block) { body(bb, block, c_bs.get()); }, "block");
 }
 
 void tile_loop_uniformly_new_dynamic(region_builder &bb, value const &loop_trip_count,
                                      int block_size, int num_tiles, value const &sg_id,
                                      uniform_loop_body_builder_new const &body) {
-    auto index_ty = get_scalar(bb.context(), scalar_type::index);
+    auto index_ty = scalar_data_type::get(loop_trip_count->context(), scalar_type::index);
     auto c1 = bb.add(make_constant(1, index_ty));
     auto c_block_size = bb.add(make_constant(block_size, index_ty));
     auto c_tiles = bb.add(make_constant(num_tiles, index_ty));
@@ -568,8 +571,8 @@ void tile_loop_uniformly_new_dynamic(region_builder &bb, value const &loop_trip_
     auto block_end_1 = bb.add(make_arith(arithmetic::mul, bs_1, rem));
     auto step_1 = bb.add(make_arith(arithmetic::mul, bs_1, c_tiles));
     bb.for_loop(
-        scalar_type::index, std::move(block_start_1), std::move(block_end_1), std::move(step_1),
-        [&](region_builder &bb, value const &block) { body(bb, block, bs_1); }, "block");
+        std::move(block_start_1), std::move(block_end_1), std::move(step_1), index_ty,
+        [&](region_builder &bb, tinytc_value_t block) { body(bb, block, bs_1.get()); }, "block");
 
     auto tmp0 = bb.add(make_arith(arithmetic::rem, rem, c_tiles));
     auto tmp1 = bb.add(make_arith(arithmetic::add, sg_id_index, tmp0));
@@ -579,8 +582,8 @@ void tile_loop_uniformly_new_dynamic(region_builder &bb, value const &loop_trip_
     auto block_start = bb.add(make_arith(arithmetic::add, tmp3, tmp2));
     auto step = bb.add(make_arith(arithmetic::mul, bs, c_tiles));
     bb.for_loop(
-        scalar_type::index, std::move(block_start), loop_trip_count, std::move(step),
-        [&](region_builder &bb, value const &block) { body(bb, block, bs); }, "block");
+        std::move(block_start), loop_trip_count, std::move(step), index_ty,
+        [&](region_builder &bb, tinytc_value_t block) { body(bb, block, bs.get()); }, "block");
 }
 
 } // namespace tinytc

@@ -34,7 +34,7 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
     while (prev_it != reg.begin()) {
         auto &i = *(--prev_it);
         for (auto &subreg : i.child_regions()) {
-            rgn_ops.merge(run_on_region(*subreg, aa));
+            rgn_ops.merge(run_on_region(subreg, aa));
         }
         for (auto &v : i.operands()) {
             if (isa<memref_data_type>(*v->ty())) {

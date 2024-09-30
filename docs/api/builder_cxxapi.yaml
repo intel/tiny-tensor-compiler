@@ -36,12 +36,9 @@ Builder C++-API:
       - tinytc::to_scalar_type_v
   Function:
     function:
-      - tinytc::make_function
-      - tinytc::set_work_group_size
-      - tinytc::set_subgroup_size
+      - tinytc::make_func
     class:
       - tinytc::func
-      - tinytc::function_builder
   Instruction:
     function:
       - tinytc::make_alloca
@@ -80,18 +77,21 @@ Builder C++-API:
       - tinytc::inst
   Program:
     function:
-      - tinytc::make_program
+      - tinytc::make_prog
     class:
       - tinytc::prog
-      - tinytc::program_builder
   Region:
     function:
-      - tinytc::make_region
+      - tinytc::add_instruction
+      - tinytc::get_num_parameters
+      - tinytc::get_parameter
+      - tinytc::get_parameters
     class:
-      - tinytc::region
       - tinytc::region_builder
   Value:
     function:
+      - tinytc::get_name
       - tinytc::make_value
+      - tinytc::set_name
     class:
       - tinytc::value

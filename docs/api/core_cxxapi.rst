@@ -24,6 +24,8 @@ Common
 
 * Classes
 
+  * :ref:`array_view`
+
   * :ref:`shared_handle`
 
   * :ref:`unique_handle`
@@ -65,6 +67,11 @@ CHECK_STATUS_LOC
 
 Common Classes
 --------------
+
+array_view
+..........
+
+.. doxygenclass:: tinytc::array_view
 
 shared_handle
 .............

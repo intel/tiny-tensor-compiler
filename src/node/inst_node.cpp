@@ -54,16 +54,15 @@ blas_a3_inst::blas_a3_inst(IK tid, value alpha, value A, value B, value beta, va
     op(op_C) = std::move(C);
 }
 
-loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step0, region body0,
+loop_inst::loop_inst(IK tid, value from0, value to0, value step0, tinytc_data_type_t loop_var_type,
                      location const &lc)
-    : standard_inst{tid, step0 ? 4 : 3} {
-    op(op_loop_var) = std::move(loop_var0);
+    : standard_inst{tid, step0 ? 3 : 2} {
     op(op_from) = std::move(from0);
     op(op_to) = std::move(to0);
     op(op_step) = std::move(step0);
-    child_region(0) = std::move(body0);
-
+    body().add_param(loop_var_type);
     loc(lc);
+
     auto lvt = get_scalar_type(loc(), loop_var());
     auto fromt = get_scalar_type(loc(), from());
     auto tot = get_scalar_type(loc(), to());
@@ -73,7 +72,8 @@ loop_inst::loop_inst(IK tid, value loop_var0, value from0, value to0, value step
         step_ok = lvt->ty() == stept->ty();
     }
 
-    if (lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() || !step_ok) {
+    if (!is_integer_type(lvt->ty()) || lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() ||
+        !step_ok) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 }
@@ -202,22 +202,9 @@ constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, loc
 
     if (auto st = dyn_cast<scalar_data_type>(ty); st) {
         const auto type_ok = [](value_type const &val, scalar_type ty) {
-            switch (ty) {
-            case scalar_type::i1:
-            case scalar_type::i8:
-            case scalar_type::i16:
-            case scalar_type::i32:
-            case scalar_type::i64:
-            case scalar_type::index:
-                return std::holds_alternative<std::int64_t>(val);
-            case scalar_type::f32:
-            case scalar_type::f64:
-                return std::holds_alternative<double>(val);
-            case scalar_type::c32:
-            case scalar_type::c64:
-                return std::holds_alternative<std::complex<double>>(val);
-            }
-            return false;
+            return (is_integer_type(ty) && std::holds_alternative<std::int64_t>(val)) ||
+                   (is_floating_type(ty) && std::holds_alternative<double>(val)) ||
+                   (is_complex_type(ty) && std::holds_alternative<std::complex<double>>(val));
         };
         if (!type_ok(value_, st->ty())) {
             throw compilation_error(loc(), status::ir_scalar_mismatch);
@@ -426,15 +413,10 @@ ger_inst::ger_inst(value alpha0, value A0, value B0, value beta0, value C0, bool
     }
 }
 
-foreach_inst::foreach_inst(value loop_var, value from, value to, region body, location const &loc)
-    : loop_inst{IK::foreach_loop,
-                std::move(loop_var),
-                std::move(from),
-                std::move(to),
-                {},
-                std::move(body),
-                loc} {
-    child_region(0)->kind(region_kind::spmd);
+foreach_inst::foreach_inst(value from, value to, tinytc_data_type_t loop_var_type,
+                           location const &loc)
+    : loop_inst{IK::foreach_loop, std::move(from), std::move(to), {}, loop_var_type, loc} {
+    child_region(0).kind(region_kind::spmd);
 }
 
 hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, value C0, bool atomic,
@@ -462,23 +444,20 @@ hadamard_inst::hadamard_inst(value alpha0, value A0, value B0, value beta0, valu
     }
 }
 
-if_inst::if_inst(value condition, region then0, region otherwise0,
-                 std::vector<tinytc_data_type_t> const &return_types, location const &lc)
-    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size()), otherwise0 ? 2 : 1} {
+if_inst::if_inst(value condition, std::vector<tinytc_data_type_t> const &return_types,
+                 location const &lc)
+    : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
     op(0) = std::move(condition);
-    child_region(child_region_then) = std::move(then0);
-    child_region(child_region_otherwise) = std::move(otherwise0);
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         result(i) = make_value(return_types[i]);
     }
 }
 
-parallel_inst::parallel_inst(region body, location const &lc) : standard_inst{IK::parallel} {
-    child_region(0) = std::move(body);
+parallel_inst::parallel_inst(location const &lc) : standard_inst{IK::parallel} {
     loc(lc);
 
-    child_region(0)->kind(region_kind::spmd);
+    child_region(0).kind(region_kind::spmd);
 }
 
 size_inst::size_inst(value op0, std::int64_t mode, location const &lc)

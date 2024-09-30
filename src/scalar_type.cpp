@@ -32,6 +32,21 @@ bool is_complex_type(scalar_type ty) {
     return false;
 }
 
+bool is_integer_type(scalar_type ty) {
+    switch (ty) {
+    case scalar_type::i1:
+    case scalar_type::i8:
+    case scalar_type::i16:
+    case scalar_type::i32:
+    case scalar_type::i64:
+    case scalar_type::index:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 scalar_type element_type(scalar_type ty) {
     switch (ty) {
     case scalar_type::c32:

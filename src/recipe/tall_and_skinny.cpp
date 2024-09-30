@@ -104,8 +104,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 tiling[1] /= 2;
             }
 
-            auto const body = [&](region_builder &bb, value &alpha, value &A, value &B,
-                                  bool is_beta_nonzero, value &beta_arg, value &C) {
+            auto const body = [&](region_builder &bb, value const &alpha, value const &A,
+                                  value const &B, bool is_beta_nonzero, value const &beta_arg,
+                                  value const &C) {
                 auto c_M_block_size = bb.add(make_constant(M_block_size, index_ty, my_loc()));
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
                 auto m = bb.add(make_arith(arithmetic::mul, gid, c_M_block_size, my_loc()));
@@ -150,39 +151,39 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 }
             };
 
-            auto const kernel = [&](function_builder &fb, bool is_beta_nonzero) {
-                auto alpha = fb.argument(ty_, "alpha", my_loc());
-                auto A = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, K}, {1, ldA},
-                                                address_space::global, my_loc()),
-                                     "A", my_loc());
-                auto B = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {K, N}, {1, ldB},
-                                                address_space::global, my_loc()),
-                                     "B", my_loc());
-                auto beta_arg = fb.argument(ty_, "beta", my_loc());
-                auto C = fb.argument(get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N}, {1, ldC},
-                                                address_space::global, my_loc()),
-                                     "C", my_loc());
-                fb.subgroup_size(sgs);
+            auto const kernel = [&](char const *name, bool is_beta_nonzero) {
+                auto A_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, K}, {1, ldA},
+                                       address_space::global, my_loc());
+                auto B_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {K, N}, {1, ldB},
+                                       address_space::global, my_loc());
+                auto C_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N}, {1, ldC},
+                                       address_space::global, my_loc());
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
+                auto fn_body = f.get_body();
+                auto alpha = get_parameter(fn_body, 0);
+                set_name(alpha, "alpha");
+                auto A = get_parameter(fn_body, 1);
+                set_name(A, "A");
+                auto B = get_parameter(fn_body, 2);
+                set_name(B, "B");
+                auto beta = get_parameter(fn_body, 3);
+                set_name(beta, "beta");
+                auto C = get_parameter(fn_body, 4);
+                set_name(C, "C");
+                f.set_subgroup_size(sgs);
                 auto const wgs = tiling.work_group_size(sgs);
-                fb.work_group_size(wgs[0], wgs[1]);
+                f.set_work_group_size(wgs[0], wgs[1]);
 
-                fb.body(
-                    [&](region_builder &bb) {
-                        body(bb, alpha, A, B, is_beta_nonzero, beta_arg, C);
-                    },
-                    my_loc());
+                auto bb = region_builder{fn_body};
+                body(bb, value{alpha, true}, value{A, true}, value{B, true}, is_beta_nonzero,
+                     value{beta, true}, value{C, true});
+                return f;
             };
 
-            auto p = [&] {
-                auto pb = program_builder{ctx_, my_loc()};
-                pb.create(
-                    tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm),
-                    [&](function_builder &fb) { kernel(fb, true); }, my_loc());
-                pb.create(
-                    tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0),
-                    [&](function_builder &fb) { kernel(fb, false); }, my_loc());
-                return std::move(pb).get_product();
-            }();
+            auto p = make_prog(ctx_, my_loc());
+            p.add_function(kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm), true));
+            p.add_function(
+                kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0), false));
             tinytc_source_t src;
             CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
             *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src),

@@ -6,6 +6,7 @@
 
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "node/region_node.hpp"
 #include "support/ilist.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
@@ -85,8 +86,9 @@ using inst_nodes =
 
 using value_range = iterator_range_wrapper<value *>;
 using const_value_range = iterator_range_wrapper<value const *>;
-using region_range = iterator_range_wrapper<region *>;
-using const_region_range = iterator_range_wrapper<region const *>;
+
+using region_range = iterator_range_wrapper<tinytc_region_t>;
+using const_region_range = iterator_range_wrapper<const_tinytc_region_t>;
 
 } // namespace tinytc
 
@@ -138,25 +140,23 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline auto num_results() const -> std::int64_t { return result_end_ - result_begin_; }
 
     // Iterator over regions
-    inline auto child_regions_begin() -> tinytc::region * { return child_regions_begin_; }
-    inline auto child_regions_end() -> tinytc::region * { return child_regions_end_; }
+    inline auto child_regions_begin() -> tinytc_region_t { return child_regions_begin_; }
+    inline auto child_regions_end() -> tinytc_region_t { return child_regions_end_; }
     inline auto child_regions() -> tinytc::region_range {
         return tinytc::region_range{child_regions_begin(), child_regions_end()};
     }
-    inline auto child_regions_begin() const -> tinytc::region const * {
+    inline auto child_regions_begin() const -> const_tinytc_region_t {
         return child_regions_begin_;
     }
-    inline auto child_regions_end() const -> tinytc::region const * { return child_regions_end_; }
+    inline auto child_regions_end() const -> const_tinytc_region_t { return child_regions_end_; }
     inline auto child_regions() const -> tinytc::const_region_range {
         return tinytc::const_region_range{child_regions_begin(), child_regions_end()};
     }
-    inline auto child_region(std::size_t pos) -> tinytc::region & {
+    auto child_region(std::size_t pos) -> tinytc_region & { return child_regions_begin_[pos]; }
+    auto child_region(std::size_t pos) const -> tinytc_region const & {
         return child_regions_begin_[pos];
     }
-    inline auto child_region(std::size_t pos) const -> tinytc::region const & {
-        return child_regions_begin_[pos];
-    }
-    inline auto num_child_regions() const -> std::int64_t {
+    auto num_child_regions() const -> std::int64_t {
         return child_regions_end_ - child_regions_begin_;
     }
 
@@ -215,7 +215,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
         result_begin_ = begin;
         result_end_ = end;
     }
-    inline auto child_regions_range(tinytc::region *begin, tinytc::region *end) {
+    inline auto child_regions_range(tinytc_region_t begin, tinytc_region_t end) {
         child_regions_begin_ = begin;
         child_regions_end_ = end;
     }
@@ -225,7 +225,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     tinytc::location loc_;
     tinytc::value *op_begin_ = nullptr, *op_end_ = nullptr, *result_begin_ = nullptr,
                   *result_end_ = nullptr;
-    tinytc::region *child_regions_begin_ = nullptr, *child_regions_end_ = nullptr;
+    tinytc_region_t child_regions_begin_ = nullptr, child_regions_end_ = nullptr;
 };
 
 namespace tinytc {
@@ -284,7 +284,7 @@ class standard_inst : public inst_node {
   private:
     object_container<value, NumOperands> ops_;
     object_container<value, NumResults> results_;
-    object_container<region, NumChildRegions> child_regions_;
+    object_container<tinytc_region, NumChildRegions> child_regions_;
 };
 
 class blas_a2_inst : public standard_inst<4, 0> {
@@ -326,20 +326,20 @@ class blas_a3_inst : public standard_inst<5, 0> {
     bool atomic_;
 };
 
-class loop_inst : public standard_inst<4, 0, 1> {
+class loop_inst : public standard_inst<3, 0, 1> {
   public:
     inline static bool classof(inst_node const &i) {
         return i.type_id() >= IK::loop && i.type_id() <= IK::last_loop;
     }
-    enum op_number { op_loop_var = 0, op_from = 1, op_to = 2, op_step = 3 };
-    loop_inst(IK tid, value loop_var, value from, value to, value step, region body,
+    enum op_number { op_from = 0, op_to = 1, op_step = 2 };
+    loop_inst(IK tid, value from, value to, value step, tinytc_data_type_t loop_var_type,
               location const &loc = {});
-    inline auto loop_var() const -> value const & { return op(op_loop_var); }
     inline auto from() const -> value const & { return op(op_from); }
     inline auto to() const -> value const & { return op(op_to); }
     inline auto step() const -> value const & { return op(op_step); }
-    inline auto body() -> tinytc_region & { return *child_region(0); }
-    inline auto body() const -> tinytc_region const & { return *child_region(0); }
+    inline auto body() -> tinytc_region & { return child_region(0); }
+    inline auto body() const -> tinytc_region const & { return child_region(0); }
+    inline auto loop_var() const -> value const & { return body().param(0); }
 };
 
 class alloca_inst : public standard_inst<0, 1> {
@@ -553,23 +553,19 @@ class ger_inst : public blas_a3_inst {
 class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
-    inline for_inst(value loop_var, value from, value to, region body, location const &loc = {})
-        : for_inst{std::move(loop_var), std::move(from), std::move(to), {}, std::move(body), loc} {}
-    inline for_inst(value loop_var, value from, value to, value step, region body,
+    inline for_inst(value from, value to, tinytc_data_type_t loop_var_type,
                     location const &loc = {})
-        : loop_inst{IK::for_loop,
-                    std::move(loop_var),
-                    std::move(from),
-                    std::move(to),
-                    std::move(step),
-                    std::move(body),
-                    loc} {}
+        : for_inst{std::move(from), std::move(to), {}, loop_var_type, loc} {}
+    inline for_inst(value from, value to, value step, tinytc_data_type_t loop_var_type,
+                    location const &loc = {})
+        : loop_inst{IK::for_loop,    std::move(from), std::move(to),
+                    std::move(step), loop_var_type,   loc} {}
 };
 
 class foreach_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::foreach_loop; }
-    foreach_inst(value loop_var, value from, value to, region body, location const &loc = {});
+    foreach_inst(value from, value to, tinytc_data_type_t loop_var_type, location const &loc = {});
 };
 
 class hadamard_inst : public blas_a3_inst {
@@ -583,16 +579,16 @@ class if_inst : public standard_inst<1, dynamic, 2> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::if_; }
     enum child_region_number { child_region_then = 0, child_region_otherwise = 1 };
-    if_inst(value condition, region then, region otherwise = {},
-            std::vector<tinytc_data_type_t> const &return_types = {}, location const &lc = {});
+    if_inst(value condition, std::vector<tinytc_data_type_t> const &return_types = {},
+            location const &lc = {});
     inline auto condition() const -> value const & { return op(0); }
-    inline auto then() -> tinytc_region & { return *child_region(child_region_then); }
-    inline auto then() const -> tinytc_region const & { return *child_region(child_region_then); }
-    inline auto has_otherwise() const -> bool { return bool(child_region(child_region_otherwise)); }
-    inline auto otherwise() -> tinytc_region & { return *child_region(child_region_otherwise); }
+    inline auto then() -> tinytc_region & { return child_region(child_region_then); }
+    inline auto then() const -> tinytc_region const & { return child_region(child_region_then); }
+    inline auto otherwise() -> tinytc_region & { return child_region(child_region_otherwise); }
     inline auto otherwise() const -> tinytc_region const & {
-        return *child_region(child_region_otherwise);
+        return child_region(child_region_otherwise);
     }
+    inline bool is_otherwise_empty() const { return otherwise().insts().empty(); }
 };
 
 class num_subgroups_inst : public standard_inst<0, 1> {
@@ -608,10 +604,10 @@ class num_subgroups_inst : public standard_inst<0, 1> {
 class parallel_inst : public standard_inst<0, 0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::parallel; }
-    parallel_inst(region body, location const &lc = {});
+    parallel_inst(location const &lc = {});
 
-    inline auto body() -> tinytc_region & { return *child_region(0); }
-    inline auto body() const -> tinytc_region const & { return *child_region(0); }
+    inline auto body() -> tinytc_region & { return child_region(0); }
+    inline auto body() const -> tinytc_region const & { return child_region(0); }
 };
 
 class size_inst : public standard_inst<1, 1> {

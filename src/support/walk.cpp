@@ -14,7 +14,7 @@ void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage
         callback(i, stage);
         stage.advance();
 
-        for (auto &j : *reg) {
+        for (auto &j : reg) {
             walk(j, callback);
         }
     }

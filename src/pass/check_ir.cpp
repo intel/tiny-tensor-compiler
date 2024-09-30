@@ -14,7 +14,7 @@ namespace tinytc {
 void check_ir_pass::run_on_function(function_node &fn) {
     walk(fn, [this](inst_node const &i, walk_stage const &stage) {
         const bool child_region_is_spmd_region =
-            i.num_child_regions() > 0 && i.child_region(0)->kind() == region_kind::spmd;
+            i.num_child_regions() > 0 && i.child_region(0).kind() == region_kind::spmd;
 
         if (stage.is_before_all_regions()) {
             if (i.kind() == inst_execution_kind::collective && inside_spmd_region_) {

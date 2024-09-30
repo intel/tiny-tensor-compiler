@@ -25,8 +25,8 @@ using namespace tinytc;
 
 extern "C" {
 
-tinytc_status_t tinytc_program_create(tinytc_prog_t *prg, tinytc_compiler_context_t ctx,
-                                      const tinytc_location_t *loc) {
+tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_compiler_context_t ctx,
+                                   const tinytc_location_t *loc) {
     if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -40,7 +40,7 @@ tinytc_status_t tinytc_prog_add_function(tinytc_prog_t prg, tinytc_func_t fun) {
     if (prg == nullptr || fun == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { prg->push_back(fun); });
+    return exception_to_status_code([&] { prg->push_back(tinytc::func{fun}); });
 }
 
 tinytc_status_t tinytc_prog_release(tinytc_prog_t obj) {

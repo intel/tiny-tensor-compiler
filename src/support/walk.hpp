@@ -35,7 +35,7 @@ template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node
         callback(i);
     }
     for (auto &reg : i.child_regions()) {
-        for (auto &j : *reg) {
+        for (auto &j : reg) {
             walk<Order>(j, callback);
         }
     }
@@ -48,13 +48,13 @@ template <walk_order Order>
 void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
     for (auto &reg : i.child_regions()) {
         if constexpr (Order == walk_order::pre_order) {
-            callback(*reg);
+            callback(reg);
         }
-        for (auto &j : *reg) {
+        for (auto &j : reg) {
             walk<Order>(j, callback);
         }
         if constexpr (Order == walk_order::post_order) {
-            callback(*reg);
+            callback(reg);
         }
     }
 }

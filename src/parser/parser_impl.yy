@@ -6,26 +6,29 @@
 
 %code requires {
     #include "node/function_node.hpp"
+    #include "node/inst_node.hpp"
     #include "tinytc/tinytc.hpp"
     #include "tinytc/types.hpp"
     #include <algorithm>
     #include <cstdint>
     #include <functional>
+    #include <memory>
     #include <new>
     #include <utility>
+    #include <variant>
 
     namespace tinytc {
         class parse_context;
         class lexer;
 
         using int_or_val = std::variant<std::int64_t, ::tinytc::value>;
+        using unique_ptr_to_if_inst = std::unique_ptr<if_inst>;
     }
 }
 
 %code {
     #include "error.hpp"
     #include "node/data_type_node.hpp"
-    #include "node/inst_node.hpp"
     #include "node/program_node.hpp"
     #include "node/region_node.hpp"
     #include "node/value_node.hpp"
@@ -37,12 +40,11 @@
     #include <array>
     #include <cstdint>
     #include <cstdlib>
-    #include <memory>
     #include <utility>
-    #include <variant>
     #include <vector>
 
     namespace tinytc {
+
     void check_scalar_type(compiler_context const &ctx, value &val, scalar_type const &sty,
                            location &loc1, location &loc2) {
          if (val->ty() != get_scalar(ctx, sty)) {
@@ -148,8 +150,8 @@
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
 %nterm <func> func
-%nterm <std::vector<::tinytc::value>> arguments
-%nterm <::tinytc::value> argument
+%nterm <std::pair<std::vector<std::string>,std::vector<tinytc_data_type_t>>> parameters
+%nterm <std::pair<std::string,tinytc_data_type_t>> parameter
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
@@ -163,9 +165,7 @@
 %nterm <tinytc_data_type_t> group_type
 %nterm <std::int64_t> group_offset
 %nterm <tinytc_data_type_t> memref_or_group_type
-%nterm <region> region
 %nterm <::tinytc::value> var
-%nterm <std::vector<inst>> instructions
 %nterm <inst> instruction
 %nterm <inst> axpby_inst
 %nterm <bool> atomic
@@ -186,10 +186,9 @@
 %nterm <std::vector<tinytc_data_type_t>> optional_returned_values
 %nterm <std::vector<tinytc_data_type_t>> optional_scalar_type_list
 %nterm <std::vector<tinytc_data_type_t>> scalar_type_list
-%nterm <region> else_region
 %nterm <inst> sum_inst
 %nterm <inst> yield_inst
-%nterm <scalar_type> for_loop_var_type
+%nterm <tinytc_data_type_t> for_loop_var_type
 %nterm <inst> var_definition
 %nterm <std::vector<std::string>> identifier_list
 %nterm <inst> valued_inst
@@ -236,34 +235,52 @@ func_list:
   | func_list func { $$ = std::move($1); $$.emplace_back(std::move($func)); }
 
 func:
-    FUNC {
-        ctx.push_scope();
-    } GLOBAL_IDENTIFIER LPAREN arguments RPAREN attributes region {
+    FUNC GLOBAL_IDENTIFIER LPAREN parameters RPAREN attributes <func>{
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
-        auto func_node = std::make_unique<function_node>($GLOBAL_IDENTIFIER, std::move($arguments),
-                                                         $region.release(), loc)
-                             .release();
-        for (auto &attr : $attributes) {
-            attr(*func_node);
+        try {
+            auto func_node =
+                std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second, loc);
+            for (auto &attr : $attributes) {
+                attr(*func_node);
+            }
+            ctx.push_scope();
+            auto name_it = $parameters.first.begin();
+            for (auto &p : func_node->params()) {
+                p.name(*name_it);
+                ctx.val(*name_it, p, @parameters);
+                ++name_it;
+            }
+            ctx.push_region(&func_node->body());
+            $$ = func{func_node.release()};
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
         }
-        $func = func{func_node};
+    }[prototype] region {
+        ctx.pop_region();
         ctx.pop_scope();
+        $$ = std::move($prototype);
     }
 ;
 
-arguments:
+parameters:
     %empty {}
-  | argument { $$.emplace_back(std::move($argument)); }
-  | arguments COMMA argument { $$ = std::move($1); $$.emplace_back(std::move($argument)); }
+  | parameter {
+        $$.first.emplace_back(std::move($parameter.first));
+        $$.second.emplace_back(std::move($parameter.second));
+    }
+  | parameters COMMA parameter {
+        $$.first = std::move($1.first);
+        $$.second = std::move($1.second);
+        $$.first.emplace_back(std::move($parameter.first));
+        $$.second.emplace_back(std::move($parameter.second));
+    }
 ;
 
-argument:
+parameter:
     LOCAL_IDENTIFIER COLON data_type {
-        auto v = make_value(std::move($data_type));
-        v.name($LOCAL_IDENTIFIER);
-        ctx.val($LOCAL_IDENTIFIER, v, @LOCAL_IDENTIFIER);
-        $$ = std::move(v);
+        $$ = std::make_pair($LOCAL_IDENTIFIER, $data_type);
     }
 ;
 
@@ -373,27 +390,23 @@ memref_or_group_type:
   | group_type
 ;
 
-region:
-    LBRACE {
-        ctx.push_scope();
-    } instructions RBRACE {
-        $$ = region{std::make_unique<region_node>(@region).release()};
-        for (auto& i : $instructions) {
-            $$.add_instruction(std::move(i));
-        }
-        ctx.pop_scope();
-    }
-;
-
 var:
     LOCAL_IDENTIFIER { $$ = ctx.val($LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER); }
+;
+
+region:
+    LBRACE { ctx.push_scope(); } instructions { ctx.pop_scope(); } RBRACE {}
 ;
 
 instructions:
     %empty {}
   | instructions instruction {
-        $$ = std::move($1);
-        $$.emplace_back(std::move($instruction));
+        if (!ctx.has_regions()) {
+            error(@instruction, "Internal error: missing region");
+            YYERROR;
+        }
+        tinytc_region_t reg = ctx.top_region();
+        reg->insts().push_back($instruction.release());
     }
 ;
 
@@ -553,28 +566,30 @@ ger_inst:
 ;
 
 for_inst:
-    FOR LOCAL_IDENTIFIER[loop_var]
-        EQUALS var[from] COMMA var[to] optional_step
-        for_loop_var_type {
-        check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
+    FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step for_loop_var_type <inst>{
+        check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
+        check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
         if ($optional_step) {
-            check_scalar_type(ctx.cctx(), $optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
+            check_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
-        auto v = make_value(get_scalar(ctx.cctx(), $for_loop_var_type));
-        v.name($loop_var);
-        ctx.val($loop_var, std::move(v), @loop_var);
-    } region {
         try {
-            $$ = inst {
-                std::make_unique<for_inst>(ctx.val($loop_var, @loop_var), $from, $to,
-                                           $optional_step, std::move($region), @for_inst)
-                    .release()
-            };
+            location loc = @FOR;
+            loc.end = @for_loop_var_type.end;
+            auto inode = std::make_unique<for_inst>($from, $to, $optional_step, $for_loop_var_type, loc);
+            ctx.push_scope();
+            auto loop_var = inode->loop_var();
+            loop_var->name($loop_var);
+            ctx.val($loop_var, std::move(loop_var), @loop_var);
+            ctx.push_region(&inode->body());
+            $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
         }
+    }[loop_header] region {
+        ctx.pop_region();
+        ctx.pop_scope();
+        $$ = std::move($loop_header);
     }
 ;
 
@@ -583,30 +598,34 @@ optional_step:
   | COMMA var { $$ = $var; }
 
 foreach_inst:
-    FOREACH LOCAL_IDENTIFIER[loop_var]
-        EQUALS var[from] COMMA var[to] for_loop_var_type {
-        check_scalar_type(ctx.cctx(), $from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_scalar_type(ctx.cctx(), $to, $for_loop_var_type, @to, @for_loop_var_type);
-        auto v = make_value(get_scalar(ctx.cctx(), $for_loop_var_type));
-        v.name($loop_var);
-        ctx.val($loop_var, std::move(v), @loop_var);
-    } region {
+    FOREACH LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] for_loop_var_type <inst>{
+        check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
+        check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
         try {
-            $$ = inst {
-                std::make_unique<foreach_inst>(ctx.val($loop_var, @loop_var), $from, $to,
-                                               std::move($region), @foreach_inst)
-                    .release()
-            };
+            location loc = @FOREACH;
+            loc.end = @for_loop_var_type.end;
+            auto inode =
+                std::make_unique<foreach_inst>($from, $to, $for_loop_var_type, loc);
+            ctx.push_scope();
+            auto loop_var = inode->loop_var();
+            loop_var->name($loop_var);
+            ctx.val($loop_var, std::move(loop_var), @loop_var);
+            ctx.push_region(&inode->body());
+            $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
             YYERROR;
         }
+    }[loop_header] region {
+        ctx.pop_region();
+        ctx.pop_scope();
+        $$ = std::move($loop_header);
     }
 ;
 
 for_loop_var_type:
-    %empty { $$ = scalar_type::index; }
-  | COLON INTEGER_TYPE { $$ = $INTEGER_TYPE; }
+    %empty { $$ = get_scalar(ctx.cctx(), scalar_type::index); }
+  | COLON INTEGER_TYPE { $$ = get_scalar(ctx.cctx(), $INTEGER_TYPE); }
 ;
 
 var_definition:
@@ -943,19 +962,31 @@ group_size_inst:
 ;
 
 if_inst:
-    IF var[condition] optional_returned_values region else_region {
+    IF var[condition] optional_returned_values <unique_ptr_to_if_inst>{
         check_scalar_type(ctx.cctx(), $condition, scalar_type::i1, @condition, @condition);
-        $$ = inst{std::make_unique<if_inst>(std::move($condition), std::move($region),
-                                            std::move($else_region),
-                                            std::move($optional_returned_values))
-                      .release()};
-        $$->loc(@if_inst);
+        try {
+            auto loc = @IF;
+            loc.end = @optional_returned_values.end;
+            auto inode = std::make_unique<if_inst>(std::move($condition),
+                                                   std::move($optional_returned_values), loc);
+            ctx.push_region(&inode->then());
+            $$ = std::move(inode);
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }[header] region {
+        ctx.pop_region();
+        ctx.push_region(&$header->otherwise());
+    } else_region {
+        ctx.pop_region();
+        $$ = inst{$header.release()};
     }
 ;
 
 else_region:
-    %empty { $$ = {}; }
-  | ELSE region{ $$ = std::move($region); }
+    %empty {}
+  | ELSE region {}
 ;
 
 optional_returned_values:
@@ -980,8 +1011,18 @@ num_subgroups_inst:
 ;
 
 parallel_inst:
-    PARALLEL region {
-        $$ = inst{std::make_unique<parallel_inst>(std::move($region), @parallel_inst) .release()};
+    PARALLEL <inst>{
+        try {
+            auto inode = std::make_unique<parallel_inst>(@PARALLEL);
+            ctx.push_region(&inode->body());
+            $$ = inst{inode.release()};
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }[header] region {
+        ctx.pop_region();
+        $$ = std::move($header);
     }
 ;
 

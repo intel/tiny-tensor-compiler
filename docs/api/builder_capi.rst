@@ -270,31 +270,38 @@ Function
 
 * Functions
 
-  * :ref:`tinytc_function_create`
+  * :ref:`tinytc_func_create`
 
-  * :ref:`tinytc_function_set_subgroup_size`
+  * :ref:`tinytc_func_set_subgroup_size`
 
-  * :ref:`tinytc_function_set_work_group_size`
+  * :ref:`tinytc_func_set_work_group_size`
+
+  * :ref:`tinytc_func_get_body`
 
   * :ref:`tinytc_func_destroy`
 
 Function Functions
 ------------------
 
-tinytc_function_create
-......................
+tinytc_func_create
+..................
 
-.. doxygenfunction:: tinytc_function_create
+.. doxygenfunction:: tinytc_func_create
 
-tinytc_function_set_subgroup_size
-.................................
+tinytc_func_set_subgroup_size
+.............................
 
-.. doxygenfunction:: tinytc_function_set_subgroup_size
+.. doxygenfunction:: tinytc_func_set_subgroup_size
 
-tinytc_function_set_work_group_size
-...................................
+tinytc_func_set_work_group_size
+...............................
 
-.. doxygenfunction:: tinytc_function_set_work_group_size
+.. doxygenfunction:: tinytc_func_set_work_group_size
+
+tinytc_func_get_body
+....................
+
+.. doxygenfunction:: tinytc_func_get_body
 
 tinytc_func_destroy
 ...................
@@ -317,6 +324,12 @@ Instruction
   * :ref:`tinytc_cast_inst_create`
 
   * :ref:`tinytc_cmp_inst_create`
+
+  * :ref:`tinytc_constant_inst_create_complex`
+
+  * :ref:`tinytc_constant_inst_create_float`
+
+  * :ref:`tinytc_constant_inst_create_int`
 
   * :ref:`tinytc_expand_inst_create`
 
@@ -362,6 +375,10 @@ Instruction
 
   * :ref:`tinytc_yield_inst_create`
 
+  * :ref:`tinytc_inst_get_region`
+
+  * :ref:`tinytc_inst_get_regions`
+
   * :ref:`tinytc_inst_get_value`
 
   * :ref:`tinytc_inst_get_values`
@@ -400,6 +417,21 @@ tinytc_cmp_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_cmp_inst_create
+
+tinytc_constant_inst_create_complex
+...................................
+
+.. doxygenfunction:: tinytc_constant_inst_create_complex
+
+tinytc_constant_inst_create_float
+.................................
+
+.. doxygenfunction:: tinytc_constant_inst_create_float
+
+tinytc_constant_inst_create_int
+...............................
+
+.. doxygenfunction:: tinytc_constant_inst_create_int
 
 tinytc_expand_inst_create
 .........................
@@ -511,6 +543,16 @@ tinytc_yield_inst_create
 
 .. doxygenfunction:: tinytc_yield_inst_create
 
+tinytc_inst_get_region
+......................
+
+.. doxygenfunction:: tinytc_inst_get_region
+
+tinytc_inst_get_regions
+.......................
+
+.. doxygenfunction:: tinytc_inst_get_regions
+
 tinytc_inst_get_value
 .....................
 
@@ -531,7 +573,7 @@ Program
 
 * Functions
 
-  * :ref:`tinytc_program_create`
+  * :ref:`tinytc_prog_create`
 
   * :ref:`tinytc_prog_add_function`
 
@@ -550,10 +592,10 @@ Program
 Program Functions
 -----------------
 
-tinytc_program_create
-.....................
+tinytc_prog_create
+..................
 
-.. doxygenfunction:: tinytc_program_create
+.. doxygenfunction:: tinytc_prog_create
 
 tinytc_prog_add_function
 ........................
@@ -595,38 +637,34 @@ Region
 
 * Functions
 
-  * :ref:`tinytc_region_create`
-
   * :ref:`tinytc_region_add_instruction`
 
-  * :ref:`tinytc_region_destroy`
+  * :ref:`tinytc_region_get_parameter`
+
+  * :ref:`tinytc_region_get_parameters`
 
 Region Functions
 ----------------
-
-tinytc_region_create
-....................
-
-.. doxygenfunction:: tinytc_region_create
 
 tinytc_region_add_instruction
 .............................
 
 .. doxygenfunction:: tinytc_region_add_instruction
 
-tinytc_region_destroy
-.....................
+tinytc_region_get_parameter
+...........................
 
-.. doxygenfunction:: tinytc_region_destroy
+.. doxygenfunction:: tinytc_region_get_parameter
+
+tinytc_region_get_parameters
+............................
+
+.. doxygenfunction:: tinytc_region_get_parameters
 
 Value
 =====
 
 * Functions
-
-  * :ref:`tinytc_float_imm_create`
-
-  * :ref:`tinytc_int_imm_create`
 
   * :ref:`tinytc_value_create`
 
@@ -634,22 +672,14 @@ Value
 
   * :ref:`tinytc_value_set_name`
 
+  * :ref:`tinytc_value_set_name_n`
+
   * :ref:`tinytc_value_release`
 
   * :ref:`tinytc_value_retain`
 
 Value Functions
 ---------------
-
-tinytc_float_imm_create
-.......................
-
-.. doxygenfunction:: tinytc_float_imm_create
-
-tinytc_int_imm_create
-.....................
-
-.. doxygenfunction:: tinytc_int_imm_create
 
 tinytc_value_create
 ...................
@@ -665,6 +695,11 @@ tinytc_value_set_name
 .....................
 
 .. doxygenfunction:: tinytc_value_set_name
+
+tinytc_value_set_name_n
+.......................
+
+.. doxygenfunction:: tinytc_value_set_name_n
 
 tinytc_value_release
 ....................

@@ -7,6 +7,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <stack>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -16,14 +17,10 @@ namespace tinytc {
 
 class parse_context {
   public:
-    inline parse_context(compiler_context compiler_ctx) : compiler_ctx_(compiler_ctx) {
-        id_map_.push_back({});
-    }
+    parse_context(compiler_context compiler_ctx);
     inline auto program() { return program_; }
     inline void program(prog p) { program_ = std::move(p); }
 
-    void push_scope();
-    void pop_scope();
     void val(std::string const &id, value val, location const &l);
     value val(std::string const &id, location const &l);
 
@@ -31,9 +28,18 @@ class parse_context {
 
     auto cctx() -> compiler_context const & { return compiler_ctx_; }
 
+    void push_scope();
+    void pop_scope();
+
+    void push_region(tinytc_region_t r);
+    void pop_region();
+    auto top_region() -> tinytc_region_t;
+    auto has_regions() -> bool;
+
   private:
     compiler_context compiler_ctx_;
     std::vector<std::unordered_map<std::string, value>> id_map_;
+    std::stack<tinytc_region_t> regions_;
     prog program_;
 };
 

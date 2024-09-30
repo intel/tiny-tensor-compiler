@@ -8,9 +8,12 @@
 
 namespace tinytc {
 
-template <typename NodeT> struct ilist_traits;
+template <typename NodeT> struct ilist_callbacks {
+    void node_added(NodeT *) {}
+    void node_removed(NodeT *) {}
+};
 
-template <typename NodeT, typename IListCallback = ilist_traits<NodeT>>
+template <typename NodeT, typename IListCallback = ilist_callbacks<NodeT>>
 class ilist : public ilist_base<NodeT, IListCallback> {
   public:
     ilist() = default;

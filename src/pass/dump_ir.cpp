@@ -297,7 +297,7 @@ void dump_ir_pass::operator()(if_inst const &in) {
     dump_val(*in.condition());
     *os_ << " ";
     dump_region(in.then());
-    if (in.has_otherwise()) {
+    if (!in.is_otherwise_empty()) {
         *os_ << " else ";
         dump_region(in.otherwise());
     }
@@ -423,7 +423,7 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     std::string infix = ",\n       ";
     infix += std::string(fn.name().size(), ' ');
     do_with_infix(
-        fn.args().begin(), fn.args().end(),
+        fn.params().begin(), fn.params().end(),
         [this](auto const &a) {
             dump_val(*a);
             *os_ << ": ";

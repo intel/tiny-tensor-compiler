@@ -842,7 +842,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(if_inst const &in) {
     }
     auto ib = clir::if_selection_builder(val(*in.condition()));
     ib.set_then(run_on_region(in.then()));
-    if (in.has_otherwise()) {
+    if (!in.is_otherwise_empty()) {
         ib.set_otherwise(run_on_region(in.otherwise()));
     }
     yielded_vars_.pop_back();
@@ -1093,7 +1093,7 @@ auto convert_to_opencl_pass::run_on_function(function_node const &fn) -> clir::f
 
     // Create prototype
     auto fb = clir::kernel_builder(std::string(fn.name()));
-    for (auto const &v : fn.args()) {
+    for (auto const &v : fn.params()) {
         fb.argument(visit(*this, *v->ty()), declare(*v));
         auto dv = visit(
             overloaded{[&fb, &v](memref_data_type const &) -> std::optional<dope_vector> {
@@ -1136,13 +1136,13 @@ auto convert_to_opencl_pass::run_on_function(function_node const &fn) -> clir::f
 /* Program nodes */
 auto convert_to_opencl_pass::run_on_program(program_node const &p) -> clir::prog {
     reserved_names_.clear();
-    for (auto const &fn : p.functions()) {
-        reserved_names_.insert(std::string(fn->name()));
+    for (auto const &fn : p) {
+        reserved_names_.insert(std::string(fn.name()));
     }
 
     prog_builder_ = clir::program_builder{};
-    for (auto const &fn : p.functions()) {
-        prog_builder_.add(run_on_function(*fn));
+    for (auto const &fn : p) {
+        prog_builder_.add(run_on_function(fn));
     }
     return prog_builder_.get_product();
 }
