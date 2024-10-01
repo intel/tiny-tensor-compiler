@@ -274,8 +274,7 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
         stride.push_back(m->stride(i));
     }
 
-    auto result_ty =
-        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace());
+    auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
     result(0) = value_node{result_ty, lc};
 }
 
@@ -311,8 +310,7 @@ fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, loc
         shape.push_back(m->shape(i));
         stride.push_back(m->stride(i));
     }
-    auto result_ty =
-        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace());
+    auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
     result(0) = value_node{result_ty, lc};
 }
 
@@ -535,8 +533,7 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
         }
     }
 
-    auto result_ty =
-        memref_data_type::get(m->context(), m->element_ty(), shape, stride, m->addrspace());
+    auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
     result(0) = value_node{result_ty, lc};
 }
 

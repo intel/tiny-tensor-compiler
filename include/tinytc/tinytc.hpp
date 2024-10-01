@@ -548,7 +548,6 @@ inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) 
  *
  * Cf. \ref tinytc_memref_type_get
  *
- * @param ctx Compiler context
  * @param scalar_ty Element type
  * @param shape Tensor shape
  * @param stride Tensor stride
@@ -557,33 +556,30 @@ inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) 
  *
  * @return Data type
  */
-inline data_type get_memref(compiler_context const &ctx, scalar_type scalar_ty,
-                            array_view<std::int64_t> shape, array_view<std::int64_t> stride = {},
+inline data_type get_memref(data_type scalar_ty, array_view<std::int64_t> shape,
+                            array_view<std::int64_t> stride = {},
                             address_space addrspace = address_space::global,
                             location const &loc = {}) {
     tinytc_data_type_t mt;
-    CHECK_STATUS_LOC(
-        tinytc_memref_type_get(&mt, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty),
-                               shape.size(), shape.data(), stride.size(), stride.data(),
-                               static_cast<tinytc_address_space_t>(addrspace), &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_memref_type_get(&mt, scalar_ty, shape.size(), shape.data(),
+                                            stride.size(), stride.data(),
+                                            static_cast<tinytc_address_space_t>(addrspace), &loc),
+                     loc);
     return mt;
 }
 
 /**
  * @brief Get a group data type
  *
- * @param ctx Compiler context
  * @param memref_ty Memref data type
  * @param offset Offset parameter
  * @param loc Source code location
  *
  * @return Data type
  */
-inline data_type get_group(compiler_context const &ctx, data_type memref_ty,
-                           std::int64_t offset = 0, location const &loc = {}) {
+inline data_type get_group(data_type memref_ty, std::int64_t offset = 0, location const &loc = {}) {
     tinytc_data_type_t gt;
-    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, ctx.get(), memref_ty, offset, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, offset, &loc), loc);
     return gt;
 }
 

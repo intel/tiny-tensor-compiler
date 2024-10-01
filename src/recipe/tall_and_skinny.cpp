@@ -151,12 +151,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             };
 
             auto const kernel = [&](char const *name, bool is_beta_nonzero) {
-                auto A_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, K}, {1, ldA},
-                                       address_space::global, my_loc());
-                auto B_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {K, N}, {1, ldB},
-                                       address_space::global, my_loc());
-                auto C_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N}, {1, ldC},
-                                       address_space::global, my_loc());
+                auto A_ty = get_memref(ty_, {M, K}, {1, ldA}, address_space::global, my_loc());
+                auto B_ty = get_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc());
+                auto C_ty = get_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
                 auto fn_body = f.get_body();
                 auto params = std::array<value, 5u>{};

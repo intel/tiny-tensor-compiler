@@ -30,12 +30,12 @@ tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt, tinytc_compiler_c
         [&] { *dt = scalar_data_type::get(ctx, enum_cast<scalar_type>(type)); });
 }
 
-tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
-                                       tinytc_scalar_type_t scalar_ty, uint32_t shape_size,
-                                       const int64_t *shape, uint32_t stride_size,
-                                       const int64_t *stride, tinytc_address_space_t addrspace,
+tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_data_type_t scalar_ty,
+                                       uint32_t shape_size, const int64_t *shape,
+                                       uint32_t stride_size, const int64_t *stride,
+                                       tinytc_address_space_t addrspace,
                                        const tinytc_location_t *loc) {
-    if (dt == nullptr || ctx == nullptr || (shape_size != 0 && shape == nullptr) ||
+    if (dt == nullptr || (shape_size != 0 && shape == nullptr) ||
         (stride_size != 0 && stride == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
@@ -51,20 +51,18 @@ tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_compiler_c
                 std::span<const std::int64_t>(stride, static_cast<std::size_t>(stride_size));
         }
 
-        *dt = memref_data_type::get(ctx, enum_cast<scalar_type>(scalar_ty), std::move(shape_span),
-                                    std::move(stride_span), enum_cast<address_space>(addrspace),
-                                    get_optional(loc));
+        *dt = memref_data_type::get(scalar_ty, std::move(shape_span), std::move(stride_span),
+                                    enum_cast<address_space>(addrspace), get_optional(loc));
     });
 }
 
-tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
-                                      tinytc_data_type_t memref_ty, int64_t offset,
-                                      const tinytc_location_t *loc) {
-    if (dt == nullptr || ctx == nullptr) {
+tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_data_type_t memref_ty,
+                                      int64_t offset, const tinytc_location_t *loc) {
+    if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
     return exception_to_status_code(
-        [&] { *dt = group_data_type::get(ctx, memref_ty, offset, get_optional(loc)); });
+        [&] { *dt = group_data_type::get(memref_ty, offset, get_optional(loc)); });
 }
 }

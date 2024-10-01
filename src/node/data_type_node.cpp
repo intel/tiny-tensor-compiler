@@ -14,8 +14,9 @@
 
 namespace tinytc {
 
-auto group_data_type::get(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t offset,
+auto group_data_type::get(tinytc_data_type_t ty, std::int64_t offset,
                           location const &lc) -> tinytc_data_type_t {
+    auto ctx = ty->context();
     auto &value = ctx->cache()->group_tys[std::make_pair(ty, offset)];
 
     if (value == nullptr) {
@@ -37,12 +38,15 @@ group_data_type::group_data_type(tinytc_compiler_context_t ctx, tinytc_data_type
     }
 }
 
-memref_data_type::memref_data_type(tinytc_compiler_context_t ctx, scalar_type type,
+memref_data_type::memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t element_ty,
                                    std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, address_space addrspace,
                                    location const &lc)
-    : data_type_node(DTK::memref, ctx), element_ty_(std::move(type)), shape_(std::move(shape)),
+    : data_type_node(DTK::memref, ctx), element_ty_(element_ty), shape_(std::move(shape)),
       stride_(std::move(stride)), addrspace_(addrspace) {
+    if (!isa<scalar_data_type>(*element_ty_)) {
+        throw compilation_error(lc, status::ir_expected_scalar);
+    }
     if (stride_.size() != shape_.size()) {
         throw compilation_error(lc, status::ir_shape_stride_mismatch);
     }
@@ -58,10 +62,15 @@ memref_data_type::memref_data_type(tinytc_compiler_context_t ctx, scalar_type ty
     }
 }
 
-auto memref_data_type::get(tinytc_compiler_context_t ctx, scalar_type element_ty,
-                           std::span<const std::int64_t> shape,
+scalar_type memref_data_type::element_ty() const {
+    return dyn_cast<scalar_data_type>(element_ty_)->ty();
+}
+
+auto memref_data_type::get(tinytc_data_type_t element_ty, std::span<const std::int64_t> shape,
                            std::span<const std::int64_t> stride, address_space addrspace,
                            location const &lc) -> tinytc_data_type_t {
+    auto ctx = element_ty->context();
+
     auto stride_buffer = std::vector<std::int64_t>{};
     if (stride.empty()) {
         stride_buffer = canonical_stride(shape);
@@ -110,7 +119,7 @@ auto memref_data_type_key::hash() -> std::uint64_t {
 }
 
 auto memref_data_type_key::operator==(memref_data_type const &mt) -> bool {
-    return element_ty == mt.element_ty() && addrspace == mt.addrspace() &&
+    return element_ty == mt.element_data_ty() && addrspace == mt.addrspace() &&
            std::equal(shape.begin(), shape.end(), mt.shape().begin(), mt.shape().end()) &&
            std::equal(stride.begin(), stride.end(), mt.stride().begin(), mt.stride().end());
 }

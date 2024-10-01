@@ -42,7 +42,7 @@ using data_type_node = ::tinytc_data_type;
 class group_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::group; }
-    static auto get(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t offset,
+    static auto get(tinytc_data_type_t ty, std::int64_t offset,
                     location const &lc = {}) -> tinytc_data_type_t;
 
     inline auto ty() const -> tinytc_data_type_t { return ty_; }
@@ -61,19 +61,20 @@ class memref_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::memref; }
     static auto canonical_stride(std::span<const std::int64_t> shape) -> std::vector<std::int64_t>;
-    static auto get(tinytc_compiler_context_t ctx, scalar_type element_ty,
-                    std::span<const std::int64_t> shape, std::span<const std::int64_t> stride,
+    static auto get(tinytc_data_type_t element_ty, std::span<const std::int64_t> shape,
+                    std::span<const std::int64_t> stride,
                     address_space addrspace = address_space::global,
                     location const &lc = {}) -> tinytc_data_type_t;
 
-    inline scalar_type element_ty() const { return element_ty_; }
+    scalar_type element_ty() const;
+    inline tinytc_data_type_t element_data_ty() const { return element_ty_; }
     inline std::int64_t dim() const { return shape_.size(); }
     inline auto const &shape() const { return shape_; }
     inline std::int64_t shape(std::int64_t i) const { return shape_[i]; }
     inline auto const &stride() const { return stride_; }
     inline std::int64_t stride(std::int64_t i) const { return stride_[i]; }
     inline std::int64_t size_in_bytes() const {
-        return is_dynamic() ? dynamic : size(element_ty_) * stride_.back() * shape_.back();
+        return is_dynamic() ? dynamic : size(element_ty()) * stride_.back() * shape_.back();
     }
     inline auto addrspace() const -> address_space { return addrspace_; }
     inline void addrspace(address_space space) { addrspace_ = space; }
@@ -88,17 +89,17 @@ class memref_data_type : public data_type_node {
     inline bool is_canonical_stride() const { return stride_ == canonical_stride(shape_); }
 
   protected:
-    memref_data_type(tinytc_compiler_context_t ctx, scalar_type type,
+    memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t element_ty,
                      std::vector<std::int64_t> shape, std::vector<std::int64_t> stride,
                      address_space addrspace = address_space::global, location const &lc = {});
 
-    scalar_type element_ty_;
+    tinytc_data_type_t element_ty_;
     std::vector<std::int64_t> shape_, stride_;
     address_space addrspace_ = address_space::global;
 };
 
 struct memref_data_type_key {
-    scalar_type element_ty;
+    tinytc_data_type_t element_ty;
     std::span<const std::int64_t> shape, stride;
     address_space addrspace;
 

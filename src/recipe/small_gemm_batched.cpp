@@ -86,14 +86,12 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             auto const tB_ = enum_cast<transpose>(tB);
 
             auto const kernel = [&](char const *name, bool is_beta_nonzero) {
-                auto A_ty =
-                    get_memref(ctx_, enum_cast<scalar_type>(ty), {selA(M, K), selA(K, M), dynamic},
-                               {1, ldA, strideA}, address_space::global, my_loc());
-                auto B_ty =
-                    get_memref(ctx_, enum_cast<scalar_type>(ty), {selB(K, N), selB(N, K), dynamic},
-                               {1, ldB, strideB}, address_space::global, my_loc());
-                auto C_ty = get_memref(ctx_, enum_cast<scalar_type>(ty), {M, N, dynamic},
-                                       {1, ldC, strideC}, address_space::global, my_loc());
+                auto A_ty = get_memref(ty_, {selA(M, K), selA(K, M), dynamic}, {1, ldA, strideA},
+                                       address_space::global, my_loc());
+                auto B_ty = get_memref(ty_, {selB(K, N), selB(N, K), dynamic}, {1, ldB, strideB},
+                                       address_space::global, my_loc());
+                auto C_ty = get_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
+                                       address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
                 auto fn_body = f.get_body();
                 auto params = std::array<value, 5u>{};

@@ -65,8 +65,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
 /**
  * @brief Get memref data type
  *
+ * Note: modifies compiler context
+ *
  * @param dt [out] pointer to the data type object created
- * @param ctx [inout] compiler context
  * @param scalar_ty [in] element type
  * @param shape_size [in] tensor order; number of elements in shape array, must be 0 if shape ==
  * nullptr
@@ -79,16 +80,19 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(
-    tinytc_data_type_t *dt, tinytc_compiler_context_t ctx, tinytc_scalar_type_t scalar_ty,
-    uint32_t shape_size, const int64_t *shape, uint32_t stride_size, const int64_t *stride,
-    tinytc_address_space_t addrspace, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
+                                                     tinytc_data_type_t scalar_ty,
+                                                     uint32_t shape_size, const int64_t *shape,
+                                                     uint32_t stride_size, const int64_t *stride,
+                                                     tinytc_address_space_t addrspace,
+                                                     const tinytc_location_t *loc);
 
 /**
  * @brief Get group data type
  *
+ * Note: modifies compiler context
+ *
  * @param dt [out] pointer to the data type object created
- * @param ctx [inout] compiler context
  * @param memref_ty [in] memref data type object
  * @param offset [in][optional] offset parameter; pass 0 for default
  * @param loc [in][optional] Source code location; can be nullptr
@@ -96,7 +100,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
-                                                    tinytc_compiler_context_t ctx,
                                                     tinytc_data_type_t memref_ty, int64_t offset,
                                                     const tinytc_location_t *loc);
 
