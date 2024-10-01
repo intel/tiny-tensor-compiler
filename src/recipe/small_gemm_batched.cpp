@@ -96,13 +96,13 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                        {1, ldC, strideC}, address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
                 auto fn_body = f.get_body();
-                auto params = std::array<tinytc_value_t, 5u>{};
-                get_parameters(fn_body, params);
-                set_name(params[0], "alpha");
-                set_name(params[1], "A");
-                set_name(params[2], "B");
-                set_name(params[3], "beta");
-                set_name(params[4], "C");
+                auto params = std::array<value, 5u>{};
+                fn_body.get_parameters(params);
+                params[0].set_name("alpha");
+                params[1].set_name("A");
+                params[2].set_name("B");
+                params[3].set_name("beta");
+                params[4].set_name("C");
 
                 auto bb = region_builder{fn_body};
 
@@ -112,11 +112,11 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto const B_static_sizes = std::vector<std::int64_t>{K, N, 0};
                 auto const C_static_sizes = std::vector<std::int64_t>{M, N, 0};
                 auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
-                                             array_view<tinytc_value_t>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, my_loc()));
                 auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
-                                             array_view<tinytc_value_t>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, my_loc()));
                 auto c = bb.add(make_subview(params[3], static_offsets, C_static_sizes,
-                                             array_view<tinytc_value_t>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, my_loc()));
                 auto beta = is_beta_nonzero ? params[4] : bb.add(make_constant(0.0, ty_, my_loc()));
                 bb.add(make_gemm(tA_, tB_, false, params[0], std::move(a), std::move(b), beta,
                                  std::move(c), my_loc()));

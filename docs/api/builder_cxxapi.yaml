@@ -32,6 +32,8 @@ Builder C++-API:
       - tinytc::get_scalar
     struct:
       - tinytc::to_scalar_type
+    typedef:
+      - tinytc::data_type
     variable:
       - tinytc::to_scalar_type_v
   Function:
@@ -43,14 +45,14 @@ Builder C++-API:
     function:
       - tinytc::make_alloca
       - tinytc::make_axpby
-      - tinytc::make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
-      - tinytc::make_arith(arithmetic_unary,tinytc_value_t,location const&)
+      - tinytc::make_arith(arithmetic,value,value,location const&)
+      - tinytc::make_arith(arithmetic_unary,value,location const&)
       - tinytc::make_cast
       - tinytc::make_cmp
-      - tinytc::make_constant(std::complex<double>,tinytc_data_type_t,location const&)
-      - tinytc::make_constant(double,tinytc_data_type_t,location const&)
-      - tinytc::make_constant(std::int32_t,tinytc_data_type_t,location const&)
-      - tinytc::make_constant(std::int64_t,tinytc_data_type_t,location const&)
+      - tinytc::make_constant(std::complex<double>,data_type,location const&)
+      - tinytc::make_constant(double,data_type,location const&)
+      - tinytc::make_constant(std::int32_t,data_type,location const&)
+      - tinytc::make_constant(std::int64_t,data_type,location const&)
       - tinytc::make_expand
       - tinytc::make_for
       - tinytc::make_foreach
@@ -81,13 +83,9 @@ Builder C++-API:
     class:
       - tinytc::prog
   Region:
-    function:
-      - tinytc::add_instruction
-      - tinytc::get_num_parameters
-      - tinytc::get_parameters
     class:
+      - tinytc::region
       - tinytc::region_builder
   Value:
-    function:
-      - tinytc::get_name
-      - tinytc::set_name
+    class:
+      - tinytc::value

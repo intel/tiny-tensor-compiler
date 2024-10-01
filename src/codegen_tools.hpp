@@ -122,29 +122,24 @@ void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
                         matrix_block_description const &d, bool is_atomic, scalar_type beta_ty,
                         clir::expr beta, core_config const &core_cfg);
 
-using sgs_loop_body_builder_new =
-    std::function<void(region_builder &, tinytc_value_t, bool, tinytc_value_t)>;
-using uniform_loop_body_builder_new =
-    std::function<void(region_builder &, tinytc_value_t, tinytc_value_t)>;
+using sgs_loop_body_builder_new = std::function<void(region_builder &, value, bool, value)>;
+using uniform_loop_body_builder_new = std::function<void(region_builder &, value, value)>;
 
-void tile_loop_by_sgs_new(region_builder &bb, tinytc_value_t loop_trip_count, int sgs,
-                          int num_tiles, tinytc_value_t sg_id,
-                          sgs_loop_body_builder_new const &body);
+void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
+                          value sg_id, sgs_loop_body_builder_new const &body);
 void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
-                                   int num_tiles, tinytc_value_t sg_id,
+                                   int num_tiles, value sg_id,
                                    sgs_loop_body_builder_new const &body);
-void tile_loop_by_sgs_new_dynamic(region_builder &bb, tinytc_value_t loop_trip_count, int sgs,
-                                  int num_tiles, tinytc_value_t sg_id,
-                                  sgs_loop_body_builder_new const &body);
+void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
+                                  value sg_id, sgs_loop_body_builder_new const &body);
 
-void tile_loop_uniformly_new(region_builder &bb, tinytc_value_t loop_trip_count, int block_size,
-                             int num_tiles, tinytc_value_t sg_id,
-                             uniform_loop_body_builder_new const &body);
+void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
+                             int num_tiles, value sg_id, uniform_loop_body_builder_new const &body);
 void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,
-                                      int block_size, int num_tiles, tinytc_value_t sg_id,
+                                      int block_size, int num_tiles, value sg_id,
                                       uniform_loop_body_builder_new const &body);
-void tile_loop_uniformly_new_dynamic(region_builder &bb, tinytc_value_t loop_trip_count,
-                                     int block_size, int num_tiles, tinytc_value_t sg_id,
+void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, int block_size,
+                                     int num_tiles, value sg_id,
                                      uniform_loop_body_builder_new const &body);
 
 } // namespace tinytc

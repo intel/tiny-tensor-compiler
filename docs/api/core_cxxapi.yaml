@@ -13,6 +13,7 @@ Core C++-API:
       - tinytc::array_view_base
       - tinytc::array_view
       - tinytc::mutable_array_view
+      - tinytc::handle
       - tinytc::shared_handle
       - tinytc::unique_handle
     typedef:

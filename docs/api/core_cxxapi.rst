@@ -30,6 +30,8 @@ Common
 
   * :ref:`mutable_array_view`
 
+  * :ref:`handle`
+
   * :ref:`shared_handle`
 
   * :ref:`unique_handle`
@@ -86,6 +88,11 @@ mutable_array_view
 ..................
 
 .. doxygenclass:: tinytc::mutable_array_view
+
+handle
+......
+
+.. doxygenclass:: tinytc::handle
 
 shared_handle
 .............

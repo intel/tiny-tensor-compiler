@@ -127,6 +127,34 @@ template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_
 // Shared / unique handle //
 ////////////////////////////
 
+template <typename T> class handle {
+  public:
+    //! Create empty (invalid) handle
+    handle() : obj_{nullptr} {}
+    //! Create handle from C handle
+    handle(T obj) : obj_(obj) {}
+
+    //! Dereference C handle and get reference to underlying type
+    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
+    //! Convert handle to C handle
+    auto operator->() const -> T { return obj_; }
+    //! Returns C handle
+    auto get() const -> T { return obj_; }
+
+    //! Check whether handle is non-empty (valid)
+    explicit operator bool() const noexcept { return obj_ != nullptr; }
+
+    //! Check equality
+    bool operator==(handle<T> const &other) const { return obj_ == other.obj_; }
+    //! Check inequality
+    bool operator!=(handle<T> const &other) const { return !(*this == other); }
+
+    operator T() const { return obj_; }
+
+  protected:
+    T obj_;
+};
+
 namespace internal {
 //! Wraps retain / release calls for type T
 template <typename T> struct shared_handle_traits {};
@@ -495,6 +523,9 @@ inline auto make_compiler_context() -> compiler_context {
 //! Check if mode i is dynamic ('?')
 inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
 
+//! Alias for tinytc_data_type_t
+using data_type = tinytc_data_type_t;
+
 /**
  * @brief Get a scalar data type
  *
@@ -505,7 +536,7 @@ inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
  *
  * @return Data type
  */
-inline tinytc_data_type_t get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
+inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
     tinytc_data_type_t st;
     CHECK_STATUS(
         tinytc_scalar_type_get(&st, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty)));
@@ -526,11 +557,10 @@ inline tinytc_data_type_t get_scalar(compiler_context const &ctx, scalar_type sc
  *
  * @return Data type
  */
-inline tinytc_data_type_t get_memref(compiler_context const &ctx, scalar_type scalar_ty,
-                                     array_view<std::int64_t> shape,
-                                     array_view<std::int64_t> stride = {},
-                                     address_space addrspace = address_space::global,
-                                     location const &loc = {}) {
+inline data_type get_memref(compiler_context const &ctx, scalar_type scalar_ty,
+                            array_view<std::int64_t> shape, array_view<std::int64_t> stride = {},
+                            address_space addrspace = address_space::global,
+                            location const &loc = {}) {
     tinytc_data_type_t mt;
     CHECK_STATUS_LOC(
         tinytc_memref_type_get(&mt, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty),
@@ -550,8 +580,8 @@ inline tinytc_data_type_t get_memref(compiler_context const &ctx, scalar_type sc
  *
  * @return Data type
  */
-inline tinytc_data_type_t get_group(compiler_context const &ctx, tinytc_data_type_t memref_ty,
-                                    std::int64_t offset = 0, location const &loc = {}) {
+inline data_type get_group(compiler_context const &ctx, data_type memref_ty,
+                           std::int64_t offset = 0, location const &loc = {}) {
     tinytc_data_type_t gt;
     CHECK_STATUS_LOC(tinytc_group_type_get(&gt, ctx.get(), memref_ty, offset, &loc), loc);
     return gt;
@@ -561,28 +591,32 @@ inline tinytc_data_type_t get_group(compiler_context const &ctx, tinytc_data_typ
 /////////// Value //////////
 ////////////////////////////
 
-/**
- * @brief Get name
- *
- * @param val value object
- *
- * @return Name as C-string
- */
-inline auto get_name(tinytc_value_t val) -> char const * {
-    char const *name;
-    CHECK_STATUS(tinytc_value_get_name(val, &name));
-    return name;
-}
+//! @brief OO-wrapper for tinytc_value_t
+class value : public handle<tinytc_value_t> {
+  public:
+    using handle::handle;
 
-/**
- * @brief Set value name
- *
- * @param val value object
- * @param name Name
- */
-inline void set_name(tinytc_value_t val, std::string_view name) {
-    CHECK_STATUS(tinytc_value_set_name_n(val, name.size(), name.data()));
-}
+    /**
+     * @brief Get name
+     *
+     * @return Name as C-string
+     */
+    inline auto get_name() -> char const * {
+        char const *name;
+        CHECK_STATUS(tinytc_value_get_name(obj_, &name));
+        return name;
+    }
+
+    /**
+     * @brief Set value name
+     *
+     * @param name Name
+     */
+    inline void set_name(std::string_view name) {
+        CHECK_STATUS(tinytc_value_set_name_n(obj_, name.size(), name.data()));
+    }
+};
+static_assert(std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t));
 
 ////////////////////////////
 /////////// Inst ///////////
@@ -649,6 +683,8 @@ template <> struct unique_handle_traits<tinytc_inst_t> {
 };
 } // namespace internal
 
+class region;
+
 //! @brief Reference-counting wrapper for tinytc_inst_t
 class inst : public unique_handle<tinytc_inst_t> {
   public:
@@ -663,9 +699,10 @@ class inst : public unique_handle<tinytc_inst_t> {
      *
      * @return Minimum of view size and actual number of result values
      */
-    inline auto get_values(mutable_array_view<tinytc_value_t> vals) const -> std::uint32_t {
+    inline auto get_values(mutable_array_view<value> vals) const -> std::uint32_t {
         std::uint32_t result_list_size = vals.size();
-        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, vals.data()));
+        tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
+        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, vs));
         return result_list_size;
     }
 
@@ -678,9 +715,10 @@ class inst : public unique_handle<tinytc_inst_t> {
      *
      * @return Minimum of view size and actual number of child regions
      */
-    inline auto get_regions(mutable_array_view<tinytc_region_t> regs) const -> std::uint32_t {
+    inline auto get_regions(mutable_array_view<region> regs) const -> std::uint32_t {
         std::uint32_t result_list_size = 0;
-        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, regs.data()));
+        tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
+        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
         return result_list_size;
     }
 };
@@ -689,32 +727,38 @@ class inst : public unique_handle<tinytc_inst_t> {
 ////////// Region //////////
 ////////////////////////////
 
-/**
- * @brief Append instruction to region
- *
- * @param reg region object
- * @param instruction instruction object
- */
-inline void add_instruction(tinytc_region_t reg, inst instruction) {
-    CHECK_STATUS(tinytc_region_add_instruction(reg, instruction.release()));
-}
+//! @brief OO-wrapper for tinytc_region_t
+class region : public handle<tinytc_region_t> {
+  public:
+    using handle::handle;
 
-/**
- * @brief Get region parameters
- *
- * May be called with empty view (vals = {}) to get the number of parameters.
- *
- * @param reg region object
- * @param params view on buffer that stores parameters
- *
- * @return Minimum of view size and actual number of parameters
- */
-inline auto get_parameters(tinytc_region_t reg,
-                           mutable_array_view<tinytc_value_t> params) -> std::uint32_t {
-    std::uint32_t result_list_size = params.size();
-    CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, params.data()));
-    return result_list_size;
-}
+    /**
+     * @brief Append instruction to region
+     *
+     * @param instruction instruction object
+     */
+    inline void add_instruction(inst instruction) {
+        CHECK_STATUS(tinytc_region_add_instruction(obj_, instruction.release()));
+    }
+
+    /**
+     *
+     * @brief Get region parameters
+     *
+     * May be called with empty view (vals = {}) to get the number of parameters.
+     *
+     * @param params view on buffer that stores parameters
+     *
+     * @return Minimum of view size and actual number of parameters
+     */
+    inline auto get_parameters(mutable_array_view<value> params) -> std::uint32_t {
+        std::uint32_t result_list_size = params.size();
+        tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
+        CHECK_STATUS(tinytc_region_get_parameters(obj_, &result_list_size, ps));
+        return result_list_size;
+    }
+};
+static_assert(std::is_standard_layout_v<region> && sizeof(region) == sizeof(tinytc_region_t));
 
 ////////////////////////////
 /////// Instructions ///////
@@ -730,8 +774,7 @@ inline auto get_parameters(tinytc_region_t reg,
  *
  * @return Instruction
  */
-inline inst make_arith(arithmetic op, tinytc_value_t a, tinytc_value_t b,
-                       location const &loc = {}) {
+inline inst make_arith(arithmetic op, value a, value b, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_arith_inst_create(&instr, static_cast<tinytc_arithmetic_t>(op), a, b, &loc), loc);
@@ -747,7 +790,7 @@ inline inst make_arith(arithmetic op, tinytc_value_t a, tinytc_value_t b,
  *
  * @return Instruction
  */
-inline inst make_arith(arithmetic_unary op, tinytc_value_t a, location const &loc = {}) {
+inline inst make_arith(arithmetic_unary op, value a, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_arith_unary_inst_create(&instr, static_cast<tinytc_arithmetic_unary_t>(op), a, &loc),
@@ -764,7 +807,7 @@ inline inst make_arith(arithmetic_unary op, tinytc_value_t a, location const &lo
  *
  * @return Instruction
  */
-inline inst make_cast(tinytc_value_t a, scalar_type to_ty, location const &loc = {}) {
+inline inst make_cast(value a, scalar_type to_ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_cast_inst_create(&instr, a, static_cast<tinytc_scalar_type_t>(to_ty), &loc), loc);
@@ -781,8 +824,7 @@ inline inst make_cast(tinytc_value_t a, scalar_type to_ty, location const &loc =
  *
  * @return Instruction
  */
-inline inst make_cmp(cmp_condition cond, tinytc_value_t a, tinytc_value_t b,
-                     location const &loc = {}) {
+inline inst make_cmp(cmp_condition cond, value a, value b, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a, b, &loc), loc);
@@ -798,8 +840,7 @@ inline inst make_cmp(cmp_condition cond, tinytc_value_t a, tinytc_value_t b,
  *
  * @return Instruction
  */
-inline inst make_constant(std::complex<double> value, tinytc_data_type_t ty,
-                          location const &loc = {}) {
+inline inst make_constant(std::complex<double> value, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_constant_inst_create_complex(&instr, value.real(), value.imag(), ty, &loc), loc);
@@ -815,7 +856,7 @@ inline inst make_constant(std::complex<double> value, tinytc_data_type_t ty,
  *
  * @return Instruction
  */
-inline inst make_constant(double value, tinytc_data_type_t ty, location const &loc = {}) {
+inline inst make_constant(double value, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_constant_inst_create_float(&instr, value, ty, &loc), loc);
     return inst(instr);
@@ -830,7 +871,7 @@ inline inst make_constant(double value, tinytc_data_type_t ty, location const &l
  *
  * @return Instruction
  */
-inline inst make_constant(std::int32_t value, tinytc_data_type_t ty, location const &loc = {}) {
+inline inst make_constant(std::int32_t value, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
     return inst(instr);
@@ -845,7 +886,7 @@ inline inst make_constant(std::int32_t value, tinytc_data_type_t ty, location co
  *
  * @return Instruction
  */
-inline inst make_constant(std::int64_t value, tinytc_data_type_t ty, location const &loc = {}) {
+inline inst make_constant(std::int64_t value, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
     return inst(instr);
@@ -859,7 +900,7 @@ inline inst make_constant(std::int64_t value, tinytc_data_type_t ty, location co
  *
  * @return Instruction
  */
-inline inst make_alloca(tinytc_data_type_t ty, location const &loc = {}) {
+inline inst make_alloca(data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_alloca_inst_create(&instr, ty, &loc), loc);
     return inst(instr);
@@ -878,8 +919,8 @@ inline inst make_alloca(tinytc_data_type_t ty, location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_axpby(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_value_t A,
-                       tinytc_value_t beta, tinytc_value_t B, location const &loc = {}) {
+inline inst make_axpby(transpose tA, bool atomic, value alpha, value A, value beta, value B,
+                       location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
                                               alpha, A, beta, B, &loc),
@@ -898,9 +939,9 @@ inline inst make_axpby(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_v
  *
  * @return Instruction
  */
-inline inst make_expand(tinytc_value_t a, std::int64_t expanded_mode,
+inline inst make_expand(value a, std::int64_t expanded_mode,
                         array_view<std::int64_t> static_expand_shape,
-                        array_view<tinytc_value_t> expand_shape, location const &loc = {}) {
+                        array_view<value> expand_shape, location const &loc = {}) {
     tinytc_inst_t instr;
     auto static_len = static_expand_shape.size();
     if (static_len > std::numeric_limits<std::uint32_t>::max()) {
@@ -910,9 +951,9 @@ inline inst make_expand(tinytc_value_t a, std::int64_t expanded_mode,
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("expand shape too large");
     }
+    const tinytc_value_t *es = reinterpret_cast<const tinytc_value_t *>(expand_shape.data());
     CHECK_STATUS_LOC(tinytc_expand_inst_create(&instr, a, expanded_mode, static_len,
-                                               static_expand_shape.data(), len, expand_shape.data(),
-                                               &loc),
+                                               static_expand_shape.data(), len, es, &loc),
                      loc);
     return inst(instr);
 }
@@ -927,8 +968,7 @@ inline inst make_expand(tinytc_value_t a, std::int64_t expanded_mode,
  *
  * @return Instruction
  */
-inline inst make_fuse(tinytc_value_t a, std::int64_t from, std::int64_t to,
-                      location const &loc = {}) {
+inline inst make_fuse(value a, std::int64_t from, std::int64_t to, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_fuse_inst_create(&instr, a, from, to, &loc), loc);
     return inst(instr);
@@ -943,14 +983,14 @@ inline inst make_fuse(tinytc_value_t a, std::int64_t from, std::int64_t to,
  *
  * @return Instruction
  */
-inline inst make_load(tinytc_value_t a, array_view<tinytc_value_t> index_list,
-                      location const &loc = {}) {
+inline inst make_load(value a, array_view<value> index_list, location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
-    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, index_list.data(), &loc), loc);
+    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
+    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, &loc), loc);
     return inst(instr);
 }
 
@@ -997,9 +1037,8 @@ inline inst make_group_size(compiler_context const &ctx, location const &loc = {
  *
  * @return Instruction
  */
-inline inst make_gemm(transpose tA, transpose tB, bool atomic, tinytc_value_t alpha,
-                      tinytc_value_t A, tinytc_value_t B, tinytc_value_t beta, tinytc_value_t C,
-                      location const &loc = {}) {
+inline inst make_gemm(transpose tA, transpose tB, bool atomic, value alpha, value A, value B,
+                      value beta, value C, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
                                              static_cast<tinytc_transpose_t>(tB), atomic, alpha, A,
@@ -1022,8 +1061,7 @@ inline inst make_gemm(transpose tA, transpose tB, bool atomic, tinytc_value_t al
  *
  * @return Instruction
  */
-inline inst make_gemv(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_value_t A,
-                      tinytc_value_t B, tinytc_value_t beta, tinytc_value_t C,
+inline inst make_gemv(transpose tA, bool atomic, value alpha, value A, value B, value beta, value C,
                       location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
@@ -1045,8 +1083,8 @@ inline inst make_gemv(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_va
  *
  * @return Instruction
  */
-inline inst make_ger(bool atomic, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
-                     tinytc_value_t beta, tinytc_value_t C, location const &loc = {}) {
+inline inst make_ger(bool atomic, value alpha, value A, value B, value beta, value C,
+                     location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_ger_inst_create(&instr, atomic, alpha, A, B, beta, C, &loc), loc);
     return inst(instr);
@@ -1065,8 +1103,8 @@ inline inst make_ger(bool atomic, tinytc_value_t alpha, tinytc_value_t A, tinytc
  *
  * @return Instruction
  */
-inline inst make_hadamard(bool atomic, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
-                          tinytc_value_t beta, tinytc_value_t C, location const &loc = {}) {
+inline inst make_hadamard(bool atomic, value alpha, value A, value B, value beta, value C,
+                          location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_hadamard_inst_create(&instr, atomic, alpha, A, B, beta, C, &loc), loc);
     return inst(instr);
@@ -1108,7 +1146,7 @@ inline inst make_parallel(location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_size(tinytc_value_t a, std::int64_t mode, location const &loc = {}) {
+inline inst make_size(value a, std::int64_t mode, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a, mode, &loc), loc);
     return inst(instr);
@@ -1170,10 +1208,9 @@ inline inst make_subgroup_size(compiler_context const &ctx, location const &loc 
  *
  * @return Instruction
  */
-inline inst make_subview(tinytc_value_t a, array_view<std::int64_t> static_offset_list,
-                         array_view<std::int64_t> static_size_list,
-                         array_view<tinytc_value_t> offset_list,
-                         array_view<tinytc_value_t> size_list, location const &loc = {}) {
+inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
+                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
+                         array_view<value> size_list, location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(
@@ -1191,9 +1228,11 @@ inline inst make_subview(tinytc_value_t a, array_view<std::int64_t> static_offse
     if (size_len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("dynamic size list too long");
     }
-    CHECK_STATUS_LOC(tinytc_subview_inst_create(
-                         &instr, a, static_len, static_offset_list.data(), static_size_list.data(),
-                         offset_len, offset_list.data(), size_len, size_list.data(), &loc),
+    const tinytc_value_t *ol = reinterpret_cast<const tinytc_value_t *>(offset_list.data());
+    const tinytc_value_t *sl = reinterpret_cast<const tinytc_value_t *>(size_list.data());
+    CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a, static_len, static_offset_list.data(),
+                                                static_size_list.data(), offset_len, ol, size_len,
+                                                sl, &loc),
                      loc);
     return inst(instr);
 }
@@ -1208,14 +1247,14 @@ inline inst make_subview(tinytc_value_t a, array_view<std::int64_t> static_offse
  *
  * @return Instruction
  */
-inline inst make_store(tinytc_value_t val, tinytc_value_t a, array_view<tinytc_value_t> index_list,
-                       location const &loc = {}) {
+inline inst make_store(value val, value a, array_view<value> index_list, location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
-    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, val, a, len, index_list.data(), &loc), loc);
+    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
+    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, val, a, len, il, &loc), loc);
     return inst(instr);
 }
 
@@ -1232,8 +1271,8 @@ inline inst make_store(tinytc_value_t val, tinytc_value_t a, array_view<tinytc_v
  *
  * @return Instruction
  */
-inline inst make_sum(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_value_t A,
-                     tinytc_value_t beta, tinytc_value_t B, location const &loc = {}) {
+inline inst make_sum(transpose tA, bool atomic, value alpha, value A, value beta, value B,
+                     location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
                                             alpha, A, beta, B, &loc),
@@ -1252,8 +1291,8 @@ inline inst make_sum(transpose tA, bool atomic, tinytc_value_t alpha, tinytc_val
  *
  * @return Instruction
  */
-inline inst make_for(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                     tinytc_data_type_t loop_var_type, location const &loc = {}) {
+inline inst make_for(value from, value to, value step, data_type loop_var_type,
+                     location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_for_inst_create(&instr, from, to, step, loop_var_type, &loc), loc);
     return inst(instr);
@@ -1269,8 +1308,7 @@ inline inst make_for(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step
  *
  * @return Instruction
  */
-inline inst make_foreach(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
-                         location const &loc = {}) {
+inline inst make_foreach(value from, value to, data_type loop_var_type, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr, from, to, loop_var_type, &loc), loc);
     return inst(instr);
@@ -1285,7 +1323,7 @@ inline inst make_foreach(tinytc_value_t from, tinytc_value_t to, tinytc_data_typ
  *
  * @return Instruction
  */
-inline inst make_if(tinytc_value_t condition, array_view<tinytc_data_type_t> return_type_list = {},
+inline inst make_if(value condition, array_view<data_type> return_type_list = {},
                     location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = return_type_list.size();
@@ -1305,13 +1343,14 @@ inline inst make_if(tinytc_value_t condition, array_view<tinytc_data_type_t> ret
  *
  * @return Instruction
  */
-inline inst make_yield(array_view<tinytc_value_t> yield_list, location const &loc = {}) {
+inline inst make_yield(array_view<value> yield_list, location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = yield_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("yield list too long");
     }
-    CHECK_STATUS_LOC(tinytc_yield_inst_create(&instr, len, yield_list.data(), &loc), loc);
+    const tinytc_value_t *yl = reinterpret_cast<const tinytc_value_t *>(yield_list.data());
+    CHECK_STATUS_LOC(tinytc_yield_inst_create(&instr, len, yl, &loc), loc);
     return inst(instr);
 }
 
@@ -1338,10 +1377,10 @@ class func : public unique_handle<tinytc_func_t> {
         CHECK_STATUS(tinytc_func_set_subgroup_size(obj_, sgs));
     }
 
-    auto get_body() -> tinytc_region_t {
+    auto get_body() -> region {
         tinytc_region_t body;
         CHECK_STATUS(tinytc_func_get_body(obj_, &body));
-        return body;
+        return region{body};
     }
 };
 
@@ -1354,7 +1393,7 @@ class func : public unique_handle<tinytc_func_t> {
  *
  * @return Function
  */
-inline func make_func(std::string_view name, array_view<tinytc_data_type_t> param_type_list,
+inline func make_func(std::string_view name, array_view<data_type> param_type_list,
                       location const &loc = {}) {
     tinytc_func_t fun;
     auto len = param_type_list.size();
@@ -1395,7 +1434,7 @@ class prog : public shared_handle<tinytc_prog_t> {
      * @param fun function
      */
     inline void add_function(func fun) {
-        CHECK_STATUS(tinytc_prog_add_function(get(), fun.release()));
+        CHECK_STATUS(tinytc_prog_add_function(obj_, fun.release()));
     }
 
     /**
@@ -1458,7 +1497,7 @@ class region_builder {
      *
      * @param reg region object
      */
-    region_builder(tinytc_region_t reg) : reg_{reg} {}
+    region_builder(region reg) : reg_{reg} {}
 
     /**
      * @brief Add instruction
@@ -1468,12 +1507,12 @@ class region_builder {
      *
      * @return Value returned by instruction; may be empty
      */
-    [[maybe_unused]] inline auto add(inst i, std::string_view name = "") -> tinytc_value_t {
-        tinytc_value_t result = nullptr;
+    [[maybe_unused]] inline auto add(inst i, std::string_view name = "") -> value {
+        auto result = value{};
         if (i.get_values(result) > 0 && name.size() > 0) {
-            set_name(result, name);
+            result.set_name(name);
         }
-        add_instruction(reg_, std::move(i));
+        reg_.add_instruction(std::move(i));
         return result;
     }
 
@@ -1485,24 +1524,24 @@ class region_builder {
      *
      * @return Values returned by instruction
      */
-    [[maybe_unused]] inline auto
-    add_multivalued(inst i, std::string_view name = "") -> std::vector<tinytc_value_t> {
+    [[maybe_unused]] inline auto add_multivalued(inst i,
+                                                 std::string_view name = "") -> std::vector<value> {
         auto num_results = i.get_values({});
-        auto results = std::vector<tinytc_value_t>(static_cast<std::size_t>(num_results));
+        auto results = std::vector<value>(static_cast<std::size_t>(num_results));
         results.resize(i.get_values(results));
         if (name.size() > 0) {
             int counter = 0;
             auto name_str = std::string{name};
             for (auto &result : results) {
-                set_name(result, name_str + std::to_string(counter++));
+                result.set_name(name_str + std::to_string(counter++));
             }
         }
-        add_instruction(reg_, std::move(i));
+        reg_.add_instruction(std::move(i));
         return results;
     }
 
     /**
-     * @brief Build for-loop with functor f(region_builder&, tinytc_value_t) -> void
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
      *
      * The loop trip count is passed as second argument to the functor.
      *
@@ -1515,13 +1554,13 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_ty, F &&f,
+    void for_loop(value from, value to, data_type loop_var_ty, F &&f,
                   std::string_view loop_var_name = "", location const &loc = {}) {
         for_loop<F>(std::move(from), std::move(to), nullptr, std::move(loop_var_ty),
                     std::forward<F>(f), std::move(loop_var_name), loc);
     }
     /**
-     * @brief Build for-loop with functor f(region_builder&, tinytc_value_t) -> void
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
      *
      * The loop trip count is passed as second argument to the functor.
      *
@@ -1535,24 +1574,23 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                  tinytc_data_type_t loop_var_ty, F &&f, std::string_view loop_var_name = "",
-                  location const &loc = {}) {
+    void for_loop(value from, value to, value step, data_type loop_var_ty, F &&f,
+                  std::string_view loop_var_name = "", location const &loc = {}) {
         auto fi = ::tinytc::make_for(from, to, step, loop_var_ty, loc);
-        tinytc_region_t reg = nullptr;
+        auto reg = region{};
         fi.get_regions(reg);
-        tinytc_value_t loop_var = nullptr;
-        get_parameters(reg, loop_var);
+        auto loop_var = value{};
+        reg.get_parameters(loop_var);
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        set_name(loop_var, loop_var_name);
-        add_instruction(reg_, std::move(fi));
+        loop_var.set_name(loop_var_name);
+        reg_.add_instruction(std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);
     }
     /**
-     * @brief Build foreach-loop with functor f(region_builder&, tinytc_value_t) -> void
+     * @brief Build foreach-loop with functor f(region_builder&, value) -> void
      *
      * @tparam F Functor type
      * @param from Loop variable start
@@ -1563,18 +1601,18 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void foreach (tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_ty, F && f,
+    void foreach (value from, value to, data_type loop_var_ty, F && f,
                   std::string const &loop_var_name = "", location const &loc = {}) {
         auto fi = ::tinytc::make_foreach(from, to, loop_var_ty, loc);
-        tinytc_region_t reg = nullptr;
+        auto reg = region{};
         fi.get_regions(reg);
-        tinytc_value_t loop_var = nullptr;
-        get_parameters(reg, loop_var);
+        auto loop_var = value{};
+        reg.get_parameters(loop_var);
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        set_name(loop_var, loop_var_name);
-        add_instruction(reg_, std::move(fi));
+        loop_var.set_name(loop_var_name);
+        reg_.add_instruction(std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);
     }
@@ -1591,11 +1629,10 @@ class region_builder {
      * @return Returned values
      */
     template <typename F>
-    auto if_condition(tinytc_value_t condition, F &&then,
-                      array_view<tinytc_data_type_t> return_type_list = {},
-                      location const &loc = {}) -> std::vector<tinytc_value_t> {
+    auto if_condition(value condition, F &&then, array_view<data_type> return_type_list = {},
+                      location const &loc = {}) -> std::vector<value> {
         auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
-        tinytc_region_t reg = nullptr;
+        auto reg = region{};
         ii.get_regions(reg);
         if (!reg) {
             throw status::internal_compiler_error;
@@ -1620,11 +1657,11 @@ class region_builder {
      * @return Returned values
      */
     template <typename F, typename G>
-    auto ifelse(tinytc_value_t condition, F &&then, G &&otherwise,
-                array_view<tinytc_data_type_t> return_type_list = {},
-                location const &loc = {}) -> std::vector<tinytc_value_t> {
+    auto ifelse(value condition, F &&then, G &&otherwise,
+                array_view<data_type> return_type_list = {},
+                location const &loc = {}) -> std::vector<value> {
         auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
-        auto regs = std::array<tinytc_region_t, 2u>{nullptr, nullptr};
+        std::array<region, 2u> regs = {};
         ii.get_regions(regs);
         if (!regs[0] || !regs[1]) {
             throw status::internal_compiler_error;
@@ -1638,7 +1675,7 @@ class region_builder {
     }
 
   private:
-    tinytc_region_t reg_;
+    region reg_;
 };
 
 ////////////////////////////

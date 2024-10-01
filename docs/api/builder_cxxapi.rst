@@ -174,6 +174,10 @@ Data Type
 
   * :ref:`to_scalar_type`
 
+* Typedefs
+
+  * :ref:`data_type`
+
 * Variables
 
   * :ref:`to_scalar_type_v`
@@ -203,6 +207,14 @@ to_scalar_type
 ..............
 
 .. doxygenstruct:: tinytc::to_scalar_type
+
+Data Type Typedefs
+------------------
+
+data_type
+.........
+
+.. doxygentypedef:: tinytc::data_type
 
 Data Type Variables
 -------------------
@@ -248,21 +260,21 @@ Instruction
 
   * :ref:`make_axpby`
 
-  * :ref:`make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)`
+  * :ref:`make_arith(arithmetic,value,value,location const&)`
 
-  * :ref:`make_arith(arithmetic_unary,tinytc_value_t,location const&)`
+  * :ref:`make_arith(arithmetic_unary,value,location const&)`
 
   * :ref:`make_cast`
 
   * :ref:`make_cmp`
 
-  * :ref:`make_constant(std::complex\<double\>,tinytc_data_type_t,location const&)`
+  * :ref:`make_constant(std::complex\<double\>,data_type,location const&)`
 
-  * :ref:`make_constant(double,tinytc_data_type_t,location const&)`
+  * :ref:`make_constant(double,data_type,location const&)`
 
-  * :ref:`make_constant(std::int32_t,tinytc_data_type_t,location const&)`
+  * :ref:`make_constant(std::int32_t,data_type,location const&)`
 
-  * :ref:`make_constant(std::int64_t,tinytc_data_type_t,location const&)`
+  * :ref:`make_constant(std::int64_t,data_type,location const&)`
 
   * :ref:`make_expand`
 
@@ -325,15 +337,15 @@ make_axpby
 
 .. doxygenfunction:: tinytc::make_axpby
 
-make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
-....................................................................
+make_arith(arithmetic,value,value,location const&)
+..................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic,tinytc_value_t,tinytc_value_t,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic,value,value,location const&)
 
-make_arith(arithmetic_unary,tinytc_value_t,location const&)
-...........................................................
+make_arith(arithmetic_unary,value,location const&)
+..................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,tinytc_value_t,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value,location const&)
 
 make_cast
 .........
@@ -345,25 +357,25 @@ make_cmp
 
 .. doxygenfunction:: tinytc::make_cmp
 
-make_constant(std::complex<double>,tinytc_data_type_t,location const&)
-......................................................................
+make_constant(std::complex<double>,data_type,location const&)
+.............................................................
 
-.. doxygenfunction:: tinytc::make_constant(std::complex<double>,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_constant(std::complex<double>,data_type,location const&)
 
-make_constant(double,tinytc_data_type_t,location const&)
-........................................................
+make_constant(double,data_type,location const&)
+...............................................
 
-.. doxygenfunction:: tinytc::make_constant(double,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_constant(double,data_type,location const&)
 
-make_constant(std::int32_t,tinytc_data_type_t,location const&)
-..............................................................
+make_constant(std::int32_t,data_type,location const&)
+.....................................................
 
-.. doxygenfunction:: tinytc::make_constant(std::int32_t,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_constant(std::int32_t,data_type,location const&)
 
-make_constant(std::int64_t,tinytc_data_type_t,location const&)
-..............................................................
+make_constant(std::int64_t,data_type,location const&)
+.....................................................
 
-.. doxygenfunction:: tinytc::make_constant(std::int64_t,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_constant(std::int64_t,data_type,location const&)
 
 make_expand
 ...........
@@ -513,38 +525,19 @@ prog
 Region
 ======
 
-* Functions
-
-  * :ref:`add_instruction`
-
-  * :ref:`get_num_parameters`
-
-  * :ref:`get_parameters`
-
 * Classes
+
+  * :ref:`region`
 
   * :ref:`region_builder`
 
-Region Functions
-----------------
-
-add_instruction
-...............
-
-.. doxygenfunction:: tinytc::add_instruction
-
-get_num_parameters
-..................
-
-.. doxygenfunction:: tinytc::get_num_parameters
-
-get_parameters
-..............
-
-.. doxygenfunction:: tinytc::get_parameters
-
 Region Classes
 --------------
+
+region
+......
+
+.. doxygenclass:: tinytc::region
 
 region_builder
 ..............
@@ -554,22 +547,15 @@ region_builder
 Value
 =====
 
-* Functions
+* Classes
 
-  * :ref:`get_name`
+  * :ref:`value`
 
-  * :ref:`set_name`
+Value Classes
+-------------
 
-Value Functions
----------------
+value
+.....
 
-get_name
-........
-
-.. doxygenfunction:: tinytc::get_name
-
-set_name
-........
-
-.. doxygenfunction:: tinytc::set_name
+.. doxygenclass:: tinytc::value
 
