@@ -177,13 +177,16 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     result(0) = value_node{at, lc};
 }
 
-cast_inst::cast_inst(tinytc_value_t a, scalar_type to_ty, location const &lc)
+cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const &lc)
     : standard_inst{IK::cast} {
     op(op_a) = std::move(a);
     loc(lc);
 
-    auto result_ty = scalar_data_type::get(op(op_a)->context(), to_ty);
-    result(0) = value_node{result_ty, lc};
+    if (!isa<scalar_data_type>(*to_ty)) {
+        throw compilation_error(lc, status::ir_expected_scalar);
+    }
+
+    result(0) = value_node{to_ty, lc};
 }
 
 compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t b0,

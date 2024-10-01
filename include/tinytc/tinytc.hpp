@@ -716,7 +716,7 @@ class inst : public unique_handle<tinytc_inst_t> {
      * @return Minimum of view size and actual number of child regions
      */
     inline auto get_regions(mutable_array_view<region> regs) const -> std::uint32_t {
-        std::uint32_t result_list_size = 0;
+        std::uint32_t result_list_size = regs.size();
         tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
         CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
         return result_list_size;
@@ -807,10 +807,9 @@ inline inst make_arith(arithmetic_unary op, value a, location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_cast(value a, scalar_type to_ty, location const &loc = {}) {
+inline inst make_cast(value a, data_type to_ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_cast_inst_create(&instr, a, static_cast<tinytc_scalar_type_t>(to_ty), &loc), loc);
+    CHECK_STATUS_LOC(tinytc_cast_inst_create(&instr, a, to_ty, &loc), loc);
     return inst(instr);
 }
 

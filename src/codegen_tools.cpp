@@ -449,7 +449,7 @@ void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_co
     auto c_tiles_1 = bb.add(make_constant(num_tiles - 1, index_ty));
     auto c_rem = bb.add(make_constant(rem, index_ty));
 
-    auto sg_id_index = bb.add(make_cast(sg_id, scalar_type::index));
+    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
     if (blocks > 0) {
         auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
         bb.for_loop(
@@ -475,7 +475,7 @@ void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int
     auto blocks = bb.add(make_arith(arithmetic::div, loop_trip_count, c_sgs));
     auto rem = bb.add(make_arith(arithmetic::rem, loop_trip_count, c_sgs));
 
-    auto sg_id_index = bb.add(make_cast(sg_id, scalar_type::index));
+    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
     auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
     auto block_end = bb.add(make_arith(arithmetic::mul, c_sgs, blocks));
     bb.for_loop(
@@ -521,7 +521,7 @@ void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip
     auto c_tiles = bb.add(make_constant(num_tiles, index_ty));
     auto c_loop_trip_count = bb.add(make_constant(loop_trip_count, index_ty));
 
-    auto sg_id_index = bb.add(make_cast(sg_id, scalar_type::index));
+    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
     if (rem > 0) {
         auto block_start = bb.add(make_arith(arithmetic::mul, c_bs_1, sg_id_index));
         bb.for_loop(
@@ -561,7 +561,7 @@ void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, 
     auto rem = bb.add(make_arith(arithmetic::rem, loop_trip_count, blocks));
     rem->name("rem");
 
-    auto sg_id_index = bb.add(make_cast(sg_id, scalar_type::index));
+    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
     auto block_start_1 = bb.add(make_arith(arithmetic::mul, bs_1, sg_id_index));
     auto block_end_1 = bb.add(make_arith(arithmetic::mul, bs_1, rem));
     auto step_1 = bb.add(make_arith(arithmetic::mul, bs_1, c_tiles));

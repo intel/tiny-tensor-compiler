@@ -3,33 +3,66 @@
 
 #include "pass/constant_propagation.hpp"
 #include "error.hpp"
-#include "node/data_type_node.hpp"
-#include "node/value_node.hpp"
+#include "node/function_node.hpp"
+#include "node/inst_node.hpp"
+#include "node/region_node.hpp"
 #include "support/casting.hpp"
 #include "support/visit.hpp"
+#include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <cmath>
 
 namespace tinytc {
 
-/* Inst nodes */
-void constant_propagation::operator()(inst_node &in) {
-    for (auto &op : in.operands()) {
-        if (op) {
-            uintptr_t u = std::bit_cast<uintptr_t>(op.get());
-            if (auto kc = known_constants_.find(u); kc != known_constants_.end()) {
-                op = kc->second;
-            }
-        }
+class constant_evaluator {
+  public:
+    auto operator()(inst_node &) -> inst;
+    // auto operator()(arith_inst &) -> inst;
+    auto operator()(size_inst &in) -> inst;
+
+  private:
+    auto get_memref_type(value_node const &v) const -> const memref_data_type *;
+};
+
+auto constant_evaluator::get_memref_type(value_node const &v) const -> const memref_data_type * {
+    auto t = dyn_cast<memref_data_type>(v.ty());
+    if (t == nullptr) {
+        throw compilation_error(v.loc(), status::ir_expected_memref);
     }
+    return t;
 }
 
-void constant_propagation::operator()(arith_inst &arith) {
+/* Inst nodes */
+auto constant_evaluator::operator()(inst_node &in) -> inst {
+    // for (auto &op : in.operands()) {
+    // if (op) {
+    // uintptr_t u = std::bit_cast<uintptr_t>(op.get());
+    // if (auto kc = known_constants_.find(u); kc != known_constants_.end()) {
+    // op = kc->second;
+    //}
+    //}
+    //}
+    return inst{};
+}
+
+auto constant_evaluator::operator()(size_inst &in) -> inst {
+    auto ct = get_memref_type(in.operand());
+
+    auto mode_size = ct->shape(in.mode());
+    if (!is_dynamic_value(mode_size)) {
+        return make_constant(
+            mode_size, scalar_data_type::get(in.operand().context(), scalar_type::index), in.loc());
+    }
+
+    return inst{};
+}
+
+/*auto constant_propagation::operator()(arith_inst &arith) -> inst {
     this->operator()(static_cast<inst_node &>(arith));
 
-    auto const &a = arith.a();
-    auto const &b = arith.b();
+    auto &a = arith.a();
+    auto &b = arith.b();
 
     auto at = dyn_cast<scalar_data_type>(a->ty().get());
     if (at == nullptr) {
@@ -148,25 +181,18 @@ void constant_propagation::operator()(arith_inst &arith) {
             }
         }
     }
-}
+}*/
 
-void constant_propagation::operator()(parallel_inst &p) { visit(*this, *p.body()); }
-
-/* Region nodes */
-void constant_propagation::operator()(region_node &b) {
-    for (auto &s : b.insts()) {
-        visit(*this, *s);
-    }
-}
-
-/* Function nodes */
-void constant_propagation::operator()(function_node &fn) { visit(*this, *fn.body()); }
-
-/* Program nodes */
-void constant_propagation::operator()(program &p) {
-    for (auto &fn : p.functions()) {
-        visit(*this, *fn);
-    }
+void constant_propagation_pass::run_on_function(function_node &fn) {
+    walk<walk_order::post_order>(fn, [&](region_node &reg) {
+        for (auto it = reg.begin(); it != reg.end(); ++it) {
+            auto known_constant = visit(constant_evaluator{}, *it);
+            if (known_constant) {
+                it = reg.insts().erase(it);
+                it = reg.insts().insert(it, known_constant.release());
+            }
+        }
+    });
 }
 
 } // namespace tinytc

@@ -419,6 +419,9 @@ void dump_ir_pass::dump_region(region_node const &reg) {
 }
 
 void dump_ir_pass::run_on_function(function_node const &fn) {
+    tracker_ = slot_tracker{};
+    tracker_.run_on_function(fn);
+
     *os_ << "func @" << fn.name() << "(";
     std::string infix = ",\n       ";
     infix += std::string(fn.name().size(), ' ');

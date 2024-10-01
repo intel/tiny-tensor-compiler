@@ -167,20 +167,18 @@ class ilist_base : protected IListCallback {
 
     auto erase(iterator it) -> iterator {
         // let s = sentinel
-        // |0|: s{prev->s,next->s}
         // |1|: n0{prev->s,next->s}, s{prev->n0,next->n0}
         // |2|: n0{prev->s,next->n1}, n1{prev->n0,next->s}, s{prev->n1,next->n0}
         base_pointer prev = it.get_base()->prev();
-        base_pointer next = it.get_base()->prev();
-        prev->prev(next);
+        base_pointer next = it.get_base()->next();
+        prev->next(next);
         next->prev(prev);
         it.get_base()->prev(nullptr);
         it.get_base()->next(nullptr);
-        // |0| (it -> s) : s{prev->s,next->s}
         // |1| (it -> n0): s{prev->s,next->s}
         // |2| (it -> n0): n1{prev->s,next->s}, s{prev->n1,next->n1}
         // |2| (it -> n1): n0{prev->s,next->s}, s{prev->n0,next->n0}
-        // this->node_removed(&*it);
+        this->node_removed(&*it);
         return iterator{next};
     }
     auto erase(iterator begin, iterator end) -> iterator {

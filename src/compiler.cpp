@@ -5,11 +5,13 @@
 #include "error.hpp"
 #include "node/program_node.hpp"
 #include "pass/check_ir.hpp"
+#include "pass/constant_propagation.hpp"
 #include "pass/convert_to_opencl.hpp"
 #include "pass/dump_cfg.hpp"
 #include "pass/dump_ir.hpp"
 #include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"
+#include "pass/lower_linalg.hpp"
 #include "pass/stack.hpp"
 #include "pass/work_group_size.hpp"
 #include "passes.hpp"
@@ -85,13 +87,11 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             run_function_pass(check_ir_pass{}, *prg);
             run_function_pass(insert_lifetime_stop_pass{}, *prg);
             run_function_pass(set_stack_ptr_pass{}, *prg);
-            //  insert_barriers(*prg);
+            run_function_pass(insert_barrier_pass{}, *prg);
             run_function_pass(work_group_size_pass{info}, *prg);
-            //  lower_linalg(*prg, *info);
-            //run_function_pass(dump_ir_pass{std::cout}, *prg);
-            // propagate_constants(*prg);
-            // dump_ir(std::cout, *prg);
-            //  opencl
+            // run_function_pass(lower_linalg_pass{info}, *prg);
+            // run_function_pass(constant_propagation_pass{info}, *prg);
+            // opencl
             auto ast = convert_to_opencl_pass{info}.run_on_program(*prg);
             clir::make_names_unique(ast);
 

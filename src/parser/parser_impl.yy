@@ -781,8 +781,8 @@ arith_unary_inst:
 
 
 cast_inst:
-    CAST var[a] COLON scalar_type[from] RETURNS scalar_type[to] {
-        check_scalar_type(ctx.cctx(), $a, $from, @a, @from);
+    CAST var[a] COLON data_type[from] RETURNS data_type[to] {
+        check_type($a, $from, @a, @from);
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {

@@ -319,10 +319,15 @@ class blas_a3_inst : public standard_inst<5, 0> {
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
+    inline auto alpha() -> tinytc_value & { return *op(op_alpha); }
     inline auto alpha() const -> tinytc_value const & { return *op(op_alpha); }
+    inline auto A() -> tinytc_value & { return *op(op_A); }
     inline auto A() const -> tinytc_value const & { return *op(op_A); }
+    inline auto B() -> tinytc_value & { return *op(op_B); }
     inline auto B() const -> tinytc_value const & { return *op(op_B); }
+    inline auto beta() -> tinytc_value & { return *op(op_beta); }
     inline auto beta() const -> tinytc_value const & { return *op(op_beta); }
+    inline auto C() -> tinytc_value & { return *op(op_C); }
     inline auto C() const -> tinytc_value const & { return *op(op_C); }
 
   protected:
@@ -420,7 +425,7 @@ class cast_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::cast; }
     enum op_number { op_a = 0 };
-    cast_inst(tinytc_value_t a, scalar_type to_ty, location const &lc = {});
+    cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const &lc = {});
     inline auto a() const -> tinytc_value const & { return *op(op_a); }
 };
 

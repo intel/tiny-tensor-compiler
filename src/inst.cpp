@@ -121,14 +121,12 @@ tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr, tinytc_arit
 }
 
 tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                        tinytc_scalar_type_t to_ty, const tinytc_location_t *loc) {
+                                        tinytc_data_type_t to_ty, const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<cast_inst>(a, enum_cast<scalar_type>(to_ty), get_optional(loc))
-                     .release();
-    });
+    return exception_to_status_code(
+        [&] { *instr = std::make_unique<cast_inst>(a, to_ty, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_condition_t cond,

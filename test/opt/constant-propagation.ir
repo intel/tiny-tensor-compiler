@@ -1,0 +1,13 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt --constant-propagation < %s | filecheck %s
+func @known_size(%a: memref<f32x64x32>) {
+    %0 = size %a[0] : memref<f32x64x32>
+    %1 = size %a[1] : memref<f32x64x32>
+    %2 = arith.add %0, %1 : index
+; CHECK-LABEL: func @known_size({{.*}}
+; CHECK-NEXT:  %0 = constant 64 -> index
+; CHECK-NEXT:  %1 = constant 32 -> index
+; CHECK-NEXT:  %2 = constant 96 -> index
+}

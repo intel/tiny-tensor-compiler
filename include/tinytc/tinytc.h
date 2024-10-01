@@ -201,7 +201,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *inst
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                      tinytc_scalar_type_t to_ty,
+                                                      tinytc_data_type_t to_ty,
                                                       const tinytc_location_t *loc);
 
 /**
