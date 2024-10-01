@@ -286,25 +286,25 @@ template <typename T> class unique_handle {
 ////////////////////////////
 
 /**
- * @brief Stores a view on an array (pointer + size)
+ * @brief Base implementation of array view
  *
  * @tparam T array element type
  */
-template <typename T> class array_view {
+template <typename T> class array_view_base {
   public:
-    using const_iterator = T const *;
+    using iterator = T *;
 
     /**
      * @brief Empty array view
      */
-    array_view() = default;
+    array_view_base() = default;
 
     /**
      * @brief Single element view
      *
      * @param single the single element
      */
-    array_view(T const &single) : data_{&single}, size_{1} {}
+    array_view_base(T &single) : data_{&single}, size_{1} {}
 
     /**
      * @brief ctor
@@ -312,7 +312,7 @@ template <typename T> class array_view {
      * @param data base pointer
      * @param size array size
      */
-    array_view(T const *data, std::size_t size) : data_{data}, size_{size} {}
+    array_view_base(T *data, std::size_t size) : data_{data}, size_{size} {}
 
     /**
      * @brief ctor
@@ -320,7 +320,42 @@ template <typename T> class array_view {
      * @param begin begin pointer
      * @param end end pointer (not included)
      */
-    array_view(T const *begin, T const *end) : data_{begin}, size_{end - begin} {}
+    array_view_base(T *begin, T *end) : data_{begin}, size_{end - begin} {}
+
+    //! Begin iterator
+    auto begin() const -> iterator { return data_; }
+    //! End iterator
+    auto end() const -> iterator { return data_ + size_; }
+    //! Returns true if view is empty
+    auto empty() const -> bool { return size_ == 0; }
+    //! Returns array size
+    auto size() const -> std::size_t { return size_; }
+    //! Access first element; must not call when array size is 0
+    auto front() const -> T & { return data_[0]; }
+    //! Access last element; must not call when array size is 0
+    auto back() const -> T & { return data_[size_ - 1]; }
+    //! Get data pointer
+    auto data() const -> T * { return data_; }
+    //! Access operator
+    auto operator[](std::size_t n) const -> T & { return data_[n]; }
+    //! Convert to vector
+    operator std::vector<std::remove_const_t<T>>() const {
+        return std::vector<std::remove_const_t<T>>(data_, data_ + size_);
+    }
+
+  private:
+    T *data_ = nullptr;
+    std::size_t size_ = 0;
+};
+
+/**
+ * @brief Stores an immutable view on an array (pointer + size)
+ *
+ * @tparam T array element type
+ */
+template <typename T> class array_view : public array_view_base<const T> {
+  public:
+    using array_view_base<const T>::array_view_base;
 
     /**
      * @brief Convert vector to array view
@@ -328,7 +363,7 @@ template <typename T> class array_view {
      * @param vec standard vector
      */
     array_view(std::vector<T> const &vec)
-        : data_{!vec.empty() ? vec.data() : nullptr}, size_{vec.size()} {}
+        : array_view_base<const T>{(!vec.empty() ? vec.data() : nullptr), vec.size()} {}
 
     /**
      * @brief Convert std::array to array view
@@ -337,7 +372,7 @@ template <typename T> class array_view {
      * @param arr standard array
      */
     template <std::size_t N>
-    array_view(std::array<T, N> const &arr) : data_{arr.data()}, size_{arr.size()} {}
+    array_view(std::array<T, N> const &arr) : array_view_base<const T>{arr.data(), arr.size()} {}
 
     /**
      * @brief Convert initializer list to array view (array_view must be rvalue)
@@ -345,31 +380,44 @@ template <typename T> class array_view {
      * @param arr initializer list
      */
     array_view(std::initializer_list<T> const &arr)
-        : data_{arr.begin() != arr.end() ? arr.begin() : nullptr}, size_{arr.size()} {}
-
-    //! Begin iterator
-    auto begin() const -> const_iterator { return data_; }
-    //! End iterator
-    auto end() const -> const_iterator { return data_ + size_; }
-    //! Returns true if view is empty
-    auto empty() const -> bool { return size_ == 0; }
-    //! Returns array size
-    auto size() const -> std::size_t { return size_; }
-    //! Access first element; must not call when array size is 0
-    auto front() const -> T const & { return data_[0]; }
-    //! Access last element; must not call when array size is 0
-    auto back() const -> T const & { return data_[size_ - 1]; }
-    //! Get data pointer
-    auto data() const -> T const * { return data_; }
-    //! Access operator
-    auto operator[](std::size_t n) const -> T const & { return data_[n]; }
-    //! Convert to vector
-    operator std::vector<T>() const { return std::vector<T>(data_, data_ + size_); }
-
-  private:
-    T const *data_ = nullptr;
-    std::size_t size_ = 0;
+        : array_view_base<const T>{(arr.begin() != arr.end() ? arr.begin() : nullptr), arr.size()} {
+    }
 };
+
+template <typename T> array_view(T const &) -> array_view<T>;
+template <typename T> array_view(T const *, std::size_t) -> array_view<T>;
+template <typename T> array_view(T const *, T const *) -> array_view<T>;
+
+/**
+ * @brief Stores a mutable view on an array (pointer + size)
+ *
+ * @tparam T array element type
+ */
+template <typename T> class mutable_array_view : public array_view_base<T> {
+  public:
+    using array_view_base<T>::array_view_base;
+
+    /**
+     * @brief Convert vector to array view
+     *
+     * @param vec standard vector
+     */
+    mutable_array_view(std::vector<T> &vec)
+        : array_view_base<T>{(!vec.empty() ? vec.data() : nullptr), vec.size()} {}
+
+    /**
+     * @brief Convert std::array to array view
+     *
+     * @tparam N array size
+     * @param arr standard array
+     */
+    template <std::size_t N>
+    mutable_array_view(std::array<T, N> &arr) : array_view_base<T>{arr.data(), arr.size()} {}
+};
+
+template <typename T> mutable_array_view(T &) -> mutable_array_view<T>;
+template <typename T> mutable_array_view(T *, std::size_t) -> mutable_array_view<T>;
+template <typename T> mutable_array_view(T *, T *) -> mutable_array_view<T>;
 
 ////////////////////////////
 ///// Compiler context /////
@@ -481,7 +529,7 @@ inline tinytc_data_type_t get_scalar(compiler_context const &ctx, scalar_type sc
 inline tinytc_data_type_t get_memref(compiler_context const &ctx, scalar_type scalar_ty,
                                      array_view<std::int64_t> shape,
                                      array_view<std::int64_t> stride = {},
-                                     const address_space addrspace = address_space::global,
+                                     address_space addrspace = address_space::global,
                                      location const &loc = {}) {
     tinytc_data_type_t mt;
     CHECK_STATUS_LOC(
@@ -607,73 +655,33 @@ class inst : public unique_handle<tinytc_inst_t> {
     using unique_handle::unique_handle;
 
     /**
-     * @brief Get result value
-     *
-     * @return Value; may be empty
-     */
-    inline auto get_value() const -> tinytc_value_t {
-        tinytc_value_t result;
-        CHECK_STATUS(tinytc_inst_get_value(obj_, &result));
-        return result;
-    }
-
-    /**
-     * @brief Get number of result values
-     *
-     * @return Number of result values
-     */
-    inline auto get_num_values() const -> std::uint32_t {
-        std::uint32_t result_list_size = 0;
-        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, nullptr));
-        return result_list_size;
-    }
-
-    /**
      * @brief Get result values
      *
-     * @return Vector of values
-     */
-    inline auto get_values() const -> std::vector<tinytc_value_t> {
-        std::uint32_t result_list_size = get_num_values();
-        auto values = std::vector<tinytc_value_t>(result_list_size);
-        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, values.data()));
-        return values;
-    }
-
-    /**
-     * @brief Get child region
+     * May be called with empty view (vals = {}) to get the number of results.
      *
-     * @param region_no region index
+     * @param vals view on buffer that stores results
      *
-     * @return Region
+     * @return Minimum of view size and actual number of result values
      */
-    inline auto get_region(std::uint32_t region_no) const -> tinytc_region_t {
-        tinytc_region_t result;
-        CHECK_STATUS(tinytc_inst_get_region(obj_, region_no, &result));
-        return result;
-    }
-
-    /**
-     * @brief Get number of child regions
-     *
-     * @return Number of child regions
-     */
-    inline auto get_num_regions() const -> std::uint32_t {
-        std::uint32_t result_list_size = 0;
-        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, nullptr));
+    inline auto get_values(mutable_array_view<tinytc_value_t> vals) const -> std::uint32_t {
+        std::uint32_t result_list_size = vals.size();
+        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, vals.data()));
         return result_list_size;
     }
 
     /**
      * @brief Get child regions
      *
-     * @return Vector of regions
+     * May be called with empty view (vals = {}) to get the number of child regions.
+     *
+     * @param regs view on buffer that stores results
+     *
+     * @return Minimum of view size and actual number of child regions
      */
-    inline auto get_regions() const -> std::vector<tinytc_region_t> {
-        std::uint32_t result_list_size = get_num_regions();
-        auto regions = std::vector<tinytc_region_t>(result_list_size);
-        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, regions.data()));
-        return regions;
+    inline auto get_regions(mutable_array_view<tinytc_region_t> regs) const -> std::uint32_t {
+        std::uint32_t result_list_size = 0;
+        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, regs.data()));
+        return result_list_size;
     }
 };
 
@@ -692,40 +700,20 @@ inline void add_instruction(tinytc_region_t reg, inst instruction) {
 }
 
 /**
- * @brief Get region parameter
+ * @brief Get region parameters
  *
- * @param reg Region object
- * @param region_no Region index
+ * May be called with empty view (vals = {}) to get the number of parameters.
  *
- * @return Parameter
+ * @param reg region object
+ * @param params view on buffer that stores parameters
+ *
+ * @return Minimum of view size and actual number of parameters
  */
-inline auto get_parameter(tinytc_region_t reg, std::uint32_t region_no) -> tinytc_value_t {
-    tinytc_value_t result;
-    CHECK_STATUS(tinytc_region_get_parameter(reg, region_no, &result));
-    return result;
-}
-
-/**
- * @brief Get number of child regions
- *
- * @return Number of child regions
- */
-inline auto get_num_parameters(tinytc_region_t reg) -> std::uint32_t {
-    std::uint32_t result_list_size = 0;
-    CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, nullptr));
-    return result_list_size;
-}
-
-/**
- * @brief Get parameters
- *
- * @return Vector of parameters
- */
-inline auto get_parameters(tinytc_region_t reg) -> std::vector<tinytc_value_t> {
-    std::uint32_t result_list_size = get_num_parameters(reg);
-    auto params = std::vector<tinytc_value_t>(result_list_size);
+inline auto get_parameters(tinytc_region_t reg,
+                           mutable_array_view<tinytc_value_t> params) -> std::uint32_t {
+    std::uint32_t result_list_size = params.size();
     CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, params.data()));
-    return params;
+    return result_list_size;
 }
 
 ////////////////////////////
@@ -1481,8 +1469,8 @@ class region_builder {
      * @return Value returned by instruction; may be empty
      */
     [[maybe_unused]] inline auto add(inst i, std::string_view name = "") -> tinytc_value_t {
-        auto result = i.get_value();
-        if (result && name.size() > 0) {
+        tinytc_value_t result = nullptr;
+        if (i.get_values(result) > 0 && name.size() > 0) {
             set_name(result, name);
         }
         add_instruction(reg_, std::move(i));
@@ -1499,7 +1487,9 @@ class region_builder {
      */
     [[maybe_unused]] inline auto
     add_multivalued(inst i, std::string_view name = "") -> std::vector<tinytc_value_t> {
-        auto results = i.get_values();
+        auto num_results = i.get_values({});
+        auto results = std::vector<tinytc_value_t>(static_cast<std::size_t>(num_results));
+        results.resize(i.get_values(results));
         if (name.size() > 0) {
             int counter = 0;
             auto name_str = std::string{name};
@@ -1549,8 +1539,13 @@ class region_builder {
                   tinytc_data_type_t loop_var_ty, F &&f, std::string_view loop_var_name = "",
                   location const &loc = {}) {
         auto fi = ::tinytc::make_for(from, to, step, loop_var_ty, loc);
-        auto reg = fi.get_region(0);
-        auto loop_var = get_parameter(reg, 0);
+        tinytc_region_t reg = nullptr;
+        fi.get_regions(reg);
+        tinytc_value_t loop_var = nullptr;
+        get_parameters(reg, loop_var);
+        if (!reg || !loop_var) {
+            throw status::internal_compiler_error;
+        }
         set_name(loop_var, loop_var_name);
         add_instruction(reg_, std::move(fi));
         auto bb = region_builder{reg};
@@ -1571,8 +1566,13 @@ class region_builder {
     void foreach (tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_ty, F && f,
                   std::string const &loop_var_name = "", location const &loc = {}) {
         auto fi = ::tinytc::make_foreach(from, to, loop_var_ty, loc);
-        auto reg = fi.get_region(0);
-        auto loop_var = get_parameter(reg, 0);
+        tinytc_region_t reg = nullptr;
+        fi.get_regions(reg);
+        tinytc_value_t loop_var = nullptr;
+        get_parameters(reg, loop_var);
+        if (!reg || !loop_var) {
+            throw status::internal_compiler_error;
+        }
         set_name(loop_var, loop_var_name);
         add_instruction(reg_, std::move(fi));
         auto bb = region_builder{reg};
@@ -1595,9 +1595,13 @@ class region_builder {
                       array_view<tinytc_data_type_t> return_type_list = {},
                       location const &loc = {}) -> std::vector<tinytc_value_t> {
         auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
-        auto r0 = ii.get_region(0);
+        tinytc_region_t reg = nullptr;
+        ii.get_regions(reg);
+        if (!reg) {
+            throw status::internal_compiler_error;
+        }
         auto results = add_multivalued(std::move(ii));
-        auto bb = region_builder{r0};
+        auto bb = region_builder{reg};
         then(bb);
         return results;
     }
@@ -1620,12 +1624,15 @@ class region_builder {
                 array_view<tinytc_data_type_t> return_type_list = {},
                 location const &loc = {}) -> std::vector<tinytc_value_t> {
         auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
-        auto r0 = ii.get_region(0);
-        auto r1 = ii.get_region(1);
+        auto regs = std::array<tinytc_region_t, 2u>{nullptr, nullptr};
+        ii.get_regions(regs);
+        if (!regs[0] || !regs[1]) {
+            throw status::internal_compiler_error;
+        }
         auto results = add_multivalued(std::move(ii));
-        auto bb0 = region_builder{r0};
+        auto bb0 = region_builder{regs[0]};
         then(bb0);
-        auto bb1 = region_builder{r1};
+        auto bb1 = region_builder{regs[1]};
         otherwise(bb1);
         return results;
     }

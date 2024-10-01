@@ -17,7 +17,6 @@
 #include <memory>
 #include <stdexcept>
 #include <utility>
-#include <vector>
 
 using namespace tinytc;
 
@@ -454,12 +453,10 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        auto rt = std::vector<tinytc_data_type_t>();
-        rt.reserve(return_type_list_size);
-        for (uint32_t i = 0; i < return_type_list_size; ++i) {
-            rt.emplace_back(return_type_list[i]);
-        }
-        *instr = std::make_unique<if_inst>(condition, std::move(rt), get_optional(loc)).release();
+        *instr = std::make_unique<if_inst>(condition,
+                                           array_view{return_type_list, return_type_list_size},
+                                           get_optional(loc))
+                     .release();
     });
 }
 
@@ -478,13 +475,6 @@ tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr, uint32_t yield_li
 
 void tinytc_inst_destroy(tinytc_inst_t obj) { delete obj; }
 
-tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result) {
-    if (instr == nullptr || result == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { *result = instr->result(); });
-}
-
 tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_list_size,
                                        tinytc_value_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||
@@ -496,24 +486,16 @@ tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_lis
         if (num_results > std::numeric_limits<std::uint32_t>::max()) {
             throw std::out_of_range("too many results");
         }
-        auto const num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::uint32_t>(num_results);
         if (*result_list_size > 0) {
+            num = std::min(num, *result_list_size);
             auto results = instr->result_begin();
-            auto const limit = std::min(num, *result_list_size);
-            for (uint32_t i = 0; i < limit; ++i) {
+            for (uint32_t i = 0; i < num; ++i) {
                 result_list[i] = &results[i];
             }
         }
         *result_list_size = num;
     });
-}
-
-tinytc_status_t tinytc_inst_get_region(tinytc_inst_t instr, uint32_t region_no,
-                                       tinytc_region_t *result) {
-    if (instr == nullptr || result == nullptr || region_no >= instr->num_child_regions()) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { *result = &instr->child_region(region_no); });
 }
 
 tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_list_size,
@@ -527,11 +509,11 @@ tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_li
         if (num_results > std::numeric_limits<std::uint32_t>::max()) {
             throw std::out_of_range("too many results");
         }
-        auto const num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::uint32_t>(num_results);
         if (*result_list_size > 0) {
             auto results = instr->child_regions_begin();
-            auto const limit = std::min(num, *result_list_size);
-            for (uint32_t i = 0; i < limit; ++i) {
+            num = std::min(num, *result_list_size);
+            for (uint32_t i = 0; i < num; ++i) {
                 result_list[i] = &results[i];
             }
         }

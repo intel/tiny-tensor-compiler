@@ -33,8 +33,7 @@ tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt, tinytc_compiler_c
 tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
                                        tinytc_scalar_type_t scalar_ty, uint32_t shape_size,
                                        const int64_t *shape, uint32_t stride_size,
-                                       const int64_t *stride,
-                                       const tinytc_address_space_t addrspace,
+                                       const int64_t *stride, tinytc_address_space_t addrspace,
                                        const tinytc_location_t *loc) {
     if (dt == nullptr || ctx == nullptr || (shape_size != 0 && shape == nullptr) ||
         (stride_size != 0 && stride == nullptr)) {

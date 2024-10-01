@@ -76,6 +76,8 @@ Common
 
   * :ref:`const_tinytc_region_t`
 
+  * :ref:`const_tinytc_value_t`
+
 Common Enumerations
 -------------------
 
@@ -236,6 +238,11 @@ const_tinytc_region_t
 
 .. doxygentypedef:: const_tinytc_region_t
 
+const_tinytc_value_t
+....................
+
+.. doxygentypedef:: const_tinytc_value_t
+
 Data Type
 =========
 
@@ -375,11 +382,7 @@ Instruction
 
   * :ref:`tinytc_yield_inst_create`
 
-  * :ref:`tinytc_inst_get_region`
-
   * :ref:`tinytc_inst_get_regions`
-
-  * :ref:`tinytc_inst_get_value`
 
   * :ref:`tinytc_inst_get_values`
 
@@ -543,20 +546,10 @@ tinytc_yield_inst_create
 
 .. doxygenfunction:: tinytc_yield_inst_create
 
-tinytc_inst_get_region
-......................
-
-.. doxygenfunction:: tinytc_inst_get_region
-
 tinytc_inst_get_regions
 .......................
 
 .. doxygenfunction:: tinytc_inst_get_regions
-
-tinytc_inst_get_value
-.....................
-
-.. doxygenfunction:: tinytc_inst_get_value
 
 tinytc_inst_get_values
 ......................
@@ -639,8 +632,6 @@ Region
 
   * :ref:`tinytc_region_add_instruction`
 
-  * :ref:`tinytc_region_get_parameter`
-
   * :ref:`tinytc_region_get_parameters`
 
 Region Functions
@@ -650,11 +641,6 @@ tinytc_region_add_instruction
 .............................
 
 .. doxygenfunction:: tinytc_region_add_instruction
-
-tinytc_region_get_parameter
-...........................
-
-.. doxygenfunction:: tinytc_region_get_parameter
 
 tinytc_region_get_parameters
 ............................

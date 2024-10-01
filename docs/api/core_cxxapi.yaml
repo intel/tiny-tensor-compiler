@@ -10,7 +10,9 @@ Core C++-API:
       - tinytc::CHECK_STATUS
       - tinytc::CHECK_STATUS_LOC
     class:
+      - tinytc::array_view_base
       - tinytc::array_view
+      - tinytc::mutable_array_view
       - tinytc::shared_handle
       - tinytc::unique_handle
     typedef:

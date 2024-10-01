@@ -42,11 +42,11 @@ tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, uint32_t *resu
         if (num_results > std::numeric_limits<std::uint32_t>::max()) {
             throw std::out_of_range("too many results");
         }
-        auto const num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::uint32_t>(num_results);
         if (*result_list_size > 0) {
             auto results = reg->param_begin();
-            auto const limit = std::min(num, *result_list_size);
-            for (uint32_t i = 0; i < limit; ++i) {
+            num = std::min(num, *result_list_size);
+            for (uint32_t i = 0; i < num; ++i) {
                 result_list[i] = &results[i];
             }
         }

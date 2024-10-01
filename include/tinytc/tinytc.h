@@ -82,7 +82,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
 TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(
     tinytc_data_type_t *dt, tinytc_compiler_context_t ctx, tinytc_scalar_type_t scalar_ty,
     uint32_t shape_size, const int64_t *shape, uint32_t stride_size, const int64_t *stride,
-    const tinytc_address_space_t addrspace, const tinytc_location_t *loc);
+    tinytc_address_space_t addrspace, const tinytc_location_t *loc);
 
 /**
  * @brief Get group data type
@@ -511,10 +511,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *in
 /**
  * @brief Create parallel region
  *
- * Takes ownership of region.
- *
  * @code
- * parallel { %body }
+ * parallel { }
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -659,13 +657,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
 /**
  * @brief Create for loop
  *
- * Takes ownership of region.
- *
  * @code
- * for %loop_var = %from, %to, %step : type(%loop_var) { %body }
- * ; type(%loop_var) == type(%from)
- * ; type(%loop_var) == type(%to)
- * ; type(%loop_var) == type(%step)
+ * for %loop_var = %from, %to, %step : loop_var_type { }
+ * ; loop_var_type == type(%from)
+ * ; loop_var_type == type(%to)
+ * ; loop_var_type == type(%step)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -685,12 +681,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
 /**
  * @brief Create foreach loop
  *
- * Takes ownership of region.
- *
  * @code
- * foreach %loop_var = %from, %to : type(%loop_var) { %body }
- * ; type(%loop_var) == type(%from)
- * ; type(%loop_var) == type(%to)
+ * foreach %loop_var = %from, %to : loop_var_type { }
+ * ; loop_var_type == type(%from)
+ * ; loop_var_type == type(%to)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -709,10 +703,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, t
 /**
  * @brief Create if condition
  *
- * Takes ownership of if and else region (if given).
- *
  * @code
- * if %condition { %then } else { %otherwise }
+ * if %condition -> (return_type_list, ...) { } else { }
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -757,23 +749,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
 TINYTC_EXPORT void tinytc_inst_destroy(tinytc_inst_t instr);
 
 /**
- * @brief Get value produced by instruction
- *
- * @param instr [in] inst object
- * @param result [out] result value; may be set to nullptr if instruction does not return a value
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_value(tinytc_inst_t instr, tinytc_value_t *result);
-
-/**
  * @brief Get values produced by instruction
  *
  * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
  * the number of results
  *
  * @param instr [in] inst object
- * @param result_list_size [inout] number of results to fetch; is updated with the actual value
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greater than the number of
+ * results, the value is updated with the correct number of results
  * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
  * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
  *
@@ -784,25 +768,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      tinytc_value_t *result_list);
 
 /**
- * @brief Get child region of instruction
- *
- * @param instr [in] inst object
- * @param region_no [in] region index
- * @param result [out] result value
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_region(tinytc_inst_t instr, uint32_t region_no,
-                                                     tinytc_region_t *result);
-
-/**
  * @brief Get child regions of instruction
  *
  * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
  * the number of results
  *
  * @param instr [in] inst object
- * @param result_list_size [inout] number of results to fetch; is updated with the actual value
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greater than the number of
+ * results, the value is updated with the correct number of results
  * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
  * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
  *
@@ -831,25 +805,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg,
                                                             tinytc_inst_t instruction);
 
 /**
- * @brief Get region parameter
- *
- * @param reg [in] region object
- * @param param_no [in] parameter index
- * @param result [out] result value
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameter(tinytc_region_t reg, uint32_t param_no,
-                                                          tinytc_value_t *result);
-
-/**
  * @brief Get region parameters
  *
  * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
  * the number of results
  *
  * @param reg [in] region object
- * @param result_list_size [inout] number of results to fetch; is updated with the actual value
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greather than the number of
+ * results, the value is updated with the correct number of results
  * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
  * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
  *
@@ -886,7 +850,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t na
 /**
  * @brief Set work-group size
  *
- * @param fun [out] func object (must be the function definition, not the function prototype)
+ * @param fun [inout] function object
  * @param x [in] number of rows in parallel grid; must be a multiple of the subgroup size
  * @param y [in] number of columns in parallel grid
  *
@@ -897,7 +861,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_set_work_group_size(tinytc_func_t fun,
 /**
  * @brief Set subgroup size
  *
- * @param fun [out] func object (must be the function definition, not the function prototype)
+ * @param fun [inout] function object
  * @param sgs [in] subgroup size; the supported values need to be queried from the compute device
  *
  * @return tinytc_status_success on success and error otherwise
@@ -943,7 +907,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_comp
  * @brief Append function to program
  *
  * The program takes ownership of the function.
- * A function must not be added to multiple programs.
+ * A function must not be added to multiple programs nor must the user destroy the function after
+ * adding it to the program.
  *
  * @param prg [inout] program object
  * @param fun [in,pass_ownership] function object

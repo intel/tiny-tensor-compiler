@@ -519,8 +519,6 @@ Region
 
   * :ref:`get_num_parameters`
 
-  * :ref:`get_parameter`
-
   * :ref:`get_parameters`
 
 * Classes
@@ -539,11 +537,6 @@ get_num_parameters
 ..................
 
 .. doxygenfunction:: tinytc::get_num_parameters
-
-get_parameter
-.............
-
-.. doxygenfunction:: tinytc::get_parameter
 
 get_parameters
 ..............

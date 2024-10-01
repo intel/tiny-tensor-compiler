@@ -96,16 +96,13 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                        {1, ldC, strideC}, address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
                 auto fn_body = f.get_body();
-                auto alpha = get_parameter(fn_body, 0);
-                set_name(alpha, "alpha");
-                auto A = get_parameter(fn_body, 1);
-                set_name(A, "A");
-                auto B = get_parameter(fn_body, 2);
-                set_name(B, "B");
-                auto beta = get_parameter(fn_body, 3);
-                set_name(beta, "beta");
-                auto C = get_parameter(fn_body, 4);
-                set_name(C, "C");
+                auto params = std::array<tinytc_value_t, 5u>{};
+                get_parameters(fn_body, params);
+                set_name(params[0], "alpha");
+                set_name(params[1], "A");
+                set_name(params[2], "B");
+                set_name(params[3], "beta");
+                set_name(params[4], "C");
 
                 auto bb = region_builder{fn_body};
 
@@ -114,14 +111,14 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto const A_static_sizes = std::vector<std::int64_t>{M, K, 0};
                 auto const B_static_sizes = std::vector<std::int64_t>{K, N, 0};
                 auto const C_static_sizes = std::vector<std::int64_t>{M, N, 0};
-                auto a = bb.add(make_subview(A, static_offsets, A_static_sizes,
+                auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
                                              array_view<tinytc_value_t>{gid}, {}, my_loc()));
-                auto b = bb.add(make_subview(B, static_offsets, B_static_sizes,
+                auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
                                              array_view<tinytc_value_t>{gid}, {}, my_loc()));
-                auto c = bb.add(make_subview(C, static_offsets, C_static_sizes,
+                auto c = bb.add(make_subview(params[3], static_offsets, C_static_sizes,
                                              array_view<tinytc_value_t>{gid}, {}, my_loc()));
-                auto beta_val = is_beta_nonzero ? beta : bb.add(make_constant(0.0, ty_, my_loc()));
-                bb.add(make_gemm(tA_, tB_, false, alpha, std::move(a), std::move(b), beta_val,
+                auto beta = is_beta_nonzero ? params[4] : bb.add(make_constant(0.0, ty_, my_loc()));
+                bb.add(make_gemm(tA_, tB_, false, params[0], std::move(a), std::move(b), beta,
                                  std::move(c), my_loc()));
 
                 return f;

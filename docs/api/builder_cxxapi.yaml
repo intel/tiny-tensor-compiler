@@ -84,7 +84,6 @@ Builder C++-API:
     function:
       - tinytc::add_instruction
       - tinytc::get_num_parameters
-      - tinytc::get_parameter
       - tinytc::get_parameters
     class:
       - tinytc::region_builder
