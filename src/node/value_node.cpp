@@ -18,6 +18,7 @@ auto tinytc_value::use_end() const -> const_use_iterator { return {nullptr}; }
 auto tinytc_value::uses() const -> iterator_range_wrapper<const_use_iterator> {
     return {use_begin(), use_end()};
 }
+auto tinytc_value::has_uses() const -> bool { return first_use_ != nullptr; }
 
 namespace tinytc {
 

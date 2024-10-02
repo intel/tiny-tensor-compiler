@@ -237,7 +237,8 @@ auto constant_evaluator::operator()(size_inst &in) -> inst {
 }
 
 void constant_propagation_pass::run_on_function(function_node &fn) {
-    walk<walk_order::post_order>(fn, [&](region_node &reg) {
+    // @todo: Use worklist instead of pre-order?
+    walk<walk_order::pre_order>(fn, [&](region_node &reg) {
         for (auto it = reg.begin(); it != reg.end(); ++it) {
             auto known_constant = visit(constant_evaluator{}, *it);
             if (known_constant) {
@@ -250,8 +251,13 @@ void constant_propagation_pass::run_on_function(function_node &fn) {
                 for (; r_old != it->result_end() && r_new != known_constant->result_end();
                      ++r_old, ++r_new) {
                     r_new->name(r_old->name());
-                    for (auto &u : r_old->uses()) {
-                        u.set(&*r_new);
+                    auto u = r_old->use_begin();
+                    while (r_old->has_uses()) {
+                        u->set(&*r_new);
+                        u = r_old->use_begin();
+                    }
+                    if (r_old->has_uses()) {
+                        throw status::internal_compiler_error;
                     }
                 }
                 // delete old instruction

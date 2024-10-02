@@ -47,6 +47,7 @@ struct tinytc_value final {
     auto use_begin() const -> tinytc::const_use_iterator;
     auto use_end() const -> tinytc::const_use_iterator;
     auto uses() const -> tinytc::iterator_range_wrapper<tinytc::const_use_iterator>;
+    auto has_uses() const -> bool;
 
     // Can be nullptr, e.g. if value is a region parameter
     auto defining_inst() const -> tinytc_inst_t { return def_inst_; }
