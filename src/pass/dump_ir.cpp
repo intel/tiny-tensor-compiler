@@ -195,7 +195,7 @@ void dump_ir_pass::operator()(expand_inst const &e) {
             *os_ << " x ";
         }
         if (is_dynamic_value(ses[i])) {
-            dump_val(*es[j++]);
+            dump_val(es[j++]);
         } else {
             *os_ << ses[i];
         }
@@ -219,7 +219,7 @@ void dump_ir_pass::operator()(load_inst const &e) {
     dump_val(e.operand());
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(*i); });
+                  [this](auto const &i) { dump_val(i); });
     *os_ << "] : ";
     visit(*this, *e.operand().ty());
 }
@@ -350,7 +350,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         }
         auto offset = s.static_offsets()[i];
         if (is_dynamic_value(offset)) {
-            dump_val(*dyn_offsets[joffset++]);
+            dump_val(dyn_offsets[joffset++]);
         } else {
             *os_ << offset;
         }
@@ -358,7 +358,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         if (size > 0 || is_dynamic_value(size)) {
             *os_ << ":";
             if (is_dynamic_value(size)) {
-                dump_val(*dyn_sizes[jsize++]);
+                dump_val(dyn_sizes[jsize++]);
             } else {
                 *os_ << size;
             }
@@ -378,7 +378,7 @@ void dump_ir_pass::operator()(store_inst const &e) {
     dump_val(e.operand());
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
-                  [this](auto const &i) { dump_val(*i); });
+                  [this](auto const &i) { dump_val(i); });
     *os_ << "] : ";
     visit(*this, *e.operand().ty());
 }
@@ -392,10 +392,10 @@ void dump_ir_pass::operator()(sum_inst const &a) {
 void dump_ir_pass::operator()(yield_inst const &y) {
     *os_ << "yield ";
     if (y.num_operands() > 0) {
-        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { dump_val(*i); }, ", ");
+        do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { dump_val(i); }, ", ");
         *os_ << " : ";
         do_with_infix(
-            y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i->ty()); }, ", ");
+            y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i.ty()); }, ", ");
     } else {
         *os_ << ":";
     }
@@ -419,8 +419,7 @@ void dump_ir_pass::dump_region(region_node const &reg) {
 }
 
 void dump_ir_pass::run_on_function(function_node const &fn) {
-    tracker_ = slot_tracker{};
-    tracker_.run_on_function(fn);
+    init_slot_tracker(fn);
 
     *os_ << "func @" << fn.name() << "(";
     std::string infix = ",\n       ";
@@ -448,5 +447,10 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
 
 void dump_ir_pass::run_on_region(region_node const &reg) { dump_region(reg); }
 void dump_ir_pass::run_on_instruction(inst_node const &in) { visit(*this, in); }
+
+void dump_ir_pass::init_slot_tracker(function_node const &fn) {
+    tracker_ = slot_tracker{};
+    tracker_.run_on_function(fn);
+}
 
 } // namespace tinytc

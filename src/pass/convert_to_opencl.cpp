@@ -451,7 +451,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e)
     int j = 0;
     for (auto &s : static_shape) {
         if (is_dynamic_value(s)) {
-            eshape_cl.emplace_back(val(*dyn_shape[j++]));
+            eshape_cl.emplace_back(val(dyn_shape[j++]));
         } else {
             eshape_cl.emplace_back(clir::expr(s, static_cast<short>(size(scalar_type::index) * 8)));
         }
@@ -527,7 +527,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                              throw compilation_error(e.loc(), status::ir_invalid_number_of_indices);
                          }
 
-                         auto idx = val(*e.index_list().front());
+                         auto idx = val(e.index_list().front());
                          rhs = rhs + idx;
 
                          auto &dv = get_dope_vector(e.operand());
@@ -550,7 +550,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
                          }
                          auto &dv = get_dope_vector(e.operand());
                          for (std::int64_t i = 0; i < m.dim(); ++i) {
-                             rhs = rhs + val(*e.index_list()[i]) * dv.stride(i);
+                             rhs = rhs + val(e.index_list()[i]) * dv.stride(i);
                          }
                          rhs = clir::dereference(std::move(rhs));
                      },
@@ -907,7 +907,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
 
         auto offset_cl = clir::expr{};
         if (is_dynamic_value(offset)) {
-            offset_cl = val(*dyn_offsets[joffset++]);
+            offset_cl = val(dyn_offsets[joffset++]);
         } else {
             offset_cl =
                 clir::expr(offset, static_cast<short>(tinytc::size(scalar_type::index) * 8));
@@ -918,7 +918,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s
         if (size > 0 || is_dynamic_value(size)) {
             auto size_cl = clir::expr{};
             if (is_dynamic_value(size)) {
-                size_cl = val(*dyn_sizes[jsize++]);
+                size_cl = val(dyn_sizes[jsize++]);
             } else {
                 size_cl =
                     clir::expr(size, static_cast<short>(tinytc::size(scalar_type::index) * 8));
@@ -954,7 +954,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(store_inst const &s) 
     auto lhs = val(s.operand());
     auto &dv = get_dope_vector(s.operand());
     for (std::int64_t i = 0; i < ot->dim(); ++i) {
-        lhs = lhs + val(*s.index_list()[i]) * dv.stride(i);
+        lhs = lhs + val(s.index_list()[i]) * dv.stride(i);
     }
 
     auto rhs = val(s.val());

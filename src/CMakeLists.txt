@@ -44,6 +44,7 @@ set(SOURCES
     pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
     pass/dump_cfg.cpp
+    pass/dump_def_use.cpp
     pass/dump_ir.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp

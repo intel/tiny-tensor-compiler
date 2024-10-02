@@ -65,11 +65,13 @@ class dump_ir_pass {
     void run_on_region(region_node const &reg);
     void run_on_instruction(inst_node const &in);
 
+    void dump_val(value_node const &v);
+    void init_slot_tracker(function_node const &fn);
+
   private:
     void dump_region(region_node const &reg);
     void dump_blas_a2(blas_a2_inst const &g);
     void dump_blas_a3(blas_a3_inst const &g);
-    void dump_val(value_node const &v);
 
     template <typename Iterator, typename Action>
     void do_with_infix(Iterator begin, Iterator end, Action a, std::string const &infix = ",") {

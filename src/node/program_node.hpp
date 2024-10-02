@@ -16,8 +16,9 @@
 
 struct tinytc_prog final : tinytc::reference_counted {
   public:
-    using iterator = tinytc::indirect_iterator<std::vector<tinytc::func>::iterator>;
-    using const_iterator = tinytc::indirect_iterator<std::vector<tinytc::func>::const_iterator>;
+    using iterator = tinytc::indirect_random_access_iterator<std::vector<tinytc::func>::iterator>;
+    using const_iterator =
+        tinytc::indirect_random_access_iterator<std::vector<tinytc::func>::const_iterator>;
 
     tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc = {});
 

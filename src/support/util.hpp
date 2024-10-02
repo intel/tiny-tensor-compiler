@@ -41,85 +41,104 @@ constexpr auto fnv1a(Head &&head, Tail &&...tail) -> std::uint64_t {
 template <typename ItT> class iterator_range_wrapper {
   public:
     iterator_range_wrapper(ItT begin, ItT end) : begin_(std::move(begin)), end_(std::move(end)) {}
-    ItT begin() const { return begin_; }
-    ItT end() const { return end_; }
+    ItT begin() { return begin_; }
+    ItT end() { return end_; }
 
   private:
     ItT begin_, end_;
 };
 
-template <typename IteratorT> class indirect_iterator : public IteratorT {
+template <typename IteratorT> class indirection_kind_deref {
   public:
-    using value_type = std::decay_t<decltype(*(*std::declval<IteratorT>()))>;
-    using pointer = value_type *;
+    using iterator_value_reference = decltype(*std::declval<IteratorT>());
+    using value_type = std::decay_t<decltype(*std::declval<iterator_value_reference>())>;
     using reference = value_type &;
+    using pointer = value_type *;
 
-    auto operator*() const -> reference { return *(this->IteratorT::operator*()); }
-    auto operator->() const -> pointer { return &*(this->IteratorT::operator*()); }
-    auto operator[](std::size_t n) const -> reference { return *(this->IteratorT::operator[](n)); }
+    static auto ref(iterator_value_reference v) -> reference { return *v; }
+    static auto ptr(iterator_value_reference v) -> pointer { return &ref(v); }
 };
 
-template <typename T> class pointer_iterator {
+template <typename IteratorT> class indirection_kind_get {
   public:
-    using value_type = T;
+    using iterator_value_reference = decltype(*std::declval<IteratorT>());
+    using value_type =
+        std::remove_reference_t<decltype(*std::declval<iterator_value_reference>().get())>;
+    using reference = value_type &;
+    using pointer = value_type *;
+
+    static auto ref(iterator_value_reference v) -> reference { return *v.get(); }
+    static auto ptr(iterator_value_reference v) -> pointer { return v.get(); }
+};
+
+template <typename IteratorT, template <typename> class IndirectionKind = indirection_kind_deref>
+class indirect_random_access_iterator {
+  public:
+    using value_type = typename IndirectionKind<IteratorT>::value_type;
     using pointer = value_type *;
     using reference = value_type &;
     using difference_type = std::ptrdiff_t;
 
-    pointer_iterator() : ptr_{nullptr} {}
-    pointer_iterator(pointer ptr) : ptr_{std::move(ptr)} {}
+    indirect_random_access_iterator() : it_{nullptr} {}
+    indirect_random_access_iterator(IteratorT it) : it_{std::move(it)} {}
 
-    auto operator*() const -> reference { return *ptr_; }
-    auto operator->() const -> pointer { return ptr_; }
-    auto operator[](std::size_t n) const -> reference { return ptr_[n]; }
-    auto operator++() -> pointer_iterator & {
-        ++ptr_;
+    auto operator*() const -> reference { return IndirectionKind<IteratorT>::ref(*it_); }
+    auto operator->() const -> pointer { return IndirectionKind<IteratorT>::ptr(*it_); }
+    auto operator[](std::size_t n) const -> reference {
+        return IndirectionKind<IteratorT>::ref(it_[n]);
+    }
+    auto operator++() -> indirect_random_access_iterator & {
+        ++it_;
         return *this;
     }
-    auto operator++(int) -> pointer_iterator {
-        auto tmp = ptr_++;
-        return pointer_iterator{tmp};
+    auto operator++(int) -> indirect_random_access_iterator {
+        auto tmp = it_++;
+        return indirect_random_access_iterator{tmp};
     }
-    auto operator--() -> pointer_iterator & {
-        --ptr_;
+    auto operator--() -> indirect_random_access_iterator & {
+        --it_;
         return *this;
     }
-    auto operator--(int) -> pointer_iterator {
-        auto tmp = ptr_--;
-        return pointer_iterator{tmp};
+    auto operator--(int) -> indirect_random_access_iterator {
+        auto tmp = it_--;
+        return indirect_random_access_iterator{tmp};
     }
-    auto operator-(pointer_iterator const &other) const -> difference_type {
-        return other.ptr_ - ptr_;
+    auto operator-(indirect_random_access_iterator const &other) const -> difference_type {
+        return it_ - other.it_;
     }
-    auto operator+=(std::ptrdiff_t n) -> pointer_iterator & {
-        ptr_ += n;
+    auto operator+=(std::ptrdiff_t n) -> indirect_random_access_iterator & {
+        it_ += n;
         return *this;
     }
-    auto operator-=(std::ptrdiff_t n) -> pointer_iterator & {
-        ptr_ -= n;
+    auto operator-=(std::ptrdiff_t n) -> indirect_random_access_iterator & {
+        it_ -= n;
         return *this;
     }
-    auto operator==(pointer_iterator const &other) const -> bool { return ptr_ == other.ptr_; }
-    auto operator<=>(pointer_iterator const &other) const -> bool { return ptr_ <=> other.ptr_; }
+    auto operator==(indirect_random_access_iterator const &other) const -> bool {
+        return it_ == other.it_;
+    }
+    auto operator<=>(indirect_random_access_iterator const &other) const -> bool {
+        return it_ <=> other.it_;
+    }
 
   private:
-    pointer ptr_;
+    IteratorT it_;
 };
 
-template <typename T>
-auto operator+(pointer_iterator<T> const &p, std::ptrdiff_t n) -> pointer_iterator<T> {
-    auto q = pointer_iterator{p};
+template <typename T, template <typename> class Kind>
+auto operator+(indirect_random_access_iterator<T, Kind> const &p, std::ptrdiff_t n) {
+    auto q = indirect_random_access_iterator{p};
     return q += n;
 }
 
-template <typename T>
-auto operator+(std::ptrdiff_t n, pointer_iterator<T> const &p) -> pointer_iterator<T> {
+template <typename T, template <typename> class Kind>
+auto operator+(std::ptrdiff_t n, indirect_random_access_iterator<T, Kind> const &p) {
     return p + n;
 }
 
-template <typename T>
-auto operator-(pointer_iterator<T> const &p, std::ptrdiff_t n) -> pointer_iterator<T> {
-    auto q = pointer_iterator{p};
+template <typename T, template <typename> class Kind>
+auto operator-(indirect_random_access_iterator<T, Kind> const &p, std::ptrdiff_t n) {
+    auto q = indirect_random_access_iterator{p};
     return q -= n;
 }
 

@@ -85,9 +85,6 @@ using inst_nodes =
               class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst,
               class yield_inst>;
 
-using op_range = iterator_range_wrapper<tinytc_value_t *>;
-using const_op_range = iterator_range_wrapper<const tinytc_value_t *>;
-
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
 
@@ -99,6 +96,19 @@ using const_region_range = iterator_range_wrapper<const_tinytc_region_t>;
 struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> {
   public:
     using leaves = tinytc::inst_nodes;
+
+    using op_iterator =
+        tinytc::indirect_random_access_iterator<tinytc::use *, tinytc::indirection_kind_get>;
+    using const_op_iterator =
+        tinytc::indirect_random_access_iterator<const tinytc::use *, tinytc::indirection_kind_get>;
+
+    using op_range = tinytc::iterator_range_wrapper<op_iterator>;
+    using const_op_range = tinytc::iterator_range_wrapper<const_op_iterator>;
+
+    static_assert(std::random_access_iterator<op_iterator>);
+    static_assert(std::random_access_iterator<const_op_iterator>);
+    static_assert(std::ranges::random_access_range<op_range>);
+    static_assert(std::ranges::random_access_range<const_op_range>);
 
     inline tinytc_inst(tinytc::IK tid) : tid_(tid) {}
     virtual ~tinytc_inst() = default;
@@ -114,14 +124,15 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
     // Iterator over operands
-    inline auto op_begin() -> tinytc_value_t * { return op_begin_; }
-    inline auto op_end() -> tinytc_value_t * { return op_end_; }
-    inline auto operands() -> tinytc::op_range { return {op_begin_, op_end_}; }
-    inline auto op_begin() const -> const tinytc_value_t * { return op_begin_; }
-    inline auto op_end() const -> const tinytc_value_t * { return op_end_; }
-    inline auto operands() const -> tinytc::const_op_range { return {op_begin_, op_end_}; }
-    inline auto op(std::size_t pos) -> tinytc_value_t & { return op_begin_[pos]; }
-    inline auto op(std::size_t pos) const -> tinytc_value_t const & { return op_begin_[pos]; }
+    inline auto op_begin() -> op_iterator { return {op_begin_}; }
+    inline auto op_end() -> op_iterator { return {op_end_}; }
+    inline auto operands() -> op_range { return {op_begin(), op_end()}; }
+    inline auto op_begin() const -> const_op_iterator { return {op_begin_}; }
+    inline auto op_end() const -> const_op_iterator { return {op_end_}; }
+    inline auto operands() const -> const_op_range { return {op_begin(), op_end()}; }
+    inline auto op(std::size_t pos) -> tinytc_value_t { return op_begin_[pos].get(); }
+    inline auto op(std::size_t pos) const -> tinytc_value_t { return op_begin_[pos].get(); }
+    inline void op(std::size_t pos, tinytc_value_t val) { op_begin_[pos] = val; }
     inline auto num_operands() const -> std::int64_t { return op_end_ - op_begin_; }
 
     // Iterator over results
@@ -208,15 +219,15 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     }
 
   protected:
-    inline auto op_range(tinytc_value_t *begin, tinytc_value_t *end) {
+    inline auto set_op_range(tinytc::use *begin, tinytc::use *end) noexcept {
         op_begin_ = begin;
         op_end_ = end;
     }
-    inline auto result_range(tinytc_value_t begin, tinytc_value_t end) {
+    inline auto set_result_range(tinytc_value_t begin, tinytc_value_t end) noexcept {
         result_begin_ = begin;
         result_end_ = end;
     }
-    inline auto child_regions_range(tinytc_region_t begin, tinytc_region_t end) {
+    inline auto set_child_regions_range(tinytc_region_t begin, tinytc_region_t end) noexcept {
         child_regions_begin_ = begin;
         child_regions_end_ = end;
     }
@@ -224,7 +235,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
   private:
     tinytc::IK tid_;
     tinytc::location loc_;
-    tinytc_value_t *op_begin_ = nullptr, *op_end_ = nullptr;
+    tinytc::use *op_begin_ = nullptr, *op_end_ = nullptr;
     tinytc_value_t result_begin_ = nullptr, result_end_ = nullptr;
     tinytc_region_t child_regions_begin_ = nullptr, child_regions_end_ = nullptr;
 };
@@ -272,18 +283,24 @@ class standard_inst : public inst_node {
         : inst_node{tid}, ops_{num_operands}, results_{num_results},
           child_regions_{num_child_regions} {
         if (num_operands > 0) {
-            op_range(ops_.get(), ops_.get() + num_operands);
+            auto *op_begin = ops_.get();
+            set_op_range(op_begin, op_begin + num_operands);
+            if constexpr (NumOperands != 0) {
+                for (std::int64_t i = 0; i < num_operands; ++i) {
+                    op_begin[i].owner(this);
+                }
+            }
         }
         if (num_results > 0) {
-            result_range(results_.get(), results_.get() + num_results);
+            set_result_range(results_.get(), results_.get() + num_results);
         }
         if (num_child_regions > 0) {
-            child_regions_range(child_regions_.get(), child_regions_.get() + num_child_regions);
+            set_child_regions_range(child_regions_.get(), child_regions_.get() + num_child_regions);
         }
     }
 
   private:
-    object_container<tinytc_value_t, NumOperands> ops_;
+    object_container<use, NumOperands> ops_;
     object_container<tinytc_value, NumResults> results_;
     object_container<tinytc_region, NumChildRegions> child_regions_;
 };
@@ -523,9 +540,7 @@ class group_size_inst : public standard_inst<0, 1> {
 class lifetime_stop_inst : public standard_inst<1, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::lifetime_stop; }
-    inline lifetime_stop_inst(tinytc_value_t obj) : standard_inst{IK::lifetime_stop} {
-        op(0) = std::move(obj);
-    }
+    inline lifetime_stop_inst(tinytc_value_t obj) : standard_inst{IK::lifetime_stop} { op(0, obj); }
     inline auto object() const -> tinytc_value const & { return *op(0); }
 };
 
@@ -716,7 +731,7 @@ class yield_inst : public standard_inst<dynamic, 0> {
         : standard_inst{IK::yield, static_cast<std::int64_t>(vals.size())} {
         loc(lc);
         for (std::size_t i = 0; i < vals.size(); ++i) {
-            op(i) = vals[i];
+            op(i, vals[i]);
         }
     }
 };

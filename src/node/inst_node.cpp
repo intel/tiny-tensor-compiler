@@ -40,28 +40,30 @@ memref_data_type *get_memref_type(location const &loc, tinytc_value const &v) {
 blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
                            tinytc_value_t B, bool atomic)
     : standard_inst{tid}, atomic_(atomic) {
-    op(op_alpha) = std::move(alpha);
-    op(op_A) = std::move(A);
-    op(op_beta) = std::move(beta);
-    op(op_B) = std::move(B);
+    op(op_alpha, alpha);
+    op(op_A, A);
+    op(op_beta, beta);
+    op(op_B, B);
 }
 
 blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
                            tinytc_value_t beta, tinytc_value_t C, bool atomic)
     : standard_inst{tid}, atomic_(atomic) {
-    op(op_alpha) = std::move(alpha);
-    op(op_A) = std::move(A);
-    op(op_B) = std::move(B);
-    op(op_beta) = std::move(beta);
-    op(op_C) = std::move(C);
+    op(op_alpha, alpha);
+    op(op_A, A);
+    op(op_B, B);
+    op(op_beta, beta);
+    op(op_C, C);
 }
 
 loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
                      tinytc_data_type_t loop_var_type, location const &lc)
     : standard_inst{tid, step0 ? 3 : 2} {
-    op(op_from) = std::move(from0);
-    op(op_to) = std::move(to0);
-    op(op_step) = std::move(step0);
+    op(op_from, from0);
+    op(op_to, to0);
+    if (step0) {
+        op(op_step, step0);
+    }
     body().set_params(array_view{loop_var_type}, lc);
     loc(lc);
 
@@ -122,8 +124,8 @@ axpby_inst::axpby_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, t
 arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b0,
                        location const &lc)
     : standard_inst{IK::arith}, operation_(operation) {
-    op(op_a) = std::move(a0);
-    op(op_b) = std::move(b0);
+    op(op_a, a0);
+    op(op_b, b0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -158,7 +160,7 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0,
                                    location const &lc)
     : standard_inst{IK::arith_unary}, operation_(operation) {
-    op(op_a) = std::move(a0);
+    op(op_a, a0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -179,7 +181,7 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
 
 cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const &lc)
     : standard_inst{IK::cast} {
-    op(op_a) = std::move(a);
+    op(op_a, a);
     loc(lc);
 
     if (!isa<scalar_data_type>(*to_ty)) {
@@ -192,8 +194,8 @@ cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const 
 compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t b0,
                            location const &lc)
     : standard_inst{IK::compare}, cond_(cond) {
-    op(op_a) = std::move(a0);
-    op(op_b) = std::move(b0);
+    op(op_a, a0);
+    op(op_b, b0);
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
@@ -232,9 +234,9 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
                          array_view<tinytc_value_t> expand_shape0, location const &lc)
     : standard_inst{IK::expand, static_cast<std::int64_t>(1 + expand_shape0.size())},
       expanded_mode_(expanded_mode), static_expand_shape_(std::move(static_expand_shape0)) {
-    op(0) = std::move(op0);
+    op(0, op0);
     for (std::size_t i = 0; i < expand_shape0.size(); ++i) {
-        op(1 + i) = expand_shape0[i];
+        op(1 + i, expand_shape0[i]);
     }
     loc(lc);
 
@@ -280,7 +282,7 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
 
 fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, location const &lc)
     : standard_inst{IK::fuse}, from_(from), to_(to) {
-    op(0) = std::move(op0);
+    op(0, op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= from_ && from_ < to_ && to_ < m->dim();
@@ -316,9 +318,9 @@ fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, loc
 
 load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0, location const &lc)
     : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())} {
-    op(0) = std::move(op0);
+    op(0, op0);
     for (std::size_t i = 0; i < index_list0.size(); ++i) {
-        op(1 + i) = index_list0[i];
+        op(1 + i, index_list0[i]);
     }
     loc(lc);
 
@@ -460,7 +462,7 @@ hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_va
 if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return_types,
                  location const &lc)
     : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
-    op(0) = std::move(condition);
+    op(0, condition);
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         result(i) = value_node{return_types[i], lc};
@@ -475,7 +477,7 @@ parallel_inst::parallel_inst(location const &lc) : standard_inst{IK::parallel} {
 
 size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, location const &lc)
     : standard_inst{IK::size}, mode_(mode) {
-    op(0) = std::move(op0);
+    op(0, op0);
     loc(lc);
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
@@ -493,15 +495,15 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
                            location const &lc)
     : standard_inst{IK::subview, static_cast<std::int64_t>(1 + offsets0.size() + sizes0.size())},
       static_offsets_(std::move(static_offsets0)), static_sizes_(std::move(static_sizes0)) {
-    op(0) = std::move(op0);
+    op(0, op0);
     {
         std::size_t i = 1;
         for (auto const &val : offsets0) {
-            op(i++) = val;
+            op(i++, val);
         }
         num_dyn_offsets_ = i - 1;
         for (auto const &val : sizes0) {
-            op(i++) = val;
+            op(i++, val);
         }
     }
     loc(lc);
@@ -540,12 +542,12 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
 store_inst::store_inst(tinytc_value_t val0, tinytc_value_t op0,
                        array_view<tinytc_value_t> index_list0, location const &lc)
     : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())} {
-    op(op_val) = std::move(val0);
-    op(op_operand) = std::move(op0);
+    op(op_val, val0);
+    op(op_operand, op0);
     {
         std::size_t i = op_operand;
         for (auto const &val : index_list0) {
-            op(++i) = val;
+            op(++i, val);
         }
     }
     loc(lc);
