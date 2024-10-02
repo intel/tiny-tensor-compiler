@@ -65,6 +65,8 @@ typedef enum {
     tinytc_status_ir_expected_local_address_space = 0x114,  ///< Expected local address space
     tinytc_status_ir_expected_global_address_space = 0x115, ///< Expected global address space
     tinytc_status_ir_invalid_offset = 0x116,                ///< Invalid offset
+    tinytc_status_ir_i1_unsupported = 0x117,      ///< Instruction does not support i1 type
+    tinytc_status_ir_complex_unsupported = 0x118, ///< Instruction does not support complex type
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST

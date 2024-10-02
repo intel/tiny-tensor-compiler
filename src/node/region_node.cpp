@@ -31,6 +31,6 @@ tinytc_region::~tinytc_region() {}
 void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types, location const &lc) {
     params_.resize(param_types.size());
     for (std::size_t i = 0; i < param_types.size(); ++i) {
-        params_[i] = tinytc_value{param_types[i], lc};
+        params_[i] = tinytc_value{param_types[i], nullptr, lc};
     }
 }

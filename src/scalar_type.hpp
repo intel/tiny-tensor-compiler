@@ -9,7 +9,11 @@
 #include <clir/builtin_type.hpp>
 #include <clir/data_type.hpp>
 
+#include <cstdint>
+
 namespace tinytc {
+
+using host_index_type = std::int64_t;
 
 bool is_floating_type(scalar_type ty);
 bool is_complex_type(scalar_type ty);

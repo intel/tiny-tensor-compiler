@@ -46,7 +46,7 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                   },
                   [&allocs](lifetime_stop_inst &s) {
                       int num = 0;
-                      auto v = s.object();
+                      auto &v = s.object();
                       for (auto it = allocs.begin(); it != allocs.end();) {
                           if (it->value == &v) {
                               it = allocs.erase(it);

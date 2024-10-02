@@ -156,7 +156,7 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_collective_called_from_spmd:
         return "Collective instruction must not be called from SPMD region";
     case tinytc_status_ir_fp_unsupported:
-        return "Floating point type unsupported for instruction";
+        return "Floating point type unsupported by instruction";
     case tinytc_status_ir_spmd_called_from_collective:
         return "SPMD instruction must not be called from collective region";
     case tinytc_status_ir_expected_local_address_space:
@@ -165,6 +165,10 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "A memref with global address space is expected";
     case tinytc_status_ir_invalid_offset:
         return "Offset must be non-negative or dynamic";
+    case tinytc_status_ir_i1_unsupported:
+        return "i1 type unsupported by instruction";
+    case tinytc_status_ir_complex_unsupported:
+        return "complex type unsupported by instruction";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

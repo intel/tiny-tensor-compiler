@@ -1056,7 +1056,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
     }
     std::vector<clir::stmt> clinst;
     for (std::int64_t i = 0; i < in.num_operands(); ++i) {
-        auto assign_yielded_var = clir::assignment(yielded_vars_.back()[i], val(*in.op(i)));
+        auto assign_yielded_var = clir::assignment(yielded_vars_.back()[i], val(in.op(i)));
         clinst.push_back(clir::expression_statement(std::move(assign_yielded_var)));
     }
     return clinst;

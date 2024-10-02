@@ -22,7 +22,13 @@ class const_use_iterator;
 
 struct tinytc_value final {
   public:
-    tinytc_value(tinytc_data_type_t ty = nullptr, tinytc::location const &lc = {});
+    tinytc_value(tinytc_data_type_t ty = nullptr, tinytc_inst_t def_inst_ = nullptr,
+                 tinytc::location const &lc = {});
+
+    tinytc_value(tinytc_value const &) = delete;
+    tinytc_value(tinytc_value &&) = default;
+    tinytc_value &operator=(tinytc_value const &) = delete;
+    tinytc_value &operator=(tinytc_value &&) = default;
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
@@ -42,9 +48,13 @@ struct tinytc_value final {
     auto use_end() const -> tinytc::const_use_iterator;
     auto uses() const -> tinytc::iterator_range_wrapper<tinytc::const_use_iterator>;
 
+    // Can be nullptr, e.g. if value is a region parameter
+    auto defining_inst() const -> tinytc_inst_t { return def_inst_; }
+
   private:
     tinytc_data_type_t ty_;
     tinytc::location loc_;
+    tinytc_inst_t def_inst_ = nullptr;
     std::string name_;
 
     friend class tinytc::use;

@@ -75,6 +75,8 @@ enum class status {
     ir_expected_local_address_space = tinytc_status_ir_expected_local_address_space,
     ir_expected_global_address_space = tinytc_status_ir_expected_global_address_space,
     ir_invalid_offset = tinytc_status_ir_invalid_offset,
+    ir_i1_unsupported = tinytc_status_ir_i1_unsupported,
+    ir_complex_unsupported = tinytc_status_ir_complex_unsupported,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,

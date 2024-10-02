@@ -5,8 +5,8 @@
 
 using namespace tinytc;
 
-tinytc_value::tinytc_value(tinytc_data_type_t ty, location const &lc)
-    : ty_{std::move(ty)}, loc_{lc} {}
+tinytc_value::tinytc_value(tinytc_data_type_t ty, tinytc_inst_t def_inst, location const &lc)
+    : ty_{std::move(ty)}, loc_{lc}, def_inst_{def_inst} {}
 
 auto tinytc_value::use_begin() -> use_iterator { return {first_use_}; }
 auto tinytc_value::use_end() -> use_iterator { return {nullptr}; }

@@ -61,7 +61,7 @@ Constants
 
 .. code:: abnf
 
-    constant                    = floating-constant / integer-constant
+    constant                    = complex-constant / floating-constant / integer-constant
     integer-constant            = "true" / "false" / [sign] 1*DIGIT
     sign                        = "-" / "+"
     floating-constant           = [sign] *DIGIT "." 1*DIGIT ["e" [sign] 1*DIGIT]
@@ -71,6 +71,7 @@ Constants
     floating-constant-dec       = [sign] (mantissa-dec ["e" exponent] / 1*DIGIT "e" exponent)
     floating-constant-hex       = [sign] "0x" (mantissa-hex ["p" exponent] / 1*HEXDIG "p" exponent)
     floating-constant           = floating-constant-dec / floating-constant-hex
+    complex-constant            = "[" floating-constant "," floating-constant "]"
 
 Integer constants must lie in the range :math:`-2^{63}+1,\dots,2^{63}-1`.
 
@@ -138,11 +139,13 @@ Scalar types
 
 .. code:: abnf
 
-    scalar-type                 = integer-type / floating-type
+    scalar-type                 = integer-type / floating-type / complex-type
     integer-type                = "i" ("1" / "8" / "16" / "32" / "64") / "index"
     floating-type               = "f" ("32" / "64")
+    complex-type                = "c" ("32" / "64")
 
-Scalar types are either signless integer ("i") or floating point ("f").
+Scalar types are either signless integer ("i"), floating point ("f"),
+or complex floating point ("c").
 The number behind the scalar type prefix denotes the number of bits,
 e.g. "f64" are double precision floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
@@ -560,20 +563,23 @@ Overview
 Binary arithmetic operation on scalars.
 Both operands, as well as the returned type, have the same scalar type.
 
-==== ============ ==============================================================================
-Op   Allowed type Description
-==== ============ ==============================================================================
-.add scalar-type  Sum of operands
-.sub scalar-type  Difference of operands
-.mul scalar-type  Product of operands
-.div scalar-type  Quotient of operands
-.rem scalar-type  Remainder from the division of operands
-.shl integer-type Left shift first operand by number of bits given by second operand
-.shr integer-type Arithmetic right shift first operand by number of bits given by second operand
-.and integer-type Bitwise and
-.or  integer-type Bitwise or
-.xor integer-type Bitwise xor
-==== ============ ==============================================================================
+The following table shows the operations' description and the types that are allowed for the operation.
+The backslash "\\" is used to exclude types from the list of allowed types.
+
+==== ============================ ================================================================
+Op   Allowed type                 Description
+==== ============================ ================================================================
+.add scalar-type                  Sum of operands
+.sub scalar-type                  Difference of operands
+.mul scalar-type                  Product of operands
+.div scalar-type                  Quotient of operands
+.rem scalar-type  \\ complex-type Remainder from the division of operands
+.shl integer-type \\ i1           Left shift first operand by second operand
+.shr integer-type \\ i1           Arithmetic right shift first operand by second operand
+.and integer-type                 Bitwise and
+.or  integer-type                 Bitwise or
+.xor integer-type                 Bitwise xor
+==== ============================ ================================================================
 
 Arithmetic (unary)
 ..................
@@ -588,6 +594,8 @@ Overview
 
 Unary arithmetic operation on scalars.
 The returned value has the same type as the operand.
+
+The following table shows the operations' description and the types that are allowed for the operation.
 
 ==== ============ ==============================================================================
 Op   Allowed type Description
@@ -650,16 +658,19 @@ Overview
 Scalar comparison.
 Both operands must have the same scalar type and the returned value is boolean.
 
-==== =====================
-Cond Description
-==== =====================
-.eq  Equal
-.ne  Not equal
-.gt  Greater than
-.ge  Greater than or equal
-.lt  Less than
-.le  Less than or equal
-==== =====================
+The following table shows the comparisons' description and the types that are allowed for the comparison.
+The backslash "\\" is used to exclude types from the list of allowed types.
+
+==== =========================== =====================
+Cond Allowed type Description
+==== =========================== =====================
+.eq  scalar-type                 Equal
+.ne  scalar-type                 Not equal
+.gt  scalar-type \\ complex-type Greater than
+.ge  scalar-type \\ complex-type Greater than or equal
+.lt  scalar-type \\ complex-type Less than
+.le  scalar-type \\ complex-type Less than or equal
+==== =========================== =====================
 
 Constant
 ........

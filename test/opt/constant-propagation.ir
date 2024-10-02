@@ -11,3 +11,71 @@ func @known_size(%a: memref<f32x64x32>) {
 ; CHECK-NEXT:  %1 = constant 32 -> index
 ; CHECK-NEXT:  %2 = constant 96 -> index
 }
+
+func @known_loop_bounds() {
+    %one = constant 1 -> index
+    %lb = constant 5 -> index
+    %size = constant 42 -> index
+    %tmp = arith.sub %size, %lb : index
+    %ub = arith.sub %tmp, %one : index
+    for %i=%lb,%ub {
+    }
+; CHECK-LABEL: func @known_loop_bounds({{.*}}
+; CHECK:      %one = constant 1 -> index
+; CHECK-NEXT: %lb = constant 5 -> index
+; CHECK-NEXT: %size = constant 42 -> index
+; CHECK-NEXT: %tmp = constant 37 -> index
+; CHECK-NEXT: %ub = constant 36 -> index
+; CHECK-NEXT: for %i=%lb,%ub : index {
+; CHECK-NEXT: }
+}
+
+func @known_arith() {
+    %0 = constant 1 -> i64
+    %1 = arith.not %0 : i64
+    %2 = constant 2 -> i64
+    %3 = arith.add %0, %2 : i64
+    %4 = constant -2.0 -> f32
+    %5 = arith.neg %4 : f32
+    %6 = constant [1.0, -1.0] -> c32
+    %7 = arith.add %6, %6 : c32
+; CHECK-LABEL: func @known_arith({{.*}}
+; CHECK:      %0 = constant 1 -> i64
+; CHECK-NEXT: %1 = constant -2 -> i64
+; CHECK-NEXT: %2 = constant 2 -> i64
+; CHECK-NEXT: %3 = constant 3 -> i64
+; CHECK-NEXT: %4 = constant -0x1p+1 -> f32
+; CHECK-NEXT: %5 = constant 0x1p+1 -> f32
+; CHECK-NEXT: %6 = constant [0x1p+0,-0x1p+0] -> c32
+; CHECK-NEXT: %7 = constant [0x1p+1,-0x1p+1] -> c32
+}
+
+func @known_cast() {
+    %0 = constant 32768 -> i32
+    %1 = cast %0 : i32 -> i16
+    %2 = cast %0 : i32 -> f32
+    %3 = cast %0 : i32 -> c32
+    %4 = cast %0 : i32 -> i1
+    %5 = cast %3 : c32 -> i1
+    %6 = cast %5 : i1 -> c32
+; CHECK-LABEL: func @known_cast({{.*}}
+; CHECK:       %0 = constant 32768 -> i32
+; CHECK-NEXT:  %1 = constant -32768 -> i16
+; CHECK-NEXT:  %2 = constant 0x1p+15 -> f32
+; CHECK-NEXT:  %3 = constant [0x1p+15,0x0p+0] -> c32
+; CHECK-NEXT:  %4 = constant 1 -> i1
+; CHECK-NEXT:  %5 = constant 1 -> i1
+; CHECK-NEXT:  %6 = constant [0x1p+0,0x0p+0] -> c32
+}
+
+func @known_compare() {
+    %0 = constant 1.0 -> f32
+    %1 = constant 2.0 -> f32
+    %2 = cmp.eq %0, %0 : f32
+    %3 = cmp.eq %0, %1 : f32
+; CHECK-LABEL: func @known_compare({{.*}}
+; CHECK:       %0 = constant 0x1p+0 -> f32
+; CHECK-NEXT:  %1 = constant 0x1p+1 -> f32
+; CHECK-NEXT:  %2 = constant 1 -> i1
+; CHECK-NEXT:  %3 = constant 0 -> i1
+}

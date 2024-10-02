@@ -6,5 +6,5 @@ func @t1(%a: f32, %b: f32) {
   %1 = arith.and %a, %b : f32
 ; CHECK:       %1 = arith.and %a, %b : f32
 ; CHECK-NEXT:       ~~~~~~~~~~~~~~~~~~~~~~
-; CHECK-NEXT:<stdin>:6.8-29: Floating point type unsupported for instruction
+; CHECK-NEXT:<stdin>:6.8-29: Floating point type unsupported by instruction
 }

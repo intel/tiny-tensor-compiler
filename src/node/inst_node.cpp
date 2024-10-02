@@ -86,7 +86,7 @@ alloca_inst::alloca_inst(tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::alloca}, stack_ptr_{-1} {
     loc(lc);
 
-    result(0) = value_node{ty, lc};
+    result(0) = value_node{ty, this, lc};
     auto memref = dyn_cast<memref_data_type>(result(0).ty());
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
@@ -134,27 +134,41 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
     if (at->ty() != bt->ty()) {
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
-    bool inst_supports_fp = false;
+    bool inst_supports_fp = true;
+    bool inst_supports_complex = true;
+    bool inst_supports_i1 = true;
     switch (operation) {
     case arithmetic::add:
     case arithmetic::sub:
     case arithmetic::mul:
     case arithmetic::div:
-    case arithmetic::rem:
-        inst_supports_fp = true;
         break;
-    case arithmetic::shl:
-    case arithmetic::shr:
+    case arithmetic::rem:
+        inst_supports_complex = false;
+        break;
     case arithmetic::and_:
     case arithmetic::or_:
     case arithmetic::xor_:
         inst_supports_fp = false;
+        inst_supports_complex = false;
         break;
+    case arithmetic::shl:
+    case arithmetic::shr:
+        inst_supports_i1 = false;
+        inst_supports_fp = false;
+        inst_supports_complex = false;
+        break;
+    }
+    if (!inst_supports_i1 && at->ty() == scalar_type::i1) {
+        throw compilation_error(loc(), status::ir_i1_unsupported);
     }
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result(0) = value_node{at};
+    if (!inst_supports_complex && is_complex_type(at->ty())) {
+        throw compilation_error(loc(), status::ir_complex_unsupported);
+    }
+    result(0) = value_node{at, this, lc};
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0,
@@ -164,19 +178,23 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     loc(lc);
 
     auto at = get_scalar_type(loc(), a());
-    bool inst_supports_fp = false;
+    bool inst_supports_fp = true;
+    bool inst_supports_complex = true;
     switch (operation) {
     case arithmetic_unary::neg:
-        inst_supports_fp = true;
         break;
     case arithmetic_unary::not_:
         inst_supports_fp = false;
+        inst_supports_complex = false;
         break;
     }
     if (!inst_supports_fp && is_floating_type(at->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    result(0) = value_node{at, lc};
+    if (!inst_supports_complex && is_complex_type(at->ty())) {
+        throw compilation_error(loc(), status::ir_complex_unsupported);
+    }
+    result(0) = value_node{at, this, lc};
 }
 
 cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const &lc)
@@ -188,7 +206,7 @@ cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const 
         throw compilation_error(lc, status::ir_expected_scalar);
     }
 
-    result(0) = value_node{to_ty, lc};
+    result(0) = value_node{to_ty, this, lc};
 }
 
 compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t b0,
@@ -205,8 +223,24 @@ compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
 
+    bool inst_supports_complex = true;
+    switch (cond_) {
+    case cmp_condition::eq:
+    case cmp_condition::ne:
+        break;
+    case cmp_condition::gt:
+    case cmp_condition::ge:
+    case cmp_condition::lt:
+    case cmp_condition::le:
+        inst_supports_complex = false;
+        break;
+    }
+    if (!inst_supports_complex && is_complex_type(at->ty())) {
+        throw compilation_error(loc(), status::ir_complex_unsupported);
+    }
+
     auto result_ty = scalar_data_type::get(at->context(), scalar_type::i1);
-    result(0) = value_node{result_ty, lc};
+    result(0) = value_node{result_ty, this, lc};
 }
 
 constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, location const &lc)
@@ -226,7 +260,7 @@ constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, loc
         throw compilation_error(loc(), status::ir_expected_scalar);
     }
 
-    result(0) = value_node{ty, lc};
+    result(0) = value_node{ty, this, lc};
 }
 
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
@@ -277,7 +311,7 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
     }
 
     auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
-    result(0) = value_node{result_ty, lc};
+    result(0) = value_node{result_ty, this, lc};
 }
 
 fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, location const &lc)
@@ -313,7 +347,7 @@ fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, loc
         stride.push_back(m->stride(i));
     }
     auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
-    result(0) = value_node{result_ty, lc};
+    result(0) = value_node{result_ty, this, lc};
 }
 
 load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0, location const &lc)
@@ -329,14 +363,14 @@ load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
                   if (static_cast<std::int64_t>(index_list().size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result(0) = value_node{g.ty(), lc};
+                  result(0) = value_node{g.ty(), this, lc};
               },
               [&](memref_data_type &m) {
                   if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
                   auto result_ty = scalar_data_type::get(m.context(), m.element_ty());
-                  result(0) = value_node{result_ty, lc};
+                  result(0) = value_node{result_ty, this, lc};
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *operand().ty());
@@ -465,7 +499,7 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     op(0, condition);
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
-        result(i) = value_node{return_types[i], lc};
+        result(i) = value_node{return_types[i], this, lc};
     }
 }
 
@@ -485,8 +519,8 @@ size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, location const &lc)
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    auto result_ty = scalar_data_type::get(op(0)->context(), scalar_type::index);
-    result(0) = value_node{result_ty, lc};
+    auto result_ty = scalar_data_type::get(op(0).context(), scalar_type::index);
+    result(0) = value_node{result_ty, this, lc};
 }
 
 subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_offsets0,
@@ -536,7 +570,7 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
     }
 
     auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
-    result(0) = value_node{result_ty, lc};
+    result(0) = value_node{result_ty, this, lc};
 }
 
 store_inst::store_inst(tinytc_value_t val0, tinytc_value_t op0,
