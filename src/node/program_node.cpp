@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "node/program_node.hpp"
-#include "node/function_node.hpp"
-#include "tinytc/tinytc.h"
 
 #include <utility>
 

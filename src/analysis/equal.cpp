@@ -3,7 +3,6 @@
 
 #include "analysis/equal.hpp"
 #include "support/visit.hpp"
-#include "tinytc/tinytc.hpp"
 
 #include <vector>
 

@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "location.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "support/ilist.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 
-#include <memory>
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+#include <stdexcept>
+#include <vector>
 
 using namespace tinytc;
 

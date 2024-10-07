@@ -4,9 +4,13 @@
 #ifndef PARSE_CONTEXT_20231221_HPP
 #define PARSE_CONTEXT_20231221_HPP
 
+#include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <stack>
 #include <string>
 #include <unordered_map>

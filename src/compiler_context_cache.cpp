@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context_cache.hpp"
+#include "compiler_context.hpp"
 #include "support/util.hpp"
+#include "tinytc/types.hpp"
 
 namespace tinytc {
 

@@ -5,13 +5,12 @@
 #define PROGRAM_NODE_20240208_HPP
 
 #include "compiler_context.hpp"
-#include "node/function_node.hpp"
 #include "reference_counted.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
-#include <memory>
+#include <utility>
 #include <vector>
 
 struct tinytc_prog final : tinytc::reference_counted {

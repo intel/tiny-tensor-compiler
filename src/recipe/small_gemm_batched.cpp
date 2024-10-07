@@ -12,6 +12,7 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

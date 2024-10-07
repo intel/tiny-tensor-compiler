@@ -4,14 +4,14 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
+#include "compiler_context.hpp"
 #include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <cstdint>
-#include <span>
-#include <utility>
 #include <vector>
 
 namespace tinytc {
@@ -60,9 +60,9 @@ class group_data_type : public data_type_node {
 class memref_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::memref; }
-    static auto canonical_stride(std::span<const std::int64_t> shape) -> std::vector<std::int64_t>;
-    static auto get(tinytc_data_type_t element_ty, std::span<const std::int64_t> shape,
-                    std::span<const std::int64_t> stride,
+    static auto canonical_stride(array_view<std::int64_t> shape) -> std::vector<std::int64_t>;
+    static auto get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
+                    array_view<std::int64_t> stride,
                     address_space addrspace = address_space::global,
                     location const &lc = {}) -> tinytc_data_type_t;
 
@@ -100,7 +100,7 @@ class memref_data_type : public data_type_node {
 
 struct memref_data_type_key {
     tinytc_data_type_t element_ty;
-    std::span<const std::int64_t> shape, stride;
+    array_view<std::int64_t> shape, stride;
     address_space addrspace;
 
     auto hash() -> std::uint64_t;

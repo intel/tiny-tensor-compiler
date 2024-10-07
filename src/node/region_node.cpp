@@ -3,6 +3,9 @@
 
 #include "node/region_node.hpp"
 #include "node/inst_node.hpp"
+#include "tinytc/tinytc.h"
+
+#include <utility>
 
 namespace tinytc {
 

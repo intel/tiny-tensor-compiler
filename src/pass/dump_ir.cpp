@@ -2,11 +2,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
+#include "support/ilist_base.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <array>
+#include <complex>
+#include <cstddef>
 #include <cstdint>
+#include <ranges>
 #include <string_view>
 #include <variant>
 #include <vector>

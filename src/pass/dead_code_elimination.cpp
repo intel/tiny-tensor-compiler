@@ -5,13 +5,14 @@
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/visit.hpp"
-#include "tinytc/tinytc.hpp"
 
+#include <cstdint>
 #include <variant>
-
-#include <iostream>
 
 namespace tinytc {
 

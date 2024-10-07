@@ -7,7 +7,6 @@
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
-#include "node/program_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "pass/slot_tracker.hpp"

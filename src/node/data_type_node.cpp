@@ -9,7 +9,10 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstddef>
+#include <memory>
+#include <unordered_map>
 #include <utility>
 
 namespace tinytc {
@@ -66,15 +69,15 @@ scalar_type memref_data_type::element_ty() const {
     return dyn_cast<scalar_data_type>(element_ty_)->ty();
 }
 
-auto memref_data_type::get(tinytc_data_type_t element_ty, std::span<const std::int64_t> shape,
-                           std::span<const std::int64_t> stride, address_space addrspace,
+auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
+                           array_view<std::int64_t> stride, address_space addrspace,
                            location const &lc) -> tinytc_data_type_t {
     auto ctx = element_ty->context();
 
     auto stride_buffer = std::vector<std::int64_t>{};
     if (stride.empty()) {
         stride_buffer = canonical_stride(shape);
-        stride = std::span<const std::int64_t>{stride_buffer};
+        stride = array_view<std::int64_t>{stride_buffer};
     }
 
     auto key = memref_data_type_key(element_ty, shape, stride, addrspace);
@@ -87,13 +90,12 @@ auto memref_data_type::get(tinytc_data_type_t element_ty, std::span<const std::i
             return it->second;
         }
     }
-    auto new_mt = std::unique_ptr<memref_data_type>(new memref_data_type(
-        ctx, key.element_ty, std::vector<std::int64_t>(shape.begin(), shape.end()),
-        std::vector<std::int64_t>(stride.begin(), stride.end()), key.addrspace, lc));
+    auto new_mt = std::unique_ptr<memref_data_type>(
+        new memref_data_type(ctx, key.element_ty, shape, stride, key.addrspace, lc));
     return tys.emplace(map_key, new_mt.release())->second;
 }
 
-auto memref_data_type::canonical_stride(std::span<const std::int64_t> shape)
+auto memref_data_type::canonical_stride(array_view<std::int64_t> shape)
     -> std::vector<std::int64_t> {
     if (shape.empty()) {
         return {};

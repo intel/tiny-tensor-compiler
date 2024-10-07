@@ -4,14 +4,15 @@
 #ifndef VALUE_NODE_20230309_HPP
 #define VALUE_NODE_20230309_HPP
 
-#include "location.hpp"
 #include "node/data_type_node.hpp"
 #include "support/util.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
-#include <cstdint>
+#include <cstddef>
 #include <iterator>
 #include <string>
+#include <type_traits>
 #include <utility>
 
 namespace tinytc {

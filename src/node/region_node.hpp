@@ -7,12 +7,12 @@
 #include "node/value_node.hpp"
 #include "support/ilist.hpp"
 #include "support/util.hpp"
-#include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <type_traits>
 #include <vector>
 

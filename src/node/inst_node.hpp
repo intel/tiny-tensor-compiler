@@ -4,24 +4,29 @@
 #ifndef INST_NODE_20230327_HPP
 #define INST_NODE_20230327_HPP
 
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/type_list.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <ranges>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace tinytc {
 

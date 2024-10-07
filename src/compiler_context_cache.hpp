@@ -6,12 +6,15 @@
 
 #include "node/data_type_node.hpp"
 #include "support/util.hpp"
-#include "tinytc/types.hpp"
+#include "tinytc/types.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
-#include <span>
+#include <memory>
+#include <string_view>
 #include <unordered_map>
+#include <utility>
 
 namespace std {
 template <> class hash<std::pair<tinytc_data_type_t, std::int64_t>> {

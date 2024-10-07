@@ -8,11 +8,8 @@
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
-#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/types.hpp"
-
-#include <clir/builtin_type.hpp>
 
 #include <algorithm>
 #include <cstddef>

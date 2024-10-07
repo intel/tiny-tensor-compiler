@@ -1,9 +1,13 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "location.hpp"
+#include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
@@ -16,7 +20,6 @@
 #include <limits>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 
 using namespace tinytc;
 

@@ -7,6 +7,8 @@
 #include "gemm_generator.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
@@ -25,11 +27,12 @@
 #include <array>
 #include <bit>
 #include <cctype>
+#include <complex>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <sstream>
 #include <stdexcept>
-#include <string_view>
 #include <variant>
 
 namespace tinytc {

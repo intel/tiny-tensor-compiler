@@ -4,7 +4,6 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/function_node.hpp"
-#include "node/region_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -12,8 +11,6 @@
 #include <cstdint>
 #include <memory>
 #include <string>
-#include <utility>
-#include <vector>
 
 using namespace tinytc;
 

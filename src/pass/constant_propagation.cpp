@@ -3,17 +3,24 @@
 
 #include "pass/constant_propagation.hpp"
 #include "error.hpp"
+#include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "pass/constant_propagation_helper.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
-#include <cmath>
 #include <complex>
+#include <cstdint>
+#include <memory>
+#include <utility>
 #include <variant>
 
 namespace tinytc {

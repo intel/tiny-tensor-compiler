@@ -2,10 +2,17 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_def_use.hpp"
+#include "node/inst_node.hpp"
+#include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "pass/dump_ir.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
+
+#include <ostream>
+#include <string_view>
+#include <vector>
 
 namespace tinytc {
 

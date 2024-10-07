@@ -9,7 +9,8 @@
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
-#include "tinytc/tinytc.hpp"
+#include "support/util.hpp"
+#include "tinytc/types.h"
 
 #include <memory>
 #include <vector>

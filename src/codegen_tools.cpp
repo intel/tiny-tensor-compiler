@@ -3,11 +3,11 @@
 
 #include "codegen_tools.hpp"
 #include "error.hpp"
-#include "node/inst_node.hpp"
+#include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
-#include "support/util.hpp"
 #include "support/visit.hpp"
+#include "tinytc/types.h"
 
 #include <clir/attr_defs.hpp>
 #include <clir/builtin_function.hpp>

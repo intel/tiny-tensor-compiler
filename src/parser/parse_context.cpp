@@ -7,6 +7,7 @@
 #include "node/value_node.hpp"
 #include "parser/parser_impl.hpp"
 
+#include <algorithm>
 #include <sstream>
 #include <utility>
 

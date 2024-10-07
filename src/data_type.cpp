@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context.hpp"
-#include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "location.hpp"
 #include "node/data_type_node.hpp"
@@ -13,9 +12,6 @@
 #include "tinytc/types.hpp"
 
 #include <cstdint>
-#include <memory>
-#include <utility>
-#include <vector>
 
 using namespace tinytc;
 
@@ -41,17 +37,8 @@ tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_data_type_
     }
 
     return exception_to_status_code([&] {
-        auto shape_span = std::span<const std::int64_t>{};
-        if (shape != nullptr) {
-            shape_span = std::span<const std::int64_t>(shape, static_cast<std::size_t>(shape_size));
-        }
-        auto stride_span = std::span<const std::int64_t>{};
-        if (stride != nullptr) {
-            stride_span =
-                std::span<const std::int64_t>(stride, static_cast<std::size_t>(stride_size));
-        }
-
-        *dt = memref_data_type::get(scalar_ty, std::move(shape_span), std::move(stride_span),
+        *dt = memref_data_type::get(scalar_ty, array_view{shape, shape_size},
+                                    array_view{stride, stride_size},
                                     enum_cast<address_space>(addrspace), get_optional(loc));
     });
 }

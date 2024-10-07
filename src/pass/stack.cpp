@@ -9,7 +9,6 @@
 #include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>

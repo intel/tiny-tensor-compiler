@@ -161,23 +161,23 @@ func @no_barrier_spmd(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>
     %c3 = constant 3 -> i32
     %c4 = constant 4 -> i32
     parallel {
-        %1 = subgroup_id
-        %2 = cmp.eq %1, %c0 : i32
-        if %2 {
-            %3 = load %A[%c3,%c4] : memref<f32x8x8>
-            store %3, %A[%c3,%c4] : memref<f32x8x8>
+        %0 = subgroup_id
+        %1 = cmp.eq %1, %c0 : i32
+        if %1 {
+            %2 = load %A[%c3,%c4] : memref<f32x8x8>
+            store %2, %A[%c3,%c4] : memref<f32x8x8>
         }
     }
-    %0 = load %A[%c3,%c4] : memref<f32x8x8>
+    %3 = load %A[%c3,%c4] : memref<f32x8x8>
 ; CHECK-LABEL: func @no_barrier_spmd({{.*}}
 ; CHECK:       parallel {
-; CHECK-NEXT:    %1 = subgroup_id
-; CHECK-NEXT:    %2 = cmp.eq %1, %c0 : i32
-; CHECK-NEXT:    if %2 {
-; CHECK-NEXT:      %3 = load %A[%c3,%c4] : memref<f32x8x8>
-; CHECK-NEXT:      store %3, %A[%c3,%c4] : memref<f32x8x8>
+; CHECK-NEXT:    %0 = subgroup_id
+; CHECK-NEXT:    %1 = cmp.eq %1, %c0 : i32
+; CHECK-NEXT:    if %1 {
+; CHECK-NEXT:      %2 = load %A[%c3,%c4] : memref<f32x8x8>
+; CHECK-NEXT:      store %2, %A[%c3,%c4] : memref<f32x8x8>
 ; CHECK-NEXT:    }
 ; CHECK-NEXT:  }
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  %0 = load %A[%c3,%c4] : memref<f32x8x8>
+; CHECK-NEXT:  %3 = load %A[%c3,%c4] : memref<f32x8x8>
 }
