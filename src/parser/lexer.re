@@ -35,9 +35,11 @@ lex:
         newline               = "\r"? "\n";
         whitespace            = [ \t\v\r]+;
 
-        identifier            = [0-9]+ | ([a-zA-Z] [a-zA-Z0-9_]*);
-        local_identifier      = "%" identifier;
-        global_identifier     = "@" identifier;
+        unnamed_identifier    = [0-9]+;
+        named_identifier      = [a-zA-Z] [a-zA-Z0-9_]*;
+        local_unnamed_identifier = "%" unnamed_identifier;
+        local_named_identifier   = "%" named_identifier;
+        global_identifier     = "@" (unnamed_identifier | named_identifier);
 
         integer_type          = "i" ("1" | "8" | "16" | "32" | "64") | "index";
         floating_type         = ("f" | "c") ("32" | "64");
@@ -54,7 +56,12 @@ lex:
 
 
         // identifier
-        local_identifier    {
+        local_unnamed_identifier    {
+            adv_loc();
+            std::int64_t id = lex_integer_constant(b + 1, YYCURSOR);
+            return parser::make_LOCAL_IDENTIFIER(std::move(id), loc_);
+        }
+        local_named_identifier    {
             adv_loc();
             auto id = std::string(b + 1, YYCURSOR);
             return parser::make_LOCAL_IDENTIFIER(std::move(id), loc_);

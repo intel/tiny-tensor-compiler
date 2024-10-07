@@ -52,7 +52,9 @@ are prefixed with ``@``.
 
 .. code:: abnf
 
-    identifier                  = 1*DIGIT / (ALPHA *(ALPHA / DIGIT / "_"))
+    identifier                  = unnamed-identifier / named-identifier
+    unnamed-identifier          = 1*DIGIT
+    named-identifier            = ALPHA *(ALPHA / DIGIT / "_")
     local-identifier            = "%" identifier
     global-identifier           = "@" identifier
 

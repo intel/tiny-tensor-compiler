@@ -11,6 +11,7 @@ namespace tinytc {
 class constant_propagation_pass {
   public:
     void run_on_function(::tinytc_func &fn);
+    void run_on_region(::tinytc_region &reg);
 };
 
 } // namespace tinytc

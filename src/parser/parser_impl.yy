@@ -129,7 +129,7 @@
     SUM             "sum"
     YIELD           "yield"
 ;
-%token <std::string> LOCAL_IDENTIFIER
+%token <std::variant<std::int64_t, std::string>> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
@@ -142,8 +142,8 @@
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
 %nterm <func> func
-%nterm <std::pair<std::vector<std::string>,std::vector<tinytc_data_type_t>>> parameters
-%nterm <std::pair<std::string,tinytc_data_type_t>> parameter
+%nterm <std::pair<std::vector<std::variant<std::int64_t,std::string>>,std::vector<tinytc_data_type_t>>> parameters
+%nterm <std::pair<std::variant<std::int64_t,std::string>,tinytc_data_type_t>> parameter
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
@@ -182,7 +182,7 @@
 %nterm <inst> yield_inst
 %nterm <tinytc_data_type_t> for_loop_var_type
 %nterm <inst> var_definition
-%nterm <std::vector<std::string>> identifier_list
+%nterm <std::vector<std::variant<std::int64_t,std::string>>> identifier_list
 %nterm <inst> valued_inst
 %nterm <inst> alloca_inst
 %nterm <inst> arith_inst
@@ -239,7 +239,6 @@ func:
             ctx.push_scope();
             auto name_it = $parameters.first.begin();
             for (auto &p : func_node->params()) {
-                p.name(*name_it);
                 ctx.val(*name_it, p, @parameters);
                 ++name_it;
             }
@@ -569,7 +568,6 @@ for_inst:
             auto inode = std::make_unique<for_inst>($from, $to, $optional_step, $for_loop_var_type, loc);
             ctx.push_scope();
             auto &loop_var = inode->loop_var();
-            loop_var.name($loop_var);
             ctx.val($loop_var, loop_var, @loop_var);
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
@@ -599,7 +597,6 @@ foreach_inst:
                 std::make_unique<foreach_inst>($from, $to, $for_loop_var_type, loc);
             ctx.push_scope();
             auto &loop_var = inode->loop_var();
-            loop_var.name($loop_var);
             ctx.val($loop_var, loop_var, @loop_var);
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
@@ -629,7 +626,6 @@ var_definition:
         }
         auto results = $$->result_begin();
         for (std::int64_t i = 0; i < $$->num_results(); ++i) {
-            results[i].name($identifier_list[i]);
             ctx.val($identifier_list[i], results[i], @identifier_list);
         }
     }

@@ -1498,15 +1498,12 @@ class region_builder {
      * @brief Add instruction
      *
      * @param i Instruction
-     * @param name Result name
      *
      * @return Value returned by instruction; may be empty
      */
-    [[maybe_unused]] inline auto add(inst i, std::string_view name = "") -> value {
+    [[maybe_unused]] inline auto add(inst i) -> value {
         auto result = value{};
-        if (i.get_values(result) > 0 && name.size() > 0) {
-            result.set_name(name);
-        }
+        i.get_values(result);
         reg_.add_instruction(std::move(i));
         return result;
     }
@@ -1515,22 +1512,13 @@ class region_builder {
      * @brief Add instruction that returns multiple values
      *
      * @param i Instruction
-     * @param name Result name
      *
      * @return Values returned by instruction
      */
-    [[maybe_unused]] inline auto add_multivalued(inst i,
-                                                 std::string_view name = "") -> std::vector<value> {
+    [[maybe_unused]] inline auto add_multivalued(inst i) -> std::vector<value> {
         auto num_results = i.get_values({});
         auto results = std::vector<value>(static_cast<std::size_t>(num_results));
         results.resize(i.get_values(results));
-        if (name.size() > 0) {
-            int counter = 0;
-            auto name_str = std::string{name};
-            for (auto &result : results) {
-                result.set_name(name_str + std::to_string(counter++));
-            }
-        }
         reg_.add_instruction(std::move(i));
         return results;
     }
@@ -1545,14 +1533,12 @@ class region_builder {
      * @param to Loop variable bound
      * @param loop_var_ty Type of loop variable
      * @param f Functor
-     * @param loop_var_name Loop variable name
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, data_type loop_var_ty, F &&f,
-                  std::string_view loop_var_name = "", location const &loc = {}) {
+    void for_loop(value from, value to, data_type loop_var_ty, F &&f, location const &loc = {}) {
         for_loop<F>(std::move(from), std::move(to), nullptr, std::move(loop_var_ty),
-                    std::forward<F>(f), std::move(loop_var_name), loc);
+                    std::forward<F>(f), loc);
     }
     /**
      * @brief Build for-loop with functor f(region_builder&, value) -> void
@@ -1565,12 +1551,11 @@ class region_builder {
      * @param step Loop variable step
      * @param loop_var_ty Type of loop variable
      * @param f Functor
-     * @param loop_var_name Loop variable name
      * @param loc Source code location
      */
     template <typename F>
     void for_loop(value from, value to, value step, data_type loop_var_ty, F &&f,
-                  std::string_view loop_var_name = "", location const &loc = {}) {
+                  location const &loc = {}) {
         auto fi = ::tinytc::make_for(from, to, step, loop_var_ty, loc);
         auto reg = region{};
         fi.get_regions(reg);
@@ -1579,7 +1564,6 @@ class region_builder {
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        loop_var.set_name(loop_var_name);
         reg_.add_instruction(std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);
@@ -1592,12 +1576,10 @@ class region_builder {
      * @param to Loop variable bound
      * @param loop_var_ty Type of loop variable
      * @param f functor
-     * @param loop_var_name Loop variable name
      * @param loc Source code location
      */
     template <typename F>
-    void foreach (value from, value to, data_type loop_var_ty, F && f,
-                  std::string const &loop_var_name = "", location const &loc = {}) {
+    void foreach (value from, value to, data_type loop_var_ty, F && f, location const &loc = {}) {
         auto fi = ::tinytc::make_foreach(from, to, loop_var_ty, loc);
         auto reg = region{};
         fi.get_regions(reg);
@@ -1606,7 +1588,6 @@ class region_builder {
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        loop_var.set_name(loop_var_name);
         reg_.add_instruction(std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);

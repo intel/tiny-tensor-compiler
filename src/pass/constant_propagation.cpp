@@ -10,7 +10,6 @@
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "support/visit.hpp"
-#include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <cmath>
@@ -236,37 +235,40 @@ auto constant_evaluator::operator()(size_inst &in) -> inst {
     return inst{};
 }
 
-void constant_propagation_pass::run_on_function(function_node &fn) {
-    // @todo: Use worklist instead of pre-order?
-    walk<walk_order::pre_order>(fn, [&](region_node &reg) {
-        for (auto it = reg.begin(); it != reg.end(); ++it) {
-            auto known_constant = visit(constant_evaluator{}, *it);
-            if (known_constant) {
-                // update uses
-                if (it->num_results() != known_constant->num_results()) {
+void constant_propagation_pass::run_on_function(function_node &fn) { run_on_region(fn.body()); }
+
+void constant_propagation_pass::run_on_region(region_node &reg) {
+    for (auto it = reg.begin(); it != reg.end(); ++it) {
+        for (auto &subreg : it->child_regions()) {
+            run_on_region(subreg);
+        }
+
+        auto known_constant = visit(constant_evaluator{}, *it);
+        if (known_constant) {
+            // update uses
+            if (it->num_results() != known_constant->num_results()) {
+                throw status::internal_compiler_error;
+            }
+            auto r_old = it->result_begin();
+            auto r_new = known_constant->result_begin();
+            for (; r_old != it->result_end() && r_new != known_constant->result_end();
+                 ++r_old, ++r_new) {
+                r_new->name(r_old->name());
+                auto u = r_old->use_begin();
+                while (r_old->has_uses()) {
+                    u->set(&*r_new);
+                    u = r_old->use_begin();
+                }
+                if (r_old->has_uses()) {
                     throw status::internal_compiler_error;
                 }
-                auto r_old = it->result_begin();
-                auto r_new = known_constant->result_begin();
-                for (; r_old != it->result_end() && r_new != known_constant->result_end();
-                     ++r_old, ++r_new) {
-                    r_new->name(r_old->name());
-                    auto u = r_old->use_begin();
-                    while (r_old->has_uses()) {
-                        u->set(&*r_new);
-                        u = r_old->use_begin();
-                    }
-                    if (r_old->has_uses()) {
-                        throw status::internal_compiler_error;
-                    }
-                }
-                // delete old instruction
-                it = reg.insts().erase(it);
-                // insert new instruction
-                it = reg.insts().insert(it, known_constant.release());
             }
+            // delete old instruction
+            it = reg.insts().erase(it);
+            // insert new instruction
+            it = reg.insts().insert(it, known_constant.release());
         }
-    });
+    }
 }
 
 } // namespace tinytc
