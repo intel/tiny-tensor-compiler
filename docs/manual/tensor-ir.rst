@@ -611,7 +611,7 @@ Barrier
 
 .. code:: abnf
 
-    barrier-instruction         = "barrier" [".global"] [".local"]
+    instruction             =/ "barrier" [".global"] [".local"]
 
 Overview
 ~~~~~~~~
@@ -1094,7 +1094,7 @@ Additional instructions
 
 .. code:: abnf
 
-    lifetime-stop-instruction   = "lifetime_stop" local-identifier
+    instruction             =/ "lifetime_stop" local-identifier
 
 SPMD instructions
 -----------------

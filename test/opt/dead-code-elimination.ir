@@ -1,0 +1,54 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt --dead-code-elimination < %s | filecheck %s
+func @dead_if(%a: memref<f64>) {
+    %c0 = constant 0 -> i1
+    if %c0 {
+        %c42 = constant 42.0 -> f64
+        store %c42, %a[] : memref<f64>
+    }
+    %c1 = constant 1 -> i1
+    if %c1 {
+        %c43 = constant 43.0 -> f64
+        store %c43, %a[] : memref<f64>
+    }
+; CHECK-LABEL: func @dead_if({{.*}}
+; CHECK-NEXT: %c1 = constant 1 -> i1
+; CHECK-NEXT: if %c1 {
+; CHECK-NEXT:   %c43{{.*}}
+; CHECK-NEXT:   store{{.*}}
+; CHECK-NEXT: }
+}
+
+func @dead_loop(%a: memref<f64>) {
+    %c2 = constant 2 -> index
+    for %0=%c2,%c2 {
+        %c42 = constant 42.0 -> f64
+        store %c42, %a[] : memref<f64>
+    }
+    %c5 = constant 5 -> index
+    %c6 = constant 6 -> index
+    for %0=%c5,%c6 {
+        %c43 = constant 43.0 -> f64
+        store %c43, %a[] : memref<f64>
+    }
+; CHECK-LABEL: func @dead_loop({{.*}}
+; CHECK-NEXT: %c5 = constant 5 -> index
+; CHECK-NEXT: %c6 = constant 6 -> index
+; CHECK-NEXT: for %0=%c5,%c6 : index {
+; CHECK-NEXT:   %c43{{.*}}
+; CHECK-NEXT:   store{{.*}}
+; CHECK-NEXT: }
+}
+
+func @unused_alloca(%a: memref<f64x4>) {
+    %0 = alloca -> memref<f64x8,local>
+    %1 = alloca -> memref<f64x4,local>
+    %one = constant 1.0 -> f64
+    axpby.n %one, %1, %one, %a : f64, memref<f64x4,local>, f64, memref<f64x4>
+; CHECK-LABEL: func @unused_alloca({{.*}}
+; CHECK-NEXT: %0 = alloca -> memref<f64x4,local>
+; CHECK-NEXT: %one{{.*}}
+; CHECK-NEXT: axpby.n %one, %0{{.*}}
+}

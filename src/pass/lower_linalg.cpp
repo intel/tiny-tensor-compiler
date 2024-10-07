@@ -61,13 +61,11 @@ auto linalg_generator::operator()(ger_inst &g) -> inst {
             bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
                 auto nn = bb.add(make_arith(arithmetic::add, block, n, g.loc()));
                 auto b = bb.add(make_load(&g.B(), {nn}, g.loc()));
-                b->name("b");
                 tile_loop_by_sgs_new(
                     bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles(), sg_m,
                     [&](region_builder &bb, value block, bool, value) {
                         auto mm = bb.add(make_arith(arithmetic::add, block, m_index, g.loc()));
                         auto a = bb.add(make_load(&g.A(), {mm}, g.loc()));
-                        a->name("a");
                         auto ab = bb.add(make_arith(arithmetic::mul, a, b, g.loc()));
                         bb.add(make_store(ab, &g.C(), {mm, nn}, g.loc()));
                     });

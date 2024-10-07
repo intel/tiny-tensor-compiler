@@ -3,6 +3,7 @@
 
 #include "codegen_tools.hpp"
 #include "error.hpp"
+#include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/util.hpp"
@@ -538,31 +539,36 @@ void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, 
                                      int num_tiles, value sg_id,
                                      uniform_loop_body_builder_new const &body) {
     auto index_ty = scalar_data_type::get(loop_trip_count->context(), scalar_type::index);
+    auto c0 = bb.add(make_constant(0, index_ty));
     auto c1 = bb.add(make_constant(1, index_ty));
-    auto c_block_size = bb.add(make_constant(block_size, index_ty));
     auto c_tiles = bb.add(make_constant(num_tiles, index_ty));
 
+    // Here we compute
+    // blocks = ceil(loop_trip_count / block_size) = 1 + (loop_trip_count - 1) / block_size
+    // blocks = ceil(blocks / num_tiles) * num_tiles = (1 + (blocks - 1) / num_tiles) * num_tiles
+    auto c_block_size = bb.add(make_constant(block_size, index_ty));
     auto blocks0 = bb.add(make_arith(arithmetic::sub, loop_trip_count, c1));
     auto blocks1 = bb.add(make_arith(arithmetic::div, blocks0, c_block_size));
-    auto blocks2 = bb.add(make_arith(arithmetic::add, c1, blocks1));
-    auto blocks3 = bb.add(make_arith(arithmetic::sub, blocks2, c1));
-    auto blocks4 = bb.add(make_arith(arithmetic::div, blocks3, c_tiles));
-    auto blocks5 = bb.add(make_arith(arithmetic::add, c1, blocks4));
-    auto blocks = bb.add(make_arith(arithmetic::mul, blocks5, c_tiles));
-    blocks->name("blocks");
+    auto blocks2 = bb.add(make_arith(arithmetic::div, blocks1, c_tiles));
+    auto blocks3 = bb.add(make_arith(arithmetic::add, c1, blocks2));
+    auto blocks = bb.add(make_arith(arithmetic::mul, blocks3, c_tiles));
+
     auto bs = bb.add(make_arith(arithmetic::div, loop_trip_count, blocks));
-    bs->name("bs");
     auto bs_1 = bb.add(make_arith(arithmetic::add, bs, c1));
-    bs_1->name("bs_1");
     auto rem = bb.add(make_arith(arithmetic::rem, loop_trip_count, blocks));
-    rem->name("rem");
 
     auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
-    auto block_start_1 = bb.add(make_arith(arithmetic::mul, bs_1, sg_id_index));
-    auto block_end_1 = bb.add(make_arith(arithmetic::mul, bs_1, rem));
-    auto step_1 = bb.add(make_arith(arithmetic::mul, bs_1, c_tiles));
-    bb.for_loop(std::move(block_start_1), std::move(block_end_1), std::move(step_1), index_ty,
-                [&](region_builder &bb, value block) { body(bb, block, bs_1); });
+    // The following if makes it easy to eliminate the remainder handler in optimization if rem == 0
+    // is known at compile time. Without the if, we would need to prove that block_start_1 is
+    // non-negative to eliminate the for-loop.
+    auto is_rem_0 = bb.add(make_cmp(cmp_condition::gt, rem, c0));
+    bb.if_condition(is_rem_0, [&](region_builder &bb) {
+        auto block_start_1 = bb.add(make_arith(arithmetic::mul, bs_1, sg_id_index));
+        auto block_end_1 = bb.add(make_arith(arithmetic::mul, bs_1, rem));
+        auto step_1 = bb.add(make_arith(arithmetic::mul, bs_1, c_tiles));
+        bb.for_loop(std::move(block_start_1), std::move(block_end_1), std::move(step_1), index_ty,
+                    [&](region_builder &bb, value block) { body(bb, block, bs_1); });
+    });
 
     auto tmp0 = bb.add(make_arith(arithmetic::rem, rem, c_tiles));
     auto tmp1 = bb.add(make_arith(arithmetic::add, sg_id_index, tmp0));
