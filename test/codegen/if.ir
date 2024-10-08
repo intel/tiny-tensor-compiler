@@ -11,8 +11,8 @@ func @if0(%0: i32) {
     if %3 {
     } else {
     }
-; CHECK:      bool x1 = x0 < c16;
-; CHECK:      bool x2 = x0 >= c0;
+; CHECK:      bool x1 = x < c16;
+; CHECK:      bool x2 = x >= c0;
 ; CHECK:      bool x3 = x1 && x2;
 ; CHECK:      if (x3) {
 ; CHECK-NEXT: }
@@ -49,11 +49,11 @@ func @if3(%0: i32) {
     } else {
         yield %c16 : i32
     }
-; CHECK:      int x;
+; CHECK:      int x2;
 ; CHECK-NEXT: if (x1) {
-; CHECK-NEXT:     x = x0;
+; CHECK-NEXT:     x2 = x;
 ; CHECK-NEXT: } else {
-; CHECK-NEXT:     x = c16;
+; CHECK-NEXT:     x2 = c16;
 ; CHECK-NEXT: }
 }
 
@@ -75,13 +75,13 @@ func @if4(%0: i32) {
         }
         yield %c16, %z : i32, f32
     }
-; CHECK:      int x;
+; CHECK:      int x2;
 ; CHECK-NEXT: float y;
 ; CHECK-NEXT: if (x1) {
 ; CHECK-NEXT:     if (x1) {
 ; CHECK-NEXT:     }
 ; CHECK-NEXT:     float one = 0x1p+0f;
-; CHECK-NEXT:     x = x0;
+; CHECK-NEXT:     x2 = x;
 ; CHECK-NEXT:     y = one;
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:     float z;
@@ -92,7 +92,7 @@ func @if4(%0: i32) {
 ; CHECK-NEXT:         float zero = 0x0p+0f;
 ; CHECK-NEXT:         z = zero;
 ; CHECK-NEXT:     }
-; CHECK-NEXT:     x = c16;
+; CHECK-NEXT:     x2 = c16;
 ; CHECK-NEXT:     y = z;
 ; CHECK-NEXT: }
 }

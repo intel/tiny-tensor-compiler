@@ -49,6 +49,7 @@ Core C-API:
       - tinytc_compiler_context_create
       - tinytc_compiler_context_add_source
       - tinytc_compiler_context_set_error_reporter
+      - tinytc_compiler_context_set_optimization_level
       - tinytc_compiler_context_report_error
       - tinytc_compiler_context_release
       - tinytc_compiler_context_retain

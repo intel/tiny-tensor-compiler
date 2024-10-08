@@ -91,6 +91,7 @@ positional arguments:
     file-name           Path to source code; leave empty to read from stdin
 
 optional arguments:
+    -O0,-O1,-O2         Optimization level, default is -O2
     -d, --device        Device name (cf. intel_gpu_architecture enum), default is "pvc"
     -h, --help          Show help text and exit
 

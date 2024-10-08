@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc < %s | filecheck %s
+; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @t1(%a: i32, %b: i32, %a1: i1, %b1: i1) {
   %1 = arith.add %a, %b : i32
   %2 = arith.sub %a, %b : i32
@@ -18,21 +18,21 @@ func @t1(%a: i32, %b: i32, %a1: i1, %b1: i1) {
   %13 = arith.neg %a : i32
   %14 = arith.not %a : i32
   %15 = arith.not %a1 : i1
-; CHECK:      int x1 = a + b;
-; CHECK-NEXT: int x2 = a - b;
-; CHECK-NEXT: int x3 = a * b;
-; CHECK-NEXT: int x4 = a / b;
-; CHECK-NEXT: int x5 = a % b;
-; CHECK-NEXT: int x6 = a << b;
-; CHECK-NEXT: int x7 = a >> b;
-; CHECK-NEXT: int x8 = a & b;
-; CHECK-NEXT: bool x9 = a1 && b1;
-; CHECK-NEXT: int x10 = a | b;
-; CHECK-NEXT: bool x11 = a1 || b1;
-; CHECK-NEXT: int x12 = a ^ b;
-; CHECK-NEXT: int x13 = -a;
-; CHECK-NEXT: int x14 = ~a;
-; CHECK-NEXT: bool x15 = !a1;
+; CHECK:      int x = a + b;
+; CHECK-NEXT: int x1 = a - b;
+; CHECK-NEXT: int x2 = a * b;
+; CHECK-NEXT: int x3 = a / b;
+; CHECK-NEXT: int x4 = a % b;
+; CHECK-NEXT: int x5 = a << b;
+; CHECK-NEXT: int x6 = a >> b;
+; CHECK-NEXT: int x7 = a & b;
+; CHECK-NEXT: bool x8 = a1 && b1;
+; CHECK-NEXT: int x9 = a | b;
+; CHECK-NEXT: bool x10 = a1 || b1;
+; CHECK-NEXT: int x11 = a ^ b;
+; CHECK-NEXT: int x12 = -a;
+; CHECK-NEXT: int x13 = ~a;
+; CHECK-NEXT: bool x14 = !a1;
 }
 func @t2(%a: i32, %b: i32) {
   %1 = cmp.eq %a, %b : i32
@@ -41,12 +41,12 @@ func @t2(%a: i32, %b: i32) {
   %4 = cmp.ge %a, %b : i32
   %5 = cmp.lt %a, %b : i32
   %6 = cmp.le %a, %b : i32
-; CHECK:      bool x1 = a == b;
-; CHECK-NEXT: bool x2 = a != b;
-; CHECK-NEXT: bool x3 = a > b;
-; CHECK-NEXT: bool x4 = a >= b;
-; CHECK-NEXT: bool x5 = a < b;
-; CHECK-NEXT: bool x6 = a <= b;
+; CHECK:      bool x = a == b;
+; CHECK-NEXT: bool x1 = a != b;
+; CHECK-NEXT: bool x2 = a > b;
+; CHECK-NEXT: bool x3 = a >= b;
+; CHECK-NEXT: bool x4 = a < b;
+; CHECK-NEXT: bool x5 = a <= b;
 }
 func @t3(%a: f32, %b: f32) {
   %1 = arith.add %a, %b : f32
@@ -55,12 +55,12 @@ func @t3(%a: f32, %b: f32) {
   %4 = arith.div %a, %b : f32
   %5 = arith.rem %a, %b : f32
   %6 = arith.neg %a : f32
-; CHECK:      float x1 = a + b;
-; CHECK-NEXT: float x2 = a - b;
-; CHECK-NEXT: float x3 = a * b;
-; CHECK-NEXT: float x4 = a / b;
-; CHECK-NEXT: float x5 = fmod(a, b);
-; CHECK-NEXT: float x6 = -a;
+; CHECK:      float x = a + b;
+; CHECK-NEXT: float x1 = a - b;
+; CHECK-NEXT: float x2 = a * b;
+; CHECK-NEXT: float x3 = a / b;
+; CHECK-NEXT: float x4 = fmod(a, b);
+; CHECK-NEXT: float x5 = -a;
 }
 func @t4(%a: f32, %b: f32) {
   %1 = cmp.eq %a, %b : f32
@@ -69,12 +69,12 @@ func @t4(%a: f32, %b: f32) {
   %4 = cmp.ge %a, %b : f32
   %5 = cmp.lt %a, %b : f32
   %6 = cmp.le %a, %b : f32
-; CHECK:      bool x1 = a == b;
-; CHECK-NEXT: bool x2 = a != b;
-; CHECK-NEXT: bool x3 = a > b;
-; CHECK-NEXT: bool x4 = a >= b;
-; CHECK-NEXT: bool x5 = a < b;
-; CHECK-NEXT: bool x6 = a <= b;
+; CHECK:      bool x = a == b;
+; CHECK-NEXT: bool x1 = a != b;
+; CHECK-NEXT: bool x2 = a > b;
+; CHECK-NEXT: bool x3 = a >= b;
+; CHECK-NEXT: bool x4 = a < b;
+; CHECK-NEXT: bool x5 = a <= b;
 }
 func @t5(%a: i32) {
   %b = cast %a : i32 -> index

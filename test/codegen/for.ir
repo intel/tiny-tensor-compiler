@@ -6,11 +6,11 @@ func @for1() {
   %lb0 = constant 0 -> index
   %ub0 = constant 10 -> index
   for %0 = %lb0,%ub0 {
-  ; CHECK: for (long x0 = lb0; x0 < ub0; ++x0)
+  ; CHECK: for (long x = lb0; x < ub0; ++x)
   }
   %lb1 = constant -2 -> i16
   %ub1 = constant 2 -> i16
   for %1 = %lb1,%ub1 : i16 {
-  ; CHECK: for (short x1 = lb1; x1 < ub1; ++x1)
+  ; CHECK: for (short x = lb1; x < ub1; ++x)
   }
 }

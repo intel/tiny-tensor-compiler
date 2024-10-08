@@ -24,6 +24,7 @@ auto make_core_info_from_string(char const *name) -> core_info {
 args arg_parser::parse_args(int argc, char **argv) {
     args a = {};
     a.filename = nullptr;
+    a.opt_level = 2;
 
     int npos = 0;
     for (int i = 1; i < argc; ++i) {
@@ -34,6 +35,12 @@ args arg_parser::parse_args(int argc, char **argv) {
             };
             if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
                 a.help = true;
+            } else if (std::strcmp(argv[i], "-O0") == 0) {
+                a.opt_level = 0;
+            } else if (std::strcmp(argv[i], "-O1") == 0) {
+                a.opt_level = 1;
+            } else if (std::strcmp(argv[i], "-O2") == 0) {
+                a.opt_level = 2;
             } else if (i + 1 < argc) {
                 if (std::strcmp(argv[i], "-d") == 0 || std::strcmp(argv[i], "--device") == 0) {
                     a.info = make_core_info_from_string(argv[++i]);

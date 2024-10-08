@@ -85,13 +85,17 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
     }
     return exception_to_status_code(
         [&] {
+            const auto opt_level = prg->get_context()->opt_level();
+
             // passes
             run_function_pass(check_ir_pass{}, *prg);
 
-            // We run constant propagation + dead code elimination early to capture dead allocas
-            // (later on they are maybe "in use" due to the lifetime_stop instruction)
-            run_function_pass(constant_propagation_pass{}, *prg);
-            run_function_pass(dead_code_elimination_pass{}, *prg);
+            if (opt_level >= 1) {
+                // We run constant propagation + dead code elimination early to capture dead allocas
+                // (later on they are maybe "in use" due to the lifetime_stop instruction)
+                run_function_pass(constant_propagation_pass{}, *prg);
+                run_function_pass(dead_code_elimination_pass{}, *prg);
+            }
 
             run_function_pass(insert_lifetime_stop_pass{}, *prg);
             run_function_pass(set_stack_ptr_pass{}, *prg);
@@ -99,9 +103,10 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
             run_function_pass(work_group_size_pass{info}, *prg);
 
             run_function_pass(lower_linalg_pass{info}, *prg);
-            run_function_pass(constant_propagation_pass{}, *prg);
-            run_function_pass(dead_code_elimination_pass{}, *prg);
-            run_function_pass(dump_ir_pass{std::cout}, *prg);
+            if (opt_level >= 1) {
+                run_function_pass(constant_propagation_pass{}, *prg);
+                run_function_pass(dead_code_elimination_pass{}, *prg);
+            }
 
             // opencl
             auto ast = convert_to_opencl_pass{info}.run_on_program(*prg);

@@ -6,12 +6,14 @@
 
 #include "tinytc/tinytc.hpp"
 
+#include <cstdint>
 #include <iosfwd>
 
 struct args {
     char const *filename;
     tinytc::core_info info;
     bool help;
+    std::int32_t opt_level;
 };
 
 class arg_parser {

@@ -291,6 +291,8 @@ Compiler Context
 
   * :ref:`tinytc_compiler_context_set_error_reporter`
 
+  * :ref:`tinytc_compiler_context_set_optimization_level`
+
   * :ref:`tinytc_compiler_context_report_error`
 
   * :ref:`tinytc_compiler_context_release`
@@ -314,6 +316,11 @@ tinytc_compiler_context_set_error_reporter
 ..........................................
 
 .. doxygenfunction:: tinytc_compiler_context_set_error_reporter
+
+tinytc_compiler_context_set_optimization_level
+..............................................
+
+.. doxygenfunction:: tinytc_compiler_context_set_optimization_level
 
 tinytc_compiler_context_report_error
 ....................................

@@ -1196,6 +1196,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_error_reporter(
     tinytc_compiler_context_t ctx, tinytc_error_reporter_t reporter, void *user_data);
 
 /**
+ * @brief Set optimization level (from 0 to 2)
+ *
+ * @param ctx [inout] context object
+ * @param level [in] optimization level
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_compiler_context_set_optimization_level(tinytc_compiler_context_t ctx, int32_t level);
+
+/**
  * @brief Report an error and augment the error with source context
  *
  * @param ctx [in] context object

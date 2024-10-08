@@ -495,6 +495,14 @@ class compiler_context : public shared_handle<tinytc_compiler_context_t> {
         CHECK_STATUS(tinytc_compiler_context_set_error_reporter(obj_, reporter, user_data));
     }
     /**
+     * @brief Set optimization level
+     *
+     * @param level optimization level
+     */
+    inline void set_optimization_level(std::int32_t level) {
+        CHECK_STATUS(tinytc_compiler_context_set_optimization_level(obj_, level));
+    }
+    /**
      * @brief Enhance error message with compiler context; useful when builder is used
      *
      * @param loc Source location

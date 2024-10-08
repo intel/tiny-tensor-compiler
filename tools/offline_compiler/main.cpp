@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
     auto ctx = compiler_context{};
     try {
         ctx = make_compiler_context();
+        ctx.set_optimization_level(a.opt_level);
         auto p = prog{};
         if (!a.filename) {
             p = parse_stdin(ctx);

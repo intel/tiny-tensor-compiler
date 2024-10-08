@@ -1,18 +1,18 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc < %s | filecheck %s
+; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @kernel(%K0: memref<f32x?x?>, %offset: index, %size: index) {
   %0 = subview %K0[4:%size, %offset] : memref<f32x?x?>
 ; CHECK: void kernel({{.*}}
-; CHECK-NEXT: global float* x0 = K0 + 4ll * 1 + offset * K0_stride1;
-; CHECK-NEXT: long x0_shape0 = size;
+; CHECK-NEXT: global float* x = K0 + 4ll * 1 + offset * K0_stride1;
+; CHECK-NEXT: long x_shape0 = size;
 }
 
 func @kernel2(%K0: memref<f32x?x?>, %offset: index, %size: index) {
   %0 = subview %K0[%offset, 4:%size] : memref<f32x?x?>
 ; CHECK: void kernel2({{.*}}
-; CHECK-NEXT: global float* x0 = K0 + offset * 1 + 4ll * K0_stride1;
-; CHECK-NEXT: long x0_shape0 = size;
-; CHECK-NEXT: long x0_stride0 = K0_stride1;
+; CHECK-NEXT: global float* x = K0 + offset * 1 + 4ll * K0_stride1;
+; CHECK-NEXT: long x_shape0 = size;
+; CHECK-NEXT: long x_stride0 = K0_stride1;
 }

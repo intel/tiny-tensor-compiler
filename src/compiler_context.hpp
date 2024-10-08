@@ -48,6 +48,9 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     auto source_text(std::int32_t source_id) -> std::pair<char const *, std::size_t>;
     void report_error(tinytc_location const &l, char const *what);
 
+    auto opt_level() const noexcept -> std::int32_t { return opt_level_; }
+    void opt_level(std::int32_t level) noexcept { opt_level_ = level; }
+
   private:
     struct source_input {
         std::string name, text;
@@ -61,6 +64,7 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     tinytc::error_reporter_t reporter_ = &tinytc::default_error_reporter;
     void *user_data_ = nullptr;
     std::vector<source_input> sources_;
+    std::int32_t opt_level_ = 2;
 };
 
 #endif // COMPILER_CONTEXT_20240924_HPP

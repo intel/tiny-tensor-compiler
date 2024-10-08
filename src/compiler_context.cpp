@@ -71,6 +71,15 @@ tinytc_status_t tinytc_compiler_context_set_error_reporter(tinytc_compiler_conte
     return exception_to_status_code([&] { ctx->set_error_reporter(reporter, user_data); });
 }
 
+tinytc_status_t tinytc_compiler_context_set_optimization_level(tinytc_compiler_context_t ctx,
+                                                               int32_t level) {
+    if (ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    ctx->opt_level(level);
+    return tinytc_status_success;
+}
+
 tinytc_status_t tinytc_compiler_context_report_error(tinytc_compiler_context_t ctx,
                                                      const tinytc_location_t *location,
                                                      char const *what) {
