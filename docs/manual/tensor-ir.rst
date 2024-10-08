@@ -645,6 +645,22 @@ Overview
 ~~~~~~~~
 
 Cast scalar values.
+Casts from complex types to non-complex types are forbidden.
+The following table summarizes the casts and the mapping to SPIR-V:
+
+============= ============= ==================================================
+Operand type  Result type   SPIR-V Op
+============= ============= ==================================================
+integer-type  integer-type  OpSConvert
+floating-type floating-type OpFConvert
+complex-type  complex-type  OpFConvert (on vector2)
+integer-type  floating-type OpConvertSToF
+floating-type integer-type  OpConvertFToS
+floating-type complex-type  OpFConvert on real part, imaginary part is zero
+integer-type  complex-type  OpConvertSToF on real part, imaginary part is zero
+complex-type  integer-type  Forbidden
+complex-type  floating-type Forbidden
+============= ============= ==================================================
 
 Comparison
 ..........

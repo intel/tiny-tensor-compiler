@@ -194,13 +194,19 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     result(0) = value_node{at, this, lc};
 }
 
-cast_inst::cast_inst(tinytc_value_t a, tinytc_data_type_t to_ty, location const &lc)
+cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const &lc)
     : standard_inst{IK::cast} {
-    op(op_a, a);
+    op(op_a, a0);
     loc(lc);
 
-    if (!isa<scalar_data_type>(*to_ty)) {
+    auto rt = dyn_cast<scalar_data_type>(to_ty);
+    if (rt == nullptr) {
         throw compilation_error(lc, status::ir_expected_scalar);
+    }
+
+    auto at = get_scalar_type(loc(), a());
+    if (is_complex_type(at->ty()) && !is_complex_type(rt->ty())) {
+        throw compilation_error(lc, status::ir_forbidden_cast);
     }
 
     result(0) = value_node{to_ty, this, lc};

@@ -201,16 +201,24 @@ template <typename T, typename U> struct value_cast_impl {
     auto operator()(U const &u) { return static_cast<T>(u); }
 };
 
+template <typename F, typename U> struct value_cast_impl<std::complex<F>, U> {
+    auto operator()(U const &u) { return std::complex<F>{static_cast<F>(u), static_cast<F>(0)}; }
+};
+
+template <typename F1, typename F2> struct value_cast_impl<std::complex<F1>, std::complex<F2>> {
+    auto operator()(std::complex<F2> const &u) { return static_cast<std::complex<F1>>(u); }
+};
+
 template <typename U> struct value_cast_impl<bool, U> {
     auto operator()(U const &u) { return u != U{}; }
 };
 
 template <typename F> struct value_cast_impl<bool, std::complex<F>> {
-    auto operator()(std::complex<F> const &u) { return u != std::complex<F>{}; }
+    auto operator()(std::complex<F> const &) -> bool { throw status::ir_forbidden_cast; }
 };
 
 template <typename T, typename F> struct value_cast_impl<T, std::complex<F>> {
-    auto operator()(std::complex<F> const &u) { return static_cast<T>(u.real()); }
+    auto operator()(std::complex<F> const &) -> T { throw status::ir_forbidden_cast; }
 };
 
 template <typename T, typename U> auto value_cast(U const &u) { return value_cast_impl<T, U>{}(u); }

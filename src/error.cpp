@@ -169,6 +169,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "i1 type unsupported by instruction";
     case tinytc_status_ir_complex_unsupported:
         return "complex type unsupported by instruction";
+    case tinytc_status_ir_forbidden_cast:
+        return "Forbidden cast";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

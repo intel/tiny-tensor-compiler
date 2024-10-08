@@ -51,20 +51,24 @@ func @known_arith() {
 }
 
 func @known_cast() {
-    %0 = constant 32768 -> i32
-    %1 = cast %0 : i32 -> i16
-    %2 = cast %0 : i32 -> f32
-    %3 = cast %0 : i32 -> c32
-    %4 = cast %0 : i32 -> i1
-    %5 = cast %3 : c32 -> i1
-    %6 = cast %5 : i1 -> c32
+    %c0 = constant 32768 -> i32
+    %c1 = constant [3.0, -2.0] -> c32
+    %0 = cast %c0 : i32 -> i16
+    %1 = cast %c0 : i32 -> f32
+    %2 = cast %c0 : i32 -> c32
+    %3 = cast %c0 : i32 -> i1
+    %4 = cast %c0 : i32 -> c32
+    %5 = cast %c1 : c32 -> c64
+    %6 = cast %3 : i1 -> c32
 ; CHECK-LABEL: func @known_cast({{.*}}
-; CHECK:       %0 = constant 32768 -> i32
-; CHECK-NEXT:  %1 = constant -32768 -> i16
-; CHECK-NEXT:  %2 = constant 0x1p+15 -> f32
-; CHECK-NEXT:  %3 = constant [0x1p+15,0x0p+0] -> c32
-; CHECK-NEXT:  %4 = constant 1 -> i1
-; CHECK-NEXT:  %5 = constant 1 -> i1
+; CHECK:       %c0 = constant 32768 -> i32
+; CHECK:       %c1 = constant [0x1.8p+1,-0x1p+1] -> c32
+; CHECK-NEXT:  %0 = constant -32768 -> i16
+; CHECK-NEXT:  %1 = constant 0x1p+15 -> f32
+; CHECK-NEXT:  %2 = constant [0x1p+15,0x0p+0] -> c32
+; CHECK-NEXT:  %3 = constant 1 -> i1
+; CHECK-NEXT:  %4 = constant [0x1p+15,0x0p+0] -> c32
+; CHECK-NEXT:  %5 = constant [0x1.8p+1,-0x1p+1] -> c64
 ; CHECK-NEXT:  %6 = constant [0x1p+0,0x0p+0] -> c32
 }
 

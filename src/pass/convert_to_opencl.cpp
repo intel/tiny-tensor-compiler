@@ -382,8 +382,27 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cast_inst const &c) {
     auto v = declare(*c.result());
+    auto aty = get_scalar_type(c.a().ty());
+    auto rty = get_scalar_type(c.result(0).ty());
+    auto av = val(c.a());
+    auto cst = clir::expr{};
     auto result_ty = visit(*this, *c.result()->ty());
-    auto cst = cast(result_ty, val(c.a()));
+    if (is_complex_type(aty) && is_complex_type(rty)) {
+        switch (rty) {
+        case scalar_type::c32:
+            cst = clir::call("convert_float2", {std::move(av)});
+            break;
+        case scalar_type::c64:
+            cst = clir::call("convert_double2", {std::move(av)});
+            break;
+        default:
+            throw status::internal_compiler_error;
+        }
+    } else if (is_complex_type(rty)) {
+        cst = clir::init_vector(result_ty, {std::move(av), 0});
+    } else {
+        cst = cast(result_ty, std::move(av));
+    }
     return {declaration_assignment(std::move(result_ty), std::move(v), std::move(cst))};
 }
 
