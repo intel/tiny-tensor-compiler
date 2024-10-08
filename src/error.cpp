@@ -165,6 +165,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "A memref with global address space is expected";
     case tinytc_status_ir_invalid_offset:
         return "Offset must be non-negative or dynamic";
+    case tinytc_status_ir_int_unsupported:
+        return "int type unsupported by instruction";
     case tinytc_status_ir_i1_unsupported:
         return "i1 type unsupported by instruction";
     case tinytc_status_ir_complex_unsupported:

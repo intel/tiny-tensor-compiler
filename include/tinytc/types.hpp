@@ -75,6 +75,7 @@ enum class status {
     ir_expected_local_address_space = tinytc_status_ir_expected_local_address_space,
     ir_expected_global_address_space = tinytc_status_ir_expected_global_address_space,
     ir_invalid_offset = tinytc_status_ir_invalid_offset,
+    ir_int_unsupported = tinytc_status_ir_int_unsupported,
     ir_i1_unsupported = tinytc_status_ir_i1_unsupported,
     ir_complex_unsupported = tinytc_status_ir_complex_unsupported,
     ir_forbidden_cast = tinytc_status_ir_forbidden_cast,
@@ -233,8 +234,12 @@ enum class arithmetic {
 
 //! Arithmetic operations (unary)
 enum class arithmetic_unary {
-    neg = tinytc_arithmetic_unary_neg, ///< negation
-    not_ = tinytc_arithmetic_unary_not ///< bitwise not
+    neg = tinytc_arithmetic_unary_neg,   ///< negation
+    not_ = tinytc_arithmetic_unary_not,  ///< bitwise not
+    abs = tinytc_arithmetic_unary_abs,   ///< absolute value
+    conj = tinytc_arithmetic_unary_conj, ///< complex conjugate
+    im = tinytc_arithmetic_unary_im,     ///< imaginary part
+    re = tinytc_arithmetic_unary_re      ///< real part
 };
 
 //! Compare operation

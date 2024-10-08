@@ -176,8 +176,12 @@ lex:
         ".xor"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
 
         // unary op
+        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
         ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
         ".not"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
+        ".conj"             { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
+        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
+        ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
 
         // comparison condition
         ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq,

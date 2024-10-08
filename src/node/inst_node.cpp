@@ -174,24 +174,46 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     op(op_a, a0);
     loc(lc);
 
-    auto at = get_scalar_type(loc(), a());
+    auto a_ty = get_scalar_type(loc(), a());
+    tinytc_data_type_t to_ty = a_ty;
+
+    bool inst_supports_int = true;
     bool inst_supports_fp = true;
     bool inst_supports_complex = true;
     switch (operation) {
+    case arithmetic_unary::abs:
     case arithmetic_unary::neg:
         break;
     case arithmetic_unary::not_:
         inst_supports_fp = false;
         inst_supports_complex = false;
         break;
+    case arithmetic_unary::conj:
+    case arithmetic_unary::im:
+    case arithmetic_unary::re:
+        inst_supports_int = false;
+        inst_supports_fp = false;
+        break;
     }
-    if (!inst_supports_fp && is_floating_type(at->ty())) {
+    if (!inst_supports_int && is_integer_type(a_ty->ty())) {
+        throw compilation_error(loc(), status::ir_int_unsupported);
+    }
+    if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
         throw compilation_error(loc(), status::ir_fp_unsupported);
     }
-    if (!inst_supports_complex && is_complex_type(at->ty())) {
+    if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
         throw compilation_error(loc(), status::ir_complex_unsupported);
     }
-    result(0) = value_node{at, this, lc};
+    switch (operation) {
+    case arithmetic_unary::abs:
+    case arithmetic_unary::im:
+    case arithmetic_unary::re:
+        to_ty = scalar_data_type::get(a_ty->context(), element_type(a_ty->ty()));
+        break;
+    default:
+        break;
+    }
+    result(0) = value_node{to_ty, this, lc};
 }
 
 cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const &lc)

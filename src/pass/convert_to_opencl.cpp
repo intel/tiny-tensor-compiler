@@ -330,7 +330,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
         case arithmetic::mul:
             return multiply(sty, sty, std::move(a), std::move(b));
         case arithmetic::div:
-            return std::move(a) / std::move(b);
+            return divide(sty, sty, std::move(a), std::move(b));
         case arithmetic::rem:
             if (is_floating_type(sty)) {
                 return clir::fmod(std::move(a), std::move(b));
@@ -364,6 +364,15 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst const &a) {
     auto const make = [](arithmetic_unary op, clir::expr a, scalar_type sty) -> clir::expr {
         switch (op) {
+        case arithmetic_unary::abs:
+            if (is_complex_type(sty)) {
+                return clir::call_builtin(clir::builtin_function::sqrt,
+                                          {a.s(0) * a.s(0) + a.s(1) * a.s(1)});
+            }
+            if (is_floating_type(sty)) {
+                return clir::call_builtin(clir::builtin_function::fabs, {std::move(a)});
+            }
+            return clir::call_builtin(clir::builtin_function::abs, {std::move(a)});
         case arithmetic_unary::neg:
             return -std::move(a);
         case arithmetic_unary::not_:
@@ -371,6 +380,12 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
                 return !std::move(a);
             }
             return ~std::move(a);
+        case arithmetic_unary::conj:
+            return clir::init_vector(to_clir_ty(sty), {a.s(0), -a.s(1)});
+        case arithmetic_unary::im:
+            return std::move(a).s(1);
+        case arithmetic_unary::re:
+            return std::move(a).s(0);
         }
         return {};
     };

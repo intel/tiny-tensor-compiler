@@ -39,6 +39,7 @@ func @known_arith() {
     %5 = arith.neg %4 : f32
     %6 = constant [1.0, -1.0] -> c32
     %7 = arith.add %6, %6 : c32
+    %8 = arith.abs %4 : f32
 ; CHECK-LABEL: func @known_arith({{.*}}
 ; CHECK:      %0 = constant 1 -> i64
 ; CHECK-NEXT: %1 = constant -2 -> i64
@@ -48,6 +49,7 @@ func @known_arith() {
 ; CHECK-NEXT: %5 = constant 0x1p+1 -> f32
 ; CHECK-NEXT: %6 = constant [0x1p+0,-0x1p+0] -> c32
 ; CHECK-NEXT: %7 = constant [0x1p+1,-0x1p+1] -> c32
+; CHECK-NEXT: %8 = constant 0x1p+1 -> f32
 }
 
 func @known_cast() {
@@ -82,4 +84,30 @@ func @known_compare() {
 ; CHECK-NEXT:  %1 = constant 0x1p+1 -> f32
 ; CHECK-NEXT:  %2 = constant 1 -> i1
 ; CHECK-NEXT:  %3 = constant 0 -> i1
+}
+
+func @known_arith_complex() {
+    %a = constant [3.0, 2.0] -> c32
+    %b = constant [-1.0, 5.0] -> c32
+    %0 = arith.add %a, %b : c32
+    %1 = arith.sub %a, %b : c32
+    %2 = arith.mul %a, %b : c32
+    %3 = arith.div %a, %b : c32
+    %4 = arith.neg %a : c32
+    %5 = arith.conj %a : c32
+    %6 = arith.abs %a : c32
+    %7 = arith.im %a : c32
+    %8 = arith.re %a : c32
+; CHECK-LABEL: func @known_arith_complex({{.*}}
+; CHECK:      %a = constant [0x1.8p+1,0x1p+1] -> c32
+; CHECK:      %b = constant [-0x1p+0,0x1.4p+2] -> c32
+; CHECK-NEXT: %0 = constant [0x1p+1,0x1.cp+2] -> c32
+; CHECK-NEXT: %1 = constant [0x1p+2,-0x1.8p+1] -> c32
+; CHECK-NEXT: %2 = constant [-0x1.ap+3,0x1.ap+3] -> c32
+; CHECK-NEXT: %3 = constant [0x1.13b13cp-2,-0x1.4ec4eep-1] -> c32
+; CHECK-NEXT: %4 = constant [-0x1.8p+1,-0x1p+1] -> c32
+; CHECK-NEXT: %5 = constant [0x1.8p+1,-0x1p+1] -> c32
+; CHECK-NEXT: %6 = constant 0x1.cd82b4p+1 -> f32
+; CHECK-NEXT: %7 = constant 0x1p+1 -> f32
+; CHECK-NEXT: %8 = constant 0x1.8p+1 -> f32
 }

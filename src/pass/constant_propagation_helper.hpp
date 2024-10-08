@@ -5,12 +5,20 @@
 #define CONSTANT_PROPAGATION_HELPER_20241002_HPP
 
 #include "scalar_type.hpp"
+#include "support/casting.hpp"
 #include "tinytc/tinytc.hpp"
 
+#include <complex>
 #include <concepts>
 #include <type_traits>
 
 namespace tinytc {
+
+template <typename T> struct is_complex : public std::false_type {};
+template <typename F>
+requires(std::is_floating_point_v<F>)
+struct is_complex<std::complex<F>> : public std::true_type {};
+template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
 
 struct compute_unary_op {
     arithmetic_unary operation;
@@ -22,6 +30,9 @@ struct compute_unary_op {
     auto operator()(T a) {
         T val = 0;
         switch (operation) {
+        case arithmetic_unary::abs:
+            val = a < 0 ? -a : a;
+            break;
         case arithmetic_unary::neg:
             val = -a;
             break;
@@ -32,27 +43,79 @@ struct compute_unary_op {
                 val = ~a;
             }
             break;
+        default:
+            throw compilation_error(loc, status::ir_int_unsupported);
+        }
+        return make_constant(val, ty, loc);
+    }
+
+    template <typename T>
+    requires(std::is_floating_point_v<T>)
+    auto operator()(T a) -> inst {
+        T val = 0;
+        switch (operation) {
+        case arithmetic_unary::abs:
+            val = a < T{0} ? -a : a;
+            break;
+        case arithmetic_unary::neg:
+            val = -a;
+            break;
+        default:
+            throw compilation_error(loc, status::ir_fp_unsupported);
         }
         return make_constant(val, ty, loc);
     }
 
     template <typename T, typename U>
-    requires(!std::is_integral_v<T>)
+    requires(is_complex_v<T>)
     auto operator()(U const &A) -> inst {
-        const auto a = static_cast<T>(A);
-        T val = {};
-        switch (operation) {
-        case arithmetic_unary::neg:
-            val = -a;
-            break;
-        default:
-            if constexpr (!std::is_floating_point_v<T>) {
-                throw compilation_error(loc, status::ir_complex_unsupported);
+        const auto neg_conj = [&](T const &a) {
+            T val = {};
+            switch (operation) {
+            case arithmetic_unary::neg:
+                val = -a;
+                break;
+            case arithmetic_unary::conj:
+                val = std::conj(a);
+                break;
+            default:
+                return inst{nullptr};
             }
-            throw compilation_error(loc, status::ir_fp_unsupported);
-            break;
+            return make_constant(val, ty, loc);
+        };
+        const auto abs_im_re = [&](T const &a) -> inst {
+            typename T::value_type val = {};
+            switch (operation) {
+            case arithmetic_unary::abs:
+                val = std::abs(a);
+                break;
+            case arithmetic_unary::im:
+                val = std::imag(a);
+                break;
+            case arithmetic_unary::re:
+                val = std::real(a);
+                break;
+            default:
+                return inst{nullptr};
+            }
+            scalar_data_type *sty = dyn_cast<scalar_data_type>(ty);
+            if (!sty) {
+                throw compilation_error(loc, status::ir_expected_scalar);
+            }
+            auto cst_ty = scalar_data_type::get(sty->context(), element_type(sty->ty()));
+            return make_constant(val, cst_ty, loc);
+        };
+
+        const auto a = static_cast<T>(A);
+        auto result = neg_conj(a);
+        if (result) {
+            return result;
         }
-        return make_constant(val, ty, loc);
+        result = abs_im_re(a);
+        if (result) {
+            return result;
+        }
+        throw compilation_error(loc, status::ir_complex_unsupported);
     }
 };
 

@@ -588,23 +588,30 @@ Arithmetic (unary)
 
 .. code:: abnf
 
-    arith-unary-type        =  ".neg"  / ".not"
+    arith-unary-type        =  ".abs" / ".neg"  / ".not" / ".conj" / ".im" / ".re"
     value-instruction       =/ "arith" arith-unary-type local-identifier ":" scalar-type
 
 Overview
 ~~~~~~~~
 
 Unary arithmetic operation on scalars.
-The returned value has the same type as the operand.
+For integer and floating point input, the returned value has the same type as the operand.
+For complex input, the returned value has the underlying floating point type
+for ".abs", ".im", and ".re", and the returned value has the same type as the operand
+for ".neg" and ".conj".
 
 The following table shows the operations' description and the types that are allowed for the operation.
 
-==== ============ ==============================================================================
-Op   Allowed type Description
-==== ============ ==============================================================================
-.neg scalar-type  Negation
-.not integer-type Bitwise not
-==== ============ ==============================================================================
+===== ============ ==============================================================================
+Op    Allowed type Description
+===== ============ ==============================================================================
+.abs  scalar-type  Compute absolute value
+.neg  scalar-type  Negation
+.not  integer-type Bitwise not
+.conj complex-type Complex conjugate
+.im   complex-type Extract imaginary part
+.re   complex-type Extract real part
+===== ============ ==============================================================================
 
 Barrier
 .......

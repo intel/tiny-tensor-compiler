@@ -39,6 +39,17 @@ expr multiply(scalar_type ty_a, scalar_type ty_b, expr a, expr b) {
     }
     return a * b;
 }
+expr divide(scalar_type ty_a, scalar_type ty_b, expr a, expr b) {
+    if (is_complex_type(ty_a) && is_complex_type(ty_b)) {
+        return (a * b.s(0) - init_vector(to_clir_ty(ty_a), {-a.s(1), a.s(0)}) * b.s(1)) /
+               (b.s(0) * b.s(0) + b.s(1) * b.s(1));
+    }
+    if (is_complex_type(ty_b)) {
+        return a * init_vector(to_clir_ty(ty_b), {b.s(0), -b.s(1)}) /
+               (b.s(0) * b.s(0) + b.s(1) * b.s(1));
+    }
+    return a / b;
+}
 
 expr vload_helper(short vec_size, expr offset, expr ptr) {
     switch (vec_size) {

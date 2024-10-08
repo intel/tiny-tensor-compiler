@@ -25,6 +25,7 @@ short bits(scalar_type ty);
 clir::expr constant(scalar_type ty, std::int64_t value);
 clir::expr constant(scalar_type ty, double value);
 clir::expr multiply(scalar_type ty_a, scalar_type ty_b, clir::expr a, clir::expr b);
+clir::expr divide(scalar_type ty_a, scalar_type ty_b, clir::expr a, clir::expr b);
 clir::expr vload_helper(short vec_size, clir::expr offset, clir::expr ptr);
 clir::expr sub_group_block_read_helper(clir::expr pointer, scalar_type ty, clir::address_space as);
 clir::expr sub_group_block_write_helper(clir::expr pointer, clir::expr data, scalar_type ty,
