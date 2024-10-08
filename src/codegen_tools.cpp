@@ -433,39 +433,6 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
 
 void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                           value sg_id, sgs_loop_body_builder_new const &body) {
-    tile_loop_by_sgs_new_dynamic(bb, std::move(loop_trip_count), sgs, num_tiles, std::move(sg_id),
-                                 body);
-}
-
-void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
-                                   int num_tiles, value sg_id,
-                                   sgs_loop_body_builder_new const &body) {
-    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
-    std::int64_t blocks = loop_trip_count / sgs;
-    std::int64_t rem = loop_trip_count % sgs;
-
-    auto c_sgs = bb.add(make_constant(sgs, index_ty));
-    auto c_sgs_blocks = bb.add(make_constant(sgs * blocks, index_ty));
-    auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, index_ty));
-    auto c_tiles_1 = bb.add(make_constant(num_tiles - 1, index_ty));
-    auto c_rem = bb.add(make_constant(rem, index_ty));
-
-    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
-    if (blocks > 0) {
-        auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
-        bb.for_loop(std::move(block_start), c_sgs_blocks, c_sgs_tiles, index_ty,
-                    [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
-    }
-
-    if (rem > 0) {
-        auto condition = bb.add(make_cmp(cmp_condition::eq, sg_id_index, c_tiles_1));
-        bb.if_condition(condition,
-                        [&](region_builder &bb) { body(bb, c_sgs_blocks, true, c_rem); });
-    }
-}
-
-void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
-                                  value sg_id, sgs_loop_body_builder_new const &body) {
     auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
     auto c_sgs = bb.add(make_constant(sgs, index_ty));
     auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, index_ty));
@@ -476,10 +443,13 @@ void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int
     auto rem = bb.add(make_arith(arithmetic::rem, loop_trip_count, c_sgs));
 
     auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
-    auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
-    auto block_end = bb.add(make_arith(arithmetic::mul, c_sgs, blocks));
-    bb.for_loop(std::move(block_start), std::move(block_end), c_sgs_tiles, index_ty,
-                [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
+    auto is_blocks_gt_0 = bb.add(make_cmp(cmp_condition::gt, blocks, c0));
+    bb.if_condition(is_blocks_gt_0, [&](region_builder &bb) {
+        auto block_start = bb.add(make_arith(arithmetic::mul, c_sgs, sg_id_index));
+        auto block_end = bb.add(make_arith(arithmetic::mul, c_sgs, blocks));
+        bb.for_loop(std::move(block_start), std::move(block_end), c_sgs_tiles, index_ty,
+                    [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
+    });
 
     auto condition0 = bb.add(make_cmp(cmp_condition::gt, rem, c0));
     bb.if_condition(condition0, [&](region_builder &bb) {
@@ -494,50 +464,6 @@ void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id,
                              uniform_loop_body_builder_new const &body) {
-    tile_loop_uniformly_new_dynamic(bb, std::move(loop_trip_count), block_size, num_tiles,
-                                    std::move(sg_id), body);
-}
-
-void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,
-                                      int block_size, int num_tiles, value sg_id,
-                                      uniform_loop_body_builder_new const &body) {
-    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
-    // Find minimum number of blocks such that the block sizes are smaller or equal block_size
-    std::int64_t blocks = 1 + (loop_trip_count - 1) / block_size;
-    // Increase the number of blocks if such that the number of blocks is a multiple
-    // of the number of tiles
-    blocks = (1 + (blocks - 1) / num_tiles) * num_tiles;
-    std::int64_t bs = loop_trip_count / blocks;
-    std::int64_t bs_1 = bs + 1;
-    std::int64_t rem = loop_trip_count % blocks;
-
-    auto c_bs = bb.add(make_constant(bs, index_ty));
-    auto c_bs_tiles = bb.add(make_constant(bs * num_tiles, index_ty));
-    auto c_bs_1 = bb.add(make_constant(bs_1, index_ty));
-    auto c_bs_1_rem = bb.add(make_constant(bs_1 * rem, index_ty));
-    auto c_bs_1_tiles = bb.add(make_constant(bs_1 * num_tiles, index_ty));
-    auto c_rem_mod_tiles = bb.add(make_constant(rem % num_tiles, index_ty));
-    auto c_tiles = bb.add(make_constant(num_tiles, index_ty));
-    auto c_loop_trip_count = bb.add(make_constant(loop_trip_count, index_ty));
-
-    auto sg_id_index = bb.add(make_cast(sg_id, index_ty));
-    if (rem > 0) {
-        auto block_start = bb.add(make_arith(arithmetic::mul, c_bs_1, sg_id_index));
-        bb.for_loop(std::move(block_start), c_bs_1_rem, c_bs_1_tiles, index_ty,
-                    [&](region_builder &bb, value block) { body(bb, block, c_bs_1); });
-    }
-
-    auto tmp = bb.add(make_arith(arithmetic::add, sg_id_index, c_rem_mod_tiles));
-    auto sg_id_1 = bb.add(make_arith(arithmetic::rem, tmp, c_tiles));
-    auto tmp2 = bb.add(make_arith(arithmetic::mul, c_bs, sg_id_1));
-    auto block_start = bb.add(make_arith(arithmetic::add, c_bs_1_rem, tmp2));
-    bb.for_loop(std::move(block_start), c_loop_trip_count, c_bs_tiles, index_ty,
-                [&](region_builder &bb, value block) { body(bb, block, c_bs); });
-}
-
-void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, int block_size,
-                                     int num_tiles, value sg_id,
-                                     uniform_loop_body_builder_new const &body) {
     auto index_ty = scalar_data_type::get(loop_trip_count->context(), scalar_type::index);
     auto c0 = bb.add(make_constant(0, index_ty));
     auto c1 = bb.add(make_constant(1, index_ty));
@@ -561,8 +487,8 @@ void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, 
     // The following if makes it easy to eliminate the remainder handler in optimization if rem == 0
     // is known at compile time. Without the if, we would need to prove that block_start_1 is
     // non-negative to eliminate the for-loop.
-    auto is_rem_0 = bb.add(make_cmp(cmp_condition::gt, rem, c0));
-    bb.if_condition(is_rem_0, [&](region_builder &bb) {
+    auto is_rem_gt_0 = bb.add(make_cmp(cmp_condition::gt, rem, c0));
+    bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
         auto block_start_1 = bb.add(make_arith(arithmetic::mul, bs_1, sg_id_index));
         auto block_end_1 = bb.add(make_arith(arithmetic::mul, bs_1, rem));
         auto step_1 = bb.add(make_arith(arithmetic::mul, bs_1, c_tiles));

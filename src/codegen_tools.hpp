@@ -127,20 +127,9 @@ using uniform_loop_body_builder_new = std::function<void(region_builder &, value
 
 void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                           value sg_id, sgs_loop_body_builder_new const &body);
-void tile_loop_by_sgs_new_constant(region_builder &bb, std::int64_t loop_trip_count, int sgs,
-                                   int num_tiles, value sg_id,
-                                   sgs_loop_body_builder_new const &body);
-void tile_loop_by_sgs_new_dynamic(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
-                                  value sg_id, sgs_loop_body_builder_new const &body);
 
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id, uniform_loop_body_builder_new const &body);
-void tile_loop_uniformly_new_constant(region_builder &bb, std::int64_t loop_trip_count,
-                                      int block_size, int num_tiles, value sg_id,
-                                      uniform_loop_body_builder_new const &body);
-void tile_loop_uniformly_new_dynamic(region_builder &bb, value loop_trip_count, int block_size,
-                                     int num_tiles, value sg_id,
-                                     uniform_loop_body_builder_new const &body);
 
 } // namespace tinytc
 
