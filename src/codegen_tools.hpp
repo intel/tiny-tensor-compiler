@@ -21,6 +21,8 @@
 
 namespace tinytc {
 
+// tools for OpenCL codegen
+
 short bits(scalar_type ty);
 clir::expr constant(scalar_type ty, std::int64_t value);
 clir::expr constant(scalar_type ty, double value);
@@ -123,6 +125,8 @@ void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
                         matrix_block_description const &d, bool is_atomic, scalar_type beta_ty,
                         clir::expr beta, core_config const &core_cfg);
 
+// tools for tinytc lowering
+
 using sgs_loop_body_builder_new = std::function<void(region_builder &, value, bool, value)>;
 using uniform_loop_body_builder_new = std::function<void(region_builder &, value, value)>;
 
@@ -131,6 +135,9 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
 
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id, uniform_loop_body_builder_new const &body);
+
+auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value a, value b,
+                                location const &loc) -> value;
 
 } // namespace tinytc
 

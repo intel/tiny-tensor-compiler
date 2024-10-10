@@ -5,7 +5,7 @@
 #define COMPILER_CONTEXT_CACHE_20240925_HPP
 
 #include "node/data_type_node.hpp"
-#include "support/util.hpp"
+#include "support/fnv1a.hpp"
 #include "tinytc/types.h"
 
 #include <array>
@@ -20,7 +20,7 @@ namespace std {
 template <> class hash<std::pair<tinytc_data_type_t, std::int64_t>> {
   public:
     auto operator()(std::pair<tinytc_data_type_t, std::int64_t> const &key) const -> std::size_t {
-        return tinytc::fnv1a(key.first, key.second);
+        return tinytc::fnv1a_combine(key.first, key.second);
     }
 };
 } // namespace std

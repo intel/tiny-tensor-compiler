@@ -4,8 +4,8 @@
 include(CommonOptions)
 include(GNUInstallDirs)
 
-add_executable(tinytc-opt main.cpp args.cpp)
-target_link_libraries(tinytc-opt PRIVATE tinytc)
+add_executable(tinytc-opt main.cpp)
+target_link_libraries(tinytc-opt PRIVATE tinytc argparser)
 set_cxx_common_options(tinytc-opt)
 
 set_target_properties(tinytc-opt PROPERTIES INSTALL_RPATH_USE_LINK_PATH True)

@@ -19,6 +19,7 @@ bool is_floating_type(scalar_type ty);
 bool is_complex_type(scalar_type ty);
 bool is_integer_type(scalar_type ty);
 scalar_type element_type(scalar_type ty);
+scalar_type compatible_type(scalar_type a_ty, scalar_type b_ty);
 clir::data_type to_clir_ty(scalar_type ty, clir::address_space as = clir::address_space::generic_t,
                            clir::type_qualifier q = clir::type_qualifier::none);
 clir::data_type to_clir_ty(scalar_type ty, short size,

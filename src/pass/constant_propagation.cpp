@@ -15,7 +15,6 @@
 #include "support/ilist_base.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
 
 #include <complex>
 #include <cstdint>
@@ -275,6 +274,12 @@ void constant_propagation_pass::run_on_region(region_node &reg) {
             // insert new instruction
             it = reg.insts().insert(it, known_constant.release());
         }
+    }
+}
+
+void constant_propagation_pass::set_opt_flag(tinytc::optflag flag, bool enabled) {
+    if (flag == tinytc::optflag::unsafe_fp_math) {
+        enable_unsafe_fp_math_ = enabled;
     }
 }
 

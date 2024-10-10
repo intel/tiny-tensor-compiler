@@ -494,6 +494,20 @@ class compiler_context : public shared_handle<tinytc_compiler_context_t> {
     inline void set_error_reporter(error_reporter_t reporter, void *user_data) {
         CHECK_STATUS(tinytc_compiler_context_set_error_reporter(obj_, reporter, user_data));
     }
+
+    /**
+     * @brief Sets an optimization flag
+     *
+     * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization
+     * level).
+     *
+     * @param flag optimization flag
+     * @param state flag state
+     */
+    inline void set_optimization_flag(optflag flag, std::int32_t state) {
+        CHECK_STATUS(tinytc_compiler_context_set_optimization_flag(
+            obj_, static_cast<tinytc_optflag_t>(flag), state));
+    }
     /**
      * @brief Set optimization level
      *
@@ -1754,6 +1768,19 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch) -> core_
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
         &info, static_cast<tinytc_intel_gpu_architecture_t>(arch)));
+    return core_info{info};
+}
+
+/**
+ * @brief Get core info for Intel GPUs from lookup table
+ *
+ * @param name architecture name
+ *
+ * @return Core info
+ */
+inline auto make_core_info_intel_from_name(char const *name) -> core_info {
+    tinytc_core_info_t info;
+    CHECK_STATUS(tinytc_core_info_intel_create_from_name(&info, name));
     return core_info{info};
 }
 

@@ -8,6 +8,7 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <algorithm>
 #include <iostream>
 
 namespace tinytc {
@@ -21,7 +22,9 @@ using namespace tinytc;
 extern "C" {
 
 tinytc_compiler_context::tinytc_compiler_context()
-    : cache_{std::make_unique<compiler_context_cache>(this)} {}
+    : cache_{std::make_unique<compiler_context_cache>(this)} {
+    opt_flags_.fill(-1);
+}
 
 auto tinytc_compiler_context::source_name(std::int32_t source_id)
     -> std::pair<char const *, std::size_t> {
@@ -44,6 +47,15 @@ void tinytc_compiler_context::report_error(location const &l, char const *what) 
     auto [text, text_size] = source_text(l.begin.source_id);
     auto err = report_error_with_context(text, text_size, name, l, what);
     reporter_(err.c_str(), &l, user_data_);
+}
+
+auto tinytc_compiler_context::opt_flag(tinytc_optflag_t flag) const -> bool {
+    const auto state = opt_flags_[flag];
+    if (state >= 0) {
+        return state > 0;
+    }
+    const auto clamped_opt_level = std::min(2, std::max(0, opt_level_));
+    return default_opt_flags[clamped_opt_level][flag];
 }
 
 tinytc_status_t tinytc_compiler_context_create(tinytc_compiler_context_t *ctx) {
@@ -69,6 +81,15 @@ tinytc_status_t tinytc_compiler_context_set_error_reporter(tinytc_compiler_conte
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { ctx->set_error_reporter(reporter, user_data); });
+}
+
+tinytc_status_t tinytc_compiler_context_set_optimization_flag(tinytc_compiler_context_t ctx,
+                                                              tinytc_optflag_t flag,
+                                                              int32_t state) {
+    if (ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { ctx->opt_flag(flag, state); });
 }
 
 tinytc_status_t tinytc_compiler_context_set_optimization_level(tinytc_compiler_context_t ctx,

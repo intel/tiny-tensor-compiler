@@ -2,10 +2,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "scalar_type.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <algorithm>
 #include <cstddef>
 
 namespace tinytc {
@@ -57,6 +59,11 @@ scalar_type element_type(scalar_type ty) {
         break;
     }
     return ty;
+}
+
+scalar_type compatible_type(scalar_type a_ty, scalar_type b_ty) {
+    int max = std::max(static_cast<int>(a_ty), static_cast<int>(b_ty));
+    return enum_cast<scalar_type>(max);
 }
 
 clir::data_type to_clir_ty(scalar_type ty, clir::address_space as, clir::type_qualifier q) {

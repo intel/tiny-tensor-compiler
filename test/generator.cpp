@@ -4,6 +4,8 @@
 #include "device_info.hpp"
 #include "gemm_generator.hpp"
 #include "reference_counted.hpp"
+#include "scalar_type.hpp"
+#include "support/util.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -80,4 +82,79 @@ TEST_CASE("max register block") {
     auto d2 = max_register_block_gemm(8, 16, 16384);
     CHECK(d2.first == 2);
     CHECK(d2.second == 19);
+}
+
+TEST_CASE("compatible scalar type") {
+    for (int i = 0; i < TINYTC_NUMBER_OF_SCALAR_TYPES; ++i) {
+        const auto si = enum_cast<scalar_type>(i);
+        for (int j = 0; j < TINYTC_NUMBER_OF_SCALAR_TYPES; ++j) {
+            const auto sj = enum_cast<scalar_type>(j);
+            CHECK(compatible_type(si, sj) == compatible_type(sj, si));
+        }
+    }
+
+    CHECK(compatible_type(scalar_type::i1, scalar_type::i1) == scalar_type::i1);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::i8) == scalar_type::i8);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::i16) == scalar_type::i16);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::i32) == scalar_type::i32);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::i64) == scalar_type::i64);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::i1, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::i8, scalar_type::i8) == scalar_type::i8);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::i16) == scalar_type::i16);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::i32) == scalar_type::i32);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::i64) == scalar_type::i64);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::i8, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::i16, scalar_type::i16) == scalar_type::i16);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::i32) == scalar_type::i32);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::i64) == scalar_type::i64);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::i16, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::i32, scalar_type::i32) == scalar_type::i32);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::i64) == scalar_type::i64);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::i32, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::i64, scalar_type::i64) == scalar_type::i64);
+    CHECK(compatible_type(scalar_type::i64, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::i64, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::i64, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::i64, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::i64, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::index, scalar_type::index) == scalar_type::index);
+    CHECK(compatible_type(scalar_type::index, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::index, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::index, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::index, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::f32, scalar_type::f32) == scalar_type::f32);
+    CHECK(compatible_type(scalar_type::f32, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::f32, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::f32, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::f64, scalar_type::f64) == scalar_type::f64);
+    CHECK(compatible_type(scalar_type::f64, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::f64, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::c32, scalar_type::c32) == scalar_type::c32);
+    CHECK(compatible_type(scalar_type::c32, scalar_type::c64) == scalar_type::c64);
+
+    CHECK(compatible_type(scalar_type::c64, scalar_type::c64) == scalar_type::c64);
 }

@@ -63,10 +63,18 @@ char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op) {
 
 char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op) {
     switch (op) {
-    case tinytc_arithmetic_unary_neg:
-        return "neg";
+    case tinytc_arithmetic_unary_abs:
+        return "abs";
     case tinytc_arithmetic_unary_not:
         return "not";
+    case tinytc_arithmetic_unary_neg:
+        return "neg";
+    case tinytc_arithmetic_unary_conj:
+        return "conj";
+    case tinytc_arithmetic_unary_im:
+        return "im";
+    case tinytc_arithmetic_unary_re:
+        return "re";
     }
     return "unknown";
 }

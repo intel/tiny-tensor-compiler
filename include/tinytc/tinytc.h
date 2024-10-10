@@ -1028,6 +1028,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create_from_arch(
     tinytc_core_info_t *info, tinytc_intel_gpu_architecture_t arch);
 
 /**
+ * @brief Look up core info for Intel GPU architecture
+ *
+ * @param info [out] pointer to the core_info object created
+ * @param name [in] architecture name
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info,
+                                                                      char const *name);
+
+/**
  * @brief Create core_info for Intel GPUs
  *
  * @param info [out] pointer to the core_info object created
@@ -1185,7 +1196,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_add_source(tinytc_compiler
  *
  * Error reporting function that is called whenever an error occurs in the parser or the builder.
  *
- * @param ctx [in] context object
+ * @param ctx [inout] context object
  * @param reporter [in] error reporting callback; set to nullptr to disable reporting
  * @param user_data [in][optional] pointer to user data that is passed to the callback; can be
  * nullptr
@@ -1194,6 +1205,20 @@ TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_add_source(tinytc_compiler
  */
 TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_error_reporter(
     tinytc_compiler_context_t ctx, tinytc_error_reporter_t reporter, void *user_data);
+
+/**
+ * @brief Sets an optimization flag
+ *
+ * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization level).
+ *
+ * @param ctx [inout] context object
+ * @param flag [in] optimization flag
+ * @param state [in] flag state
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_set_optimization_flag(
+    tinytc_compiler_context_t ctx, tinytc_optflag_t flag, int32_t state);
 
 /**
  * @brief Set optimization level (from 0 to 2)

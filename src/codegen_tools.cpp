@@ -6,6 +6,7 @@
 #include "node/data_type_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
+#include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 
@@ -516,6 +517,27 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
     auto step = bb.add(make_arith(arithmetic::mul, bs, c_tiles));
     bb.for_loop(std::move(block_start), loop_trip_count, std::move(step), index_ty,
                 [&](region_builder &bb, value block) { body(bb, block, bs); });
+}
+
+auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value a, value b,
+                                location const &loc) -> value {
+    scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
+    scalar_data_type *bt = dyn_cast<scalar_data_type>(b->ty());
+    if (at == nullptr || bt == nullptr) {
+        throw compilation_error(loc, status::ir_expected_scalar);
+    }
+    if (at->ty() != bt->ty()) {
+        auto compatible_scalar_ty = compatible_type(at->ty(), bt->ty());
+        auto compatible_ty = scalar_data_type::get(at->context(), compatible_scalar_ty);
+
+        if (at->ty() != compatible_scalar_ty) {
+            a = bb.add(make_cast(a, compatible_ty, loc));
+        }
+        if (bt->ty() != compatible_scalar_ty) {
+            b = bb.add(make_cast(b, compatible_ty, loc));
+        }
+    }
+    return bb.add(make_arith(operation, a, b));
 }
 
 } // namespace tinytc

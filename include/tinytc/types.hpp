@@ -278,6 +278,12 @@ enum class bundle_format {
     native = tinytc_bundle_format_native ///< Native device binary
 };
 
+//! Flags for optimizer
+enum class optflag {
+    unsafe_fp_math =
+        tinytc_optflag_unsafe_fp_math ///< Unsafe floating point math (e.g. 0.0 * x = 0.0)
+};
+
 //! Memory object type
 enum class mem_type {
     buffer = tinytc_mem_type_buffer,           ///< Buffer object (e.g. cl_mem)

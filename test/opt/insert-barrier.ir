@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-opt --insert-barrier < %s | filecheck %s
+; RUN: %tinytc-opt -pinsert-barrier < %s | filecheck %s
 func @rar(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
     gemm.n.n %a, %A, %B, %b, %C : f32, memref<f32x4x4>, memref<f32x4x4>, f32, memref<f32x4x4>
     gemm.n.n %a, %A, %B, %b, %D : f32, memref<f32x4x4>, memref<f32x4x4>, f32, memref<f32x4x4>

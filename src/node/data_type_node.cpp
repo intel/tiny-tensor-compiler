@@ -5,7 +5,8 @@
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "support/casting.hpp"
-#include "support/util.hpp"
+#include "support/fnv1a.hpp"
+#include "support/fnv1a_array_view.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
@@ -109,15 +110,7 @@ auto memref_data_type::canonical_stride(array_view<std::int64_t> shape)
 }
 
 auto memref_data_type_key::hash() -> std::uint64_t {
-    std::uint64_t hash = fnv1a0();
-    hash = fnv1a_step(hash, element_ty);
-    for (auto &s : shape) {
-        hash = fnv1a_step(hash, s);
-    }
-    for (auto &s : stride) {
-        hash = fnv1a_step(hash, s);
-    }
-    return fnv1a_step(hash, addrspace);
+    return fnv1a_combine(element_ty, shape, stride, addrspace);
 }
 
 auto memref_data_type_key::operator==(memref_data_type const &mt) -> bool {

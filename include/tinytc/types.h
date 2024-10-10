@@ -316,6 +316,12 @@ typedef enum {
     tinytc_bundle_format_native = 1 ///< Native device binary
 } tinytc_bundle_format_t;
 
+//! Flags for optimizer
+typedef enum {
+    tinytc_optflag_unsafe_fp_math = 0 ///< Unsafe floating point math (e.g. 0.0 * x = 0.0)
+} tinytc_optflag_t;
+#define TINYTC_NUMBER_OF_OPTFLAGS 10 // @todo Keep up to date with tinytc_optflag_t
+
 //! Memory object type
 typedef enum {
     tinytc_mem_type_buffer = 0x0,      ///< Buffer object (e.g. cl_mem)

@@ -77,8 +77,15 @@ auto linalg_generator::operator()(ger_inst &g) -> inst {
                     [&](region_builder &bb, value block, bool, value) {
                         auto mm = bb.add(make_arith(arithmetic::add, block, m_index, g.loc()));
                         auto a = bb.add(make_load(&g.A(), {mm}, g.loc()));
-                        auto ab = bb.add(make_arith(arithmetic::mul, a, b, g.loc()));
-                        bb.add(make_store(ab, &g.C(), {mm, nn}, g.loc()));
+                        auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, g.loc());
+                        auto alpha_ab = mixed_precision_arithmetic(bb, arithmetic::mul, &g.alpha(),
+                                                                   ab, g.loc());
+                        auto c = bb.add(make_load(&g.C(), {mm, nn}, g.loc()));
+                        auto beta_c =
+                            mixed_precision_arithmetic(bb, arithmetic::mul, &g.beta(), c, g.loc());
+                        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic(
+                            bb, arithmetic::add, alpha_ab, beta_c, g.loc());
+                        bb.add(make_store(alpha_ab_plus_beta_c, &g.C(), {mm, nn}, g.loc()));
                     });
             });
         });

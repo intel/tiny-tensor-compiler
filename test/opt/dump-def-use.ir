@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-opt --dump-def-use < %s | filecheck %s
+; RUN: %tinytc-opt -pdump-def-use < %s | filecheck %s
 
 func @foobar() {
     %one = constant 1 -> index

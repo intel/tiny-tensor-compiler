@@ -36,6 +36,15 @@
 
 using namespace tinytc;
 
+template <typename PassT> struct optflag_setter {
+    PassT &pass;
+    tinytc_compiler_context_t ctx;
+
+    template <typename... Flags> void operator()(Flags &&...flags) {
+        (pass.set_opt_flag(flags, ctx->opt_flag(flags)), ...);
+    }
+};
+
 extern "C" {
 
 tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t prg,
@@ -45,9 +54,11 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
     }
     return exception_to_status_code(
         [&] {
-#define FUNCTION_PASS(NAME, CREATE_PASS)                                                           \
+#define FUNCTION_PASS(NAME, CREATE_PASS, ...)                                                      \
     if (strcmp(NAME, pass_name) == 0) {                                                            \
-        return run_function_pass(CREATE_PASS, *prg);                                               \
+        auto pass = CREATE_PASS;                                                                   \
+        optflag_setter{pass, prg->get_context()}(__VA_ARGS__);                                     \
+        return run_function_pass(std::move(pass), *prg);                                           \
     }
 #define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS)                                                 \
     if (strcmp(NAME, pass_name) == 0) {                                                            \
@@ -65,7 +76,7 @@ tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *co
     if (names_size == nullptr || names == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-#define FUNCTION_PASS(NAME, CREATE_PASS) NAME,
+#define FUNCTION_PASS(NAME, CREATE_PASS, ...) NAME,
 #define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS) NAME,
     static char const *const pass_names[] = {
 #include "passes.def"
@@ -85,15 +96,19 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
     }
     return exception_to_status_code(
         [&] {
-            const auto opt_level = prg->get_context()->opt_level();
+            const auto ctx = prg->get_context();
+            const auto opt_level = ctx->opt_level();
 
             // passes
+            auto cpp = constant_propagation_pass{};
+            optflag_setter{cpp, ctx}(tinytc::optflag::unsafe_fp_math);
+
             run_function_pass(check_ir_pass{}, *prg);
 
             if (opt_level >= 1) {
                 // We run constant propagation + dead code elimination early to capture dead allocas
                 // (later on they are maybe "in use" due to the lifetime_stop instruction)
-                run_function_pass(constant_propagation_pass{}, *prg);
+                run_function_pass(cpp, *prg);
                 run_function_pass(dead_code_elimination_pass{}, *prg);
             }
 
@@ -104,7 +119,7 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
 
             run_function_pass(lower_linalg_pass{info}, *prg);
             if (opt_level >= 1) {
-                run_function_pass(constant_propagation_pass{}, *prg);
+                run_function_pass(cpp, *prg);
                 run_function_pass(dead_code_elimination_pass{}, *prg);
             }
 

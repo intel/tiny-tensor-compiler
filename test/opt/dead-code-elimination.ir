@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-opt --dead-code-elimination < %s | filecheck %s
+; RUN: %tinytc-opt -pdead-code-elimination < %s | filecheck %s
 func @dead_if(%a: memref<f64>) {
     %c0 = constant 0 -> i1
     if %c0 {

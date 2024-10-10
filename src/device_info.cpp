@@ -3,11 +3,14 @@
 
 #include "device_info.hpp"
 #include "error.hpp"
+#include "support/fnv1a.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -147,6 +150,28 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
                         .release();
+            break;
+        default:
+            *info = nullptr;
+            throw status::invalid_arguments;
+        }
+    });
+}
+
+tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info,
+                                                        char const *name) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        switch (fnv1a(name, std::strlen(name))) {
+        case "tgl"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_tgl));
+            break;
+        case "pvc"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_pvc));
             break;
         default:
             *info = nullptr;
