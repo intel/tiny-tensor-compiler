@@ -5,7 +5,7 @@ include(CommonOptions)
 include(GNUInstallDirs)
 
 add_executable(tinytc-oc main.cpp)
-target_link_libraries(tinytc-oc PRIVATE tinytc argparser)
+target_link_libraries(tinytc-oc PRIVATE tinytc argparser argparser_common)
 set_target_properties(tinytc-oc PROPERTIES OUTPUT_NAME "tinytc")
 set_cxx_common_options(tinytc-oc)
 

@@ -1,0 +1,110 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -pconstant-propagation -fno-unsafe-fp-math < %s | filecheck %s
+
+func @identity_iadd(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.add %a, %c0 : i32
+    %1 = arith.add %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_iadd({{.*}}
+; CHECK: %2 = arith.add %a, %a : i32
+}
+
+func @identity_isub(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.sub %a, %c0 : i32
+    %1 = arith.sub %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_isub({{.*}}
+; CHECK: %2 = arith.add %a, %1 : i32
+}
+
+func @identity_imul0(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.mul %a, %c0 : i32
+    %1 = arith.mul %c0, %a : i32
+; CHECK-LABEL: func @identity_imul0({{.*}}
+; CHECK:       %0 = constant 0 -> i32
+; CHECK-NEXT:  %1 = arith.mul %a, %c0 : i32
+; CHECK-NEXT:  %2 = constant 0 -> i32
+; CHECK-NEXT:  %3 = arith.mul %c0, %a : i32
+}
+
+func @identity_imul1(%a: i32) {
+    %c1 = constant 1 -> i32
+    %0 = arith.mul %a, %c1 : i32
+    %1 = arith.mul %c1, %a : i32
+    %2 = arith.mul %0, %1 : i32
+; CHECK-LABEL: func @identity_imul1({{.*}}
+; CHECK:       %2 = arith.mul %a, %a : i32
+}
+
+func @identity_idiv(%a: i32) {
+    %c1 = constant 1 -> i32
+    %0 = arith.div %a, %c1 : i32
+    %1 = arith.div %c1, %a : i32
+    %2 = arith.mul %0, %1 : i32
+; CHECK-LABEL: func @identity_idiv({{.*}}
+; CHECK:       %2 = arith.mul %a, %1 : i32
+}
+
+func @identity_irem(%a: i32) {
+    %c1 = constant 1 -> i32
+    %0 = arith.rem %a, %c1 : i32
+    %1 = arith.rem %c1, %a : i32
+    %2 = arith.mul %0, %1 : i32
+; CHECK-LABEL: func @identity_irem({{.*}}
+; CHECK:       %0 = constant 0 -> i32
+; CHECK:       %4 = arith.mul %0, %2 : i32
+}
+
+func @identity_ishl(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.shl %a, %c0 : i32
+    %1 = arith.shl %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_ishl({{.*}}
+; CHECK:       %1 = constant 0 -> i32
+; CHECK:       %3 = arith.add %a, %1 : i32
+}
+
+func @identity_ishr(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.shr %a, %c0 : i32
+    %1 = arith.shr %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_ishr({{.*}}
+; CHECK:       %1 = constant 0 -> i32
+; CHECK:       %3 = arith.add %a, %1 : i32
+}
+
+func @identity_iand(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.and %a, %c0 : i32
+    %1 = arith.and %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_iand({{.*}}
+; CHECK:       %0 = constant 0 -> i32
+; CHECK:       %2 = constant 0 -> i32
+; CHECK:       %5 = arith.add %0, %2 : i32
+}
+
+func @identity_ior(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.or %a, %c0 : i32
+    %1 = arith.or %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_ior({{.*}}
+; CHECK:       %2 = arith.add %a, %a : i32
+}
+
+func @identity_ixor(%a: i32) {
+    %c0 = constant 0 -> i32
+    %0 = arith.xor %a, %c0 : i32
+    %1 = arith.xor %c0, %a : i32
+    %2 = arith.add %0, %1 : i32
+; CHECK-LABEL: func @identity_ixor({{.*}}
+; CHECK:       %2 = arith.add %a, %a : i32
+}

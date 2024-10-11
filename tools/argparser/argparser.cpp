@@ -47,6 +47,9 @@ auto to_string(parser_status status) -> char const * {
     return "";
 }
 
+int arg_parser::optindent = 4;
+int arg_parser::optwidth = 20;
+
 arg_parser::arg_parser() : short_(2 * 26 + 10) {}
 
 void arg_parser::parse(int argc, char **argv) {
@@ -156,8 +159,6 @@ void arg_parser::parse(int argc, char **argv) {
 }
 
 void arg_parser::print_help(std::ostream &os, char const *name, char const *description) {
-    constexpr int optwidth = 20;
-
     const auto print = [&](auto const &key, auto const &par, char const *init, char const *sep_req,
                            char const *sep_nonreq) {
         if (par) {
@@ -186,7 +187,10 @@ void arg_parser::print_help(std::ostream &os, char const *name, char const *desc
     const auto print_short_help = [&](char i) {
         auto const &opt = short_[short_index(i)];
         if (opt.par) {
-            os << "   -" << std::left << std::setw(optwidth) << i << opt.help << std::endl;
+            for (int i = 0; i < optindent - 1; ++i) {
+                os << ' ';
+            }
+            os << '-' << std::left << std::setw(optwidth) << i << opt.help << std::endl;
         }
     };
     os << "Usage: " << name;
@@ -220,7 +224,10 @@ void arg_parser::print_help(std::ostream &os, char const *name, char const *desc
 
     os << "Positional arguments:" << std::endl;
     for (auto const &pos : positional_) {
-        os << "    " << std::left << std::setw(optwidth) << pos.opt << pos.help << std::endl;
+        for (int i = 0; i < optindent; ++i) {
+            os << ' ';
+        }
+        os << std::left << std::setw(optwidth) << pos.opt << pos.help << std::endl;
     }
 
     os << std::endl << "Options:" << std::endl;
@@ -232,7 +239,10 @@ void arg_parser::print_help(std::ostream &os, char const *name, char const *desc
         print_short_help(std::toupper(i));
     }
     for (auto const &opt : long_opts) {
-        os << "  --" << std::left << std::setw(optwidth) << opt->opt << opt->help << std::endl;
+        for (int i = 0; i < optindent - 2; ++i) {
+            os << ' ';
+        }
+        os << "--" << std::left << std::setw(optwidth) << opt->opt << opt->help << std::endl;
     }
 }
 

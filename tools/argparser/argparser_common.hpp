@@ -5,25 +5,24 @@
 #define ARGPARSER_COMMON_20241010_HPP
 
 #include "argparser.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
+
+#include <iosfwd>
+#include <utility>
+#include <vector>
+
+namespace tinytc {
+class compiler_context;
+}
 
 namespace tinytc::cmd {
+class arg_parser;
 
-struct optflag_states {
-    std::int32_t unsafe_fp_math = -1;
-};
+using optflag_states = std::vector<std::pair<optflag, std::int32_t>>;
 
-inline void add_optflag_states(arg_parser &parser, optflag_states &flags) {
-    auto const validator = [](std::int32_t value) { return -1 <= value && value <= 1; };
-    parser
-        .set_long_opt("unsafe-fp-math", &flags.unsafe_fp_math,
-                      "Enable unsafe floating point math (e.g. 0.0 * x = 0.0)", 1)
-        .validator(validator);
-}
-
-inline void set_optflags(compiler_context &ctx, optflag_states const &flags) {
-    ctx.set_optimization_flag(optflag::unsafe_fp_math, flags.unsafe_fp_math);
-}
+void add_optflag_states(arg_parser &parser, optflag_states &flags);
+void set_optflags(compiler_context &ctx, optflag_states const &flags);
+void list_optimization_flags(std::ostream &os);
 
 } // namespace tinytc::cmd
 

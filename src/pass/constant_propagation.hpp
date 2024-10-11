@@ -17,7 +17,7 @@ class constant_propagation_pass {
     void set_opt_flag(tinytc::optflag flag, bool enabled);
 
   private:
-    bool enable_unsafe_fp_math_;
+    bool unsafe_fp_math_ = false;
 };
 
 } // namespace tinytc

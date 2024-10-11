@@ -8,7 +8,7 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "pass/constant_propagation_helper.hpp"
+#include "pass/constant_folding_helper.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
@@ -33,7 +33,7 @@ template <typename F> class unary_op_dispatcher {
     unary_op_dispatcher(scalar_type sw_ty, F &&f)
         : switch_ty{sw_ty}, computer{std::forward<F>(f)} {}
 
-    auto operator()(std::int64_t const &A) -> inst {
+    auto operator()(std::int64_t const &A) -> fold_result {
         switch (switch_ty) {
         case scalar_type::i1:
             return computer.template operator()<bool>(A);
@@ -52,7 +52,7 @@ template <typename F> class unary_op_dispatcher {
             break;
         };
     }
-    auto operator()(double const &A) -> inst {
+    auto operator()(double const &A) -> fold_result {
         switch (switch_ty) {
         case scalar_type::f32:
             return computer.template operator()<float>(A);
@@ -63,7 +63,7 @@ template <typename F> class unary_op_dispatcher {
             break;
         }
     }
-    auto operator()(std::complex<double> const &A) -> inst {
+    auto operator()(std::complex<double> const &A) -> fold_result {
         switch (switch_ty) {
         case scalar_type::c32:
             return computer.template operator()<std::complex<float>>(A);
@@ -85,7 +85,7 @@ template <typename F> class binary_op_dispatcher {
     binary_op_dispatcher(scalar_type sw_ty, F &&f)
         : switch_ty{sw_ty}, computer{std::forward<F>(f)} {}
 
-    auto operator()(std::int64_t const &A, std::int64_t const &B) -> inst {
+    auto operator()(std::int64_t const &A, std::int64_t const &B) -> fold_result {
         switch (switch_ty) {
         case scalar_type::i1:
             return computer.template operator()<bool>(A, B);
@@ -104,7 +104,7 @@ template <typename F> class binary_op_dispatcher {
             break;
         };
     }
-    auto operator()(double const &A, double const &B) -> inst {
+    auto operator()(double const &A, double const &B) -> fold_result {
         switch (switch_ty) {
         case scalar_type::f32:
             return computer.template operator()<float>(A, B);
@@ -115,7 +115,7 @@ template <typename F> class binary_op_dispatcher {
             break;
         }
     }
-    auto operator()(std::complex<double> const &A, std::complex<double> const &B) -> inst {
+    auto operator()(std::complex<double> const &A, std::complex<double> const &B) -> fold_result {
         switch (switch_ty) {
         case scalar_type::c32:
             return computer.template operator()<std::complex<float>>(A, B);
@@ -126,25 +126,31 @@ template <typename F> class binary_op_dispatcher {
             break;
         }
     }
-    template <typename T, typename U> auto operator()(T const &, U const &) -> inst {
+    template <typename T, typename U> auto operator()(T const &, U const &) -> fold_result {
         throw compilation_error(computer.loc, status::ir_scalar_mismatch);
     }
 };
 
-class constant_evaluator {
+class constant_folding {
   public:
-    auto operator()(inst_node &) -> inst;
-    auto operator()(arith_inst &) -> inst;
-    auto operator()(arith_unary_inst &) -> inst;
-    auto operator()(cast_inst &) -> inst;
-    auto operator()(compare_inst &) -> inst;
-    auto operator()(size_inst &in) -> inst;
+    constant_folding(bool unsafe_fp_math);
+
+    auto operator()(inst_node &) -> fold_result;
+    auto operator()(arith_inst &) -> fold_result;
+    auto operator()(arith_unary_inst &) -> fold_result;
+    auto operator()(cast_inst &) -> fold_result;
+    auto operator()(compare_inst &) -> fold_result;
+    auto operator()(size_inst &in) -> fold_result;
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
+
+    bool unsafe_fp_math_;
 };
 
-auto constant_evaluator::get_memref_type(value_node const &v) const -> const memref_data_type * {
+constant_folding::constant_folding(bool unsafe_fp_math) : unsafe_fp_math_(unsafe_fp_math) {}
+
+auto constant_folding::get_memref_type(value_node const &v) const -> const memref_data_type * {
     auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
@@ -152,34 +158,44 @@ auto constant_evaluator::get_memref_type(value_node const &v) const -> const mem
     return t;
 }
 
-auto constant_evaluator::operator()(inst_node &) -> inst { return {}; }
+auto constant_folding::operator()(inst_node &) -> fold_result { return {}; }
 
-auto constant_evaluator::operator()(arith_inst &in) -> inst {
+auto constant_folding::operator()(arith_inst &in) -> fold_result {
     auto &op_a = in.a();
     auto &op_b = in.b();
 
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     constant_inst *b_const = dyn_cast<constant_inst>(op_b.defining_inst());
-    if (a_const == nullptr || b_const == nullptr) {
-        return inst{};
-    }
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
     if (at == nullptr) {
         throw compilation_error(op_a.loc(), status::ir_expected_scalar);
     }
 
-    auto computer = compute_binary_op{in.operation(), op_a.ty(), in.loc()};
-    auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
-    return std::visit(std::move(dispatcher), a_const->value(), b_const->value());
+    if (a_const != nullptr && b_const != nullptr) {
+        auto computer = compute_binary_op{in.operation(), op_a.ty(), in.loc()};
+        auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
+        return std::visit(std::move(dispatcher), a_const->value(), b_const->value());
+    } else if (a_const != nullptr) {
+        auto computer =
+            compute_binop_identities{unsafe_fp_math_, in.operation(), op_b, true, in.loc()};
+        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        return std::visit(std::move(dispatcher), a_const->value());
+    } else if (b_const != nullptr) {
+        auto computer =
+            compute_binop_identities{unsafe_fp_math_, in.operation(), op_a, false, in.loc()};
+        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        return std::visit(std::move(dispatcher), b_const->value());
+    }
+    return tinytc_value_t{};
 }
 
-auto constant_evaluator::operator()(arith_unary_inst &in) -> inst {
+auto constant_folding::operator()(arith_unary_inst &in) -> fold_result {
     auto &op_a = in.a();
 
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     if (a_const == nullptr) {
-        return inst{};
+        return tinytc_value_t{};
     }
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
@@ -192,12 +208,12 @@ auto constant_evaluator::operator()(arith_unary_inst &in) -> inst {
     return std::visit(std::move(dispatcher), a_const->value());
 }
 
-auto constant_evaluator::operator()(cast_inst &in) -> inst {
+auto constant_folding::operator()(cast_inst &in) -> fold_result {
     auto &op_a = in.a();
 
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     if (a_const == nullptr) {
-        return inst{};
+        return tinytc_value_t{};
     }
 
     auto rt = dyn_cast<scalar_data_type>(in.result(0).ty());
@@ -205,18 +221,19 @@ auto constant_evaluator::operator()(cast_inst &in) -> inst {
         throw compilation_error(in.result(0).loc(), status::ir_expected_scalar);
     }
 
-    return std::visit(overloaded{[&](auto A) -> inst { return compute_cast(rt, A, in.loc()); }},
-                      a_const->value());
+    return std::visit(
+        overloaded{[&](auto A) -> fold_result { return compute_cast(rt, A, in.loc()); }},
+        a_const->value());
 }
 
-auto constant_evaluator::operator()(compare_inst &in) -> inst {
+auto constant_folding::operator()(compare_inst &in) -> fold_result {
     auto &op_a = in.a();
     auto &op_b = in.b();
 
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     constant_inst *b_const = dyn_cast<constant_inst>(op_b.defining_inst());
     if (a_const == nullptr || b_const == nullptr) {
-        return inst{};
+        return tinytc_value_t{};
     }
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
@@ -229,7 +246,7 @@ auto constant_evaluator::operator()(compare_inst &in) -> inst {
     return std::visit(std::move(dispatcher), a_const->value(), b_const->value());
 }
 
-auto constant_evaluator::operator()(size_inst &in) -> inst {
+auto constant_folding::operator()(size_inst &in) -> fold_result {
     auto ct = get_memref_type(in.operand());
 
     auto mode_size = ct->shape(in.mode());
@@ -238,7 +255,7 @@ auto constant_evaluator::operator()(size_inst &in) -> inst {
             mode_size, scalar_data_type::get(in.operand().context(), scalar_type::index), in.loc());
     }
 
-    return inst{};
+    return tinytc_value_t{};
 }
 
 void constant_propagation_pass::run_on_function(function_node &fn) { run_on_region(fn.body()); }
@@ -249,37 +266,46 @@ void constant_propagation_pass::run_on_region(region_node &reg) {
             run_on_region(subreg);
         }
 
-        auto known_constant = visit(constant_evaluator{}, *it);
-        if (known_constant) {
-            // update uses
-            if (it->num_results() != known_constant->num_results()) {
+        const auto update_uses = [&it](tinytc_value_t with) {
+            if (it->num_results() != 1) {
                 throw status::internal_compiler_error;
             }
-            auto r_old = it->result_begin();
-            auto r_new = known_constant->result_begin();
-            for (; r_old != it->result_end() && r_new != known_constant->result_end();
-                 ++r_old, ++r_new) {
-                r_new->name(r_old->name());
-                auto u = r_old->use_begin();
-                while (r_old->has_uses()) {
-                    u->set(&*r_new);
-                    u = r_old->use_begin();
-                }
-                if (r_old->has_uses()) {
-                    throw status::internal_compiler_error;
-                }
+            auto r = it->result_begin();
+            auto u = r->use_begin();
+            while (r->has_uses()) {
+                u->set(with);
+                u = r->use_begin();
             }
-            // delete old instruction
-            it = reg.insts().erase(it);
-            // insert new instruction
-            it = reg.insts().insert(it, known_constant.release());
-        }
+            if (r->has_uses()) {
+                throw status::internal_compiler_error;
+            }
+        };
+
+        fold_result fr = visit(constant_folding{unsafe_fp_math_}, *it);
+        std::visit(overloaded{[&](tinytc_value_t val) {
+                                  if (val) {
+                                      update_uses(val);
+                                  }
+                              },
+                              [&](inst &new_constant) {
+                                  if (new_constant) {
+                                      if (new_constant->num_results() != 1) {
+                                          throw status::internal_compiler_error;
+                                      }
+                                      update_uses(&*new_constant->result_begin());
+                                      // insert new constant
+                                      it = reg.insts().insert(it, new_constant.release());
+                                      // skip over constant
+                                      ++it;
+                                  }
+                              }},
+                   fr);
     }
 }
 
 void constant_propagation_pass::set_opt_flag(tinytc::optflag flag, bool enabled) {
     if (flag == tinytc::optflag::unsafe_fp_math) {
-        enable_unsafe_fp_math_ = enabled;
+        unsafe_fp_math_ = enabled;
     }
 }
 

@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
         parser.set_long_opt("help", &help, "Show help");
         parser.add_positional_arg("file-name", &filename,
                                   "Path to source code; leave empty to read from stdin");
-        add_optflag_states(parser, flags);
+        cmd::add_optflag_states(parser, flags);
 
         parser.parse(argc, argv);
     } catch (status const &st) {
@@ -54,6 +54,10 @@ int main(int argc, char **argv) {
     }
     if (help) {
         parser.print_help(std::cout, "tinytc", "");
+
+        std::cout << std::endl;
+        cmd::list_optimization_flags(std::cout);
+
         return 0;
     }
 
@@ -61,7 +65,7 @@ int main(int argc, char **argv) {
     try {
         ctx = make_compiler_context();
         ctx.set_optimization_level(opt_level);
-        set_optflags(ctx, flags);
+        cmd::set_optflags(ctx, flags);
         auto p = prog{};
         if (!filename) {
             p = parse_stdin(ctx);

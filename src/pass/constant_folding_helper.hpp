@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef CONSTANT_PROPAGATION_HELPER_20241002_HPP
-#define CONSTANT_PROPAGATION_HELPER_20241002_HPP
+#ifndef CONSTANT_FOLDING_HELPER_20241011_HPP
+#define CONSTANT_FOLDING_HELPER_20241011_HPP
 
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
@@ -11,6 +11,7 @@
 #include <complex>
 #include <concepts>
 #include <type_traits>
+#include <variant>
 
 namespace tinytc {
 
@@ -20,6 +21,8 @@ requires(std::is_floating_point_v<F>)
 struct is_complex<std::complex<F>> : public std::true_type {};
 template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
 
+using fold_result = std::variant<tinytc_value_t, inst>;
+
 struct compute_unary_op {
     arithmetic_unary operation;
     data_type ty;
@@ -27,7 +30,7 @@ struct compute_unary_op {
 
     template <typename T>
     requires(std::is_integral_v<T>)
-    auto operator()(T a) {
+    auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
         case arithmetic_unary::abs:
@@ -51,7 +54,7 @@ struct compute_unary_op {
 
     template <typename T>
     requires(std::is_floating_point_v<T>)
-    auto operator()(T a) -> inst {
+    auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
         case arithmetic_unary::abs:
@@ -68,7 +71,7 @@ struct compute_unary_op {
 
     template <typename T, typename U>
     requires(is_complex_v<T>)
-    auto operator()(U const &A) -> inst {
+    auto operator()(U const &A) -> fold_result {
         const auto neg_conj = [&](T const &a) {
             T val = {};
             switch (operation) {
@@ -126,7 +129,7 @@ struct compute_binary_op {
 
     template <typename T>
     requires(std::is_integral_v<T>)
-    auto operator()(T a, T b) {
+    auto operator()(T a, T b) -> fold_result {
         T val = 0;
         switch (operation) {
         case arithmetic::add:
@@ -173,7 +176,7 @@ struct compute_binary_op {
 
     template <typename T, typename U>
     requires(!std::is_integral_v<T>)
-    auto operator()(U const &A, U const &B) -> inst {
+    auto operator()(U const &A, U const &B) -> fold_result {
         const auto a = static_cast<T>(A);
         const auto b = static_cast<T>(B);
         T val = {};
@@ -208,6 +211,104 @@ struct compute_binary_op {
     }
 };
 
+struct compute_binop_identities {
+    bool unsafe_fp_math;
+    arithmetic operation;
+    tinytc_value &operand;
+    bool is_second_operand;
+    location const &loc;
+
+    template <typename T>
+    requires(std::is_integral_v<T>)
+    auto operator()(T a) -> fold_result {
+        switch (operation) {
+        case arithmetic::add:
+            if (a == T{0}) { // operand + 0 or 0 + operand
+                return &operand;
+            }
+            break;
+        case arithmetic::sub:
+            if (a == T{0} && !is_second_operand) { // operand - 0
+                return &operand;
+            }
+            break;
+        case arithmetic::mul:
+            if (a == T{0}) { // operand * 0 or 0 * operand
+                return make_constant(T{0}, operand.ty(), loc);
+            } else if (a == T{1}) { // operand * 1 or 1 * operand
+                return &operand;
+            }
+            break;
+        case arithmetic::div:
+            if (a == T{1} && !is_second_operand) { // operand / 1
+                return &operand;
+            }
+            break;
+        case arithmetic::rem:
+            if (a == T{1} && !is_second_operand) { // operand % 1
+                return make_constant(T{0}, operand.ty(), loc);
+            }
+            break;
+        case arithmetic::shl:
+        case arithmetic::shr:
+            if (a == T{0}) {
+                if (is_second_operand) { // 0 << operand
+                    return make_constant(T{0}, operand.ty(), loc);
+                } else { // operand << 0
+                    return &operand;
+                }
+            }
+        case arithmetic::and_:
+            if (a == T{0}) {
+                return make_constant(T{0}, operand.ty(), loc);
+            }
+            break;
+        case arithmetic::or_:
+        case arithmetic::xor_:
+            if (a == T{0}) {
+                return &operand;
+            }
+            break;
+        default:
+            break;
+        }
+        return tinytc_value_t{};
+    }
+
+    template <typename T, typename U>
+    requires(!std::is_integral_v<T>)
+    auto operator()(U const &A) -> fold_result {
+        const auto a = static_cast<T>(A);
+        switch (operation) {
+        case arithmetic::add:
+            if (a == T{0}) { // operand + 0 or 0 + operand
+                return &operand;
+            }
+            break;
+        case arithmetic::sub:
+            if (a == T{0} && !is_second_operand) { // operand - 0
+                return &operand;
+            }
+            break;
+        case arithmetic::mul:
+            if (unsafe_fp_math && a == T{0}) { // operand * 0 or 0 * operand
+                return make_constant(T{0}, operand.ty(), loc);
+            } else if (a == T{1}) { // operand * 1 or 1 * operand
+                return &operand;
+            }
+            break;
+        case arithmetic::div:
+            if (a == T{1} && !is_second_operand) { // operand / 1
+                return &operand;
+            }
+            break;
+        default:
+            break;
+        }
+        return tinytc_value_t{};
+    }
+};
+
 struct compute_compare {
     cmp_condition cond;
     data_type ty;
@@ -215,7 +316,7 @@ struct compute_compare {
 
     template <typename T>
     requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
-    auto operator()(T a, T b) {
+    auto operator()(T a, T b) -> fold_result {
         bool val = false;
         switch (cond) {
         case cmp_condition::eq:
@@ -241,7 +342,7 @@ struct compute_compare {
     }
 
     template <typename T, typename F>
-    auto operator()(std::complex<F> const &A, std::complex<F> const &B) {
+    auto operator()(std::complex<F> const &A, std::complex<F> const &B) -> fold_result {
         const auto a = static_cast<T>(A);
         const auto b = static_cast<T>(B);
         bool val = false;
@@ -286,7 +387,8 @@ template <typename T, typename F> struct value_cast_impl<T, std::complex<F>> {
 
 template <typename T, typename U> auto value_cast(U const &u) { return value_cast_impl<T, U>{}(u); }
 
-template <typename T> auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> inst {
+template <typename T>
+auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_result {
     switch (to_ty->ty()) {
     case scalar_type::i1:
         return make_constant(value_cast<bool>(A), to_ty, loc);
@@ -314,4 +416,4 @@ template <typename T> auto compute_cast(scalar_data_type *to_ty, T A, location c
 
 } // namespace tinytc
 
-#endif // CONSTANT_PROPAGATION_HELPER_20241002_HPP
+#endif // CONSTANT_FOLDING_HELPER_20241011_HPP

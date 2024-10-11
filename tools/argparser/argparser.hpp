@@ -151,6 +151,9 @@ template <typename T> class par_model<std::vector<T>> : public par_model<T> {
 
 class arg_parser {
   public:
+    static int optindent;
+    static int optwidth;
+
     arg_parser();
 
     inline void set_short_opt(char opt, bool *ptr, char const *help = nullptr) {

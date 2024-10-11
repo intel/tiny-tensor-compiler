@@ -408,7 +408,9 @@ class arith_inst : public standard_inst<2, 1> {
     arith_inst(arithmetic op, tinytc_value_t a, tinytc_value_t b, location const &lc = {});
 
     inline arithmetic operation() const { return operation_; }
+    inline auto a() -> tinytc_value & { return op(op_a); }
     inline auto a() const -> tinytc_value const & { return op(op_a); }
+    inline auto b() -> tinytc_value & { return op(op_b); }
     inline auto b() const -> tinytc_value const & { return op(op_b); }
 
   private:
