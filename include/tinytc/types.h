@@ -69,6 +69,7 @@ typedef enum {
     tinytc_status_ir_i1_unsupported = 0x118,      ///< Instruction does not support i1 type
     tinytc_status_ir_complex_unsupported = 0x119, ///< Instruction does not support complex type
     tinytc_status_ir_forbidden_cast = 0x11a,      ///< Forbidden cast
+    tinytc_status_ir_invalid_beta = 0x11b,        ///< Invalid beta value
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST
@@ -280,6 +281,13 @@ typedef enum {
     tinytc_address_space_global = 0x1, ///< Global memory
     tinytc_address_space_local = 0x2   ///< Local memory, returned by alloca
 } tinytc_address_space_t;
+
+//! Store flag
+typedef enum {
+    tinytc_store_flag_regular = 0,   ///< Non-atomic store
+    tinytc_store_flag_atomic = 1,    ///< Atomic store
+    tinytc_store_flag_atomic_add = 2 ///< Atomic fetch add
+} tinytc_store_flag_t;
 
 //! Core features that may be optionally enabled
 typedef enum {

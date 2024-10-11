@@ -333,6 +333,11 @@ The transpose modifier defines :math:`\text{op}` as following:
 The shape of :math:`\text{op}(A)` and B must be identical and the order of A and B needs to be 1 (vector)
 or 2 (matrix).
 
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+
 Foreach
 .......
 
@@ -395,6 +400,11 @@ defines :math:`\text{op}_2` as following:
 If :math:`\text{op}_1(A)` has the shape MxK and
 :math:`\text{op}_2(B)` has the shape KxN then C must have the shape MxN.
 
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+
 GEMV
 ....
 
@@ -426,6 +436,11 @@ The transpose modifier for A as in GEMM.
 
 :math:`\text{op}_1(A)` has the shape MxK and :math:`B` has the shape K then c must have the shape M.
 
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+
 GER
 ...
 
@@ -454,6 +469,11 @@ The second, the third, and the fifth argument must have memref type and give
 a, b, and C, respectively.
 
 a and b must be vectors. If the size of a is M and the size of b is N the shape of C must be :math:`M\times N`.
+
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
 Hadamard product
@@ -485,6 +505,11 @@ The second, the third, and the fifth argument must have memref type and give
 a, b, and c, respectively.
 
 a, b, and c must be vectors and have equal shape.
+
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 Parallel
 ........
@@ -536,6 +561,11 @@ The first mode size of :math:`\text{op}(A)` must match the size of B.
 If A is a vector, then B must be a scalar memref.
 
 The transpose op is defined as in the axpby instruction.
+
+Restrictions
+~~~~~~~~~~~~
+
+If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
 
@@ -901,7 +931,8 @@ Load
 
 .. code:: abnf
 
-    value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]" ":" memref-or-group-type
+    value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
+                                   ":" memref-or-group-type
     memref-or-group-type        =  memref-type / group-type
 
 Overview
@@ -1078,13 +1109,24 @@ Store
 
 .. code:: abnf
 
-    instruction     =/ "store" local-identifier "," local-identifier "[" [local-identifier-list] "]" ":" memref-type
+    instruction     =/ "store" [store-flag]
+                       local-identifier "," local-identifier "[" [local-identifier-list] "]"
+                       ":" memref-type
+    store-flag      = ".atomic" / ".atomic_add"
 
 Overview
 ~~~~~~~~
 
 Store a scalar value in a memref at the position given by the index list.
 The number of indices must match the order of the memref.
+
+The store is atomic when the atomic flag is set with relaxed memory ordering.
+When the atomic_add flag is set, the following steps are done atomically:
+The value at the memory location is fetched, the scalar value is added to the fetched value,
+and the resulting value is stored at the memory location.
+
+When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
+for the the real and imaginary separately.
 
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.

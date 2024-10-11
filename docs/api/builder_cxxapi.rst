@@ -20,6 +20,8 @@ Common
 
   * :ref:`scalar_type`
 
+  * :ref:`store_flag`
+
   * :ref:`transpose`
 
 * Functions
@@ -35,6 +37,8 @@ Common
   * :ref:`to_string(cmp_condition)`
 
   * :ref:`to_string(scalar_type)`
+
+  * :ref:`to_string(store_flag)`
 
   * :ref:`to_string(transpose)`
 
@@ -82,6 +86,11 @@ scalar_type
 
 .. doxygenenum:: tinytc::scalar_type
 
+store_flag
+..........
+
+.. doxygenenum:: tinytc::store_flag
+
 transpose
 .........
 
@@ -119,6 +128,11 @@ to_string(scalar_type)
 ......................
 
 .. doxygenfunction:: tinytc::to_string(scalar_type)
+
+to_string(store_flag)
+.....................
+
+.. doxygenfunction:: tinytc::to_string(store_flag)
 
 to_string(transpose)
 ....................

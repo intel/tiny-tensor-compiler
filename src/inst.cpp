@@ -97,6 +97,18 @@ char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
     return "unknown";
 }
 
+char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
+    switch (flag) {
+    case tinytc_store_flag_regular:
+        return "";
+    case tinytc_store_flag_atomic:
+        return "atomic";
+    case tinytc_store_flag_atomic_add:
+        return "atomic_add";
+    }
+    return "unknown";
+}
+
 char const *tinytc_transpose_to_string(tinytc_transpose_t t) {
     switch (t) {
     case tinytc_transpose_T:
@@ -402,16 +414,18 @@ tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t stat
     });
 }
 
-tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_value_t val, tinytc_value_t a,
+tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_store_flag_t flag,
+                                         tinytc_value_t val, tinytc_value_t a,
                                          uint32_t index_list_size, const tinytc_value_t *index_list,
                                          const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<store_inst>(val, a, array_view{index_list, index_list_size},
-                                              get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<store_inst>(enum_cast<store_flag>(flag), val, a,
+                                         array_view{index_list, index_list_size}, get_optional(loc))
+                .release();
     });
 }
 

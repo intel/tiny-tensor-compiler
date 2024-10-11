@@ -378,7 +378,11 @@ void dump_ir_pass::operator()(subview_inst const &s) {
 }
 
 void dump_ir_pass::operator()(store_inst const &e) {
-    *os_ << "store ";
+    *os_ << "store";
+    if (e.flag() != store_flag::regular) {
+        *os_ << '.' << to_string(e.flag());
+    }
+    *os_ << ' ';
     dump_val(e.val());
     *os_ << ", ";
     dump_val(e.operand());

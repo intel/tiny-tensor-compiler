@@ -95,6 +95,7 @@ lex:
         ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
+        ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
         ".local"             { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }

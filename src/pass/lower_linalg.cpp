@@ -80,12 +80,7 @@ auto linalg_generator::operator()(ger_inst &g) -> inst {
                         auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, g.loc());
                         auto alpha_ab = mixed_precision_arithmetic(bb, arithmetic::mul, &g.alpha(),
                                                                    ab, g.loc());
-                        auto c = bb.add(make_load(&g.C(), {mm, nn}, g.loc()));
-                        auto beta_c =
-                            mixed_precision_arithmetic(bb, arithmetic::mul, &g.beta(), c, g.loc());
-                        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic(
-                            bb, arithmetic::add, alpha_ab, beta_c, g.loc());
-                        bb.add(make_store(alpha_ab_plus_beta_c, &g.C(), {mm, nn}, g.loc()));
+                        blas_update(bb, g.atomic(), alpha_ab, &g.beta(), &g.C(), {mm, nn}, g.loc());
                     });
             });
         });

@@ -4,6 +4,7 @@
 #include "codegen_tools.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
+#include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
@@ -538,6 +539,34 @@ auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value 
         }
     }
     return bb.add(make_arith(operation, a, b));
+}
+
+auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {
+    constant_inst *beta_cst = dyn_cast<constant_inst>(beta->defining_inst());
+    if (beta_cst) {
+        if (beta_cst->is_zero()) {
+            return store_flag::atomic;
+        } else if (beta_cst->is_identity()) {
+            return store_flag::atomic_add;
+        }
+    }
+    return std::nullopt;
+}
+void blas_update(region_builder &bb, bool atomic, value alpha_ab, value beta, value C,
+                 array_view<value> index_list, location const &loc) {
+    if (atomic) {
+        auto flag = get_atomic_store_flag(beta);
+        if (!flag) {
+            throw compilation_error(loc, status::ir_invalid_beta);
+        }
+        bb.add(make_store(*flag, alpha_ab, C, index_list, loc));
+    } else {
+        auto c = bb.add(make_load(C, index_list, loc));
+        auto beta_c = mixed_precision_arithmetic(bb, arithmetic::mul, beta, c, loc);
+        auto alpha_ab_plus_beta_c =
+            mixed_precision_arithmetic(bb, arithmetic::add, alpha_ab, beta_c, loc);
+        bb.add(make_store(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc));
+    }
 }
 
 } // namespace tinytc

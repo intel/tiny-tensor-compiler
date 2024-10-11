@@ -995,7 +995,27 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(store_inst const &s) 
     }
 
     auto rhs = val(s.val());
-    auto st = assignment(dereference(std::move(lhs)), std::move(rhs));
+    auto st = clir::expr{};
+    auto atomic_pointer_ty =
+        pointer_to(to_clir_atomic_ty(ot->element_ty(), to_clir_address_space(ot->addrspace()),
+                                     clir::type_qualifier::volatile_t));
+    switch (s.flag()) {
+    case store_flag::regular:
+        st = assignment(dereference(std::move(lhs)), std::move(rhs));
+        break;
+    case store_flag::atomic:
+        lhs = cast(std::move(atomic_pointer_ty), std::move(lhs));
+        st = call_builtin(clir::builtin_function::atomic_store_explicit,
+                          {std::move(lhs), std::move(rhs), clir::memory_order::relaxed,
+                           clir::memory_scope::work_group});
+        break;
+    case store_flag::atomic_add:
+        lhs = cast(std::move(atomic_pointer_ty), std::move(lhs));
+        st = call_builtin(clir::builtin_function::atomic_fetch_add_explicit,
+                          {std::move(lhs), std::move(rhs), clir::memory_order::relaxed,
+                           clir::memory_scope::work_group});
+        break;
+    }
     return {expression_statement(std::move(st))};
 }
 

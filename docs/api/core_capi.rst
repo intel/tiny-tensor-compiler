@@ -246,6 +246,8 @@ Compiler
 
   * :ref:`tinytc_bundle_format_t`
 
+  * :ref:`tinytc_optflag_t`
+
 * Functions
 
   * :ref:`tinytc_run_function_pass`
@@ -261,6 +263,11 @@ tinytc_bundle_format_t
 ......................
 
 .. doxygenenum:: tinytc_bundle_format_t
+
+tinytc_optflag_t
+................
+
+.. doxygenenum:: tinytc_optflag_t
 
 Compiler Functions
 ------------------
@@ -291,6 +298,8 @@ Compiler Context
 
   * :ref:`tinytc_compiler_context_set_error_reporter`
 
+  * :ref:`tinytc_compiler_context_set_optimization_flag`
+
   * :ref:`tinytc_compiler_context_set_optimization_level`
 
   * :ref:`tinytc_compiler_context_report_error`
@@ -316,6 +325,11 @@ tinytc_compiler_context_set_error_reporter
 ..........................................
 
 .. doxygenfunction:: tinytc_compiler_context_set_error_reporter
+
+tinytc_compiler_context_set_optimization_flag
+.............................................
+
+.. doxygenfunction:: tinytc_compiler_context_set_optimization_flag
 
 tinytc_compiler_context_set_optimization_level
 ..............................................
@@ -361,6 +375,8 @@ Device Info
   * :ref:`tinytc_core_info_intel_create`
 
   * :ref:`tinytc_core_info_intel_create_from_arch`
+
+  * :ref:`tinytc_core_info_intel_create_from_name`
 
   * :ref:`tinytc_core_info_release`
 
@@ -420,6 +436,11 @@ tinytc_core_info_intel_create_from_arch
 .......................................
 
 .. doxygenfunction:: tinytc_core_info_intel_create_from_arch
+
+tinytc_core_info_intel_create_from_name
+.......................................
+
+.. doxygenfunction:: tinytc_core_info_intel_create_from_name
 
 tinytc_core_info_release
 ........................

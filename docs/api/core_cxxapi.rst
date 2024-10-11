@@ -224,6 +224,8 @@ Device Info
 
   * :ref:`make_core_info_intel_from_arch`
 
+  * :ref:`make_core_info_intel_from_name`
+
 * Classes
 
   * :ref:`core_info`
@@ -258,6 +260,11 @@ make_core_info_intel_from_arch
 ..............................
 
 .. doxygenfunction:: tinytc::make_core_info_intel_from_arch
+
+make_core_info_intel_from_name
+..............................
+
+.. doxygenfunction:: tinytc::make_core_info_intel_from_name
 
 Device Info Classes
 -------------------

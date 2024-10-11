@@ -94,6 +94,7 @@
     NOTRANS         ".n"
     TRANS           ".t"
     ATOMIC          ".atomic"
+    ATOMIC_ADD      ".atomic_add"
     LOCAL           "local"
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
@@ -207,6 +208,7 @@
 %nterm <inst> subgroup_local_id_inst
 %nterm <inst> subgroup_size_inst
 %nterm <inst> store_inst
+%nterm <store_flag> store_flag
 %nterm <inst> subview_inst
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> optional_slice_list
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
@@ -920,7 +922,7 @@ load_inst:
 ;
 
 store_inst:
-    STORE var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON memref_type {
+    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON memref_type {
         if ($b->ty() != $memref_type) {
             auto loc = @b;
             loc.end = @memref_type.end;
@@ -928,7 +930,7 @@ store_inst:
         }
         try {
             $$ = inst {
-                std::make_unique<store_inst>(std::move($a), std::move($b),
+                std::make_unique<store_inst>($store_flag, std::move($a), std::move($b),
                                              std::move($optional_value_list), @store_inst)
                     .release()
             };
@@ -937,6 +939,12 @@ store_inst:
             YYERROR;
         }
     }
+;
+
+store_flag:
+    %empty { $$ = store_flag::regular; }
+  | ATOMIC { $$ = store_flag::atomic; }
+  | ATOMIC_ADD { $$ = store_flag::atomic_add; }
 ;
 
 group_id_inst:

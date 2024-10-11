@@ -154,6 +154,8 @@ TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
 TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
+//! Convert store flag to string
+TINYTC_EXPORT char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag);
 //! Convert transpose to string
 TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
 
@@ -619,6 +621,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
  * @code store %val, %a[%index_list] : type(%a) @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param flag [in] store flag
  * @param val [in] value to store
  * @param a [in] operand
  * @param index_list_size [in] number of indices
@@ -628,7 +631,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_value_t val,
+TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr,
+                                                       tinytc_store_flag_t flag, tinytc_value_t val,
                                                        tinytc_value_t a, uint32_t index_list_size,
                                                        const tinytc_value_t *index_list,
                                                        const tinytc_location_t *loc);

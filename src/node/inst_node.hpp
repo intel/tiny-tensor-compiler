@@ -478,6 +478,8 @@ class constant_inst : public standard_inst<0, 1> {
     constant_inst(value_type const &value, tinytc_data_type_t ty, location const &lc = {});
 
     auto value() const -> value_type const & { return value_; }
+    auto is_zero() const -> bool;
+    auto is_identity() const -> bool;
 
   private:
     value_type value_;
@@ -714,12 +716,16 @@ class store_inst : public standard_inst<dynamic, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::store; }
     enum op_number { op_val = 0, op_operand = 1 };
-    store_inst(tinytc_value_t val, tinytc_value_t op, array_view<tinytc_value_t> index_list,
-               location const &lc = {});
+    store_inst(store_flag flag, tinytc_value_t val, tinytc_value_t op,
+               array_view<tinytc_value_t> index_list, location const &lc = {});
 
+    inline auto flag() const -> store_flag { return flag_; }
     inline auto val() const -> tinytc_value const & { return op(op_val); }
     inline auto operand() const -> tinytc_value const & { return op(op_operand); }
     inline auto index_list() const { return operands() | std::views::drop(2); }
+
+  private:
+    store_flag flag_;
 };
 
 class sum_inst : public blas_a2_inst {

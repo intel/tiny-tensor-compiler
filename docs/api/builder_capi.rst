@@ -20,6 +20,8 @@ Common
 
   * :ref:`tinytc_scalar_type_t`
 
+  * :ref:`tinytc_store_flag_t`
+
   * :ref:`tinytc_transpose_t`
 
 * Definitions
@@ -39,6 +41,8 @@ Common
   * :ref:`tinytc_scalar_type_size`
 
   * :ref:`tinytc_scalar_type_to_string`
+
+  * :ref:`tinytc_store_flag_to_string`
 
   * :ref:`tinytc_transpose_to_string`
 
@@ -106,6 +110,11 @@ tinytc_scalar_type_t
 
 .. doxygenenum:: tinytc_scalar_type_t
 
+tinytc_store_flag_t
+...................
+
+.. doxygenenum:: tinytc_store_flag_t
+
 tinytc_transpose_t
 ..................
 
@@ -151,6 +160,11 @@ tinytc_scalar_type_to_string
 ............................
 
 .. doxygenfunction:: tinytc_scalar_type_to_string
+
+tinytc_store_flag_to_string
+...........................
+
+.. doxygenfunction:: tinytc_store_flag_to_string
 
 tinytc_transpose_to_string
 ..........................

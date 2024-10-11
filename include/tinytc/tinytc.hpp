@@ -685,6 +685,17 @@ inline char const *to_string(cmp_condition cond) {
 }
 
 /**
+ * @brief Convert store flag to string
+ *
+ * @param flag Store flag
+ *
+ * @return C-string
+ */
+inline char const *to_string(store_flag flag) {
+    return ::tinytc_store_flag_to_string(static_cast<tinytc_store_flag_t>(flag));
+}
+
+/**
  * @brief Convert transpose to string
  *
  * @param t Transpose
@@ -1257,6 +1268,7 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
 /**
  * @brief Make store instruction
  *
+ * @param flag store flag
  * @param val Value that is stored
  * @param a Target memref
  * @param index_list Vector of indices
@@ -1264,14 +1276,17 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
  *
  * @return Instruction
  */
-inline inst make_store(value val, value a, array_view<value> index_list, location const &loc = {}) {
+inline inst make_store(store_flag flag, value val, value a, array_view<value> index_list,
+                       location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, val, a, len, il, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, static_cast<tinytc_store_flag_t>(flag), val,
+                                              a, len, il, &loc),
+                     loc);
     return inst(instr);
 }
 

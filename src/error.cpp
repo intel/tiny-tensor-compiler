@@ -173,6 +173,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "complex type unsupported by instruction";
     case tinytc_status_ir_forbidden_cast:
         return "Forbidden cast";
+    case tinytc_status_ir_invalid_beta:
+        return "beta must be constant and 0 or 1 for atomic linear algebra operations";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

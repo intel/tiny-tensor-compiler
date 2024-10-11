@@ -8,6 +8,7 @@ Builder C++-API:
       - tinytc::arithmetic_unary
       - tinytc::cmp_condition
       - tinytc::scalar_type
+      - tinytc::store_flag
       - tinytc::transpose
     function:
       - tinytc::is_dynamic_value
@@ -16,6 +17,7 @@ Builder C++-API:
       - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(scalar_type)
+      - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)
       - tinytc::size
     class:

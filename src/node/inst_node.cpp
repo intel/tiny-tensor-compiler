@@ -288,6 +288,13 @@ constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, loc
     result(0) = value_node{ty, this, lc};
 }
 
+auto constant_inst::is_zero() const -> bool {
+    return std::visit([](auto const &v) { return v == decltype(v){0}; }, value_);
+}
+auto constant_inst::is_identity() const -> bool {
+    return std::visit([](auto const &v) { return v == decltype(v){1}; }, value_);
+}
+
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
                          array_view<std::int64_t> static_expand_shape0,
                          array_view<tinytc_value_t> expand_shape0, location const &lc)
@@ -598,9 +605,9 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
     result(0) = value_node{result_ty, this, lc};
 }
 
-store_inst::store_inst(tinytc_value_t val0, tinytc_value_t op0,
+store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
                        array_view<tinytc_value_t> index_list0, location const &lc)
-    : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())} {
+    : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())}, flag_{flag} {
     op(op_val, val0);
     op(op_operand, op0);
     {
