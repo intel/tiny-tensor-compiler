@@ -324,9 +324,13 @@ class blas_a2_inst : public standard_inst<4, 0> {
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
+    inline auto alpha() -> tinytc_value & { return op(op_alpha); }
     inline auto alpha() const -> tinytc_value const & { return op(op_alpha); }
+    inline auto A() -> tinytc_value & { return op(op_A); }
     inline auto A() const -> tinytc_value const & { return op(op_A); }
+    inline auto beta() -> tinytc_value & { return op(op_beta); }
     inline auto beta() const -> tinytc_value const & { return op(op_beta); }
+    inline auto B() -> tinytc_value & { return op(op_B); }
     inline auto B() const -> tinytc_value const & { return op(op_B); }
 
   protected:

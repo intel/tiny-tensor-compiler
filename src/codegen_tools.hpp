@@ -129,10 +129,14 @@ void write_matrix_block(clir::block_builder &bb, block_accessor const &block,
 // tools for tinytc lowering
 
 using sgs_loop_body_builder_new = std::function<void(region_builder &, value, bool, value)>;
+using sgs_loop_body_builder_standard = std::function<void(region_builder &, value)>;
 using uniform_loop_body_builder_new = std::function<void(region_builder &, value, value)>;
 
 void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                           value sg_id, sgs_loop_body_builder_new const &body);
+
+void tile_loop_by_sgs_standard(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
+                               value sg_id, sgs_loop_body_builder_standard const &body);
 
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id, uniform_loop_body_builder_new const &body);
@@ -141,7 +145,7 @@ auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value 
                                 location const &loc) -> value;
 
 auto get_atomic_store_flag(value beta) -> std::optional<store_flag>;
-void blas_update(region_builder &bb, bool atomic, value alpha_ab, value beta, value C,
+void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,
                  array_view<value> index_list, location const &loc);
 
 } // namespace tinytc

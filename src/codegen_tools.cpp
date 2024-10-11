@@ -474,6 +474,25 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
     });
 }
 
+void tile_loop_by_sgs_standard(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
+                               value sg_id, sgs_loop_body_builder_standard const &body) {
+    auto ctx = compiler_context{sg_id->context(), true};
+    auto index_ty = get_scalar(ctx, scalar_type::index);
+    auto m = bb.add(make_subgroup_local_id(ctx));
+    auto m_index = bb.add(make_cast(m, index_ty));
+    tile_loop_by_sgs_new(
+        bb, loop_trip_count, sgs, num_tiles, sg_id,
+        [&m_index, &body](region_builder &bb, value block, bool is_remainder, value trip_count) {
+            auto mm = bb.add(make_arith(arithmetic::add, block, m_index));
+            if (is_remainder) {
+                auto cond = bb.add(make_cmp(cmp_condition::lt, m_index, trip_count));
+                bb.if_condition(cond, [&](region_builder &bb) { body(bb, mm); });
+            } else {
+                body(bb, mm);
+            }
+        });
+}
+
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id,
                              uniform_loop_body_builder_new const &body) {
@@ -552,8 +571,9 @@ auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {
     }
     return std::nullopt;
 }
-void blas_update(region_builder &bb, bool atomic, value alpha_ab, value beta, value C,
+void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,
                  array_view<value> index_list, location const &loc) {
+    auto alpha_ab = mixed_precision_arithmetic(bb, arithmetic::mul, alpha, ab, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {

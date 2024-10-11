@@ -19,6 +19,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <algorithm>
 #include <array>
 #include <stdexcept>
 #include <utility>
@@ -30,7 +31,10 @@ class linalg_generator {
     linalg_generator(local_tiling tiling, core_config core_cfg)
         : tiling_{std::move(tiling)}, core_cfg_{std::move(core_cfg)} {}
     auto operator()(inst_node &) -> inst { return inst{}; }
-    auto operator()(ger_inst &g) -> inst;
+    auto operator()(axpby_inst &in) -> inst;
+    auto operator()(ger_inst &in) -> inst;
+    auto operator()(hadamard_inst &in) -> inst;
+    auto operator()(sum_inst &in) -> inst;
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
@@ -47,44 +51,164 @@ auto linalg_generator::get_memref_type(value_node const &v) const -> const memre
     return t;
 }
 
-auto linalg_generator::operator()(ger_inst &g) -> inst {
-    auto parallel = make_parallel(g.loc());
+auto linalg_generator::operator()(axpby_inst &in) -> inst {
+    auto parallel = make_parallel(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
-    auto ctx = compiler_context{g.alpha().context(), true};
+    auto ctx = compiler_context{in.alpha().context(), true};
+    auto index_ty = get_scalar(ctx, scalar_type::index);
+    auto i32_ty = get_scalar(ctx, scalar_type::i32);
+
+    auto bt = get_memref_type(in.B());
+
+    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+
+    auto const inner_loop = [&](region_builder &bb, value Ab, value Bb, value trip_count,
+                                int num_tiles, value sgid) {
+        tile_loop_by_sgs_standard(bb, trip_count, core_cfg_.subgroup_size, num_tiles, sgid,
+                                  [&](region_builder &bb, value mm) {
+                                      auto a = bb.add(make_load(Ab, {mm}, in.loc()));
+                                      blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), Bb,
+                                                  {mm}, in.loc());
+                                  });
+    };
+
+    if (bt->dim() == 0) {
+        auto m = bb.add(make_subgroup_local_id(ctx, in.loc()));
+        auto c0 = bb.add(make_constant(0, i32_ty));
+        auto cond0 = bb.add(make_cmp(cmp_condition::eq, sgid, c0));
+        auto cond1 = bb.add(make_cmp(cmp_condition::eq, m, c0));
+        auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1));
+        bb.if_condition(cond, [&](region_builder &bb) {
+            auto a = bb.add(make_load(&in.A(), {}, in.loc()));
+            blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
+        });
+    } else if (bt->dim() == 1) {
+        auto c_shape0 = bb.add(make_size(&in.B(), 0, in.loc()));
+        inner_loop(bb, &in.A(), &in.B(), c_shape0, tiling_.m_tiles() * tiling_.n_tiles(), sgid);
+    } else if (bt->dim() == 2) {
+        auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
+        auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, in.loc()));
+        auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, in.loc()));
+
+        auto c_shape0 = bb.add(make_size(&in.B(), 0, in.loc()));
+        auto c_shape1 = bb.add(make_size(&in.B(), 1, in.loc()));
+        tile_loop_uniformly_new(
+            bb, c_shape1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_n,
+            [&](region_builder &bb, value block, value trip_count) {
+                auto zero = bb.add(make_constant(0, index_ty));
+                bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
+                    auto nn = bb.add(make_arith(arithmetic::add, block, n, in.loc()));
+                    auto static_offset_list = std::array<std::int64_t, 2u>{dynamic, 0};
+                    auto static_size_list = std::array<std::int64_t, 2u>{dynamic, 0};
+                    auto Bb = bb.add(make_subview(&in.B(), static_offset_list, static_size_list,
+                                                  {nn}, {c_shape0}, in.loc()));
+                    if (in.tA() == transpose::T) {
+                        std::swap(static_offset_list[0], static_offset_list[1]);
+                        std::swap(static_size_list[0], static_size_list[1]);
+                    }
+                    auto Ab = bb.add(make_subview(&in.A(), static_offset_list, static_size_list,
+                                                  {nn}, {c_shape0}, in.loc()));
+                    inner_loop(bb, Ab, Bb, c_shape0, tiling_.m_tiles(), sg_m);
+                });
+            });
+    }
+
+    return parallel;
+}
+
+auto linalg_generator::operator()(ger_inst &in) -> inst {
+    auto parallel = make_parallel(in.loc());
+    tinytc_region_t body = &parallel->child_region(0);
+    auto bb = region_builder{body};
+
+    auto ctx = compiler_context{in.alpha().context(), true};
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
-    auto sgid = bb.add(make_subgroup_id(ctx, g.loc()));
-    auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, g.loc()));
-    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, g.loc()));
-    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, g.loc()));
-    auto m = bb.add(make_subgroup_local_id(ctx, g.loc()));
-    auto m_index = bb.add(make_cast(m, index_ty, g.loc()));
+    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+    auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
+    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, in.loc()));
+    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, in.loc()));
 
-    auto c_shape0 = bb.add(make_size(&g.C(), 0, g.loc()));
-    auto c_shape1 = bb.add(make_size(&g.C(), 1, g.loc()));
+    auto c_shape0 = bb.add(make_size(&in.C(), 0, in.loc()));
+    auto c_shape1 = bb.add(make_size(&in.C(), 1, in.loc()));
     tile_loop_uniformly_new(
         bb, c_shape1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_n,
         [&](region_builder &bb, value block, value trip_count) {
             auto zero = bb.add(make_constant(0, index_ty));
             bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
-                auto nn = bb.add(make_arith(arithmetic::add, block, n, g.loc()));
-                auto b = bb.add(make_load(&g.B(), {nn}, g.loc()));
-                tile_loop_by_sgs_new(
-                    bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles(), sg_m,
-                    [&](region_builder &bb, value block, bool, value) {
-                        auto mm = bb.add(make_arith(arithmetic::add, block, m_index, g.loc()));
-                        auto a = bb.add(make_load(&g.A(), {mm}, g.loc()));
-                        auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, g.loc());
-                        auto alpha_ab = mixed_precision_arithmetic(bb, arithmetic::mul, &g.alpha(),
-                                                                   ab, g.loc());
-                        blas_update(bb, g.atomic(), alpha_ab, &g.beta(), &g.C(), {mm, nn}, g.loc());
-                    });
+                auto nn = bb.add(make_arith(arithmetic::add, block, n, in.loc()));
+                auto b = bb.add(make_load(&in.B(), {nn}, in.loc()));
+                tile_loop_by_sgs_standard(bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles(),
+                                          sg_m, [&](region_builder &bb, value mm) {
+                                              auto a = bb.add(make_load(&in.A(), {mm}, in.loc()));
+                                              auto ab = mixed_precision_arithmetic(
+                                                  bb, arithmetic::mul, a, b, in.loc());
+                                              blas_update(bb, in.atomic(), &in.alpha(), ab,
+                                                          &in.beta(), &in.C(), {mm, nn}, in.loc());
+                                          });
             });
         });
 
+    return parallel;
+}
+
+auto linalg_generator::operator()(hadamard_inst &in) -> inst {
+    auto parallel = make_parallel(in.loc());
+    tinytc_region_t body = &parallel->child_region(0);
+    auto bb = region_builder{body};
+
+    auto ctx = compiler_context{in.alpha().context(), true};
+    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+
+    auto c_shape0 = bb.add(make_size(&in.C(), 0, in.loc()));
+    tile_loop_by_sgs_standard(
+        bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
+        [&](region_builder &bb, value mm) {
+            auto a = bb.add(make_load(&in.A(), {mm}, in.loc()));
+            auto b = bb.add(make_load(&in.B(), {mm}, in.loc()));
+            auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {mm}, in.loc());
+        });
+
+    return parallel;
+}
+
+auto linalg_generator::operator()(sum_inst &in) -> inst {
+    auto parallel = make_parallel(in.loc());
+    tinytc_region_t body = &parallel->child_region(0);
+    auto bb = region_builder{body};
+
+    auto ctx = compiler_context{in.alpha().context(), true};
+    auto index_ty = get_scalar(ctx, scalar_type::index);
+
+    auto bt = get_memref_type(in.B());
+
+    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+
+    if (bt->dim() == 0) {
+        // @todo
+    } else if (bt->dim() == 1) {
+        auto c_shape0 = bb.add(make_size(&in.B(), 0, in.loc()));
+        auto c_trip_count = bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+        tile_loop_by_sgs_standard(
+            bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
+            [&](region_builder &bb, value mm) {
+                auto zero = bb.add(make_constant(0, index_ty));
+                // @todo need for loop that yields values
+                bb.for_loop(zero, c_trip_count, index_ty, [&](region_builder &bb, value n) {
+                    auto index_list = std::array<value, 2u>{mm, n};
+                    if (in.tA() == transpose::T) {
+                        std::swap(index_list[0], index_list[1]);
+                    }
+                    auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
+                    blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {mm},
+                                in.loc());
+                });
+            });
+    }
     return parallel;
 }
 
