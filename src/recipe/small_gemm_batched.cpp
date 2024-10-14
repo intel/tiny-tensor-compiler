@@ -72,13 +72,14 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
         ++l.end.column;
         return l;
     };
+    auto const make_static_sizes = [](transpose t, int64_t A, std::int64_t B) {
+        auto s = std::array<std::int64_t, 3u>{A, B, 0};
+        if (t == transpose::T) {
+            std::swap(s[0], s[1]);
+        }
+        return s;
+    };
 
-    auto const selA = [&](std::int64_t N1, std::int64_t N2) {
-        return tA == tinytc_transpose_T ? N2 : N1;
-    };
-    auto const selB = [&](std::int64_t N1, std::int64_t N2) {
-        return tB == tinytc_transpose_T ? N2 : N1;
-    };
     return exception_to_status_code(
         [&] {
             auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
@@ -86,10 +87,15 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
             auto const tB_ = enum_cast<transpose>(tB);
 
             auto const kernel = [&](char const *name, bool is_beta_nonzero) {
-                auto A_ty = get_memref(ty_, {selA(M, K), selA(K, M), dynamic}, {1, ldA, strideA},
-                                       address_space::global, my_loc());
-                auto B_ty = get_memref(ty_, {selB(K, N), selB(N, K), dynamic}, {1, ldB, strideB},
-                                       address_space::global, my_loc());
+                auto const static_offsets = std::array<std::int64_t, 3u>{0, 0, dynamic};
+                auto const A_static_sizes = make_static_sizes(tA_, M, K);
+                auto const B_static_sizes = make_static_sizes(tB_, K, N);
+                auto const C_static_sizes = make_static_sizes(transpose::N, M, N);
+
+                auto A_ty = get_memref(ty_, {A_static_sizes[0], A_static_sizes[1], dynamic},
+                                       {1, ldA, strideA}, address_space::global, my_loc());
+                auto B_ty = get_memref(ty_, {B_static_sizes[0], B_static_sizes[1], dynamic},
+                                       {1, ldB, strideB}, address_space::global, my_loc());
                 auto C_ty = get_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
                                        address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
@@ -105,10 +111,6 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto bb = region_builder{fn_body};
 
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
-                auto const static_offsets = std::array<std::int64_t, 3u>{0, 0, dynamic};
-                auto const A_static_sizes = std::array<std::int64_t, 3u>{M, K, 0};
-                auto const B_static_sizes = std::array<std::int64_t, 3u>{K, N, 0};
-                auto const C_static_sizes = std::array<std::int64_t, 3u>{M, N, 0};
                 auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
                                              array_view<value>{gid}, {}, my_loc()));
                 auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
