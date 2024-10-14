@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
         return -1;
-    } catch (std::runtime_error const &e) {
+    } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;
     }

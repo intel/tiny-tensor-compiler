@@ -45,8 +45,8 @@ template <typename T> struct default_converter;
 template <std::integral T> struct default_converter<T> {
     auto operator()(char const *str, T &val) const -> parser_status {
         long v = strtol(str, nullptr, 0);
-        if (errno == ERANGE || v < std::numeric_limits<T>::min() ||
-            v > std::numeric_limits<T>::max()) {
+        if (errno == ERANGE || static_cast<T>(v) < std::numeric_limits<T>::min() ||
+            static_cast<T>(v) > std::numeric_limits<T>::max()) {
             return parser_status::argument_out_of_range;
         }
         val = v;

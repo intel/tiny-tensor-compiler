@@ -17,7 +17,7 @@ enum class test_case { volume, ader };
 template <typename T> class test_multi {
   public:
     test_multi(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
-               test_case tc, std::vector<::sycl::queue> const &q);
+               test_case tc, std::vector<::sycl::queue> const &q, bool dump = false);
 
     void reference();
     void optimized();

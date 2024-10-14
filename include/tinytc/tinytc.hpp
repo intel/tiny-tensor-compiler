@@ -1265,8 +1265,9 @@ inline inst make_subgroup_size(compiler_context const &ctx, location const &loc 
  * @return Instruction
  */
 inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
-                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
-                         array_view<value> size_list, location const &loc = {}) {
+                         array_view<std::int64_t> static_size_list,
+                         array_view<value> offset_list = {}, array_view<value> size_list = {},
+                         location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(

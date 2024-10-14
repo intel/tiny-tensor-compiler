@@ -6,8 +6,8 @@
 
 #include <array>
 #include <cmath>
-#include <iostream>
 #include <limits>
+#include <sstream>
 #include <utility>
 
 using namespace sycl;
@@ -15,14 +15,15 @@ using namespace tinytc;
 
 template <typename T>
 test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany,
-                            std::size_t alignment, queue q)
+                            std::size_t alignment, queue q, bool dump)
     : B3_(num_basis(N, dim)), B2_(num_basis(N - 1, dim)), P_(P), howmany_(howmany),
       B3_aligned_(aligned<T>(B3_, alignment)), B2_aligned_(aligned<T>(B2_, alignment)),
       q_(std::move(q)), dev_info_(make_core_info(q_.get_device())),
       Q_ref_(B3_, P_, B3_aligned_, howmany_, q_), Q_opt_(B3_, P_, B3_aligned_, howmany_, q_),
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
-      K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), opt_bundle_(make_optimized_kernel()),
+      K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)),
+      opt_bundle_(make_optimized_kernel(dump)),
       opt_kernel_(make_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
     Q_opt_.random();
@@ -46,84 +47,78 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
 }
 
 template <typename T>
-auto test_volume<T>::make_optimized_kernel()
+auto test_volume<T>::make_optimized_kernel(bool dump)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
-    /**
-     * With B3_ = 56, B3_aligned_ = 64, B2_ = 35, B2_aligned_ = 48, P_ = 9
-     *
-     * func chain(A0: batch<memref<f32x9x9>, distance<81>>,
-     *            A1: batch<memref<f32x9x9>, distance<81>>,
-     *            A2: batch<memref<f32x9x9>, distance<81>>,
-     *            K0: memref<f32x56x9,1,64>,
-     *            K1: memref<f32x56x9,1,64>,
-     *            K2: memref<f32x56x9,1,64>,
-     *            Q: batch<memref<f32x56x9,1,64>, distance<576>>,
-     *            I: batch<memref<f32x56x9,1,64>, distance<576>>) {
-     *      a0 = get_work_item A0
-     *      a1 = get_work_item A1
-     *      a2 = get_work_item A2
-     *      q = get_work_item Q
-     *      i = get_work_item i
-     *      tmp = alloca matrix<f32x56x9, 1x64>;
-     *      K0v = submatrix K0[0:64,0:35]
-     *      K1v = submatrix K1[0:64,0:35]
-     *      K2v = submatrix K2[0:64,0:35]
-     *      qv = submatrix Q[0:64,0:9]
-     *      iv = submatrix I[0:48,0:9]
-     *      tmpv = submatrix tmp[0:48,0:9]
-     *      matmul(iv, a0, tmpv, 1.0, 0.0);
-     *      matmul(K0v, tmp, qv, 1.0, 0.0);
-     *      matmul(iv, a1, tmpv, 1.0, 0.0);
-     *      matmul(K1v, tmp, qv, 1.0, 0.0);
-     *      matmul(iv, a2, tmpv, 1.0, 0.0);
-     *      matmul(K2v, tmp, qv, 1.0, 0.0);
-     * }
-     */
     // Optimized kernel
-    auto opt_kernel = [&](function_builder &fb) {
-        auto A0 = fb.argument(A_[0].type(), "A0");
-        auto A1 = fb.argument(A_[1].type(), "A1");
-        auto A2 = fb.argument(A_[2].type(), "A2");
-        auto K0 = fb.argument(K_[0].type(), "K0");
-        auto K1 = fb.argument(K_[1].type(), "K1");
-        auto K2 = fb.argument(K_[2].type(), "K2");
-        auto Q = fb.argument(Q_opt_.type(), "Q");
-        auto I = fb.argument(I_.type(), "I");
-        fb.body([&](region_builder &bb) {
-            auto gid = bb.add(make_group_id());
-            auto const offsets2 = std::vector<value>{make_index(0), make_index(0)};
-            auto const offsets3 = std::vector<value>{make_index(0), make_index(0), gid};
-            auto const size3 = std::vector<value>{make_dynamic(), make_dynamic(), value{}};
-            auto const sizeK2 = std::vector<value>{make_index(B3_aligned_), make_index(B2_)};
-            auto tmp = bb.add(make_alloca(make_memref(real_t, {B2_, P_}, {1, B2_aligned_})));
-            auto a0 = bb.add(make_subview(A0, offsets3, size3));
-            auto a1 = bb.add(make_subview(A1, offsets3, size3));
-            auto a2 = bb.add(make_subview(A2, offsets3, size3));
-            auto K0v = bb.add(make_subview(K0, offsets2, sizeK2));
-            auto K1v = bb.add(make_subview(K1, offsets2, sizeK2));
-            auto K2v = bb.add(make_subview(K2, offsets2, sizeK2));
-            auto qv = bb.add(
-                make_subview(Q, offsets3, {make_index(B3_aligned_), make_index(P_), value{}}));
-            auto iv = bb.add(
-                make_subview(I, offsets3, {make_index(B2_aligned_), make_index(P_), value{}}));
-            auto tmpv =
-                bb.add(make_subview(tmp, offsets2, {make_index(B2_aligned_), make_index(P_)}));
-            auto const s0 = make_imm(T(0.0));
-            auto const s1 = make_imm(T(1.0));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a0, s0, tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K0v, tmp, s1, qv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a1, s0, tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K1v, tmp, s1, qv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, iv, a2, s0, tmpv));
-            bb.add(make_gemm(transpose::N, transpose::N, false, s1, K2v, tmp, s1, qv));
-        });
-    };
-    auto pb = program_builder{};
-    pb.create("volume_kernel", opt_kernel);
+    auto opt_kernel = [&](compiler_context const &ctx) {
+        auto element_ty = get_scalar(ctx, real_t);
+        std::array<data_type, 2 * dim + 2> param_types;
+        for (std::size_t i = 0; i < dim; ++i) {
+            param_types[i] = A_[i].type(element_ty);
+        }
+        for (std::size_t i = 0; i < dim; ++i) {
+            param_types[dim + i] = K_[i].type(element_ty);
+        }
+        param_types[2 * dim + 0] = Q_opt_.type(element_ty);
+        param_types[2 * dim + 1] = I_.type(element_ty);
 
-    return make_kernel_bundle(q_.get_context(), q_.get_device(),
-                              compile_to_opencl(pb.get_product(), dev_info_));
+        auto f = make_func("volume_kernel", param_types);
+        auto fn_body = f.get_body();
+
+        std::array<value, 2 * dim + 2> params;
+        fn_body.get_parameters(params);
+
+        auto A = [&params](std::size_t i) -> value & { return params[i]; };
+        auto K = [&params](std::size_t i) -> value & { return params[dim + i]; };
+        auto Q = params[2 * dim + 0];
+        auto I = params[2 * dim + 1];
+
+        for (std::size_t i = 0; i < dim; ++i) {
+            A(i).set_name((std::ostringstream{} << 'A' << i).str());
+            K(i).set_name((std::ostringstream{} << 'K' << i).str());
+        }
+        Q.set_name("Q");
+        I.set_name("I");
+
+        auto bb = region_builder{fn_body};
+        auto gid = bb.add(make_group_id(ctx));
+        auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
+        auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
+        auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
+            return {b.nrows(), b.ncols(), 0};
+        };
+        auto const offsets3 = array_view<value>(gid);
+        auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
+        auto tmp = bb.add(
+            make_alloca(get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local)));
+        auto a0 = bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3));
+        auto a1 = bb.add(make_subview(A(1), static_offsets3, static_sizes3(A_[1]), offsets3));
+        auto a2 = bb.add(make_subview(A(2), static_offsets3, static_sizes3(A_[2]), offsets3));
+        auto k0 = bb.add(make_subview(K(0), static_offsets2, sizeK2));
+        auto k1 = bb.add(make_subview(K(1), static_offsets2, sizeK2));
+        auto k2 = bb.add(make_subview(K(2), static_offsets2, sizeK2));
+        auto qv = bb.add(make_subview(Q, static_offsets3, {B3_aligned_, P_, 0}, offsets3));
+        auto iv = bb.add(make_subview(I, static_offsets3, {B2_aligned_, P_, 0}, offsets3));
+        auto tmpv = bb.add(make_subview(tmp, static_offsets2, {B2_, P_}));
+        auto const c0 = bb.add(make_constant_zero(element_ty));
+        auto const c1 = bb.add(make_constant_one(element_ty));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a0, c0, tmp));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k0, tmpv, c1, qv));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a1, c0, tmp));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k1, tmpv, c1, qv));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a2, c0, tmp));
+        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k2, tmpv, c1, qv));
+
+        return f;
+    };
+    auto ctx = make_compiler_context();
+    auto p = make_prog(ctx);
+    p.add_function(opt_kernel(ctx));
+    if (dump) {
+        p.dump();
+    }
+    return make_kernel_bundle(q_.get_context(), q_.get_device(), compile_to_opencl(p, dev_info_));
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {

@@ -20,7 +20,7 @@
 template <typename T> class test_ader : public test {
   public:
     test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
-              sycl::queue q);
+              sycl::queue q, bool dump = false);
     ~test_ader() = default;
     test_ader(test_ader<T> const &other) = delete;
     test_ader(test_ader<T> &&other) = default;
@@ -41,7 +41,7 @@ template <typename T> class test_ader : public test {
     inline std::int64_t Bd_aligned() { return aligned<T>(Bd(N_), alignment_); }
     inline std::int64_t Bd_aligned(std::int64_t N) { return aligned<T>(Bd(N), alignment_); }
     std::vector<matrix_batch<T>> make_dQ();
-    auto make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable>;
+    auto make_optimized_kernel(bool dump) -> sycl::kernel_bundle<sycl::bundle_state::executable>;
     sycl::event taylor_sum(matrix_batch<T> &I, matrix_batch<T> &dQ, T factor,
                            std::vector<sycl::event> const &dep_events = {});
 

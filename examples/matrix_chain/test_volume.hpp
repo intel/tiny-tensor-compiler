@@ -19,7 +19,7 @@
 template <typename T> class test_volume : public test {
   public:
     test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
-                sycl::queue q);
+                sycl::queue q, bool dump = false);
     ~test_volume() = default;
     test_volume(test_volume<T> const &other) = delete;
     test_volume(test_volume<T> &&other) = default;
@@ -35,7 +35,7 @@ template <typename T> class test_volume : public test {
 
   private:
     constexpr static std::size_t dim = 3;
-    auto make_optimized_kernel() -> sycl::kernel_bundle<sycl::bundle_state::executable>;
+    auto make_optimized_kernel(bool dump) -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
     std::int64_t B3_, B2_, P_, howmany_, B3_aligned_, B2_aligned_;
     sycl::queue q_;

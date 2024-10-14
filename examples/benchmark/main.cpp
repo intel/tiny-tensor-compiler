@@ -304,7 +304,7 @@ int main(int argc, char **argv) {
             .validator(examples::validate_test_case);
 
         parser.parse(argc, argv);
-    } catch (std::runtime_error const &e) {
+    } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;
     }
