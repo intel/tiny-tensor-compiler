@@ -112,7 +112,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto beta = is_beta_nonzero ? beta_arg : bb.add(make_constant_zero(ty_, my_loc()));
 
                 auto const static_offsets = std::array<std::int64_t, 2u>{dynamic, 0};
-                auto const offsets = array_view<value>{m};
+                auto const offsets = array_view<value>(m);
 
                 auto const static_gemm = [&](region_builder &bb) {
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{M_block_size, K};
@@ -127,7 +127,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto const dynamic_gemm = [&](region_builder &bb, value dyn_block_size) {
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{dynamic, K};
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{dynamic, N};
-                    auto const sizes = array_view<value>{dyn_block_size};
+                    auto const sizes = array_view<value>(dyn_block_size);
                     auto a = bb.add(
                         make_subview(A, static_offsets, A_static_sizes, offsets, sizes, my_loc()));
                     auto c = bb.add(

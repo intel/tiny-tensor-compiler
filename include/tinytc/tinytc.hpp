@@ -2081,16 +2081,31 @@ inline auto compile_to_opencl(prog prg, core_info const &info) -> source {
 template <typename T, typename Enable = void> struct auto_mem_type;
 
 /**
- * @brief True if T is either pointer to a fundamental type or a pointer to a pointer to a
- * fundamental type
+ * @brief Check whether T maps to a scalar data type
  *
  * @tparam T type
  */
 template <typename T>
-constexpr bool usm_pointer_type =
+constexpr bool is_supported_scalar_type = std::is_same_v<T, std::int8_t> ||         // i8
+                                          std::is_same_v<T, std::int16_t> ||        // i16
+                                          std::is_same_v<T, std::int32_t> ||        // i32
+                                          std::is_same_v<T, std::int64_t> ||        // i64
+                                          std::is_same_v<T, float> ||               // f32
+                                          std::is_same_v<T, double> ||              // f64
+                                          std::is_same_v<T, std::complex<float>> || // c32
+                                          std::is_same_v<T, std::complex<double>>;  // c64
+
+/**
+ * @brief True if T is either pointer to a support scalar type or a pointer to a pointer to a
+ * supported scalar type
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_usm_pointer_type =
     std::is_pointer_v<T> &&
-    (std::is_fundamental_v<std::remove_pointer_t<T>> ||
-     std::is_fundamental_v<std::remove_pointer_t<std::remove_pointer_t<T>>>);
+    (is_supported_scalar_type<std::remove_pointer_t<T>> ||
+     is_supported_scalar_type<std::remove_pointer_t<std::remove_pointer_t<T>>>);
 
 /**
  * @brief Specialize auto_mem_type for pointer to non-class types
@@ -2100,7 +2115,7 @@ constexpr bool usm_pointer_type =
  *
  * @tparam T memory object type
  */
-template <typename T> struct auto_mem_type<T, std::enable_if_t<usm_pointer_type<T>>> {
+template <typename T> struct auto_mem_type<T, std::enable_if_t<is_usm_pointer_type<T>>> {
     constexpr static mem_type value = mem_type::usm_pointer; ///< Pointer maps to USM pointer type
 };
 

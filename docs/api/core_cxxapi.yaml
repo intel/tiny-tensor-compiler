@@ -65,11 +65,12 @@ Core C++-API:
       - tinytc::tall_and_skinny
     struct:
       - tinytc::auto_mem_type
-      - tinytc::auto_mem_type< T, std::enable_if_t< usm_pointer_type< T > > >
+      - tinytc::auto_mem_type< T, std::enable_if_t< is_usm_pointer_type< T > > >
       - tinytc::mem
     variable:
       - tinytc::auto_mem_type_v
-      - tinytc::usm_pointer_type
+      - tinytc::is_supported_scalar_type
+      - tinytc::is_usm_pointer_type
   Source:
     class:
       - tinytc::source

@@ -1,6 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "../gemm_common.hpp"
+
 #include <argparser.hpp>
 #include <sycl/sycl.hpp>
 #include <tinytc/tinytc.hpp>
@@ -23,12 +25,6 @@
 using namespace sycl;
 using namespace tinytc;
 
-struct test_case {
-    std::int64_t m;
-    std::int64_t n;
-    std::int64_t k;
-};
-
 struct args {
     bool atomic = false;
     bool dump = false;
@@ -38,7 +34,7 @@ struct args {
     scalar_type ty = scalar_type::f32;
     bool update = false;
     bool verify = false;
-    std::vector<test_case> tc;
+    std::vector<examples::test_case> tc;
 };
 
 template <typename F> double bench(F f, int nrepeat = 10) {
@@ -286,47 +282,12 @@ int main(int argc, char **argv) {
     auto a = args{};
     bool help = false;
 
-    auto const convert_data_type = [](char const *str, scalar_type &val) -> cmd::parser_status {
-        if (std::strcmp(str, "f32") == 0) {
-            val = scalar_type::f32;
-        } else if (std::strcmp(str, "f64") == 0) {
-            val = scalar_type::f64;
-        } else if (std::strcmp(str, "c32") == 0) {
-            val = scalar_type::c32;
-        } else if (std::strcmp(str, "c64") == 0) {
-            val = scalar_type::c64;
-        } else {
-            return cmd::parser_status::invalid_argument;
-        }
-        return cmd::parser_status::success;
-    };
-    auto const convert_test_case = [](char const *str, test_case &tc) {
-        auto const parse = [](std::int64_t *v, char const *str, char **end, char sep) {
-            *v = strtol(str, end, 10);
-            if (*v == 0 || **end != sep) {
-                throw cmd::parser_status::invalid_argument;
-            }
-            if (errno == ERANGE) {
-                throw cmd::parser_status::argument_out_of_range;
-            }
-        };
-        char *end = nullptr;
-        try {
-            parse(&tc.m, str, &end, 'x');
-            parse(&tc.n, end + 1, &end, 'x');
-            parse(&tc.k, end + 1, &end, 0);
-        } catch (cmd::parser_status st) {
-            return st;
-        }
-        return cmd::parser_status::success;
-    };
-
     auto parser = cmd::arg_parser{};
     try {
         parser.set_short_opt('a', &a.atomic, "Update C atomically");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
         parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
-            .converter(convert_data_type);
+            .converter(examples::convert_data_type);
         parser
             .set_short_opt('i', &a.internal_repetitions,
                            "Number of GEMM repetitions inside kernel (default: 1)")
@@ -339,8 +300,8 @@ int main(int argc, char **argv) {
         parser.set_long_opt("transpose-a", &a.trans_a, "Transpose A matrix");
         parser.set_long_opt("transpose-b", &a.trans_b, "Transpose B matrix");
         parser.add_positional_arg("test-case", &a.tc, "MxNxK triplet (e.g. 64x64x64)")
-            .converter(convert_test_case)
-            .validator([](test_case const &tc) { return tc.m > 0 && tc.n > 0 && tc.k > 0; });
+            .converter(examples::convert_test_case)
+            .validator(examples::validate_test_case);
 
         parser.parse(argc, argv);
     } catch (std::runtime_error const &e) {

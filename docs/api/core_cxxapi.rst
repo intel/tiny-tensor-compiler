@@ -332,7 +332,7 @@ Recipe
 
   * :ref:`auto_mem_type`
 
-  * :ref:`auto_mem_type\<T, std::enable_if_t\<usm_pointer_type\<T\>\>\>`
+  * :ref:`auto_mem_type\<T, std::enable_if_t\<is_usm_pointer_type\<T\>\>\>`
 
   * :ref:`mem`
 
@@ -340,7 +340,9 @@ Recipe
 
   * :ref:`auto_mem_type_v`
 
-  * :ref:`usm_pointer_type`
+  * :ref:`is_supported_scalar_type`
+
+  * :ref:`is_usm_pointer_type`
 
 Recipe Enumerations
 -------------------
@@ -399,10 +401,10 @@ auto_mem_type
 
 .. doxygenstruct:: tinytc::auto_mem_type
 
-auto_mem_type<T, std::enable_if_t<usm_pointer_type<T>>>
-.......................................................
+auto_mem_type<T, std::enable_if_t<is_usm_pointer_type<T>>>
+..........................................................
 
-.. doxygenstruct:: tinytc::auto_mem_type< T, std::enable_if_t< usm_pointer_type< T > > >
+.. doxygenstruct:: tinytc::auto_mem_type< T, std::enable_if_t< is_usm_pointer_type< T > > >
 
 mem
 ...
@@ -417,10 +419,15 @@ auto_mem_type_v
 
 .. doxygenvariable:: tinytc::auto_mem_type_v
 
-usm_pointer_type
-................
+is_supported_scalar_type
+........................
 
-.. doxygenvariable:: tinytc::usm_pointer_type
+.. doxygenvariable:: tinytc::is_supported_scalar_type
+
+is_usm_pointer_type
+...................
+
+.. doxygenvariable:: tinytc::is_usm_pointer_type
 
 Source
 ======
