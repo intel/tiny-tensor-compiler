@@ -33,6 +33,7 @@ enum class parser_status {
     flag_does_not_take_argument,
     converter_functional_missing,
     invalid_argument,
+    validator_failed,
     argument_out_of_range,
     required_must_not_follow_optional,
     positional_must_not_follow_multiarg,
@@ -97,8 +98,8 @@ template <typename T> class par_model : public par_concept {
         } else {
             status = parser_status::required_argument_missing;
         }
-        if (validator_ && !validator_(*ptr_)) {
-            status = parser_status::invalid_argument;
+        if (validator_ && status == parser_status::success && !validator_(*ptr_)) {
+            status = parser_status::validator_failed;
         }
         return status;
     }
@@ -106,8 +107,14 @@ template <typename T> class par_model : public par_concept {
     auto is_argument_required() const -> bool override { return !default_argument_.has_value(); }
     auto does_store_multiple() const -> bool override { return false; }
 
-    template <typename F> auto converter(F &&fun) { converter_ = std::forward<F>(fun); }
-    template <typename F> auto validator(F &&fun) { validator_ = std::forward<F>(fun); }
+    template <typename F> auto converter(F &&fun) -> par_model<T> & {
+        converter_ = std::forward<F>(fun);
+        return *this;
+    }
+    template <typename F> auto validator(F &&fun) -> par_model<T> & {
+        validator_ = std::forward<F>(fun);
+        return *this;
+    }
 
   protected:
     T *ptr_;
@@ -186,17 +193,21 @@ class arg_parser {
 
     template <typename T>
     auto add_positional_arg(char const *opt, T *ptr, char const *help = nullptr,
-                            bool required = false) {
-        add_positional_arg(
-            positional_arg{opt, help,
-                           std::make_unique<par_model<T>>(
-                               ptr, required ? std::nullopt : std::make_optional(*ptr))});
+                            bool required = false) -> par_model<T> & {
+        auto model =
+            std::make_unique<par_model<T>>(ptr, required ? std::nullopt : std::make_optional(*ptr));
+        auto model_ptr = model.get();
+        add_positional_arg(positional_arg{opt, help, std::move(model)});
+        return *model_ptr;
     }
 
     template <typename T>
-    auto add_positional_arg(char const *opt, std::vector<T> *ptr, char const *help = nullptr) {
-        add_positional_arg(
-            {opt, help, std::make_unique<par_model<std::vector<T>>>(ptr, std::make_optional(T{}))});
+    auto add_positional_arg(char const *opt, std::vector<T> *ptr,
+                            char const *help = nullptr) -> par_model<T> & {
+        auto model = std::make_unique<par_model<std::vector<T>>>(ptr, std::make_optional(T{}));
+        auto model_ptr = model.get();
+        add_positional_arg({opt, help, std::move(model)});
+        return *model_ptr;
     }
 
     void parse(int argc, char **argv);

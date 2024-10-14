@@ -63,6 +63,10 @@ void dump_ir_pass::dump_val(value_node const &v) {
 
 /* Inst nodes */
 void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    *os_ << ' ';
     dump_val(g.alpha());
     *os_ << ", ";
     dump_val(g.A());
@@ -81,6 +85,10 @@ void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
 }
 
 void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
+    if (g.atomic()) {
+        *os_ << ".atomic";
+    }
+    *os_ << ' ';
     dump_val(g.alpha());
     *os_ << ", ";
     dump_val(g.A());
@@ -110,7 +118,7 @@ void dump_ir_pass::operator()(alloca_inst const &a) {
 
 void dump_ir_pass::operator()(axpby_inst const &a) {
     *os_ << "axpby";
-    *os_ << "." << to_string(a.tA()) << " ";
+    *os_ << "." << to_string(a.tA());
     dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 
@@ -248,18 +256,18 @@ void dump_ir_pass::operator()(lifetime_stop_inst const &l) {
 void dump_ir_pass::operator()(gemm_inst const &g) {
     *os_ << "gemm";
     *os_ << "." << to_string(g.tA());
-    *os_ << "." << to_string(g.tB()) << " ";
+    *os_ << "." << to_string(g.tB());
     dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
 void dump_ir_pass::operator()(gemv_inst const &g) {
     *os_ << "gemv";
-    *os_ << "." << to_string(g.tA()) << " ";
+    *os_ << "." << to_string(g.tA());
     dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
 void dump_ir_pass::operator()(ger_inst const &g) {
-    *os_ << "ger ";
+    *os_ << "ger";
     dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
@@ -294,7 +302,7 @@ void dump_ir_pass::operator()(foreach_inst const &p) {
 }
 
 void dump_ir_pass::operator()(hadamard_inst const &g) {
-    *os_ << "hadamard ";
+    *os_ << "hadamard";
     dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
@@ -395,7 +403,7 @@ void dump_ir_pass::operator()(store_inst const &e) {
 
 void dump_ir_pass::operator()(sum_inst const &a) {
     *os_ << "sum";
-    *os_ << "." << to_string(a.tA()) << " ";
+    *os_ << "." << to_string(a.tA());
     dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 

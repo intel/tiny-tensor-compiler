@@ -33,6 +33,8 @@ auto to_string(parser_status status) -> char const * {
         return "Non-default convertible type need converter functional";
     case parser_status::invalid_argument:
         return "Invalid argument";
+    case parser_status::validator_failed:
+        return "Value fails to comply with validation rules";
     case parser_status::argument_out_of_range:
         return "Argument is out of range";
     case parser_status::required_must_not_follow_optional:
@@ -124,7 +126,10 @@ void arg_parser::parse(int argc, char **argv) {
             throw arg_parser_error(argc, argv, pos, subpos, parser_status::unknown_positional_arg);
         }
         auto &arg = positional_[positional_arg_index];
-        arg.par->set(argv[pos]);
+        auto status = arg.par->set(argv[pos]);
+        if (status != parser_status::success) {
+            throw arg_parser_error(argc, argv, pos, subpos, status);
+        }
         if (!arg.par->does_store_multiple()) {
             ++positional_arg_index;
         }
