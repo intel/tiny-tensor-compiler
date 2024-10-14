@@ -4,31 +4,37 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <array>
 #include <cstdint>
 #include <iostream>
 
 using namespace tinytc;
 
 int main() {
-    scalar_type type = scalar_type::f32;
+    scalar_type sty = scalar_type::f32;
     int64_t M = 64;
     int64_t N = 32;
 
     try {
-        auto pb = program_builder{};
-        pb.create("copy", [&](function_builder &fb) {
-            auto dt = make_memref(type, {M, N});
-            auto A = fb.argument(dt);
-            auto B = fb.argument(dt);
-            fb.body([&](region_builder &bb) {
-                auto alpha = make_imm(1.0, type);
-                auto beta = make_imm(0.0, type);
-                bb.add(make_axpby(transpose::N, false, alpha, A, beta, B));
-            });
-        });
-        auto program = pb.get_product();
+        auto ctx = make_compiler_context();
+        auto element_ty = get_scalar(ctx, sty);
+        auto ty = get_memref(element_ty, {M, N});
 
-        program.dump();
+        auto f = make_func("copy", {ty, ty});
+
+        auto body = f.get_body();
+        std::array<value, 2u> params;
+        body.get_parameters(params);
+
+        auto bb = region_builder{body};
+        auto alpha = bb.add(make_constant_one(element_ty));
+        auto beta = bb.add(make_constant_zero(element_ty));
+        bb.add(make_axpby(transpose::N, false, alpha, params[0], beta, params[1]));
+
+        auto p = make_prog(ctx);
+        p.add_function(std::move(f));
+
+        p.dump();
     } catch (builder_error const &e) {
         std::cerr << "Error  " << static_cast<int>(e.code()) << std::endl;
     } catch (status const &st) {

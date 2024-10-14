@@ -2098,15 +2098,16 @@ constexpr bool is_supported_scalar_type = std::is_same_v<T, std::int8_t> ||     
 
 /**
  * @brief True if T is either pointer to a support scalar type or a pointer to a pointer to a
- * supported scalar type
+ * supported scalar type; void* is fine, too
  *
  * @tparam T type
  */
 template <typename T>
 constexpr bool is_usm_pointer_type =
-    std::is_pointer_v<T> &&
-    (is_supported_scalar_type<std::remove_pointer_t<T>> ||
-     is_supported_scalar_type<std::remove_pointer_t<std::remove_pointer_t<T>>>);
+    std::is_same_v<T, void *> ||
+    (std::is_pointer_v<T> &&
+     (is_supported_scalar_type<std::remove_pointer_t<T>> ||
+      is_supported_scalar_type<std::remove_pointer_t<std::remove_pointer_t<T>>>));
 
 /**
  * @brief Specialize auto_mem_type for pointer to non-class types

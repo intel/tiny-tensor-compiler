@@ -4,22 +4,25 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <analysis/equal.hpp>
 #include <doctest/doctest.h>
-#include <passes.hpp>
 
 using namespace tinytc;
 
 TEST_CASE("is_equal") {
-    CHECK(is_equal(*make_scalar(scalar_type::f32), *make_scalar(scalar_type::f32)));
-    CHECK(!is_equal(*make_scalar(scalar_type::i32), *make_scalar(scalar_type::i16)));
-    auto a = make_memref(scalar_type::f32, {1, 2});
-    auto b = make_memref(scalar_type::f32, {2, 3});
-    auto c = make_memref(scalar_type::f64, {1, 2});
+    auto ctx = make_compiler_context();
+    auto f32_ty = get_scalar(ctx, scalar_type::f32);
+    auto f64_ty = get_scalar(ctx, scalar_type::f64);
+    CHECK(is_equal(*f32_ty, *f32_ty));
+    CHECK(!is_equal(*get_scalar(ctx, scalar_type::i32), *get_scalar(ctx, scalar_type::i16)));
+    auto a = get_memref(f32_ty, {1, 2});
+    auto b = get_memref(f32_ty, {2, 3});
+    auto c = get_memref(f64_ty, {1, 2});
     CHECK(is_equal(*a, *a));
     CHECK(!is_equal(*a, *b));
     CHECK(!is_equal(*a, *c));
-    CHECK(is_equal(*make_group(a), *make_group(a)));
-    CHECK(!is_equal(*make_group(a), *make_group(b)));
-    CHECK(!is_equal(*make_group(a), *make_group(c)));
-    CHECK(!is_equal(*make_group(a), *a));
+    CHECK(is_equal(*get_group(a), *get_group(a)));
+    CHECK(!is_equal(*get_group(a), *get_group(b)));
+    CHECK(!is_equal(*get_group(a), *get_group(c)));
+    CHECK(!is_equal(*get_group(a), *a));
 }
