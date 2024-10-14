@@ -57,7 +57,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
 #define FUNCTION_PASS(NAME, CREATE_PASS, ...)                                                      \
     if (strcmp(NAME, pass_name) == 0) {                                                            \
         auto pass = CREATE_PASS;                                                                   \
-        optflag_setter{pass, prg->get_context()}(__VA_ARGS__);                                     \
+        optflag_setter{pass, prg->context()}(__VA_ARGS__);                                         \
         return run_function_pass(std::move(pass), *prg);                                           \
     }
 #define FUNCTION_PASS_WITH_INFO(NAME, CREATE_PASS)                                                 \
@@ -69,7 +69,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
 #undef FUNCTION_PASS_WITH_INFO
             throw status::unknown_pass_name;
         },
-        prg->get_context());
+        prg->context());
 }
 
 tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *const **names) {
@@ -96,12 +96,12 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
     }
     return exception_to_status_code(
         [&] {
-            const auto ctx = prg->get_context();
+            auto ctx = prg->share_context();
             const auto opt_level = ctx->opt_level();
 
             // passes
             auto cpp = constant_propagation_pass{};
-            optflag_setter{cpp, ctx}(tinytc::optflag::unsafe_fp_math);
+            optflag_setter{cpp, ctx.get()}(tinytc::optflag::unsafe_fp_math);
 
             run_function_pass(check_ir_pass{}, *prg);
 
@@ -135,10 +135,10 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
 
             clir::generate_opencl(oss, std::move(ast));
 
-            *src = std::make_unique<::tinytc_source>(oss.str(), prg->loc(), std::move(ext),
-                                                     info->core_features())
+            *src = std::make_unique<::tinytc_source>(std::move(ctx), oss.str(), prg->loc(),
+                                                     std::move(ext), info->core_features())
                        .release();
         },
-        prg->get_context());
+        prg->context());
 }
 }

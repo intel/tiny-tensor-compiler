@@ -5,6 +5,7 @@
 #define ZE_ERROR_20240419_HPP
 
 #include "opencl_cc.hpp"
+#include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 
 #include <new>
@@ -13,7 +14,7 @@ namespace tinytc {
 
 template <typename F>
 auto exception_to_status_code_ze(F &&f,
-                                 tinytc_source_context_t context = nullptr) -> tinytc_status_t {
+                                 tinytc_compiler_context_t context = nullptr) -> tinytc_status_t {
     try {
         f();
     } catch (status const &st) {
@@ -23,7 +24,7 @@ auto exception_to_status_code_ze(F &&f,
     } catch (opencl_c_compilation_error const &e) {
         if (context) {
             auto const loc = location{};
-            tinytc_source_context_report_error(context, &loc, e.what(), true);
+            tinytc_compiler_context_report_error(context, &loc, e.what());
         }
         return tinytc_status_compilation_error;
     } catch (std::bad_alloc const &e) {

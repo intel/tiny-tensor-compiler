@@ -203,6 +203,8 @@ Binary
 
   * :ref:`tinytc_binary_create`
 
+  * :ref:`tinytc_binary_get_compiler_context`
+
   * :ref:`tinytc_binary_get_core_features`
 
   * :ref:`tinytc_binary_get_raw`
@@ -218,6 +220,11 @@ tinytc_binary_create
 ....................
 
 .. doxygenfunction:: tinytc_binary_create
+
+tinytc_binary_get_compiler_context
+..................................
+
+.. doxygenfunction:: tinytc_binary_get_compiler_context
 
 tinytc_binary_get_core_features
 ...............................
@@ -607,6 +614,8 @@ Source
 
   * :ref:`tinytc_source_get_code`
 
+  * :ref:`tinytc_source_get_compiler_context`
+
   * :ref:`tinytc_source_get_core_features`
 
   * :ref:`tinytc_source_get_location`
@@ -624,6 +633,11 @@ tinytc_source_get_code
 ......................
 
 .. doxygenfunction:: tinytc_source_get_code
+
+tinytc_source_get_compiler_context
+..................................
+
+.. doxygenfunction:: tinytc_source_get_compiler_context
 
 tinytc_source_get_core_features
 ...............................

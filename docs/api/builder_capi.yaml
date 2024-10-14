@@ -62,6 +62,8 @@ Builder C-API:
       - tinytc_constant_inst_create_complex
       - tinytc_constant_inst_create_float
       - tinytc_constant_inst_create_int
+      - tinytc_constant_inst_create_one
+      - tinytc_constant_inst_create_zero
       - tinytc_expand_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create

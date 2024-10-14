@@ -290,6 +290,10 @@ Instruction
 
   * :ref:`make_constant(std::int64_t,data_type,location const&)`
 
+  * :ref:`make_constant_one`
+
+  * :ref:`make_constant_zero`
+
   * :ref:`make_expand`
 
   * :ref:`make_for`
@@ -390,6 +394,16 @@ make_constant(std::int64_t,data_type,location const&)
 .....................................................
 
 .. doxygenfunction:: tinytc::make_constant(std::int64_t,data_type,location const&)
+
+make_constant_one
+.................
+
+.. doxygenfunction:: tinytc::make_constant_one
+
+make_constant_zero
+..................
+
+.. doxygenfunction:: tinytc::make_constant_zero
 
 make_expand
 ...........

@@ -352,6 +352,10 @@ Instruction
 
   * :ref:`tinytc_constant_inst_create_int`
 
+  * :ref:`tinytc_constant_inst_create_one`
+
+  * :ref:`tinytc_constant_inst_create_zero`
+
   * :ref:`tinytc_expand_inst_create`
 
   * :ref:`tinytc_for_inst_create`
@@ -449,6 +453,16 @@ tinytc_constant_inst_create_int
 ...............................
 
 .. doxygenfunction:: tinytc_constant_inst_create_int
+
+tinytc_constant_inst_create_one
+...............................
+
+.. doxygenfunction:: tinytc_constant_inst_create_one
+
+tinytc_constant_inst_create_zero
+................................
+
+.. doxygenfunction:: tinytc_constant_inst_create_zero
 
 tinytc_expand_inst_create
 .........................

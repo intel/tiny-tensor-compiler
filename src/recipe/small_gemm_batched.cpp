@@ -18,7 +18,6 @@
 #include <memory>
 #include <source_location>
 #include <utility>
-#include <vector>
 
 namespace tinytc {
 
@@ -106,17 +105,17 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto bb = region_builder{fn_body};
 
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
-                auto const static_offsets = std::vector<std::int64_t>{0, 0, dynamic};
-                auto const A_static_sizes = std::vector<std::int64_t>{M, K, 0};
-                auto const B_static_sizes = std::vector<std::int64_t>{K, N, 0};
-                auto const C_static_sizes = std::vector<std::int64_t>{M, N, 0};
+                auto const static_offsets = std::array<std::int64_t, 3u>{0, 0, dynamic};
+                auto const A_static_sizes = std::array<std::int64_t, 3u>{M, K, 0};
+                auto const B_static_sizes = std::array<std::int64_t, 3u>{K, N, 0};
+                auto const C_static_sizes = std::array<std::int64_t, 3u>{M, N, 0};
                 auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
                                              array_view<value>{gid}, {}, my_loc()));
                 auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
                                              array_view<value>{gid}, {}, my_loc()));
-                auto c = bb.add(make_subview(params[3], static_offsets, C_static_sizes,
+                auto c = bb.add(make_subview(params[4], static_offsets, C_static_sizes,
                                              array_view<value>{gid}, {}, my_loc()));
-                auto beta = is_beta_nonzero ? params[4] : bb.add(make_constant(0.0, ty_, my_loc()));
+                auto beta = is_beta_nonzero ? params[3] : bb.add(make_constant_zero(ty_, my_loc()));
                 bb.add(make_gemm(tA_, tB_, false, params[0], std::move(a), std::move(b), beta,
                                  std::move(c), my_loc()));
 

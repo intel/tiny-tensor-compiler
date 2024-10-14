@@ -921,6 +921,34 @@ inline inst make_constant(std::int64_t value, data_type ty, location const &loc 
 }
 
 /**
+ * @brief Make multiplicative identity constant ("1") for the given data type
+ *
+ * @param ty Scalar data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant_one(data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_one(&instr, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make additive identity constant ("0") for the given data type
+ *
+ * @param ty Scalar data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant_zero(data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_zero(&instr, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make alloca instruction
  *
  * @param ty Memref type of allocated variable
@@ -1252,7 +1280,7 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
     if (offset_len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("dynamic offset list too long");
     }
-    auto size_len = offset_list.size();
+    auto size_len = size_list.size();
     if (size_len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("dynamic size list too long");
     }
@@ -1895,6 +1923,17 @@ class source : public shared_handle<tinytc_source_t> {
     }
 
     /**
+     * @brief Get compiler context
+     *
+     * @return Compiler context
+     */
+    inline auto get_compiler_context() const -> compiler_context {
+        tinytc_compiler_context_t ctx;
+        CHECK_STATUS(tinytc_source_get_compiler_context(obj_, &ctx));
+        return compiler_context{ctx, true};
+    }
+
+    /**
      * @brief Get location
      *
      * @return Location
@@ -1945,7 +1984,7 @@ class binary : public shared_handle<tinytc_binary_t> {
      *
      * @return Raw data
      */
-    inline auto get_raw() -> raw {
+    inline auto get_raw() const -> raw {
         raw r;
         tinytc_bundle_format_t f;
         CHECK_STATUS(tinytc_binary_get_raw(obj_, &f, &r.data_size, &r.data));
@@ -1953,11 +1992,21 @@ class binary : public shared_handle<tinytc_binary_t> {
         return r;
     }
     /**
+     * @brief Get compiler context
+     *
+     * @return Compiler context
+     */
+    inline auto get_compiler_context() const -> compiler_context {
+        tinytc_compiler_context_t ctx;
+        CHECK_STATUS(tinytc_binary_get_compiler_context(obj_, &ctx));
+        return compiler_context{ctx, true};
+    }
+    /**
      * @brief Get core features
      *
      * @return Core features
      */
-    inline auto get_core_features() -> tinytc_core_feature_flags_t {
+    inline auto get_core_features() const -> tinytc_core_feature_flags_t {
         tinytc_core_feature_flags_t cf;
         CHECK_STATUS(tinytc_binary_get_core_features(obj_, &cf));
         return cf;
@@ -1967,6 +2016,7 @@ class binary : public shared_handle<tinytc_binary_t> {
 /**
  * @brief Make binary
  *
+ * @param ctx Compiler context
  * @param format Bundle format (SPIR-V or Native)
  * @param data_size Size of data in bytes
  * @param data Binary data; data is copied
@@ -1975,11 +2025,12 @@ class binary : public shared_handle<tinytc_binary_t> {
  *
  * @return Binary
  */
-inline auto make_binary(bundle_format format, std::size_t data_size, std::uint8_t const *data,
+inline auto make_binary(compiler_context const &ctx, bundle_format format, std::size_t data_size,
+                        std::uint8_t const *data,
                         tinytc_core_feature_flags_t core_features) -> binary {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_binary_create(&bin, static_cast<tinytc_bundle_format_t>(format), data_size,
-                                      data, core_features));
+    CHECK_STATUS(tinytc_binary_create(&bin, ctx.get(), static_cast<tinytc_bundle_format_t>(format),
+                                      data_size, data, core_features));
     return binary{bin};
 }
 

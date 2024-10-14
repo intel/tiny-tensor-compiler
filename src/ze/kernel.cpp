@@ -24,8 +24,7 @@ extern "C" {
 
 tinytc_status_t tinytc_ze_source_compile_to_binary(tinytc_binary_t *bin, const_tinytc_source_t src,
                                                    uint32_t ip_version,
-                                                   tinytc_bundle_format_t format,
-                                                   tinytc_source_context_t source_ctx) {
+                                                   tinytc_bundle_format_t format) {
 
     if (bin == nullptr || src == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -33,12 +32,16 @@ tinytc_status_t tinytc_ze_source_compile_to_binary(tinytc_binary_t *bin, const_t
 
     size_t code_size = 0;
     char const *code = nullptr;
+    tinytc_compiler_context_t ctx = nullptr;
     tinytc_core_feature_flags_t core_features = 0;
     std::uint32_t extensions_size = 0;
     char const *const *extensions = nullptr;
+
     TINYTC_CHECK_STATUS(tinytc_source_get_code(src, &code_size, &code));
     TINYTC_CHECK_STATUS(tinytc_source_get_core_features(src, &core_features));
     TINYTC_CHECK_STATUS(tinytc_source_get_extensions(src, &extensions_size, &extensions));
+    TINYTC_CHECK_STATUS(tinytc_source_get_compiler_context(src, &ctx));
+    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ gets out of scope
 
     return exception_to_status_code_ze(
         [&] {
@@ -51,17 +54,16 @@ tinytc_status_t tinytc_ze_source_compile_to_binary(tinytc_binary_t *bin, const_t
             auto bin_data =
                 compile_opencl_c(code_size, code, fmt, ip_version, compiler_options.size(),
                                  compiler_options.data(), extensions_size, extensions);
-            CHECK_STATUS(
-                tinytc_binary_create(bin, format, bin_data.size(), bin_data.data(), core_features));
+            CHECK_STATUS(tinytc_binary_create(bin, ctx_.get(), format, bin_data.size(),
+                                              bin_data.data(), core_features));
         },
-        source_ctx);
+        ctx_.get());
 }
 
 tinytc_status_t tinytc_ze_kernel_bundle_create_with_source(ze_module_handle_t *bundle,
                                                            ze_context_handle_t context,
                                                            ze_device_handle_t device,
-                                                           const_tinytc_source_t src,
-                                                           tinytc_source_context_t source_ctx) {
+                                                           const_tinytc_source_t src) {
     if (bundle == nullptr || src == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -77,11 +79,11 @@ tinytc_status_t tinytc_ze_kernel_bundle_create_with_source(ze_module_handle_t *b
 
     // Get binary
     tinytc_binary_t bin = nullptr;
-    TINYTC_CHECK_STATUS(tinytc_ze_source_compile_to_binary(
-        &bin, src, dev_ip_ver.ipVersion, tinytc_bundle_format_native, source_ctx));
+    TINYTC_CHECK_STATUS(tinytc_ze_source_compile_to_binary(&bin, src, dev_ip_ver.ipVersion,
+                                                           tinytc_bundle_format_native));
 
     tinytc_status_t status =
-        tinytc_ze_kernel_bundle_create_with_binary(bundle, context, device, bin, source_ctx);
+        tinytc_ze_kernel_bundle_create_with_binary(bundle, context, device, bin);
     tinytc_binary_release(bin);
     return status;
 }
@@ -89,8 +91,7 @@ tinytc_status_t tinytc_ze_kernel_bundle_create_with_source(ze_module_handle_t *b
 tinytc_status_t
 tinytc_ze_kernel_bundle_create_with_program(ze_module_handle_t *bundle, ze_context_handle_t context,
                                             ze_device_handle_t device, tinytc_prog_t prg,
-                                            tinytc_core_feature_flags_t core_features,
-                                            tinytc_source_context_t source_ctx) {
+                                            tinytc_core_feature_flags_t core_features) {
     if (bundle == nullptr || prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -106,12 +107,10 @@ tinytc_ze_kernel_bundle_create_with_program(ze_module_handle_t *bundle, ze_conte
         status != tinytc_status_success) {
         goto err;
     }
-    if (status = tinytc_prog_compile_to_opencl(&src, prg, info, source_ctx);
-        status != tinytc_status_success) {
+    if (status = tinytc_prog_compile_to_opencl(&src, prg, info); status != tinytc_status_success) {
         goto err;
     }
-    if (status =
-            tinytc_ze_kernel_bundle_create_with_source(bundle, context, device, src, source_ctx);
+    if (status = tinytc_ze_kernel_bundle_create_with_source(bundle, context, device, src);
         status != tinytc_status_success) {
         goto err;
     }
@@ -125,8 +124,7 @@ err:
 tinytc_status_t tinytc_ze_kernel_bundle_create_with_binary(ze_module_handle_t *bundle,
                                                            ze_context_handle_t context,
                                                            ze_device_handle_t device,
-                                                           const_tinytc_binary_t bin,
-                                                           tinytc_source_context_t source_ctx) {
+                                                           const_tinytc_binary_t bin) {
     if (bin == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -147,22 +145,24 @@ tinytc_status_t tinytc_ze_kernel_bundle_create_with_binary(ze_module_handle_t *b
     uint32_t core_features;
     TINYTC_CHECK_STATUS(tinytc_binary_get_core_features(bin, &core_features));
 
+    tinytc_compiler_context_t ctx = nullptr;
+    TINYTC_CHECK_STATUS(tinytc_binary_get_compiler_context(bin, &ctx));
+    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ goes out of scope
+
     if (core_features & static_cast<std::uint32_t>(tinytc_core_feature_flag_large_register_file)) {
         module_desc.pBuildFlags = large_register_file_compiler_option_ze;
     }
     ze_module_build_log_handle_t build_log;
     ze_result_t status = zeModuleCreate(context, device, &module_desc, bundle, &build_log);
     if (status != ZE_RESULT_SUCCESS) {
-        if (source_ctx) {
-            std::string log;
-            std::size_t log_size;
-            zeModuleBuildLogGetString(build_log, &log_size, nullptr);
-            log.resize(log_size);
-            zeModuleBuildLogGetString(build_log, &log_size, log.data());
+        std::string log;
+        std::size_t log_size;
+        zeModuleBuildLogGetString(build_log, &log_size, nullptr);
+        log.resize(log_size);
+        zeModuleBuildLogGetString(build_log, &log_size, log.data());
 
-            tinytc_location_t loc = {};
-            tinytc_source_context_report_error(source_ctx, &loc, log.c_str(), true);
-        }
+        tinytc_location_t loc = {};
+        tinytc_compiler_context_report_error(ctx_.get(), &loc, log.c_str());
         zeModuleBuildLogDestroy(build_log);
         TINYTC_ZE_CHECK_STATUS(status);
     } else {

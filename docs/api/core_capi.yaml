@@ -33,6 +33,7 @@ Core C-API:
   Binary:
     function:
       - tinytc_binary_create
+      - tinytc_binary_get_compiler_context
       - tinytc_binary_get_core_features
       - tinytc_binary_get_raw
       - tinytc_binary_release
@@ -97,6 +98,7 @@ Core C-API:
   Source:
     function:
       - tinytc_source_get_code
+      - tinytc_source_get_compiler_context
       - tinytc_source_get_core_features
       - tinytc_source_get_location
       - tinytc_source_get_extensions

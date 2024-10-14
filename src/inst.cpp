@@ -8,6 +8,7 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "support/casting.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
@@ -196,6 +197,72 @@ tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t va
     }
     return exception_to_status_code(
         [&] { *instr = std::make_unique<constant_inst>(value, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_data_type_t ty,
+                                                const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    const auto *st = dyn_cast<scalar_data_type>(ty);
+    if (st == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        switch (st->ty()) {
+        case scalar_type::i1:
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            *instr =
+                std::make_unique<constant_inst>(std::int64_t{1}, ty, get_optional(loc)).release();
+            break;
+        case scalar_type::f32:
+        case scalar_type::f64:
+            *instr = std::make_unique<constant_inst>(double{1}, ty, get_optional(loc)).release();
+            break;
+        case scalar_type::c32:
+        case scalar_type::c64:
+            *instr = std::make_unique<constant_inst>(std::complex<double>{1}, ty, get_optional(loc))
+                         .release();
+            break;
+        }
+    });
+}
+
+tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_data_type_t ty,
+                                                 const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    const auto *st = dyn_cast<scalar_data_type>(ty);
+    if (st == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        switch (st->ty()) {
+        case scalar_type::i1:
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            *instr =
+                std::make_unique<constant_inst>(std::int64_t{0}, ty, get_optional(loc)).release();
+            break;
+        case scalar_type::f32:
+        case scalar_type::f64:
+            *instr = std::make_unique<constant_inst>(double{0}, ty, get_optional(loc)).release();
+            break;
+        case scalar_type::c32:
+        case scalar_type::c64:
+            *instr = std::make_unique<constant_inst>(std::complex<double>{0}, ty, get_optional(loc))
+                         .release();
+            break;
+        }
+    });
 }
 
 tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type_t ty,

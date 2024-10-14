@@ -74,8 +74,7 @@ tinytc_status_t tinytc_prog_get_compiler_context(const_tinytc_prog_t prg,
     if (prg == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return tinytc::exception_to_status_code(
-        [&] { *ctx = tinytc::compiler_context{prg->get_context(), true}.release(); });
+    return exception_to_status_code([&] { *ctx = prg->share_context().release(); });
 }
 
 tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *filename) {

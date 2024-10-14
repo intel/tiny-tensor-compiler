@@ -272,6 +272,32 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *ins
                                                               const tinytc_location_t *loc);
 
 /**
+ * @brief Creates the multiplicative identity constant (i.e. "1") for the given data type
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc);
+
+/**
+ * @brief Creates the additive identity constant (i.e. "0") for the given data type
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr,
+                                                               tinytc_data_type_t ty,
+                                                               const tinytc_location_t *loc);
+
+/**
  * @brief Create alloca instruction
  *
  * @code %value = alloca -> %ty @endcode
@@ -1321,6 +1347,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, 
                                                      char const **code);
 
 /**
+ * @brief Get context object from source object
+ *
+ * @param src [in] source object
+ * @param ctx [out] pointer to context object; reference count is increased so the user needs to
+ * call tinytc_compiler_context_release to clean up
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_source_get_compiler_context(const_tinytc_source_t src,
+                                                                 tinytc_compiler_context_t *ctx);
+
+/**
  * @brief Get source location
  *
  * @param src [in] source object
@@ -1360,6 +1398,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t
  * @brief Create binary
  *
  * @param bin [out] pointer to binary object
+ * @param ctx [in] compiler context
  * @param format [in] Bundle format (SPIR-V or Native)
  * @param data_size [in] Size of data in bytes
  * @param data [in][range(0, data_size)] Binary data; data is copied
@@ -1369,9 +1408,22 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_create(tinytc_binary_t *bin,
+                                                   tinytc_compiler_context_t ctx,
                                                    tinytc_bundle_format_t format, size_t data_size,
                                                    uint8_t const *data,
                                                    tinytc_core_feature_flags_t core_features);
+
+/**
+ * @brief Get context object from binary object
+ *
+ * @param bin [in] binary object
+ * @param ctx [out] pointer to context object; reference count is increased so the user needs to
+ * call tinytc_compiler_context_release to clean up
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_get_compiler_context(const_tinytc_binary_t bin,
+                                                                 tinytc_compiler_context_t *ctx);
 
 /**
  * @brief Get raw binary data

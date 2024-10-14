@@ -21,7 +21,8 @@ struct tinytc_prog final : tinytc::reference_counted {
 
     tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc = {});
 
-    inline auto get_context() const -> tinytc_compiler_context_t { return ctx_.get(); }
+    inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }
+    inline auto share_context() const -> tinytc::compiler_context { return ctx_; }
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
