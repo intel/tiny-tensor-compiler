@@ -39,7 +39,6 @@
 tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue queue) {
     tinytc_status_t status = tinytc_status_success;
     tinytc_core_info_t info = NULL;
-    tinytc_source_context_t source_ctx = NULL;
     tinytc_recipe_t recipe = NULL;
     tinytc_recipe_handler_t handler = NULL;
     cl_mem A = NULL, B = NULL, C = NULL;
@@ -49,11 +48,10 @@ tinytc_status_t gemm(cl_context context, cl_device_id device, cl_command_queue q
     CHECK(tinytc_cl_core_info_create(&info, device));
 
     const uint32_t M = 64, N = 64, K = 64, howmany = 1000;
-    CHECK(tinytc_source_context_create(&source_ctx));
     CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
                                                   tinytc_transpose_N, tinytc_transpose_N, M, N, K,
-                                                  M, M * K, K, K * N, M, M * N, source_ctx));
-    CHECK(tinytc_cl_recipe_handler_create(&handler, context, device, recipe, source_ctx));
+                                                  M, M * K, K, K * N, M, M * N, NULL));
+    CHECK(tinytc_cl_recipe_handler_create(&handler, context, device, recipe));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
     const size_t Bbytes = K * N * howmany * sizeof(float);
@@ -114,14 +112,6 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
-    if (source_ctx) {
-        const char *error_log;
-        tinytc_source_context_get_error_log(source_ctx, &error_log);
-        if (error_log[0] != '\0') {
-            printf("\nError log:\n%s\n", error_log);
-        }
-        tinytc_source_context_release(source_ctx);
-    }
     tinytc_core_info_release(info);
 
     return status;
@@ -132,7 +122,6 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     int32_t *host = NULL;
     cl_mem A = NULL, B = NULL;
     tinytc_core_info_t info = NULL;
-    tinytc_source_context_t source_ctx = NULL;
     tinytc_prog_t program = NULL;
     cl_program module = NULL;
     cl_kernel kernel = NULL;
@@ -159,16 +148,16 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     static const char source_text[] =
         "func @copy(%A: memref<i32x" CHUNK_SIZE_S "x?>, %B: memref<i32x" CHUNK_SIZE_S "x?>) {\n"
         "    %gid = group_id\n"
-        "    %a = subview %A[:,%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    %b = subview %B[:,%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    axpby.n 1, %a, 0, %b\n"
+        "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
+        "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
+        "    %c0 = constant 0 -> i32\n"
+        "    %c1 = constant 1 -> i32\n"
+        "    axpby.n %c1, %a, %c0, %b\n"
         "        : i32, memref<i32x" CHUNK_SIZE_S ">, i32, memref<i32x" CHUNK_SIZE_S ">\n"
         "}\n";
 
-    CHECK(tinytc_source_context_create(&source_ctx));
-    CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, source_ctx));
-    CHECK(tinytc_cl_kernel_bundle_create_with_program(&module, context, device, program, 0u,
-                                                      source_ctx));
+    CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, NULL));
+    CHECK(tinytc_cl_kernel_bundle_create_with_program(&module, context, device, program, 0u));
     kernel = clCreateKernel(module, "copy", &err);
     CL_CHECK(err);
 
@@ -211,14 +200,6 @@ err:
         clReleaseProgram(module);
     }
     tinytc_prog_release(program);
-    if (source_ctx) {
-        const char *error_log;
-        tinytc_source_context_get_error_log(source_ctx, &error_log);
-        if (error_log[0] != '\0') {
-            printf("\nError log:\n%s\n", error_log);
-        }
-        tinytc_source_context_release(source_ctx);
-    }
     tinytc_core_info_release(info);
     if (B) {
         clReleaseMemObject(B);

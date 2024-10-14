@@ -64,14 +64,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *inf
  * @param context [in] context handle
  * @param device [in] device handle
  * @param src [in] source text and extensions
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(
-    cl_program *bundle, cl_context context, cl_device_id device, const_tinytc_source_t src,
-    tinytc_source_context_t source_ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(cl_program *bundle,
+                                                                         cl_context context,
+                                                                         cl_device_id device,
+                                                                         const_tinytc_source_t src);
 
 /**
  * @brief Compile tensor program
@@ -82,14 +81,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(
  * @param prg [inout] tensor program; modified as compiler passes are run
  * @param core_features [in][optional] requested core features; must be 0 (default) or a combination
  * of tinytc_core_feature_flag_t
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_program(
     cl_program *bundle, cl_context context, cl_device_id device, tinytc_prog_t prg,
-    tinytc_core_feature_flags_t core_features, tinytc_source_context_t source_ctx);
+    tinytc_core_feature_flags_t core_features);
 
 /**
  * @brief Create an OpenCL program from a tinytc binary
@@ -98,14 +95,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_program(
  * @param context [in] context handle
  * @param device [in] device handle
  * @param bin [in] binary object
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(
-    cl_program *bundle, cl_context context, cl_device_id device, const_tinytc_binary_t bin,
-    tinytc_source_context_t source_ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_binary(cl_program *bundle,
+                                                                         cl_context context,
+                                                                         cl_device_id device,
+                                                                         const_tinytc_binary_t bin);
 
 /**
  * @brief Get work group size for kernel
@@ -139,16 +135,13 @@ TINYTC_EXPORT void tinytc_cl_get_global_size(int64_t howmany, const size_t *loca
  * @param context [in] context handle
  * @param device [in] device handle
  * @param recipe [in] recipe object
- * @param source_ctx [inout][optional] source context object to save extended error messages that
- * are enhanced with source code context; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cl_recipe_handler_create(tinytc_recipe_handler_t *handler,
                                                               cl_context context,
                                                               cl_device_id device,
-                                                              tinytc_recipe_t recipe,
-                                                              tinytc_source_context_t source_ctx);
+                                                              tinytc_recipe_t recipe);
 
 /**
  * @brief Submit recipe to device

@@ -83,15 +83,13 @@ template <> struct shared_handle_traits<cl_kernel> {
  * @param context Context
  * @param device Device
  * @param src Source
- * @param source_ctx Source context for improved error reporting
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, source const &src,
-                               source_context source_ctx = {}) -> shared_handle<cl_program> {
+inline auto make_kernel_bundle(cl_context context, cl_device_id device,
+                               source const &src) -> shared_handle<cl_program> {
     cl_program obj;
-    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_source(&obj, context, device, src.get(),
-                                                            source_ctx.get()));
+    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_source(&obj, context, device, src.get()));
     return shared_handle<cl_program>{obj};
 }
 
@@ -103,16 +101,15 @@ inline auto make_kernel_bundle(cl_context context, cl_device_id device, source c
  * @param prg Program
  * @param core_features requested core features; must be 0 (default) or a combination of
  * tinytc_core_feature_flag_t
- * @param source_ctx Source context for improved error reporting
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
-                               tinytc_core_feature_flags_t core_features = 0,
-                               source_context source_ctx = {}) -> shared_handle<cl_program> {
+inline auto
+make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
+                   tinytc_core_feature_flags_t core_features = 0) -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_program(&obj, context, device, prg.get(),
-                                                             core_features, source_ctx.get()));
+                                                             core_features));
     return shared_handle<cl_program>{obj};
 }
 
@@ -122,15 +119,13 @@ inline auto make_kernel_bundle(cl_context context, cl_device_id device, prog prg
  * @param context Context
  * @param device Device
  * @param bin Binary
- * @param source_ctx Source context for improved error reporting
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, binary const &bin,
-                               source_context source_ctx = {}) -> shared_handle<cl_program> {
+inline auto make_kernel_bundle(cl_context context, cl_device_id device,
+                               binary const &bin) -> shared_handle<cl_program> {
     cl_program obj;
-    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin.get(),
-                                                            source_ctx.get()));
+    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin.get()));
     return shared_handle<cl_program>{obj};
 }
 
@@ -242,15 +237,13 @@ class opencl_recipe_handler : public recipe_handler {
  * @param context Context
  * @param device Device
  * @param rec Recipe
- * @param source_ctx Source context for improved error reporting
  *
  * @return OpenCL recipe handler
  */
-inline auto make_recipe_handler(cl_context context, cl_device_id device, recipe const &rec,
-                                source_context source_ctx = {}) -> opencl_recipe_handler {
+inline auto make_recipe_handler(cl_context context, cl_device_id device,
+                                recipe const &rec) -> opencl_recipe_handler {
     tinytc_recipe_handler_t handler;
-    CHECK_STATUS(
-        tinytc_cl_recipe_handler_create(&handler, context, device, rec.get(), source_ctx.get()));
+    CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec.get()));
     return opencl_recipe_handler{handler};
 }
 
