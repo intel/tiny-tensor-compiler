@@ -1664,9 +1664,9 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, value step, array_view<value> initial_value_list,
+    auto for_loop(value from, value to, value step, array_view<value> initial_value_list,
                   array_view<data_type> return_type_list, data_type loop_var_ty, F &&f,
-                  location const &loc = {}) {
+                  location const &loc = {}) -> std::vector<value> {
         auto fi = ::tinytc::make_for(from, to, step, initial_value_list, return_type_list,
                                      loop_var_ty, loc);
         auto reg = region{};
@@ -1677,9 +1677,10 @@ class region_builder {
         if (!reg || num_params != 1 + return_type_list.size()) {
             throw status::internal_compiler_error;
         }
-        reg_.add_instruction(std::move(fi));
+        auto results = add_multivalued(std::move(fi));
         auto bb = region_builder{reg};
         f(bb, array_view<value>(params));
+        return results;
     }
     /**
      * @brief Build foreach-loop with functor f(region_builder&, value) -> void

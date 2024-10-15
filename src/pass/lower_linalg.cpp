@@ -196,17 +196,22 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
         tile_loop_by_sgs_standard(
             bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
             [&](region_builder &bb, value mm) {
-                auto zero = bb.add(make_constant(0, index_ty));
-                // @todo need for loop that yields values
-                bb.for_loop(zero, c_trip_count, index_ty, [&](region_builder &bb, value n) {
-                    auto index_list = std::array<value, 2u>{mm, n};
-                    if (in.tA() == transpose::T) {
-                        std::swap(index_list[0], index_list[1]);
-                    }
-                    auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
-                    blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {mm},
-                                in.loc());
-                });
+                auto from = bb.add(make_constant(0, index_ty));
+                auto zero = bb.add(make_constant_zero(bt->element_data_ty()));
+                auto acc =
+                    bb.for_loop(from, c_trip_count, {}, {zero}, {bt->element_data_ty()}, index_ty,
+                                [&](region_builder &bb, array_view<value> args) {
+                                    auto index_list = std::array<value, 2u>{mm, args[0]};
+                                    if (in.tA() == transpose::T) {
+                                        std::swap(index_list[0], index_list[1]);
+                                    }
+                                    auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
+                                    auto sum = mixed_precision_arithmetic(bb, arithmetic::add,
+                                                                          args[1], a, in.loc());
+                                    bb.add(make_yield({sum}, in.loc()));
+                                });
+                blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(), {mm},
+                            in.loc());
             });
     }
     return parallel;
