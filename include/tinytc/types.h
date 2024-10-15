@@ -65,11 +65,12 @@ typedef enum {
     tinytc_status_ir_expected_local_address_space = 0x114,  ///< Expected local address space
     tinytc_status_ir_expected_global_address_space = 0x115, ///< Expected global address space
     tinytc_status_ir_invalid_offset = 0x116,                ///< Invalid offset
-    tinytc_status_ir_int_unsupported = 0x117,     ///< Instruction does not support int type
-    tinytc_status_ir_i1_unsupported = 0x118,      ///< Instruction does not support i1 type
-    tinytc_status_ir_complex_unsupported = 0x119, ///< Instruction does not support complex type
-    tinytc_status_ir_forbidden_cast = 0x11a,      ///< Forbidden cast
-    tinytc_status_ir_invalid_beta = 0x11b,        ///< Invalid beta value
+    tinytc_status_ir_int_unsupported = 0x117,      ///< Instruction does not support int type
+    tinytc_status_ir_i1_unsupported = 0x118,       ///< Instruction does not support i1 type
+    tinytc_status_ir_complex_unsupported = 0x119,  ///< Instruction does not support complex type
+    tinytc_status_ir_forbidden_cast = 0x11a,       ///< Forbidden cast
+    tinytc_status_ir_invalid_beta = 0x11b,         ///< Invalid beta value
+    tinytc_status_ir_init_return_mismatch = 0x11c, ///< Mismatch of init values and returned values
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST

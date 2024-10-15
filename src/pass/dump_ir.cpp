@@ -271,21 +271,40 @@ void dump_ir_pass::operator()(ger_inst const &g) {
     dump_blas_a3(static_cast<blas_a3_inst const &>(g));
 }
 
-void dump_ir_pass::operator()(for_inst const &p) {
+void dump_ir_pass::operator()(for_inst const &in) {
+    if (in.num_results() > 0) {
+        do_with_infix(in.result_begin(), in.result_end(), [this](auto const &i) { dump_val(i); });
+        *os_ << " = ";
+    }
     *os_ << "for ";
-    dump_val(p.loop_var());
+    dump_val(in.loop_var());
     *os_ << "=";
-    dump_val(p.from());
+    dump_val(in.from());
     *os_ << ",";
-    dump_val(p.to());
-    if (p.has_step()) {
+    dump_val(in.to());
+    if (in.has_step()) {
         *os_ << ",";
-        dump_val(p.step());
+        dump_val(in.step());
+    }
+    if (in.num_results() > 0) {
+        *os_ << " init(";
+        for (std::int64_t i = 0; i < in.num_results(); ++i) {
+            if (i != 0) {
+                *os_ << ",";
+            }
+            dump_val(in.iter_arg(i));
+            *os_ << "=";
+            dump_val(in.iter_init(i));
+        }
+        *os_ << ") -> (";
+        do_with_infix(in.result_begin(), in.result_end(),
+                      [this](auto const &i) { visit(*this, *i.ty()); });
+        *os_ << ")";
     }
     *os_ << " : ";
-    visit(*this, *p.loop_var().ty());
+    visit(*this, *in.loop_var().ty());
     *os_ << " ";
-    dump_region(p.body());
+    dump_region(in.body());
 }
 
 void dump_ir_pass::operator()(foreach_inst const &p) {
@@ -307,6 +326,11 @@ void dump_ir_pass::operator()(hadamard_inst const &g) {
 }
 
 void dump_ir_pass::operator()(if_inst const &in) {
+
+    if (in.num_results() > 0) {
+        do_with_infix(in.result_begin(), in.result_end(), [this](auto const &i) { dump_val(i); });
+        *os_ << " = ";
+    }
     *os_ << "if ";
     dump_val(in.condition());
     *os_ << " ";

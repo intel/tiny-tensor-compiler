@@ -37,3 +37,8 @@ void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types, locat
         params_[i] = tinytc_value{param_types[i], nullptr, lc};
     }
 }
+
+void tinytc_region::set_num_params(std::size_t num_params) { params_.resize(num_params); }
+void tinytc_region::set_param(std::size_t idx, tinytc_data_type_t param_type, location const &lc) {
+    params_[idx] = tinytc_value{param_type, nullptr, lc};
+}

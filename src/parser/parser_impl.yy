@@ -17,6 +17,7 @@
     #include <memory>
     #include <new>
     #include <utility>
+    #include <tuple>
     #include <variant>
 
     namespace tinytc {
@@ -95,6 +96,7 @@
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
+    INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
@@ -175,6 +177,9 @@
 %nterm <inst> ger_inst
 %nterm <transpose> transpose
 %nterm <inst> for_inst
+%nterm <std::tuple<std::vector<std::variant<std::int64_t, std::string>>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
+%nterm <std::pair<std::vector<std::variant<std::int64_t, std::string>>, std::vector<tinytc_value_t>>> init_value_list
+%nterm <std::pair<std::variant<std::int64_t, std::string>, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
@@ -561,19 +566,27 @@ ger_inst:
 ;
 
 for_inst:
-    FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step for_loop_var_type <inst>{
+    FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] for_loop_var_type <inst>{
         check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
         check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
         if ($optional_step) {
             check_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
         }
         try {
+            auto &[lcv_id, lcv_init, lcv_type] = $lcv;
+            if (lcv_init.size() != lcv_type.size()) {
+                throw parser::syntax_error(@lcv, "Length of init value list must match scalar type list");
+            }
             location loc = @FOR;
             loc.end = @for_loop_var_type.end;
-            auto inode = std::make_unique<for_inst>($from, $to, $optional_step, $for_loop_var_type, loc);
+            auto inode = std::make_unique<for_inst>($from, $to, $optional_step, lcv_init,
+                                                    lcv_type, $for_loop_var_type, loc);
             ctx.push_scope();
             auto &loop_var = inode->loop_var();
             ctx.val($loop_var, loop_var, @loop_var);
+            for (std::int64_t i = 0; i < inode->num_results(); ++i) {
+                ctx.val(lcv_id[i], inode->iter_arg(i), @lcv);
+            }
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
@@ -590,6 +603,31 @@ for_inst:
 optional_step:
     %empty { $$ = {}; }
   | COMMA var { $$ = $var; }
+;
+
+optional_loop_carried_values:
+    %empty { $$ = {}; }
+  | INIT LPAREN init_value_list RPAREN RETURNS LPAREN scalar_type_list RPAREN {
+        $$ = std::make_tuple(std::move($init_value_list.first), std::move($init_value_list.second),
+                             std::move($scalar_type_list));
+    }
+;
+
+init_value_list:
+    init_value {
+        $$.first.emplace_back($init_value.first);
+        $$.second.emplace_back($init_value.second);
+    }
+  | init_value_list COMMA init_value {
+        $$ = std::move($1);
+        $$.first.emplace_back($init_value.first);
+        $$.second.emplace_back($init_value.second);
+    }
+;
+
+init_value:
+    LOCAL_IDENTIFIER EQUALS var { $$ = std::make_pair($LOCAL_IDENTIFIER, $var); }
+;
 
 foreach_inst:
     FOREACH LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] for_loop_var_type <inst>{
@@ -709,6 +747,7 @@ valued_inst:
   | compare_inst            { $$ = std::move($1); }
   | constant_inst           { $$ = std::move($1); }
   | expand_inst             { $$ = std::move($1); }
+  | for_inst                { $$ = std::move($1); }
   | fuse_inst               { $$ = std::move($1); }
   | group_id_inst           { $$ = std::move($1); }
   | group_size_inst         { $$ = std::move($1); }

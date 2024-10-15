@@ -363,22 +363,34 @@ class blas_a3_inst : public standard_inst<5, 0> {
     bool atomic_;
 };
 
-class loop_inst : public standard_inst<3, 0, 1> {
+class loop_inst : public standard_inst<dynamic, dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) {
         return i.type_id() >= IK::loop && i.type_id() <= IK::last_loop;
     }
     enum op_number { op_from = 0, op_to = 1, op_step = 2 };
     loop_inst(IK tid, tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+              array_view<tinytc_value_t> init_values, array_view<tinytc_data_type_t> return_types,
               tinytc_data_type_t loop_var_type, location const &loc = {});
     inline auto from() const -> tinytc_value const & { return op(op_from); }
     inline auto to() const -> tinytc_value const & { return op(op_to); }
-    inline auto has_step() const -> bool { return get_use(op_step).get() != nullptr; }
+    inline auto has_step() const -> bool { return op_init() == 3; }
     inline auto step() const -> tinytc_value const & { return op(op_step); }
     inline auto body() -> tinytc_region & { return child_region(0); }
     inline auto body() const -> tinytc_region const & { return child_region(0); }
     inline auto loop_var() -> tinytc_value & { return body().param(0); }
     inline auto loop_var() const -> tinytc_value const & { return body().param(0); }
+    inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }
+    inline auto iter_arg(std::int64_t no) const -> tinytc_value const & {
+        return body().param(no + 1);
+    }
+    inline auto iter_init(std::int64_t no) -> tinytc_value & { return op(op_init() + no); }
+    inline auto iter_init(std::int64_t no) const -> tinytc_value const & {
+        return op(op_init() + no);
+    }
+
+  private:
+    inline auto op_init() const -> std::int64_t { return num_operands() - num_results(); }
 };
 
 class alloca_inst : public standard_inst<0, 1> {
@@ -595,13 +607,12 @@ class ger_inst : public blas_a3_inst {
 class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
-    inline for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
-                    location const &loc = {})
-        : for_inst{std::move(from), std::move(to), {}, loop_var_type, loc} {}
     inline for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                    tinytc_data_type_t loop_var_type, location const &loc = {})
-        : loop_inst{IK::for_loop,    std::move(from), std::move(to),
-                    std::move(step), loop_var_type,   loc} {}
+                    array_view<tinytc_value_t> init_values,
+                    array_view<tinytc_data_type_t> return_types, tinytc_data_type_t loop_var_type,
+                    location const &loc = {})
+        : loop_inst{IK::for_loop,           std::move(from),         std::move(to), std::move(step),
+                    std::move(init_values), std::move(return_types), loop_var_type, loc} {}
 };
 
 class foreach_inst : public loop_inst {

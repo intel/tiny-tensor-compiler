@@ -80,6 +80,7 @@ enum class status {
     ir_complex_unsupported = tinytc_status_ir_complex_unsupported,
     ir_forbidden_cast = tinytc_status_ir_forbidden_cast,
     ir_invalid_beta = tinytc_status_ir_invalid_beta,
+    ir_init_return_mismatch = tinytc_status_ir_init_return_mismatch,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,

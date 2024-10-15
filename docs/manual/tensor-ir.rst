@@ -352,10 +352,10 @@ Overview
 A foreach loop that executes the loop's range [from; to) without any sequence guarantee.
 The region of a foreach is a *spmd region*.
 
-The loop's range [from; to) is given by the first integer value and second integer value,
-and the trip count is stored in the local identifier.
-The integer type of the loop variable and the loop bounds is given after the colon.
-The default integer type is ``index``.
+The trip count is stored in the first local identifier and is accessible within the loop body.
+The loop's range [from; to) is given by the first and the second local identifier after the equals sign.
+The integer type of the loop variable and the loop bounds is given after the colon and
+the default integer type is ``index``.
 
 GEMM
 ....
@@ -805,6 +805,63 @@ The product of the expand shape must be the same as the mode size.
 If the product of the expand shape is only known at runtime, then it is undefined behaviour
 if the dynamic product does not match the mode size.
 
+For
+...
+
+.. code:: abnf
+
+    multi-value-instruction = "for" local-identifier "="
+                                    local-identifier "," local-identifier ["," local-identifier]
+                              ["init" "(" init-value-list ")" "->" "(" scalar-type-list ")" ]
+                              [":" integer-type] region
+    init-value-list         = init-value *("," init-value)
+    init-value              = local-identifier "=" local-identifier
+    scalar-type-list        = scalar-type *("," scalar-type)
+
+Overview
+~~~~~~~~
+
+A for loop.
+Instructions in the for loop execute sequentially and its region is a *mixed region*.
+
+Arguments
+~~~~~~~~~
+
+The trip count is stored in the first local identifier and is accessible within the loop body.
+The loop's range [from; to) is given by the first and the second local identifier after the equals sign,
+and a step size may be given with the third local identifier after the equals sign.
+The step size defaults to 1 if omitted.
+The integer type of the loop variable and the loop bounds is given after the colon and
+the default integer type is ``index``.
+
+Values that are given in the init-value-list may be carried from one iteration to the next.
+The local identifier gives the name of the loop-carried value as it is accessible in the loop body.
+The local identifier given on the right-hand side of the init-value expression determines
+the initial value of the loop-carried value, and its type must coincide with the scalar-type-list.
+When loop-carried values are present, the loop's last instruction must be a yield instruction that
+updates the loop-carried values for the next iteration.
+The number and types of the yielded values must correspond the scalar-type-list.
+
+Returns
+~~~~~~~
+
+The final value of the loop-carried values are returned by the for instruction.
+
+
+Example:
+
+   .. code::
+
+       %from = constant 2 -> i32
+       %to = constant 6 -> i32
+       %f0 = constant 0 -> i64
+       %f1 = constant 1 -> i64
+       %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) : i32 {
+           %fn = arith.add %fn_2, %fn_1 : i64
+           yield %fn_1, %fn : i64, i64
+       }
+       ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
+
 Fuse
 ....
 
@@ -894,9 +951,8 @@ If
 
 .. code:: abnf
 
-    multi-value-instruction = "if" local-identifier ["->" "(" scalar-type-list ")"]
-                              region ["else" region]
-    type-list               = scalar-type *("," scalar-type)
+    multi-value-instruction =/ "if" local-identifier ["->" "(" scalar-type-list ")"]
+                               region ["else" region]
 
 Overview
 ~~~~~~~~
@@ -906,8 +962,8 @@ Both regions are *mixed regions*.
 
 The condition must be of bool type.
 
-Arguments
-~~~~~~~~~
+Returns
+~~~~~~~
 
 The if instruction may return multiple values, where the number of values and the value types
 are given by the scalar-type-list.
@@ -970,27 +1026,6 @@ Overview
 ~~~~~~~~
 
 Returns the number of subgroups the work-group is divided in; i32 integer.
-
-For
-...
-
-.. code:: abnf
-
-    instruction     =/ "for" local-identifier "=" local-identifier "," local-identifier
-                       ["," local-identifier] [":" integer-type] region
-
-Overview
-~~~~~~~~
-
-A for loop.
-Instructions in the for loop execute sequentially and its region is a *mixed region*.
-
-The loop's range [from; to) is given by the first integer constant and second integer constant,
-and the trip count is stored in the local identifier.
-A step size can be given with the third integer constant.
-The step size defaults to 1 if omitted.
-The integer type of the loop variable and the loop bounds is given after the colon.
-The default integer type is ``index``.
 
 Size
 ....

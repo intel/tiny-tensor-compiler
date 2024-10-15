@@ -64,6 +64,8 @@ struct tinytc_region final {
     }
     inline auto num_params() const noexcept -> std::int64_t { return params_.size(); }
     void set_params(tinytc::array_view<tinytc_data_type_t> param_types, tinytc::location const &lc);
+    void set_num_params(std::size_t num_params);
+    void set_param(std::size_t idx, tinytc_data_type_t param_type, tinytc::location const &lc);
 
   private:
     static auto inst_list_offset() -> std::size_t {

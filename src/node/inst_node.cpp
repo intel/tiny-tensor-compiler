@@ -54,14 +54,33 @@ blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
 }
 
 loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
-                     tinytc_data_type_t loop_var_type, location const &lc)
-    : standard_inst{tid, step0 ? 3 : 2} {
+                     array_view<tinytc_value_t> init_values,
+                     array_view<tinytc_data_type_t> return_types, tinytc_data_type_t loop_var_type,
+                     location const &lc)
+    : standard_inst{tid, (step0 ? 3 : 2) + static_cast<std::int64_t>(init_values.size()),
+                    static_cast<std::int64_t>(return_types.size())} {
+    if (init_values.size() != return_types.size()) {
+        throw compilation_error(loc(), status::ir_init_return_mismatch);
+    }
+
     op(op_from, from0);
     op(op_to, to0);
     if (step0) {
         op(op_step, step0);
     }
-    body().set_params(array_view{loop_var_type}, lc);
+
+    body().set_num_params(1 + return_types.size());
+    body().set_param(0, loop_var_type, lc);
+    for (std::size_t i = 0; i < return_types.size(); ++i) {
+        body().set_param(1 + i, return_types[i], lc);
+        result(i) = value_node{return_types[i], this, lc};
+    }
+    for (std::size_t i = 0; i < init_values.size(); ++i) {
+        if (init_values[i]->ty() != return_types[i]) {
+            throw compilation_error(loc(), status::ir_init_return_mismatch);
+        }
+        op(op_init() + i, init_values[i]);
+    }
     loc(lc);
 
     auto lvt = get_scalar_type(loc(), loop_var());
@@ -495,7 +514,8 @@ ger_inst::ger_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
 
 foreach_inst::foreach_inst(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
                            location const &loc)
-    : loop_inst{IK::foreach_loop, std::move(from), std::move(to), {}, loop_var_type, loc} {
+    : loop_inst{
+          IK::foreach_loop, std::move(from), std::move(to), nullptr, {}, {}, loop_var_type, loc} {
     child_region(0).kind(region_kind::spmd);
 }
 

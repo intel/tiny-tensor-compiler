@@ -96,10 +96,11 @@ lex:
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
         ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
+        "init"              { adv_loc(); return parser::make_INIT(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
-        ".local"             { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
-        ".global"            { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
+        ".local"            { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
+        ".global"           { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
 
         // constants
         "true"              { adv_loc(); return parser::make_INTEGER_CONSTANT(1, loc_); }

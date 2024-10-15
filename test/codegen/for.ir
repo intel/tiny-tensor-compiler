@@ -6,11 +6,37 @@ func @for1() {
   %lb0 = constant 0 -> index
   %ub0 = constant 10 -> index
   for %0 = %lb0,%ub0 {
-  ; CHECK: for (long x = lb0; x < ub0; ++x)
   }
   %lb1 = constant -2 -> i16
   %ub1 = constant 2 -> i16
   for %1 = %lb1,%ub1 : i16 {
-  ; CHECK: for (short x = lb1; x < ub1; ++x)
   }
+; CHECK-LABEL: void for1({{.*}}
+; CHECK: for (long x = lb0; x < ub0; ++x)
+; CHECK: for (short x = lb1; x < ub1; ++x)
+}
+
+func @for2(%fib: memref<i64>) {
+  %from = constant 2 -> i32
+  %to = constant 6 -> i32
+  %f0 = constant 0 -> i64
+  %f1 = constant 1 -> i64
+  %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) : i32 {
+    %fn = arith.add %fn_2, %fn_1 : i64
+    yield %fn_1, %fn : i64, i64
+  }
+  store %fn, %fib[] : memref<i64>
+; CHECK-LABEL: void for2({{.*}}
+; CHECK:      long f0 = 0ll;
+; CHECK-NEXT: long f1 = 1ll;
+; CHECK-NEXT: long fn_2 = f0;
+; CHECK-NEXT: long fn_1 = f1;
+; CHECK-NEXT: for (int n = from; n < to; ++n) {
+; CHECK-NEXT:     long fn = fn_2 + fn_1;
+; CHECK-NEXT:     fn_2 = fn_1;
+; CHECK-NEXT:     fn_1 = fn;
+; CHECK-NEXT: }
+; CHECK-NEXT: long fn_11 = fn_2;
+; CHECK-NEXT: long fn = fn_1;
+; CHECK-NEXT: *fib = fn;
 }

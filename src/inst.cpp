@@ -511,14 +511,20 @@ tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t 
 }
 
 tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from, tinytc_value_t to,
-                                       tinytc_value_t step, tinytc_data_type_t loop_var_type,
+                                       tinytc_value_t step, uint32_t init_list_size,
+                                       const tinytc_value_t *initial_value_list,
+                                       const tinytc_data_type_t *return_type_list,
+                                       tinytc_data_type_t loop_var_type,
                                        const tinytc_location_t *loc) {
-    if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr) {
+    if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr ||
+        (init_list_size != 0 && (initial_value_list == nullptr || return_type_list == nullptr))) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<for_inst>(from, to, step, loop_var_type, get_optional(loc)).release();
+        *instr = std::make_unique<for_inst>(
+                     from, to, step, array_view{initial_value_list, init_list_size},
+                     array_view{return_type_list, init_list_size}, loop_var_type, get_optional(loc))
+                     .release();
     });
 }
 

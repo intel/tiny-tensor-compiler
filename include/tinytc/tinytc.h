@@ -691,7 +691,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @brief Create for loop
  *
  * @code
- * for %loop_var = %from, %to, %step : loop_var_type { }
+ * for %loop_var = %from, %to, %step init(initial_value_list) : loop_var_type { }
  * ; loop_var_type == type(%from)
  * ; loop_var_type == type(%to)
  * ; loop_var_type == type(%step)
@@ -701,6 +701,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @param from [in] loop begion
  * @param to [in] loop bound
  * @param step [in][optional] loop step; can be nullptr
+ * @param init_list_size [in] length of init_value_list and return_type_list
+ * @param init_value_list [in][range(0, init_list_size)] array of initial values; can be
+ * nullptr if init_value_list is 0
+ * @param return_type_list [in][range(0, init_list_size)] return type array; can be nullptr
+ * if return_type_list_size is 0
  * @param loop_var_type [in] type of loop variable
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -708,6 +713,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  */
 TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
                                                      tinytc_value_t to, tinytc_value_t step,
+                                                     uint32_t init_list_size,
+                                                     const tinytc_value_t *init_value_list,
+                                                     const tinytc_data_type_t *return_type_list,
                                                      tinytc_data_type_t loop_var_type,
                                                      const tinytc_location_t *loc);
 

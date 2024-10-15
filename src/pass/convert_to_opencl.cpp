@@ -784,18 +784,30 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
     return {bb.get_product()};
 }
 
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &p) {
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &in) {
     auto clinst = std::vector<clir::stmt>{};
-    yielded_vars_.push_back(std::vector<clir::var>{});
 
-    auto lv = declare(p.loop_var());
-    auto lv_ty = visit(*this, *p.loop_var().ty());
-    auto start = clir::declaration_assignment(std::move(lv_ty), lv, val(p.from()));
-    auto condition = lv < val(p.to());
-    auto step = p.has_step() ? clir::add_into(lv, val(p.step())) : ++lv;
-    auto body = run_on_region(p.body());
+    yielded_vars_.push_back(std::vector<clir::var>{});
+    for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        auto v = declare(in.iter_arg(i));
+        clinst.emplace_back(clir::declaration_assignment(visit(*this, *in.iter_arg(i).ty()), v,
+                                                         val(in.iter_init(i))));
+        yielded_vars_.back().emplace_back(std::move(v));
+    }
+
+    auto lv = declare(in.loop_var());
+    auto lv_ty = visit(*this, *in.loop_var().ty());
+    auto start = clir::declaration_assignment(std::move(lv_ty), lv, val(in.from()));
+    auto condition = lv < val(in.to());
+    auto step = in.has_step() ? clir::add_into(lv, val(in.step())) : ++lv;
+    auto body = run_on_region(in.body());
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
+
+    for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        clinst.emplace_back(clir::declaration_assignment(
+            visit(*this, *in.result(i).ty()), declare(in.result(i)), yielded_vars_.back()[i]));
+    }
 
     yielded_vars_.pop_back();
     return clinst;
