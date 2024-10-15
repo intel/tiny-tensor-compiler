@@ -82,6 +82,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         fn_body.get_parameters(params);
 
         auto dt = params[0];
+        dt.set_name("dt");
         auto A = [&params](std::size_t i) -> value & { return params[1 + i]; };
         auto K = [&params](std::size_t i) -> value & { return params[1 + dim + i]; };
         auto Q = params[1 + 2 * dim + 0];
@@ -92,10 +93,6 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         }
         Q.set_name("Q");
         I.set_name("I");
-
-        T dt0 = T{1.01};
-        T num = T{1};
-        int denom = 1;
 
         auto bb = region_builder{fn_body};
         auto const c0 = bb.add(make_constant_zero(element_ty));
@@ -113,10 +110,14 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         auto i = bb.add(make_subview(I, static_offsets3, static_sizes3(I_opt_), offsets3));
         bb.add(make_axpby(transpose::N, false, c1, dq, c1, i));
 
+        int denom = 1;
+        auto cnum = c1;
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         for (std::int64_t n = 1; n <= N_; ++n) {
-            num *= dt0;
+            cnum = bb.add(make_arith(arithmetic::mul, cnum, dt));
             denom *= n + 1;
+            auto cdenom = bb.add(make_constant(static_cast<double>(denom), element_ty));
+            auto cfactor = bb.add(make_arith(arithmetic::div, cnum, cdenom));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.add(make_alloca(dQ_[n].local_type(element_ty)));
             auto dq_nextv = bb.add(make_subview(dq_next, static_offsets2, {bn, P_}));
@@ -129,7 +130,6 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
                                  dq_nextv));
             }
             auto iv = bb.add(make_subview(i, static_offsets2, {Bd(N_ - n), P_}));
-            auto cfactor = bb.add(make_constant(num / denom, element_ty));
             bb.add(make_axpby(transpose::N, false, cfactor, dq_next, c1, iv));
             dq = dq_next;
         }
