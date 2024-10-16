@@ -16,7 +16,9 @@ The unit of execution described by a function written in the tensor language
 is called a **kernel**. 
 Kernels are launched in batches, where each instance of the kernel is called a work-group.
 The kernel has access to its group id that is used to select the work done in the work group.
-Each work group consists of a fixed number of work-items that execute concurrently. 
+Each work group consists of a fixed number of subgroups that execute concurrently.
+Subgroups can be further divided into work-items, where the number of work-items per subgroup
+is given by the subgroup size.
 
 The language distinguishes between *collective*, *SPMD*, and *mixed* instructions.
 A collective instruction distributes the work among the work-items in an implementation-defined manner.
@@ -250,6 +252,21 @@ The default offset is 0.
 Dynamic values ('?') may appear in the memref-type and in the offset.
 These values are stored in the dope vector;
 the calling convention for groups is implementation-defined.
+
+Cooperative matrix type
+-----------------------
+
+.. code:: abnf
+
+    coopmatrix-type             = "coopmatrix<" scalar-type 2*2("x" integer-constant) "," matrix-use ">"
+    matrix-use                  = "matrix_a" / "matrix_b" / "matrix_acc"
+
+The coopmatrix represents a matrix distributed across a subgroup, where each work-item in a subgroup
+stores a part of the matrix.
+The scalar-type specifies the matrix element type, the first integer-constant the number of rows,
+and the second integer-constant the number of columns.
+The matrix-use may affect the distribution of the matrix in the subgroup, and the name refers to the
+position of the matrix in a matrix multiplication.
 
 Instructions
 ============
@@ -587,31 +604,33 @@ Arithmetic (binary)
                                ".and"  /
                                ".or"   /
                                ".xor"
-    value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier ":" scalar-type
+    value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier
+                               ":" (scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
 
-Binary arithmetic operation on scalars.
-Both operands, as well as the returned type, have the same scalar type.
+Binary arithmetic operation on scalars and cooperative matrices.
+Both operands, as well as the returned type, have the same (underlying) scalar type.
+Arithmetic on cooperative matrices is done component-wise.
 
 The following table shows the operations' description and the types that are allowed for the operation.
 The backslash "\\" is used to exclude types from the list of allowed types.
 
-==== ============================ ================================================================
-Op   Allowed type                 Description
-==== ============================ ================================================================
-.add scalar-type                  Sum of operands
-.sub scalar-type                  Difference of operands
-.mul scalar-type                  Product of operands
-.div scalar-type                  Quotient of operands
-.rem scalar-type  \\ complex-type Remainder from the division of operands
-.shl integer-type \\ i1           Left shift first operand by second operand
-.shr integer-type \\ i1           Arithmetic right shift first operand by second operand
-.and integer-type                 Bitwise and
-.or  integer-type                 Bitwise or
-.xor integer-type                 Bitwise xor
-==== ============================ ================================================================
+==== ============================= ================================================================
+Op   Allowed type                  Description
+==== ============================= ================================================================
+.add scalar-type / coopmatrix-type Sum of operands
+.sub scalar-type / coopmatrix-type Difference of operands
+.mul scalar-type / coopmatrix-type Product of operands
+.div scalar-type / coopmatrix-type Quotient of operands
+.rem scalar-type  \\ complex-type  Remainder from the division of operands
+.shl integer-type \\ i1            Left shift first operand by second operand
+.shr integer-type \\ i1            Arithmetic right shift first operand by second operand
+.and integer-type                  Bitwise and
+.or  integer-type                  Bitwise or
+.xor integer-type                  Bitwise xor
+==== ============================= ================================================================
 
 Arithmetic (unary)
 ..................
@@ -619,12 +638,13 @@ Arithmetic (unary)
 .. code:: abnf
 
     arith-unary-type        =  ".abs" / ".neg"  / ".not" / ".conj" / ".im" / ".re"
-    value-instruction       =/ "arith" arith-unary-type local-identifier ":" scalar-type
+    value-instruction       =/ "arith" arith-unary-type local-identifier
+                               ":" (scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
 
-Unary arithmetic operation on scalars.
+Unary arithmetic operation on scalars and cooperative matrices.
 For integer and floating point input, the returned value has the same type as the operand.
 For complex input, the returned value has the underlying floating point type
 for ".abs", ".im", and ".re", and the returned value has the same type as the operand
@@ -632,16 +652,16 @@ for ".neg" and ".conj".
 
 The following table shows the operations' description and the types that are allowed for the operation.
 
-===== ============ ==============================================================================
+===== ============================= =============================
 Op    Allowed type Description
-===== ============ ==============================================================================
-.abs  scalar-type  Compute absolute value
-.neg  scalar-type  Negation
-.not  integer-type Bitwise not
-.conj complex-type Complex conjugate
-.im   complex-type Extract imaginary part
-.re   complex-type Extract real part
-===== ============ ==============================================================================
+===== ============================= =============================
+.abs  scalar-type                   Compute absolute value
+.neg  scalar-type / coopmatrix-type Negation
+.not  integer-type                  Bitwise not
+.conj complex-type                  Complex conjugate
+.im   complex-type                  Extract imaginary part
+.re   complex-type                  Extract real part
+===== ============================= =============================
 
 Barrier
 .......
@@ -677,11 +697,12 @@ Cast
 .. code:: abnf
 
     value-instruction       =/ "cast" local-identifier ":" scalar-type "->" scalar-type
+    value-instruction       =/ "cast" local-identifier ":" coopmatrix-type "->" coopmatrix-type
 
 Overview
 ~~~~~~~~
 
-Cast scalar values.
+Cast scalar values or cooperative matrices.
 Casts from complex types to non-complex types are forbidden.
 The following table summarizes the casts and the mapping to SPIR-V:
 
@@ -732,14 +753,116 @@ Constant
 
 .. code:: abnf
 
-    value-instruction       =/ "constant" constant "->" scalar-type
+    value-instruction       =/ "constant" constant "->" (scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
 
 Sets the result value to a constant value.
-The type of the constant must match the scalar type
+The type of the constant must match the (underlying) scalar type
 (e.g. an integer type requires an integer-constant and a floating type requires a floating-constant).
+
+When the result is a cooperative matrix, all entries are set to the same constant value.
+
+Cooperative matrix load
+.......................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_load" [".checked"] transpose
+                                   local-identifier "[" local-identifier "," local-identifier "]"
+                                   ":" memref-type "->" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Load a cooperative matrix from a 2d-memref at the position given by the indices in square brackets.
+The position gives the starting row and column index, that is,
+when a coopmatrix of size :math:`X\times Y` is loaded from memref :math:`M` at
+position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are given by
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2] 
+
+When the checked flag is set, memory loads that would be out of bounds are not executed and the corresponding
+value in the cooperative matrix are set to 0.
+
+When the transpose modifier ".t" is given, we have
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + j) S_1 + (y + i) S_2] 
+
+Arguments
+~~~~~~~~~
+
+The first operand must have memref type of dimension 2 with the same underlying scalar type
+as the coopmatrix type.
+The indices must be of ``index`` type.
+
+Cooperative matrix mul add
+..........................
+
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_mul_add"
+                                   local-identifier "," local-identifier "," local-identifier
+                                   ":" coopmatrix-type "," coopmatrix-type "," coopmatrix-type
+                                   "->" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Matrix mul add returns the value of 
+
+.. math::
+
+    AB + C,
+
+where A, B, and C are matrices given by the three operands.
+
+The operands must have cooperative matrix type, where the first operand has shape :math:`M\times K`
+with use "matrix_a", the second operand has shape :math:`K\times N` with use "matrix_b",
+and the third operand and the result have shape :math:`M\times N` with use "matrix_acc".
+
+The underlying scalar types of the operands and the result do not need to match.
+
+Cooperative matrix store
+........................
+
+.. code:: abnf
+
+    instruction     =/ "cooperative_matrix_store" [".checked"] [store-flag]
+                       local-identifier "," local-identifier "[" local-identifier "," local-identifier "]"
+                       ":" coopmatrix-type "," memref-type
+
+Overview
+~~~~~~~~
+
+Store a cooperative matrix value in a 2d-memref at the position given by the indices in square brackets.
+The position gives the starting row and column index, that is,
+when a coopmatrix of size :math:`X\times Y` is written to memref :math:`M` at
+position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are written to
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij}
+
+If the checked flag is set, only memory locations that are in-bounds are written.
+
+The store is atomic when the atomic flag is set with relaxed memory ordering.
+When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
+
+When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
+for the the real and imaginary separately.
+
+Arguments
+~~~~~~~~~
+
+The first operand must have cooperative matrix type with the same underlying scalar type as the memref type.
+The indices must be of ``index`` type.
 
 Expand
 ......
@@ -1221,7 +1344,7 @@ Subgroup local id
 Overview
 ~~~~~~~~
 
-Returns the work-item id within the sub-group; i32 integer from 0 to subgroup_size - 1.
+Returns the work-item id within the subgroup; i32 integer from 0 to subgroup_size - 1.
 
 Sample code
 ===========
