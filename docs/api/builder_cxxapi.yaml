@@ -7,6 +7,7 @@ Builder C++-API:
       - tinytc::arithmetic
       - tinytc::arithmetic_unary
       - tinytc::cmp_condition
+      - tinytc::matrix_use
       - tinytc::scalar_type
       - tinytc::store_flag
       - tinytc::transpose
@@ -16,6 +17,7 @@ Builder C++-API:
       - tinytc::to_string(arithmetic)
       - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)
@@ -29,8 +31,9 @@ Builder C++-API:
       - tinytc::dynamic
   Data Type:
     function:
-      - tinytc::get_memref
+      - tinytc::get_coopmatrix
       - tinytc::get_group
+      - tinytc::get_memref
       - tinytc::get_scalar
     struct:
       - tinytc::to_scalar_type

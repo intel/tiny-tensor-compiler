@@ -16,6 +16,19 @@
 using namespace tinytc;
 
 extern "C" {
+
+char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u) {
+    switch (u) {
+    case tinytc_matrix_use_a:
+        return "matrix_a";
+    case tinytc_matrix_use_b:
+        return "matrix_b";
+    case tinytc_matrix_use_acc:
+        return "matrix_acc";
+    }
+    return "unknown";
+}
+
 tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
                                        tinytc_scalar_type_t type) {
     if (dt == nullptr || ctx == nullptr) {
@@ -51,5 +64,18 @@ tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_data_type_t
 
     return exception_to_status_code(
         [&] { *dt = group_data_type::get(memref_ty, offset, get_optional(loc)); });
+}
+
+tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt, tinytc_data_type_t scalar_ty,
+                                           int64_t rows, int64_t cols, tinytc_matrix_use_t use,
+                                           const tinytc_location_t *loc) {
+    if (dt == nullptr || scalar_ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    return exception_to_status_code([&] {
+        *dt = coopmatrix_data_type::get(scalar_ty, rows, cols, enum_cast<matrix_use>(use),
+                                        get_optional(loc));
+    });
 }
 }

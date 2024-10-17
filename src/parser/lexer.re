@@ -127,12 +127,18 @@ lex:
             auto t = lex_floating_type(b, YYCURSOR);
             return parser::make_FLOATING_TYPE(t, loc_);
         }
+        "coopmatrix"        { adv_loc(); return parser::make_COOPMATRIX(loc_); }
         "memref"            { adv_loc(); return parser::make_MEMREF(loc_); }
         "group"             { adv_loc(); return parser::make_GROUP(loc_); }
 
         // layouts
         "offset"            { adv_loc(); return parser::make_OFFSET(loc_); }
         "strided"           { adv_loc(); return parser::make_STRIDED(loc_); }
+
+        // matrix use
+        "matrix_a"          { adv_loc(); return parser::make_MATRIX_USE(matrix_use::a, loc_); }
+        "matrix_b"          { adv_loc(); return parser::make_MATRIX_USE(matrix_use::b, loc_); }
+        "matrix_acc"        { adv_loc(); return parser::make_MATRIX_USE(matrix_use::acc, loc_); }
 
         // instructions
         "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }

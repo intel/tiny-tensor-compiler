@@ -101,6 +101,7 @@
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
     GLOBAL_ATTR     ".global"
+    COOPMATRIX      "coopmatrix"
     MEMREF          "memref"
     GROUP           "group"
     OFFSET          "offset"
@@ -144,6 +145,7 @@
 %token <arithmetic> ARITHMETIC
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <cmp_condition> CMP_CONDITION
+%token <matrix_use> MATRIX_USE
 
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
@@ -154,6 +156,7 @@
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
 %nterm <tinytc_data_type_t> scalar_type
+%nterm <tinytc_data_type_t> coopmatrix_type
 %nterm <tinytc_data_type_t> memref_type
 %nterm <address_space> optional_address_space
 %nterm <std::vector<std::int64_t>> mode_list
@@ -314,6 +317,7 @@ attribute:
 
 data_type:
     scalar_type
+  | coopmatrix_type
   | memref_type
   | group_type
 ;
@@ -321,6 +325,17 @@ data_type:
 scalar_type:
     INTEGER_TYPE  { $$ = get_scalar(ctx.cctx(), $INTEGER_TYPE); }
   | FLOATING_TYPE { $$ = get_scalar(ctx.cctx(), $FLOATING_TYPE); }
+;
+
+coopmatrix_type:
+    COOPMATRIX LCHEV scalar_type TIMES INTEGER_CONSTANT[rows] TIMES INTEGER_CONSTANT[cols] COMMA MATRIX_USE RCHEV {
+        try {
+            $$ = get_coopmatrix($scalar_type, $rows, $cols, $MATRIX_USE, @coopmatrix_type);
+        } catch (compilation_error const& e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
 ;
 
 memref_type:
@@ -775,7 +790,7 @@ alloca_inst:
 ;
 
 arith_inst:
-    ARITH ARITHMETIC var[a] COMMA var[b] COLON scalar_type[ty] {
+    ARITH ARITHMETIC var[a] COMMA var[b] COLON data_type[ty] {
         check_type($a, $ty, @a, @ty);
         check_type($b, $ty, @b, @ty);
         try {
@@ -791,7 +806,7 @@ arith_inst:
 ;
 
 arith_unary_inst:
-    ARITH ARITHMETIC_UNARY var[a] COLON scalar_type[ty] {
+    ARITH ARITHMETIC_UNARY var[a] COLON data_type[ty] {
         check_type($a, $ty, @a, @ty);
         try {
             $$ = inst {

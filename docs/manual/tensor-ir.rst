@@ -611,7 +611,7 @@ Overview
 ~~~~~~~~
 
 Binary arithmetic operation on scalars and cooperative matrices.
-Both operands, as well as the returned type, have the same (underlying) scalar type.
+Both operands, as well as the returned type, have the same scalar or component type.
 Arithmetic on cooperative matrices is done component-wise.
 
 The following table shows the operations' description and the types that are allowed for the operation.
@@ -646,7 +646,7 @@ Overview
 
 Unary arithmetic operation on scalars and cooperative matrices.
 For integer and floating point input, the returned value has the same type as the operand.
-For complex input, the returned value has the underlying floating point type
+For complex input, the returned value has the component floating point type
 for ".abs", ".im", and ".re", and the returned value has the same type as the operand
 for ".neg" and ".conj".
 
@@ -703,8 +703,10 @@ Overview
 ~~~~~~~~
 
 Cast scalar values or cooperative matrices.
+The shape and the use the coopmatrix types must match.
 Casts from complex types to non-complex types are forbidden.
-The following table summarizes the casts and the mapping to SPIR-V:
+The following table summarizes the casts and the mapping to SPIR-V
+(the casts are done component-wise for coopmatrix types):
 
 ============= ============= ==================================================
 Operand type  Result type   SPIR-V Op
@@ -759,7 +761,7 @@ Overview
 ~~~~~~~~
 
 Sets the result value to a constant value.
-The type of the constant must match the (underlying) scalar type
+The type of the constant must match the scalar or component type
 (e.g. an integer type requires an integer-constant and a floating type requires a floating-constant).
 
 When the result is a cooperative matrix, all entries are set to the same constant value.
@@ -797,13 +799,12 @@ When the transpose modifier ".t" is given, we have
 Arguments
 ~~~~~~~~~
 
-The first operand must have memref type of dimension 2 with the same underlying scalar type
+The first operand must have memref type of dimension 2 with the same component type
 as the coopmatrix type.
 The indices must be of ``index`` type.
 
 Cooperative matrix mul add
 ..........................
-
 
 .. code:: abnf
 
@@ -827,7 +828,22 @@ The operands must have cooperative matrix type, where the first operand has shap
 with use "matrix_a", the second operand has shape :math:`K\times N` with use "matrix_b",
 and the third operand and the result have shape :math:`M\times N` with use "matrix_acc".
 
-The underlying scalar types of the operands and the result do not need to match.
+The component types of the operands and the result do not need to match.
+
+Cooperative matrix scale
+........................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_scale"
+                                   local-identifier "," local-identifier
+                                   ":" scalar-type "," coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Scale a matrix by a scalar.
+The scalar type of the scalar and the component type of the matrix must match.
 
 Cooperative matrix store
 ........................
@@ -861,7 +877,7 @@ for the the real and imaginary separately.
 Arguments
 ~~~~~~~~~
 
-The first operand must have cooperative matrix type with the same underlying scalar type as the memref type.
+The first operand must have cooperative matrix type with the same component type as the memref type.
 The indices must be of ``index`` type.
 
 Expand

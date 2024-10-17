@@ -15,9 +15,10 @@
 #include <vector>
 
 namespace tinytc {
-enum class DTK { group, memref, scalar, void_ };
-using data_type_nodes = type_list<class group_data_type, class memref_data_type,
-                                  class scalar_data_type, class void_data_type>;
+enum class DTK { coopmatrix, group, memref, scalar, void_ };
+using data_type_nodes =
+    type_list<class coopmatrix_data_type, class group_data_type, class memref_data_type,
+              class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
 struct tinytc_data_type {
@@ -38,6 +39,42 @@ struct tinytc_data_type {
 namespace tinytc {
 
 using data_type_node = ::tinytc_data_type;
+
+class coopmatrix_data_type : public data_type_node {
+  public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::coopmatrix; }
+    static auto get(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols, matrix_use use,
+                    location const &lc = {}) -> tinytc_data_type_t;
+
+    inline auto ty() const -> tinytc_data_type_t { return ty_; }
+    auto component_ty() const -> scalar_type;
+    inline auto rows() const -> std::int64_t { return rows_; }
+    inline auto cols() const -> std::int64_t { return cols_; }
+    inline auto use() const -> matrix_use { return use_; }
+    // Number of components per work-item
+    inline auto length(std::int32_t subgroup_size) const -> std::int64_t {
+        const std::int64_t blocks = 1 + (rows_ - 1) / subgroup_size;
+        return blocks * cols_;
+    }
+
+  protected:
+    coopmatrix_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t rows,
+                         std::int64_t cols, matrix_use use, location const &lc = {});
+
+  private:
+    tinytc_data_type_t ty_;
+    std::int64_t rows_, cols_;
+    matrix_use use_;
+};
+
+struct coopmatrix_data_type_key {
+    tinytc_data_type_t ty;
+    std::int64_t rows, cols;
+    matrix_use use;
+
+    auto hash() -> std::uint64_t;
+    auto operator==(coopmatrix_data_type const &ct) -> bool;
+};
 
 class group_data_type : public data_type_node {
   public:

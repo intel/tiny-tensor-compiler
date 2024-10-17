@@ -7,6 +7,7 @@ Builder C-API:
       - tinytc_arithmetic_t
       - tinytc_arithmetic_unary_t
       - tinytc_cmp_condition_t
+      - tinytc_matrix_use_t
       - tinytc_scalar_type_t
       - tinytc_store_flag_t
       - tinytc_transpose_t
@@ -17,6 +18,7 @@ Builder C-API:
       - tinytc_arithmetic_to_string
       - tinytc_arithmetic_unary_to_string
       - tinytc_cmp_condition_to_string
+      - tinytc_matrix_use_to_string
       - tinytc_scalar_type_size
       - tinytc_scalar_type_to_string
       - tinytc_store_flag_to_string
@@ -41,6 +43,7 @@ Builder C-API:
       - const_tinytc_value_t
   Data Type:
     function:
+      - tinytc_coopmatrix_type_get
       - tinytc_group_type_get
       - tinytc_memref_type_get
       - tinytc_scalar_type_get

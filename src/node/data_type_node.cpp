@@ -18,6 +18,53 @@
 
 namespace tinytc {
 
+auto coopmatrix_data_type::get(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols,
+                               matrix_use use, location const &lc) -> tinytc_data_type_t {
+    auto ctx = ty->context();
+
+    auto key = coopmatrix_data_type_key(ty, rows, cols, use);
+    std::uint64_t map_key = key.hash();
+
+    auto &tys = ctx->cache()->coopmatrix_tys;
+    auto range = tys.equal_range(map_key);
+    for (auto it = range.first; it != range.second; ++it) {
+        if (key == *dyn_cast<coopmatrix_data_type>(it->second)) {
+            return it->second;
+        }
+    }
+    auto new_ct = std::unique_ptr<coopmatrix_data_type>(
+        new coopmatrix_data_type(ctx, key.ty, key.rows, key.cols, key.use, lc));
+    return tys.emplace(map_key, new_ct.release())->second;
+}
+
+coopmatrix_data_type::coopmatrix_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty,
+                                           std::int64_t rows, std::int64_t cols, matrix_use use,
+                                           location const &lc)
+    : data_type_node(DTK::coopmatrix, ctx), ty_(std::move(ty)), rows_(rows), cols_(cols),
+      use_(use) {
+    if (!isa<scalar_data_type>(*ty_)) {
+        throw compilation_error(lc, status::ir_expected_scalar);
+    }
+    if (rows_ < 0 || is_dynamic_value(rows_)) {
+        throw compilation_error(lc, status::ir_invalid_shape);
+    }
+    if (cols_ < 0 || is_dynamic_value(cols_)) {
+        throw compilation_error(lc, status::ir_invalid_shape);
+    }
+}
+
+auto coopmatrix_data_type::component_ty() const -> scalar_type {
+    return dyn_cast<scalar_data_type>(ty_)->ty();
+}
+
+auto coopmatrix_data_type_key::hash() -> std::uint64_t {
+    return fnv1a_combine(ty, rows, cols, use);
+}
+
+auto coopmatrix_data_type_key::operator==(coopmatrix_data_type const &ct) -> bool {
+    return ty == ct.ty() && rows == ct.rows() && cols == ct.cols() && use == ct.use();
+}
+
 auto group_data_type::get(tinytc_data_type_t ty, std::int64_t offset,
                           location const &lc) -> tinytc_data_type_t {
     auto ctx = ty->context();

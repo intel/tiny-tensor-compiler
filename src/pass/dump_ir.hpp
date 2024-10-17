@@ -23,6 +23,7 @@ class dump_ir_pass {
 
     /* Data type nodes */
     void operator()(void_data_type const &);
+    void operator()(coopmatrix_data_type const &ct);
     void operator()(group_data_type const &g);
     void operator()(memref_data_type const &m);
     void operator()(scalar_data_type const &s);

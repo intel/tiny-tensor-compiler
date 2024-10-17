@@ -169,7 +169,14 @@ auto constant_folding::operator()(arith_inst &in) -> fold_result {
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
     if (at == nullptr) {
-        throw compilation_error(op_a.loc(), status::ir_expected_scalar);
+        // Arithmetic on coopmatrix is component-wise and if a coopmatrix is constant, then all
+        // elements have the same value. Thus, constant folding on coopmatrix types is identical to
+        // constant folding on scalar types.
+        auto ct = dyn_cast<coopmatrix_data_type>(op_a.ty());
+        if (ct == nullptr) {
+            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
+        }
+        at = dyn_cast<scalar_data_type>(ct->ty());
     }
 
     if (a_const != nullptr && b_const != nullptr) {
@@ -200,7 +207,14 @@ auto constant_folding::operator()(arith_unary_inst &in) -> fold_result {
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
     if (at == nullptr) {
-        throw compilation_error(op_a.loc(), status::ir_expected_scalar);
+        // Arithmetic on coopmatrix is component-wise and if a coopmatrix is constant, then all
+        // elements have the same value. Thus, constant folding on coopmatrix types is identical to
+        // constant folding on scalar types.
+        auto ct = dyn_cast<coopmatrix_data_type>(op_a.ty());
+        if (ct == nullptr) {
+            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
+        }
+        at = dyn_cast<scalar_data_type>(ct->ty());
     }
 
     auto computer = compute_unary_op{in.operation(), op_a.ty(), in.loc()};
@@ -218,7 +232,14 @@ auto constant_folding::operator()(cast_inst &in) -> fold_result {
 
     auto rt = dyn_cast<scalar_data_type>(in.result(0).ty());
     if (rt == nullptr) {
-        throw compilation_error(in.result(0).loc(), status::ir_expected_scalar);
+        // Cast on coopmatrix is component-wise and if a coopmatrix is constant, then all
+        // elements have the same value. Thus, constant folding on coopmatrix types is identical to
+        // constant folding on scalar types.
+        auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty());
+        if (ct == nullptr) {
+            throw compilation_error(in.result(0).loc(), status::ir_expected_coopmatrix_or_scalar);
+        }
+        rt = dyn_cast<scalar_data_type>(ct->ty());
     }
 
     return std::visit(

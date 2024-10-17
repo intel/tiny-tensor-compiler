@@ -23,6 +23,11 @@ dump_ir_pass::dump_ir_pass(std::ostream &os, int level_limit) : os_(&os), lvl_li
 
 /* Data type nodes */
 void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
+void dump_ir_pass::operator()(coopmatrix_data_type const &ct) {
+    *os_ << "coopmatrix<";
+    visit(*this, *ct.ty());
+    *os_ << "x" << ct.rows() << "x" << ct.cols() << "," << to_string(ct.use()) << ">";
+}
 void dump_ir_pass::operator()(group_data_type const &g) {
     *os_ << "group<";
     visit(*this, *g.ty());

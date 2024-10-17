@@ -59,6 +59,8 @@ enum class status {
     ir_scalar_mismatch = tinytc_status_ir_scalar_mismatch,
     ir_invalid_number_of_indices = tinytc_status_ir_invalid_number_of_indices,
     ir_expected_scalar = tinytc_status_ir_expected_scalar,
+    ir_expected_coopmatrix = tinytc_status_ir_expected_coopmatrix,
+    ir_expected_coopmatrix_or_scalar = tinytc_status_ir_expected_coopmatrix_or_scalar,
     ir_expected_memref = tinytc_status_ir_expected_memref,
     ir_expected_memref_or_scalar = tinytc_status_ir_expected_memref_or_scalar,
     ir_expected_memref_or_group = tinytc_status_ir_expected_memref_or_group,
@@ -78,6 +80,7 @@ enum class status {
     ir_int_unsupported = tinytc_status_ir_int_unsupported,
     ir_i1_unsupported = tinytc_status_ir_i1_unsupported,
     ir_complex_unsupported = tinytc_status_ir_complex_unsupported,
+    ir_coopmatrix_unsupported = tinytc_status_ir_coopmatrix_unsupported,
     ir_forbidden_cast = tinytc_status_ir_forbidden_cast,
     ir_invalid_beta = tinytc_status_ir_invalid_beta,
     ir_init_return_mismatch = tinytc_status_ir_init_return_mismatch,
@@ -270,6 +273,13 @@ enum class store_flag {
     regular = tinytc_store_flag_regular,      ///< Non-atomic store
     atomic = tinytc_store_flag_atomic,        ///< Atomic store
     atomic_add = tinytc_store_flag_atomic_add ///< Atomic fetch add
+};
+
+//! Matrix use
+enum class matrix_use {
+    a = tinytc_matrix_use_a,    ///< matrix_a
+    b = tinytc_matrix_use_b,    ///< matrix_b
+    acc = tinytc_matrix_use_acc ///< matrix_acc
 };
 
 //! @brief Cf. @ref tinytc_core_feature_flag_t

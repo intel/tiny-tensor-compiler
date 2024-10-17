@@ -156,19 +156,19 @@ auto convert_to_opencl_pass::get_memref_type(value_node const &v) const
 }
 
 auto convert_to_opencl_pass::get_scalar_type(value_node const &v) -> scalar_type {
-    return visit(overloaded{[](scalar_data_type const &i) -> scalar_type { return i.ty(); },
-                            [](memref_data_type const &i) -> scalar_type { return i.element_ty(); },
-                            [&](auto const &) -> scalar_type {
-                                throw compilation_error(v.loc(),
-                                                        status::ir_expected_memref_or_scalar);
-                                return scalar_type{};
-                            }},
-                 *v.ty());
+    auto st = dyn_cast<scalar_data_type>(v.ty());
+    if (!st) {
+        throw compilation_error(v.loc(), status::ir_expected_scalar);
+    }
+    return st->ty();
 };
 
 /* Data type nodes */
 clir::data_type convert_to_opencl_pass::operator()(void_data_type const &) {
     return clir::builtin_type::void_t;
+}
+clir::data_type convert_to_opencl_pass::operator()(coopmatrix_data_type const &ct) {
+    return array_of(to_clir_ty(ct.component_ty()), ct.length(core_cfg_.subgroup_size));
 }
 clir::data_type convert_to_opencl_pass::operator()(group_data_type const &g) {
     auto ptr_ty = visit(*this, *g.ty());
@@ -355,10 +355,27 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_inst const &a) 
         }
         return {};
     };
-    auto sty = get_scalar_type(a.a());
-    auto v = declare(*a.result());
-    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.operation(), val(a.a()), val(a.b()), sty))};
+
+    auto lhs = declare(a.result(0));
+    auto lhs_ty = visit(*this, *a.result()->ty());
+    auto av = val(a.a());
+    auto bv = val(a.b());
+    if (auto st = dyn_cast<scalar_data_type>(a.result(0).ty()); st) {
+        auto op = make(a.operation(), av, bv, st->ty());
+        return {declaration_assignment(std::move(lhs_ty), std::move(lhs), std::move(op))};
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(a.result(0).ty()); ct) {
+        auto clinst = std::vector<clir::stmt>{};
+        auto const len = ct->length(core_cfg_.subgroup_size);
+        clinst.reserve(len + 1);
+        clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+        const auto sty = ct->component_ty();
+        for (std::int64_t i = 0; i < len; ++i) {
+            auto op = make(a.operation(), av[i], bv[i], sty);
+            clinst.emplace_back(expression_statement(assignment(lhs[i], std::move(op))));
+        }
+        return clinst;
+    }
+    throw compilation_error(a.loc(), status::ir_expected_coopmatrix_or_scalar);
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst const &a) {
@@ -389,36 +406,72 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
         }
         return {};
     };
-    auto sty = get_scalar_type(a.a());
-    auto v = declare(*a.result());
-    return {declaration_assignment(visit(*this, *a.result()->ty()), std::move(v),
-                                   make(a.operation(), val(a.a()), sty))};
+
+    auto lhs = declare(a.result(0));
+    auto lhs_ty = visit(*this, *a.result()->ty());
+    auto av = val(a.a());
+    if (auto st = dyn_cast<scalar_data_type>(a.a().ty()); st) {
+        auto op = make(a.operation(), av, st->ty());
+        return {declaration_assignment(std::move(lhs_ty), std::move(lhs), std::move(op))};
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(a.a().ty()); ct) {
+        auto clinst = std::vector<clir::stmt>{};
+        auto const len = ct->length(core_cfg_.subgroup_size);
+        clinst.reserve(len + 1);
+        clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+        const auto sty = ct->component_ty();
+        for (std::int64_t i = 0; i < len; ++i) {
+            auto op = make(a.operation(), av[i], sty);
+            clinst.emplace_back(expression_statement(assignment(lhs[i], std::move(op))));
+        }
+        return clinst;
+    }
+    throw compilation_error(a.loc(), status::ir_expected_coopmatrix_or_scalar);
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cast_inst const &c) {
-    auto v = declare(*c.result());
-    auto aty = get_scalar_type(c.a().ty());
-    auto rty = get_scalar_type(c.result(0).ty());
-    auto av = val(c.a());
-    auto cst = clir::expr{};
-    auto result_ty = visit(*this, *c.result()->ty());
-    if (is_complex_type(aty) && is_complex_type(rty)) {
-        switch (rty) {
-        case scalar_type::c32:
-            cst = clir::call("convert_float2", {std::move(av)});
-            break;
-        case scalar_type::c64:
-            cst = clir::call("convert_double2", {std::move(av)});
-            break;
-        default:
-            throw status::internal_compiler_error;
+    auto const make = [](clir::expr a, scalar_type aty, scalar_type rty) -> clir::expr {
+        if (is_complex_type(aty) && is_complex_type(rty)) {
+            switch (rty) {
+            case scalar_type::c32:
+                return clir::call("convert_float2", {std::move(a)});
+            case scalar_type::c64:
+                return clir::call("convert_double2", {std::move(a)});
+            default:
+                throw status::internal_compiler_error;
+            }
+        } else if (is_complex_type(rty)) {
+            return clir::init_vector(to_clir_ty(rty), {std::move(a), 0});
         }
-    } else if (is_complex_type(rty)) {
-        cst = clir::init_vector(result_ty, {std::move(av), 0});
-    } else {
-        cst = cast(result_ty, std::move(av));
+        return cast(to_clir_ty(rty), std::move(a));
+    };
+
+    auto lhs = declare(c.result(0));
+    auto lhs_ty = visit(*this, *c.result(0).ty());
+    auto av = val(c.a());
+
+    if (auto rt = dyn_cast<scalar_data_type>(c.result(0).ty()); rt) {
+        auto aty = get_scalar_type(c.a());
+        auto op = make(av, aty, rt->ty());
+        return {declaration_assignment(std::move(lhs_ty), std::move(lhs), std::move(op))};
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(c.result(0).ty()); ct) {
+        const auto rty = ct->component_ty();
+        auto at = dyn_cast<coopmatrix_data_type>(c.a().ty());
+        if (!at) {
+            throw compilation_error(c.loc(), status::ir_expected_coopmatrix);
+        }
+        const auto aty = at->component_ty();
+
+        auto clinst = std::vector<clir::stmt>{};
+        auto const len = ct->length(core_cfg_.subgroup_size);
+        clinst.reserve(len + 1);
+        clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+        for (std::int64_t i = 0; i < len; ++i) {
+            auto op = make(av[i], aty, rty);
+            clinst.emplace_back(expression_statement(assignment(lhs[i], std::move(op))));
+        }
+        return clinst;
     }
-    return {declaration_assignment(std::move(result_ty), std::move(v), std::move(cst))};
+    throw compilation_error(c.loc(), status::ir_expected_coopmatrix_or_scalar);
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c) {
@@ -445,20 +498,37 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(compare_inst const &c
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &c) {
-    auto v = declare(c.result(0));
-    auto ty = get_scalar_type(c.result(0));
-    auto ty_bits = static_cast<short>(size(ty) * 8);
-    auto rhs =
-        std::visit(overloaded{
-                       [&](std::int64_t i) { return clir::expr(i, ty_bits); },
-                       [&](double d) { return clir::expr(d, ty_bits); },
-                       [&](std::complex<double> d) {
-                           return init_vector(to_clir_ty(ty), {clir::expr(d.real(), ty_bits),
-                                                               clir::expr(d.imag(), ty_bits)});
-                       },
-                   },
-                   c.value());
-    return {declaration_assignment(visit(*this, *c.result()->ty()), std::move(v), std::move(rhs))};
+    auto const get_rhs = [&c](scalar_type ty, short ty_bits) {
+        return std::visit(overloaded{
+                              [&](std::int64_t i) { return clir::expr(i, ty_bits); },
+                              [&](double d) { return clir::expr(d, ty_bits); },
+                              [&](std::complex<double> d) {
+                                  return init_vector(to_clir_ty(ty),
+                                                     {clir::expr(d.real(), ty_bits),
+                                                      clir::expr(d.imag(), ty_bits)});
+                              },
+                          },
+                          c.value());
+    };
+    auto lhs = declare(c.result(0));
+    auto lhs_ty = visit(*this, *c.result()->ty());
+    if (auto st = dyn_cast<scalar_data_type>(c.result(0).ty()); st) {
+        auto ty_bits = static_cast<short>(size(st->ty()) * 8);
+        return {
+            declaration_assignment(std::move(lhs_ty), std::move(lhs), get_rhs(st->ty(), ty_bits))};
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(c.result(0).ty()); ct) {
+        auto ty_bits = static_cast<short>(size(ct->component_ty()) * 8);
+        auto rhs = get_rhs(ct->component_ty(), ty_bits);
+        auto clinst = std::vector<clir::stmt>{};
+        auto const len = ct->length(core_cfg_.subgroup_size);
+        clinst.reserve(len + 1);
+        clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+        for (std::int64_t i = 0; i < len; ++i) {
+            clinst.emplace_back(expression_statement(assignment(lhs[i], rhs)));
+        }
+        return clinst;
+    }
+    throw compilation_error(c.loc(), status::ir_expected_coopmatrix_or_scalar);
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e) {

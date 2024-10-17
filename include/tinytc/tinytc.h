@@ -102,6 +102,23 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
 TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
                                                     tinytc_data_type_t memref_ty, int64_t offset,
                                                     const tinytc_location_t *loc);
+/**
+ * @brief Get coopmatrix data type
+ *
+ * Note: modifies compiler context
+ *
+ * @param dt [out] pointer to the data type object created
+ * @param scalar_ty [in] component type
+ * @param rows [in] number of rows
+ * @param cols [in] number of cols
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt,
+                                                         tinytc_data_type_t scalar_ty, int64_t rows,
+                                                         int64_t cols, tinytc_matrix_use_t use,
+                                                         const tinytc_location_t *loc);
 
 ////////////////////////////
 /////////// Value //////////
@@ -154,6 +171,8 @@ TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
 TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
+//! Convert matrix use to string
+TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
 //! Convert store flag to string
 TINYTC_EXPORT char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag);
 //! Convert transpose to string

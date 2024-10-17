@@ -605,6 +605,26 @@ inline data_type get_group(data_type memref_ty, std::int64_t offset = 0, locatio
     return gt;
 }
 
+/**
+ * @brief Get a coopmatrix data type
+ *
+ * @param scalar_ty Component type
+ * @param rows Number of rows
+ * @param cols Number of cols
+ * @param use Matrix use
+ * @param loc Source code location
+ *
+ * @return Data type
+ */
+inline data_type get_coopmatrix(data_type scalar_ty, std::int64_t rows, std::int64_t cols,
+                                matrix_use use, location const &loc = {}) {
+    tinytc_data_type_t ct;
+    CHECK_STATUS_LOC(tinytc_coopmatrix_type_get(&ct, scalar_ty, rows, cols,
+                                                static_cast<::tinytc_matrix_use_t>(use), &loc),
+                     loc);
+    return ct;
+}
+
 ////////////////////////////
 /////////// Value //////////
 ////////////////////////////
@@ -682,6 +702,17 @@ inline char const *to_string(arithmetic_unary op) {
  */
 inline char const *to_string(cmp_condition cond) {
     return ::tinytc_cmp_condition_to_string(static_cast<::tinytc_cmp_condition_t>(cond));
+}
+
+/**
+ * @brief Convert matrix use to string
+ *
+ * @param u Matrix use
+ *
+ * @return C-string
+ */
+inline char const *to_string(matrix_use u) {
+    return ::tinytc_matrix_use_to_string(static_cast<::tinytc_matrix_use_t>(u));
 }
 
 /**

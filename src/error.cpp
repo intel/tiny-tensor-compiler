@@ -132,6 +132,10 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Number of indices must match memref order or must be 1 for group types";
     case tinytc_status_ir_expected_scalar:
         return "Expected scalar type";
+    case tinytc_status_ir_expected_coopmatrix:
+        return "Expected coopmatrix type";
+    case tinytc_status_ir_expected_coopmatrix_or_scalar:
+        return "Expected coopmatrix type or scalar type";
     case tinytc_status_ir_expected_memref:
         return "Expected memref type";
     case tinytc_status_ir_expected_memref_or_scalar:
@@ -171,6 +175,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "i1 type unsupported by instruction";
     case tinytc_status_ir_complex_unsupported:
         return "complex type unsupported by instruction";
+    case tinytc_status_ir_coopmatrix_unsupported:
+        return "coopmatrix type unsupported by instruction";
     case tinytc_status_ir_forbidden_cast:
         return "Forbidden cast";
     case tinytc_status_ir_invalid_beta:

@@ -37,6 +37,7 @@ class compiler_context_cache {
 
     std::array<std::unique_ptr<tinytc_data_type>, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys;
     std::unordered_multimap<std::uint64_t, tinytc_data_type_t> memref_tys;
+    std::unordered_multimap<std::uint64_t, tinytc_data_type_t> coopmatrix_tys;
     std::unordered_map<std::pair<tinytc_data_type_t, std::int64_t>, tinytc_data_type_t> group_tys;
 };
 
