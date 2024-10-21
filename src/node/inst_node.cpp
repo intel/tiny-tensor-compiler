@@ -34,6 +34,12 @@ memref_data_type *get_memref_type(location const &loc, tinytc_value const &v) {
     return m;
 }
 
+void check_index_ty(location const &loc, tinytc_data_type_t ty) {
+    if (auto sty = dyn_cast<scalar_data_type>(ty); !sty || sty->ty() != scalar_type::index) {
+        throw compilation_error(loc, status::ir_expected_index);
+    }
+}
+
 blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
                            tinytc_value_t B, bool atomic)
     : standard_inst{tid}, atomic_(atomic) {
@@ -76,6 +82,10 @@ loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_va
         result(i) = value_node{return_types[i], this, lc};
     }
     for (std::size_t i = 0; i < init_values.size(); ++i) {
+        if (!isa<scalar_data_type>(*return_types[i]) &&
+            !isa<coopmatrix_data_type>(*return_types[i])) {
+            throw compilation_error(loc(), status::ir_expected_coopmatrix_or_scalar);
+        }
         if (init_values[i]->ty() != return_types[i]) {
             throw compilation_error(loc(), status::ir_init_return_mismatch);
         }
@@ -366,6 +376,131 @@ auto constant_inst::is_identity() const -> bool {
     return std::visit([](auto const &v) { return v == decltype(v){1}; }, value_);
 }
 
+cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, bool checked,
+                                                           tinytc_value_t op0, tinytc_value_t p0,
+                                                           tinytc_value_t p1,
+                                                           tinytc_data_type_t to_ty,
+                                                           location const &lc)
+    : standard_inst{IK::cooperative_matrix_load}, t_(t), checked_(checked) {
+    op(op_operand, op0);
+    op(op_pos0, p0);
+    op(op_pos1, p1);
+    loc(lc);
+
+    auto ot = dyn_cast<memref_data_type>(operand().ty());
+    if (!ot) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+    auto rt = dyn_cast<coopmatrix_data_type>(to_ty);
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_coopmatrix);
+    }
+    if (ot->element_ty() != rt->component_ty()) {
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+    if (ot->dim() != 2) {
+        throw compilation_error(loc(), status::ir_expected_matrix);
+    }
+
+    check_index_ty(lc, pos0().ty());
+    check_index_ty(lc, pos1().ty());
+
+    result(0) = value_node{to_ty, this, lc};
+}
+
+cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t a0,
+                                                                 tinytc_value_t b0,
+                                                                 tinytc_value_t c0,
+                                                                 tinytc_data_type_t to_ty,
+                                                                 location const &lc)
+    : standard_inst{IK::cooperative_matrix_mul_add} {
+    op(op_a, a0);
+    op(op_b, b0);
+    op(op_c, c0);
+    loc(lc);
+
+    auto at = dyn_cast<coopmatrix_data_type>(a().ty());
+    auto bt = dyn_cast<coopmatrix_data_type>(b().ty());
+    auto ct = dyn_cast<coopmatrix_data_type>(c().ty());
+    auto rt = dyn_cast<coopmatrix_data_type>(to_ty);
+    if (!at || !bt || !ct || !rt) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+
+    auto M = rt->rows();
+    auto N = rt->cols();
+    auto K = at->cols();
+    if (ct->rows() != M || ct->cols() != N || at->rows() != M || bt->rows() != K ||
+        bt->cols() != N) {
+        std::ostringstream oss;
+        oss << "Got ";
+        oss << "A=" << at->rows() << "x" << at->cols() << ", ";
+        oss << "B=" << bt->rows() << "x" << bt->cols() << ", ";
+        oss << "C=" << ct->rows() << "x" << ct->cols() << ", ";
+        oss << "result=" << rt->rows() << "x" << rt->cols();
+        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+    }
+    if (at->use() != matrix_use::a && bt->use() != matrix_use::b && ct->use() != matrix_use::acc &&
+        rt->use() != matrix_use::acc) {
+        throw compilation_error(loc(), status::ir_invalid_matrix_use);
+    }
+
+    result(0) = value_node{to_ty, this, lc};
+}
+
+cooperative_matrix_scale_inst::cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0,
+                                                             location const &lc)
+    : standard_inst{IK::cooperative_matrix_scale} {
+    op(op_a, a0);
+    op(op_b, b0);
+    loc(lc);
+
+    auto at = dyn_cast<scalar_data_type>(a().ty());
+    if (!at) {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+    auto bt = dyn_cast<coopmatrix_data_type>(b().ty());
+    if (!bt) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+
+    if (at->ty() != bt->component_ty()) {
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+
+    result(0) = value_node{b().ty(), this, lc};
+}
+
+cooperative_matrix_store_inst::cooperative_matrix_store_inst(bool checked, store_flag flag,
+                                                             tinytc_value_t val0,
+                                                             tinytc_value_t op0, tinytc_value_t p0,
+                                                             tinytc_value_t p1, location const &lc)
+    : standard_inst{IK::cooperative_matrix_store}, checked_(checked), flag_(flag) {
+    op(op_val, val0);
+    op(op_operand, op0);
+    op(op_pos0, p0);
+    op(op_pos1, p1);
+    loc(lc);
+
+    auto vt = dyn_cast<coopmatrix_data_type>(val().ty());
+    if (!vt) {
+        throw compilation_error(loc(), status::ir_expected_coopmatrix);
+    }
+    auto ot = dyn_cast<memref_data_type>(operand().ty());
+    if (!ot) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+    if (vt->component_ty() != ot->element_ty()) {
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+    if (ot->dim() != 2) {
+        throw compilation_error(loc(), status::ir_expected_matrix);
+    }
+
+    check_index_ty(lc, pos0().ty());
+    check_index_ty(lc, pos1().ty());
+}
+
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
                          array_view<std::int64_t> static_expand_shape0,
                          array_view<tinytc_value_t> expand_shape0, location const &lc)
@@ -457,6 +592,7 @@ load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
     : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())} {
     op(0, op0);
     for (std::size_t i = 0; i < index_list0.size(); ++i) {
+        check_index_ty(lc, index_list0[i]->ty());
         op(1 + i, index_list0[i]);
     }
     loc(lc);
@@ -491,7 +627,7 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_v
     auto c = get_memref_type(loc(), C());
 
     if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
+        throw compilation_error(loc(), status::ir_expected_matrix,
                                 "gemm only supported for memref of order 2 (matrices)");
     }
 
@@ -603,6 +739,10 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     op(0, condition);
     loc(lc);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
+        if (!isa<scalar_data_type>(*return_types[i]) &&
+            !isa<coopmatrix_data_type>(*return_types[i])) {
+            throw compilation_error(loc(), status::ir_expected_coopmatrix_or_scalar);
+        }
         result(i) = value_node{return_types[i], this, lc};
     }
 }
@@ -685,6 +825,7 @@ store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
     {
         std::size_t i = op_operand;
         for (auto const &val : index_list0) {
+            check_index_ty(lc, val->ty());
             op(++i, val);
         }
     }
@@ -720,6 +861,14 @@ sum_inst::sum_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinyt
         if (a->shape(tA_ == transpose::T ? 1 : 0) != b->shape(0)) {
             throw compilation_error(loc(), status::ir_incompatible_shapes);
         }
+    }
+}
+
+yield_inst::yield_inst(array_view<tinytc_value_t> vals, location const &lc)
+    : standard_inst{IK::yield, static_cast<std::int64_t>(vals.size())} {
+    loc(lc);
+    for (std::size_t i = 0; i < vals.size(); ++i) {
+        op(i, vals[i]);
     }
 }
 

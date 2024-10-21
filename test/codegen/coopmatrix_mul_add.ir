@@ -1,0 +1,100 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 < %s | filecheck %s
+func @coopmatrix_mul_add_ff() subgroup_size(16) {
+    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    %b = constant 1.0 -> coopmatrix<f32x2x4,matrix_b>
+    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
+              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<f32x16x4,matrix_acc>
+; CHECK-LABEL: void coopmatrix_mul_add_ff({{.*}}
+; CHECK:      float c_next[4];
+; CHECK-NEXT: c_next[0] = fma(a[0], sub_group_broadcast(b[0], 0), c[0]);
+; CHECK-NEXT: c_next[1] = fma(a[0], sub_group_broadcast(b[0], 1), c[1]);
+; CHECK-NEXT: c_next[2] = fma(a[0], sub_group_broadcast(b[0], 2), c[2]);
+; CHECK-NEXT: c_next[3] = fma(a[0], sub_group_broadcast(b[0], 3), c[3]);
+; CHECK-NEXT: c_next[0] = fma(a[1], sub_group_broadcast(b[1], 0), c_next[0]);
+; CHECK-NEXT: c_next[1] = fma(a[1], sub_group_broadcast(b[1], 1), c_next[1]);
+; CHECK-NEXT: c_next[2] = fma(a[1], sub_group_broadcast(b[1], 2), c_next[2]);
+; CHECK-NEXT: c_next[3] = fma(a[1], sub_group_broadcast(b[1], 3), c_next[3]);
+}
+
+func @coopmatrix_mul_add_cf() subgroup_size(16) {
+    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
+    %b = constant 1.0 -> coopmatrix<f32x2x4,matrix_b>
+    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
+              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+; CHECK-LABEL: void coopmatrix_mul_add_cf({{.*}}
+; CHECK:      float2 c_next[4];
+; CHECK-NEXT: c_next[0] = (float2) (c[0], 0) + a[0] * sub_group_broadcast(b[0], 0);
+; CHECK-NEXT: c_next[1] = (float2) (c[1], 0) + a[0] * sub_group_broadcast(b[0], 1);
+; CHECK-NEXT: c_next[2] = (float2) (c[2], 0) + a[0] * sub_group_broadcast(b[0], 2);
+; CHECK-NEXT: c_next[3] = (float2) (c[3], 0) + a[0] * sub_group_broadcast(b[0], 3);
+; CHECK-NEXT: c_next[0] = c_next[0] + a[1] * sub_group_broadcast(b[1], 0);
+; CHECK-NEXT: c_next[1] = c_next[1] + a[1] * sub_group_broadcast(b[1], 1);
+; CHECK-NEXT: c_next[2] = c_next[2] + a[1] * sub_group_broadcast(b[1], 2);
+; CHECK-NEXT: c_next[3] = c_next[3] + a[1] * sub_group_broadcast(b[1], 3);
+}
+
+func @coopmatrix_mul_add_fc() subgroup_size(16) {
+    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    %b = constant [1.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
+    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
+              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+; CHECK-LABEL: void coopmatrix_mul_add_fc({{.*}}
+; CHECK:      float2 c_next[4];
+; CHECK-NEXT: c_next[0].x = ((float2) (c[0], 0)).x + a[0] * sub_group_broadcast(b[0].x, 0);
+; CHECK-NEXT: c_next[0].y = ((float2) (c[0], 0)).y + a[0] * sub_group_broadcast(b[0].y, 0);
+; CHECK-NEXT: c_next[1].x = ((float2) (c[1], 0)).x + a[0] * sub_group_broadcast(b[0].x, 1);
+; CHECK-NEXT: c_next[1].y = ((float2) (c[1], 0)).y + a[0] * sub_group_broadcast(b[0].y, 1);
+; CHECK-NEXT: c_next[2].x = ((float2) (c[2], 0)).x + a[0] * sub_group_broadcast(b[0].x, 2);
+; CHECK-NEXT: c_next[2].y = ((float2) (c[2], 0)).y + a[0] * sub_group_broadcast(b[0].y, 2);
+; CHECK-NEXT: c_next[3].x = ((float2) (c[3], 0)).x + a[0] * sub_group_broadcast(b[0].x, 3);
+; CHECK-NEXT: c_next[3].y = ((float2) (c[3], 0)).y + a[0] * sub_group_broadcast(b[0].y, 3);
+; CHECK-NEXT: c_next[0].x = c_next[0].x + a[1] * sub_group_broadcast(b[1].x, 0);
+; CHECK-NEXT: c_next[0].y = c_next[0].y + a[1] * sub_group_broadcast(b[1].y, 0);
+; CHECK-NEXT: c_next[1].x = c_next[1].x + a[1] * sub_group_broadcast(b[1].x, 1);
+; CHECK-NEXT: c_next[1].y = c_next[1].y + a[1] * sub_group_broadcast(b[1].y, 1);
+; CHECK-NEXT: c_next[2].x = c_next[2].x + a[1] * sub_group_broadcast(b[1].x, 2);
+; CHECK-NEXT: c_next[2].y = c_next[2].y + a[1] * sub_group_broadcast(b[1].y, 2);
+; CHECK-NEXT: c_next[3].x = c_next[3].x + a[1] * sub_group_broadcast(b[1].x, 3);
+; CHECK-NEXT: c_next[3].y = c_next[3].y + a[1] * sub_group_broadcast(b[1].y, 3);
+}
+
+func @coopmatrix_mul_add_cc() subgroup_size(16) {
+    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
+    %b = constant [1.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
+    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
+              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+; CHECK-LABEL: void coopmatrix_mul_add_cc({{.*}}
+; CHECK:      float2 c_next[4];
+; CHECK-NEXT: float2 x[4];
+; CHECK-NEXT: c_next[0] = c[0] + a[0] * sub_group_broadcast(b[0].x, 0);
+; CHECK-NEXT: x[0] = (float2) (0, 0) + a[0] * sub_group_broadcast(b[0].y, 0);
+; CHECK-NEXT: c_next[1] = c[1] + a[0] * sub_group_broadcast(b[0].x, 1);
+; CHECK-NEXT: x[1] = (float2) (0, 0) + a[0] * sub_group_broadcast(b[0].y, 1);
+; CHECK-NEXT: c_next[2] = c[2] + a[0] * sub_group_broadcast(b[0].x, 2);
+; CHECK-NEXT: x[2] = (float2) (0, 0) + a[0] * sub_group_broadcast(b[0].y, 2);
+; CHECK-NEXT: c_next[3] = c[3] + a[0] * sub_group_broadcast(b[0].x, 3);
+; CHECK-NEXT: x[3] = (float2) (0, 0) + a[0] * sub_group_broadcast(b[0].y, 3);
+; CHECK-NEXT: c_next[0] = c_next[0] + a[1] * sub_group_broadcast(b[1].x, 0);
+; CHECK-NEXT: x[0] = x[0] + a[1] * sub_group_broadcast(b[1].y, 0);
+; CHECK-NEXT: c_next[1] = c_next[1] + a[1] * sub_group_broadcast(b[1].x, 1);
+; CHECK-NEXT: x[1] = x[1] + a[1] * sub_group_broadcast(b[1].y, 1);
+; CHECK-NEXT: c_next[2] = c_next[2] + a[1] * sub_group_broadcast(b[1].x, 2);
+; CHECK-NEXT: x[2] = x[2] + a[1] * sub_group_broadcast(b[1].y, 2);
+; CHECK-NEXT: c_next[3] = c_next[3] + a[1] * sub_group_broadcast(b[1].x, 3);
+; CHECK-NEXT: x[3] = x[3] + a[1] * sub_group_broadcast(b[1].y, 3);
+; CHECK-NEXT: c_next[0] += (float2) (-x[0].y, x[0].x);
+; CHECK-NEXT: c_next[1] += (float2) (-x[1].y, x[1].x);
+; CHECK-NEXT: c_next[2] += (float2) (-x[2].y, x[2].x);
+; CHECK-NEXT: c_next[3] += (float2) (-x[3].y, x[3].x);
+}

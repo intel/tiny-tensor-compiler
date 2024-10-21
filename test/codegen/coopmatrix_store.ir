@@ -1,0 +1,55 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 < %s | filecheck %s
+func @coopmatrix_a_store_n(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
+    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+; CHECK-LABEL: void coopmatrix_a_store_n({{.*}}
+; CHECK:      global float* x1 = A + x * 1 + y * 64;
+; CHECK-NEXT: x1[1 * (get_sub_group_local_id() + 0) + 0] = c0[0];
+; CHECK-NEXT: x1[1 * (get_sub_group_local_id() + 0) + 64] = c0[1];
+}
+
+func @coopmatrix_a_store_n_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
+    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.checked %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+; CHECK-LABEL: void coopmatrix_a_store_n_checked({{.*}}
+; CHECK:      global float* x1 = A + x * 1 + y * 64;
+; CHECK-NEXT: long x2 = 64 - x;
+; CHECK-NEXT: long x3 = 48 - y;
+; CHECK-NEXT: if (get_sub_group_local_id() + 0 >= -x && get_sub_group_local_id() + 0 < x2) {
+; CHECK-NEXT:     if (0 >= -y && 0 < x3) {
+; CHECK-NEXT:         x1[1 * (get_sub_group_local_id() + 0) + 0] = c0[0];
+; CHECK-NEXT:     }
+; CHECK-NEXT:     if (1 >= -y && 1 < x3) {
+; CHECK-NEXT:         x1[1 * (get_sub_group_local_id() + 0) + 64] = c0[1];
+; CHECK-NEXT:     }
+; CHECK-NEXT: }
+}
+
+func @coopmatrix_a_store_atomic_add(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
+    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.atomic_add %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+; CHECK-LABEL: void coopmatrix_a_store_atomic_add({{.*}}
+; CHECK:      global float* x1 = A + x * 1 + y * 64;
+; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) x1 + (1 * (get_sub_group_local_id() + 0) + 0), c0[0], memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) x1 + (1 * (get_sub_group_local_id() + 0) + 64), c0[1], memory_order_relaxed, memory_scope_work_group);
+}
+
+func @coopmatrix_a_store_checked_atomic_add(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
+    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.checked.atomic_add %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+; CHECK-LABEL: void coopmatrix_a_store_checked_atomic_add({{.*}}
+; CHECK:      global float* x1 = A + x * 1 + y * 64;
+; CHECK-NEXT: long x2 = 64 - x;
+; CHECK-NEXT: long x3 = 48 - y;
+; CHECK-NEXT: if (get_sub_group_local_id() + 0 >= -x && get_sub_group_local_id() + 0 < x2) {
+; CHECK-NEXT:     if (0 >= -y && 0 < x3) {
+; CHECK-NEXT:         atomic_fetch_add_explicit((global volatile atomic_float*) x1 + (1 * (get_sub_group_local_id() + 0) + 0), c0[0], memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT:     }
+; CHECK-NEXT:     if (1 >= -y && 1 < x3) {
+; CHECK-NEXT:         atomic_fetch_add_explicit((global volatile atomic_float*) x1 + (1 * (get_sub_group_local_id() + 0) + 64), c0[1], memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT:     }
+; CHECK-NEXT: }
+}

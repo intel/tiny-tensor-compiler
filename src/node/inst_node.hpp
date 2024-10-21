@@ -45,6 +45,10 @@ enum class IK {
     cast,
     compare,
     constant,
+    cooperative_matrix_load,
+    cooperative_matrix_mul_add,
+    cooperative_matrix_scale,
+    cooperative_matrix_store,
     expand,
     fuse,
     load,
@@ -82,6 +86,8 @@ enum class IK {
 using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class barrier_inst, class arith_inst,
               class arith_unary_inst, class cast_inst, class compare_inst, class constant_inst,
+              class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
+              class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst,
               class expand_inst, class fuse_inst, class load_inst, class group_id_inst,
               class group_size_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
               class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
@@ -202,6 +208,10 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
         case tinytc::IK::cast:
         case tinytc::IK::compare:
         case tinytc::IK::constant:
+        case tinytc::IK::cooperative_matrix_load:
+        case tinytc::IK::cooperative_matrix_mul_add:
+        case tinytc::IK::cooperative_matrix_scale:
+        case tinytc::IK::cooperative_matrix_store:
         case tinytc::IK::expand:
         case tinytc::IK::fuse:
         case tinytc::IK::load:
@@ -501,6 +511,71 @@ class constant_inst : public standard_inst<0, 1> {
     value_type value_;
 };
 
+class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_load;
+    }
+    enum op_number { op_operand = 0, op_pos0 = 1, op_pos1 = 2 };
+    cooperative_matrix_load_inst(transpose t, bool checked, tinytc_value_t op0, tinytc_value_t p0,
+                                 tinytc_value_t p1, tinytc_data_type_t to_ty,
+                                 location const &lc = {});
+    inline auto t() const -> transpose { return t_; }
+    inline auto checked() const -> bool { return checked_; }
+    inline auto operand() const -> tinytc_value const & { return op(op_operand); }
+    inline auto pos0() const -> tinytc_value const & { return op(op_pos0); }
+    inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
+
+  private:
+    transpose t_;
+    bool checked_;
+};
+
+class cooperative_matrix_mul_add_inst : public standard_inst<3, 1, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_mul_add;
+    }
+    enum op_number { op_a = 0, op_b = 1, op_c = 2 };
+    cooperative_matrix_mul_add_inst(tinytc_value_t a0, tinytc_value_t b0, tinytc_value_t c0,
+                                    tinytc_data_type_t to_ty, location const &lc = {});
+    inline auto a() const -> tinytc_value const & { return op(op_a); }
+    inline auto b() const -> tinytc_value const & { return op(op_b); }
+    inline auto c() const -> tinytc_value const & { return op(op_c); }
+};
+
+class cooperative_matrix_scale_inst : public standard_inst<2, 1, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_scale;
+    }
+    enum op_number { op_a = 0, op_b = 1 };
+    cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0, location const &lc = {});
+    inline auto a() const -> tinytc_value const & { return op(op_a); }
+    inline auto b() const -> tinytc_value const & { return op(op_b); }
+};
+
+class cooperative_matrix_store_inst : public standard_inst<4, 0, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_store;
+    }
+    enum op_number { op_val = 0, op_operand = 1, op_pos0 = 2, op_pos1 = 3 };
+    cooperative_matrix_store_inst(bool checked, store_flag flag, tinytc_value_t val0,
+                                  tinytc_value_t op0, tinytc_value_t p0, tinytc_value_t p1,
+                                  location const &lc = {});
+    inline auto checked() const -> bool { return checked_; }
+    inline auto flag() const -> store_flag { return flag_; }
+    inline auto val() const -> tinytc_value const & { return op(op_val); }
+    inline auto operand() const -> tinytc_value const & { return op(op_operand); }
+    inline auto pos0() const -> tinytc_value const & { return op(op_pos0); }
+    inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
+
+  private:
+    bool checked_;
+    store_flag flag_;
+};
+
 class expand_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::expand; }
@@ -758,13 +833,7 @@ class sum_inst : public blas_a2_inst {
 class yield_inst : public standard_inst<dynamic, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::yield; }
-    inline yield_inst(array_view<tinytc_value_t> vals, location const &lc = {})
-        : standard_inst{IK::yield, static_cast<std::int64_t>(vals.size())} {
-        loc(lc);
-        for (std::size_t i = 0; i < vals.size(); ++i) {
-            op(i, vals[i]);
-        }
-    }
+    yield_inst(array_view<tinytc_value_t> vals, location const &lc = {});
 };
 
 } // namespace tinytc

@@ -48,13 +48,17 @@ class coopmatrix_data_type : public data_type_node {
 
     inline auto ty() const -> tinytc_data_type_t { return ty_; }
     auto component_ty() const -> scalar_type;
+    inline auto shape(int mode) const -> std::int64_t { return mode == 1 ? cols_ : rows_; }
     inline auto rows() const -> std::int64_t { return rows_; }
     inline auto cols() const -> std::int64_t { return cols_; }
     inline auto use() const -> matrix_use { return use_; }
+    inline auto distributed_mode() const -> int { return use_ == matrix_use::b ? 1 : 0; }
+    inline auto num_blocks(std::int32_t subgroup_size) const -> std::int64_t {
+        return 1 + (shape(distributed_mode()) - 1) / subgroup_size;
+    }
     // Number of components per work-item
     inline auto length(std::int32_t subgroup_size) const -> std::int64_t {
-        const std::int64_t blocks = 1 + (rows_ - 1) / subgroup_size;
-        return blocks * cols_;
+        return num_blocks(subgroup_size) * shape(1 - distributed_mode());
     }
 
   protected:

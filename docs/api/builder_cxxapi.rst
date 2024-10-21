@@ -18,6 +18,8 @@ Common
 
   * :ref:`cmp_condition`
 
+  * :ref:`matrix_use`
+
   * :ref:`scalar_type`
 
   * :ref:`store_flag`
@@ -35,6 +37,8 @@ Common
   * :ref:`to_string(arithmetic_unary)`
 
   * :ref:`to_string(cmp_condition)`
+
+  * :ref:`to_string(matrix_use)`
 
   * :ref:`to_string(scalar_type)`
 
@@ -81,6 +85,11 @@ cmp_condition
 
 .. doxygenenum:: tinytc::cmp_condition
 
+matrix_use
+..........
+
+.. doxygenenum:: tinytc::matrix_use
+
 scalar_type
 ...........
 
@@ -123,6 +132,11 @@ to_string(cmp_condition)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
+
+to_string(matrix_use)
+.....................
+
+.. doxygenfunction:: tinytc::to_string(matrix_use)
 
 to_string(scalar_type)
 ......................
@@ -178,9 +192,11 @@ Data Type
 
 * Functions
 
-  * :ref:`get_memref`
+  * :ref:`get_coopmatrix`
 
   * :ref:`get_group`
+
+  * :ref:`get_memref`
 
   * :ref:`get_scalar`
 
@@ -199,15 +215,20 @@ Data Type
 Data Type Functions
 -------------------
 
-get_memref
-..........
+get_coopmatrix
+..............
 
-.. doxygenfunction:: tinytc::get_memref
+.. doxygenfunction:: tinytc::get_coopmatrix
 
 get_group
 .........
 
 .. doxygenfunction:: tinytc::get_group
+
+get_memref
+..........
+
+.. doxygenfunction:: tinytc::get_memref
 
 get_scalar
 ..........
@@ -293,6 +314,14 @@ Instruction
   * :ref:`make_constant_one`
 
   * :ref:`make_constant_zero`
+
+  * :ref:`make_cooperative_matrix_load`
+
+  * :ref:`make_cooperative_matrix_mul_add`
+
+  * :ref:`make_cooperative_matrix_scale`
+
+  * :ref:`make_cooperative_matrix_store`
 
   * :ref:`make_expand`
 
@@ -404,6 +433,26 @@ make_constant_zero
 ..................
 
 .. doxygenfunction:: tinytc::make_constant_zero
+
+make_cooperative_matrix_load
+............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_load
+
+make_cooperative_matrix_mul_add
+...............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_mul_add
+
+make_cooperative_matrix_scale
+.............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_scale
+
+make_cooperative_matrix_store
+.............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_store
 
 make_expand
 ...........

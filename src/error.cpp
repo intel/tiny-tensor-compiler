@@ -132,6 +132,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Number of indices must match memref order or must be 1 for group types";
     case tinytc_status_ir_expected_scalar:
         return "Expected scalar type";
+    case tinytc_status_ir_expected_index:
+        return "Expected index type";
     case tinytc_status_ir_expected_coopmatrix:
         return "Expected coopmatrix type";
     case tinytc_status_ir_expected_coopmatrix_or_scalar:
@@ -142,6 +144,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Expected memref type or scalar type";
     case tinytc_status_ir_expected_memref_or_group:
         return "Expected memref or group operand";
+    case tinytc_status_ir_expected_matrix:
+        return "Expected matrix input";
     case tinytc_status_ir_expected_vector_or_matrix:
         return "Expected vector or matrix input";
     case tinytc_status_ir_unexpected_yield:
@@ -183,6 +187,11 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "beta must be constant and 0 or 1 for atomic linear algebra operations";
     case tinytc_status_ir_init_return_mismatch:
         return "The number or types of the initial values does not match the return type list";
+    case tinytc_status_ir_invalid_matrix_use:
+        return "Operands have invalid matrix use";
+    case tinytc_status_ir_unsupported_coopmatrix_shape:
+        return "Unsupported coopmatrix shape for the combination of scalar type, matrix use, and "
+               "target architecture";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

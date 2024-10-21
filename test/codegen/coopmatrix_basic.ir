@@ -1,0 +1,56 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 < %s | filecheck %s
+func @coopmatrix_constant() {
+    %0 = constant 1.0 -> coopmatrix<f64x16x5, matrix_a>
+; CHECK-LABEL: void coopmatrix_constant({{.*}}
+; CHECK:      double x[5];
+; CHECK-NEXT: x[0] = 0x1p+0;
+; CHECK-NEXT: x[1] = 0x1p+0;
+; CHECK-NEXT: x[2] = 0x1p+0;
+; CHECK-NEXT: x[3] = 0x1p+0;
+; CHECK-NEXT: x[4] = 0x1p+0;
+}
+
+func @coopmatrix_add() {
+    %0 = constant 1.0 -> coopmatrix<f64x16x4, matrix_a>
+    %1 = constant 1.0 -> coopmatrix<f64x16x4, matrix_a>
+    %2 = arith.add %0, %1 : coopmatrix<f64x16x4, matrix_a>
+; CHECK-LABEL: void coopmatrix_add({{.*}}
+; CHECK:      double x2[4];
+; CHECK-NEXT: x2[0] = x[0] + x1[0];
+; CHECK-NEXT: x2[1] = x[1] + x1[1];
+; CHECK-NEXT: x2[2] = x[2] + x1[2];
+; CHECK-NEXT: x2[3] = x[3] + x1[3];
+}
+
+func @coopmatrix_neg() subgroup_size(16) {
+    %0 = constant 1.0 -> coopmatrix<f64x32x4, matrix_a>
+    %1 = arith.neg %0 : coopmatrix<f64x32x4, matrix_a>
+; CHECK-LABEL: void coopmatrix_neg({{.*}}
+; CHECK:      double x1[8];
+; CHECK-NEXT: x1[0] = -x[0];
+; CHECK-NEXT: x1[1] = -x[1];
+; CHECK-NEXT: x1[2] = -x[2];
+; CHECK-NEXT: x1[3] = -x[3];
+; CHECK-NEXT: x1[4] = -x[4];
+; CHECK-NEXT: x1[5] = -x[5];
+; CHECK-NEXT: x1[6] = -x[6];
+; CHECK-NEXT: x1[7] = -x[7];
+}
+
+func @coopmatrix_cast() subgroup_size(16) {
+    %0 = constant 1 -> coopmatrix<i8x16x8, matrix_a>
+    %1 = cast %0 : coopmatrix<i8x16x8, matrix_a> -> coopmatrix<c32x16x8, matrix_a>
+; CHECK-LABEL: void coopmatrix_cast({{.*}}
+; CHECK:      float2 x1[8];
+; CHECK-NEXT: x1[0] = (float2) (x[0], 0);
+; CHECK-NEXT: x1[1] = (float2) (x[1], 0);
+; CHECK-NEXT: x1[2] = (float2) (x[2], 0);
+; CHECK-NEXT: x1[3] = (float2) (x[3], 0);
+; CHECK-NEXT: x1[4] = (float2) (x[4], 0);
+; CHECK-NEXT: x1[5] = (float2) (x[5], 0);
+; CHECK-NEXT: x1[6] = (float2) (x[6], 0);
+; CHECK-NEXT: x1[7] = (float2) (x[7], 0);
+}

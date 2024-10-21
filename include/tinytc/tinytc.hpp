@@ -980,6 +980,86 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
 }
 
 /**
+ * @brief Create cooperative matrix load instruction
+ *
+ * @param trans transpose operation applied on load
+ * @param checked true for out-of-bounds checks
+ * @param op %op
+ * @param p0 %p0
+ * @param p1 %p1
+ * @param to_ty result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_load(transpose trans, bool checked, value op, value p0,
+                                         value p1, data_type to_ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_cooperative_matrix_load_inst_create(&instr, static_cast<tinytc_transpose_t>(trans),
+                                                   checked, op, p0, p1, to_ty, &loc),
+        loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix mul add instruction
+ *
+ * @param a %a
+ * @param b %b
+ * @param c %c
+ * @param to_ty result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_mul_add(value a, value b, value c, data_type to_ty,
+                                            location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_mul_add_inst_create(&instr, a, b, c, to_ty, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix scale instruction
+ *
+ * @param a %a
+ * @param b %b
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_scale(value a, value b, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_scale_inst_create(&instr, a, b, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix store instruction
+ *
+ * @param checked true for out-of-bounds checks
+ * @param flag store flag
+ * @param val %val
+ * @param op %op
+ * @param p0 %p0
+ * @param p1 %p1
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_store(bool checked, store_flag flag, value val, value op,
+                                          value p0, value p1, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_cooperative_matrix_store_inst_create(
+            &instr, checked, static_cast<tinytc_store_flag_t>(flag), val, op, p0, p1, &loc),
+        loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make alloca instruction
  *
  * @param ty Memref type of allocated variable

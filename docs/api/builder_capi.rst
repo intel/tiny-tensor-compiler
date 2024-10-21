@@ -18,6 +18,8 @@ Common
 
   * :ref:`tinytc_cmp_condition_t`
 
+  * :ref:`tinytc_matrix_use_t`
+
   * :ref:`tinytc_scalar_type_t`
 
   * :ref:`tinytc_store_flag_t`
@@ -37,6 +39,8 @@ Common
   * :ref:`tinytc_arithmetic_unary_to_string`
 
   * :ref:`tinytc_cmp_condition_to_string`
+
+  * :ref:`tinytc_matrix_use_to_string`
 
   * :ref:`tinytc_scalar_type_size`
 
@@ -105,6 +109,11 @@ tinytc_cmp_condition_t
 
 .. doxygenenum:: tinytc_cmp_condition_t
 
+tinytc_matrix_use_t
+...................
+
+.. doxygenenum:: tinytc_matrix_use_t
+
 tinytc_scalar_type_t
 ....................
 
@@ -150,6 +159,11 @@ tinytc_cmp_condition_to_string
 ..............................
 
 .. doxygenfunction:: tinytc_cmp_condition_to_string
+
+tinytc_matrix_use_to_string
+...........................
+
+.. doxygenfunction:: tinytc_matrix_use_to_string
 
 tinytc_scalar_type_size
 .......................
@@ -262,6 +276,8 @@ Data Type
 
 * Functions
 
+  * :ref:`tinytc_coopmatrix_type_get`
+
   * :ref:`tinytc_group_type_get`
 
   * :ref:`tinytc_memref_type_get`
@@ -270,6 +286,11 @@ Data Type
 
 Data Type Functions
 -------------------
+
+tinytc_coopmatrix_type_get
+..........................
+
+.. doxygenfunction:: tinytc_coopmatrix_type_get
 
 tinytc_group_type_get
 .....................
@@ -355,6 +376,14 @@ Instruction
   * :ref:`tinytc_constant_inst_create_one`
 
   * :ref:`tinytc_constant_inst_create_zero`
+
+  * :ref:`tinytc_cooperative_matrix_load_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_mul_add_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_scale_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_store_inst_create`
 
   * :ref:`tinytc_expand_inst_create`
 
@@ -463,6 +492,26 @@ tinytc_constant_inst_create_zero
 ................................
 
 .. doxygenfunction:: tinytc_constant_inst_create_zero
+
+tinytc_cooperative_matrix_load_inst_create
+..........................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_load_inst_create
+
+tinytc_cooperative_matrix_mul_add_inst_create
+.............................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_mul_add_inst_create
+
+tinytc_cooperative_matrix_scale_inst_create
+...........................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_scale_inst_create
+
+tinytc_cooperative_matrix_store_inst_create
+...........................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_store_inst_create
 
 tinytc_expand_inst_create
 .........................

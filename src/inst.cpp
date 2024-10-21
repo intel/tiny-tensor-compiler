@@ -265,6 +265,58 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
     });
 }
 
+tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
+    tinytc_inst_t *instr, tinytc_transpose_t trans, tinytc_bool_t checked, tinytc_value_t op,
+    tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc) {
+    if (instr == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr || to_ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<cooperative_matrix_load_inst>(
+                     enum_cast<transpose>(trans), checked, op, p0, p1, to_ty, get_optional(loc))
+                     .release();
+    });
+}
+
+tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(tinytc_inst_t *instr,
+                                                              tinytc_value_t a, tinytc_value_t b,
+                                                              tinytc_value_t c,
+                                                              tinytc_data_type_t to_ty,
+                                                              const tinytc_location_t *loc) {
+    if (instr == nullptr || a == nullptr || b == nullptr || c == nullptr || to_ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<cooperative_matrix_mul_add_inst>(a, b, c, to_ty, get_optional(loc))
+                .release();
+    });
+}
+
+tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
+                                                            tinytc_value_t b,
+                                                            const tinytc_location_t *loc) {
+    if (instr == nullptr || a == nullptr || b == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<cooperative_matrix_scale_inst>(a, b, get_optional(loc)).release();
+    });
+}
+
+tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
+    tinytc_inst_t *instr, tinytc_bool_t checked, tinytc_store_flag_t flag, tinytc_value_t val,
+    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, const tinytc_location_t *loc) {
+    if (instr == nullptr || val == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<cooperative_matrix_store_inst>(
+                     checked, enum_cast<store_flag>(flag), val, op, p0, p1, get_optional(loc))
+                     .release();
+    });
+}
+
 tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, tinytc_data_type_t ty,
                                           const tinytc_location_t *loc) {
     if (instr == nullptr) {

@@ -111,6 +111,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
  * @param scalar_ty [in] component type
  * @param rows [in] number of rows
  * @param cols [in] number of cols
+ * @param use [in] matrix use
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -315,6 +316,81 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *ins
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr,
                                                                tinytc_data_type_t ty,
                                                                const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix load instruction
+ *
+ * @code %value = cooperative_matrix_load.transpose.checked %op[%p0, %p1] : type(%op) -> to_ty
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param transpose [in] transpose operation applied on load
+ * @param checked [in] true for out-of-bounds checks
+ * @param op [in] %op
+ * @param p0 [in] %p0
+ * @param p1 [in] %p1
+ * @param to_ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
+    tinytc_inst_t *instr, tinytc_transpose_t transpose, tinytc_bool_t checked, tinytc_value_t op,
+    tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix mul add instruction
+ *
+ * @code cooperative_matrix_mul_add %a, %b, %c : type(%a), type(%b), type(%c) -> to_ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param a [in] %a
+ * @param b [in] %b
+ * @param c [in] %c
+ * @param to_ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t a, tinytc_value_t b, tinytc_value_t c,
+    tinytc_data_type_t to_ty, const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix scale instruction
+ *
+ * @code cooperative_matrix_scale %a, %b : type(%a), type(%b) @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param a [in] %a
+ * @param b [in] %b
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t a, tinytc_value_t b, const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix store instruction
+ *
+ * @code cooperative_matrix_store.checked.store_flag %val, %op[%p0, %p1] : type(%val), type(%op)
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param checked [in] true for out-of-bounds checks
+ * @param flag [in] store flag
+ * @param val [in] %val
+ * @param op [in] %op
+ * @param p0 [in] %p0
+ * @param p1 [in] %p1
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
+    tinytc_inst_t *instr, tinytc_bool_t checked, tinytc_store_flag_t flag, tinytc_value_t val,
+    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, const tinytc_location_t *loc);
 
 /**
  * @brief Create alloca instruction

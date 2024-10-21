@@ -29,14 +29,12 @@ func @for2(%fib: memref<i64>) {
 ; CHECK-LABEL: void for2({{.*}}
 ; CHECK:      long f0 = 0ll;
 ; CHECK-NEXT: long f1 = 1ll;
-; CHECK-NEXT: long fn_2 = f0;
-; CHECK-NEXT: long fn_1 = f1;
+; CHECK-NEXT: long fn_1 = f0;
+; CHECK-NEXT: long fn = f1;
 ; CHECK-NEXT: for (int n = from; n < to; ++n) {
-; CHECK-NEXT:     long fn = fn_2 + fn_1;
-; CHECK-NEXT:     fn_2 = fn_1;
+; CHECK-NEXT:     long fn1 = fn_1 + fn;
 ; CHECK-NEXT:     fn_1 = fn;
+; CHECK-NEXT:     fn = fn1;
 ; CHECK-NEXT: }
-; CHECK-NEXT: long fn_11 = fn_2;
-; CHECK-NEXT: long fn = fn_1;
 ; CHECK-NEXT: *fib = fn;
 }

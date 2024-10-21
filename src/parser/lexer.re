@@ -96,6 +96,7 @@ lex:
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
         ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
+        ".checked"          { adv_loc(); return parser::make_CHECKED(loc_); }
         "init"              { adv_loc(); return parser::make_INIT(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
@@ -152,6 +153,10 @@ lex:
         "cast"              { adv_loc(); return parser::make_CAST(loc_); }
         "cmp"               { adv_loc(); return parser::make_CMP(loc_); }
         "constant"          { adv_loc(); return parser::make_CONSTANT(loc_); }
+        "cooperative_matrix_load" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
+        "cooperative_matrix_mul_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
+        "cooperative_matrix_scale" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
+        "cooperative_matrix_store" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
         "expand"            { adv_loc(); return parser::make_EXPAND(loc_); }
         "fuse"              { adv_loc(); return parser::make_FUSE(loc_); }
         "load"              { adv_loc(); return parser::make_LOAD(loc_); }

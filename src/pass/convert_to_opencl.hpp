@@ -75,6 +75,10 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(cast_inst const &c);
     std::vector<clir::stmt> operator()(compare_inst const &c);
     std::vector<clir::stmt> operator()(constant_inst const &c);
+    std::vector<clir::stmt> operator()(cooperative_matrix_load_inst const &c);
+    std::vector<clir::stmt> operator()(cooperative_matrix_mul_add_inst const &c);
+    std::vector<clir::stmt> operator()(cooperative_matrix_scale_inst const &c);
+    std::vector<clir::stmt> operator()(cooperative_matrix_store_inst const &c);
     std::vector<clir::stmt> operator()(expand_inst const &e);
     std::vector<clir::stmt> operator()(fuse_inst const &f);
     std::vector<clir::stmt> operator()(load_inst const &e);
@@ -109,6 +113,7 @@ class convert_to_opencl_pass {
     auto get_dope_vector(value_node const &v) -> dope_vector &;
     void set_dope_vector(value_node const &v, dope_vector dv);
     clir::var declare(value_node const &v);
+    auto get_coopmatrix_type(value_node const &v) const -> const coopmatrix_data_type *;
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
     static auto get_scalar_type(value_node const &v) -> scalar_type;
 

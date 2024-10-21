@@ -268,6 +268,9 @@ and the second integer-constant the number of columns.
 The matrix-use may affect the distribution of the matrix in the subgroup, and the name refers to the
 position of the matrix in a matrix multiplication.
 
+Not all matrix shapes need to be supported in the implementation.
+The supported matrix shapes may depend on data type, matrix use, and target hardware.
+
 Instructions
 ============
 
@@ -771,7 +774,7 @@ Cooperative matrix load
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_load" [".checked"] transpose
+    value-instruction           =/ "cooperative_matrix_load" transpose [".checked"] 
                                    local-identifier "[" local-identifier "," local-identifier "]"
                                    ":" memref-type "->" coopmatrix-type
 
@@ -951,11 +954,12 @@ For
 
     multi-value-instruction = "for" local-identifier "="
                                     local-identifier "," local-identifier ["," local-identifier]
-                              ["init" "(" init-value-list ")" "->" "(" scalar-type-list ")" ]
+                              ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ]
                               [":" integer-type] region
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
-    scalar-type-list        = scalar-type *("," scalar-type)
+    return-type-list        = return-type *("," return-type)
+    return-type             = scalar-type / coopmatrix-type
 
 Overview
 ~~~~~~~~
@@ -1090,7 +1094,7 @@ If
 
 .. code:: abnf
 
-    multi-value-instruction =/ "if" local-identifier ["->" "(" scalar-type-list ")"]
+    multi-value-instruction =/ "if" local-identifier ["->" "(" return-type-list ")"]
                                region ["else" region]
 
 Overview
@@ -1105,7 +1109,7 @@ Returns
 ~~~~~~~
 
 The if instruction may return multiple values, where the number of values and the value types
-are given by the scalar-type-list.
+are given by the return-type-list.
 If values are returned, the last instruction in both the "then"-region and the "else"-region must
 be a yield instruction (the "else"-region cannot be omitted).
 
@@ -1316,7 +1320,7 @@ Yield
 
 .. code:: abnf
 
-    instruction                 =/ "yield" [local-identifier-list]  ":" [scalar-type-list]
+    instruction                 =/ "yield" [local-identifier-list]  ":" [return-type-list]
 
 Overview
 ~~~~~~~~
@@ -1326,7 +1330,7 @@ Yield returns values from an if or for instruction.
 Arguments
 ~~~~~~~~~
 
-The length of the local identifier list must equal the length of the scalar type list.
+The length of the local identifier list must equal the length of the return type list.
 
 Additional instructions
 .......................

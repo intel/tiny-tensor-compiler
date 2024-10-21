@@ -146,6 +146,15 @@ clir::var convert_to_opencl_pass::declare(value_node const &v) {
     return declared_vars_.back()[u];
 }
 
+auto convert_to_opencl_pass::get_coopmatrix_type(value_node const &v) const
+    -> const coopmatrix_data_type * {
+    auto t = dyn_cast<coopmatrix_data_type>(v.ty());
+    if (t == nullptr) {
+        throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
+    }
+    return t;
+}
+
 auto convert_to_opencl_pass::get_memref_type(value_node const &v) const
     -> const memref_data_type * {
     auto t = dyn_cast<memref_data_type>(v.ty());
@@ -531,6 +540,314 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(constant_inst const &
     throw compilation_error(c.loc(), status::ir_expected_coopmatrix_or_scalar);
 }
 
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_load_inst const &c) {
+    auto lhs = declare(c.result(0));
+    auto lhs_ty = visit(*this, *c.result(0).ty());
+    auto ot = get_memref_type(c.operand());
+    auto rt = get_coopmatrix_type(c.result(0));
+    auto &dv = get_dope_vector(c.operand());
+
+    const int rmode = rt->distributed_mode();
+    const int omode = c.t() == transpose::T ? 1 - rmode : rmode;
+    const bool enable_sub_group_reads = core_cfg_.block_read_write_supported && !c.checked() &&
+                                        c.t() == transpose::N && ot->stride(omode) == 1;
+
+    auto clinst = std::vector<clir::stmt>{};
+    auto const len = rt->length(core_cfg_.subgroup_size);
+    clinst.reserve(len + 5);
+    clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+
+    clir::expr pv[] = {val(c.pos0()), val(c.pos1())};
+    auto pointer = clir::var{};
+    clinst.emplace_back(
+        declaration_assignment(visit(*this, *c.operand().ty()), pointer,
+                               val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
+    clir::var rem[2] = {};
+    if (c.checked()) {
+        clinst.emplace_back(
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
+        clinst.emplace_back(
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], dv.shape(1) - pv[1]));
+    }
+
+    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    for (std::int64_t block = 0; block < num_blocks; ++block) {
+        auto common_check = clir::var{};
+        if (c.checked()) {
+            auto m = clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size;
+            clinst.emplace_back(declaration_assignment(to_clir_ty(scalar_type::i1), common_check,
+                                                       m >= -pv[omode] && m < rem[omode]));
+        }
+        for (std::int64_t k = 0; k < rt->shape(1 - rmode); ++k) {
+            auto const store = [&](clir::expr rhs) -> clir::stmt {
+                return expression_statement(
+                    assignment(lhs[k + block * rt->shape(1 - rmode)], std::move(rhs)));
+            };
+            auto const remainder = rt->shape(rmode) - core_cfg_.subgroup_size * block;
+            const bool needs_mask = remainder < core_cfg_.subgroup_size;
+            if (enable_sub_group_reads && !needs_mask) {
+                auto rhs = sub_group_block_read_helper(
+                    pointer + block * core_cfg_.subgroup_size + k * ot->stride(1), ot->element_ty(),
+                    to_clir_address_space(ot->addrspace()));
+                clinst.emplace_back(store(std::move(rhs)));
+            } else {
+                auto rhs = pointer[ot->stride(omode) * (clir::get_sub_group_local_id() +
+                                                        block * core_cfg_.subgroup_size) +
+                                   k * ot->stride(1 - omode)];
+                auto checked_cond = [&] {
+                    return common_check && k >= -pv[1 - omode] && k < rem[1 - omode];
+                };
+                auto mask_cond = [&] { return clir::get_sub_group_local_id() < remainder; };
+                clir::expr cond = {};
+                if (c.checked() && needs_mask) {
+                    cond = checked_cond() && mask_cond();
+                } else if (c.checked()) {
+                    cond = checked_cond();
+                } else if (needs_mask) {
+                    cond = mask_cond();
+                }
+                if (cond) {
+                    rhs = ternary_conditional(cond, std::move(rhs), 0);
+                }
+                clinst.emplace_back(store(std::move(rhs)));
+            }
+        }
+    }
+    return clinst;
+}
+std::vector<clir::stmt>
+convert_to_opencl_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
+    auto lhs = declare(c.result(0));
+    auto lhs_ty = visit(*this, *c.result(0).ty());
+    auto rt = get_coopmatrix_type(c.result(0));
+    auto at = get_coopmatrix_type(c.a());
+    auto bt = get_coopmatrix_type(c.b());
+    auto ct = get_coopmatrix_type(c.c());
+    auto av = val(c.a());
+    auto bv = val(c.b());
+    auto cv = val(c.c());
+
+    const auto a_ty = at->component_ty();
+    const auto b_ty = bt->component_ty();
+    const auto c_ty = ct->component_ty();
+    const auto r_ty = rt->component_ty();
+    const bool use_double_buffering = is_complex_type(a_ty) && is_complex_type(b_ty);
+
+    const std::int64_t M = rt->rows(), N = rt->cols(), K = at->cols();
+    auto clinst = std::vector<clir::stmt>{};
+    clinst.reserve(M * N + 2);
+    clinst.emplace_back(declaration(lhs_ty, lhs));
+
+    auto c_acc_im = clir::var{};
+    if (use_double_buffering) {
+        clinst.emplace_back(declaration(lhs_ty, c_acc_im));
+    }
+
+    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    const std::int64_t nbb = 4;
+    for (std::int64_t m_block = 0; m_block < num_blocks; ++m_block) {
+        for (std::int64_t nb = 0; nb < N; nb += nbb) {
+            for (std::int64_t k = 0; k < K; ++k) {
+                for (std::int64_t n = 0; n < nbb; ++n) {
+                    if (nb + n < N) {
+                        auto const n_block = (nb + n) / core_cfg_.subgroup_size;
+                        auto const n_offset = (nb + n) % core_cfg_.subgroup_size;
+
+                        auto a = av[k + m_block * K];
+                        auto b = bv[k + n_block * K];
+                        auto c_next = lhs[nb + n + m_block * N];
+                        auto c = [&] {
+                            if (k == 0) {
+                                auto c = cv[nb + n + m_block * N];
+                                if (c_ty != r_ty) {
+                                    if (is_complex_type(r_ty) && !is_complex_type(c_ty)) {
+                                        c = clir::init_vector(to_clir_ty(r_ty), {c, 0});
+                                    } else if (r_ty != c_ty) {
+                                        return clir::cast(to_clir_ty(r_ty), c);
+                                    }
+                                }
+                                return c;
+                            }
+                            return c_next;
+                        }();
+                        const auto c_next_im = [&] { return c_acc_im[nb + n + m_block * N]; };
+                        const auto c_im = [&] {
+                            if (k == 0) {
+                                return init_vector(to_clir_ty(r_ty), {0, 0});
+                            }
+                            return c_next_im();
+                        };
+
+                        auto const add = [&](auto a_ty, auto b_ty, auto c_ty, auto a, auto b,
+                                             auto c, auto c_next) {
+                            if (a_ty == b_ty && b_ty == c_ty) {
+                                clinst.emplace_back(expression_statement(
+                                    assignment(std::move(c_next),
+                                               fma(std::move(a), std::move(b), std::move(c)))));
+                            } else {
+                                clinst.emplace_back(expression_statement(
+                                    assignment(std::move(c_next),
+                                               std::move(c) + std::move(a) * std::move(b))));
+                            }
+                        };
+
+                        if (is_complex_type(a_ty)) {
+                            if (is_complex_type(b_ty)) {
+                                auto b_bc_re = sub_group_broadcast(b.s(0), n_offset);
+                                auto b_bc_im = sub_group_broadcast(b.s(1), n_offset);
+                                add(a_ty, element_type(b_ty), r_ty, a, std::move(b_bc_re), c,
+                                    c_next);
+                                add(a_ty, element_type(b_ty), r_ty, a, std::move(b_bc_im), c_im(),
+                                    c_next_im());
+                            } else {
+                                auto b_bc = sub_group_broadcast(b, n_offset);
+                                add(a_ty, b_ty, r_ty, std::move(a), std::move(b_bc), c, c_next);
+                            }
+                        } else if (is_complex_type(b_ty)) {
+                            auto b_bc_re = sub_group_broadcast(b.s(0), n_offset);
+                            auto b_bc_im = sub_group_broadcast(b.s(1), n_offset);
+                            add(a_ty, element_type(b_ty), r_ty, a, std::move(b_bc_re), c.s(0),
+                                c_next.s(0));
+                            add(a_ty, element_type(b_ty), r_ty, a, std::move(b_bc_im), c.s(1),
+                                c_next.s(1));
+                        } else {
+                            auto b_bc = sub_group_broadcast(std::move(b), n_offset);
+                            add(a_ty, b_ty, r_ty, std::move(a), std::move(b_bc), std::move(c),
+                                std::move(c_next));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (use_double_buffering) {
+        for (std::int64_t i = 0; i < rt->length(core_cfg_.subgroup_size); ++i) {
+            clinst.emplace_back(expression_statement(
+                add_into(lhs[i], clir::init_vector(to_clir_ty(r_ty),
+                                                   {-c_acc_im[i].s(1), c_acc_im[i].s(0)}))));
+        }
+    }
+    return clinst;
+}
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_scale_inst const &c) {
+    auto lhs = declare(c.result(0));
+    auto lhs_ty = visit(*this, *c.result()->ty());
+    auto av = val(c.a());
+    auto bv = val(c.b());
+    auto at = get_scalar_type(c.a());
+    auto bt = get_coopmatrix_type(c.b());
+
+    auto clinst = std::vector<clir::stmt>{};
+    auto const len = bt->length(core_cfg_.subgroup_size);
+    clinst.reserve(len + 1);
+    clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+    for (std::int64_t i = 0; i < len; ++i) {
+        auto op = multiply(at, bt->component_ty(), av, bv[i]);
+        clinst.emplace_back(expression_statement(assignment(lhs[i], std::move(op))));
+    }
+    return clinst;
+}
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_store_inst const &c) {
+    auto ot = get_memref_type(c.operand());
+    auto vt = get_coopmatrix_type(c.val());
+    auto &dv = get_dope_vector(c.operand());
+    auto valv = val(c.val());
+
+    const int vmode = vt->distributed_mode();
+    const int omode = vmode;
+
+    auto clinst = std::vector<clir::stmt>{};
+    auto const len = vt->length(core_cfg_.subgroup_size);
+    clinst.reserve(len + 4);
+
+    clir::expr pv[] = {val(c.pos0()), val(c.pos1())};
+    auto pointer = clir::var{};
+    clinst.emplace_back(
+        declaration_assignment(visit(*this, *c.operand().ty()), pointer,
+                               val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
+    clir::var rem[2] = {};
+    if (c.checked()) {
+        clinst.emplace_back(
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
+        clinst.emplace_back(
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], dv.shape(1) - pv[1]));
+    }
+
+    auto atomic_pointer =
+        cast(pointer_to(to_clir_atomic_ty(ot->element_ty(), to_clir_address_space(ot->addrspace()),
+                                          clir::type_qualifier::volatile_t)),
+             pointer);
+    const std::int64_t num_blocks = vt->num_blocks(core_cfg_.subgroup_size);
+    auto const num_k = vt->shape(1 - vmode);
+    auto store_block = std::vector<clir::stmt>{};
+    store_block.reserve(num_k);
+    for (std::int64_t block = 0; block < num_blocks; ++block) {
+        store_block.clear();
+        for (std::int64_t k = 0; k < num_k; ++k) {
+            auto const store = [&](clir::expr offset, clir::expr rhs) -> clir::expr {
+                switch (c.flag()) {
+                case store_flag::regular:
+                    return assignment(pointer[std::move(offset)], std::move(rhs));
+                case store_flag::atomic:
+                    return call_builtin(clir::builtin_function::atomic_store_explicit,
+                                        {atomic_pointer + std::move(offset), std::move(rhs),
+                                         clir::memory_order::relaxed,
+                                         clir::memory_scope::work_group});
+                case store_flag::atomic_add:
+                    return call_builtin(clir::builtin_function::atomic_fetch_add_explicit,
+                                        {atomic_pointer + std::move(offset), std::move(rhs),
+                                         clir::memory_order::relaxed,
+                                         clir::memory_scope::work_group});
+                };
+                return {};
+            };
+            auto const remainder = vt->shape(vmode) - core_cfg_.subgroup_size * block;
+            const bool needs_mask = remainder < core_cfg_.subgroup_size;
+
+            auto offset = ot->stride(omode) *
+                              (clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size) +
+                          k * ot->stride(1 - omode);
+            auto rhs = valv[k + block * vt->shape(1 - vmode)];
+            auto checked_cond = [&] { return k >= -pv[1 - omode] && k < rem[1 - omode]; };
+            auto mask_cond = [&] { return clir::get_sub_group_local_id() < remainder; };
+            clir::expr cond = {};
+            if (c.checked() && needs_mask) {
+                cond = checked_cond() && mask_cond();
+            } else if (c.checked()) {
+                cond = checked_cond();
+            } else if (needs_mask) {
+                cond = mask_cond();
+            }
+            auto st = clir::expression_statement(store(std::move(offset), std::move(rhs)));
+            if (cond) {
+                store_block.emplace_back(
+                    clir::if_selection_builder(cond)
+                        .then([&](clir::block_builder &bb) { bb.add(std::move(st)); })
+                        .get_product());
+            } else {
+                store_block.emplace_back(std::move(st));
+            }
+        }
+
+        if (c.checked()) {
+            auto m = clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size;
+            clinst.emplace_back(clir::if_selection_builder(m >= -pv[omode] && m < rem[omode])
+                                    .then([&](clir::block_builder &bb) {
+                                        for (auto &i : store_block) {
+                                            bb.add(i);
+                                        }
+                                    })
+                                    .get_product());
+        } else {
+            for (auto &i : store_block) {
+                clinst.emplace_back(i);
+            }
+        }
+    }
+
+    return clinst;
+}
+
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(expand_inst const &e) {
     auto result_var = declare(*e.result());
     auto m = get_memref_type(e.operand());
@@ -859,10 +1176,25 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &in) {
 
     yielded_vars_.push_back(std::vector<clir::var>{});
     for (std::int64_t i = 0; i < in.num_results(); ++i) {
-        auto v = declare(in.iter_arg(i));
-        clinst.emplace_back(clir::declaration_assignment(visit(*this, *in.iter_arg(i).ty()), v,
-                                                         val(in.iter_init(i))));
-        yielded_vars_.back().emplace_back(std::move(v));
+        auto lhs_ty = visit(*this, *in.result(i).ty());
+        auto lhs = declare(in.result(i));
+
+        // Link the iteration variable to the result variable
+        uintptr_t u = std::bit_cast<uintptr_t>(&in.result(i));
+        uintptr_t v = std::bit_cast<uintptr_t>(&in.iter_arg(i));
+        declared_vars_.back()[v] = declared_vars_.back()[u];
+
+        auto iinit = val(in.iter_init(i));
+        if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(i).ty()); ct) {
+            clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
+            auto const len = ct->length(core_cfg_.subgroup_size);
+            for (std::int64_t j = 0; j < len; ++j) {
+                clinst.emplace_back(expression_statement(assignment(lhs[j], iinit[j])));
+            }
+        } else {
+            clinst.emplace_back(clir::declaration_assignment(lhs_ty, lhs, iinit));
+        }
+        yielded_vars_.back().emplace_back(std::move(lhs));
     }
 
     auto lv = declare(in.loop_var());
@@ -873,11 +1205,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &in) {
     auto body = run_on_region(in.body());
     clinst.emplace_back(clir::stmt(std::make_shared<clir::internal::for_loop>(
         std::move(start), std::move(condition), std::move(step), std::move(body))));
-
-    for (std::int64_t i = 0; i < in.num_results(); ++i) {
-        clinst.emplace_back(clir::declaration_assignment(
-            visit(*this, *in.result(i).ty()), declare(in.result(i)), yielded_vars_.back()[i]));
-    }
 
     yielded_vars_.pop_back();
     return clinst;
@@ -1195,8 +1522,16 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in)
     }
     std::vector<clir::stmt> clinst;
     for (std::int64_t i = 0; i < in.num_operands(); ++i) {
-        auto assign_yielded_var = clir::assignment(yielded_vars_.back()[i], val(in.op(i)));
-        clinst.push_back(clir::expression_statement(std::move(assign_yielded_var)));
+        auto &yielded_var = yielded_vars_.back()[i];
+        auto ov = val(in.op(i));
+        if (auto ct = dyn_cast<coopmatrix_data_type>(in.op(i).ty()); ct) {
+            auto const len = ct->length(core_cfg_.subgroup_size);
+            for (std::int64_t j = 0; j < len; ++j) {
+                clinst.push_back(expression_statement(assignment(yielded_var[j], ov[j])));
+            }
+        } else {
+            clinst.push_back(expression_statement(assignment(yielded_var, ov)));
+        }
     }
     return clinst;
 }

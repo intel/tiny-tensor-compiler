@@ -96,6 +96,7 @@
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
+    CHECKED         ".checked"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -117,6 +118,10 @@
     CAST            "cast"
     CMP             "cmp"
     CONSTANT        "constant"
+    COOPERATIVE_MATRIX_LOAD "cooperative_matrix_load"
+    COOPERATIVE_MATRIX_MUL_ADD "cooperative_matrix_mul_add"
+    COOPERATIVE_MATRIX_SCALE "cooperative_matrix_scale"
+    COOPERATIVE_MATRIX_STORE "cooperative_matrix_store"
     EXPAND          "expand"
     FUSE            "fuse"
     LOAD            "load"
@@ -188,8 +193,8 @@
 %nterm <inst> hadamard_inst
 %nterm <inst> if_inst
 %nterm <std::vector<tinytc_data_type_t>> optional_returned_values
-%nterm <std::vector<tinytc_data_type_t>> optional_scalar_type_list
-%nterm <std::vector<tinytc_data_type_t>> scalar_type_list
+%nterm <std::vector<tinytc_data_type_t>> optional_return_type_list
+%nterm <std::vector<tinytc_data_type_t>> return_type_list
 %nterm <inst> sum_inst
 %nterm <inst> yield_inst
 %nterm <tinytc_data_type_t> for_loop_var_type
@@ -202,6 +207,11 @@
 %nterm <inst> cast_inst
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
+%nterm <inst> cooperative_matrix_load_inst
+%nterm <inst> cooperative_matrix_mul_add_inst
+%nterm <inst> cooperative_matrix_scale_inst
+%nterm <inst> cooperative_matrix_store_inst
+%nterm <bool> checked
 %nterm <inst> expand_inst
 %nterm <int_or_val> integer_constant_or_identifier
 %nterm <std::vector<int_or_val>> expand_shape
@@ -428,6 +438,7 @@ instructions:
 instruction:
     axpby_inst      { $$ = std::move($1); }
   | barrier_inst    { $$ = std::move($1); }
+  | cooperative_matrix_store_inst { $$ = std::move($1); }
   | gemm_inst       { $$ = std::move($1); }
   | gemv_inst       { $$ = std::move($1); }
   | ger_inst        { $$ = std::move($1); }
@@ -622,9 +633,9 @@ optional_step:
 
 optional_loop_carried_values:
     %empty { $$ = {}; }
-  | INIT LPAREN init_value_list RPAREN RETURNS LPAREN scalar_type_list RPAREN {
+  | INIT LPAREN init_value_list RPAREN RETURNS LPAREN return_type_list RPAREN {
         $$ = std::make_tuple(std::move($init_value_list.first), std::move($init_value_list.second),
-                             std::move($scalar_type_list));
+                             std::move($return_type_list));
     }
 ;
 
@@ -741,7 +752,7 @@ sum_inst:
 ;
 
 yield_inst:
-    YIELD optional_value_list[vals] COLON optional_scalar_type_list[tys] {
+    YIELD optional_value_list[vals] COLON optional_return_type_list[tys] {
         if ($vals.size() != $tys.size()) {
             location loc = @vals;
             loc.end = @tys.end;
@@ -761,6 +772,9 @@ valued_inst:
   | cast_inst               { $$ = std::move($1); }
   | compare_inst            { $$ = std::move($1); }
   | constant_inst           { $$ = std::move($1); }
+  | cooperative_matrix_load_inst { $$ = std::move($1); }
+  | cooperative_matrix_mul_add_inst { $$ = std::move($1); }
+  | cooperative_matrix_scale_inst { $$ = std::move($1); }
   | expand_inst             { $$ = std::move($1); }
   | for_inst                { $$ = std::move($1); }
   | fuse_inst               { $$ = std::move($1); }
@@ -877,6 +891,82 @@ constant_inst:
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($INTEGER_CONSTANT, $data_type, @constant_inst).release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_load_inst:
+    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[op_ty] RETURNS data_type[result_ty]  {
+        check_type($op, $op_ty, @op, @op_ty);
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_load_inst>(
+                    $transpose, $checked, std::move($op), std::move($p0), std::move($p1), std::move($result_ty),
+                    @cooperative_matrix_load_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
+checked:
+    %empty { $$ = false; }
+  | CHECKED { $$ = true; }
+;
+
+cooperative_matrix_mul_add_inst:
+    COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[a_ty] COMMA data_type[b_ty] COMMA data_type[c_ty] RETURNS data_type[to_ty] {
+        check_type($a, $a_ty, @a, @a_ty);
+        check_type($b, $b_ty, @b, @b_ty);
+        check_type($c, $c_ty, @c, @c_ty);
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_mul_add_inst>(std::move($a), std::move($b),
+                                                                  std::move($c), std::move($to_ty),
+                                                                  @cooperative_matrix_mul_add_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_scale_inst:
+    COOPERATIVE_MATRIX_SCALE var[a] COMMA var[b] COLON data_type[a_ty] COMMA data_type[b_ty] {
+        check_type($a, $a_ty, @a, @a_ty);
+        check_type($b, $b_ty, @b, @b_ty);
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_scale_inst>(std::move($a), std::move($b),
+                                                                @cooperative_matrix_scale_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_store_inst:
+    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[val_ty] COMMA data_type[op_ty]  {
+        check_type($val, $val_ty, @val, @val_ty);
+        check_type($op, $op_ty, @op, @op_ty);
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_store_inst>(
+                    $checked, $store_flag, std::move($val), std::move($op), std::move($p0), std::move($p1),
+                    @cooperative_matrix_store_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             error(e.loc(), e.what());
@@ -1039,18 +1129,18 @@ else_region:
 
 optional_returned_values:
     %empty { $$ = {}; }
-  | RETURNS LPAREN optional_scalar_type_list[tys] RPAREN { $$ = std::move($tys); }
+  | RETURNS LPAREN optional_return_type_list[tys] RPAREN { $$ = std::move($tys); }
 ;
 
-optional_scalar_type_list:
+optional_return_type_list:
     %empty {}
-  | scalar_type_list { $$ = std::move($1); }
+  | return_type_list { $$ = std::move($1); }
 ;
 
-scalar_type_list:
-    scalar_type { $$.push_back($scalar_type); }
-  | scalar_type_list COMMA scalar_type {
-        $$ = std::move($1); $$.push_back($scalar_type);
+return_type_list:
+    data_type { $$.push_back($data_type); }
+  | return_type_list COMMA data_type {
+        $$ = std::move($1); $$.push_back($data_type);
     }
 ;
 
