@@ -4,6 +4,7 @@
 #ifndef BINARY_20240308_HPP
 #define BINARY_20240308_HPP
 
+#include "compiler_context.hpp"
 #include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"

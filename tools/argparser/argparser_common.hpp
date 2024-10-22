@@ -4,9 +4,9 @@
 #ifndef ARGPARSER_COMMON_20241010_HPP
 #define ARGPARSER_COMMON_20241010_HPP
 
-#include "argparser.hpp"
 #include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <iosfwd>
 #include <utility>
 #include <vector>

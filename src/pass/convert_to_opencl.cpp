@@ -681,9 +681,9 @@ convert_to_opencl_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
                         auto const add = [&](auto a_ty, auto b_ty, auto c_ty, auto a, auto b,
                                              auto c, auto c_next) {
                             if (a_ty == b_ty && b_ty == c_ty) {
-                                clinst.emplace_back(expression_statement(
-                                    assignment(std::move(c_next),
-                                               fma(std::move(a), std::move(b), std::move(c)))));
+                                clinst.emplace_back(expression_statement(assignment(
+                                    std::move(c_next),
+                                    clir::fma(std::move(a), std::move(b), std::move(c)))));
                             } else {
                                 clinst.emplace_back(expression_statement(
                                     assignment(std::move(c_next),

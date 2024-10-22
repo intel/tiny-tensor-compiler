@@ -3,7 +3,9 @@
 
 #include "argparser.hpp"
 
+#include <exception>
 #include <iostream>
+#include <vector>
 
 using namespace tinytc;
 

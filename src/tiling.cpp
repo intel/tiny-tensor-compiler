@@ -3,7 +3,7 @@
 
 #include "tiling.hpp"
 #include "device_info.hpp"
-#include "gemm_generator.hpp"
+#include "gemm_tools.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <algorithm>

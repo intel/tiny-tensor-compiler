@@ -16,7 +16,6 @@
 #include <optional>
 #include <string>
 #include <string_view>
-#include <utility>
 
 namespace tinytc {
 
@@ -95,21 +94,6 @@ struct gemm_configuration {
                            ::clir::address_space As = ::clir::address_space::global_t,
                            ::clir::address_space Bs = ::clir::address_space::global_t,
                            ::clir::address_space Cs = ::clir::address_space::global_t);
-
-/**
- * @brief Calculate maximum register blocking size of GEMM
- *
- * @param C_scalar_type_size_in_bytes Size of scalar type of result matrix in bytes
- * @param sgs Subgroup size
- * @param register_space Size of register file per core in bytes
- * @param max_fill_fraction Fraction of register file that shall be blocked at most
- *
- * @return {number of row-blocks (block size = subgroup size), number of columns}
- */
-auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int32_t sgs,
-                             std::int32_t register_space,
-                             std::pair<std::int32_t, std::int32_t> max_fill_fraction = {
-                                 1, 2}) -> std::pair<std::int32_t, std::int32_t>;
 
 } // namespace tinytc
 

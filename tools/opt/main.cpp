@@ -10,7 +10,6 @@
 #include <cstring>
 #include <exception>
 #include <iostream>
-#include <stdexcept>
 #include <vector>
 
 using namespace tinytc;

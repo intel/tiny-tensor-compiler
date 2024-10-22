@@ -4,24 +4,48 @@
 #ifndef CONSTANT_FOLDING_HELPER_20241011_HPP
 #define CONSTANT_FOLDING_HELPER_20241011_HPP
 
+#include "error.hpp"
+#include "node/data_type_node.hpp"
+#include "node/inst_node.hpp"
+#include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
+#include <cmath>
 #include <complex>
-#include <concepts>
+#include <cstdint>
 #include <type_traits>
 #include <variant>
 
 namespace tinytc {
+
+using fold_result = std::variant<tinytc_value_t, inst>;
+
+class constant_folding {
+  public:
+    constant_folding(bool unsafe_fp_math);
+
+    auto operator()(inst_node &) -> fold_result;
+    auto operator()(arith_inst &) -> fold_result;
+    auto operator()(arith_unary_inst &) -> fold_result;
+    auto operator()(cast_inst &) -> fold_result;
+    auto operator()(compare_inst &) -> fold_result;
+    auto operator()(size_inst &in) -> fold_result;
+
+  private:
+    auto get_memref_type(value_node const &v) const -> const memref_data_type *;
+
+    bool unsafe_fp_math_;
+};
 
 template <typename T> struct is_complex : public std::false_type {};
 template <typename F>
 requires(std::is_floating_point_v<F>)
 struct is_complex<std::complex<F>> : public std::true_type {};
 template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
-
-using fold_result = std::variant<tinytc_value_t, inst>;
 
 struct compute_unary_op {
     arithmetic_unary operation;

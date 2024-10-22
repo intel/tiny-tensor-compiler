@@ -31,6 +31,7 @@ set(SOURCES
     error.cpp
     func.cpp
     gemm_generator.cpp
+    gemm_tools.cpp
     inst.cpp
     location.cpp
     node/data_type_node.cpp
@@ -41,6 +42,7 @@ set(SOURCES
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp
+    pass/constant_folding.cpp
     pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
     pass/dead_code_elimination.cpp

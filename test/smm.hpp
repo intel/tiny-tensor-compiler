@@ -10,12 +10,14 @@
 
 #include <doctest/doctest.h>
 
+#include <complex>
 #include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #define DOCTEST_TENSOR4_TEST(MM, NN, KK, HH)                                                       \

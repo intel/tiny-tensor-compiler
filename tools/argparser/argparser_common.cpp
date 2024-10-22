@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "argparser_common.hpp"
+#include "argparser.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 
