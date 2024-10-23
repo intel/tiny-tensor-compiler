@@ -694,6 +694,17 @@ inline char const *to_string(arithmetic_unary op) {
 }
 
 /**
+ * @brief Convert checked flag string
+ *
+ * @param flag Flag
+ *
+ * @return C-string
+ */
+inline char const *to_string(checked_flag flag) {
+    return ::tinytc_checked_flag_to_string(static_cast<::tinytc_checked_flag_t>(flag));
+}
+
+/**
  * @brief Convert cmp condition to string
  *
  * @param cond Condition
@@ -983,7 +994,7 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
  * @brief Create cooperative matrix load instruction
  *
  * @param trans transpose operation applied on load
- * @param checked true for out-of-bounds checks
+ * @param flag out-of-bounds checks type
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
@@ -992,13 +1003,13 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_cooperative_matrix_load(transpose trans, bool checked, value op, value p0,
+inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, value op, value p0,
                                          value p1, data_type to_ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_cooperative_matrix_load_inst_create(&instr, static_cast<tinytc_transpose_t>(trans),
-                                                   checked, op, p0, p1, to_ty, &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_load_inst_create(
+                         &instr, static_cast<tinytc_transpose_t>(trans),
+                         static_cast<tinytc_checked_flag_t>(flag), op, p0, p1, to_ty, &loc),
+                     loc);
     return inst(instr);
 }
 
@@ -1039,8 +1050,8 @@ inline inst make_cooperative_matrix_scale(value a, value b, location const &loc 
 /**
  * @brief Create cooperative matrix store instruction
  *
- * @param checked true for out-of-bounds checks
- * @param flag store flag
+ * @param cflag out-of-bounds checks type
+ * @param sflag store flag
  * @param val %val
  * @param op %op
  * @param p0 %p0
@@ -1049,13 +1060,13 @@ inline inst make_cooperative_matrix_scale(value a, value b, location const &loc 
  *
  * @return Instruction
  */
-inline inst make_cooperative_matrix_store(bool checked, store_flag flag, value val, value op,
+inline inst make_cooperative_matrix_store(checked_flag cflag, store_flag sflag, value val, value op,
                                           value p0, value p1, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_cooperative_matrix_store_inst_create(
-            &instr, checked, static_cast<tinytc_store_flag_t>(flag), val, op, p0, p1, &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_store_inst_create(
+                         &instr, static_cast<tinytc_checked_flag_t>(cflag),
+                         static_cast<tinytc_store_flag_t>(sflag), val, op, p0, p1, &loc),
+                     loc);
     return inst(instr);
 }
 

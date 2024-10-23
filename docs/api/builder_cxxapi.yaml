@@ -16,6 +16,7 @@ Builder C++-API:
       - tinytc::to_string(address_space)
       - tinytc::to_string(arithmetic)
       - tinytc::to_string(arithmetic_unary)
+      - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)

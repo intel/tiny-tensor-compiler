@@ -28,6 +28,9 @@ An SPMD instruction follows the OpenCL execution model, where local variables ma
 for each work-item.
 Mixed instructions accept both varying and uniform local variables.
 
+In an SPMD region, we call an argument *dynamically uniform* if all work-items in a subgroup have
+the same value.
+
 Regions come in two different kinds: collective and SPMD.
 A collective instructions must only appear in a collective region, and an SPMD instruction
 must only appear in a SPMD region. Mixed instructions might appear in both kinds of regions.
@@ -271,6 +274,8 @@ position of the matrix in a matrix multiplication.
 Not all matrix shapes need to be supported in the implementation.
 The supported matrix shapes may depend on data type, matrix use, and target hardware.
 
+An argument to any instruction that has coopmatrix type **must** be dynamically uniform.
+
 Instructions
 ============
 
@@ -441,7 +446,7 @@ GEMV implements the well-known GEMM BLAS-2 operation.
 
 .. math::
 
-    c := \alpha \text{op}_1(A) b + \beta C
+    c := \alpha \text{op}_1(A) b + \beta c
 
 If the atomic flag is set, c is updated atomically.
 
@@ -774,9 +779,10 @@ Cooperative matrix load
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_load" transpose [".checked"] 
+    value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
                                    local-identifier "[" local-identifier "," local-identifier "]"
                                    ":" memref-type "->" coopmatrix-type
+    checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
 
 Overview
 ~~~~~~~~
@@ -790,14 +796,24 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
 
     \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2] 
 
-When the checked flag is set, memory loads that would be out of bounds are not executed and the corresponding
-value in the cooperative matrix are set to 0.
-
 When the transpose modifier ".t" is given, we have
 
 .. math::
 
     \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + j) S_1 + (y + i) S_2] 
+
+When the checked flag is set, the following out-of-bound checks are added:
+
+=============== =======================================================================================================
+Flag            Description
+=============== =======================================================================================================
+.rows_checked.n :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < X \text{ else } 0`
+.rows_checked.t :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < Y \text{ else } 0`
+.cols_checked.n :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < Y \text{ else } 0`
+.cols_checked.t :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < X \text{ else } 0`
+.both_checked.n .rows_checked.n + .cols_checked.n
+.both_checked.t .rows_checked.t + .cols_checked.t
+=============== =======================================================================================================
 
 Arguments
 ~~~~~~~~~
@@ -805,6 +821,8 @@ Arguments
 The first operand must have memref type of dimension 2 with the same component type
 as the coopmatrix type.
 The indices must be of ``index`` type.
+
+All arguments **must** be dynamically uniform.
 
 Cooperative matrix mul add
 ..........................
@@ -853,7 +871,7 @@ Cooperative matrix store
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" [".checked"] [store-flag]
+    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag]
                        local-identifier "," local-identifier "[" local-identifier "," local-identifier "]"
                        ":" coopmatrix-type "," memref-type
 
@@ -869,7 +887,15 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
 
     \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij}
 
-If the checked flag is set, only memory locations that are in-bounds are written.
+When the checked flag is set, the following out-of-bound checks are added:
+
+============= =======================================================================================================
+Flag            Description
+============= =======================================================================================================
+.rows_checked Only execute store if :math:`0 \leq x+i < X`
+.cols_checked Only execute store if :math:`0 \leq y+j < Y`
+.both_checked .rows_checked + .cols_checked
+============= =======================================================================================================
 
 The store is atomic when the atomic flag is set with relaxed memory ordering.
 When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
@@ -882,6 +908,8 @@ Arguments
 
 The first operand must have cooperative matrix type with the same component type as the memref type.
 The indices must be of ``index`` type.
+
+All arguments **must** be dynamically uniform.
 
 Expand
 ......

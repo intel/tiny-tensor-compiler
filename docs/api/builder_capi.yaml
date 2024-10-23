@@ -6,6 +6,7 @@ Builder C-API:
       - tinytc_address_space_t
       - tinytc_arithmetic_t
       - tinytc_arithmetic_unary_t
+      - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
       - tinytc_matrix_use_t
       - tinytc_scalar_type_t
@@ -17,6 +18,7 @@ Builder C-API:
       - tinytc_address_space_to_string
       - tinytc_arithmetic_to_string
       - tinytc_arithmetic_unary_to_string
+      - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_matrix_use_to_string
       - tinytc_scalar_type_size

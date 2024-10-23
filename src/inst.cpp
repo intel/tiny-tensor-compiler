@@ -80,6 +80,20 @@ char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op) {
     return "unknown";
 }
 
+char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag) {
+    switch (flag) {
+    case tinytc_checked_flag_none:
+        return "";
+    case tinytc_checked_flag_rows:
+        return "rows_checked";
+    case tinytc_checked_flag_cols:
+        return "cols_checked";
+    case tinytc_checked_flag_both:
+        return "both_checked";
+    }
+    return "unknown";
+}
+
 char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
     switch (cond) {
     case tinytc_cmp_condition_eq:
@@ -204,12 +218,18 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_dat
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    const auto *st = dyn_cast<scalar_data_type>(ty);
-    if (st == nullptr) {
+
+    scalar_type sty;
+    if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
+        sty = st->ty();
+    } else if (const auto *ct = dyn_cast<coopmatrix_data_type>(ty); ct != nullptr) {
+        sty = ct->component_ty();
+    } else {
         return tinytc_status_invalid_arguments;
     }
+
     return exception_to_status_code([&] {
-        switch (st->ty()) {
+        switch (sty) {
         case scalar_type::i1:
         case scalar_type::i8:
         case scalar_type::i16:
@@ -237,12 +257,18 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    const auto *st = dyn_cast<scalar_data_type>(ty);
-    if (st == nullptr) {
+
+    scalar_type sty;
+    if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
+        sty = st->ty();
+    } else if (const auto *ct = dyn_cast<coopmatrix_data_type>(ty); ct != nullptr) {
+        sty = ct->component_ty();
+    } else {
         return tinytc_status_invalid_arguments;
     }
+
     return exception_to_status_code([&] {
-        switch (st->ty()) {
+        switch (sty) {
         case scalar_type::i1:
         case scalar_type::i8:
         case scalar_type::i16:
@@ -266,14 +292,15 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
 }
 
 tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
-    tinytc_inst_t *instr, tinytc_transpose_t trans, tinytc_bool_t checked, tinytc_value_t op,
+    tinytc_inst_t *instr, tinytc_transpose_t trans, tinytc_checked_flag_t flag, tinytc_value_t op,
     tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc) {
     if (instr == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr || to_ty == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cooperative_matrix_load_inst>(
-                     enum_cast<transpose>(trans), checked, op, p0, p1, to_ty, get_optional(loc))
+        *instr = std::make_unique<cooperative_matrix_load_inst>(enum_cast<transpose>(trans),
+                                                                enum_cast<checked_flag>(flag), op,
+                                                                p0, p1, to_ty, get_optional(loc))
                      .release();
     });
 }
@@ -304,15 +331,19 @@ tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(tinytc_inst_t *instr
     });
 }
 
-tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
-    tinytc_inst_t *instr, tinytc_bool_t checked, tinytc_store_flag_t flag, tinytc_value_t val,
-    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, const tinytc_location_t *loc) {
+tinytc_status_t tinytc_cooperative_matrix_store_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_checked_flag_t cflag,
+                                                            tinytc_store_flag_t sflag,
+                                                            tinytc_value_t val, tinytc_value_t op,
+                                                            tinytc_value_t p0, tinytc_value_t p1,
+                                                            const tinytc_location_t *loc) {
     if (instr == nullptr || val == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cooperative_matrix_store_inst>(
-                     checked, enum_cast<store_flag>(flag), val, op, p0, p1, get_optional(loc))
+        *instr = std::make_unique<cooperative_matrix_store_inst>(enum_cast<checked_flag>(cflag),
+                                                                 enum_cast<store_flag>(sflag), val,
+                                                                 op, p0, p1, get_optional(loc))
                      .release();
     });
 }

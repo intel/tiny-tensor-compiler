@@ -135,7 +135,7 @@ auto constant_folding::get_memref_type(value_node const &v) const -> const memre
     return t;
 }
 
-auto constant_folding::operator()(inst_node &) -> fold_result { return {}; }
+auto constant_folding::operator()(inst_node &) -> fold_result { return tinytc_value_t{}; }
 
 auto constant_folding::operator()(arith_inst &in) -> fold_result {
     auto &op_a = in.a();

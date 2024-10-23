@@ -272,6 +272,14 @@ enum class address_space {
     local = tinytc_address_space_local    ///< Local memory, returned by alloca
 };
 
+//! Checked flag
+enum class checked_flag {
+    none = tinytc_checked_flag_none, ///< Perform no checks
+    rows = tinytc_checked_flag_rows, ///< Check for out-of-bound rows
+    cols = tinytc_checked_flag_cols, ///< Check for out-of-bound cols
+    both = tinytc_checked_flag_both  ///< Check for out-of-bound rows and cols
+};
+
 //! Store flag
 enum class store_flag {
     regular = tinytc_store_flag_regular,      ///< Non-atomic store

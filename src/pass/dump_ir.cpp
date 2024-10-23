@@ -206,8 +206,8 @@ void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cooperative_matrix_load";
     *os_ << "." << to_string(c.t());
-    if (c.checked()) {
-        *os_ << ".checked";
+    if (c.checked() != checked_flag::none) {
+        *os_ << "." << to_string(c.checked());
     }
     *os_ << " ";
     dump_val(c.operand());
@@ -253,8 +253,8 @@ void dump_ir_pass::operator()(cooperative_matrix_scale_inst const &c) {
 
 void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
     *os_ << "cooperative_matrix_store";
-    if (c.checked()) {
-        *os_ << ".checked";
+    if (c.checked() != checked_flag::none) {
+        *os_ << "." << to_string(c.checked());
     }
     if (c.flag() != store_flag::regular) {
         *os_ << '.' << to_string(c.flag());

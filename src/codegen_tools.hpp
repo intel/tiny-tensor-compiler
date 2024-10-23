@@ -143,10 +143,15 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
 
 auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value a, value b,
                                 location const &loc) -> value;
+auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
+                                      location const &loc) -> value;
 
 auto get_atomic_store_flag(value beta) -> std::optional<store_flag>;
 void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,
                  array_view<value> index_list, location const &loc);
+
+auto instant_constant_fold_add(region_builder &bb, inst i) -> value;
+auto get_int_constant(tinytc_value_t val) -> std::optional<std::int64_t>;
 
 } // namespace tinytc
 

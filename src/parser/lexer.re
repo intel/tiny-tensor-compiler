@@ -96,7 +96,6 @@ lex:
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
         ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
-        ".checked"          { adv_loc(); return parser::make_CHECKED(loc_); }
         "init"              { adv_loc(); return parser::make_INIT(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
@@ -140,6 +139,11 @@ lex:
         "matrix_a"          { adv_loc(); return parser::make_MATRIX_USE(matrix_use::a, loc_); }
         "matrix_b"          { adv_loc(); return parser::make_MATRIX_USE(matrix_use::b, loc_); }
         "matrix_acc"        { adv_loc(); return parser::make_MATRIX_USE(matrix_use::acc, loc_); }
+
+        // checked flag
+        ".rows_checked"     { adv_loc(); return parser::make_CHECKED(checked_flag::rows, loc_); }
+        ".cols_checked"     { adv_loc(); return parser::make_CHECKED(checked_flag::cols, loc_); }
+        ".both_checked"     { adv_loc(); return parser::make_CHECKED(checked_flag::both, loc_); }
 
         // instructions
         "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }

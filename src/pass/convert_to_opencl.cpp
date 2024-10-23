@@ -547,10 +547,12 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
     auto rt = get_coopmatrix_type(c.result(0));
     auto &dv = get_dope_vector(c.operand());
 
+    const bool check_rows = c.checked() == checked_flag::rows || c.checked() == checked_flag::both;
+    const bool check_cols = c.checked() == checked_flag::cols || c.checked() == checked_flag::both;
     const int rmode = rt->distributed_mode();
     const int omode = c.t() == transpose::T ? 1 - rmode : rmode;
-    const bool enable_sub_group_reads = core_cfg_.block_read_write_supported && !c.checked() &&
-                                        c.t() == transpose::N && ot->stride(omode) == 1;
+    const bool enable_sub_group_reads =
+        core_cfg_.block_read_write_supported && c.t() == transpose::N && ot->stride(omode) == 1;
 
     auto clinst = std::vector<clir::stmt>{};
     auto const len = rt->length(core_cfg_.subgroup_size);
@@ -563,7 +565,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
         declaration_assignment(visit(*this, *c.operand().ty()), pointer,
                                val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
     clir::var rem[2] = {};
-    if (c.checked()) {
+    if (check_rows || check_cols) {
         clinst.emplace_back(
             declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
         clinst.emplace_back(
@@ -572,40 +574,45 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
 
     const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
     for (std::int64_t block = 0; block < num_blocks; ++block) {
-        auto common_check = clir::var{};
-        if (c.checked()) {
+        auto row_in_bounds = clir::var{};
+        if (check_rows) {
             auto m = clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size;
-            clinst.emplace_back(declaration_assignment(to_clir_ty(scalar_type::i1), common_check,
+            clinst.emplace_back(declaration_assignment(to_clir_ty(scalar_type::i1), row_in_bounds,
                                                        m >= -pv[omode] && m < rem[omode]));
         }
         for (std::int64_t k = 0; k < rt->shape(1 - rmode); ++k) {
+            auto col_cond = [&] { return k >= -pv[1 - omode] && k < rem[1 - omode]; };
+
             auto const store = [&](clir::expr rhs) -> clir::stmt {
                 return expression_statement(
                     assignment(lhs[k + block * rt->shape(1 - rmode)], std::move(rhs)));
             };
             auto const remainder = rt->shape(rmode) - core_cfg_.subgroup_size * block;
             const bool needs_mask = remainder < core_cfg_.subgroup_size;
-            if (enable_sub_group_reads && !needs_mask) {
+            if (enable_sub_group_reads && !needs_mask && !check_rows) {
                 auto rhs = sub_group_block_read_helper(
                     pointer + block * core_cfg_.subgroup_size + k * ot->stride(1), ot->element_ty(),
                     to_clir_address_space(ot->addrspace()));
+                if (check_cols) {
+                    rhs = ternary_conditional(col_cond(), std::move(rhs), 0);
+                }
                 clinst.emplace_back(store(std::move(rhs)));
             } else {
                 auto rhs = pointer[ot->stride(omode) * (clir::get_sub_group_local_id() +
                                                         block * core_cfg_.subgroup_size) +
                                    k * ot->stride(1 - omode)];
-                auto checked_cond = [&] {
-                    return common_check && k >= -pv[1 - omode] && k < rem[1 - omode];
-                };
-                auto mask_cond = [&] { return clir::get_sub_group_local_id() < remainder; };
                 clir::expr cond = {};
-                if (c.checked() && needs_mask) {
-                    cond = checked_cond() && mask_cond();
-                } else if (c.checked()) {
-                    cond = checked_cond();
-                } else if (needs_mask) {
-                    cond = mask_cond();
+                if (check_rows) {
+                    cond = row_in_bounds;
                 }
+                if (check_cols) {
+                    cond = cond ? cond && col_cond() : col_cond();
+                }
+                if (needs_mask) {
+                    auto mask_cond = clir::get_sub_group_local_id() < remainder;
+                    cond = cond ? cond && mask_cond : mask_cond;
+                }
+
                 if (cond) {
                     rhs = ternary_conditional(cond, std::move(rhs), 0);
                 }
@@ -753,6 +760,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
     auto &dv = get_dope_vector(c.operand());
     auto valv = val(c.val());
 
+    const bool check_rows = c.checked() == checked_flag::rows || c.checked() == checked_flag::both;
+    const bool check_cols = c.checked() == checked_flag::cols || c.checked() == checked_flag::both;
+
     const int vmode = vt->distributed_mode();
     const int omode = vmode;
 
@@ -766,7 +776,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
         declaration_assignment(visit(*this, *c.operand().ty()), pointer,
                                val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
     clir::var rem[2] = {};
-    if (c.checked()) {
+    if (check_rows || check_cols) {
         clinst.emplace_back(
             declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
         clinst.emplace_back(
@@ -808,15 +818,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
                               (clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size) +
                           k * ot->stride(1 - omode);
             auto rhs = valv[k + block * vt->shape(1 - vmode)];
-            auto checked_cond = [&] { return k >= -pv[1 - omode] && k < rem[1 - omode]; };
-            auto mask_cond = [&] { return clir::get_sub_group_local_id() < remainder; };
             clir::expr cond = {};
-            if (c.checked() && needs_mask) {
-                cond = checked_cond() && mask_cond();
-            } else if (c.checked()) {
-                cond = checked_cond();
-            } else if (needs_mask) {
-                cond = mask_cond();
+            if (check_cols) {
+                cond = k >= -pv[1 - omode] && k < rem[1 - omode];
+            }
+            if (needs_mask) {
+                auto mask_cond = clir::get_sub_group_local_id() < remainder;
+                cond = cond ? cond && mask_cond : mask_cond;
             }
             auto st = clir::expression_statement(store(std::move(offset), std::move(rhs)));
             if (cond) {
@@ -829,7 +837,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
             }
         }
 
-        if (c.checked()) {
+        if (check_rows) {
             auto m = clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size;
             clinst.emplace_back(clir::if_selection_builder(m >= -pv[omode] && m < rem[omode])
                                     .then([&](clir::block_builder &bb) {

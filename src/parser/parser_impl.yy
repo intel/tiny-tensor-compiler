@@ -96,7 +96,6 @@
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
-    CHECKED         ".checked"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -151,6 +150,7 @@
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <cmp_condition> CMP_CONDITION
 %token <matrix_use> MATRIX_USE
+%token <checked_flag> CHECKED
 
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
@@ -211,7 +211,7 @@
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_scale_inst
 %nterm <inst> cooperative_matrix_store_inst
-%nterm <bool> checked
+%nterm <checked_flag> checked
 %nterm <inst> expand_inst
 %nterm <int_or_val> integer_constant_or_identifier
 %nterm <std::vector<int_or_val>> expand_shape
@@ -917,8 +917,8 @@ cooperative_matrix_load_inst:
 ;
 
 checked:
-    %empty { $$ = false; }
-  | CHECKED { $$ = true; }
+    %empty { $$ = checked_flag::none; }
+  | CHECKED { $$ = $CHECKED; }
 ;
 
 cooperative_matrix_mul_add_inst:

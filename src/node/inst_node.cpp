@@ -16,6 +16,15 @@
 #include <memory>
 #include <sstream>
 
+auto tinytc_inst::context() const -> tinytc_compiler_context_t {
+    if (num_results() > 0) {
+        return result(0).context();
+    } else if (num_operands() > 0) {
+        return op(0).context();
+    }
+    return nullptr;
+}
+
 namespace tinytc {
 
 scalar_data_type *get_scalar_type(location const &loc, tinytc_value const &v) {
@@ -376,12 +385,12 @@ auto constant_inst::is_identity() const -> bool {
     return std::visit([](auto const &v) { return v == decltype(v){1}; }, value_);
 }
 
-cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, bool checked,
+cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_flag flag,
                                                            tinytc_value_t op0, tinytc_value_t p0,
                                                            tinytc_value_t p1,
                                                            tinytc_data_type_t to_ty,
                                                            location const &lc)
-    : standard_inst{IK::cooperative_matrix_load}, t_(t), checked_(checked) {
+    : standard_inst{IK::cooperative_matrix_load}, t_(t), flag_(flag) {
     op(op_operand, op0);
     op(op_pos0, p0);
     op(op_pos1, p1);
@@ -471,11 +480,11 @@ cooperative_matrix_scale_inst::cooperative_matrix_scale_inst(tinytc_value_t a0, 
     result(0) = value_node{b().ty(), this, lc};
 }
 
-cooperative_matrix_store_inst::cooperative_matrix_store_inst(bool checked, store_flag flag,
+cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag, store_flag sflag,
                                                              tinytc_value_t val0,
                                                              tinytc_value_t op0, tinytc_value_t p0,
                                                              tinytc_value_t p1, location const &lc)
-    : standard_inst{IK::cooperative_matrix_store}, checked_(checked), flag_(flag) {
+    : standard_inst{IK::cooperative_matrix_store}, cflag_(cflag), sflag_(sflag) {
     op(op_val, val0);
     op(op_operand, op0);
     op(op_pos0, p0);

@@ -170,6 +170,8 @@ TINYTC_EXPORT char const *tinytc_address_space_to_string(tinytc_address_space_t 
 TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
 //! Convert arithmetic operation type to string (unary)
 TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
+//! Convert checked flag to string
+TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
 //! Convert matrix use to string
@@ -325,7 +327,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
  *
  * @param instr [out] pointer to the inst object created
  * @param transpose [in] transpose operation applied on load
- * @param checked [in] true for out-of-bounds checks
+ * @param flag [in] out-of-bounds checks type
  * @param op [in] %op
  * @param p0 [in] %p0
  * @param p1 [in] %p1
@@ -335,8 +337,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
-    tinytc_inst_t *instr, tinytc_transpose_t transpose, tinytc_bool_t checked, tinytc_value_t op,
-    tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc);
+    tinytc_inst_t *instr, tinytc_transpose_t transpose, tinytc_checked_flag_t flag,
+    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty,
+    const tinytc_location_t *loc);
 
 /**
  * @brief Create cooperative matrix mul add instruction
@@ -378,8 +381,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param checked [in] true for out-of-bounds checks
- * @param flag [in] store flag
+ * @param cflag [in] out-of-bounds checks type
+ * @param sflag [in] store flag
  * @param val [in] %val
  * @param op [in] %op
  * @param p0 [in] %p0
@@ -389,8 +392,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
-    tinytc_inst_t *instr, tinytc_bool_t checked, tinytc_store_flag_t flag, tinytc_value_t val,
-    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, const tinytc_location_t *loc);
+    tinytc_inst_t *instr, tinytc_checked_flag_t cflag, tinytc_store_flag_t sflag,
+    tinytc_value_t val, tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1,
+    const tinytc_location_t *loc);
 
 /**
  * @brief Create alloca instruction

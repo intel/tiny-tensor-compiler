@@ -299,8 +299,9 @@ void generator::add_function_body(block_builder &bb, var A, var B, var C, expr a
         // available for one of the buffers
         register_space /= 2;
     }
-    auto [max_row_blocks, max_cols] =
+    auto [max_rows, max_cols] =
         max_register_block_gemm(size(gemm_cfg.ty.C), core_cfg.subgroup_size, register_space);
+    const auto max_row_blocks = max_rows / core_cfg.subgroup_size;
     row_blocks_in_register = max_row_blocks;
     cols_in_register = max_cols;
     if (!is_dynamic_value(gemm_cfg.M)) {

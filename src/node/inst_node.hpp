@@ -129,6 +129,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     tinytc_inst &operator=(tinytc_inst const &other) = delete;
     tinytc_inst &operator=(tinytc_inst &&other) = delete;
 
+    auto context() const -> tinytc_compiler_context_t;
     inline auto type_id() const -> tinytc::IK { return tid_; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
@@ -517,18 +518,18 @@ class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
         return i.type_id() == IK::cooperative_matrix_load;
     }
     enum op_number { op_operand = 0, op_pos0 = 1, op_pos1 = 2 };
-    cooperative_matrix_load_inst(transpose t, bool checked, tinytc_value_t op0, tinytc_value_t p0,
-                                 tinytc_value_t p1, tinytc_data_type_t to_ty,
+    cooperative_matrix_load_inst(transpose t, checked_flag flag, tinytc_value_t op0,
+                                 tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty,
                                  location const &lc = {});
     inline auto t() const -> transpose { return t_; }
-    inline auto checked() const -> bool { return checked_; }
+    inline auto checked() const -> checked_flag { return flag_; }
     inline auto operand() const -> tinytc_value const & { return op(op_operand); }
     inline auto pos0() const -> tinytc_value const & { return op(op_pos0); }
     inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
 
   private:
     transpose t_;
-    bool checked_;
+    checked_flag flag_;
 };
 
 class cooperative_matrix_mul_add_inst : public standard_inst<3, 1, 0> {
@@ -561,19 +562,19 @@ class cooperative_matrix_store_inst : public standard_inst<4, 0, 0> {
         return i.type_id() == IK::cooperative_matrix_store;
     }
     enum op_number { op_val = 0, op_operand = 1, op_pos0 = 2, op_pos1 = 3 };
-    cooperative_matrix_store_inst(bool checked, store_flag flag, tinytc_value_t val0,
+    cooperative_matrix_store_inst(checked_flag cflag, store_flag sflag, tinytc_value_t val0,
                                   tinytc_value_t op0, tinytc_value_t p0, tinytc_value_t p1,
                                   location const &lc = {});
-    inline auto checked() const -> bool { return checked_; }
-    inline auto flag() const -> store_flag { return flag_; }
+    inline auto checked() const -> checked_flag { return cflag_; }
+    inline auto flag() const -> store_flag { return sflag_; }
     inline auto val() const -> tinytc_value const & { return op(op_val); }
     inline auto operand() const -> tinytc_value const & { return op(op_operand); }
     inline auto pos0() const -> tinytc_value const & { return op(op_pos0); }
     inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
 
   private:
-    bool checked_;
-    store_flag flag_;
+    checked_flag cflag_;
+    store_flag sflag_;
 };
 
 class expand_inst : public standard_inst<dynamic, 1> {

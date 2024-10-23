@@ -66,23 +66,37 @@ TEST_CASE("routine names") {
 
 TEST_CASE("max register block") {
     auto s1 = max_register_block_gemm(4, 16, 8192);
-    CHECK(s1.first == 2);
+    CHECK(s1.first == 32);
     CHECK(s1.second == 19);
     auto s2 = max_register_block_gemm(4, 16, 16384);
-    CHECK(s2.first == 2);
+    CHECK(s2.first == 32);
     CHECK(s2.second == 44);
     auto s3 = max_register_block_gemm(4, 32, 8192);
-    CHECK(s3.first == 1);
+    CHECK(s3.first == 32);
     CHECK(s3.second == 19);
     auto s4 = max_register_block_gemm(4, 32, 16384);
-    CHECK(s4.first == 1);
+    CHECK(s4.first == 32);
     CHECK(s4.second == 44);
     auto d1 = max_register_block_gemm(8, 16, 8192);
-    CHECK(d1.first == 1);
+    CHECK(d1.first == 16);
     CHECK(d1.second == 16);
     auto d2 = max_register_block_gemm(8, 16, 16384);
-    CHECK(d2.first == 2);
+    CHECK(d2.first == 32);
     CHECK(d2.second == 19);
+}
+
+TEST_CASE("block size") {
+    CHECK(compute_m_block_size(16, 48, 1, 5) == 16);
+    CHECK(compute_m_block_size(16, 48, 1, 17) == 32);
+    CHECK(compute_m_block_size(16, 48, 1, 32) == 32);
+    CHECK(compute_m_block_size(16, 48, 1, 48) == 48);
+    CHECK(compute_m_block_size(16, 48, 3, 144) == 48);
+    CHECK(compute_m_block_size(16, 48, 3, 143) == 48);
+    CHECK(compute_m_block_size(16, 48, 3, 145) == 16);
+    CHECK(compute_m_block_size(16, 48, 3, 288) == 48);
+    CHECK(compute_m_block_size(16, 48, 3, 286) == 48);
+    CHECK(compute_m_block_size(16, 48, 3, 290) == 16);
+    CHECK(compute_m_block_size(16, 48, 7, 224) == 32);
 }
 
 TEST_CASE("compatible scalar type") {

@@ -292,6 +292,14 @@ typedef enum {
     tinytc_address_space_local = 0x2   ///< Local memory, returned by alloca
 } tinytc_address_space_t;
 
+//! Checked flag
+typedef enum {
+    tinytc_checked_flag_none = 0, ///< Perform no checks
+    tinytc_checked_flag_rows = 1, ///< Check for out-of-bound rows
+    tinytc_checked_flag_cols = 2, ///< Check for out-of-bound cols
+    tinytc_checked_flag_both = 3  ///< Check for out-of-bound rows and cols
+} tinytc_checked_flag_t;
+
 //! Store flag
 typedef enum {
     tinytc_store_flag_regular = 0,   ///< Non-atomic store

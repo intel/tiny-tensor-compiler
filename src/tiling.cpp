@@ -95,7 +95,7 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes,
 }
 
 auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg) -> local_tiling {
-    auto [row_blocks, cols] =
+    auto [rows, cols] =
         max_register_block_gemm(size(bshape.ty), core_cfg.subgroup_size, core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {
         auto limit = std::numeric_limits<std::int32_t>::max();
@@ -104,7 +104,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
         }
         return limit;
     };
-    auto const m_limit = num_tile_limit(bshape.shape[0], row_blocks * core_cfg.subgroup_size);
+    auto const m_limit = num_tile_limit(bshape.shape[0], rows);
     auto const n_limit = num_tile_limit(bshape.shape[1], cols);
 
     auto const max_threads = core_cfg.max_work_group_size / core_cfg.subgroup_size;
@@ -119,7 +119,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
         while (2 * n <= std::min(n_limit, max_threads / m)) {
             n *= 2;
         }
-        auto const LM = m * row_blocks * core_cfg.subgroup_size;
+        auto const LM = m * rows;
         auto const LN = n * cols;
         double const ratio = LM * LN / static_cast<double>(LM + LN);
         if (ratio > best_ratio) {
