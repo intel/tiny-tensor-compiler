@@ -17,7 +17,8 @@ target_link_libraries(test-cl-device PRIVATE test-cl-lib)
 doctest_discover_tests(test-cl-device)
 set_cxx_common_options(test-cl-lib)
 
-add_executable(test-cl-smm smm.cpp)
-target_link_libraries(test-cl-smm PRIVATE test-cl-lib)
-doctest_discover_tests(test-cl-smm)
-set_cxx_common_options(test-cl-lib)
+add_executable(test-cl-linalg linalg.cpp)
+target_link_libraries(test-cl-linalg PRIVATE test-cl-lib test-lib-linalg)
+doctest_discover_tests(test-cl-linalg)
+set_cxx_common_options(test-cl-linalg)
+

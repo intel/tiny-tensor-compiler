@@ -1141,7 +1141,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(ger_inst const &g) {
                                           n < std::move(trip_count), ++n)
                        .body([&](clir::block_builder &bb) {
                            auto b = bb.declare_assign(to_clir_ty(bt->element_ty()), "b",
-                                                      B + (block + n) * bdv.stride(0));
+                                                      B[(block + n) * bdv.stride(0)]);
                            auto Cb = bb.declare_assign(this->operator()(*ct), "Cb",
                                                        C + (block + n) * cdv.stride(1));
                            auto m = bb.declare_assign(clir::generic_uint(), "m",

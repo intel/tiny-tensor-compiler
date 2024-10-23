@@ -4,6 +4,13 @@
 #ifndef DOCTEST_UTIL_20241023_HPP
 #define DOCTEST_UTIL_20241023_HPP
 
+#define DOCTEST_TENSOR1_TEST(MM)                                                                   \
+    do {                                                                                           \
+        for (auto mm : MM) {                                                                       \
+            DOCTEST_SUBCASE((std::to_string(mm)).c_str()) { M = mm; }                              \
+        }                                                                                          \
+    } while (false)
+
 #define DOCTEST_TENSOR2_TEST(MM, NN)                                                               \
     do {                                                                                           \
         for (auto nn : NN) {                                                                       \
