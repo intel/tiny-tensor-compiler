@@ -481,6 +481,11 @@ cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t 
         throw compilation_error(loc(), status::ir_invalid_matrix_use);
     }
 
+    const auto AB_ty = compatible_type(at->component_ty(), bt->component_ty());
+    if (compatible_type(AB_ty, ct->component_ty()) != ct->component_ty()) {
+        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+    }
+
     result(0) = value_node{to_ty, this, lc};
 }
 

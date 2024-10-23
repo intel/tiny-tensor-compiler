@@ -861,7 +861,7 @@ Matrix mul add returns the value of
 
 .. math::
 
-    AB + C,
+    D := AB + C,
 
 where A, B, and C are matrices given by the three operands.
 
@@ -870,6 +870,12 @@ with use "matrix_a", the second operand has shape :math:`K\times N` with use "ma
 and the third operand and the result have shape :math:`M\times N` with use "matrix_acc".
 
 The component types of the operands and the result do not need to match.
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{compatible_type}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
+* Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
 
 Cooperative matrix scale
 ........................
