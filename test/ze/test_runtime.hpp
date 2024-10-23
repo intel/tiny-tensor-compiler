@@ -16,6 +16,8 @@ class level_zero_test_runtime {
     using context_t = ze_context_handle_t;
     using command_list_t = ze_command_list_handle_t;
     using recipe_handler_t = tinytc::level_zero_recipe_handler;
+    using kernel_bundle_t = tinytc::unique_handle<ze_module_handle_t>;
+    using kernel_t = tinytc::unique_handle<ze_kernel_handle_t>;
     using mem_t = void *;
     using const_mem_t = const void *;
 
@@ -38,6 +40,13 @@ class level_zero_test_runtime {
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
     auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
+    auto get_kernel_bundle(tinytc::prog p) -> kernel_bundle_t;
+    auto get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t;
+    void set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
+                 const void *arg_value);
+    void set_mem_arg(kernel_t &kernel, std::uint32_t arg_index, const void *arg_value,
+                     tinytc::mem_type type);
+    void submit(kernel_t &kernel, std::int64_t howmany = 1);
     void synchronize();
 
     bool supports_fp64();

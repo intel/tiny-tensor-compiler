@@ -4,6 +4,7 @@
 #ifndef CL_TEST_RUNTIME_20240314_HPP
 #define CL_TEST_RUNTIME_20240314_HPP
 
+#include "cl/argument_handler.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
 
@@ -16,6 +17,8 @@ class opencl_test_runtime {
     using context_t = cl_context;
     using command_list_t = cl_command_queue;
     using recipe_handler_t = tinytc::opencl_recipe_handler;
+    using kernel_bundle_t = tinytc::shared_handle<cl_program>;
+    using kernel_t = tinytc::shared_handle<cl_kernel>;
     using mem_t = cl_mem;
     using const_mem_t = const cl_mem;
 
@@ -38,6 +41,13 @@ class opencl_test_runtime {
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
     auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
+    auto get_kernel_bundle(tinytc::prog p) -> kernel_bundle_t;
+    auto get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t;
+    void set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
+                 const void *arg_value);
+    void set_mem_arg(kernel_t &kernel, std::uint32_t arg_index, const void *arg_value,
+                     tinytc::mem_type type);
+    void submit(kernel_t &kernel, std::int64_t howmany = 1);
     void synchronize();
 
     bool supports_fp64();
@@ -46,6 +56,7 @@ class opencl_test_runtime {
     device_t dev_;
     context_t ctx_;
     command_list_t q_;
+    tinytc::opencl_argument_handler arg_handler_;
 };
 
 #endif // CL_TEST_RUNTIME_20240314_HPP

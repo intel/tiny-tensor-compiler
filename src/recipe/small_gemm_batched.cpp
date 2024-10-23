@@ -72,7 +72,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
         ++l.end.column;
         return l;
     };
-    auto const make_static_sizes = [](transpose t, int64_t A, std::int64_t B) {
+    auto const make_static_sizes = [](transpose t, std::int64_t A, std::int64_t B) {
         auto s = std::array<std::int64_t, 3u>{A, B, 0};
         if (t == transpose::T) {
             std::swap(s[0], s[1]);

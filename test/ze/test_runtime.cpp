@@ -66,6 +66,26 @@ auto level_zero_test_runtime::get_command_list() -> command_list_t { return list
 auto level_zero_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
     return tinytc::make_recipe_handler(ctx_, dev_, rec);
 }
+auto level_zero_test_runtime::get_kernel_bundle(tinytc::prog p) -> kernel_bundle_t {
+    return ::tinytc::make_kernel_bundle(ctx_, dev_, std::move(p));
+}
+auto level_zero_test_runtime::get_kernel(kernel_bundle_t const &bundle,
+                                         char const *name) -> kernel_t {
+    return ::tinytc::make_kernel(bundle.get(), name);
+}
+void level_zero_test_runtime::set_arg(kernel_t &kernel, std::uint32_t arg_index,
+                                      std::size_t arg_size, const void *arg_value) {
+    ZE_CHECK_STATUS(zeKernelSetArgumentValue(kernel.get(), arg_index, arg_size, arg_value));
+}
+void level_zero_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_index,
+                                          const void *arg_value, tinytc::mem_type) {
+    set_arg(kernel, arg_index, sizeof(arg_value), &arg_value);
+}
+void level_zero_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
+    auto group_count = ::tinytc::get_group_count(howmany);
+    ZE_CHECK_STATUS(
+        zeCommandListAppendLaunchKernel(list_, kernel.get(), &group_count, nullptr, 0, nullptr));
+}
 void level_zero_test_runtime::synchronize() {
     ZE_CHECK_STATUS(zeCommandListHostSynchronize(list_, UINT64_MAX));
 }

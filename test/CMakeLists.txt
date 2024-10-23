@@ -26,6 +26,10 @@ target_link_libraries(test-visitor PRIVATE test-lib)
 doctest_discover_tests(test-visitor)
 set_cxx_common_options(test-visitor)
 
+add_library(test-lib-linalg STATIC linalg_ops.cpp linalg_types.cpp)
+target_link_libraries(test-lib-linalg PUBLIC tinytc)
+set_cxx_common_options(test-lib-linalg)
+
 configure_file(lit.site.cfg.py.in lit.site.cfg.py @ONLY)
 file(READ ${CMAKE_CURRENT_SOURCE_DIR}/lit.site.cfg.py.in LIT_SITE_CONFIG)
 string(CONFIGURE "${LIT_SITE_CONFIG}" LIT_SITE_CONFIG @ONLY)
