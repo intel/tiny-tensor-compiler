@@ -88,6 +88,7 @@ enum class status {
     ir_init_return_mismatch = tinytc_status_ir_init_return_mismatch,
     ir_invalid_matrix_use = tinytc_status_ir_invalid_matrix_use,
     ir_unsupported_coopmatrix_shape = tinytc_status_ir_unsupported_coopmatrix_shape,
+    ir_incompatible_scalar_types = tinytc_status_ir_incompatible_scalar_types,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,

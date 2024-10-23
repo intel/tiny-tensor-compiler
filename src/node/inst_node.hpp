@@ -331,7 +331,7 @@ class blas_a2_inst : public standard_inst<4, 0> {
     }
     enum op_number { op_alpha = 0, op_A = 1, op_beta = 2, op_B = 3 };
     blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
-                 tinytc_value_t B, bool atomic);
+                 tinytc_value_t B, bool atomic, location const &lc);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }
@@ -355,7 +355,7 @@ class blas_a3_inst : public standard_inst<5, 0> {
     }
     enum op_number { op_alpha = 0, op_A = 1, op_B = 2, op_beta = 3, op_C = 4 };
     blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
-                 tinytc_value_t beta, tinytc_value_t C, bool atomic);
+                 tinytc_value_t beta, tinytc_value_t C, bool atomic, location const &lc);
 
     inline bool atomic() const { return atomic_; }
     inline void atomic(bool a) { atomic_ = a; }

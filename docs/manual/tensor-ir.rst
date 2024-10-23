@@ -157,6 +157,15 @@ The number behind the scalar type prefix denotes the number of bits,
 e.g. "f64" are double precision floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
 
+Scalar types are ordered as 
+:math:`i1 \prec \text{i8} \prec \text{i16} \prec \text{i32} \prec \text{i64} \prec \text{f32} \prec \text{f64} \prec \text{c32} \prec \text{c64}`.
+A scalar type :math:`\alpha` is called *compatible to* a scalar type :math:`\beta` if
+:math:`\alpha \preceq \beta`.
+If an arithmetic operation involves mixed types :math:`\alpha` and :math:`\beta` and
+:math:`\alpha \preceq \beta`, then :math:`\alpha` is casted to :math:`\beta` and the arithmetic operation
+is done with type :math:`\beta`.
+
+
 Memref type
 -----------
 
@@ -361,7 +370,9 @@ or 2 (matrix).
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+* :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 Foreach
 .......
@@ -428,7 +439,9 @@ If :math:`\text{op}_1(A)` has the shape MxK and
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(B))`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 GEMV
 ....
@@ -464,7 +477,9 @@ The transpose modifier for A as in GEMM.
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(b))`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 GER
 ...
@@ -498,7 +513,9 @@ a and b must be vectors. If the size of a is M and the size of b is N the shape 
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
 Hadamard product
@@ -534,7 +551,9 @@ a, b, and c must be vectors and have equal shape.
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(c)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 Parallel
 ........
@@ -590,8 +609,9 @@ The transpose op is defined as in the axpby instruction.
 Restrictions
 ~~~~~~~~~~~~
 
-If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
-
+* :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
 Mixed instructions

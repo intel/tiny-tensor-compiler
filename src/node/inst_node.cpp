@@ -50,22 +50,50 @@ void check_index_ty(location const &loc, tinytc_data_type_t ty) {
 }
 
 blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
-                           tinytc_value_t B, bool atomic)
+                           tinytc_value_t B, bool atomic, location const &lc)
     : standard_inst{tid}, atomic_(atomic) {
     op(op_alpha, alpha);
     op(op_A, A);
     op(op_beta, beta);
     op(op_B, B);
+    loc(lc);
+
+    auto At = get_memref_type(loc(), op(op_A));
+    auto Bt = get_memref_type(loc(), op(op_B));
+    auto alphat = get_scalar_type(loc(), op(op_alpha));
+    auto betat = get_scalar_type(loc(), op(op_beta));
+
+    if (compatible_type(alphat->ty(), At->element_ty()) != At->element_ty()) {
+        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+    }
+    if (compatible_type(betat->ty(), Bt->element_ty()) != Bt->element_ty()) {
+        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+    }
 }
 
 blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B,
-                           tinytc_value_t beta, tinytc_value_t C, bool atomic)
+                           tinytc_value_t beta, tinytc_value_t C, bool atomic, location const &lc)
     : standard_inst{tid}, atomic_(atomic) {
     op(op_alpha, alpha);
     op(op_A, A);
     op(op_B, B);
     op(op_beta, beta);
     op(op_C, C);
+    loc(lc);
+
+    auto At = get_memref_type(loc(), op(op_A));
+    auto Bt = get_memref_type(loc(), op(op_B));
+    auto Ct = get_memref_type(loc(), op(op_C));
+    auto alphat = get_scalar_type(loc(), op(op_alpha));
+    auto betat = get_scalar_type(loc(), op(op_beta));
+
+    const auto AB_ty = compatible_type(At->element_ty(), Bt->element_ty());
+    if (compatible_type(alphat->ty(), AB_ty) != AB_ty) {
+        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+    }
+    if (compatible_type(betat->ty(), Ct->element_ty()) != Ct->element_ty()) {
+        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+    }
 }
 
 loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
@@ -134,9 +162,8 @@ alloca_inst::alloca_inst(tinytc_data_type_t ty, location const &lc)
 axpby_inst::axpby_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t beta0,
                        tinytc_value_t B0, bool atomic, location const &lc)
     : blas_a2_inst(IK::axpby_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
-                   std::move(B0), atomic),
+                   std::move(B0), atomic, lc),
       tA_(tA) {
-    loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
 
@@ -628,9 +655,8 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_v
                      tinytc_value_t B0, tinytc_value_t beta0, tinytc_value_t C0, bool atomic,
                      location const &lc)
     : blas_a3_inst(IK::gemm_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
-                   std::move(beta0), std::move(C0), atomic),
+                   std::move(beta0), std::move(C0), atomic, lc),
       tA_(tA), tB_(tB) {
-    loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
@@ -658,9 +684,8 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_v
 gemv_inst::gemv_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
                      tinytc_value_t beta0, tinytc_value_t C0, bool atomic, location const &lc)
     : blas_a3_inst(IK::gemv_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
-                   std::move(beta0), std::move(C0), atomic),
+                   std::move(beta0), std::move(C0), atomic, lc),
       tA_(tA) {
-    loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
@@ -686,8 +711,7 @@ gemv_inst::gemv_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tin
 ger_inst::ger_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
                    tinytc_value_t beta0, tinytc_value_t C0, bool atomic, location const &lc)
     : blas_a3_inst(IK::ger_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
-                   std::move(beta0), std::move(C0), atomic) {
-    loc(lc);
+                   std::move(beta0), std::move(C0), atomic, lc) {
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
@@ -720,8 +744,7 @@ hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_va
                              tinytc_value_t beta0, tinytc_value_t C0, bool atomic,
                              location const &lc)
     : blas_a3_inst(IK::hadamard_blas_a3, std::move(alpha0), std::move(A0), std::move(B0),
-                   std::move(beta0), std::move(C0), atomic) {
-    loc(lc);
+                   std::move(beta0), std::move(C0), atomic, lc) {
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
@@ -855,9 +878,8 @@ store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
 sum_inst::sum_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t beta0,
                    tinytc_value_t B0, bool atomic, location const &lc)
     : blas_a2_inst(IK::sum_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
-                   std::move(B0), atomic),
+                   std::move(B0), atomic, lc),
       tA_(tA) {
-    loc(lc);
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
 
