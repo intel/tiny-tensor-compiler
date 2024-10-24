@@ -25,6 +25,7 @@ struct tinytc_value final {
   public:
     tinytc_value(tinytc_data_type_t ty = nullptr, tinytc_inst_t def_inst_ = nullptr,
                  tinytc::location const &lc = {});
+    ~tinytc_value();
 
     tinytc_value(tinytc_value const &) = delete;
     tinytc_value(tinytc_value &&) = default;

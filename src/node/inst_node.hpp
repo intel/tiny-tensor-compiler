@@ -186,7 +186,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
         return child_regions_end_ - child_regions_begin_;
     }
 
-    inline constexpr auto kind() const -> tinytc::inst_execution_kind {
+    inline auto kind() const -> tinytc::inst_execution_kind {
         switch (type_id()) {
         case tinytc::IK::alloca:
         case tinytc::IK::barrier:

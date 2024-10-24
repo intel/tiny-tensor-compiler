@@ -29,7 +29,13 @@ tinytc_region::tinytc_region(array_view<tinytc_data_type_t> param_types, locatio
 
     set_params(std::move(param_types), lc);
 }
-tinytc_region::~tinytc_region() {}
+tinytc_region::~tinytc_region() {
+    // Erase instructions in reverse order such that we delete value use before value definition
+    auto prev_it = insts_.end();
+    while (prev_it != insts_.begin()) {
+        prev_it = insts_.erase(--prev_it);
+    }
+}
 
 void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types, location const &lc) {
     params_.resize(param_types.size());

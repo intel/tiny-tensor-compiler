@@ -58,7 +58,11 @@ struct compute_unary_op {
         T val = 0;
         switch (operation) {
         case arithmetic_unary::abs:
-            val = a < 0 ? -a : a;
+            if constexpr (std::is_same_v<T, bool>) {
+                val = a;
+            } else {
+                val = a < 0 ? -a : a;
+            }
             break;
         case arithmetic_unary::neg:
             val = -a;
@@ -163,7 +167,11 @@ struct compute_binary_op {
             val = a - b;
             break;
         case arithmetic::mul:
-            val = a * b;
+            if constexpr (std::is_same_v<T, bool>) {
+                val = a && b;
+            } else {
+                val = a * b;
+            }
             break;
         case arithmetic::div:
             val = a / b;
@@ -282,6 +290,7 @@ struct compute_binop_identities {
                     return &operand;
                 }
             }
+            break;
         case arithmetic::and_:
             if (a == T{0}) {
                 return make_constant(T{0}, operand.ty(), loc);

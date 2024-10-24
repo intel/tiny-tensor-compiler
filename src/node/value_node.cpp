@@ -3,10 +3,16 @@
 
 #include "node/value_node.hpp"
 
+#include <cassert>
+
 using namespace tinytc;
 
 tinytc_value::tinytc_value(tinytc_data_type_t ty, tinytc_inst_t def_inst, location const &lc)
     : ty_{std::move(ty)}, loc_{lc}, def_inst_{def_inst} {}
+
+tinytc_value::~tinytc_value() {
+    assert(!has_uses() && "Destructor called for value that still has uses");
+}
 
 auto tinytc_value::use_begin() -> use_iterator { return {first_use_}; }
 auto tinytc_value::use_end() -> use_iterator { return {nullptr}; }
