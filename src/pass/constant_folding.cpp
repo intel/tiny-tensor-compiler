@@ -244,6 +244,26 @@ auto constant_folding::operator()(compare_inst &in) -> fold_result {
     return std::visit(std::move(dispatcher), a_const->value(), b_const->value());
 }
 
+auto constant_folding::operator()(cooperative_matrix_scale_inst &in) -> fold_result {
+    auto &op_a = in.a();
+    auto &op_b = in.b();
+
+    constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
+
+    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    if (at == nullptr) {
+        throw compilation_error(op_a.loc(), status::ir_expected_scalar);
+    }
+
+    if (a_const != nullptr) {
+        auto computer =
+            compute_binop_identities{unsafe_fp_math_, arithmetic::mul, op_b, true, in.loc()};
+        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        return std::visit(std::move(dispatcher), a_const->value());
+    }
+    return tinytc_value_t{};
+}
+
 auto constant_folding::operator()(size_inst &in) -> fold_result {
     auto ct = get_memref_type(in.operand());
 

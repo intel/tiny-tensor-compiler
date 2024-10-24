@@ -31,6 +31,7 @@ class constant_folding {
     auto operator()(inst_node &) -> fold_result;
     auto operator()(arith_inst &) -> fold_result;
     auto operator()(arith_unary_inst &) -> fold_result;
+    auto operator()(cooperative_matrix_scale_inst &) -> fold_result;
     auto operator()(cast_inst &) -> fold_result;
     auto operator()(compare_inst &) -> fold_result;
     auto operator()(size_inst &in) -> fold_result;

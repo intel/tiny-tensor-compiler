@@ -85,8 +85,8 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
             for (std::int64_t m = 0; m < M; ++m) {
                 CT c_acc = CT{0};
                 for (std::int64_t k = 0; k < K; ++k) {
-                    c_acc += A[lA_.linear_index(make_index(tA_, m, k))] *
-                             B[lB_.linear_index(make_index(tB_, k, n))];
+                    c_acc = c_acc + A[lA_.linear_index(make_index(tA_, m, k))] *
+                                        B[lB_.linear_index(make_index(tB_, k, n))];
                 }
                 auto &c = C[lC_.linear_index({m, n})];
                 c = alpha * c_acc + beta * c;

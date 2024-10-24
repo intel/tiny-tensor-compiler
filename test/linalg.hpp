@@ -111,6 +111,19 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed complex alpha=(-1,-2) beta=(2,3)",
     test::test_blas_a3<runtime_class>(op, {-1.0, -2.0}, {2.0, 3.0});
 }
 
+TEST_CASE(RUNTIME_NAME " gemm packed mixed precision") {
+    auto KK = std::vector<std::uint32_t>{53};
+    auto MM = std::vector<std::uint32_t>{21, 42};
+    auto NN = std::vector<std::uint32_t>{7, 11};
+
+    std::int64_t M, N, K;
+    DOCTEST_TENSOR3_TEST(MM, NN, KK);
+
+    auto op = test::gemm<int, int, int, float, float>(transpose::N, transpose::N, {{M, K}},
+                                                      {{K, N}}, {{M, N}});
+    test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
 TEST_CASE_TEMPLATE(RUNTIME_NAME " ger packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{10, 32, 45};
     auto NN = std::vector<std::int64_t>{1, 16, 17, 48};
