@@ -59,6 +59,24 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm non-packed alpha=1 beta=0 transA transB",
     test::test_blas_a3<runtime_class>(op, 1, 0);
 }
 
+TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm non-static M", T, TEST_PRECISIONS) {
+    std::int64_t M = 63, N = 43, K = 23;
+
+    auto op = test::gemm<T, T, T, T, T>(
+        transpose::N, transpose::N, {{M, K}, {1, M}, {dynamic, K}, {1, dynamic}}, {{K, N}, {1, K}},
+        {{M, N}, {1, M}, {dynamic, N}, {1, dynamic}});
+    test::test_blas_a3<runtime_class>(op, 1, 1);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm non-static N", T, TEST_PRECISIONS) {
+    std::int64_t M = 63, N = 43, K = 23;
+
+    auto op = test::gemm<T, T, T, T, T>(transpose::N, transpose::N, {{M, K}, {1, M}},
+                                        {{K, N}, {1, K}, {K, dynamic}, {1, K}},
+                                        {{M, N}, {1, M}, {M, dynamic}, {1, M}});
+    test::test_blas_a3<runtime_class>(op, 1, 1);
+}
+
 TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm non-static", T, TEST_PRECISIONS) {
     std::int64_t M = 63, N = 43, K = 23;
 

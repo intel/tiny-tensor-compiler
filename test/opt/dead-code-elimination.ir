@@ -21,6 +21,28 @@ func @dead_if(%a: memref<f64>) {
 ; CHECK-NEXT: }
 }
 
+func @dead_if_with_yield(%a: memref<f64>) {
+    %c0 = constant 0 -> i1
+    %0 = if %c0 -> (f64) {
+        %c42 = constant 42.0 -> f64
+        yield %c42 : f64
+    } else {
+        %c43 = constant 43.0 -> f64
+        yield %c43 : f64
+    }
+    store %0, %a[] : memref<f64>
+; Cannot eliminate if that returns results currently
+; CHECK-LABEL: func @dead_if_with_yield({{.*}}
+; CHECK:       %0 = if %c0 {
+; CHECK-NEXT:    %c42 = constant 0x1.5p+5 -> f64
+; CHECK-NEXT:    yield %c42 : f64
+; CHECK-NEXT:  } else {
+; CHECK-NEXT:    %c43 = constant 0x1.58p+5 -> f64
+; CHECK-NEXT:    yield %c43 : f64
+; CHECK-NEXT:  }
+; CHECK-NEXT:  store %0, %a[] : memref<f64>
+}
+
 func @dead_loop(%a: memref<f64>) {
     %c2 = constant 2 -> index
     for %0=%c2,%c2 {

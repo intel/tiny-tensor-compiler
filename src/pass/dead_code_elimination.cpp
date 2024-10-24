@@ -42,7 +42,7 @@ auto dead_code_analysis::operator()(inst_node &in) -> bool {
 
 auto dead_code_analysis::operator()(if_inst &in) -> bool {
     constant_inst *cond_const = dyn_cast<constant_inst>(in.condition().defining_inst());
-    if (cond_const) {
+    if (in.num_results() == 0 && cond_const) {
         // If-instruction is dead if condition is constant and false
         return std::holds_alternative<std::int64_t>(cond_const->value()) &&
                std::get<std::int64_t>(cond_const->value()) == 0;
@@ -54,7 +54,7 @@ auto dead_code_analysis::operator()(if_inst &in) -> bool {
 auto dead_code_analysis::operator()(loop_inst &in) -> bool {
     constant_inst *from_const = dyn_cast<constant_inst>(in.from().defining_inst());
     constant_inst *to_const = dyn_cast<constant_inst>(in.to().defining_inst());
-    if (from_const && to_const) {
+    if (in.num_results() == 0 && from_const && to_const) {
         // For-instruction is dead if from >= to
         return std::holds_alternative<std::int64_t>(from_const->value()) &&
                std::holds_alternative<std::int64_t>(to_const->value()) &&

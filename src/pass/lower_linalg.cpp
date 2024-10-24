@@ -93,17 +93,25 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
     auto c_zero = bb.add(make_constant_zero(index_ty, loc));
     auto c_k_block_size = bb.add(make_constant(k_block_size, index_ty, loc));
-    auto tmp = bb.add(make_arith(arithmetic::div, K, c_k_block_size, loc));
-    auto K0 = bb.add(make_arith(arithmetic::mul, tmp, c_k_block_size, loc));
+    auto tmp = instant_constant_fold_add(bb, make_arith(arithmetic::div, K, c_k_block_size, loc));
+    auto K0 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, tmp, c_k_block_size, loc));
     c_init = compute_c(bb, k_block_size, c_zero, K0, c_init);
-    auto needs_remainder = bb.add(make_cmp(cmp_condition::lt, K0, K, loc));
-    bb.if_condition(
-        needs_remainder,
-        [&](region_builder &bb) {
-            auto c_next = compute_c(bb, 1, K0, K, c_init);
-            bb.add(make_yield(c_next, loc));
-        },
-        {coopmatrix_c_ty}, loc);
+    auto needs_remainder = instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, loc));
+    auto r = get_int_constant(needs_remainder);
+    if (r) {
+        if (*r != 0) {
+            c_init = compute_c(bb, 1, K0, K, c_init);
+        }
+    } else {
+        auto remainder = bb.if_condition(
+            needs_remainder,
+            [&](region_builder &bb) {
+                auto c_next = compute_c(bb, 1, K0, K, c_init);
+                bb.add(make_yield(c_next, loc));
+            },
+            {coopmatrix_c_ty}, loc);
+        c_init = remainder[0];
+    }
 
     auto alpha_ab = mixed_precision_coopmatrix_scale(bb, alpha, c_init, loc);
     if (atomic) {
