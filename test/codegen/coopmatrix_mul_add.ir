@@ -24,16 +24,16 @@ func @coopmatrix_mul_add_ff() subgroup_size(16) {
 func @coopmatrix_mul_add_cf() subgroup_size(16) {
     %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
     %b = constant 1.0 -> coopmatrix<f32x2x4,matrix_b>
-    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
+    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
     %c_next = cooperative_matrix_mul_add %a, %b, %c
             : coopmatrix<c32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
-              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_cf({{.*}}
 ; CHECK:      float2 c_next[4];
-; CHECK-NEXT: c_next[0] = (float2) (c[0], 0) + a[0] * sub_group_broadcast(b[0], 0);
-; CHECK-NEXT: c_next[1] = (float2) (c[1], 0) + a[0] * sub_group_broadcast(b[0], 1);
-; CHECK-NEXT: c_next[2] = (float2) (c[2], 0) + a[0] * sub_group_broadcast(b[0], 2);
-; CHECK-NEXT: c_next[3] = (float2) (c[3], 0) + a[0] * sub_group_broadcast(b[0], 3);
+; CHECK-NEXT: c_next[0] = c[0] + a[0] * sub_group_broadcast(b[0], 0);
+; CHECK-NEXT: c_next[1] = c[1] + a[0] * sub_group_broadcast(b[0], 1);
+; CHECK-NEXT: c_next[2] = c[2] + a[0] * sub_group_broadcast(b[0], 2);
+; CHECK-NEXT: c_next[3] = c[3] + a[0] * sub_group_broadcast(b[0], 3);
 ; CHECK-NEXT: c_next[0] = c_next[0] + a[1] * sub_group_broadcast(b[1], 0);
 ; CHECK-NEXT: c_next[1] = c_next[1] + a[1] * sub_group_broadcast(b[1], 1);
 ; CHECK-NEXT: c_next[2] = c_next[2] + a[1] * sub_group_broadcast(b[1], 2);
@@ -43,20 +43,20 @@ func @coopmatrix_mul_add_cf() subgroup_size(16) {
 func @coopmatrix_mul_add_fc() subgroup_size(16) {
     %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
     %b = constant [1.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
-    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
+    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
     %c_next = cooperative_matrix_mul_add %a, %b, %c
             : coopmatrix<f32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
-              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_fc({{.*}}
 ; CHECK:      float2 c_next[4];
-; CHECK-NEXT: c_next[0].x = ((float2) (c[0], 0)).x + a[0] * sub_group_broadcast(b[0].x, 0);
-; CHECK-NEXT: c_next[0].y = ((float2) (c[0], 0)).y + a[0] * sub_group_broadcast(b[0].y, 0);
-; CHECK-NEXT: c_next[1].x = ((float2) (c[1], 0)).x + a[0] * sub_group_broadcast(b[0].x, 1);
-; CHECK-NEXT: c_next[1].y = ((float2) (c[1], 0)).y + a[0] * sub_group_broadcast(b[0].y, 1);
-; CHECK-NEXT: c_next[2].x = ((float2) (c[2], 0)).x + a[0] * sub_group_broadcast(b[0].x, 2);
-; CHECK-NEXT: c_next[2].y = ((float2) (c[2], 0)).y + a[0] * sub_group_broadcast(b[0].y, 2);
-; CHECK-NEXT: c_next[3].x = ((float2) (c[3], 0)).x + a[0] * sub_group_broadcast(b[0].x, 3);
-; CHECK-NEXT: c_next[3].y = ((float2) (c[3], 0)).y + a[0] * sub_group_broadcast(b[0].y, 3);
+; CHECK-NEXT: c_next[0].x = c[0].x + a[0] * sub_group_broadcast(b[0].x, 0);
+; CHECK-NEXT: c_next[0].y = c[0].y + a[0] * sub_group_broadcast(b[0].y, 0);
+; CHECK-NEXT: c_next[1].x = c[1].x + a[0] * sub_group_broadcast(b[0].x, 1);
+; CHECK-NEXT: c_next[1].y = c[1].y + a[0] * sub_group_broadcast(b[0].y, 1);
+; CHECK-NEXT: c_next[2].x = c[2].x + a[0] * sub_group_broadcast(b[0].x, 2);
+; CHECK-NEXT: c_next[2].y = c[2].y + a[0] * sub_group_broadcast(b[0].y, 2);
+; CHECK-NEXT: c_next[3].x = c[3].x + a[0] * sub_group_broadcast(b[0].x, 3);
+; CHECK-NEXT: c_next[3].y = c[3].y + a[0] * sub_group_broadcast(b[0].y, 3);
 ; CHECK-NEXT: c_next[0].x = c_next[0].x + a[1] * sub_group_broadcast(b[1].x, 0);
 ; CHECK-NEXT: c_next[0].y = c_next[0].y + a[1] * sub_group_broadcast(b[1].y, 0);
 ; CHECK-NEXT: c_next[1].x = c_next[1].x + a[1] * sub_group_broadcast(b[1].x, 1);

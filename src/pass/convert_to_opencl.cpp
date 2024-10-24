@@ -545,7 +545,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
     auto lhs_ty = visit(*this, *c.result(0).ty());
     auto ot = get_memref_type(c.operand());
     auto rt = get_coopmatrix_type(c.result(0));
-    auto &dv = get_dope_vector(c.operand());
+    auto &odv = get_dope_vector(c.operand());
 
     const int rmode = rt->distributed_mode();
     const int omode = c.t() == transpose::T ? 1 - rmode : rmode;
@@ -567,13 +567,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
     auto pointer = clir::var{};
     clinst.emplace_back(
         declaration_assignment(visit(*this, *c.operand().ty()), pointer,
-                               val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
+                               val(c.operand()) + pv[0] * odv.stride(0) + pv[1] * odv.stride(1)));
     clir::var rem[2] = {};
     if (check_m || check_k) {
         clinst.emplace_back(
-            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], odv.shape(0) - pv[0]));
         clinst.emplace_back(
-            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], dv.shape(1) - pv[1]));
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], odv.shape(1) - pv[1]));
     }
 
     const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
@@ -595,16 +595,16 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_lo
             const bool needs_mask = remainder < core_cfg_.subgroup_size;
             if (enable_sub_group_reads && !needs_mask && !check_m) {
                 auto rhs = sub_group_block_read_helper(
-                    pointer + block * core_cfg_.subgroup_size + k * ot->stride(1), ot->element_ty(),
+                    pointer + block * core_cfg_.subgroup_size + k * odv.stride(1), ot->element_ty(),
                     to_clir_address_space(ot->addrspace()));
                 if (check_k) {
                     rhs = ternary_conditional(col_cond(), std::move(rhs), 0);
                 }
                 clinst.emplace_back(store(std::move(rhs)));
             } else {
-                auto rhs = pointer[ot->stride(omode) * (clir::get_sub_group_local_id() +
+                auto rhs = pointer[odv.stride(omode) * (clir::get_sub_group_local_id() +
                                                         block * core_cfg_.subgroup_size) +
-                                   k * ot->stride(1 - omode)];
+                                   k * odv.stride(1 - omode)];
                 clir::expr cond = {};
                 if (check_m) {
                     cond = row_in_bounds;
@@ -761,7 +761,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_sc
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_store_inst const &c) {
     auto ot = get_memref_type(c.operand());
     auto vt = get_coopmatrix_type(c.val());
-    auto &dv = get_dope_vector(c.operand());
+    auto &odv = get_dope_vector(c.operand());
     auto valv = val(c.val());
 
     const int vmode = vt->distributed_mode();
@@ -781,13 +781,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
     auto pointer = clir::var{};
     clinst.emplace_back(
         declaration_assignment(visit(*this, *c.operand().ty()), pointer,
-                               val(c.operand()) + pv[0] * dv.stride(0) + pv[1] * dv.stride(1)));
+                               val(c.operand()) + pv[0] * odv.stride(0) + pv[1] * odv.stride(1)));
     clir::var rem[2] = {};
     if (check_m || check_k) {
         clinst.emplace_back(
-            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], dv.shape(0) - pv[0]));
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[0], odv.shape(0) - pv[0]));
         clinst.emplace_back(
-            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], dv.shape(1) - pv[1]));
+            declaration_assignment(to_clir_ty(scalar_type::index), rem[1], odv.shape(1) - pv[1]));
     }
 
     auto atomic_pointer =
@@ -821,9 +821,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
             auto const remainder = vt->shape(vmode) - core_cfg_.subgroup_size * block;
             const bool needs_mask = remainder < core_cfg_.subgroup_size;
 
-            auto offset = ot->stride(omode) *
+            auto offset = odv.stride(omode) *
                               (clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size) +
-                          k * ot->stride(1 - omode);
+                          k * odv.stride(1 - omode);
             auto rhs = valv[k + block * vt->shape(1 - vmode)];
             clir::expr cond = {};
             if (check_k) {

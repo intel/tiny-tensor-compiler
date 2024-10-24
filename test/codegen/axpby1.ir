@@ -7,9 +7,9 @@ func @axpby0(%alpha: f32, %A: memref<f32>, %B: memref<f32>) {
     axpby.n %alpha, %A, %z, %B : f32, memref<f32>, f32, memref<f32>
 }
 
-func @axpby1(%alpha: f64, %A: memref<f32x48,strided<2>>, %B: memref<f64x48>) {
+func @axpby1(%alpha: f32, %A: memref<f32x48,strided<2>>, %B: memref<f64x48>) {
     %z = constant 0.0 -> f32
-    axpby.n %alpha, %A, %z, %B : f64, memref<f32x48,strided<2>>, f32, memref<f64x48>
+    axpby.n %alpha, %A, %z, %B : f32, memref<f32x48,strided<2>>, f32, memref<f64x48>
 }
 
 func @axpby2(%alpha: f32, %A: memref<f32x48x43>, %B: memref<f32x48x43>) {
