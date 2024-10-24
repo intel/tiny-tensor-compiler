@@ -42,6 +42,12 @@ enum class parser_status {
 auto to_string(parser_status status) -> char const *;
 
 template <typename T> struct default_converter;
+template <> struct default_converter<char> {
+    auto operator()(char const *str, char &val) const -> parser_status {
+        val = str[0];
+        return parser_status::success;
+    }
+};
 template <std::integral T> struct default_converter<T> {
     auto operator()(char const *str, T &val) const -> parser_status {
         long v = strtol(str, nullptr, 0);
@@ -168,9 +174,10 @@ class arg_parser {
     }
 
     template <typename T>
-    auto set_short_opt(char opt, T *ptr, char const *help = nullptr,
-                       std::optional<typename par_model<T>::value_type> default_argument =
-                           std::nullopt) -> par_model<T> & {
+    auto
+    set_short_opt(char opt, T *ptr, char const *help = nullptr,
+                  std::optional<typename par_model<T>::value_type> default_argument = std::nullopt)
+        -> par_model<T> & {
         auto model = std::make_unique<par_model<T>>(ptr, std::move(default_argument));
         auto model_ptr = model.get();
         set_short_opt(opt, {help, std::move(model)});
@@ -182,9 +189,10 @@ class arg_parser {
     }
 
     template <typename T>
-    auto set_long_opt(char const *opt, T *ptr, char const *help = nullptr,
-                      std::optional<typename par_model<T>::value_type> default_argument =
-                          std::nullopt) -> par_model<T> & {
+    auto
+    set_long_opt(char const *opt, T *ptr, char const *help = nullptr,
+                 std::optional<typename par_model<T>::value_type> default_argument = std::nullopt)
+        -> par_model<T> & {
         auto model = std::make_unique<par_model<T>>(ptr, std::move(default_argument));
         auto model_ptr = model.get();
         set_long_opt({opt, help, std::move(model)});
@@ -202,8 +210,8 @@ class arg_parser {
     }
 
     template <typename T>
-    auto add_positional_arg(char const *opt, std::vector<T> *ptr,
-                            char const *help = nullptr) -> par_model<T> & {
+    auto add_positional_arg(char const *opt, std::vector<T> *ptr, char const *help = nullptr)
+        -> par_model<T> & {
         auto model = std::make_unique<par_model<std::vector<T>>>(ptr, std::make_optional(T{}));
         auto model_ptr = model.get();
         add_positional_arg({opt, help, std::move(model)});
