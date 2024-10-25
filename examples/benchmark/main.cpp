@@ -235,16 +235,15 @@ template <typename T> void test(queue q, args &a) {
                      }).wait();
                 });
 
-                auto ops_per_mnk = 0;
-                switch (element_ty) {
-                case scalar_type::c32:
-                case scalar_type::c64:
-                    ops_per_mnk = 8;
-                    break;
-                default:
-                    ops_per_mnk = 2;
-                    break;
-                }
+                const auto ops_per_mnk = [&] {
+                    switch (a.ty) {
+                    case scalar_type::c32:
+                    case scalar_type::c64:
+                        return 8;
+                    default:
+                        return 2;
+                    }
+                }();
 
                 auto gflops = a.internal_repetitions * ops_per_mnk * c.m * c.n * c.k * howmany /
                               min_exec_time_ns;

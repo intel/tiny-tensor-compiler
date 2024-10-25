@@ -135,10 +135,20 @@ template <typename T> void test(queue q, args &a) {
             }
             double min_exec_time_ns = bench([&]() { tas.submit(q).wait(); });
 
+            const auto ops_per_mnk = [&] {
+                switch (a.ty) {
+                case scalar_type::c32:
+                case scalar_type::c64:
+                    return 8;
+                default:
+                    return 2;
+                }
+            }();
+
             auto bw_C_factor = a.update ? 2 : 1;
             auto bw =
                 sizeof(T) * (c.m * c.n * bw_C_factor + c.m * c.k + c.k * c.n) / min_exec_time_ns;
-            auto gflops = 2 * c.m * c.n * c.k / min_exec_time_ns;
+            auto gflops = ops_per_mnk * c.m * c.n * c.k / min_exec_time_ns;
             std::cout << to_string(a.ty) << "," << c.m << "," << c.n << "," << c.k << ","
                       << a.update << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops
                       << std::endl;
