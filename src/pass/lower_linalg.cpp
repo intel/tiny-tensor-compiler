@@ -138,6 +138,7 @@ class linalg_generator {
     auto operator()(axpby_inst &in) -> inst;
     auto operator()(ger_inst &in) -> inst;
     auto operator()(gemm_inst &in) -> inst;
+    auto operator()(gemv_inst &in) -> inst;
     auto operator()(hadamard_inst &in) -> inst;
     auto operator()(sum_inst &in) -> inst;
 
@@ -205,7 +206,7 @@ auto linalg_generator::operator()(axpby_inst &in) -> inst {
                 auto zero = bb.add(make_constant(0, index_ty));
                 bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
                     auto nn = bb.add(make_arith(arithmetic::add, block, n, in.loc()));
-                    auto static_offset_list = std::array<std::int64_t, 2u>{dynamic, 0};
+                    auto static_offset_list = std::array<std::int64_t, 2u>{0, dynamic};
                     auto static_size_list = std::array<std::int64_t, 2u>{dynamic, 0};
                     auto Bb = bb.add(make_subview(&in.B(), static_offset_list, static_size_list,
                                                   {nn}, {c_shape0}, in.loc()));
@@ -327,6 +328,48 @@ auto linalg_generator::operator()(gemm_inst &in) -> inst {
                                      });
                              });
     }
+
+    return parallel;
+}
+
+auto linalg_generator::operator()(gemv_inst &in) -> inst {
+    auto parallel = make_parallel(in.loc());
+    tinytc_region_t body = &parallel->child_region(0);
+    auto bb = region_builder{body};
+
+    auto ct = get_memref_type(in.C());
+
+    auto ctx = compiler_context{in.alpha().context(), true};
+    auto index_ty = get_scalar(ctx, scalar_type::index);
+
+    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+
+    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, in.loc()));
+    auto K = instant_constant_fold_add(
+        bb, make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+
+    tile_loop_by_sgs_standard(
+        bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
+        [&](region_builder &bb, value mm) {
+            auto c_zero = bb.add(make_constant(0, index_ty));
+            auto c_step = bb.add(make_constant(1, index_ty));
+            auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
+            auto c_acc = bb.for_loop(
+                c_zero, K, c_step, {c_init}, {ct->element_data_ty()}, index_ty,
+                [&](region_builder &bb, array_view<value> p) {
+                    auto a_idx = std::array<value, 2u>{mm, p[0]};
+                    if (in.tA() == transpose::T) {
+                        std::swap(a_idx[0], a_idx[1]);
+                    }
+                    auto a = bb.add(make_load(&in.A(), a_idx, in.loc()));
+                    auto b = bb.add(make_load(&in.B(), {p[0]}, in.loc()));
+                    auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
+                    auto ab_c = mixed_precision_arithmetic(bb, arithmetic::add, p[1], ab, in.loc());
+                    bb.add(make_yield({ab_c}, in.loc()));
+                });
+            blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {mm},
+                        in.loc());
+        });
 
     return parallel;
 }
