@@ -54,8 +54,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                                value c_init) -> value {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
         auto return_values = bb.for_loop(
-            K0, K1, c_step, {c_init}, {coopmatrix_c_ty}, index_ty,
-            [&](region_builder &bb, array_view<value> p) {
+            K0, K1, c_step, {c_init}, index_ty, [&](region_builder &bb, array_view<value> p) {
                 const auto k = p[0];
 
                 value pos_a[2] = {m_block, k};
@@ -355,7 +354,7 @@ auto linalg_generator::operator()(gemv_inst &in) -> inst {
             auto c_step = bb.add(make_constant(1, index_ty));
             auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
             auto c_acc = bb.for_loop(
-                c_zero, K, c_step, {c_init}, {ct->element_data_ty()}, index_ty,
+                c_zero, K, c_step, {c_init}, index_ty,
                 [&](region_builder &bb, array_view<value> p) {
                     auto a_idx = std::array<value, 2u>{mm, p[0]};
                     if (in.tA() == transpose::T) {
@@ -424,8 +423,8 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
             core_cfg_.subgroup_size * tiling_.m_tiles() * tiling_.n_tiles(), index_ty, in.loc()));
         auto c_init = bb.add(make_constant_zero(bt->element_data_ty(), in.loc()));
 
-        auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, {bt->element_data_ty()},
-                               index_ty, [&](region_builder &bb, array_view<value> args) {
+        auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, index_ty,
+                               [&](region_builder &bb, array_view<value> args) {
                                    auto a = bb.add(make_load(&in.A(), {args[0]}, in.loc()));
                                    auto sum = mixed_precision_arithmetic(bb, arithmetic::add,
                                                                          args[1], a, in.loc());
@@ -448,7 +447,7 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
                 auto from = bb.add(make_constant(0, index_ty));
                 auto zero = bb.add(make_constant_zero(bt->element_data_ty()));
                 auto acc =
-                    bb.for_loop(from, c_trip_count, {}, {zero}, {bt->element_data_ty()}, index_ty,
+                    bb.for_loop(from, c_trip_count, {}, {zero}, index_ty,
                                 [&](region_builder &bb, array_view<value> args) {
                                     auto index_list = std::array<value, 2u>{mm, args[0]};
                                     if (in.tA() == transpose::T) {

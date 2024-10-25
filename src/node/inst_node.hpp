@@ -334,8 +334,8 @@ class loop_inst : public standard_inst<dynamic, dynamic, 1> {
     }
     enum op_number { op_from = 0, op_to = 1, op_step = 2 };
     loop_inst(IK tid, tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-              array_view<tinytc_value_t> init_values, array_view<tinytc_data_type_t> return_types,
-              tinytc_data_type_t loop_var_type, location const &loc = {});
+              array_view<tinytc_value_t> init_values, tinytc_data_type_t loop_var_type,
+              location const &loc = {});
     inline auto from() const -> tinytc_value const & { return op(op_from); }
     inline auto to() const -> tinytc_value const & { return op(op_to); }
     inline auto has_step() const -> bool { return op_init() == 3; }
@@ -639,11 +639,15 @@ class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
     inline for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                    array_view<tinytc_value_t> init_values,
-                    array_view<tinytc_data_type_t> return_types, tinytc_data_type_t loop_var_type,
+                    array_view<tinytc_value_t> init_values, tinytc_data_type_t loop_var_type,
                     location const &loc = {})
-        : loop_inst{IK::for_loop,           std::move(from),         std::move(to), std::move(step),
-                    std::move(init_values), std::move(return_types), loop_var_type, loc} {}
+        : loop_inst{IK::for_loop,
+                    std::move(from),
+                    std::move(to),
+                    std::move(step),
+                    std::move(init_values),
+                    loop_var_type,
+                    loc} {}
 };
 
 class foreach_inst : public loop_inst {

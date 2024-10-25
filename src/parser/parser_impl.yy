@@ -606,10 +606,13 @@ for_inst:
             if (lcv_init.size() != lcv_type.size()) {
                 throw parser::syntax_error(@lcv, "Length of init value list must match scalar type list");
             }
+            for (std::size_t i = 0; i < lcv_init.size(); ++i) {
+                check_type(lcv_init[i], lcv_type[i], @lcv, @lcv);
+            }
             location loc = @FOR;
             loc.end = @for_loop_var_type.end;
             auto inode = std::make_unique<for_inst>($from, $to, $optional_step, lcv_init,
-                                                    lcv_type, $for_loop_var_type, loc);
+                                                    $for_loop_var_type, loc);
             ctx.push_scope();
             auto &loop_var = inode->loop_var();
             ctx.val($loop_var, loop_var, @loop_var);
