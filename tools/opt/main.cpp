@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
     auto pass_names = std::vector<char const *>{};
     char const *filename = nullptr;
     auto info = core_info{};
+    tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
     bool help = false;
@@ -44,6 +45,7 @@ int main(int argc, char **argv) {
         parser.add_positional_arg("file-name", &filename,
                                   "Path to source code; leave empty to read from stdin");
         cmd::add_optflag_states(parser, flags);
+        cmd::add_core_feature_flags(parser, core_features);
 
         parser.parse(argc, argv);
     } catch (status const &st) {
@@ -71,6 +73,9 @@ int main(int argc, char **argv) {
         std::cout << std::endl;
         cmd::list_optimization_flags(std::cout);
 
+        std::cout << std::endl;
+        cmd::list_core_feature_flags(std::cout);
+
         return 0;
     }
 
@@ -83,6 +88,7 @@ int main(int argc, char **argv) {
         ctx = make_compiler_context();
         ctx.set_optimization_level(opt_level);
         cmd::set_optflags(ctx, flags);
+        info.set_core_features(core_features);
         auto p = prog{};
         if (!filename) {
             p = parse_stdin(ctx);

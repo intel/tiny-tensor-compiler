@@ -24,6 +24,9 @@ void add_optflag_states(arg_parser &parser, optflag_states &flags);
 void set_optflags(compiler_context &ctx, optflag_states const &flags);
 void list_optimization_flags(std::ostream &os);
 
+void add_core_feature_flags(arg_parser &parser, tinytc_core_feature_flags_t &flags);
+void list_core_feature_flags(std::ostream &os);
+
 } // namespace tinytc::cmd
 
 #endif // ARGPARSER_COMMON_20241010_HPP
