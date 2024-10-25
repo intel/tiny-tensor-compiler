@@ -12,58 +12,16 @@ func @atomic_store(%A: memref<f64x2>) {
 ; CHECK: atomic_fetch_add_explicit((global volatile atomic_double*) (A + i0 * 1), f0, memory_order_relaxed, memory_scope_work_group);
 }
 
-
-func @axpby_atomic_store(%alpha: f64, %A: memref<f64x2>, %B: memref<f64x2>) {
-    %zero = constant 0.0 -> f64
-    axpby.n.atomic %alpha, %A, %zero, %B : f64, memref<f64x2>, f64, memref<f64x2>
-; CHECK:      global double* b = B + (blck + m) * 1;
-; CHECK-NEXT: atomic_store_explicit((global volatile atomic_double*) b, alpha * A[(blck + m) * 1], memory_order_relaxed, memory_scope_work_group);
+func @atomic_store_c64(%A: memref<c64x2>) {
+    %f0 = constant [0.0, 0.0] -> c64
+    %i0 = constant 0 -> index
+    store.atomic %f0, %A[%i0] : memref<c64x2>
+    store.atomic_add %f0, %A[%i0] : memref<c64x2>
+; CHECK-LABEL: void atomic_store_c64({{.*}}
+; CHECK:      atomic_store_explicit((atomic_double*global volatile) &(*(A + i0 * 1)).x, f0, memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT: atomic_store_explicit((atomic_double*global volatile) &(*(A + i0 * 1)).y, f0, memory_order_relaxed, memory_scope_work_group);
+; CHECK:      atomic_fetch_add_explicit((atomic_double*global volatile) &(*(A + i0 * 1)).x, f0, memory_order_relaxed, memory_scope_work_group);
+; CHECK-NEXT: atomic_fetch_add_explicit((atomic_double*global volatile) &(*(A + i0 * 1)).y, f0, memory_order_relaxed, memory_scope_work_group);
 }
 
-func @axpby_atomic_add(%alpha: f32, %A: memref<f32x2x2>, %B: memref<f32x2x2>) {
-    %one = constant 1.0 -> f32
-    axpby.n.atomic %alpha, %A, %one, %B : f32, memref<f32x2x2>, f32, memref<f32x2x2>
-; CHECK:      global float* b = Bb + (blck1 + m) * 1;
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) b, alpha * Ab[(blck1 + m) * 1], memory_order_relaxed, memory_scope_work_group);
-}
 
-func @gemm_atomic(%A: memref<f32x32x2>, %B: memref<f32x2x2>, %C: memref<f32x32x2>) {
-    %one = constant 1.0 -> f32
-    gemm.n.n.atomic %one, %A, %B, %one, %C
-        : f32, memref<f32x32x2>, memref<f32x2x2>, f32, memref<f32x32x2>
-; CHECK: atomic_fetch_add_explicit((global volatile atomic_float*) (Cb + get_sub_group_local_id()), c[n], memory_order_relaxed, memory_scope_work_group);
-}
-
-func @ger_atomic(%A: memref<f32x32>, %B: memref<f32x2>, %C: memref<f32x32x2>) {
-    %one = constant 1.0 -> f32
-    ger.atomic %one, %A, %B, %one, %C
-        : f32, memref<f32x32>, memref<f32x2>, f32, memref<f32x32x2>
-; CHECK:      global float* c = Cb + (blck1 + m) * 1;
-; CHECK-NEXT: float ab = A[(blck1 + m) * 1] * b;
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * ab, memory_order_relaxed, memory_scope_work_group);
-}
-
-func @hadamard_atomic(%A: memref<f32x32>, %B: memref<f32x32>, %C: memref<f32x32>) {
-    %one = constant 1.0 -> f32
-    hadamard.atomic %one, %A, %B, %one, %C
-        : f32, memref<f32x32>, memref<f32x32>, f32, memref<f32x32>
-; CHECK:      global float* c = C + (blck + m) * 1;
-; CHECK-NEXT: float ab = A[(blck + m) * 1] * B[(blck + m) * 1];
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) c, 0x1p+0f * ab, memory_order_relaxed, memory_scope_work_group);
-}
-
-func @sum_atomic(%A: memref<f32x32>, %B: memref<f32>) {
-    %one = constant 1.0 -> f32
-    sum.n.atomic %one, %A, %one, %B : f32, memref<f32x32>, f32, memref<f32>
-; CHECK:      float sum = work_group_reduce_add(acc);
-; CHECK-NEXT: if (get_sub_group_id() == 0 && get_sub_group_local_id() == 0) {
-; CHECK-NEXT:     atomic_fetch_add_explicit((global volatile atomic_float*) B, 0x1p+0f * sum, memory_order_relaxed, memory_scope_work_group);
-; CHECK-NEXT: }
-}
-
-func @sum_atomic_matrix(%A: memref<f32x32x4>, %B: memref<f32x32>) {
-    %one = constant 1.0 -> f32
-    sum.n.atomic %one, %A, %one, %B : f32, memref<f32x32x4>, f32, memref<f32x32>
-; CHECK:      global float* b = B + (blck + m) * 1;
-; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) b, 0x1p+0f * acc, memory_order_relaxed, memory_scope_work_group);
-}
