@@ -139,8 +139,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 if (!is_dynamic_value(M) && M % M_block_size == 0) {
                     static_gemm(bb);
                 } else {
-                    auto M_val = is_dynamic_value(M) ? bb.add(make_size(C, 0, my_loc()))
-                                                     : bb.add(make_constant(M, index_ty));
+
+                    auto M_val = bb.add(make_size(C, 0, my_loc()));
                     auto M_val_sub_m = bb.add(make_arith(arithmetic::sub, M_val, m, my_loc()));
                     auto cond =
                         bb.add(make_cmp(cmp_condition::lt, M_val_sub_m, c_M_block_size, my_loc()));
