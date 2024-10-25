@@ -778,9 +778,9 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
     clinst.reserve(len + 4);
 
     clir::expr pv[] = {val(c.pos0()), val(c.pos1())};
-    auto pointer = clir::var{};
+    auto base_pointer = clir::var{};
     clinst.emplace_back(
-        declaration_assignment(visit(*this, *c.operand().ty()), pointer,
+        declaration_assignment(visit(*this, *c.operand().ty()), base_pointer,
                                val(c.operand()) + pv[0] * odv.stride(0) + pv[1] * odv.stride(1)));
     clir::var rem[2] = {};
     if (check_m || check_k) {
@@ -790,10 +790,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
             declaration_assignment(to_clir_ty(scalar_type::index), rem[1], odv.shape(1) - pv[1]));
     }
 
-    auto atomic_pointer =
-        cast(pointer_to(to_clir_atomic_ty(ot->element_ty(), to_clir_address_space(ot->addrspace()),
-                                          clir::type_qualifier::volatile_t)),
-             pointer);
     const std::int64_t num_blocks = vt->num_blocks(core_cfg_.subgroup_size);
     auto const num_k = vt->shape(1 - vmode);
     auto store_block = std::vector<clir::stmt>{};
@@ -801,29 +797,13 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
     for (std::int64_t block = 0; block < num_blocks; ++block) {
         store_block.clear();
         for (std::int64_t k = 0; k < num_k; ++k) {
-            auto const store = [&](clir::expr offset, clir::expr rhs) -> clir::expr {
-                switch (c.flag()) {
-                case store_flag::regular:
-                    return assignment(pointer[std::move(offset)], std::move(rhs));
-                case store_flag::atomic:
-                    return call_builtin(clir::builtin_function::atomic_store_explicit,
-                                        {atomic_pointer + std::move(offset), std::move(rhs),
-                                         clir::memory_order::relaxed,
-                                         clir::memory_scope::work_group});
-                case store_flag::atomic_add:
-                    return call_builtin(clir::builtin_function::atomic_fetch_add_explicit,
-                                        {atomic_pointer + std::move(offset), std::move(rhs),
-                                         clir::memory_order::relaxed,
-                                         clir::memory_scope::work_group});
-                };
-                return {};
-            };
             auto const remainder = vt->shape(vmode) - core_cfg_.subgroup_size * block;
             const bool needs_mask = remainder < core_cfg_.subgroup_size;
 
-            auto offset = odv.stride(omode) *
-                              (clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size) +
-                          k * odv.stride(1 - omode);
+            auto pointer = base_pointer +
+                           odv.stride(omode) *
+                               (clir::get_sub_group_local_id() + block * core_cfg_.subgroup_size) +
+                           k * odv.stride(1 - omode);
             auto rhs = valv[k + block * vt->shape(1 - vmode)];
             clir::expr cond = {};
             if (check_k) {
@@ -833,14 +813,22 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(cooperative_matrix_st
                 auto mask_cond = clir::get_sub_group_local_id() < remainder;
                 cond = cond ? cond && mask_cond : mask_cond;
             }
-            auto st = clir::expression_statement(store(std::move(offset), std::move(rhs)));
+
             if (cond) {
                 store_block.emplace_back(
                     clir::if_selection_builder(cond)
-                        .then([&](clir::block_builder &bb) { bb.add(std::move(st)); })
+                        .then([&](clir::block_builder &bb) {
+                            for (auto &s : atomic_store_helper_new(c.flag(), ot, std::move(pointer),
+                                                                   std::move(rhs))) {
+                                bb.add(std::move(s));
+                            }
+                        })
                         .get_product());
             } else {
-                store_block.emplace_back(std::move(st));
+                for (auto &s :
+                     atomic_store_helper_new(c.flag(), ot, std::move(pointer), std::move(rhs))) {
+                    store_block.emplace_back(std::move(s));
+                }
             }
         }
 
@@ -1419,28 +1407,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(store_inst const &s) 
     }
 
     auto rhs = val(s.val());
-    auto st = clir::expr{};
-    auto atomic_pointer_ty =
-        pointer_to(to_clir_atomic_ty(ot->element_ty(), to_clir_address_space(ot->addrspace()),
-                                     clir::type_qualifier::volatile_t));
-    switch (s.flag()) {
-    case store_flag::regular:
-        st = assignment(dereference(std::move(lhs)), std::move(rhs));
-        break;
-    case store_flag::atomic:
-        lhs = cast(std::move(atomic_pointer_ty), std::move(lhs));
-        st = call_builtin(clir::builtin_function::atomic_store_explicit,
-                          {std::move(lhs), std::move(rhs), clir::memory_order::relaxed,
-                           clir::memory_scope::work_group});
-        break;
-    case store_flag::atomic_add:
-        lhs = cast(std::move(atomic_pointer_ty), std::move(lhs));
-        st = call_builtin(clir::builtin_function::atomic_fetch_add_explicit,
-                          {std::move(lhs), std::move(rhs), clir::memory_order::relaxed,
-                           clir::memory_scope::work_group});
-        break;
-    }
-    return {expression_statement(std::move(st))};
+    return atomic_store_helper_new(s.flag(), ot, std::move(lhs), std::move(rhs));
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst) {

@@ -5,6 +5,7 @@
 #define CODEGEN_TOOLS_20240229_HPP
 
 #include "device_info.hpp"
+#include "node/data_type_node.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
@@ -39,6 +40,8 @@ void store_helper(clir::block_builder &bb, bool is_atomic, clir::expr dst, scala
 void atomic_store_helper(clir::block_builder &bb, clir::expr dst, scalar_type ty,
                          clir::address_space as, clir::expr value, scalar_type beta_ty,
                          clir::expr beta);
+auto atomic_store_helper_new(store_flag flag, memref_data_type const *ty, clir::expr pointer,
+                             clir::expr value) -> std::vector<clir::stmt>;
 
 void dispatch_constant_dynamic(clir::expr e, std::function<void(std::int64_t)> const &const_case,
                                std::function<void(clir::expr)> const &dyn_case);

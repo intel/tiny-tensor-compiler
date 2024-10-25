@@ -172,6 +172,46 @@ void atomic_store_helper(block_builder &bb, expr dst, scalar_type ty, clir::addr
     }
 }
 
+auto atomic_store_helper_new(store_flag flag, memref_data_type const *ty, expr pointer,
+                             expr value) -> std::vector<stmt> {
+    const auto make_atomic_store = [&](auto fun, expr pointer, expr value) -> std::vector<stmt> {
+        constexpr auto mem_order = clir::memory_order::relaxed;
+        constexpr auto mem_scope = clir::memory_scope::work_group;
+        constexpr auto qualifier = clir::type_qualifier::volatile_t;
+
+        const auto sty = ty->element_ty();
+        const auto addrspace = to_clir_address_space(ty->addrspace());
+        if (is_complex_type(sty)) {
+            const auto atomic_pointer_ty =
+                pointer_to(to_clir_atomic_ty(element_type(sty)), addrspace, qualifier);
+            return {expression_statement(call_builtin(
+                        fun, {cast(atomic_pointer_ty, address_of(dereference(pointer).s(0))), value,
+                              mem_order, mem_scope})),
+                    expression_statement(call_builtin(
+                        fun, {cast(atomic_pointer_ty, address_of(dereference(pointer).s(1))), value,
+                              mem_order, mem_scope}))};
+        } else {
+            const auto atomic_pointer_ty = pointer_to(to_clir_atomic_ty(sty, addrspace, qualifier));
+            return {
+                expression_statement(call_builtin(fun, {cast(atomic_pointer_ty, std::move(pointer)),
+                                                        std::move(value), mem_order, mem_scope}))};
+        }
+    };
+
+    switch (flag) {
+    case store_flag::regular:
+        return {
+            expression_statement(assignment(dereference(std::move(pointer)), std::move(value)))};
+    case store_flag::atomic:
+        return make_atomic_store(clir::builtin_function::atomic_store_explicit, std::move(pointer),
+                                 std::move(value));
+    case store_flag::atomic_add:
+        return make_atomic_store(clir::builtin_function::atomic_fetch_add_explicit,
+                                 std::move(pointer), std::move(value));
+    }
+    return {};
+}
+
 void dispatch_constant_dynamic(expr e, std::function<void(std::int64_t)> const &const_case,
                                std::function<void(expr)> const &dyn_case) {
     visit(
@@ -508,7 +548,8 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
 
     // Here we compute
     // blocks = ceil(loop_trip_count / block_size) = 1 + (loop_trip_count - 1) / block_size
-    // blocks = ceil(blocks / num_tiles) * num_tiles = (1 + (blocks - 1) / num_tiles) * num_tiles
+    // blocks = ceil(blocks / num_tiles) * num_tiles = (1 + (blocks - 1) / num_tiles) *
+    // num_tiles
     auto c_block_size = bb.add(make_constant(block_size, index_ty));
     auto blocks0 = instant_constant_fold_add(bb, make_arith(arithmetic::sub, loop_trip_count, c1));
     auto blocks1 =
@@ -522,9 +563,9 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
     auto rem = instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, blocks));
 
     auto sg_id_index = instant_constant_fold_add(bb, make_cast(sg_id, index_ty));
-    // The following if makes it easy to eliminate the remainder handler in optimization if rem == 0
-    // is known at compile time. Without the if, we would need to prove that block_start_1 is
-    // non-negative to eliminate the for-loop.
+    // The following if makes it easy to eliminate the remainder handler in optimization if rem
+    // == 0 is known at compile time. Without the if, we would need to prove that block_start_1
+    // is non-negative to eliminate the for-loop.
     auto is_rem_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0));
     bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
         auto block_start_1 =
