@@ -138,6 +138,7 @@
     SUBVIEW         "subview"
     STORE           "store"
     SUM             "sum"
+    WORK_GROUP      "work_group"
     YIELD           "yield"
 ;
 %token <std::variant<std::int64_t, std::string>> LOCAL_IDENTIFIER
@@ -149,6 +150,7 @@
 %token <arithmetic> ARITHMETIC
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <cmp_condition> CMP_CONDITION
+%token <work_group_operation> WORK_GROUP_OPERATION
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
 
@@ -232,6 +234,7 @@
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
 %nterm <std::pair<int_or_val,int_or_val>> slice
 %nterm <int_or_val> slice_size
+%nterm <inst> work_group_inst
 
 %%
 prog:
@@ -788,6 +791,7 @@ valued_inst:
   | subgroup_local_id_inst  { $$ = std::move($1); }
   | subgroup_size_inst      { $$ = std::move($1); }
   | subview_inst            { $$ = std::move($1); }
+  | work_group_inst         { $$ = std::move($1); }
 ;
 
 alloca_inst:
@@ -1263,6 +1267,21 @@ slice:
 slice_size:
     %empty { $$ = {}; }
   | COLON integer_constant_or_identifier { $$ = $2; }
+;
+
+work_group_inst:
+    WORK_GROUP WORK_GROUP_OPERATION[operation] var[a] COLON data_type[ty] {
+        check_type($a, $ty, @a, @ty);
+        try {
+            $$ = inst {
+                std::make_unique<work_group_inst>($operation, std::move($a), @work_group_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
 ;
 
 %%

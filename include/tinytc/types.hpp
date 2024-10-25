@@ -267,6 +267,9 @@ enum class transpose {
     T = tinytc_transpose_T  ///< transpose
 };
 
+//! Work group collectives
+enum class work_group_operation { reduce_add = tinytc_work_group_operation_reduce_add };
+
 //! Address space
 enum class address_space {
     global = tinytc_address_space_global, ///< Global memory

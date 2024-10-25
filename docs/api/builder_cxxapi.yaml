@@ -11,6 +11,7 @@ Builder C++-API:
       - tinytc::scalar_type
       - tinytc::store_flag
       - tinytc::transpose
+      - tinytc::work_group_operation
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
@@ -22,6 +23,7 @@ Builder C++-API:
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)
+      - tinytc::to_string(work_group_operation)
       - tinytc::size
     class:
       - tinytc::builder_error
@@ -86,6 +88,7 @@ Builder C++-API:
       - tinytc::make_subgroup_size
       - tinytc::make_subview
       - tinytc::make_sum
+      - tinytc::make_work_group
       - tinytc::make_yield
     class:
       - tinytc::inst

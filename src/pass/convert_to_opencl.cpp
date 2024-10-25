@@ -1495,6 +1495,27 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
     return {bb.get_product()};
 }
 
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(work_group_inst const &in) {
+    auto const make = [](work_group_operation operation, clir::expr operand,
+                         scalar_type sty) -> clir::expr {
+        switch (operation) {
+        case work_group_operation::reduce_add:
+            if (is_complex_type(sty)) {
+                return init_vector(to_clir_ty(sty), {clir::work_group_reduce_add(operand.s(0)),
+                                                     clir::work_group_reduce_add(operand.s(1))});
+            }
+            return clir::work_group_reduce_add(operand);
+        }
+        return {};
+    };
+
+    auto lhs = declare(in.result(0));
+    auto lhs_ty = visit(*this, *in.result()->ty());
+    auto sty = get_scalar_type(in.operand());
+    return {declaration_assignment(std::move(lhs_ty), std::move(lhs),
+                                   make(in.operation(), val(in.operand()), sty))};
+}
+
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(yield_inst const &in) {
     if (yielded_vars_.empty()) {
         throw compilation_error(in.loc(), status::ir_unexpected_yield);

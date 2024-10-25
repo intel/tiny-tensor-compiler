@@ -180,6 +180,8 @@ TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
 TINYTC_EXPORT char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag);
 //! Convert transpose to string
 TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
+//! Convert work group operation to string
+TINYTC_EXPORT char const *tinytc_work_group_operation_to_string(tinytc_work_group_operation_t op);
 
 /**
  * @brief Create arithmetic instruction (binary)
@@ -860,6 +862,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
                                                     uint32_t return_type_list_size,
                                                     const tinytc_data_type_t *return_type_list,
                                                     const tinytc_location_t *loc);
+
+/**
+ * @brief Create work group instruction
+ *
+ * @code
+ * %value = work_group work_group_op %operand : type(%operand)
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param operation [in] Work group operation
+ * @param operand [in] operand
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_work_group_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_work_group_operation_t operation,
+                                                            tinytc_value_t operand,
+                                                            const tinytc_location_t *loc);
 
 /**
  * @brief Create yield instruction

@@ -748,6 +748,17 @@ inline char const *to_string(transpose t) {
     return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
 }
 
+/**
+ * @brief Convert work group operation to string
+ *
+ * @param op Operation
+ *
+ * @return C-string
+ */
+inline char const *to_string(work_group_operation op) {
+    return ::tinytc_work_group_operation_to_string(static_cast<tinytc_work_group_operation_t>(op));
+}
+
 namespace internal {
 template <> struct unique_handle_traits<tinytc_inst_t> {
     static void destroy(tinytc_inst_t handle) { return tinytc_inst_destroy(handle); }
@@ -1528,6 +1539,16 @@ inline inst make_if(value condition, array_view<data_type> return_type_list = {}
     }
     CHECK_STATUS_LOC(tinytc_if_inst_create(&instr, condition, len, return_type_list.data(), &loc),
                      loc);
+    return inst(instr);
+}
+
+inline inst make_work_group(work_group_operation operation, value operand,
+                            location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_work_group_inst_create(&instr, static_cast<tinytc_work_group_operation_t>(operation),
+                                      operand, &loc),
+        loc);
     return inst(instr);
 }
 

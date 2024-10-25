@@ -64,6 +64,7 @@ enum class IK {
     subgroup_size,
     subview,
     store,
+    work_group,
     yield,
     // blas a2
     blas_a2,
@@ -94,7 +95,7 @@ using inst_nodes =
               class if_inst, class num_subgroups_inst, class parallel_inst, class size_inst,
               class subview_inst, class store_inst, class subgroup_id_inst,
               class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst,
-              class yield_inst>;
+              class work_group_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -186,55 +187,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
         return child_regions_end_ - child_regions_begin_;
     }
 
-    inline auto kind() const -> tinytc::inst_execution_kind {
-        switch (type_id()) {
-        case tinytc::IK::alloca:
-        case tinytc::IK::barrier:
-        case tinytc::IK::lifetime_stop:
-        case tinytc::IK::foreach_loop:
-        case tinytc::IK::parallel:
-        case tinytc::IK::blas_a2:
-        case tinytc::IK::axpby_blas_a2:
-        case tinytc::IK::sum_blas_a2:
-        case tinytc::IK::last_blas_a2:
-        case tinytc::IK::blas_a3:
-        case tinytc::IK::gemm_blas_a3:
-        case tinytc::IK::gemv_blas_a3:
-        case tinytc::IK::ger_blas_a3:
-        case tinytc::IK::hadamard_blas_a3:
-        case tinytc::IK::last_blas_a3:
-            return tinytc::inst_execution_kind::collective;
-        case tinytc::IK::arith:
-        case tinytc::IK::arith_unary:
-        case tinytc::IK::cast:
-        case tinytc::IK::compare:
-        case tinytc::IK::constant:
-        case tinytc::IK::cooperative_matrix_load:
-        case tinytc::IK::cooperative_matrix_mul_add:
-        case tinytc::IK::cooperative_matrix_scale:
-        case tinytc::IK::cooperative_matrix_store:
-        case tinytc::IK::expand:
-        case tinytc::IK::fuse:
-        case tinytc::IK::load:
-        case tinytc::IK::group_id:
-        case tinytc::IK::group_size:
-        case tinytc::IK::if_:
-        case tinytc::IK::num_subgroups:
-        case tinytc::IK::size:
-        case tinytc::IK::subgroup_size:
-        case tinytc::IK::subview:
-        case tinytc::IK::store:
-        case tinytc::IK::yield:
-        case tinytc::IK::loop:
-        case tinytc::IK::for_loop:
-        case tinytc::IK::last_loop:
-            return tinytc::inst_execution_kind::mixed;
-        case tinytc::IK::subgroup_id:
-        case tinytc::IK::subgroup_local_id:
-            return tinytc::inst_execution_kind::spmd;
-        };
-        throw tinytc::internal_compiler_error();
-    }
+    auto kind() const -> tinytc::inst_execution_kind;
 
   protected:
     inline auto set_op_range(tinytc::use *begin, tinytc::use *end) noexcept {
@@ -831,6 +784,19 @@ class sum_inst : public blas_a2_inst {
 
   private:
     transpose tA_;
+};
+
+class work_group_inst : public standard_inst<1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::work_group; }
+    work_group_inst(work_group_operation operation, tinytc_value_t operand,
+                    location const &lc = {});
+
+    inline auto operation() const -> work_group_operation { return operation_; }
+    inline auto operand() const -> tinytc_value const & { return op(0); }
+
+  private:
+    work_group_operation operation_;
 };
 
 class yield_inst : public standard_inst<dynamic, 0> {

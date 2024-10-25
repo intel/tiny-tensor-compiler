@@ -507,6 +507,14 @@ void dump_ir_pass::operator()(sum_inst const &a) {
     dump_blas_a2(static_cast<blas_a2_inst const &>(a));
 }
 
+void dump_ir_pass::operator()(work_group_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = work_group." << to_string(in.operation()) << " ";
+    dump_val(in.operand());
+    *os_ << " : ";
+    visit(*this, *in.operand().ty());
+}
+
 void dump_ir_pass::operator()(yield_inst const &y) {
     *os_ << "yield ";
     if (y.num_operands() > 0) {

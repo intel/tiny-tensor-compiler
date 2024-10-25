@@ -25,6 +25,57 @@ auto tinytc_inst::context() const -> tinytc_compiler_context_t {
     return nullptr;
 }
 
+auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
+    switch (type_id()) {
+    case tinytc::IK::alloca:
+    case tinytc::IK::barrier:
+    case tinytc::IK::lifetime_stop:
+    case tinytc::IK::foreach_loop:
+    case tinytc::IK::parallel:
+    case tinytc::IK::blas_a2:
+    case tinytc::IK::axpby_blas_a2:
+    case tinytc::IK::sum_blas_a2:
+    case tinytc::IK::last_blas_a2:
+    case tinytc::IK::blas_a3:
+    case tinytc::IK::gemm_blas_a3:
+    case tinytc::IK::gemv_blas_a3:
+    case tinytc::IK::ger_blas_a3:
+    case tinytc::IK::hadamard_blas_a3:
+    case tinytc::IK::last_blas_a3:
+        return tinytc::inst_execution_kind::collective;
+    case tinytc::IK::arith:
+    case tinytc::IK::arith_unary:
+    case tinytc::IK::cast:
+    case tinytc::IK::compare:
+    case tinytc::IK::constant:
+    case tinytc::IK::cooperative_matrix_load:
+    case tinytc::IK::cooperative_matrix_mul_add:
+    case tinytc::IK::cooperative_matrix_scale:
+    case tinytc::IK::cooperative_matrix_store:
+    case tinytc::IK::expand:
+    case tinytc::IK::fuse:
+    case tinytc::IK::load:
+    case tinytc::IK::group_id:
+    case tinytc::IK::group_size:
+    case tinytc::IK::if_:
+    case tinytc::IK::num_subgroups:
+    case tinytc::IK::size:
+    case tinytc::IK::subgroup_size:
+    case tinytc::IK::subview:
+    case tinytc::IK::store:
+    case tinytc::IK::work_group:
+    case tinytc::IK::yield:
+    case tinytc::IK::loop:
+    case tinytc::IK::for_loop:
+    case tinytc::IK::last_loop:
+        return tinytc::inst_execution_kind::mixed;
+    case tinytc::IK::subgroup_id:
+    case tinytc::IK::subgroup_local_id:
+        return tinytc::inst_execution_kind::spmd;
+    };
+    throw tinytc::internal_compiler_error();
+}
+
 namespace tinytc {
 
 scalar_data_type *get_scalar_type(location const &loc, tinytc_value const &v) {
@@ -898,6 +949,19 @@ sum_inst::sum_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinyt
             throw compilation_error(loc(), status::ir_incompatible_shapes);
         }
     }
+}
+
+work_group_inst::work_group_inst(work_group_operation operation, tinytc_value_t operand0,
+                                 location const &lc)
+    : standard_inst{IK::work_group}, operation_(operation) {
+    loc(lc);
+    op(0, operand0);
+
+    if (!isa<scalar_data_type>(*(operand().ty()))) {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+
+    result(0) = value_node{operand().ty(), this, lc};
 }
 
 yield_inst::yield_inst(array_view<tinytc_value_t> vals, location const &lc)

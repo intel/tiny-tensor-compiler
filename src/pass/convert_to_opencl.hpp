@@ -101,6 +101,7 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(subview_inst const &s);
     std::vector<clir::stmt> operator()(store_inst const &s);
     std::vector<clir::stmt> operator()(sum_inst const &s);
+    std::vector<clir::stmt> operator()(work_group_inst const &in);
     std::vector<clir::stmt> operator()(yield_inst const &in);
 
     auto run_on_program(program_node const &p) -> clir::prog;

@@ -1369,6 +1369,30 @@ Arguments
 The first operand must have the same scalar type as the memref type.
 The indices must be of ``index`` type.
 
+Work group collectives
+......................
+
+.. code:: abnf
+
+    value-instruction           =/ "work_group" work-group-op local-identifier ":" scalar-type
+    work-group-op               =  ".reduce_add"
+
+Overview
+~~~~~~~~
+
+Collective operations across a work-group.
+
+============= ================================================================
+Work group op Description
+============= ================================================================
+.reduce_add   Compute work group sum of value
+============= ================================================================
+
+Restrictions
+~~~~~~~~~~~~
+
+The work group collective must be encountered by all work-items.
+
 Yield
 .....
 

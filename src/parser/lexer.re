@@ -178,6 +178,7 @@ lex:
         "subview"           { adv_loc(); return parser::make_SUBVIEW(loc_); }
         "store"             { adv_loc(); return parser::make_STORE(loc_); }
         "sum"               { adv_loc(); return parser::make_SUM(loc_); }
+        "work_group"        { adv_loc(); return parser::make_WORK_GROUP(loc_); }
         "yield"             { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
@@ -201,18 +202,18 @@ lex:
         ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
 
         // comparison condition
-        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq,
-       loc_); }
-        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne,
-       loc_); }
-        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt,
-       loc_); }
-        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge,
-       loc_); }
-        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt,
-       loc_); }
-        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le,
-       loc_); }
+        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
+        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
+        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
+        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
+        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
+        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
+
+        // work group operation
+        ".reduce_add"       {
+            adv_loc();
+            return parser::make_WORK_GROUP_OPERATION(work_group_operation::reduce_add, loc_);
+        }
 
         whitespace          { adv_loc(); goto lex; }
         comment             { adv_loc(); goto lex; }

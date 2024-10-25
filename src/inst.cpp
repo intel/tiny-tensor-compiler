@@ -134,6 +134,14 @@ char const *tinytc_transpose_to_string(tinytc_transpose_t t) {
     return "unknown";
 }
 
+char const *tinytc_work_group_operation_to_string(tinytc_work_group_operation_t op) {
+    switch (op) {
+    case tinytc_work_group_operation_reduce_add:
+        return "reduce_add";
+    }
+    return "unknown";
+}
+
 tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_t op,
                                          tinytc_value_t a, tinytc_value_t b,
                                          const tinytc_location_t *loc) {
@@ -635,6 +643,20 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
         *instr = std::make_unique<if_inst>(condition,
                                            array_view{return_type_list, return_type_list_size},
                                            get_optional(loc))
+                     .release();
+    });
+}
+
+tinytc_status_t tinytc_work_group_inst_create(tinytc_inst_t *instr,
+                                              tinytc_work_group_operation_t operation,
+                                              tinytc_value_t operand,
+                                              const tinytc_location_t *loc) {
+    if (instr == nullptr || operand == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<work_group_inst>(enum_cast<work_group_operation>(operation),
+                                                   operand, get_optional(loc))
                      .release();
     });
 }

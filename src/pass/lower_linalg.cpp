@@ -401,6 +401,7 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
     auto bb = region_builder{body};
 
     auto ctx = compiler_context{in.alpha().context(), true};
+    auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
     auto bt = get_memref_type(in.B());
@@ -408,7 +409,35 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
     auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
 
     if (bt->dim() == 0) {
-        // @todo
+        auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
+        auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
+        auto m = bb.add(make_subgroup_local_id(ctx, in.loc()));
+        auto from0 = bb.add(make_arith(arithmetic::mul, sgid, c_sgs, in.loc()));
+        auto from1 = bb.add(make_arith(arithmetic::add, from0, m, in.loc()));
+        auto from_index = bb.add(make_cast(from1, index_ty, in.loc()));
+
+        auto c_zero = bb.add(make_constant_zero(i32_ty, in.loc()));
+        auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, in.loc()));
+
+        auto c_trip_count = instant_constant_fold_add(bb, make_size(&in.A(), 0, in.loc()));
+        auto c_step = bb.add(make_constant(
+            core_cfg_.subgroup_size * tiling_.m_tiles() * tiling_.n_tiles(), index_ty, in.loc()));
+        auto c_init = bb.add(make_constant_zero(bt->element_data_ty(), in.loc()));
+
+        auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, {bt->element_data_ty()},
+                               index_ty, [&](region_builder &bb, array_view<value> args) {
+                                   auto a = bb.add(make_load(&in.A(), {args[0]}, in.loc()));
+                                   auto sum = mixed_precision_arithmetic(bb, arithmetic::add,
+                                                                         args[1], a, in.loc());
+                                   bb.add(make_yield({sum}, in.loc()));
+                               });
+        auto sum = bb.add(make_work_group(work_group_operation::reduce_add, acc[0], in.loc()));
+        bb.if_condition(
+            is_from_0,
+            [&](region_builder &bb) {
+                blas_update(bb, in.atomic(), &in.alpha(), sum, &in.beta(), &in.B(), {}, in.loc());
+            },
+            {}, in.loc());
     } else if (bt->dim() == 1) {
         auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.B(), 0, in.loc()));
         auto c_trip_count = instant_constant_fold_add(

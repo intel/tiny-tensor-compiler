@@ -63,6 +63,7 @@ class dump_ir_pass {
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);
     void operator()(sum_inst const &s);
+    void operator()(work_group_inst const &in);
     void operator()(yield_inst const &y);
 
     void run_on_function(function_node const &fn);

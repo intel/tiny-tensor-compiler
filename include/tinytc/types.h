@@ -287,6 +287,11 @@ typedef enum {
     tinytc_transpose_T = 1  ///< Transpose
 } tinytc_transpose_t;
 
+//! Work group collectives
+typedef enum {
+    tinytc_work_group_operation_reduce_add = 0 ///< Reduction (add)
+} tinytc_work_group_operation_t;
+
 //! Address space
 typedef enum {
     tinytc_address_space_global = 0x1, ///< Global memory
