@@ -54,7 +54,6 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         register_size_ = 64;
     }
-    num_registers_per_thread_ = num_reg_small_grf();
 }
 
 auto core_info_intel::num_reg_small_grf() const -> std::int32_t { return 128; }
@@ -65,29 +64,26 @@ auto core_info_intel::num_reg_large_grf() const -> std::int32_t {
                : num_reg_small_grf();
 }
 
+auto core_info_intel::num_reg() const -> std::int32_t {
+    return core_features_ & tinytc_core_feature_flag_large_register_file ? num_reg_large_grf()
+                                                                         : num_reg_small_grf();
+}
+
 auto core_info_intel::subgroup_sizes() const -> std::vector<std::int32_t> const & {
     return subgroup_sizes_;
 }
 
-auto core_info_intel::register_space() const -> std::int32_t {
-    return register_size_ * num_registers_per_thread_;
-}
+auto core_info_intel::register_space() const -> std::int32_t { return register_size_ * num_reg(); }
 
 auto core_info_intel::core_features() const -> tinytc_core_feature_flags_t {
     return core_features_;
 }
 
-void core_info_intel::core_features(tinytc_core_feature_flags_t flags) {
-    if (flags & tinytc_core_feature_flag_large_register_file) {
-        num_registers_per_thread_ = num_reg_large_grf();
-    } else {
-        num_registers_per_thread_ = num_reg_small_grf();
-    }
-}
+void core_info_intel::core_features(tinytc_core_feature_flags_t flags) { core_features_ = flags; }
 
 auto core_info_intel::max_work_group_size(std::int32_t subgroup_size) const -> std::int32_t {
     auto const num_threads_per_eu_due_to_register_use =
-        num_threads_per_eu_ * num_reg_small_grf() / num_registers_per_thread_;
+        num_threads_per_eu_ * num_reg_small_grf() / num_reg();
     auto const num_threads_per_eu_due_to_subgroup_size =
         num_threads_per_eu_ * subgroup_sizes_.front() / subgroup_size;
     auto const num_threads_per_eu =
