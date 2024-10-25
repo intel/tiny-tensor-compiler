@@ -2,7 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "doctest_util.hpp"
-#include "linalg_ops.hpp"
+#include "linalg_blas_a2.hpp"
+#include "linalg_blas_a3.hpp"
 #include "linalg_runner.hpp"
 #include "linalg_types.hpp"
 
@@ -13,6 +14,43 @@
 
 using runtime_class = RUNTIME_CLASS;
 using namespace tinytc;
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 0d", T, TEST_PRECISIONS) {
+    auto op = test::axpby<T, T, T, T>(transpose::N, {{}}, {{}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 1d", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+
+    std::int64_t M;
+    DOCTEST_TENSOR1_TEST(MM);
+
+    auto op = test::axpby<T, T, T, T>(transpose::N, {{M}}, {{M}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+    auto NN = std::vector<std::int64_t>{5, 17};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::axpby<T, T, T, T>(transpose::N, {{M, N}}, {{M, N}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d trans", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+    auto NN = std::vector<std::int64_t>{5, 17};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::axpby<T, T, T, T>(transpose::T, {{N, M}}, {{M, N}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
 
 TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto KK = std::vector<std::int64_t>{56};
@@ -124,6 +162,36 @@ TEST_CASE(RUNTIME_NAME " gemm packed mixed precision") {
     test::test_blas_a3<runtime_class>(op, 1, 0);
 }
 
+TEST_CASE_TEMPLATE(RUNTIME_NAME " gemv packed alpha=1 beta=0", T, TEST_PRECISIONS) {
+    auto NN = std::vector<std::uint32_t>{21};
+    auto MM = std::vector<std::uint32_t>{16, 23};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::gemv<T, T, T, T, T>(transpose::N, {{M, N}}, {{N}}, {{M}});
+    test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " gemv packed trans alpha=1 beta=0", T, TEST_PRECISIONS) {
+    std::int64_t M = 19, N = 32;
+
+    auto op = test::gemv<T, T, T, T, T>(transpose::T, {{N, M}}, {{N}}, {{M}});
+    test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " gemv packed complex alpha=1 beta=0", T, TEST_PRECISIONS) {
+    auto NN = std::vector<std::uint32_t>{5};
+    auto MM = std::vector<std::uint32_t>{8, 37};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    using CT = std::complex<T>;
+    auto op = test::gemv<CT, CT, CT, CT, CT>(transpose::N, {{M, N}}, {{N}}, {{M}});
+    test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
 TEST_CASE_TEMPLATE(RUNTIME_NAME " ger packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{10, 32, 45};
     auto NN = std::vector<std::int64_t>{1, 16, 17, 48};
@@ -143,4 +211,36 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard packed alpha=1 beta=0", T, TEST_PRECI
 
     auto op = test::hadamard<T, T, T, T, T>({{M}}, {{M}}, {{M}});
     test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+
+    std::int64_t M;
+    DOCTEST_TENSOR1_TEST(MM);
+
+    auto op = test::sum<T, T, T, T>(transpose::N, {{M}}, {{}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 2d", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+    auto NN = std::vector<std::int64_t>{5, 17};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::sum<T, T, T, T>(transpose::N, {{M, N}}, {{M}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 2d trans", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32};
+    auto NN = std::vector<std::int64_t>{5, 17};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::sum<T, T, T, T>(transpose::T, {{N, M}}, {{M}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
 }

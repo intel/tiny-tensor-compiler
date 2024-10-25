@@ -6,6 +6,8 @@
 
 #include "tinytc/tinytc.hpp"
 
+#include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -18,7 +20,9 @@ class tensor_layout {
                   array_view<std::int64_t> static_stride = {});
 
     inline auto dim() const -> std::int64_t { return shape_.size(); }
-    inline auto size() const -> std::int64_t { return stride_.back() * shape_.back(); }
+    inline auto size() const -> std::int64_t {
+        return dim() > 0 ? stride_.back() * shape_.back() : 1;
+    }
     inline auto shape() const -> array_view<std::int64_t> { return {shape_}; }
     inline auto shape(std::size_t i) const { return shape_[i]; }
     inline auto stride() const -> array_view<std::int64_t> { return {stride_}; }
@@ -32,6 +36,45 @@ class tensor_layout {
 
   private:
     std::vector<std::int64_t> shape_, stride_, static_shape_, static_stride_;
+};
+
+template <typename T>
+concept op_blas_a2 = requires(T op, typename T::alpha_type alpha, typename T::beta_type beta,
+                              typename T::A_type const *A_ref, typename T::B_type *B_ref) {
+    typename T::alpha_type;
+    typename T::A_type;
+    typename T::beta_type;
+    typename T::B_type;
+    T::kernel_name;
+    { op.lA() } -> std::same_as<tensor_layout const &>;
+    { op.lB() } -> std::same_as<tensor_layout const &>;
+    { op.make_prog() } -> std::same_as<prog>;
+    op.reference_impl(alpha, A_ref, beta, B_ref);
+};
+
+template <typename T>
+concept op_blas_a3 = requires(T op, typename T::alpha_type alpha, typename T::beta_type beta,
+                              typename T::A_type const *A_ref, typename T::B_type const *B_ref,
+                              typename T::C_type *C_ref) {
+    typename T::alpha_type;
+    typename T::A_type;
+    typename T::B_type;
+    typename T::beta_type;
+    typename T::C_type;
+    T::kernel_name;
+    { op.lA() } -> std::same_as<tensor_layout const &>;
+    { op.lB() } -> std::same_as<tensor_layout const &>;
+    { op.lC() } -> std::same_as<tensor_layout const &>;
+    { op.make_prog() } -> std::same_as<prog>;
+    op.reference_impl(alpha, A_ref, B_ref, beta, C_ref);
+};
+
+inline auto make_index_2d(transpose t, std::int64_t m, std::int64_t n) {
+    auto idx = std::array<std::int64_t, 2u>{m, n};
+    if (t == transpose::T) {
+        std::swap(idx[0], idx[1]);
+    }
+    return idx;
 };
 
 } // namespace tinytc::test

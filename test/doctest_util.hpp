@@ -60,6 +60,10 @@
         }                                                                                          \
     } while (false)
 
+#ifdef ENABLE_DOUBLE_PRECISION
 #define TEST_PRECISIONS float, double
+#else
+#define TEST_PRECISIONS float
+#endif
 
 #endif // DOCTEST_UTIL_20241023_HPP

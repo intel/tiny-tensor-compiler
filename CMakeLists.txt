@@ -14,6 +14,7 @@ cmake_dependent_option(BUILD_LEVEL_ZERO
 cmake_dependent_option(BUILD_OPENCL
     "Build support for OpenCL run-time; required when SYCL is enabled"
     ON "NOT BUILD_SYCL" ON)
+option(BUILD_DOUBLE_PRECISION_TESTS "Build double precision unit tests" ON)
 
 include(CTest)
 

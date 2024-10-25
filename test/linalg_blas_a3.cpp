@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "linalg_ops.hpp"
+#include "linalg_blas_a3.hpp"
 
 #include <algorithm>
 #include <array>
@@ -22,6 +22,20 @@ auto gemm_mnk(transpose tA, transpose tB, tensor_layout const &A, tensor_layout 
         throw std::runtime_error("incompatible matmul");
     }
     return {M, N, K};
+}
+
+auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B,
+             tensor_layout const &C) -> std::array<std::int64_t, 2u> {
+    if (A.dim() != 2 || B.dim() != 1 || C.dim() != 1) {
+        throw std::runtime_error("expected vectors and matrix");
+    }
+    const int A_kmode = tA == transpose::T ? 1 : 0;
+    const auto M = C.shape(0);
+    const auto K = A.shape(1 - A_kmode);
+    if (M != A.shape(A_kmode) || K != B.shape(0)) {
+        throw std::runtime_error("incompatible matvec");
+    }
+    return {M, K};
 }
 
 auto ger_mn(tensor_layout const &A, tensor_layout const &B,
