@@ -30,6 +30,7 @@ Core C++-API:
       - tinytc::run_function_pass
       - tinytc::list_function_passes
       - tinytc::compile_to_opencl
+      - tinytc::compile_to_spirv
   Compiler Context:
     function:
       - tinytc::make_compiler_context

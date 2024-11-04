@@ -167,9 +167,11 @@ class scalar_data_type : public data_type_node {
 class void_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::void_; }
+    static auto get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t;
 
   protected:
     inline void_data_type(tinytc_compiler_context_t ctx) : data_type_node(DTK::void_, ctx) {}
+    friend class compiler_context_cache;
 };
 
 } // namespace tinytc

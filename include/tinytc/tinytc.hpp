@@ -2252,6 +2252,20 @@ inline auto compile_to_opencl(prog prg, core_info const &info) -> source {
     return source{src};
 }
 
+/**
+ * @brief Compile program to SPIR-V
+ *
+ * @param prg Program
+ * @param info Core info
+ *
+ * @return Binary
+ */
+inline auto compile_to_spirv(prog prg, core_info const &info) -> binary {
+    tinytc_binary_t bin;
+    CHECK_STATUS(tinytc_prog_compile_to_spirv(&bin, prg.get(), info.get()));
+    return binary{bin};
+}
+
 ////////////////////////////
 ////////// Recipe //////////
 ////////////////////////////

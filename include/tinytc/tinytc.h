@@ -1460,12 +1460,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src
                                                             const_tinytc_core_info_t info);
 
 /**
+ * @brief Compiler tensor language to SPIR-V
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param prg [inout] tensor program; modified as compiler passes are run
+ * @param info [in] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_binary_t *bin, tinytc_prog_t prg,
+                                                           const_tinytc_core_info_t info);
+
+/**
  * @brief Get source text
  *
  * @param src [in] source object
  * @param length [out] pointer to code length
- * @param code [out] code contains a pointer to the source text; the pointer is only valid as long
- * as the source object is alive
+ * @param code [out] code contains a pointer to the source text; the pointer is only valid as
+ * long as the source object is alive
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1511,8 +1523,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_core_features(
  *
  * @param src [in] source object
  * @param extensions_size [out] pointer to number of extensions
- * @param extensions [out][range(0,extensions_size)] pointer to array of C-strings; array owned by
- * source object
+ * @param extensions [out][range(0,extensions_size)] pointer to array of C-strings; array owned
+ * by source object
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1528,8 +1540,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t
  * @param format [in] Bundle format (SPIR-V or Native)
  * @param data_size [in] Size of data in bytes
  * @param data [in][range(0, data_size)] Binary data; data is copied
- * @param core_features [in][optional] requested core features; must be 0 (default) or a combination
- * of tinytc_core_feature_flag_t
+ * @param core_features [in][optional] requested core features; must be 0 (default) or a
+ * combination of tinytc_core_feature_flag_t
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1622,8 +1634,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_retain(tinytc_binary_t bin);
 /**
  * @brief Returns a small batched GEMM recipe
  *
- * The program contains a kernel for @f$\beta=0@f$ called "gemm_beta0" and a kernel for @f$\beta\neq
- * 0@f$ called "gemm". All matrix shapes and strides are known at compile-time.
+ * The program contains a kernel for @f$\beta=0@f$ called "gemm_beta0" and a kernel for
+ * @f$\beta\neq 0@f$ called "gemm". All matrix shapes and strides are known at compile-time.
  *
  * The signature of the generated kernels gemm and gemm_beta0 is (if A and B are not transposed)
  *
@@ -1691,8 +1703,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
 /**
  * @brief Returns a tall and skinny recipe
  *
- * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0 called
- * "gemm". M (= number of rows of A, C) and strides are dynamic.
+ * The program contains a kernel for beta = 0 called "gemm_beta0" and a kernel for beta != 0
+ * called "gemm". M (= number of rows of A, C) and strides are dynamic.
  *
  * The signature of the generated kernels gemm and gemm_beta0 is
  *
@@ -1717,8 +1729,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @param ty [in] Scalar type of alpha, A, B, beta, C
  * @param N [in] Number of columns of B, C
  * @param K [in] Number columns of A, number of rows of B
- * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
- * parameter auto-selected
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
  * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -1733,8 +1745,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization
  * constants M, ldA, ldB, and ldC.
  * The specializtion constants may be either set to a fixed value or to TINYTC_DYNAMIC.
- * Note that if a specialization constant is set to a fixed value then the parameter with the same
- * name in tinytc_recipe_tall_and_skinny_set_args is ignored.
+ * Note that if a specialization constant is set to a fixed value then the parameter with the
+ * same name in tinytc_recipe_tall_and_skinny_set_args is ignored.
  *
  * The generated kernels have the following signature:
  *
@@ -1755,8 +1767,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @param ldA [in] Leading dimension of A; can be TINYTC_DYNAMIC
  * @param ldB [in] Leading dimension of B; can be TINYTC_DYNAMIC
  * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
- * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have the
- * parameter auto-selected
+ * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
+ * the parameter auto-selected
  * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return
@@ -1808,8 +1820,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_set_args(
  * @brief Get prog object
  *
  * @param recipe [in] recipe object
- * @param prg [out] pointer to prog object; reference count is increased so the user needs to call
- * tinytc_prog_release to clean up
+ * @param prg [out] pointer to prog object; reference count is increased so the user needs to
+ * call tinytc_prog_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1820,8 +1832,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recip
  * @brief Get source object
  *
  * @param recipe [in] recipe object
- * @param src [out] pointer to source object; reference count is increased so the user needs to call
- * tinytc_source_release to clean up
+ * @param src [out] pointer to source object; reference count is increased so the user needs to
+ * call tinytc_source_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */
@@ -1852,8 +1864,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_retain(tinytc_recipe_t obj);
  * @brief Get recipe object
  *
  * @param handler [in] recipe handler object
- * @param recipe [out] pointer to recipe object; reference count is increased so the user needs to
- * call tinytc_recipe_release to clean up
+ * @param recipe [out] pointer to recipe object; reference count is increased so the user needs
+ * to call tinytc_recipe_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */

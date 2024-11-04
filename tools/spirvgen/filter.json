@@ -1,0 +1,11 @@
+{
+  "copyright" : [
+    "Copyright (C) 2024 Intel Corporation",
+    "SPDX-License-Identifier: BSD-3-Clause"
+  ],
+  "include" : [
+      [0, 47],
+      [53, 999],
+      [4456, 4460]
+  ]
+}

@@ -46,6 +46,7 @@ Core C-API:
       - tinytc_run_function_pass
       - tinytc_list_function_passes
       - tinytc_prog_compile_to_opencl
+      - tinytc_prog_compile_to_spirv
   Compiler Context:
     function:
       - tinytc_compiler_context_create

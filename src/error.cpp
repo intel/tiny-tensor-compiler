@@ -194,6 +194,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
                "target architecture";
     case tinytc_status_ir_incompatible_scalar_types:
         return "Scalar types violate compatibility rules";
+    case tinytc_status_spirv_forbidden_forward_declaration:
+        return "Forward declaration of id is forbidden";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

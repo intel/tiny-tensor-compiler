@@ -45,6 +45,7 @@ set(SOURCES
     pass/constant_folding.cpp
     pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
+    pass/convert_to_spirv.cpp
     pass/dead_code_elimination.cpp
     pass/dump_cfg.cpp
     pass/dump_def_use.cpp
@@ -62,6 +63,9 @@ set(SOURCES
     region.cpp
     required_extensions.cpp
     scalar_type.cpp
+    spv/module.cpp
+    spv/names.cpp
+    spv/pass/dump_asm.cpp
     source.cpp
     tiling.cpp
     value.cpp

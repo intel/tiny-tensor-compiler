@@ -81,6 +81,9 @@ typedef enum {
     tinytc_status_ir_invalid_matrix_use = 0x122,   ///< Invalid matrix use
     tinytc_status_ir_unsupported_coopmatrix_shape = 0x123, ///< Unsupported coopmatrix shape
     tinytc_status_ir_incompatible_scalar_types = 0x124,    ///< Incompatible scalar types
+    // SPIR-V errors
+    tinytc_status_spirv_forbidden_forward_declaration =
+        0x1000, ///< Forward declaration of id is forbidden
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST

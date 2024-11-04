@@ -3,10 +3,12 @@
 
 #include "argparser.hpp"
 #include "argparser_common.hpp"
+#include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <string_view>
@@ -14,13 +16,30 @@
 
 using namespace tinytc;
 
+enum class generator { opencl, spirv };
+
 int main(int argc, char **argv) {
     char const *filename = nullptr;
     auto info = core_info{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
+    auto gen = generator::opencl;
     bool help = false;
+
+    auto const convert_string_to_generator = [](char const *str, generator &val) {
+        switch (fnv1a(str, std::strlen(str))) {
+        case "opencl"_fnv1a:
+            val = generator::opencl;
+            break;
+        case "spirv"_fnv1a:
+            val = generator::spirv;
+            break;
+        default:
+            return cmd::parser_status::invalid_argument;
+        };
+        return cmd::parser_status::success;
+    };
 
     auto parser = cmd::arg_parser{};
     try {
@@ -38,6 +57,8 @@ int main(int argc, char **argv) {
                 }
                 return cmd::parser_status::success;
             });
+        parser.set_short_opt('g', &gen, "Code generation backend (opencl or spirv)")
+            .converter(convert_string_to_generator);
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
         parser.add_positional_arg("file-name", &filename,
@@ -78,8 +99,14 @@ int main(int argc, char **argv) {
             p = parse_file(filename, ctx);
         }
 
-        auto src = compile_to_opencl(std::move(p), info);
-        std::cout << src.get_code();
+        switch (gen) {
+        case generator::opencl:
+            std::cout << compile_to_opencl(std::move(p), info).get_code();
+            break;
+        case generator::spirv:
+            compile_to_spirv(std::move(p), info);
+            break;
+        }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
         return 1;

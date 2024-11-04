@@ -7,6 +7,7 @@
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
 #include "pass/convert_to_opencl.hpp"
+#include "pass/convert_to_spirv.hpp"
 #include "pass/dead_code_elimination.hpp"
 #include "pass/dump_cfg.hpp"
 #include "pass/dump_def_use.hpp"
@@ -20,6 +21,7 @@
 #include "reference_counted.hpp"
 #include "required_extensions.hpp"
 #include "source.hpp"
+#include "spv/pass/dump_asm.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -36,6 +38,8 @@
 
 using namespace tinytc;
 
+namespace tinytc {
+
 template <typename PassT> struct optflag_setter {
     PassT &pass;
     tinytc_compiler_context_t ctx;
@@ -44,6 +48,37 @@ template <typename PassT> struct optflag_setter {
         (pass.set_opt_flag(flags, ctx->opt_flag(flags)), ...);
     }
 };
+
+void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_info_t info) {
+    auto ctx = prg->context();
+    const auto opt_level = ctx->opt_level();
+
+    // passes
+    auto cpp = constant_propagation_pass{};
+    optflag_setter{cpp, ctx}(tinytc::optflag::unsafe_fp_math);
+
+    run_function_pass(check_ir_pass{}, *prg);
+
+    if (opt_level >= 1) {
+        // We run constant propagation + dead code elimination early to capture dead allocas
+        // (later on they are maybe "in use" due to the lifetime_stop instruction)
+        run_function_pass(cpp, *prg);
+        run_function_pass(dead_code_elimination_pass{}, *prg);
+    }
+
+    run_function_pass(insert_lifetime_stop_pass{}, *prg);
+    run_function_pass(set_stack_ptr_pass{}, *prg);
+    run_function_pass(insert_barrier_pass{}, *prg);
+    run_function_pass(work_group_size_pass{info}, *prg);
+
+    run_function_pass(lower_linalg_pass{info}, *prg);
+    if (opt_level >= 1) {
+        run_function_pass(cpp, *prg);
+        run_function_pass(dead_code_elimination_pass{}, *prg);
+    }
+}
+
+} // namespace tinytc
 
 extern "C" {
 
@@ -96,32 +131,7 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
     }
     return exception_to_status_code(
         [&] {
-            auto ctx = prg->share_context();
-            const auto opt_level = ctx->opt_level();
-
-            // passes
-            auto cpp = constant_propagation_pass{};
-            optflag_setter{cpp, ctx.get()}(tinytc::optflag::unsafe_fp_math);
-
-            run_function_pass(check_ir_pass{}, *prg);
-
-            if (opt_level >= 1) {
-                // We run constant propagation + dead code elimination early to capture dead allocas
-                // (later on they are maybe "in use" due to the lifetime_stop instruction)
-                run_function_pass(cpp, *prg);
-                run_function_pass(dead_code_elimination_pass{}, *prg);
-            }
-
-            run_function_pass(insert_lifetime_stop_pass{}, *prg);
-            run_function_pass(set_stack_ptr_pass{}, *prg);
-            run_function_pass(insert_barrier_pass{}, *prg);
-            run_function_pass(work_group_size_pass{info}, *prg);
-
-            run_function_pass(lower_linalg_pass{info}, *prg);
-            if (opt_level >= 1) {
-                run_function_pass(cpp, *prg);
-                run_function_pass(dead_code_elimination_pass{}, *prg);
-            }
+            apply_default_optimization_pipeline(prg, info);
 
             // opencl
             auto ast = convert_to_opencl_pass{info}.run_on_program(*prg);
@@ -135,9 +145,29 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
 
             clir::generate_opencl(oss, std::move(ast));
 
-            *src = std::make_unique<::tinytc_source>(std::move(ctx), oss.str(), prg->loc(),
+            *src = std::make_unique<::tinytc_source>(prg->share_context(), oss.str(), prg->loc(),
                                                      std::move(ext), info->core_features())
                        .release();
+        },
+        prg->context());
+}
+
+tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_binary_t *bin, tinytc_prog_t prg,
+                                             const_tinytc_core_info_t info) {
+    if (bin == nullptr || prg == nullptr || info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] {
+            apply_default_optimization_pipeline(prg, info);
+
+            // opencl
+            auto mod = convert_to_spirv_pass{info}.run_on_program(*prg);
+            spv::dump_asm_pass{std::cout}.run_on_module(*mod);
+
+            //*bin = std::make_unique<::tinytc_binary>(prg->share_context(), mod.to_binary(),
+            // bundle_format::spirv, info->core_features())
+            //.release();
         },
         prg->context());
 }

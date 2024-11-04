@@ -285,6 +285,8 @@ The supported matrix shapes may depend on data type, matrix use, and target hard
 
 An argument to any instruction that has coopmatrix type **must** be dynamically uniform.
 
+Having i1 as component type of a coopmatrix is forbidden.
+
 Instructions
 ============
 
@@ -644,21 +646,22 @@ Arithmetic on cooperative matrices is done component-wise.
 
 The following table shows the operations' description and the types that are allowed for the operation.
 The backslash "\\" is used to exclude types from the list of allowed types.
+Boolean arithmetic is only allowed for .and, .or, and .xor.
 
-==== ============================= ================================================================
-Op   Allowed type                  Description
-==== ============================= ================================================================
-.add scalar-type / coopmatrix-type Sum of operands
-.sub scalar-type / coopmatrix-type Difference of operands
-.mul scalar-type / coopmatrix-type Product of operands
-.div scalar-type / coopmatrix-type Quotient of operands
-.rem scalar-type  \\ complex-type  Remainder from the division of operands
-.shl integer-type \\ i1            Left shift first operand by second operand
-.shr integer-type \\ i1            Arithmetic right shift first operand by second operand
-.and integer-type                  Bitwise and
-.or  integer-type                  Bitwise or
-.xor integer-type                  Bitwise xor
-==== ============================= ================================================================
+==== ============================= ========== ======================================================
+Op   Allowed type                  i1 allowed Description
+==== ============================= ========== ======================================================
+.add scalar-type / coopmatrix-type No         Sum of operands
+.sub scalar-type / coopmatrix-type No         Difference of operands
+.mul scalar-type / coopmatrix-type No         Product of operands
+.div scalar-type / coopmatrix-type No         Quotient of operands
+.rem scalar-type  \\ complex-type  No         Remainder from the division of operands
+.shl integer-type                  No         Left shift first operand by second operand
+.shr integer-type                  No         Arithmetic right shift first operand by second operand
+.and integer-type                  Yes        Bitwise and
+.or  integer-type                  Yes        Bitwise or
+.xor integer-type                  Yes        Bitwise xor
+==== ============================= ========== ======================================================
 
 Arithmetic (unary)
 ..................
@@ -679,17 +682,18 @@ for ".abs", ".im", and ".re", and the returned value has the same type as the op
 for ".neg" and ".conj".
 
 The following table shows the operations' description and the types that are allowed for the operation.
+Boolean arithmetic is only allowed for .neg.
 
-===== ============================= =============================
-Op    Allowed type Description
-===== ============================= =============================
-.abs  scalar-type                   Compute absolute value
-.neg  scalar-type / coopmatrix-type Negation
-.not  integer-type                  Bitwise not
-.conj complex-type                  Complex conjugate
-.im   complex-type                  Extract imaginary part
-.re   complex-type                  Extract real part
-===== ============================= =============================
+===== ============================= ========== =============================
+Op    Allowed type                  i1 allowed Description
+===== ============================= ========== =============================
+.abs  scalar-type                   No         Compute absolute value
+.neg  scalar-type / coopmatrix-type No         Negation
+.not  integer-type                  Yes        Bitwise not
+.conj complex-type                  No         Complex conjugate
+.im   complex-type                  No         Extract imaginary part
+.re   complex-type                  No         Extract real part
+===== ============================= ========== =============================
 
 Barrier
 .......

@@ -259,16 +259,18 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         if (a_ty != b_ty) {
             throw compilation_error(loc(), status::ir_scalar_mismatch);
         }
+        bool inst_supports_i1 = true;
         bool inst_supports_fp = true;
         bool inst_supports_complex = true;
-        bool inst_supports_i1 = true;
         switch (operation) {
         case arithmetic::add:
         case arithmetic::sub:
         case arithmetic::mul:
         case arithmetic::div:
+            inst_supports_i1 = false;
             break;
         case arithmetic::rem:
+            inst_supports_i1 = false;
             inst_supports_complex = false;
             break;
         case arithmetic::and_:
@@ -315,12 +317,14 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
         auto a_ty = get_scalar_type(loc(), a());
         to_ty = a_ty;
 
+        bool inst_supports_i1 = true;
         bool inst_supports_int = true;
         bool inst_supports_fp = true;
         bool inst_supports_complex = true;
         switch (operation_) {
         case arithmetic_unary::abs:
         case arithmetic_unary::neg:
+            inst_supports_i1 = false;
             break;
         case arithmetic_unary::not_:
             inst_supports_fp = false;
@@ -329,9 +333,13 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
         case arithmetic_unary::conj:
         case arithmetic_unary::im:
         case arithmetic_unary::re:
+            inst_supports_i1 = false;
             inst_supports_int = false;
             inst_supports_fp = false;
             break;
+        }
+        if (!inst_supports_i1 && a_ty->ty() == scalar_type::i1) {
+            throw compilation_error(loc(), status::ir_i1_unsupported);
         }
         if (!inst_supports_int && is_integer_type(a_ty->ty())) {
             throw compilation_error(loc(), status::ir_int_unsupported);

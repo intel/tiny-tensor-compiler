@@ -170,4 +170,8 @@ auto scalar_data_type::get(tinytc_compiler_context_t ctx, scalar_type ty) -> tin
     return ctx->cache()->scalar_tys[static_cast<tinytc_scalar_type_t>(ty)].get();
 }
 
+auto void_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t {
+    return ctx->cache()->void_ty.get();
+}
+
 } // namespace tinytc
