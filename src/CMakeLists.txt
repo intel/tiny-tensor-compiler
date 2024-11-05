@@ -65,6 +65,7 @@ set(SOURCES
     scalar_type.cpp
     spv/module.cpp
     spv/names.cpp
+    spv/opencl.std.cpp
     spv/pass/dump_asm.cpp
     source.cpp
     tiling.cpp

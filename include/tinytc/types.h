@@ -41,6 +41,7 @@ typedef enum {
     tinytc_status_unsupported_device = 0xe,          ///< Unsupported device
     tinytc_status_invalid_core_info = 0xf,           ///< Invalid core info object
     tinytc_status_unknown_pass_name = 0x10,          ///< Invalid compiler pass name
+    tinytc_status_not_implemented = 0x11,            ///< Not implemented
     // IR errors
     tinytc_status_ir_out_of_bounds = 0x100,             ///< Out of bounds access
     tinytc_status_ir_invalid_shape = 0x101,             ///< Invalid tensor shape
@@ -83,7 +84,8 @@ typedef enum {
     tinytc_status_ir_incompatible_scalar_types = 0x124,    ///< Incompatible scalar types
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
-        0x1000, ///< Forward declaration of id is forbidden
+        0x1000,                                   ///< Forward declaration of id is forbidden
+    tinytc_status_spirv_undefined_value = 0x1001, ///< Undefined value
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST

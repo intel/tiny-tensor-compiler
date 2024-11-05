@@ -51,6 +51,7 @@ enum class status {
     unsupported_device = tinytc_status_unsupported_device,
     invalid_core_info = tinytc_status_invalid_core_info,
     unknown_pass_name = tinytc_status_unknown_pass_name,
+    not_implemented = tinytc_status_not_implemented,
     // IR errors
     ir_out_of_bounds = tinytc_status_ir_out_of_bounds,
     ir_invalid_shape = tinytc_status_ir_invalid_shape,
@@ -90,6 +91,7 @@ enum class status {
     ir_unsupported_coopmatrix_shape = tinytc_status_ir_unsupported_coopmatrix_shape,
     ir_incompatible_scalar_types = tinytc_status_ir_incompatible_scalar_types,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
+    spirv_undefined_value = tinytc_status_spirv_undefined_value,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,

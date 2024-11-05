@@ -29,6 +29,15 @@ void parse_context::pop_region() { regions_.pop(); }
 auto parse_context::top_region() -> tinytc_region_t { return regions_.top(); }
 auto parse_context::has_regions() -> bool { return !regions_.empty(); }
 
+void parse_context::add_global_name(std::string const &name, location const &l) {
+    if (auto other = global_names_.find(name); other != global_names_.end()) {
+        auto oss = std::ostringstream{};
+        oss << "Identifier @" << name << " was already used at " << other->second;
+        throw parser::syntax_error(l, std::move(oss).str());
+    }
+    global_names_[name] = l;
+}
+
 void parse_context::val(std::variant<std::int64_t, std::string> const &id, tinytc_value &val,
                         location const &l) {
     const auto handle_val =

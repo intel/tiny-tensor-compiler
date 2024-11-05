@@ -120,6 +120,10 @@ is always a multiple of the subgroup size.
 The subgroup size attribute enforces a particular subgroup device supported by
 the device.
 
+Restrictions
+------------
+
+Arguments must not have coopmatrix type.
 
 Regions
 =======

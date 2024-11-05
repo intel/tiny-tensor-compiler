@@ -4,8 +4,10 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_NAMES_2024114_HPP
-#define GENERATED_NAMES_2024114_HPP
+#ifndef GENERATED_NAMES_2024115_HPP
+#define GENERATED_NAMES_2024115_HPP
+
+#include "enums.hpp"
 
 namespace tinytc::spv {
 
@@ -66,4 +68,4 @@ auto to_string(FPEncoding e) -> char const *;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_NAMES_2024114_HPP
+#endif // GENERATED_NAMES_2024115_HPP

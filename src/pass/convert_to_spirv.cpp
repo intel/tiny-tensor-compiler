@@ -7,28 +7,40 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "scalar_type.hpp"
 #include "spv/instructions.hpp"
+#include "spv/opencl.std.hpp"
+#include "support/fnv1a.hpp"
 #include "support/visit.hpp"
 
+#include <algorithm>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace tinytc {
 
 class spirv_converter {
   public:
-    inline spirv_converter(spv::mod &mod, tinytc_compiler_context_t ctx) : mod_(&mod), ctx_(ctx) {}
+    inline spirv_converter(::tinytc_core_info const *info, spv::mod &mod,
+                           tinytc_compiler_context_t ctx)
+        : info_(info), mod_(&mod), ctx_(ctx) {}
 
     auto operator()(data_type_node const &ty) -> spv::spv_inst *;
 
     // Instruction nodes
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
+    void operator()(arith_unary_inst const &in);
+    void operator()(constant_inst const &in);
 
     void run_on_program(program_node const &p);
 
   private:
     auto declare(value_node const &v, spv::spv_inst *in);
     auto val(value_node const &v) -> spv::spv_inst *;
+    auto multi_declare(value_node const &v, std::vector<spv::spv_inst *> insts);
+    auto multi_val(value_node const &v) -> std::vector<spv::spv_inst *> &;
+    auto declare_function_type(std::vector<spv::spv_inst *> params) -> spv::spv_inst *;
     void run_on_region(region_node const &fn);
     void run_on_function(function_node const &fn);
     template <spv::section S, typename T, typename... Args> auto add_to(Args &&...args) -> T * {
@@ -41,10 +53,16 @@ class spirv_converter {
         return add_to<spv::section::function, T>(std::forward<Args>(args)...);
     }
 
+    ::tinytc_core_info const *info_;
     spv::mod *mod_;
     tinytc_compiler_context_t ctx_;
     std::unordered_map<const_tinytc_data_type_t, spv::spv_inst *> spv_tys_;
     std::unordered_map<const_tinytc_value_t, spv::spv_inst *> vals_;
+    std::unordered_map<const_tinytc_value_t, std::vector<spv::spv_inst *>> multi_vals_;
+    std::unordered_set<spv::Capability> capabilities_;
+    std::unordered_multimap<std::uint64_t, spv::OpTypeFunction *> function_tys_;
+    spv::spv_inst *opencl_ext_ = nullptr;
+    core_config core_cfg_ = {};
 };
 
 auto spirv_converter::declare(value_node const &v, spv::spv_inst *in) { vals_[&v] = in; }
@@ -52,7 +70,35 @@ auto spirv_converter::val(value_node const &v) -> spv::spv_inst * {
     if (auto it = vals_.find(&v); it != vals_.end()) {
         return it->second;
     }
-    throw status::internal_compiler_error;
+    throw compilation_error(v.loc(), status::spirv_undefined_value);
+}
+auto spirv_converter::multi_declare(value_node const &v, std::vector<spv::spv_inst *> insts) {
+    multi_vals_[&v] = std::move(insts);
+}
+auto spirv_converter::multi_val(value_node const &v) -> std::vector<spv::spv_inst *> & {
+    if (auto it = multi_vals_.find(&v); it != multi_vals_.end()) {
+        return it->second;
+    }
+    throw compilation_error(v.loc(), status::spirv_undefined_value);
+}
+auto spirv_converter::declare_function_type(std::vector<spv::spv_inst *> params)
+    -> spv::spv_inst * {
+    auto map_key = fnv1a0();
+    for (auto const &p : params) {
+        map_key = fnv1a_step(map_key, p);
+    }
+    auto range = function_tys_.equal_range(map_key);
+    for (auto it = range.first; it != range.second; ++it) {
+        if (std::equal(params.begin(), params.end(), it->second->op1().begin(),
+                       it->second->op1().end())) {
+            return it->second;
+        }
+    }
+    auto void_ty = visit(*this, *void_data_type::get(ctx_));
+    return function_tys_
+        .emplace(map_key, add_to<spv::section::type_const_var, spv::OpTypeFunction>(
+                              void_ty, std::move(params)))
+        ->second;
 }
 
 auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
@@ -61,44 +107,53 @@ auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
         auto spv_ty = visit(
             overloaded{
                 [&](void_data_type const &) -> spv::spv_inst * {
-                    return add_to<spv::section::type, spv::OpTypeVoid>();
+                    return add_to<spv::section::type_const_var, spv::OpTypeVoid>();
                 },
                 [&](scalar_data_type const &ty) -> spv::spv_inst * {
                     switch (ty.ty()) {
                     case scalar_type::i1:
-                        return add_to<spv::section::type, spv::OpTypeBool>();
+                        return add_to<spv::section::type_const_var, spv::OpTypeBool>();
                     case scalar_type::i8:
-                        add_to<spv::section::capability, spv::OpCapability>(spv::Capability::Int8);
-                        return add_to<spv::section::type, spv::OpTypeInt>(8, 1);
+                        capabilities_.insert(spv::Capability::Int8);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(8, 1);
                     case scalar_type::i16:
-                        add_to<spv::section::capability, spv::OpCapability>(spv::Capability::Int16);
-                        return add_to<spv::section::type, spv::OpTypeInt>(16, 1);
+                        capabilities_.insert(spv::Capability::Int16);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(16, 1);
                     case scalar_type::i32:
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(32, 1);
                     case scalar_type::i64:
-                    case scalar_type::index:
-                        return add_to<spv::section::type, spv::OpTypeInt>(size(ty.ty()) * 8, 1);
+                        capabilities_.insert(spv::Capability::Int64);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(64, 1);
+                    case scalar_type::index: {
+                        const auto sz = size(ty.ty());
+                        if (sz == 8) {
+                            capabilities_.insert(spv::Capability::Int64);
+                        }
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(sz * 8, 1);
+                    }
                     case scalar_type::f32:
                     case scalar_type::f64:
-                        return add_to<spv::section::type, spv::OpTypeFloat>(size(ty.ty()) * 8,
-                                                                            std::nullopt);
-                    case scalar_type::c32:
+                        return add_to<spv::section::type_const_var, spv::OpTypeFloat>(
+                            size(ty.ty()) * 8, std::nullopt);
+                    case scalar_type::c32: {
+                        auto float_ty =
+                            visit(*this, *scalar_data_type::get(ctx_, scalar_type::f32));
+                        return add_to<spv::section::type_const_var, spv::OpTypeVector>(float_ty, 2);
+                    }
                     case scalar_type::c64: {
-                        auto float_ty = add_to<spv::section::type, spv::OpTypeFloat>(
-                            size(ty.ty()) * 8 / 2, std::nullopt);
-                        return add_to<spv::section::type, spv::OpTypeVector>(float_ty, 2);
+                        auto float_ty =
+                            visit(*this, *scalar_data_type::get(ctx_, scalar_type::f64));
+                        return add_to<spv::section::type_const_var, spv::OpTypeVector>(float_ty, 2);
                     }
                     }
                     throw status::internal_compiler_error;
                 },
                 [&](coopmatrix_data_type const &ty) -> spv::spv_inst * {
-                    // @todo
-                    throw status::internal_compiler_error;
-                    return nullptr;
+                    return visit(*this, *ty.ty());
                 },
                 [](auto const &) -> spv::spv_inst * {
                     // @todo
-                    throw status::internal_compiler_error;
-                    return nullptr;
+                    throw status::not_implemented;
                 }},
             ty);
         spv_tys_[&ty] = spv_ty;
@@ -107,9 +162,9 @@ auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
     return it->second;
 }
 
-void spirv_converter::operator()(inst_node const &) {
+void spirv_converter::operator()(inst_node const &in) {
     // @todo
-    throw status::internal_compiler_error;
+    throw compilation_error(in.loc(), status::not_implemented);
 }
 
 void spirv_converter::operator()(arith_inst const &in) {
@@ -125,7 +180,7 @@ void spirv_converter::operator()(arith_inst const &in) {
         default:
             break;
         }
-        throw status::ir_i1_unsupported;
+        throw compilation_error(in.loc(), status::ir_i1_unsupported);
     };
     auto const make_int = [&](arithmetic op, spv::spv_inst *ty, spv::spv_inst *a,
                               spv::spv_inst *b) -> spv::spv_inst * {
@@ -151,7 +206,7 @@ void spirv_converter::operator()(arith_inst const &in) {
         case arithmetic::xor_:
             return add<spv::OpBitwiseXor>(ty, a, b);
         }
-        throw status::internal_compiler_error;
+        throw compilation_error(in.loc(), status::internal_compiler_error);
     };
     auto const make_float_complex = [&](arithmetic op, spv::spv_inst *ty, spv::spv_inst *a,
                                         spv::spv_inst *b) -> spv::spv_inst * {
@@ -169,7 +224,7 @@ void spirv_converter::operator()(arith_inst const &in) {
         default:
             break;
         }
-        throw status::ir_fp_unsupported;
+        throw compilation_error(in.loc(), status::ir_fp_unsupported);
     };
     auto const make = [&](scalar_type sty, arithmetic op, spv::spv_inst *ty, spv::spv_inst *a,
                           spv::spv_inst *b) -> spv::spv_inst * {
@@ -188,26 +243,229 @@ void spirv_converter::operator()(arith_inst const &in) {
         case scalar_type::c64:
             return make_float_complex(op, ty, a, b);
         }
-        throw status::internal_compiler_error;
+        throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
     auto ty = visit(*this, *in.result(0).ty());
-    auto av = val(in.a());
-    auto bv = val(in.b());
 
     if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
-        make(st->ty(), in.operation(), ty, av, bv);
+        auto av = val(in.a());
+        auto bv = val(in.b());
+        declare(in.result(0), make(st->ty(), in.operation(), ty, av, bv));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        // auto clinst = std::vector<clir::stmt>{};
-        // auto const len = ct->length(core_cfg_.subgroup_size);
-        // clinst.reserve(len + 1);
-        // clinst.emplace_back(declaration(std::move(lhs_ty), lhs));
-        // const auto sty = ct->component_ty();
-        // for (std::int64_t i = 0; i < len; ++i) {
-        // auto op = make(a.operation(), av[i], bv[i], sty);
-        // clinst.emplace_back(expression_statement(assignment(lhs[i], std::move(op))));
-        //}
-        // return clinst;
+        auto const length = ct->length(core_cfg_.subgroup_size);
+        auto insts = std::vector<spv::spv_inst *>{};
+        insts.reserve(length);
+
+        auto &av = multi_val(in.a());
+        auto &bv = multi_val(in.b());
+        for (std::int64_t i = 0; i < length; ++i) {
+            insts.emplace_back(make(ct->component_ty(), in.operation(), ty, av[i], bv[i]));
+        }
+
+        multi_declare(in.result(0), std::move(insts));
+    } else {
+        throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
+    }
+}
+
+void spirv_converter::operator()(arith_unary_inst const &in) {
+    auto const make_boolean = [&](arithmetic_unary op, spv::spv_inst *ty,
+                                  spv::spv_inst *a) -> spv::spv_inst * {
+        switch (op) {
+        case arithmetic_unary::not_:
+            return add<spv::OpLogicalNot>(ty, a);
+        default:
+            break;
+        }
+        throw compilation_error(in.loc(), status::ir_i1_unsupported);
+    };
+    auto const make_int = [&](arithmetic_unary op, spv::spv_inst *ty,
+                              spv::spv_inst *a) -> spv::spv_inst * {
+        switch (op) {
+        case arithmetic_unary::abs:
+            return add<spv::OpExtInst>(ty, opencl_ext_,
+                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::s_abs),
+                                       std::vector<spv::IdRef>{a});
+        case arithmetic_unary::neg:
+            return add<spv::OpSNegate>(ty, a);
+        case arithmetic_unary::not_:
+            return add<spv::OpNot>(ty, a);
+        default:
+            break;
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    auto const make_float = [&](arithmetic_unary op, spv::spv_inst *ty,
+                                spv::spv_inst *a) -> spv::spv_inst * {
+        switch (op) {
+        case arithmetic_unary::abs:
+            return add<spv::OpExtInst>(ty, opencl_ext_,
+                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::fabs),
+                                       std::vector<spv::IdRef>{a});
+        case arithmetic_unary::neg:
+            return add<spv::OpFNegate>(ty, a);
+        default:
+            break;
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    auto const make_complex = [&](arithmetic_unary op, scalar_type sty, spv::spv_inst *ty,
+                                  spv::spv_inst *a) -> spv::spv_inst * {
+        switch (op) {
+        case arithmetic_unary::abs: {
+            auto spv_a_ty = visit(*this, *scalar_data_type::get(ctx_, sty));
+            auto a2 = add<spv::OpFMul>(spv_a_ty, a, a);
+            auto a2_0 = add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{0});
+            auto a2_1 = add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{1});
+            auto a2_0p1 = add<spv::OpFAdd>(ty, a2_0, a2_1);
+            return add<spv::OpExtInst>(ty, opencl_ext_,
+                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::sqrt),
+                                       std::vector<spv::IdRef>{a2_0p1});
+        }
+        case arithmetic_unary::neg:
+            return add<spv::OpFNegate>(ty, a);
+        case arithmetic_unary::conj: {
+            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(sty)));
+            auto a_im =
+                add<spv::OpCompositeExtract>(spv_float_ty, a, std::vector<spv::LiteralInteger>{1});
+            auto neg_a_im = add<spv::OpFNegate>(spv_float_ty, a_im);
+            return add<spv::OpCompositeInsert>(ty, neg_a_im, a,
+                                               std::vector<spv::LiteralInteger>{1});
+        }
+        case arithmetic_unary::im:
+            return add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{1});
+        case arithmetic_unary::re:
+            return add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{0});
+        default:
+            break;
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    auto const make = [&](scalar_type sty, arithmetic_unary op, spv::spv_inst *ty,
+                          spv::spv_inst *a) -> spv::spv_inst * {
+        switch (sty) {
+        case scalar_type::i1:
+            return make_boolean(op, ty, a);
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return make_int(op, ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return make_float(op, ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            return make_complex(op, sty, ty, a);
+        }
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+
+    auto ty = visit(*this, *in.result(0).ty());
+
+    if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
+        auto av = val(in.a());
+        declare(in.result(0), make(st->ty(), in.operation(), ty, av));
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
+        auto const length = ct->length(core_cfg_.subgroup_size);
+        auto insts = std::vector<spv::spv_inst *>{};
+        insts.reserve(length);
+
+        auto &av = multi_val(in.a());
+        for (std::int64_t i = 0; i < length; ++i) {
+            insts.emplace_back(make(ct->component_ty(), in.operation(), ty, av[i]));
+        }
+
+        multi_declare(in.result(0), std::move(insts));
+    } else {
+        throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
+    }
+}
+
+void spirv_converter::operator()(constant_inst const &in) {
+    auto const make = [&](scalar_type sty, spv::spv_inst *spv_ty,
+                          constant_inst::value_type const &val) -> spv::spv_inst * {
+        auto const add_constant_bool = [this, &spv_ty](bool val) -> spv::spv_inst * {
+            if (val) {
+                return add_to<spv::section::type_const_var, spv::OpConstantTrue>(spv_ty);
+            }
+            return add_to<spv::section::type_const_var, spv::OpConstantFalse>(spv_ty);
+        };
+        auto const add_constant = [this, &spv_ty](auto val) -> spv::spv_inst * {
+            return add_to<spv::section::type_const_var, spv::OpConstant>(spv_ty, val);
+        };
+        auto const add_constant_complex = [this, &spv_ty](spv::spv_inst *spv_float_ty, auto re,
+                                                          auto im) -> spv::spv_inst * {
+            auto c_re = add_to<spv::section::type_const_var, spv::OpConstant>(spv_float_ty, re);
+            auto c_im = add_to<spv::section::type_const_var, spv::OpConstant>(spv_float_ty, im);
+            return add_to<spv::section::type_const_var, spv::OpConstantComposite>(
+                spv_ty, std::vector<spv::spv_inst *>{c_re, c_im});
+        };
+        const auto visitor = overloaded{
+            [&](std::int64_t i) -> spv::spv_inst * {
+                switch (sty) {
+                case scalar_type::i1:
+                    return add_constant_bool(i != 0);
+                case scalar_type::i8:
+                    return add_constant(static_cast<std::int8_t>(i));
+                case scalar_type::i16:
+                    return add_constant(static_cast<std::int16_t>(i));
+                case scalar_type::i32:
+                    return add_constant(static_cast<std::int32_t>(i));
+                case scalar_type::i64:
+                case scalar_type::index:
+                    return add_constant(i);
+                default:
+                    return nullptr;
+                }
+            },
+            [&](double d) -> spv::spv_inst * {
+                switch (sty) {
+                case scalar_type::f32:
+                    return add_constant(static_cast<float>(d));
+                case scalar_type::f64:
+                    return add_constant(d);
+                default:
+                    return nullptr;
+                }
+            },
+            [&](std::complex<double> d) -> spv::spv_inst * {
+                switch (sty) {
+                case scalar_type::c32: {
+                    auto spv_float_ty =
+                        visit(*this, *scalar_data_type::get(ctx_, scalar_type::f32));
+                    return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
+                                                static_cast<float>(d.imag()));
+                }
+                case scalar_type::c64: {
+                    auto spv_float_ty =
+                        visit(*this, *scalar_data_type::get(ctx_, scalar_type::f64));
+                    return add_constant_complex(spv_float_ty, d.real(), d.imag());
+                }
+                default:
+                    return nullptr;
+                }
+            },
+        };
+        auto cst = std::visit(visitor, val);
+        if (cst == nullptr) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+        return cst;
+    };
+
+    auto spv_ty = visit(*this, *in.result(0).ty());
+
+    if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+        declare(in.result(0), make(st->ty(), spv_ty, in.value()));
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
+        auto const length = ct->length(core_cfg_.subgroup_size);
+        auto cst = make(ct->component_ty(), spv_ty, in.value());
+
+        multi_declare(in.result(0), std::vector<spv::spv_inst *>(length, cst));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -218,19 +476,29 @@ void spirv_converter::run_on_region(region_node const &reg) {
     for (auto const &i : reg) {
         visit(*this, i);
     }
+    add<spv::OpReturn>();
 }
 
 void spirv_converter::run_on_function(function_node const &fn) {
-    // Function type
-    auto void_ty = visit(*this, *void_data_type::get(ctx_));
-    auto params = std::vector<spv::spv_inst *>{};
-    params.reserve(fn.num_params());
-    for (auto const &p : fn.params()) {
-        params.push_back(visit(*this, *p.ty()));
+    auto const subgroup_size = fn.subgroup_size();
+    try {
+        core_cfg_ = info_->get_core_config(subgroup_size);
+    } catch (std::out_of_range const &e) {
+        throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
-    auto fun_ty = add<spv::OpTypeFunction>(void_ty, std::move(params));
+
+    // Function type
+    auto fun_ty = declare_function_type([&] {
+        auto params = std::vector<spv::spv_inst *>{};
+        params.reserve(fn.num_params());
+        for (auto const &p : fn.params()) {
+            params.push_back(visit(*this, *p.ty()));
+        }
+        return params;
+    }());
 
     // Function
+    auto void_ty = visit(*this, *void_data_type::get(ctx_));
     auto fun = add<spv::OpFunction>(void_ty, spv::FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
         declare(p, add<spv::OpFunctionParameter>(visit(*this, *p.ty())));
@@ -250,38 +518,37 @@ void spirv_converter::run_on_function(function_node const &fn) {
             std::array<std::int32_t, 3u>{work_group_size[0], work_group_size[1], 1}});
     add_to<spv::section::execution_mode, spv::OpExecutionMode>(
         fun, spv::ExecutionMode::SubgroupSize, spv::ExecutionModeAttr{fn.subgroup_size()});
-
-    // Function decoration
-    auto linkage_decoration =
-        spv::DecorationAttr{std::make_pair(std::string{fn.name()}, spv::LinkageType::Export)};
-    add_to<spv::section::decoration, spv::OpDecorate>(fun, spv::Decoration::LinkageAttributes,
-                                                      std::move(linkage_decoration));
 }
 
 void spirv_converter::run_on_program(program_node const &p) {
-    add_to<spv::section::capability, spv::OpCapability>(spv::Capability::Addresses);
-    add_to<spv::section::capability, spv::OpCapability>(spv::Capability::Kernel);
-    add_to<spv::section::capability, spv::OpCapability>(spv::Capability::Linkage);
-    add_to<spv::section::capability, spv::OpCapability>(spv::Capability::SubgroupDispatch);
+    capabilities_.clear();
+    capabilities_.insert(spv::Capability::Addresses);
+    capabilities_.insert(spv::Capability::Kernel);
+    capabilities_.insert(spv::Capability::SubgroupDispatch);
+    opencl_ext_ = add_to<spv::section::ext_inst, spv::OpExtInstImport>(spv::OpenCLExt);
     add_to<spv::section::memory_model, spv::OpMemoryModel>(spv::AddressingModel::Physical64,
                                                            spv::MemoryModel::OpenCL);
 
     for (auto const &fn : p) {
         run_on_function(fn);
     }
+
+    for (auto const &cap : capabilities_) {
+        add_to<spv::section::capability, spv::OpCapability>(cap);
+    }
 }
 
 convert_to_spirv_pass::convert_to_spirv_pass(::tinytc_core_info const *info)
     : info_(std::move(info)) {
     if (info_ == nullptr) {
-        throw std::invalid_argument("info must not be nullptr");
+        throw status::invalid_arguments;
     }
 }
 
 auto convert_to_spirv_pass::run_on_program(program_node const &p) -> std::unique_ptr<spv::mod> {
     auto m = std::make_unique<spv::mod>();
 
-    spirv_converter(*m, p.context()).run_on_program(p);
+    spirv_converter(info_, *m, p.context()).run_on_program(p);
 
     return m;
 }

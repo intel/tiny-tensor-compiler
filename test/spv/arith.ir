@@ -1,0 +1,91 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: OpCapability Int64
+; CHECK: %[[#BOOL:]] = OpTypeBool
+; CHECK: %[[#I64:]] = OpTypeInt 64 1
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+
+func @tbool(%a: i1, %b: i1) {
+    %0 = arith.and %a, %b : i1
+    %1 = arith.or %a, %b : i1
+    %2 = arith.xor %a, %b : i1
+; CHECK:      %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpLogicalOr %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpLogicalNotEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
+func @tint(%a: i64, %b: i64) {
+    %0 = arith.add %a, %b : i64
+    %1 = arith.sub %a, %b : i64
+    %2 = arith.mul %a, %b : i64
+    %3 = arith.div %a, %b : i64
+    %4 = arith.rem %a, %b : i64
+    %5 = arith.shl %a, %b : i64
+    %6 = arith.shr %a, %b : i64
+    %7 = arith.and %a, %b : i64
+    %8 = arith.or %a, %b : i64
+    %9 = arith.xor %a, %b : i64
+; CHECK:      %[[#]] = OpIAdd %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpISub %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpIMul %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSDiv %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpSRem %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpShiftLeftLogical %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpShiftRightArithmetic %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseAnd %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseOr %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpBitwiseXor %[[#I64]] %[[#]] %[[#]]
+}
+
+func @tfloat(%a: f32, %b: f32) {
+    %0 = arith.add %a, %b : f32
+    %1 = arith.sub %a, %b : f32
+    %2 = arith.mul %a, %b : f32
+    %3 = arith.div %a, %b : f32
+    %4 = arith.rem %a, %b : f32
+; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFRem %[[#F32]] %[[#]] %[[#]]
+}
+
+func @tcomplex(%a: c32, %b: c32) {
+    %0 = arith.add %a, %b : c32
+    %1 = arith.sub %a, %b : c32
+    %2 = arith.mul %a, %b : c32
+    %3 = arith.div %a, %b : c32
+; CHECK:      %[[#]] = OpFAdd %[[#C32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#C32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#C32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#C32]] %[[#]] %[[#]]
+}
+
+func @tfloatcoopmatrix() subgroup_size(16) {
+    %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
+    %1 = constant 2.0 -> coopmatrix<f32x16x4,matrix_a>
+    %2 = arith.add %0, %1 : coopmatrix<f32x16x4,matrix_a>
+    %3 = arith.sub %0, %1 : coopmatrix<f32x16x4,matrix_a>
+    %4 = arith.mul %0, %1 : coopmatrix<f32x16x4,matrix_a>
+    %5 = arith.div %0, %1 : coopmatrix<f32x16x4,matrix_a>
+; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
+}

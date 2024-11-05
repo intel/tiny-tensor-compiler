@@ -117,6 +117,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
                "is empty)";
     case tinytc_status_unknown_pass_name:
         return "Unknown compiler pass name";
+    case tinytc_status_not_implemented:
+        return "Not implemented";
     // IR
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
@@ -196,6 +198,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Scalar types violate compatibility rules";
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";
+    case tinytc_status_spirv_undefined_value:
+        return "Undefined SPIR-V value";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

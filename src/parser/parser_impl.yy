@@ -257,6 +257,7 @@ func:
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
         try {
+            ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
             auto func_node =
                 std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second, loc);
             for (auto &attr : $attributes) {

@@ -1,0 +1,60 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: OpCapability Int64
+; CHECK: %[[#EXT:]] = OpExtInstImport "OpenCL.std"
+; CHECK: %[[#BOOL:]] = OpTypeBool
+; CHECK: %[[#I64:]] = OpTypeInt 64 1
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+
+func @tbool(%a: i1) {
+    %0 = arith.not %a : i1
+; CHECK:      OpLogicalNot %[[#BOOL]] %[[#]]
+}
+
+func @tint(%a: i64) {
+    %0 = arith.abs %a : i64
+    %1 = arith.neg %a : i64
+    %2 = arith.not %a : i64
+; CHECK:      OpExtInst %[[#I64]] %[[#EXT]] s_abs %[[#]]
+; CHECK-NEXT: OpSNegate %[[#I64]] %[[#]]
+; CHECK-NEXT: OpNot %[[#I64]] %[[#]]
+}
+
+func @tfloat(%a: f32) {
+    %0 = arith.abs %a : f32
+    %1 = arith.neg %a : f32
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] fabs %[[#]]
+; CHECK-NEXT: OpFNegate %[[#F32]] %[[#]]
+}
+
+func @tcomplex(%a: c32) {
+    %0 = arith.abs %a : c32
+    %1 = arith.neg %a : c32
+    %2 = arith.conj %a : c32
+    %3 = arith.im %a : c32
+    %4 = arith.re %a : c32
+; CHECK:      %[[#A2:]] = OpFMul %[[#C32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
+; CHECK-NEXT: %[[#A2_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1
+; CHECK-NEXT: %[[#A2_0p1:]] = OpFAdd %[[#F32]] %[[#A2_0]] %[[#A2_1]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F32]] %[[#EXT]] sqrt %[[#A2_0p1]]
+; CHECK-NEXT: %[[#]] = OpFNegate %[[#C32]] %[[#]]
+; CHECK-NEXT: %[[#A_IM:]] = OpCompositeExtract %[[#F32]] %[[#OPERAND:]] 1
+; CHECK-NEXT: %[[#NEG_A_IM:]] = OpFNegate %[[#F32]] %[[#A_IM]]
+; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C32]] %[[#NEG_A_IM]] %[[#OPERAND]] 1
+; CHECK-NEXT: %[[#]] = OpCompositeExtract %[[#F32]] %[[#]] 1
+; CHECK-NEXT: %[[#]] = OpCompositeExtract %[[#F32]] %[[#]] 0
+}
+
+func @tfloatcoopmatrix() subgroup_size(16) {
+    %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
+    %2 = arith.neg %0 : coopmatrix<f32x16x4,matrix_a>
+; CHECK:      %[[#]] = OpFNegate %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]
+}

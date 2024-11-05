@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_2024114_HPP
-#define GENERATED_VISIT_2024114_HPP
+#ifndef GENERATED_VISIT_2024115_HPP
+#define GENERATED_VISIT_2024115_HPP
 
 namespace tinytc::spv {
 
@@ -2912,4 +2912,4 @@ template <typename Derived> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_2024114_HPP
+#endif // GENERATED_VISIT_2024115_HPP

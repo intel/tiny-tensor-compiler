@@ -3,6 +3,7 @@
 
 #include "spv/pass/dump_asm.hpp"
 #include "spv/module.hpp"
+#include "spv/opencl.std.hpp"
 #include "support/casting.hpp"
 
 #include <array>
@@ -68,16 +69,6 @@ void dump_asm_pass::operator()(LiteralContextDependentNumber const &l) {
 void dump_asm_pass::operator()(LiteralInteger const &l) { *os_ << " " << l; }
 void dump_asm_pass::operator()(LiteralString const &l) { *os_ << " \"" << l << '"'; }
 
-void dump_asm_pass::operator()(spv_inst *const &in) {
-    if (auto s = slot_map_.find(in); s != slot_map_.end()) {
-        *os_ << " %" << s->second;
-    } else if (isa<OpFunction>(*in)) {
-        *os_ << " %" << declare(in);
-    } else {
-        throw status::spirv_forbidden_forward_declaration;
-    }
-}
-
 void dump_asm_pass::operator()(PairIdRefIdRef const &p) {
     this->operator()(p.first);
     this->operator()(p.second);
@@ -91,18 +82,50 @@ void dump_asm_pass::operator()(PairLiteralIntegerIdRef const &p) {
     this->operator()(p.second);
 }
 
+void dump_asm_pass::operator()(spv_inst *const &in) {
+    if (auto s = slot_map_.find(in); s != slot_map_.end()) {
+        *os_ << " %" << s->second;
+    } else if (isa<OpFunction>(*in)) {
+        *os_ << " %" << declare(in);
+    } else {
+        throw status::spirv_forbidden_forward_declaration;
+    }
+}
+auto dump_asm_pass::operator()(OpExtInst const &in) {
+    pre_visit(in);
+    this->operator()(in.type());
+    this->operator()(in.op0());
+
+    if (auto extimport = dyn_cast<OpExtInstImport>(in.op0());
+        extimport && extimport->op0() == OpenCLExt) {
+        this->operator()(static_cast<OpenCLEntrypoint>(in.op1()));
+    } else {
+        this->operator()(in.op1());
+    }
+
+    for (auto const &op : in.op2()) {
+        this->operator()(op);
+    }
+}
+
 void dump_asm_pass::run_on_module(mod const &m) {
     auto const visit_section = [&](section s) {
         for (auto const &i : m.insts(s)) {
             visit(*this, i);
         }
     };
+    *os_ << "; SPIR-V" << std::endl
+         << "; Version " << m.major_version() << '.' << m.minor_version() << std::endl
+         << "; Generator: Tiny Tensor Compiler" << std::endl
+         << "; Bound: " << m.bound() << std::endl
+         << "; Schema: 0";
     visit_section(section::capability);
+    visit_section(section::ext_inst);
     visit_section(section::memory_model);
     visit_section(section::entry_point);
     visit_section(section::execution_mode);
     visit_section(section::decoration);
-    visit_section(section::type);
+    visit_section(section::type_const_var);
     visit_section(section::function);
     *os_ << std::endl;
 }

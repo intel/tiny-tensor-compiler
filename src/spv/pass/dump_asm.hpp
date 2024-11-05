@@ -36,10 +36,12 @@ class dump_asm_pass : public default_visitor<dump_asm_pass> {
     void operator()(LiteralInteger const &l);
     void operator()(LiteralString const &l);
 
-    void operator()(spv_inst *const &in);
     void operator()(PairIdRefIdRef const &p);
     void operator()(PairIdRefLiteralInteger const &p);
     void operator()(PairLiteralIntegerIdRef const &p);
+
+    void operator()(spv_inst *const &in);
+    auto operator()(OpExtInst const &in);
 
     void run_on_module(mod const &m);
 

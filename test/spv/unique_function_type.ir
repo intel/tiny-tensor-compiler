@@ -1,0 +1,15 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv < %s | filecheck %s
+func @f1() {}
+func @f2() {}
+func @f3(%a: i32, %b: f32) {}
+func @f4(%a: i32, %b: f32) {}
+func @f5(%a: f32, %b: f32) {}
+
+; CHECK: %[[#]] = OpFunction %[[#]] None %[[#TYPE0:]]
+; CHECK: %[[#]] = OpFunction %[[#]] None %[[#TYPE0]]
+; CHECK: %[[#]] = OpFunction %[[#]] None %[[#TYPE1:]]
+; CHECK: %[[#]] = OpFunction %[[#]] None %[[#TYPE1]]
+; CHECK: %[[#]] = OpFunction %[[#]] None %[[#]]

@@ -43,11 +43,14 @@ class parse_context {
     auto top_region() -> tinytc_region_t;
     auto has_regions() -> bool;
 
+    void add_global_name(std::string const &name, location const &l);
+
   private:
     compiler_context compiler_ctx_;
     std::vector<std::unordered_map<std::int64_t, tinytc_value_t>> unnamed_id_map_;
     std::vector<std::unordered_map<std::string, tinytc_value_t>> named_id_map_;
     std::stack<tinytc_region_t> regions_;
+    std::unordered_map<std::string, location> global_names_;
     prog program_;
 };
 
