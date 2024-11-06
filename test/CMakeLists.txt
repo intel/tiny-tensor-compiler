@@ -5,6 +5,8 @@ include(CTest)
 include(CommonOptions)
 include(${PROJECT_SOURCE_DIR}/external/doctest/cmake/doctest.cmake)
 
+find_package(SPIRVTools)
+
 add_library(test-lib STATIC main.cpp)
 target_include_directories(test-lib PUBLIC ${PROJECT_SOURCE_DIR}/external)
 target_compile_features(test-lib PUBLIC cxx_std_20)
@@ -42,11 +44,27 @@ file(GENERATE
 )
 
 set(LIT_COMMAND lit "${CMAKE_CURRENT_BINARY_DIR}" -v)
-add_test(lit-check ${LIT_COMMAND})
+add_test(NAME lit-check COMMAND ${LIT_COMMAND})
 set_tests_properties(lit-check PROPERTIES LABELS "lit")
 add_custom_target(lit-check COMMAND ${LIT_COMMAND})
 add_dependencies(lit-check tinytc-oc tinytc-opt)
 
+if(SPIRVTools_FOUND)
+    set(SPIRV_VAL_SOURCES
+        spv/arith.ir
+        spv/arith_unary.ir
+        spv/cast.ir
+        spv/unique_function_type.ir
+    )
+    foreach(SOURCE IN LISTS SPIRV_VAL_SOURCES)
+        get_filename_component(TEST_NAME ${SOURCE} NAME_WE)
+        set(CHECK_COMMAND $<TARGET_FILE:tinytc-oc> -O0 -gspirv ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE} | spirv-as - -o - | ${SPIRVTools_SPIRV_VAL} -)
+        list(JOIN CHECK_COMMAND " " CHECK_COMMAND_STR)
+        add_test(NAME spirv-val-${TEST_NAME} COMMAND bash -c "${CHECK_COMMAND_STR}")
+        add_custom_target(spirv-val-${TEST_NAME} COMMAND ${CHECK_COMMAND})
+        add_dependencies(spirv-val-${TEST_NAME} tinytc-oc)
+    endforeach()
+endif()
 
 if(BUILD_OPENCL)
     add_subdirectory(cl)

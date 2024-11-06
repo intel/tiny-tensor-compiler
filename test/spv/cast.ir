@@ -5,21 +5,22 @@
 
 ; CHECK: OpCapability Int8
 ; CHECK: OpCapability Int64
-; CHECK: %[[#I64:]] = OpTypeInt 64 1
-; CHECK: %[[#I8:]] = OpTypeInt 8 1
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#I8:]] = OpTypeInt 8 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#F64:]] = OpTypeFloat 64
 ; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
+; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
+; CHECK: %[[#C64_NULL_2:]] = OpConstantNull %[[#C64]]
 
 func @tint(%a: i64) {
     %0 = cast %a : i64 -> i64
     %1 = cast %a : i64 -> i8
     %2 = cast %a : i64 -> f32
     %3 = cast %a : i64 -> c64
-; CHECK:      %[[#]] = OpSConvert %[[#I64]] %[[#]]
+; CHECK:      %[[#]] = OpCopyObject %[[#I64]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpSConvert %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertSToF %[[#F32]] %[[#]]
-; CHECK-NEXT: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
 ; CHECK-NEXT: %[[#I64_TO_F64:]] = OpConvertSToF %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#I64_TO_F64]] %[[#C64_NULL]] 0
 }
@@ -30,7 +31,6 @@ func @tfloat(%a: f32) {
     %3 = cast %a : f32 -> c64
 ; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
-; CHECK-NEXT: %[[#C64_NULL_2:]] = OpConstantNull %[[#C64]]
 ; CHECK-NEXT: %[[#F32_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#F32_TO_F64]] %[[#C64_NULL_2]] 0
 }

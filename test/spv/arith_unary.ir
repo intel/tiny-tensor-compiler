@@ -6,7 +6,7 @@
 ; CHECK: OpCapability Int64
 ; CHECK: %[[#EXT:]] = OpExtInstImport "OpenCL.std"
 ; CHECK: %[[#BOOL:]] = OpTypeBool
-; CHECK: %[[#I64:]] = OpTypeInt 64 1
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 

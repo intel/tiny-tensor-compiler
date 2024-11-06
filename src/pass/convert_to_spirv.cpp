@@ -134,24 +134,25 @@ auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
                     switch (ty.ty()) {
                     case scalar_type::i8:
                         capabilities_.insert(spv::Capability::Int8);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(8, 1);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(8, 0);
                     case scalar_type::i16:
                         capabilities_.insert(spv::Capability::Int16);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(16, 1);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(16, 0);
                     case scalar_type::i32:
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(32, 1);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(32, 0);
                     case scalar_type::i64:
                         capabilities_.insert(spv::Capability::Int64);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(64, 1);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(64, 0);
                     case scalar_type::index: {
                         const auto sz = size(ty.ty());
                         if (sz == 8) {
                             capabilities_.insert(spv::Capability::Int64);
                         }
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(sz * 8, 1);
+                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(sz * 8, 0);
                     }
                     case scalar_type::f32:
                     case scalar_type::f64:
+                        capabilities_.insert(spv::Capability::Float64);
                         return add_to<spv::section::type_const_var, spv::OpTypeFloat>(
                             size(ty.ty()) * 8, std::nullopt);
                     case scalar_type::c32: {
@@ -422,7 +423,7 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::c32:
         case scalar_type::c64: {
             auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto c0 = add<spv::OpConstantNull>(spv_to_ty);
+            auto c0 = add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_to_ty);
             auto re = add<spv::OpConvertSToF>(spv_float_ty, a);
             return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
                                                std::vector<spv::LiteralInteger>{0});
@@ -445,7 +446,7 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::c32:
         case scalar_type::c64: {
             auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto c0 = add<spv::OpConstantNull>(spv_to_ty);
+            auto c0 = add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_to_ty);
             auto re = add<spv::OpFConvert>(spv_float_ty, a);
             return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
                                                std::vector<spv::LiteralInteger>{0});
@@ -465,6 +466,9 @@ void spirv_converter::operator()(cast_inst const &in) {
     };
     auto const make = [&](scalar_type to_ty, scalar_type a_ty, spv::spv_inst *spv_to_ty,
                           spv::spv_inst *a) -> spv::spv_inst * {
+        if (a_ty == to_ty) {
+            return add<spv::OpCopyObject>(spv_to_ty, a);
+        }
         switch (a_ty) {
         case scalar_type::i8:
         case scalar_type::i16:
