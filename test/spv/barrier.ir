@@ -1,0 +1,23 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#SCOPE:]] = OpConstant %[[#I32]] 2
+; CHECK: %[[#NO_SEMANTICS:]] = OpConstant %[[#I32]] 0
+; CHECK: %[[#GLOBAL_SEMANTICS:]] = OpConstant %[[#I32]] 528
+; CHECK: %[[#LOCAL_SEMANTICS:]] = OpConstant %[[#I32]] 272
+; CHECK: %[[#GLOBAL_LOCAL_SEMANTICS:]] = OpConstant %[[#I32]] 784
+
+func @tbarrier() {
+    barrier
+    barrier.global
+    barrier.local
+    barrier.global.local
+; CHECK:      OpControlBarrier %[[#SCOPE]] %[[#SCOPE]] %[[#NO_SEMANTICS]]
+; CHECK-NEXT: OpControlBarrier %[[#SCOPE]] %[[#SCOPE]] %[[#GLOBAL_SEMANTICS]]
+; CHECK-NEXT: OpControlBarrier %[[#SCOPE]] %[[#SCOPE]] %[[#LOCAL_SEMANTICS]]
+; CHECK-NEXT: OpControlBarrier %[[#SCOPE]] %[[#SCOPE]] %[[#GLOBAL_LOCAL_SEMANTICS]]
+}
+

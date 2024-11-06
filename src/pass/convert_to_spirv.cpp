@@ -23,7 +23,7 @@ class spirv_converter {
   public:
     inline spirv_converter(::tinytc_core_info const *info, spv::mod &mod,
                            tinytc_compiler_context_t ctx)
-        : info_(info), mod_(&mod), ctx_(ctx) {}
+        : info_(info), mod_(&mod), ctx_(ctx), unique_(*this) {}
 
     auto operator()(data_type_node const &ty) -> spv::spv_inst *;
 
@@ -31,6 +31,7 @@ class spirv_converter {
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
+    void operator()(barrier_inst const &in);
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
@@ -38,6 +39,63 @@ class spirv_converter {
     void run_on_program(program_node const &p);
 
   private:
+    class unique_insts {
+      public:
+        inline unique_insts(spirv_converter &conv) : conv_(conv) {}
+        inline auto bool2_ty() -> spv::spv_inst * {
+            if (!bool2_ty_) {
+                auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
+                bool2_ty_ =
+                    conv_.add_to<spv::section::type_const_var, spv::OpTypeVector>(bool_ty, 2);
+            }
+            return bool2_ty_;
+        }
+        inline auto bool_constant(bool b) {
+            if (b) {
+                if (!bool_true_) {
+                    auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
+                    bool_true_ =
+                        conv_.add_to<spv::section::type_const_var, spv::OpConstantTrue>(bool_ty);
+                }
+                return bool_true_;
+            }
+            if (!bool_false_) {
+                auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
+                bool_false_ =
+                    conv_.add_to<spv::section::type_const_var, spv::OpConstantFalse>(bool_ty);
+            }
+            return bool_false_;
+        }
+        inline auto i32_constant(std::int32_t cst) -> spv::spv_inst * {
+            auto it = i32_cst_.find(cst);
+            if (it == i32_cst_.end()) {
+                auto i32_ty = visit(conv_, *scalar_data_type::get(conv_.ctx_, scalar_type::i32));
+                auto cst_inst = conv_.add_to<spv::section::type_const_var, spv::OpConstant>(
+                    i32_ty, spv::LiteralContextDependentNumber{cst});
+                i32_cst_[cst] = cst_inst;
+                return cst_inst;
+            }
+            return it->second;
+        }
+
+        inline auto null_constant(spv::spv_inst *spv_ty) -> spv::spv_inst * {
+            auto it = null_cst_.find(spv_ty);
+            if (it == null_cst_.end()) {
+                auto in = conv_.add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_ty);
+                null_cst_[spv_ty] = in;
+                return in;
+            }
+            return it->second;
+        }
+
+      private:
+        spirv_converter &conv_;
+        spv::spv_inst *bool2_ty_ = nullptr;
+        spv::spv_inst *bool_true_ = nullptr, *bool_false_ = nullptr;
+        std::unordered_map<std::int32_t, spv::spv_inst *> i32_cst_;
+        std::unordered_map<spv::spv_inst *, spv::spv_inst *> null_cst_;
+    };
+
     auto get_scalar_type(value_node const &v) -> scalar_type;
     auto get_coopmatrix_type(value_node const &v) -> scalar_type;
     auto declare(value_node const &v, spv::spv_inst *in);
@@ -60,13 +118,13 @@ class spirv_converter {
     ::tinytc_core_info const *info_;
     spv::mod *mod_;
     tinytc_compiler_context_t ctx_;
+    unique_insts unique_;
     std::unordered_map<const_tinytc_data_type_t, spv::spv_inst *> spv_tys_;
     std::unordered_map<const_tinytc_value_t, spv::spv_inst *> vals_;
     std::unordered_map<const_tinytc_value_t, std::vector<spv::spv_inst *>> multi_vals_;
     std::unordered_set<spv::Capability> capabilities_;
     std::unordered_multimap<std::uint64_t, spv::OpTypeFunction *> function_tys_;
     spv::spv_inst *opencl_ext_ = nullptr;
-    spv::spv_inst *bool2_ty_ = nullptr;
     core_config core_cfg_ = {};
 };
 
@@ -409,6 +467,21 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
     }
 }
 
+void spirv_converter::operator()(barrier_inst const &in) {
+    std::int32_t fence = 0;
+    if (in.has_fence(address_space::global)) {
+        fence = fence | static_cast<std::int32_t>(spv::MemorySemantics::CrossWorkgroupMemory) |
+                static_cast<std::int32_t>(spv::MemorySemantics::SequentiallyConsistent);
+    }
+    if (in.has_fence(address_space::local)) {
+        fence = fence | static_cast<std::int32_t>(spv::MemorySemantics::WorkgroupMemory) |
+                static_cast<std::int32_t>(spv::MemorySemantics::SequentiallyConsistent);
+    }
+    auto scope = unique_.i32_constant(static_cast<std::int32_t>(spv::Scope::Workgroup));
+    auto memory_semantics = unique_.i32_constant(fence);
+    add<spv::OpControlBarrier>(scope, scope, memory_semantics);
+}
+
 void spirv_converter::operator()(cast_inst const &in) {
     auto const cast_from_int = [&](scalar_type to_ty, spv::spv_inst *spv_to_ty,
                                    spv::spv_inst *a) -> spv::spv_inst * {
@@ -425,9 +498,8 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::c32:
         case scalar_type::c64: {
             auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto c0 = add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_to_ty);
             auto re = add<spv::OpConvertSToF>(spv_float_ty, a);
-            return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
+            return add<spv::OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                std::vector<spv::LiteralInteger>{0});
         }
         }
@@ -448,9 +520,8 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::c32:
         case scalar_type::c64: {
             auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto c0 = add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_to_ty);
             auto re = add<spv::OpFConvert>(spv_float_ty, a);
-            return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
+            return add<spv::OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                std::vector<spv::LiteralInteger>{0});
         }
         }
@@ -551,16 +622,13 @@ void spirv_converter::operator()(compare_inst const &in) {
     };
     auto const compare_complex = [&](cmp_condition cond, spv::spv_inst *spv_to_ty, spv::spv_inst *a,
                                      spv::spv_inst *b) -> spv::spv_inst * {
-        if (!bool2_ty_) {
-            bool2_ty_ = add_to<spv::section::type_const_var, spv::OpTypeVector>(spv_to_ty, 2);
-        }
         switch (cond) {
         case cmp_condition::eq: {
-            auto components_equal = add<spv::OpFOrdEqual>(bool2_ty_, a, b);
+            auto components_equal = add<spv::OpFOrdEqual>(unique_.bool2_ty(), a, b);
             return add<spv::OpAll>(spv_to_ty, components_equal);
         }
         case cmp_condition::ne: {
-            auto components_not_equal = add<spv::OpFUnordNotEqual>(bool2_ty_, a, b);
+            auto components_not_equal = add<spv::OpFUnordNotEqual>(unique_.bool2_ty(), a, b);
             return add<spv::OpAll>(spv_to_ty, components_not_equal);
         }
         default:
@@ -664,13 +732,7 @@ void spirv_converter::operator()(constant_inst const &in) {
         if (!std::holds_alternative<bool>(in.value())) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
-        auto cst = [&](bool b) -> spv::spv_inst * {
-            if (b) {
-                return add_to<spv::section::type_const_var, spv::OpConstantTrue>(spv_ty);
-            }
-            return add_to<spv::section::type_const_var, spv::OpConstantFalse>(spv_ty);
-        }(std::get<bool>(in.value()));
-        declare(in.result(0), cst);
+        declare(in.result(0), unique_.bool_constant(std::get<bool>(in.value())));
     } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         declare(in.result(0), make(st->ty(), spv_ty, in.value()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
