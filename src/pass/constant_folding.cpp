@@ -27,10 +27,11 @@ template <typename F> class unary_op_dispatcher {
     unary_op_dispatcher(scalar_type sw_ty, F &&f)
         : switch_ty{sw_ty}, computer{std::forward<F>(f)} {}
 
+    auto operator()(bool const &) -> fold_result {
+        throw compilation_error(computer.loc, status::ir_scalar_mismatch);
+    }
     auto operator()(std::int64_t const &A) -> fold_result {
         switch (switch_ty) {
-        case scalar_type::i1:
-            return computer.template operator()<bool>(A);
         case scalar_type::i8:
             return computer.template operator()<std::int8_t>(A);
         case scalar_type::i16:
@@ -81,8 +82,6 @@ template <typename F> class binary_op_dispatcher {
 
     auto operator()(std::int64_t const &A, std::int64_t const &B) -> fold_result {
         switch (switch_ty) {
-        case scalar_type::i1:
-            return computer.template operator()<bool>(A, B);
         case scalar_type::i8:
             return computer.template operator()<std::int8_t>(A, B);
         case scalar_type::i16:
@@ -144,6 +143,24 @@ auto constant_folding::operator()(arith_inst &in) -> fold_result {
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     constant_inst *b_const = dyn_cast<constant_inst>(op_b.defining_inst());
 
+    if (isa<boolean_data_type>(*op_a.ty())) {
+        if ((a_const && !std::holds_alternative<bool>(a_const->value())) ||
+            (b_const && !std::holds_alternative<bool>(b_const->value()))) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+        if (a_const != nullptr && b_const != nullptr) {
+            return compute_binary_op{in.operation(), op_a.ty(), in.loc()}(
+                std::get<bool>(a_const->value()), std::get<bool>(b_const->value()));
+        } else if (a_const != nullptr) {
+            return compute_binop_identities{unsafe_fp_math_, in.operation(), op_b, true,
+                                            in.loc()}(std::get<bool>(a_const->value()));
+        } else if (b_const != nullptr) {
+            return compute_binop_identities{unsafe_fp_math_, in.operation(), op_a, false,
+                                            in.loc()}(std::get<bool>(b_const->value()));
+        }
+        return tinytc_value_t{};
+    }
+
     auto at = dyn_cast<scalar_data_type>(op_a.ty());
     if (at == nullptr) {
         // Arithmetic on coopmatrix is component-wise and if a coopmatrix is constant, then all
@@ -151,7 +168,7 @@ auto constant_folding::operator()(arith_inst &in) -> fold_result {
         // constant folding on scalar types.
         auto ct = dyn_cast<coopmatrix_data_type>(op_a.ty());
         if (ct == nullptr) {
-            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
+            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
         at = dyn_cast<scalar_data_type>(ct->ty());
     }
@@ -180,6 +197,14 @@ auto constant_folding::operator()(arith_unary_inst &in) -> fold_result {
     constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     if (a_const == nullptr) {
         return tinytc_value_t{};
+    }
+
+    if (isa<boolean_data_type>(*op_a.ty())) {
+        if (!std::holds_alternative<bool>(a_const->value())) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+        return compute_unary_op{in.operation(), op_a.ty(),
+                                in.loc()}(std::get<bool>(a_const->value()));
     }
 
     auto at = dyn_cast<scalar_data_type>(op_a.ty());

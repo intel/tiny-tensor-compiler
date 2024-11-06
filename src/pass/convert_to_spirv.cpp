@@ -31,11 +31,14 @@ class spirv_converter {
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
+    void operator()(cast_inst const &in);
     void operator()(constant_inst const &in);
 
     void run_on_program(program_node const &p);
 
   private:
+    auto get_scalar_type(value_node const &v) -> scalar_type;
+    auto get_coopmatrix_type(value_node const &v) -> scalar_type;
     auto declare(value_node const &v, spv::spv_inst *in);
     auto val(value_node const &v) -> spv::spv_inst *;
     auto multi_declare(value_node const &v, std::vector<spv::spv_inst *> insts);
@@ -64,6 +67,21 @@ class spirv_converter {
     spv::spv_inst *opencl_ext_ = nullptr;
     core_config core_cfg_ = {};
 };
+
+auto spirv_converter::get_scalar_type(value_node const &v) -> scalar_type {
+    auto st = dyn_cast<scalar_data_type>(v.ty());
+    if (!st) {
+        throw compilation_error(v.loc(), status::ir_expected_scalar);
+    }
+    return st->ty();
+}
+auto spirv_converter::get_coopmatrix_type(value_node const &v) -> scalar_type {
+    auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
+    if (!ct) {
+        throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
+    }
+    return ct->component_ty();
+}
 
 auto spirv_converter::declare(value_node const &v, spv::spv_inst *in) { vals_[&v] = in; }
 auto spirv_converter::val(value_node const &v) -> spv::spv_inst * {
@@ -109,10 +127,11 @@ auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
                 [&](void_data_type const &) -> spv::spv_inst * {
                     return add_to<spv::section::type_const_var, spv::OpTypeVoid>();
                 },
+                [&](boolean_data_type const &) -> spv::spv_inst * {
+                    return add_to<spv::section::type_const_var, spv::OpTypeBool>();
+                },
                 [&](scalar_data_type const &ty) -> spv::spv_inst * {
                     switch (ty.ty()) {
-                    case scalar_type::i1:
-                        return add_to<spv::section::type_const_var, spv::OpTypeBool>();
                     case scalar_type::i8:
                         capabilities_.insert(spv::Capability::Int8);
                         return add_to<spv::section::type_const_var, spv::OpTypeInt>(8, 1);
@@ -180,7 +199,7 @@ void spirv_converter::operator()(arith_inst const &in) {
         default:
             break;
         }
-        throw compilation_error(in.loc(), status::ir_i1_unsupported);
+        throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
     auto const make_int = [&](arithmetic op, spv::spv_inst *ty, spv::spv_inst *a,
                               spv::spv_inst *b) -> spv::spv_inst * {
@@ -229,8 +248,6 @@ void spirv_converter::operator()(arith_inst const &in) {
     auto const make = [&](scalar_type sty, arithmetic op, spv::spv_inst *ty, spv::spv_inst *a,
                           spv::spv_inst *b) -> spv::spv_inst * {
         switch (sty) {
-        case scalar_type::i1:
-            return make_boolean(op, ty, a, b);
         case scalar_type::i8:
         case scalar_type::i16:
         case scalar_type::i32:
@@ -248,7 +265,11 @@ void spirv_converter::operator()(arith_inst const &in) {
 
     auto ty = visit(*this, *in.result(0).ty());
 
-    if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+    if (isa<boolean_data_type>(*in.result(0).ty())) {
+        auto av = val(in.a());
+        auto bv = val(in.b());
+        declare(in.result(0), make_boolean(in.operation(), ty, av, bv));
+    } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(0), make(st->ty(), in.operation(), ty, av, bv));
@@ -278,7 +299,7 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
         default:
             break;
         }
-        throw compilation_error(in.loc(), status::ir_i1_unsupported);
+        throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
     auto const make_int = [&](arithmetic_unary op, spv::spv_inst *ty,
                               spv::spv_inst *a) -> spv::spv_inst * {
@@ -345,8 +366,6 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
     auto const make = [&](scalar_type sty, arithmetic_unary op, spv::spv_inst *ty,
                           spv::spv_inst *a) -> spv::spv_inst * {
         switch (sty) {
-        case scalar_type::i1:
-            return make_boolean(op, ty, a);
         case scalar_type::i8:
         case scalar_type::i16:
         case scalar_type::i32:
@@ -365,8 +384,10 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
     };
 
     auto ty = visit(*this, *in.result(0).ty());
-
-    if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
+    if (isa<boolean_data_type>(*in.a().ty())) {
+        auto av = val(in.a());
+        declare(in.result(0), make_boolean(in.operation(), ty, av));
+    } else if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
         auto av = val(in.a());
         declare(in.result(0), make(st->ty(), in.operation(), ty, av));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
@@ -385,15 +406,109 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
     }
 }
 
+void spirv_converter::operator()(cast_inst const &in) {
+    auto const cast_from_int = [&](scalar_type to_ty, spv::spv_inst *spv_to_ty,
+                                   spv::spv_inst *a) -> spv::spv_inst * {
+        switch (to_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return add<spv::OpSConvert>(spv_to_ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return add<spv::OpConvertSToF>(spv_to_ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto c0 = add<spv::OpConstantNull>(spv_to_ty);
+            auto re = add<spv::OpConvertSToF>(spv_float_ty, a);
+            return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
+                                               std::vector<spv::LiteralInteger>{0});
+        }
+        }
+        throw compilation_error(in.loc(), status::ir_forbidden_cast);
+    };
+    auto const cast_from_float = [&](scalar_type to_ty, spv::spv_inst *spv_to_ty,
+                                     spv::spv_inst *a) -> spv::spv_inst * {
+        switch (to_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return add<spv::OpConvertFToS>(spv_to_ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return add<spv::OpFConvert>(spv_to_ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto c0 = add<spv::OpConstantNull>(spv_to_ty);
+            auto re = add<spv::OpFConvert>(spv_float_ty, a);
+            return add<spv::OpCompositeInsert>(spv_to_ty, re, c0,
+                                               std::vector<spv::LiteralInteger>{0});
+        }
+        }
+        throw compilation_error(in.loc(), status::ir_forbidden_cast);
+    };
+    auto const cast_from_complex = [&](scalar_type to_ty, spv::spv_inst *spv_to_ty,
+                                       spv::spv_inst *a) -> spv::spv_inst * {
+        switch (to_ty) {
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return add<spv::OpFConvert>(spv_to_ty, a);
+        default:
+            throw compilation_error(in.loc(), status::ir_forbidden_cast);
+        }
+    };
+    auto const make = [&](scalar_type to_ty, scalar_type a_ty, spv::spv_inst *spv_to_ty,
+                          spv::spv_inst *a) -> spv::spv_inst * {
+        switch (a_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return cast_from_int(to_ty, spv_to_ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return cast_from_float(to_ty, spv_to_ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            return cast_from_complex(to_ty, spv_to_ty, a);
+        }
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+
+    auto spv_to_ty = visit(*this, *in.result(0).ty());
+
+    if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+        auto av = val(in.a());
+        auto a_ty = get_scalar_type(in.a());
+        declare(in.result(0), make(st->ty(), a_ty, spv_to_ty, av));
+    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
+        auto const length = ct->length(core_cfg_.subgroup_size);
+        auto insts = std::vector<spv::spv_inst *>{};
+        insts.reserve(length);
+
+        auto &av = multi_val(in.a());
+        auto a_ty = get_coopmatrix_type(in.a());
+        for (std::int64_t i = 0; i < length; ++i) {
+            insts.emplace_back(make(ct->component_ty(), a_ty, spv_to_ty, av[i]));
+        }
+
+        multi_declare(in.result(0), std::move(insts));
+    } else {
+        throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
+    }
+}
+
 void spirv_converter::operator()(constant_inst const &in) {
     auto const make = [&](scalar_type sty, spv::spv_inst *spv_ty,
                           constant_inst::value_type const &val) -> spv::spv_inst * {
-        auto const add_constant_bool = [this, &spv_ty](bool val) -> spv::spv_inst * {
-            if (val) {
-                return add_to<spv::section::type_const_var, spv::OpConstantTrue>(spv_ty);
-            }
-            return add_to<spv::section::type_const_var, spv::OpConstantFalse>(spv_ty);
-        };
         auto const add_constant = [this, &spv_ty](auto val) -> spv::spv_inst * {
             return add_to<spv::section::type_const_var, spv::OpConstant>(spv_ty, val);
         };
@@ -405,10 +520,9 @@ void spirv_converter::operator()(constant_inst const &in) {
                 spv_ty, std::vector<spv::spv_inst *>{c_re, c_im});
         };
         const auto visitor = overloaded{
+            [&](bool) -> spv::spv_inst * { return nullptr; },
             [&](std::int64_t i) -> spv::spv_inst * {
                 switch (sty) {
-                case scalar_type::i1:
-                    return add_constant_bool(i != 0);
                 case scalar_type::i8:
                     return add_constant(static_cast<std::int8_t>(i));
                 case scalar_type::i16:
@@ -459,7 +573,18 @@ void spirv_converter::operator()(constant_inst const &in) {
 
     auto spv_ty = visit(*this, *in.result(0).ty());
 
-    if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+    if (isa<boolean_data_type>(*in.result(0).ty())) {
+        if (!std::holds_alternative<bool>(in.value())) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+        auto cst = [&](bool b) -> spv::spv_inst * {
+            if (b) {
+                return add_to<spv::section::type_const_var, spv::OpConstantTrue>(spv_ty);
+            }
+            return add_to<spv::section::type_const_var, spv::OpConstantFalse>(spv_ty);
+        }(std::get<bool>(in.value()));
+        declare(in.result(0), cst);
+    } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         declare(in.result(0), make(st->ty(), spv_ty, in.value()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
         auto const length = ct->length(core_cfg_.subgroup_size);
