@@ -32,6 +32,7 @@ class spirv_converter {
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
     void operator()(cast_inst const &in);
+    void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
 
     void run_on_program(program_node const &p);
@@ -65,6 +66,7 @@ class spirv_converter {
     std::unordered_set<spv::Capability> capabilities_;
     std::unordered_multimap<std::uint64_t, spv::OpTypeFunction *> function_tys_;
     spv::spv_inst *opencl_ext_ = nullptr;
+    spv::spv_inst *bool2_ty_ = nullptr;
     core_config core_cfg_ = {};
 };
 
@@ -508,6 +510,87 @@ void spirv_converter::operator()(cast_inst const &in) {
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
+}
+
+void spirv_converter::operator()(compare_inst const &in) {
+    auto const compare_int = [&](cmp_condition cond, spv::spv_inst *spv_to_ty, spv::spv_inst *a,
+                                 spv::spv_inst *b) -> spv::spv_inst * {
+        switch (cond) {
+        case cmp_condition::eq:
+            return add<spv::OpIEqual>(spv_to_ty, a, b);
+        case cmp_condition::ne:
+            return add<spv::OpINotEqual>(spv_to_ty, a, b);
+        case cmp_condition::gt:
+            return add<spv::OpSGreaterThan>(spv_to_ty, a, b);
+        case cmp_condition::ge:
+            return add<spv::OpSGreaterThanEqual>(spv_to_ty, a, b);
+        case cmp_condition::lt:
+            return add<spv::OpSLessThan>(spv_to_ty, a, b);
+        case cmp_condition::le:
+            return add<spv::OpSLessThanEqual>(spv_to_ty, a, b);
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    auto const compare_float = [&](cmp_condition cond, spv::spv_inst *spv_to_ty, spv::spv_inst *a,
+                                   spv::spv_inst *b) -> spv::spv_inst * {
+        switch (cond) {
+        case cmp_condition::eq:
+            return add<spv::OpFOrdEqual>(spv_to_ty, a, b);
+        case cmp_condition::ne:
+            return add<spv::OpFUnordNotEqual>(spv_to_ty, a, b);
+        case cmp_condition::gt:
+            return add<spv::OpFOrdGreaterThan>(spv_to_ty, a, b);
+        case cmp_condition::ge:
+            return add<spv::OpFOrdGreaterThanEqual>(spv_to_ty, a, b);
+        case cmp_condition::lt:
+            return add<spv::OpFOrdLessThan>(spv_to_ty, a, b);
+        case cmp_condition::le:
+            return add<spv::OpFOrdLessThanEqual>(spv_to_ty, a, b);
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    auto const compare_complex = [&](cmp_condition cond, spv::spv_inst *spv_to_ty, spv::spv_inst *a,
+                                     spv::spv_inst *b) -> spv::spv_inst * {
+        if (!bool2_ty_) {
+            bool2_ty_ = add_to<spv::section::type_const_var, spv::OpTypeVector>(spv_to_ty, 2);
+        }
+        switch (cond) {
+        case cmp_condition::eq: {
+            auto components_equal = add<spv::OpFOrdEqual>(bool2_ty_, a, b);
+            return add<spv::OpAll>(spv_to_ty, components_equal);
+        }
+        case cmp_condition::ne: {
+            auto components_not_equal = add<spv::OpFUnordNotEqual>(bool2_ty_, a, b);
+            return add<spv::OpAll>(spv_to_ty, components_not_equal);
+        }
+        default:
+            throw compilation_error(in.loc(), status::ir_complex_unsupported);
+        }
+    };
+    auto const make = [&](scalar_type a_ty, cmp_condition cond, spv::spv_inst *spv_to_ty,
+                          spv::spv_inst *a, spv::spv_inst *b) -> spv::spv_inst * {
+        switch (a_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return compare_int(cond, spv_to_ty, a, b);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return compare_float(cond, spv_to_ty, a, b);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return compare_complex(cond, spv_to_ty, a, b);
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+
+    auto spv_to_ty = visit(*this, *in.result(0).ty());
+    auto av = val(in.a());
+    auto bv = val(in.b());
+    auto a_ty = get_scalar_type(in.a());
+    declare(in.result(0), make(a_ty, in.cond(), spv_to_ty, av, bv));
 }
 
 void spirv_converter::operator()(constant_inst const &in) {

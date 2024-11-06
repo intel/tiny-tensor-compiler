@@ -54,6 +54,7 @@ if(SPIRVTools_FOUND)
         spv/arith.ir
         spv/arith_unary.ir
         spv/cast.ir
+        spv/compare.ir
         spv/unique_function_type.ir
     )
     foreach(SOURCE IN LISTS SPIRV_VAL_SOURCES)
