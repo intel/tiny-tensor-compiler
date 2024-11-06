@@ -154,6 +154,7 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
                  array_view<value> index_list, location const &loc);
 
 auto instant_constant_fold_add(region_builder &bb, inst i) -> value;
+auto get_bool_constant(tinytc_value_t val) -> std::optional<bool>;
 auto get_int_constant(tinytc_value_t val) -> std::optional<std::int64_t>;
 
 } // namespace tinytc

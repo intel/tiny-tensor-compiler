@@ -108,3 +108,32 @@ func @identity_ixor(%a: i32) {
 ; CHECK-LABEL: func @identity_ixor({{.*}}
 ; CHECK:       %2 = arith.add %a, %a : i32
 }
+
+func @identity_band(%a: bool) {
+    %c0 = constant false -> bool
+    %0 = arith.and %a, %c0 : bool
+    %1 = arith.and %c0, %a : bool
+    %2 = arith.and %0, %1 : bool
+; CHECK-LABEL: func @identity_band({{.*}}
+; CHECK:       %0 = constant false -> bool
+; CHECK:       %2 = constant false -> bool
+; CHECK:       %5 = arith.and %0, %2 : bool
+}
+
+func @identity_bor(%a: bool) {
+    %c0 = constant false -> bool
+    %0 = arith.or %a, %c0 : bool
+    %1 = arith.or %c0, %a : bool
+    %2 = arith.and %0, %1 : bool
+; CHECK-LABEL: func @identity_bor({{.*}}
+; CHECK:       %2 = arith.and %a, %a : bool
+}
+
+func @identity_bxor(%a: bool) {
+    %c0 = constant false -> bool
+    %0 = arith.xor %a, %c0 : bool
+    %1 = arith.xor %c0, %a : bool
+    %2 = arith.and %0, %1 : bool
+; CHECK-LABEL: func @identity_bxor({{.*}}
+; CHECK:       %2 = arith.and %a, %a : bool
+}

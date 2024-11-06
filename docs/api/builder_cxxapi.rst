@@ -26,6 +26,8 @@ Common
 
   * :ref:`transpose`
 
+  * :ref:`work_group_operation`
+
 * Functions
 
   * :ref:`is_dynamic_value`
@@ -36,6 +38,8 @@ Common
 
   * :ref:`to_string(arithmetic_unary)`
 
+  * :ref:`to_string(checked_flag)`
+
   * :ref:`to_string(cmp_condition)`
 
   * :ref:`to_string(matrix_use)`
@@ -45,6 +49,8 @@ Common
   * :ref:`to_string(store_flag)`
 
   * :ref:`to_string(transpose)`
+
+  * :ref:`to_string(work_group_operation)`
 
   * :ref:`size`
 
@@ -105,6 +111,11 @@ transpose
 
 .. doxygenenum:: tinytc::transpose
 
+work_group_operation
+....................
+
+.. doxygenenum:: tinytc::work_group_operation
+
 Common Functions
 ----------------
 
@@ -127,6 +138,11 @@ to_string(arithmetic_unary)
 ...........................
 
 .. doxygenfunction:: tinytc::to_string(arithmetic_unary)
+
+to_string(checked_flag)
+.......................
+
+.. doxygenfunction:: tinytc::to_string(checked_flag)
 
 to_string(cmp_condition)
 ........................
@@ -152,6 +168,11 @@ to_string(transpose)
 ....................
 
 .. doxygenfunction:: tinytc::to_string(transpose)
+
+to_string(work_group_operation)
+...............................
+
+.. doxygenfunction:: tinytc::to_string(work_group_operation)
 
 size
 ....
@@ -192,6 +213,8 @@ Data Type
 
 * Functions
 
+  * :ref:`get_boolean`
+
   * :ref:`get_coopmatrix`
 
   * :ref:`get_group`
@@ -214,6 +237,11 @@ Data Type
 
 Data Type Functions
 -------------------
+
+get_boolean
+...........
+
+.. doxygenfunction:: tinytc::get_boolean
 
 get_coopmatrix
 ..............
@@ -303,6 +331,8 @@ Instruction
 
   * :ref:`make_cmp`
 
+  * :ref:`make_constant(bool,data_type,location const&)`
+
   * :ref:`make_constant(std::complex\<double\>,data_type,location const&)`
 
   * :ref:`make_constant(double,data_type,location const&)`
@@ -365,6 +395,8 @@ Instruction
 
   * :ref:`make_sum`
 
+  * :ref:`make_work_group`
+
   * :ref:`make_yield`
 
 * Classes
@@ -403,6 +435,11 @@ make_cmp
 ........
 
 .. doxygenfunction:: tinytc::make_cmp
+
+make_constant(bool,data_type,location const&)
+.............................................
+
+.. doxygenfunction:: tinytc::make_constant(bool,data_type,location const&)
 
 make_constant(std::complex<double>,data_type,location const&)
 .............................................................
@@ -558,6 +595,11 @@ make_sum
 ........
 
 .. doxygenfunction:: tinytc::make_sum
+
+make_work_group
+...............
+
+.. doxygenfunction:: tinytc::make_work_group
 
 make_yield
 ..........

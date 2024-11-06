@@ -34,6 +34,7 @@ Builder C++-API:
       - tinytc::dynamic
   Data Type:
     function:
+      - tinytc::get_boolean
       - tinytc::get_coopmatrix
       - tinytc::get_group
       - tinytc::get_memref
@@ -57,6 +58,7 @@ Builder C++-API:
       - tinytc::make_arith(arithmetic_unary,value,location const&)
       - tinytc::make_cast
       - tinytc::make_cmp
+      - tinytc::make_constant(bool,data_type,location const&)
       - tinytc::make_constant(std::complex<double>,data_type,location const&)
       - tinytc::make_constant(double,data_type,location const&)
       - tinytc::make_constant(std::int32_t,data_type,location const&)

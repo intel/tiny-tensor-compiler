@@ -2,7 +2,7 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
-func @t1(%a: i32, %b: i32, %a1: i1, %b1: i1) {
+func @t1(%a: i32, %b: i32, %a1: bool, %b1: bool) {
   %1 = arith.add %a, %b : i32
   %2 = arith.sub %a, %b : i32
   %3 = arith.mul %a, %b : i32
@@ -11,13 +11,13 @@ func @t1(%a: i32, %b: i32, %a1: i1, %b1: i1) {
   %6 = arith.shl %a, %b : i32
   %7 = arith.shr %a, %b : i32
   %8 = arith.and %a, %b : i32
-  %9 = arith.and %a1, %b1 : i1
+  %9 = arith.and %a1, %b1 : bool
   %10 = arith.or %a, %b : i32
-  %11 = arith.or %a1, %b1 : i1
+  %11 = arith.or %a1, %b1 : bool
   %12 = arith.xor %a, %b : i32
   %13 = arith.neg %a : i32
   %14 = arith.not %a : i32
-  %15 = arith.not %a1 : i1
+  %15 = arith.not %a1 : bool
   %16 = arith.abs %a : i32
 ; CHECK:      int x = a + b;
 ; CHECK-NEXT: int x1 = a - b;

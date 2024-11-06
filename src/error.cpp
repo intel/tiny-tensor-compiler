@@ -132,6 +132,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Scalar type mismatch";
     case tinytc_status_ir_invalid_number_of_indices:
         return "Number of indices must match memref order or must be 1 for group types";
+    case tinytc_status_ir_expected_boolean:
+        return "Expected boolean type";
     case tinytc_status_ir_expected_scalar:
         return "Expected scalar type";
     case tinytc_status_ir_expected_index:
@@ -140,6 +142,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Expected coopmatrix type";
     case tinytc_status_ir_expected_coopmatrix_or_scalar:
         return "Expected coopmatrix type or scalar type";
+    case tinytc_status_ir_expected_coopmatrix_scalar_or_boolean:
+        return "Expected coopmatrix type, scalar type, or boolean type";
     case tinytc_status_ir_expected_memref:
         return "Expected memref type";
     case tinytc_status_ir_expected_memref_or_scalar:
@@ -177,8 +181,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Offset must be non-negative or dynamic";
     case tinytc_status_ir_int_unsupported:
         return "int type unsupported by instruction";
-    case tinytc_status_ir_i1_unsupported:
-        return "i1 type unsupported by instruction";
+    case tinytc_status_ir_boolean_unsupported:
+        return "boolean type unsupported by instruction";
     case tinytc_status_ir_complex_unsupported:
         return "complex type unsupported by instruction";
     case tinytc_status_ir_coopmatrix_unsupported:
@@ -196,6 +200,9 @@ char const *tinytc_error_string(tinytc_status_t status) {
                "target architecture";
     case tinytc_status_ir_incompatible_scalar_types:
         return "Scalar types violate compatibility rules";
+    case tinytc_status_ir_constant_mismatch:
+        return "Type of constant does not match type of returned value";
+    // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";
     case tinytc_status_spirv_undefined_value:

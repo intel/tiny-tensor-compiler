@@ -263,6 +263,8 @@ Compiler
 
   * :ref:`tinytc_prog_compile_to_opencl`
 
+  * :ref:`tinytc_prog_compile_to_spirv`
+
 Compiler Enumerations
 ---------------------
 
@@ -293,6 +295,11 @@ tinytc_prog_compile_to_opencl
 .............................
 
 .. doxygenfunction:: tinytc_prog_compile_to_opencl
+
+tinytc_prog_compile_to_spirv
+............................
+
+.. doxygenfunction:: tinytc_prog_compile_to_spirv
 
 Compiler Context
 ================

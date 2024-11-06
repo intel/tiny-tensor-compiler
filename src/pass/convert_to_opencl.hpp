@@ -61,6 +61,7 @@ class convert_to_opencl_pass {
 
     /* Data type nodes */
     clir::data_type operator()(void_data_type const &);
+    clir::data_type operator()(boolean_data_type const &ct);
     clir::data_type operator()(coopmatrix_data_type const &ct);
     clir::data_type operator()(group_data_type const &g);
     clir::data_type operator()(memref_data_type const &m);

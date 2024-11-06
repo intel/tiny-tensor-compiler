@@ -101,6 +101,7 @@
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
     GLOBAL_ATTR     ".global"
+    BOOLEAN         "bool"
     COOPMATRIX      "coopmatrix"
     MEMREF          "memref"
     GROUP           "group"
@@ -143,6 +144,7 @@
 ;
 %token <std::variant<std::int64_t, std::string>> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
+%token <bool> BOOLEAN_CONSTANT
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
 %token <scalar_type> INTEGER_TYPE
@@ -162,6 +164,7 @@
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
+%nterm <tinytc_data_type_t> boolean_type
 %nterm <tinytc_data_type_t> scalar_type
 %nterm <tinytc_data_type_t> coopmatrix_type
 %nterm <tinytc_data_type_t> memref_type
@@ -330,10 +333,15 @@ attribute:
 
 
 data_type:
-    scalar_type
+    boolean_type
   | coopmatrix_type
-  | memref_type
   | group_type
+  | memref_type
+  | scalar_type
+;
+
+boolean_type:
+    BOOLEAN { $$ = get_boolean(ctx.cctx()); }
 ;
 
 scalar_type:
@@ -905,6 +913,16 @@ constant_inst:
             YYERROR;
         }
     }
+  | CONSTANT BOOLEAN_CONSTANT RETURNS data_type {
+        try {
+            $$ = inst {
+                std::make_unique<constant_inst>($BOOLEAN_CONSTANT, $data_type, @constant_inst).release()
+            };
+        } catch (compilation_error const &e) {
+            error(e.loc(), e.what());
+            YYERROR;
+        }
+    }
 ;
 
 cooperative_matrix_load_inst:
@@ -1109,7 +1127,7 @@ group_size_inst:
 
 if_inst:
     IF var[condition] optional_returned_values <unique_ptr_to_if_inst>{
-        check_type($condition, get_scalar(ctx.cctx(), scalar_type::i1), @condition, @condition);
+        check_type($condition, get_boolean(ctx.cctx()), @condition, @condition);
         try {
             auto loc = @IF;
             loc.end = @optional_returned_values.end;

@@ -44,8 +44,8 @@ auto dead_code_analysis::operator()(if_inst &in) -> bool {
     constant_inst *cond_const = dyn_cast<constant_inst>(in.condition().defining_inst());
     if (in.num_results() == 0 && cond_const) {
         // If-instruction is dead if condition is constant and false
-        return std::holds_alternative<std::int64_t>(cond_const->value()) &&
-               std::get<std::int64_t>(cond_const->value()) == 0;
+        return std::holds_alternative<bool>(cond_const->value()) &&
+               std::get<bool>(cond_const->value()) == false;
     }
 
     return false;

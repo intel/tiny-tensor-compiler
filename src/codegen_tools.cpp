@@ -680,6 +680,17 @@ auto instant_constant_fold_add(region_builder &bb, inst i) -> value {
     return bb.add(std::move(i));
 }
 
+auto get_bool_constant(tinytc_value_t val) -> std::optional<bool> {
+    if (auto i = val->defining_inst(); i) {
+        if (auto *ci = dyn_cast<constant_inst>(i); ci) {
+            if (std::holds_alternative<bool>(ci->value())) {
+                return std::get<bool>(ci->value());
+            }
+        }
+    }
+    return std::nullopt;
+}
+
 auto get_int_constant(tinytc_value_t val) -> std::optional<std::int64_t> {
     if (auto i = val->defining_inst(); i) {
         if (auto *ci = dyn_cast<constant_inst>(i); ci) {

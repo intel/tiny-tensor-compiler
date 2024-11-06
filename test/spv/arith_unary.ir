@@ -10,8 +10,8 @@
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 
-func @tbool(%a: i1) {
-    %0 = arith.not %a : i1
+func @tbool(%a: bool) {
+    %0 = arith.not %a : bool
 ; CHECK:      OpLogicalNot %[[#BOOL]] %[[#]]
 }
 

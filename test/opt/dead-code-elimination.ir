@@ -3,18 +3,18 @@
 
 ; RUN: %tinytc-opt -pdead-code-elimination < %s | filecheck %s
 func @dead_if(%a: memref<f64>) {
-    %c0 = constant 0 -> i1
+    %c0 = constant false -> bool
     if %c0 {
         %c42 = constant 42.0 -> f64
         store %c42, %a[] : memref<f64>
     }
-    %c1 = constant 1 -> i1
+    %c1 = constant true -> bool
     if %c1 {
         %c43 = constant 43.0 -> f64
         store %c43, %a[] : memref<f64>
     }
 ; CHECK-LABEL: func @dead_if({{.*}}
-; CHECK-NEXT: %c1 = constant 1 -> i1
+; CHECK-NEXT: %c1 = constant true -> bool
 ; CHECK-NEXT: if %c1 {
 ; CHECK-NEXT:   %c43{{.*}}
 ; CHECK-NEXT:   store{{.*}}
@@ -22,7 +22,7 @@ func @dead_if(%a: memref<f64>) {
 }
 
 func @dead_if_with_yield(%a: memref<f64>) {
-    %c0 = constant 0 -> i1
+    %c0 = constant false -> bool
     %0 = if %c0 -> (f64) {
         %c42 = constant 42.0 -> f64
         yield %c42 : f64

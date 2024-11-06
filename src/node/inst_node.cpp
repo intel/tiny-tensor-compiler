@@ -234,7 +234,21 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
     op(op_b, b0);
     loc(lc);
 
-    if (isa<coopmatrix_data_type>(*a().ty())) {
+    if (isa<boolean_data_type>(*a().ty())) {
+        auto const inst_supports_bool = [&] {
+            switch (operation) {
+            case arithmetic::and_:
+            case arithmetic::or_:
+            case arithmetic::xor_:
+                return true;
+            default:
+                return false;
+            }
+        }();
+        if (!inst_supports_bool) {
+            throw compilation_error(loc(), status::ir_boolean_unsupported);
+        }
+    } else if (isa<coopmatrix_data_type>(*a().ty())) {
         if (!isa<coopmatrix_data_type>(*b().ty())) {
             throw compilation_error(loc(), status::ir_expected_coopmatrix);
         }
@@ -259,7 +273,6 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         if (a_ty != b_ty) {
             throw compilation_error(loc(), status::ir_scalar_mismatch);
         }
-        bool inst_supports_i1 = true;
         bool inst_supports_fp = true;
         bool inst_supports_complex = true;
         switch (operation) {
@@ -267,10 +280,8 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         case arithmetic::sub:
         case arithmetic::mul:
         case arithmetic::div:
-            inst_supports_i1 = false;
             break;
         case arithmetic::rem:
-            inst_supports_i1 = false;
             inst_supports_complex = false;
             break;
         case arithmetic::and_:
@@ -281,13 +292,9 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
             break;
         case arithmetic::shl:
         case arithmetic::shr:
-            inst_supports_i1 = false;
             inst_supports_fp = false;
             inst_supports_complex = false;
             break;
-        }
-        if (!inst_supports_i1 && a_ty == scalar_type::i1) {
-            throw compilation_error(loc(), status::ir_i1_unsupported);
         }
         if (!inst_supports_fp && is_floating_type(a_ty)) {
             throw compilation_error(loc(), status::ir_fp_unsupported);
@@ -306,60 +313,60 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     op(op_a, a0);
     loc(lc);
 
-    tinytc_data_type_t to_ty = nullptr;
+    tinytc_data_type_t to_ty = [&]() -> tinytc_data_type_t {
+        if (isa<boolean_data_type>(*a().ty())) {
+            if (operation_ != arithmetic_unary::not_) {
+                throw compilation_error(loc(), status::ir_boolean_unsupported);
+            }
+            return a().ty();
+        } else if (isa<coopmatrix_data_type>(*a().ty())) {
+            if (operation_ != arithmetic_unary::neg) {
+                throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
+            }
+            return a().ty();
+        } else {
+            auto a_ty = get_scalar_type(loc(), a());
+            tinytc_data_type_t to_ty = a_ty;
 
-    if (isa<coopmatrix_data_type>(*a().ty())) {
-        if (operation_ != arithmetic_unary::neg) {
-            throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
+            bool inst_supports_int = true;
+            bool inst_supports_fp = true;
+            bool inst_supports_complex = true;
+            switch (operation_) {
+            case arithmetic_unary::abs:
+            case arithmetic_unary::neg:
+                break;
+            case arithmetic_unary::not_:
+                inst_supports_fp = false;
+                inst_supports_complex = false;
+                break;
+            case arithmetic_unary::conj:
+            case arithmetic_unary::im:
+            case arithmetic_unary::re:
+                inst_supports_int = false;
+                inst_supports_fp = false;
+                break;
+            }
+            if (!inst_supports_int && is_integer_type(a_ty->ty())) {
+                throw compilation_error(loc(), status::ir_int_unsupported);
+            }
+            if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
+                throw compilation_error(loc(), status::ir_fp_unsupported);
+            }
+            if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
+                throw compilation_error(loc(), status::ir_complex_unsupported);
+            }
+            switch (operation_) {
+            case arithmetic_unary::abs:
+            case arithmetic_unary::im:
+            case arithmetic_unary::re:
+                to_ty = scalar_data_type::get(a_ty->context(), element_type(a_ty->ty()));
+                break;
+            default:
+                break;
+            }
+            return to_ty;
         }
-        to_ty = a().ty();
-    } else {
-        auto a_ty = get_scalar_type(loc(), a());
-        to_ty = a_ty;
-
-        bool inst_supports_i1 = true;
-        bool inst_supports_int = true;
-        bool inst_supports_fp = true;
-        bool inst_supports_complex = true;
-        switch (operation_) {
-        case arithmetic_unary::abs:
-        case arithmetic_unary::neg:
-            inst_supports_i1 = false;
-            break;
-        case arithmetic_unary::not_:
-            inst_supports_fp = false;
-            inst_supports_complex = false;
-            break;
-        case arithmetic_unary::conj:
-        case arithmetic_unary::im:
-        case arithmetic_unary::re:
-            inst_supports_i1 = false;
-            inst_supports_int = false;
-            inst_supports_fp = false;
-            break;
-        }
-        if (!inst_supports_i1 && a_ty->ty() == scalar_type::i1) {
-            throw compilation_error(loc(), status::ir_i1_unsupported);
-        }
-        if (!inst_supports_int && is_integer_type(a_ty->ty())) {
-            throw compilation_error(loc(), status::ir_int_unsupported);
-        }
-        if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
-            throw compilation_error(loc(), status::ir_fp_unsupported);
-        }
-        if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
-            throw compilation_error(loc(), status::ir_complex_unsupported);
-        }
-        switch (operation_) {
-        case arithmetic_unary::abs:
-        case arithmetic_unary::im:
-        case arithmetic_unary::re:
-            to_ty = scalar_data_type::get(a_ty->context(), element_type(a_ty->ty()));
-            break;
-        default:
-            break;
-        }
-    }
+    }();
 
     result(0) = value_node{to_ty, this, lc};
 }
@@ -428,7 +435,7 @@ compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t
         throw compilation_error(loc(), status::ir_complex_unsupported);
     }
 
-    auto result_ty = scalar_data_type::get(at->context(), scalar_type::i1);
+    auto result_ty = boolean_data_type::get(at->context());
     result(0) = value_node{result_ty, this, lc};
 }
 
@@ -442,16 +449,20 @@ constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, loc
                (is_complex_type(ty) && std::holds_alternative<std::complex<double>>(val));
     };
 
-    if (auto st = dyn_cast<scalar_data_type>(ty); st) {
+    if (auto bt = dyn_cast<boolean_data_type>(ty); bt) {
+        if (!std::holds_alternative<bool>(value_)) {
+            throw compilation_error(loc(), status::ir_constant_mismatch);
+        }
+    } else if (auto st = dyn_cast<scalar_data_type>(ty); st) {
         if (!type_ok(value_, st->ty())) {
-            throw compilation_error(loc(), status::ir_scalar_mismatch);
+            throw compilation_error(loc(), status::ir_constant_mismatch);
         }
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
         if (!type_ok(value_, ct->component_ty())) {
-            throw compilation_error(loc(), status::ir_scalar_mismatch);
+            throw compilation_error(loc(), status::ir_constant_mismatch);
         }
     } else {
-        throw compilation_error(loc(), status::ir_expected_coopmatrix_or_scalar);
+        throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
     }
 
     result(0) = value_node{ty, this, lc};
@@ -826,6 +837,9 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
     op(0, condition);
     loc(lc);
+    if (!isa<boolean_data_type>(*condition->ty())) {
+        throw compilation_error(loc(), status::ir_expected_boolean);
+    }
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         if (!isa<scalar_data_type>(*return_types[i]) &&
             !isa<coopmatrix_data_type>(*return_types[i])) {

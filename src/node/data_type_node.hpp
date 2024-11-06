@@ -15,10 +15,10 @@
 #include <vector>
 
 namespace tinytc {
-enum class DTK { coopmatrix, group, memref, scalar, void_ };
+enum class DTK { bool_, coopmatrix, group, memref, scalar, void_ };
 using data_type_nodes =
-    type_list<class coopmatrix_data_type, class group_data_type, class memref_data_type,
-              class scalar_data_type, class void_data_type>;
+    type_list<class boolean_data_type, class coopmatrix_data_type, class group_data_type,
+              class memref_data_type, class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
 struct tinytc_data_type {
@@ -39,6 +39,16 @@ struct tinytc_data_type {
 namespace tinytc {
 
 using data_type_node = ::tinytc_data_type;
+
+class boolean_data_type : public data_type_node {
+  public:
+    inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::bool_; }
+    static auto get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t;
+
+  protected:
+    inline boolean_data_type(tinytc_compiler_context_t ctx) : data_type_node(DTK::bool_, ctx) {}
+    friend class compiler_context_cache;
+};
 
 class coopmatrix_data_type : public data_type_node {
   public:

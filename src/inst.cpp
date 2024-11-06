@@ -188,6 +188,17 @@ tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_conditio
     });
 }
 
+tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr, tinytc_bool_t value,
+                                                    tinytc_data_type_t ty,
+                                                    const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<constant_inst>(value != 0, ty, get_optional(loc)).release();
+    });
+}
+
 tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr, double value_re,
                                                     double value_im, tinytc_data_type_t ty,
                                                     const tinytc_location_t *loc) {
@@ -227,6 +238,12 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_dat
         return tinytc_status_invalid_arguments;
     }
 
+    if (const auto *bt = dyn_cast<boolean_data_type>(ty); bt != nullptr) {
+        return exception_to_status_code([&] {
+            *instr = std::make_unique<constant_inst>(true, ty, get_optional(loc)).release();
+        });
+    }
+
     scalar_type sty;
     if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
         sty = st->ty();
@@ -238,7 +255,6 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_dat
 
     return exception_to_status_code([&] {
         switch (sty) {
-        case scalar_type::i1:
         case scalar_type::i8:
         case scalar_type::i16:
         case scalar_type::i32:
@@ -266,6 +282,12 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
         return tinytc_status_invalid_arguments;
     }
 
+    if (const auto *bt = dyn_cast<boolean_data_type>(ty); bt != nullptr) {
+        return exception_to_status_code([&] {
+            *instr = std::make_unique<constant_inst>(false, ty, get_optional(loc)).release();
+        });
+    }
+
     scalar_type sty;
     if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
         sty = st->ty();
@@ -277,7 +299,6 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
 
     return exception_to_status_code([&] {
         switch (sty) {
-        case scalar_type::i1:
         case scalar_type::i8:
         case scalar_type::i16:
         case scalar_type::i32:

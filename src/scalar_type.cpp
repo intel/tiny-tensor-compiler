@@ -36,7 +36,6 @@ bool is_complex_type(scalar_type ty) {
 
 bool is_integer_type(scalar_type ty) {
     switch (ty) {
-    case scalar_type::i1:
     case scalar_type::i8:
     case scalar_type::i16:
     case scalar_type::i32:
@@ -74,8 +73,6 @@ clir::data_type to_clir_ty(scalar_type ty, short size, clir::address_space as,
                            clir::type_qualifier q) {
     const auto base_type = [](scalar_type ty) {
         switch (ty) {
-        case scalar_type::i1:
-            return clir::builtin_type::bool_t;
         case scalar_type::i8:
             return clir::builtin_type::char_t;
         case scalar_type::i16:
@@ -97,7 +94,6 @@ clir::data_type to_clir_ty(scalar_type ty, short size, clir::address_space as,
     };
     const auto components = [](scalar_type ty) -> short {
         switch (ty) {
-        case scalar_type::i1:
         case scalar_type::i8:
         case scalar_type::i16:
         case scalar_type::i32:
@@ -154,8 +150,6 @@ clir::address_space to_clir_address_space(address_space as) {
 
 char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty) {
     switch (ty) {
-    case tinytc_scalar_type_i1:
-        return "i1";
     case tinytc_scalar_type_i8:
         return "i8";
     case tinytc_scalar_type_i16:
@@ -179,7 +173,6 @@ char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty) {
 }
 size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty) {
     switch (ty) {
-    case tinytc_scalar_type_i1:
     case tinytc_scalar_type_i8:
         return 1;
     case tinytc_scalar_type_i16:

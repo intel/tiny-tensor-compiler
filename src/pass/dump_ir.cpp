@@ -23,6 +23,7 @@ dump_ir_pass::dump_ir_pass(std::ostream &os, int level_limit) : os_(&os), lvl_li
 
 /* Data type nodes */
 void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
+void dump_ir_pass::operator()(boolean_data_type const &) { *os_ << "bool"; }
 void dump_ir_pass::operator()(coopmatrix_data_type const &ct) {
     *os_ << "coopmatrix<";
     visit(*this, *ct.ty());
@@ -179,6 +180,7 @@ void dump_ir_pass::operator()(constant_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = constant ";
     std::visit(overloaded{
+                   [&](bool b) { *os_ << (b ? "true" : "false"); },
                    [&](std::int64_t i) {
                        if (is_dynamic_value(i)) {
                            *os_ << "?";

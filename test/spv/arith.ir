@@ -9,10 +9,10 @@
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 
-func @tbool(%a: i1, %b: i1) {
-    %0 = arith.and %a, %b : i1
-    %1 = arith.or %a, %b : i1
-    %2 = arith.xor %a, %b : i1
+func @tbool(%a: bool, %b: bool) {
+    %0 = arith.and %a, %b : bool
+    %1 = arith.or %a, %b : bool
+    %2 = arith.xor %a, %b : bool
 ; CHECK:      %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpLogicalOr %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpLogicalNotEqual %[[#BOOL]] %[[#]] %[[#]]

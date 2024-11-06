@@ -47,6 +47,7 @@ Builder C-API:
       - const_tinytc_value_t
   Data Type:
     function:
+      - tinytc_boolean_type_get
       - tinytc_coopmatrix_type_get
       - tinytc_group_type_get
       - tinytc_memref_type_get
@@ -66,6 +67,7 @@ Builder C-API:
       - tinytc_arith_unary_inst_create
       - tinytc_cast_inst_create
       - tinytc_cmp_inst_create
+      - tinytc_constant_inst_create_boolean
       - tinytc_constant_inst_create_complex
       - tinytc_constant_inst_create_float
       - tinytc_constant_inst_create_int

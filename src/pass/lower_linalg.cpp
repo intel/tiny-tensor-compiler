@@ -96,7 +96,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto K0 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, tmp, c_k_block_size, loc));
     c_init = compute_c(bb, k_block_size, c_zero, K0, c_init);
     auto needs_remainder = instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, loc));
-    auto r = get_int_constant(needs_remainder);
+    auto r = get_bool_constant(needs_remainder);
     if (r) {
         if (*r != 0) {
             c_init = compute_c(bb, 1, K0, K, c_init);

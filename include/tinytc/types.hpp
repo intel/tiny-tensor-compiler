@@ -59,10 +59,13 @@ enum class status {
     ir_shape_stride_mismatch = tinytc_status_ir_shape_stride_mismatch,
     ir_scalar_mismatch = tinytc_status_ir_scalar_mismatch,
     ir_invalid_number_of_indices = tinytc_status_ir_invalid_number_of_indices,
+    ir_expected_boolean = tinytc_status_ir_expected_boolean,
     ir_expected_scalar = tinytc_status_ir_expected_scalar,
     ir_expected_index = tinytc_status_ir_expected_index,
     ir_expected_coopmatrix = tinytc_status_ir_expected_coopmatrix,
     ir_expected_coopmatrix_or_scalar = tinytc_status_ir_expected_coopmatrix_or_scalar,
+    ir_expected_coopmatrix_scalar_or_boolean =
+        tinytc_status_ir_expected_coopmatrix_scalar_or_boolean,
     ir_expected_memref = tinytc_status_ir_expected_memref,
     ir_expected_memref_or_scalar = tinytc_status_ir_expected_memref_or_scalar,
     ir_expected_memref_or_group = tinytc_status_ir_expected_memref_or_group,
@@ -81,7 +84,7 @@ enum class status {
     ir_expected_global_address_space = tinytc_status_ir_expected_global_address_space,
     ir_invalid_offset = tinytc_status_ir_invalid_offset,
     ir_int_unsupported = tinytc_status_ir_int_unsupported,
-    ir_i1_unsupported = tinytc_status_ir_i1_unsupported,
+    ir_boolean_unsupported = tinytc_status_ir_boolean_unsupported,
     ir_complex_unsupported = tinytc_status_ir_complex_unsupported,
     ir_coopmatrix_unsupported = tinytc_status_ir_coopmatrix_unsupported,
     ir_forbidden_cast = tinytc_status_ir_forbidden_cast,
@@ -90,6 +93,7 @@ enum class status {
     ir_invalid_matrix_use = tinytc_status_ir_invalid_matrix_use,
     ir_unsupported_coopmatrix_shape = tinytc_status_ir_unsupported_coopmatrix_shape,
     ir_incompatible_scalar_types = tinytc_status_ir_incompatible_scalar_types,
+    ir_constant_mismatch = tinytc_status_ir_constant_mismatch,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
@@ -219,7 +223,6 @@ enum class status {
 
 //! Scalar types
 enum class scalar_type {
-    i1 = tinytc_scalar_type_i1,       ///< Signed 1 bit integer (boolean)
     i8 = tinytc_scalar_type_i8,       ///< Signed 8 bit integer
     i16 = tinytc_scalar_type_i16,     ///< Signed 16 bit integer
     i32 = tinytc_scalar_type_i32,     ///< Signed 32 bit integer

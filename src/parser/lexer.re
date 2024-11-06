@@ -41,7 +41,7 @@ lex:
         local_named_identifier   = "%" named_identifier;
         global_identifier     = "@" (unnamed_identifier | named_identifier);
 
-        integer_type          = "i" ("1" | "8" | "16" | "32" | "64") | "index";
+        integer_type          = "i" ("8" | "16" | "32" | "64") | "index";
         floating_type         = ("f" | "c") ("32" | "64");
 
         digit                 = [0-9];
@@ -103,8 +103,8 @@ lex:
         ".global"           { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
 
         // constants
-        "true"              { adv_loc(); return parser::make_INTEGER_CONSTANT(1, loc_); }
-        "false"             { adv_loc(); return parser::make_INTEGER_CONSTANT(0, loc_); }
+        "true"              { adv_loc(); return parser::make_BOOLEAN_CONSTANT(true, loc_); }
+        "false"             { adv_loc(); return parser::make_BOOLEAN_CONSTANT(false, loc_); }
         integer_constant    {
             adv_loc();
             auto i = lex_integer_constant(b, YYCURSOR);
@@ -117,6 +117,7 @@ lex:
         }
 
         // types
+        "bool"              { return parser::make_BOOLEAN(loc_); }
         integer_type        {
             adv_loc();
             auto t = lex_integer_type(b, YYCURSOR);
@@ -280,7 +281,6 @@ scalar_type lexer::lex_integer_type(char const *s, char const *) {
         re2c:yyfill:enable = 0;
         re2c:define:YYCURSOR = s;
 
-        "i1"    { return scalar_type::i1; }
         "i8"    { return scalar_type::i8; }
         "i16"   { return scalar_type::i16; }
         "i32"   { return scalar_type::i32; }

@@ -162,6 +162,8 @@ Compiler
 
   * :ref:`compile_to_opencl`
 
+  * :ref:`compile_to_spirv`
+
 Compiler Functions
 ------------------
 
@@ -179,6 +181,11 @@ compile_to_opencl
 .................
 
 .. doxygenfunction:: tinytc::compile_to_opencl
+
+compile_to_spirv
+................
+
+.. doxygenfunction:: tinytc::compile_to_spirv
 
 Compiler Context
 ================

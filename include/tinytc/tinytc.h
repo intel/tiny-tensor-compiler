@@ -50,6 +50,17 @@ TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
 ////////////////////////////
 
 /**
+ * @brief Get boolean data type
+ *
+ * @param dt [out] pointer to the data type object created
+ * @param ctx [inout] compiler context
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt,
+                                                      tinytc_compiler_context_t ctx);
+
+/**
  * @brief Get scalar data type
  *
  * @param dt [out] pointer to the data type object created
@@ -250,6 +261,21 @@ TINYTC_EXPORT tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr,
                                                      tinytc_cmp_condition_t cond, tinytc_value_t a,
                                                      tinytc_value_t b,
                                                      const tinytc_location_t *loc);
+
+/**
+ * @brief Create boolean constant instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param value [in] constant value
+ * @param ty [in] type of constant
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr,
+                                                                  tinytc_bool_t value,
+                                                                  tinytc_data_type_t ty,
+                                                                  const tinytc_location_t *loc);
 
 /**
  * @brief Create complex constant instruction

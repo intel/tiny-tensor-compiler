@@ -18,6 +18,10 @@
 
 namespace tinytc {
 
+auto boolean_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t {
+    return ctx->cache()->bool_ty.get();
+}
+
 auto coopmatrix_data_type::get(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols,
                                matrix_use use, location const &lc) -> tinytc_data_type_t {
     auto ctx = ty->context();

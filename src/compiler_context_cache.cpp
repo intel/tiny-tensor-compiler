@@ -9,6 +9,7 @@
 namespace tinytc {
 
 compiler_context_cache::compiler_context_cache(tinytc_compiler_context_t ctx) {
+    bool_ty = std::unique_ptr<boolean_data_type>(new boolean_data_type(ctx));
     void_ty = std::unique_ptr<void_data_type>(new void_data_type(ctx));
     for (int i = 0; i < TINYTC_NUMBER_OF_SCALAR_TYPES; ++i) {
         scalar_tys[i] =

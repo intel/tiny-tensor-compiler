@@ -16,6 +16,8 @@ Common
 
   * :ref:`tinytc_arithmetic_unary_t`
 
+  * :ref:`tinytc_checked_flag_t`
+
   * :ref:`tinytc_cmp_condition_t`
 
   * :ref:`tinytc_matrix_use_t`
@@ -25,6 +27,8 @@ Common
   * :ref:`tinytc_store_flag_t`
 
   * :ref:`tinytc_transpose_t`
+
+  * :ref:`tinytc_work_group_operation_t`
 
 * Definitions
 
@@ -38,6 +42,8 @@ Common
 
   * :ref:`tinytc_arithmetic_unary_to_string`
 
+  * :ref:`tinytc_checked_flag_to_string`
+
   * :ref:`tinytc_cmp_condition_to_string`
 
   * :ref:`tinytc_matrix_use_to_string`
@@ -49,6 +55,8 @@ Common
   * :ref:`tinytc_store_flag_to_string`
 
   * :ref:`tinytc_transpose_to_string`
+
+  * :ref:`tinytc_work_group_operation_to_string`
 
 * Structures
 
@@ -104,6 +112,11 @@ tinytc_arithmetic_unary_t
 
 .. doxygenenum:: tinytc_arithmetic_unary_t
 
+tinytc_checked_flag_t
+.....................
+
+.. doxygenenum:: tinytc_checked_flag_t
+
 tinytc_cmp_condition_t
 ......................
 
@@ -128,6 +141,11 @@ tinytc_transpose_t
 ..................
 
 .. doxygenenum:: tinytc_transpose_t
+
+tinytc_work_group_operation_t
+.............................
+
+.. doxygenenum:: tinytc_work_group_operation_t
 
 Common Definitions
 ------------------
@@ -154,6 +172,11 @@ tinytc_arithmetic_unary_to_string
 .................................
 
 .. doxygenfunction:: tinytc_arithmetic_unary_to_string
+
+tinytc_checked_flag_to_string
+.............................
+
+.. doxygenfunction:: tinytc_checked_flag_to_string
 
 tinytc_cmp_condition_to_string
 ..............................
@@ -184,6 +207,11 @@ tinytc_transpose_to_string
 ..........................
 
 .. doxygenfunction:: tinytc_transpose_to_string
+
+tinytc_work_group_operation_to_string
+.....................................
+
+.. doxygenfunction:: tinytc_work_group_operation_to_string
 
 Common Structures
 -----------------
@@ -276,6 +304,8 @@ Data Type
 
 * Functions
 
+  * :ref:`tinytc_boolean_type_get`
+
   * :ref:`tinytc_coopmatrix_type_get`
 
   * :ref:`tinytc_group_type_get`
@@ -286,6 +316,11 @@ Data Type
 
 Data Type Functions
 -------------------
+
+tinytc_boolean_type_get
+.......................
+
+.. doxygenfunction:: tinytc_boolean_type_get
 
 tinytc_coopmatrix_type_get
 ..........................
@@ -367,6 +402,8 @@ Instruction
 
   * :ref:`tinytc_cmp_inst_create`
 
+  * :ref:`tinytc_constant_inst_create_boolean`
+
   * :ref:`tinytc_constant_inst_create_complex`
 
   * :ref:`tinytc_constant_inst_create_float`
@@ -427,6 +464,8 @@ Instruction
 
   * :ref:`tinytc_sum_inst_create`
 
+  * :ref:`tinytc_work_group_inst_create`
+
   * :ref:`tinytc_yield_inst_create`
 
   * :ref:`tinytc_inst_get_regions`
@@ -467,6 +506,11 @@ tinytc_cmp_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_cmp_inst_create
+
+tinytc_constant_inst_create_boolean
+...................................
+
+.. doxygenfunction:: tinytc_constant_inst_create_boolean
 
 tinytc_constant_inst_create_complex
 ...................................
@@ -617,6 +661,11 @@ tinytc_sum_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_sum_inst_create
+
+tinytc_work_group_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_work_group_inst_create
 
 tinytc_yield_inst_create
 ........................

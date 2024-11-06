@@ -35,7 +35,7 @@ class compiler_context_cache {
     compiler_context_cache(compiler_context_cache const &) = delete;
     compiler_context_cache &operator=(compiler_context_cache const &) = delete;
 
-    std::unique_ptr<tinytc_data_type> void_ty;
+    std::unique_ptr<tinytc_data_type> void_ty, bool_ty;
     std::array<std::unique_ptr<tinytc_data_type>, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys;
     std::unordered_multimap<std::uint64_t, tinytc_data_type_t> memref_tys;
     std::unordered_multimap<std::uint64_t, tinytc_data_type_t> coopmatrix_tys;

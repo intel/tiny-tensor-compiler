@@ -29,6 +29,14 @@ char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u) {
     return "unknown";
 }
 
+tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx) {
+    if (dt == nullptr || ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    return exception_to_status_code([&] { *dt = boolean_data_type::get(ctx); });
+}
+
 tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
                                        tinytc_scalar_type_t type) {
     if (dt == nullptr || ctx == nullptr) {

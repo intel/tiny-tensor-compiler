@@ -81,10 +81,6 @@ inline std::size_t size(scalar_type ty) {
  */
 template <typename T> struct to_scalar_type;
 //! to_scalar_type specialization
-template <> struct to_scalar_type<bool> {
-    static constexpr scalar_type value = scalar_type::i1; ///< value
-};
-//! to_scalar_type specialization
 template <> struct to_scalar_type<std::int8_t> {
     static constexpr scalar_type value = scalar_type::i8; ///< value
 };
@@ -549,6 +545,21 @@ inline bool is_dynamic_value(std::int64_t i) { return i == dynamic; }
 using data_type = tinytc_data_type_t;
 
 /**
+ * @brief Get the boolean data type
+ *
+ * Cf. \ref tinytc_boolean_type_get
+ *
+ * @param ctx Compiler context
+ *
+ * @return Data type
+ */
+inline data_type get_boolean(compiler_context const &ctx) {
+    tinytc_data_type_t bt;
+    CHECK_STATUS(tinytc_boolean_type_get(&bt, ctx.get()));
+    return bt;
+}
+
+/**
  * @brief Get a scalar data type
  *
  * Cf. \ref tinytc_scalar_type_get
@@ -909,6 +920,21 @@ inline inst make_cmp(cmp_condition cond, value a, value b, location const &loc =
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a, b, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make boolean constant
+ *
+ * @param value Constant
+ * @param ty Data type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_constant(bool value, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_constant_inst_create_boolean(&instr, value, ty, &loc), loc);
     return inst(instr);
 }
 

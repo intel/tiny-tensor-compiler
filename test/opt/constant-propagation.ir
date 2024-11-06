@@ -56,24 +56,38 @@ func @known_loop_iter_args() {
 func @known_arith() {
     %0 = constant 1 -> i64
     %1 = constant 2 -> i64
-    %3 = constant -2.0 -> f32
-    %4 = constant [1.0, -1.0] -> c32
-    %5 = arith.not %0 : i64
-    %6 = arith.add %0, %1 : i64
-    %7 = arith.neg %3 : f32
-    %8 = arith.add %4, %4 : c32
-    %9 = arith.abs %3 : f32
+    %2 = constant -2.0 -> f32
+    %3 = constant [1.0, -1.0] -> c32
+    %4 = constant false -> bool
+    %5 = constant true -> bool
+    %6 = arith.not %0 : i64
+    %7 = arith.add %0, %1 : i64
+    %8 = arith.neg %2 : f32
+    %9 = arith.add %3, %3 : c32
+    %10 = arith.abs %2 : f32
+    %11 = arith.and %4, %5 : bool
+    %12 = arith.or %4, %5 : bool
+    %13 = arith.xor %5, %5 : bool
+    %14 = arith.not %4 : bool
 ; CHECK-LABEL: func @known_arith({{.*}}
-; CHECK:       %4 = constant -2 -> i64
-; CHECK-NEXT:  %5 = arith.not %0 : i64
-; CHECK-NEXT:  %6 = constant 3 -> i64
-; CHECK-NEXT:  %7 = arith.add %0, %1 : i64
-; CHECK-NEXT:  %8 = constant 0x1p+1 -> f32
-; CHECK-NEXT:  %9 = arith.neg %2 : f32
-; CHECK-NEXT:  %10 = constant [0x1p+1,-0x1p+1] -> c32
-; CHECK-NEXT:  %11 = arith.add %3, %3 : c32
-; CHECK-NEXT:  %12 = constant 0x1p+1 -> f32
-; CHECK-NEXT:  %13 = arith.abs %2 : f32
+; CHECK:      %6 = constant -2 -> i64
+; CHECK-NEXT: %7 = arith.not %0 : i64
+; CHECK-NEXT: %8 = constant 3 -> i64
+; CHECK-NEXT: %9 = arith.add %0, %1 : i64
+; CHECK-NEXT: %10 = constant 0x1p+1 -> f32
+; CHECK-NEXT: %11 = arith.neg %2 : f32
+; CHECK-NEXT: %12 = constant [0x1p+1,-0x1p+1] -> c32
+; CHECK-NEXT: %13 = arith.add %3, %3 : c32
+; CHECK-NEXT: %14 = constant 0x1p+1 -> f32
+; CHECK-NEXT: %15 = arith.abs %2 : f32
+; CHECK-NEXT: %16 = constant false -> bool
+; CHECK-NEXT: %17 = arith.and %4, %5 : bool
+; CHECK-NEXT: %18 = constant true -> bool
+; CHECK-NEXT: %19 = arith.or %4, %5 : bool
+; CHECK-NEXT: %20 = constant false -> bool
+; CHECK-NEXT: %21 = arith.xor %5, %5 : bool
+; CHECK-NEXT: %22 = constant true -> bool
+; CHECK-NEXT: %23 = arith.not %4 : bool
 }
 
 func @known_cast() {
@@ -82,10 +96,8 @@ func @known_cast() {
     %0 = cast %c0 : i32 -> i16
     %1 = cast %c0 : i32 -> f32
     %2 = cast %c0 : i32 -> c32
-    %3 = cast %c0 : i32 -> i1
-    %4 = cast %c0 : i32 -> c32
-    %5 = cast %c1 : c32 -> c64
-    %6 = cast %3 : i1 -> c32
+    %3 = cast %c0 : i32 -> c32
+    %4 = cast %c1 : c32 -> c64
 ; CHECK-LABEL: func @known_cast({{.*}}
 ; CHECK:       %0 = constant -32768 -> i16
 ; CHECK-NEXT:  %1 = cast %c0 : i32 -> i16
@@ -93,14 +105,10 @@ func @known_cast() {
 ; CHECK-NEXT:  %3 = cast %c0 : i32 -> f32
 ; CHECK-NEXT:  %4 = constant [0x1p+15,0x0p+0] -> c32
 ; CHECK-NEXT:  %5 = cast %c0 : i32 -> c32
-; CHECK-NEXT:  %6 = constant 1 -> i1
-; CHECK-NEXT:  %7 = cast %c0 : i32 -> i1
-; CHECK-NEXT:  %8 = constant [0x1p+15,0x0p+0] -> c32
-; CHECK-NEXT:  %9 = cast %c0 : i32 -> c32
-; CHECK-NEXT:  %10 = constant [0x1.8p+1,-0x1p+1] -> c64
-; CHECK-NEXT:  %11 = cast %c1 : c32 -> c64
-; CHECK-NEXT:  %12 = constant [0x1p+0,0x0p+0] -> c32
-; CHECK-NEXT:  %13 = cast %6 : i1 -> c32
+; CHECK-NEXT:  %6 = constant [0x1p+15,0x0p+0] -> c32
+; CHECK-NEXT:  %7 = cast %c0 : i32 -> c32
+; CHECK-NEXT:  %8 = constant [0x1.8p+1,-0x1p+1] -> c64
+; CHECK-NEXT:  %9 = cast %c1 : c32 -> c64
 }
 
 func @known_compare() {
@@ -109,9 +117,9 @@ func @known_compare() {
     %2 = cmp.eq %0, %0 : f32
     %3 = cmp.eq %0, %1 : f32
 ; CHECK-LABEL: func @known_compare({{.*}}
-; CHECK:       %2 = constant 1 -> i1
+; CHECK:       %2 = constant true -> bool
 ; CHECK-NEXT:  %3 = cmp.eq %0, %0 : f32
-; CHECK-NEXT:  %4 = constant 0 -> i1
+; CHECK-NEXT:  %4 = constant false -> bool
 ; CHECK-NEXT:  %5 = cmp.eq %0, %1 : f32
 }
 

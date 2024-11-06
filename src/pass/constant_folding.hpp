@@ -53,27 +53,31 @@ struct compute_unary_op {
     data_type ty;
     location const &loc;
 
+    auto operator()(bool a) -> fold_result {
+        bool val = false;
+        switch (operation) {
+        case arithmetic_unary::not_:
+            val = !a;
+            break;
+        default:
+            throw compilation_error(loc, status::ir_boolean_unsupported);
+        }
+        return make_constant(val, ty, loc);
+    }
+
     template <typename T>
-    requires(std::is_integral_v<T>)
+    requires(std::is_integral_v<T> && !std::is_same_v<T, bool>)
     auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
         case arithmetic_unary::abs:
-            if constexpr (std::is_same_v<T, bool>) {
-                val = a;
-            } else {
-                val = a < 0 ? -a : a;
-            }
+            val = a < 0 ? -a : a;
             break;
         case arithmetic_unary::neg:
             val = -a;
             break;
         case arithmetic_unary::not_:
-            if constexpr (std::is_same_v<T, bool>) {
-                val = !a;
-            } else {
-                val = ~a;
-            }
+            val = ~a;
             break;
         default:
             throw compilation_error(loc, status::ir_int_unsupported);
@@ -156,8 +160,26 @@ struct compute_binary_op {
     data_type ty;
     location const &loc;
 
+    auto operator()(bool a, bool b) -> fold_result {
+        bool val = false;
+        switch (operation) {
+        case arithmetic::and_:
+            val = a && b;
+            break;
+        case arithmetic::or_:
+            val = a || b;
+            break;
+        case arithmetic::xor_:
+            val = a != b;
+            break;
+        default:
+            throw compilation_error(loc, status::ir_boolean_unsupported);
+        }
+        return make_constant(val, ty, loc);
+    }
+
     template <typename T>
-    requires(std::is_integral_v<T>)
+    requires(std::is_integral_v<T> && !std::is_same_v<T, bool>)
     auto operator()(T a, T b) -> fold_result {
         T val = 0;
         switch (operation) {
@@ -168,11 +190,7 @@ struct compute_binary_op {
             val = a - b;
             break;
         case arithmetic::mul:
-            if constexpr (std::is_same_v<T, bool>) {
-                val = a && b;
-            } else {
-                val = a * b;
-            }
+            val = a * b;
             break;
         case arithmetic::div:
             val = a / b;
@@ -181,18 +199,10 @@ struct compute_binary_op {
             val = a % b;
             break;
         case arithmetic::shl:
-            if constexpr (std::is_same_v<T, bool>) {
-                throw compilation_error(loc, status::ir_i1_unsupported);
-            } else {
-                val = a << b;
-            }
+            val = a << b;
             break;
         case arithmetic::shr:
-            if constexpr (std::is_same_v<T, bool>) {
-                throw compilation_error(loc, status::ir_i1_unsupported);
-            } else {
-                val = a >> b;
-            }
+            val = a >> b;
             break;
         case arithmetic::and_:
             val = a & b;
@@ -251,8 +261,27 @@ struct compute_binop_identities {
     bool is_second_operand;
     location const &loc;
 
+    auto operator()(bool a) -> fold_result {
+        switch (operation) {
+        case arithmetic::and_:
+            if (!a) {
+                return make_constant(false, operand.ty(), loc);
+            }
+            break;
+        case arithmetic::or_:
+        case arithmetic::xor_:
+            if (!a) {
+                return &operand;
+            }
+            break;
+        default:
+            break;
+        }
+        return tinytc_value_t{};
+    }
+
     template <typename T>
-    requires(std::is_integral_v<T>)
+    requires(std::is_integral_v<T> && !std::is_same_v<T, bool>)
     auto operator()(T a) -> fold_result {
         switch (operation) {
         case arithmetic::add:
@@ -424,8 +453,6 @@ template <typename T, typename U> auto value_cast(U const &u) { return value_cas
 template <typename T>
 auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_result {
     switch (to_ty->ty()) {
-    case scalar_type::i1:
-        return make_constant(value_cast<bool>(A), to_ty, loc);
     case scalar_type::i8:
         return make_constant(value_cast<std::int8_t>(A), to_ty, loc);
     case scalar_type::i16:

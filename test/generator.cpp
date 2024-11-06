@@ -108,17 +108,6 @@ TEST_CASE("compatible scalar type") {
         }
     }
 
-    CHECK(compatible_type(scalar_type::i1, scalar_type::i1) == scalar_type::i1);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::i8) == scalar_type::i8);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::i16) == scalar_type::i16);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::i32) == scalar_type::i32);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::i64) == scalar_type::i64);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::index) == scalar_type::index);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::f32) == scalar_type::f32);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::f64) == scalar_type::f64);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::c32) == scalar_type::c32);
-    CHECK(compatible_type(scalar_type::i1, scalar_type::c64) == scalar_type::c64);
-
     CHECK(compatible_type(scalar_type::i8, scalar_type::i8) == scalar_type::i8);
     CHECK(compatible_type(scalar_type::i8, scalar_type::i16) == scalar_type::i16);
     CHECK(compatible_type(scalar_type::i8, scalar_type::i32) == scalar_type::i32);

@@ -68,8 +68,9 @@ Constants
 
 .. code:: abnf
 
-    constant                    = complex-constant / floating-constant / integer-constant
-    integer-constant            = "true" / "false" / [sign] 1*DIGIT
+    constant                    = boolean-constant / integer-constant / floating-constant / complex-constant
+    boolean-constant            = "true" / "false"
+    integer-constant            = [sign] 1*DIGIT
     sign                        = "-" / "+"
     floating-constant           = [sign] *DIGIT "." 1*DIGIT ["e" [sign] 1*DIGIT]
     mantissa-dec                = *DIGIT "." 1*DIGIT / 1*DIGIT "."
@@ -142,8 +143,17 @@ Types
 
 .. code:: abnf
 
-    type                        = void-type / scalar-type / memref-type / group-type
+    type                        = void-type / boolean-type / scalar-type / memref-type / group-type
     void-type                   = "void"
+
+Boolean type
+------------
+
+.. code:: abnf
+
+    boolean-type                = "bool"
+
+Boolean type that only has two states (true or false).
 
 Scalar types
 ------------
@@ -151,7 +161,7 @@ Scalar types
 .. code:: abnf
 
     scalar-type                 = integer-type / floating-type / complex-type
-    integer-type                = "i" ("1" / "8" / "16" / "32" / "64") / "index"
+    integer-type                = "i" ("8" / "16" / "32" / "64") / "index"
     floating-type               = "f" ("32" / "64")
     complex-type                = "c" ("32" / "64")
 
@@ -162,7 +172,7 @@ e.g. "f64" are double precision floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
 
 Scalar types are ordered as 
-:math:`i1 \prec \text{i8} \prec \text{i16} \prec \text{i32} \prec \text{i64} \prec \text{f32} \prec \text{f64} \prec \text{c32} \prec \text{c64}`.
+:math:`\text{i8} \prec \text{i16} \prec \text{i32} \prec \text{i64} \prec \text{f32} \prec \text{f64} \prec \text{c32} \prec \text{c64}`.
 A scalar type :math:`\alpha` is called *compatible to* a scalar type :math:`\beta` if
 :math:`\alpha \preceq \beta`.
 If an arithmetic operation involves mixed types :math:`\alpha` and :math:`\beta` and
@@ -288,8 +298,6 @@ Not all matrix shapes need to be supported in the implementation.
 The supported matrix shapes may depend on data type, matrix use, and target hardware.
 
 An argument to any instruction that has coopmatrix type **must** be dynamically uniform.
-
-Having i1 as component type of a coopmatrix is forbidden.
 
 Instructions
 ============
@@ -639,7 +647,7 @@ Arithmetic (binary)
                                ".or"   /
                                ".xor"
     value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier
-                               ":" (scalar-type / coopmatrix-type)
+                               ":" (boolean-type / scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -650,22 +658,21 @@ Arithmetic on cooperative matrices is done component-wise.
 
 The following table shows the operations' description and the types that are allowed for the operation.
 The backslash "\\" is used to exclude types from the list of allowed types.
-Boolean arithmetic is only allowed for .and, .or, and .xor.
 
-==== ============================= ========== ======================================================
-Op   Allowed type                  i1 allowed Description
-==== ============================= ========== ======================================================
-.add scalar-type / coopmatrix-type No         Sum of operands
-.sub scalar-type / coopmatrix-type No         Difference of operands
-.mul scalar-type / coopmatrix-type No         Product of operands
-.div scalar-type / coopmatrix-type No         Quotient of operands
-.rem scalar-type  \\ complex-type  No         Remainder from the division of operands
-.shl integer-type                  No         Left shift first operand by second operand
-.shr integer-type                  No         Arithmetic right shift first operand by second operand
-.and integer-type                  Yes        Bitwise and
-.or  integer-type                  Yes        Bitwise or
-.xor integer-type                  Yes        Bitwise xor
-==== ============================= ========== ======================================================
+==== ============================= ======================================================
+Op   Allowed type                  Description
+==== ============================= ======================================================
+.add scalar-type / coopmatrix-type Sum of operands
+.sub scalar-type / coopmatrix-type Difference of operands
+.mul scalar-type / coopmatrix-type Product of operands
+.div scalar-type / coopmatrix-type Quotient of operands
+.rem scalar-type  \\ complex-type  Remainder from the division of operands
+.shl integer-type                  Left shift first operand by second operand
+.shr integer-type                  Arithmetic right shift first operand by second operand
+.and boolean-type / integer-type   Bitwise and
+.or  boolean-type / integer-type   Bitwise or
+.xor boolean-type / integer-type   Bitwise xor
+==== ============================= ======================================================
 
 Arithmetic (unary)
 ..................
@@ -686,18 +693,17 @@ for ".abs", ".im", and ".re", and the returned value has the same type as the op
 for ".neg" and ".conj".
 
 The following table shows the operations' description and the types that are allowed for the operation.
-Boolean arithmetic is only allowed for .neg.
 
-===== ============================= ========== =============================
-Op    Allowed type                  i1 allowed Description
-===== ============================= ========== =============================
-.abs  scalar-type                   No         Compute absolute value
-.neg  scalar-type / coopmatrix-type No         Negation
-.not  integer-type                  Yes        Bitwise not
-.conj complex-type                  No         Complex conjugate
-.im   complex-type                  No         Extract imaginary part
-.re   complex-type                  No         Extract real part
-===== ============================= ========== =============================
+===== ============================= =============================
+Op    Allowed type                  Description
+===== ============================= =============================
+.abs  scalar-type                   Compute absolute value
+.neg  scalar-type / coopmatrix-type Negation
+.not  boolean-type / integer-type   Bitwise not
+.conj complex-type                  Complex conjugate
+.im   complex-type                  Extract imaginary part
+.re   complex-type                  Extract real part
+===== ============================= =============================
 
 Barrier
 .......
@@ -740,6 +746,7 @@ Overview
 
 Cast scalar values or cooperative matrices.
 The shape and the use the coopmatrix types must match.
+
 Casts from complex types to non-complex types are forbidden.
 The following table summarizes the casts and the mapping to SPIR-V
 (the casts are done component-wise for coopmatrix types):
@@ -770,7 +777,7 @@ Overview
 ~~~~~~~~
 
 Scalar comparison.
-Both operands must have the same scalar type and the returned value is boolean.
+Both operands must have the same scalar type and the returned value has boolean type.
 
 The following table shows the comparisons' description and the types that are allowed for the comparison.
 The backslash "\\" is used to exclude types from the list of allowed types.
@@ -791,7 +798,7 @@ Constant
 
 .. code:: abnf
 
-    value-instruction       =/ "constant" constant "->" (scalar-type / coopmatrix-type)
+    value-instruction       =/ "constant" constant "->" (boolean-type / scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -1165,7 +1172,7 @@ Overview
 An if statement.
 Both regions are *mixed regions*.
 
-The condition must be of bool type.
+The condition must have boolean type.
 
 Returns
 ~~~~~~~

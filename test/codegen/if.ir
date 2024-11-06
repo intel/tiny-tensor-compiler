@@ -7,7 +7,7 @@ func @if0(%0: i32) {
     %c0 = constant 0 -> i32
     %1 = cmp.lt %0, %c16 : i32
     %2 = cmp.ge %0, %c0 : i32
-    %3 = arith.and %1, %2 : i1
+    %3 = arith.and %1, %2 : bool
     if %3 {
     } else {
     }
