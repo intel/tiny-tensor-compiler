@@ -63,6 +63,7 @@ set(SOURCES
     region.cpp
     required_extensions.cpp
     scalar_type.cpp
+    spv/converter.cpp
     spv/module.cpp
     spv/names.cpp
     spv/opencl.std.cpp
