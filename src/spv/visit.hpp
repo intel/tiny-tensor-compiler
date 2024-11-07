@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_2024115_HPP
-#define GENERATED_VISIT_2024115_HPP
+#ifndef GENERATED_VISIT_2024117_HPP
+#define GENERATED_VISIT_2024117_HPP
 
 namespace tinytc::spv {
 
@@ -955,6 +955,10 @@ template <typename Derived> class default_visitor {
         if (in.op1()) {
             static_cast<Derived *>(this)->operator()(*in.op1());
         }
+
+        if (in.op2()) {
+            static_cast<Derived *>(this)->operator()(*in.op2());
+        }
     }
     auto operator()(OpStore const &in) {
         static_cast<Derived *>(this)->pre_visit(in);
@@ -962,6 +966,10 @@ template <typename Derived> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
+        }
+
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
         }
     }
     auto operator()(OpCopyMemory const &in) {
@@ -975,6 +983,10 @@ template <typename Derived> class default_visitor {
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        if (in.op4()) {
+            static_cast<Derived *>(this)->operator()(*in.op4());
+        }
     }
     auto operator()(OpCopyMemorySized const &in) {
         static_cast<Derived *>(this)->pre_visit(in);
@@ -987,6 +999,10 @@ template <typename Derived> class default_visitor {
 
         if (in.op4()) {
             static_cast<Derived *>(this)->operator()(*in.op4());
+        }
+
+        if (in.op5()) {
+            static_cast<Derived *>(this)->operator()(*in.op5());
         }
     }
     auto operator()(OpAccessChain const &in) {
@@ -1038,7 +1054,9 @@ template <typename Derived> class default_visitor {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op2()) {
+            static_cast<Derived *>(this)->operator()(*in.op2());
+        }
     }
     auto operator()(OpMemberDecorate const &in) {
         static_cast<Derived *>(this)->pre_visit(in);
@@ -2879,6 +2897,10 @@ template <typename Derived> class default_visitor {
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        if (in.op4()) {
+            static_cast<Derived *>(this)->operator()(*in.op4());
+        }
     }
     auto operator()(OpCooperativeMatrixStoreKHR const &in) {
         static_cast<Derived *>(this)->pre_visit(in);
@@ -2891,6 +2913,10 @@ template <typename Derived> class default_visitor {
 
         if (in.op4()) {
             static_cast<Derived *>(this)->operator()(*in.op4());
+        }
+
+        if (in.op5()) {
+            static_cast<Derived *>(this)->operator()(*in.op5());
         }
     }
     auto operator()(OpCooperativeMatrixMulAddKHR const &in) {
@@ -2912,4 +2938,4 @@ template <typename Derived> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_2024115_HPP
+#endif // GENERATED_VISIT_2024117_HPP

@@ -35,6 +35,7 @@ class inst_converter {
     void operator()(group_id_inst const &in);
     void operator()(group_size_inst const &in);
     void operator()(num_subgroups_inst const &in);
+    void operator()(parallel_inst const &in);
     void operator()(subgroup_id_inst const &in);
     void operator()(subgroup_local_id_inst const &in);
     void operator()(subgroup_size_inst const &in);
@@ -47,6 +48,7 @@ class inst_converter {
   private:
     auto get_scalar_type(tinytc_value const &v) -> scalar_type;
     auto get_coopmatrix_type(tinytc_value const &v) -> scalar_type;
+    auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
     auto multi_declare(tinytc_value const &v, std::vector<spv_inst *> insts);
@@ -57,6 +59,7 @@ class inst_converter {
     uniquifier unique_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::unordered_map<const_tinytc_value_t, std::vector<spv_inst *>> multi_vals_;
+    std::vector<spv_inst *> builtins_used_by_function_;
     core_config core_cfg_ = {};
 };
 

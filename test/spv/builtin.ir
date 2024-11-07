@@ -1,0 +1,50 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: OpEntryPoint Kernel %[[#]] "tbuiltin" %[[#VAR1:]] %[[#VAR2:]] %[[#VAR3:]] %[[#VAR4:]] %[[#VAR5:]] %[[#VAR6:]]
+
+; CHECK: OpDecorate %[[#VAR1]] Constant
+; CHECK: OpDecorate %[[#VAR1]] BuiltIn GlobalInvocationId
+; CHECK: OpDecorate %[[#VAR2]] Constant
+; CHECK: OpDecorate %[[#VAR2]] BuiltIn GlobalSize
+; CHECK: OpDecorate %[[#VAR3]] Constant
+; CHECK: OpDecorate %[[#VAR3]] BuiltIn NumSubgroups
+; CHECK: OpDecorate %[[#VAR4]] Constant
+; CHECK: OpDecorate %[[#VAR4]] BuiltIn SubgroupSize
+; CHECK: OpDecorate %[[#VAR5]] Constant
+; CHECK: OpDecorate %[[#VAR5]] BuiltIn SubgroupId
+; CHECK: OpDecorate %[[#VAR6]] Constant
+; CHECK: OpDecorate %[[#VAR6]] BuiltIn SubgroupLocalInvocationId
+
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#I64V3:]] = OpTypeVector %[[#I64]] 3
+; CHECK: %[[#PTR_TO_I64V3:]] = OpTypePointer Input %[[#I64V3]]
+; CHECK: %[[#VAR1]] = OpVariable %[[#PTR_TO_I64V3]] Input
+; CHECK: %[[#VAR2]] = OpVariable %[[#PTR_TO_I64V3]] Input
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#PTR_TO_I32:]] = OpTypePointer Input %[[#I32]]
+; CHECK: %[[#VAR3]] = OpVariable %[[#PTR_TO_I32]] Input
+; CHECK: %[[#VAR4]] = OpVariable %[[#PTR_TO_I32]] Input
+; CHECK: %[[#VAR5]] = OpVariable %[[#PTR_TO_I32]] Input
+; CHECK: %[[#VAR6]] = OpVariable %[[#PTR_TO_I32]] Input
+
+func @tbuiltin() {
+    %0 = group_id
+    %1 = group_size
+    %2 = num_subgroups
+    %3 = subgroup_size
+    parallel {
+        %4 = subgroup_id
+        %5 = subgroup_local_id
+    }
+; CHECK: %[[#VAR1_LOAD:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD]] 2
+; CHECK: %[[#VAR2_LOAD:]] = OpLoad %[[#I64V3]] %[[#VAR2]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR2_LOAD]] 2
+; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR3]] Aligned 4
+; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR4]] Aligned 4
+; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR5]] Aligned 4
+; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR6]] Aligned 4
+}

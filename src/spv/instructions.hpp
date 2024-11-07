@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_2024115_HPP
-#define GENERATED_INSTRUCTIONS_2024115_HPP
+#ifndef GENERATED_INSTRUCTIONS_2024117_HPP
+#define GENERATED_INSTRUCTIONS_2024117_HPP
 
 #include "enums.hpp"
 #include "error.hpp"
@@ -40,7 +40,7 @@ class spv_inst : public ilist_node<spv_inst> {
     bool has_result_id_;
 };
 
-using DecorationAttr = std::variant<std::pair<std::string, LinkageType>>;
+using DecorationAttr = std::variant<BuiltIn, std::pair<std::string, LinkageType>>;
 using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
 using LiteralContextDependentNumber =
     std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
@@ -51,6 +51,7 @@ using IdResultType = spv_inst *;
 using IdRef = spv_inst *;
 using IdScope = spv_inst *;
 using IdMemorySemantics = spv_inst *;
+using MemoryAccessAttr = std::int32_t;
 using PairIdRefIdRef = std::pair<spv_inst *, spv_inst *>;
 using PairLiteralIntegerIdRef =
     std::pair<std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t>, spv_inst *>;
@@ -85,8 +86,8 @@ class OpSourceContinued : public spv_inst {
 class OpSource : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::Source; }
-    OpSource(SourceLanguage op0, LiteralInteger op1, std::optional<IdRef> op2,
-             std::optional<LiteralString> op3)
+    OpSource(SourceLanguage op0, LiteralInteger op1, std::optional<IdRef> op2 = std::nullopt,
+             std::optional<LiteralString> op3 = std::nullopt)
         : spv_inst{Op::Source, false}, op0_(std::move(op0)), op1_(std::move(op1)),
           op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto op0() const -> SourceLanguage const & { return op0_; }
@@ -278,7 +279,7 @@ class OpTypeInt : public spv_inst {
 class OpTypeFloat : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::TypeFloat; }
-    OpTypeFloat(LiteralInteger op0, std::optional<FPEncoding> op1)
+    OpTypeFloat(LiteralInteger op0, std::optional<FPEncoding> op1 = std::nullopt)
         : spv_inst{Op::TypeFloat, true}, op0_(std::move(op0)), op1_(std::move(op1)) {}
     inline auto op0() const -> LiteralInteger const & { return op0_; }
     inline auto op1() const -> std::optional<FPEncoding> const & { return op1_; }
@@ -316,7 +317,8 @@ class OpTypeImage : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::TypeImage; }
     OpTypeImage(IdRef op0, Dim op1, LiteralInteger op2, LiteralInteger op3, LiteralInteger op4,
-                LiteralInteger op5, ImageFormat op6, std::optional<AccessQualifier> op7)
+                LiteralInteger op5, ImageFormat op6,
+                std::optional<AccessQualifier> op7 = std::nullopt)
         : spv_inst{Op::TypeImage, true}, op0_(std::move(op0)), op1_(std::move(op1)),
           op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)), op5_(std::move(op5)),
           op6_(std::move(op6)), op7_(std::move(op7)) {}
@@ -597,7 +599,7 @@ class OpFunctionCall : public spv_inst {
 class OpVariable : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::Variable; }
-    OpVariable(IdResultType type, StorageClass op0, std::optional<IdRef> op1)
+    OpVariable(IdResultType type, StorageClass op0, std::optional<IdRef> op1 = std::nullopt)
         : spv_inst{Op::Variable, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -629,65 +631,77 @@ class OpImageTexelPointer : public spv_inst {
 class OpLoad : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::Load; }
-    OpLoad(IdResultType type, IdRef op0, std::optional<MemoryAccess> op1)
+    OpLoad(IdResultType type, IdRef op0, std::optional<MemoryAccess> op1 = std::nullopt,
+           std::optional<MemoryAccessAttr> op2 = std::nullopt)
         : spv_inst{Op::Load, true}, type_(std::move(type)), op0_(std::move(op0)),
-          op1_(std::move(op1)) {}
+          op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> std::optional<MemoryAccess> const & { return op1_; }
+    inline auto op2() const -> std::optional<MemoryAccessAttr> const & { return op2_; }
 
   private:
     IdResultType type_;
     IdRef op0_;
     std::optional<MemoryAccess> op1_;
+    std::optional<MemoryAccessAttr> op2_;
 };
 class OpStore : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::Store; }
-    OpStore(IdRef op0, IdRef op1, std::optional<MemoryAccess> op2)
+    OpStore(IdRef op0, IdRef op1, std::optional<MemoryAccess> op2 = std::nullopt,
+            std::optional<MemoryAccessAttr> op3 = std::nullopt)
         : spv_inst{Op::Store, false}, op0_(std::move(op0)), op1_(std::move(op1)),
-          op2_(std::move(op2)) {}
+          op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() const -> std::optional<MemoryAccess> const & { return op2_; }
+    inline auto op3() const -> std::optional<MemoryAccessAttr> const & { return op3_; }
 
   private:
     IdRef op0_;
     IdRef op1_;
     std::optional<MemoryAccess> op2_;
+    std::optional<MemoryAccessAttr> op3_;
 };
 class OpCopyMemory : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::CopyMemory; }
-    OpCopyMemory(IdRef op0, IdRef op1, std::optional<MemoryAccess> op2,
-                 std::optional<MemoryAccess> op3)
+    OpCopyMemory(IdRef op0, IdRef op1, std::optional<MemoryAccess> op2 = std::nullopt,
+                 std::optional<MemoryAccess> op3 = std::nullopt,
+                 std::optional<MemoryAccessAttr> op4 = std::nullopt)
         : spv_inst{Op::CopyMemory, false}, op0_(std::move(op0)), op1_(std::move(op1)),
-          op2_(std::move(op2)), op3_(std::move(op3)) {}
+          op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() const -> std::optional<MemoryAccess> const & { return op2_; }
     inline auto op3() const -> std::optional<MemoryAccess> const & { return op3_; }
+    inline auto op4() const -> std::optional<MemoryAccessAttr> const & { return op4_; }
 
   private:
     IdRef op0_;
     IdRef op1_;
     std::optional<MemoryAccess> op2_;
     std::optional<MemoryAccess> op3_;
+    std::optional<MemoryAccessAttr> op4_;
 };
 class OpCopyMemorySized : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::CopyMemorySized; }
     constexpr static std::array<Capability, 2> required_capabilities = {
         Capability::Addresses, Capability::UntypedPointersKHR};
-    OpCopyMemorySized(IdRef op0, IdRef op1, IdRef op2, std::optional<MemoryAccess> op3,
-                      std::optional<MemoryAccess> op4)
+    OpCopyMemorySized(IdRef op0, IdRef op1, IdRef op2,
+                      std::optional<MemoryAccess> op3 = std::nullopt,
+                      std::optional<MemoryAccess> op4 = std::nullopt,
+                      std::optional<MemoryAccessAttr> op5 = std::nullopt)
         : spv_inst{Op::CopyMemorySized, false}, op0_(std::move(op0)), op1_(std::move(op1)),
-          op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)) {}
+          op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)), op5_(std::move(op5)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() const -> IdRef const & { return op2_; }
     inline auto op3() const -> std::optional<MemoryAccess> const & { return op3_; }
     inline auto op4() const -> std::optional<MemoryAccess> const & { return op4_; }
+    inline auto op5() const -> std::optional<MemoryAccessAttr> const & { return op5_; }
 
   private:
     IdRef op0_;
@@ -695,6 +709,7 @@ class OpCopyMemorySized : public spv_inst {
     IdRef op2_;
     std::optional<MemoryAccess> op3_;
     std::optional<MemoryAccess> op4_;
+    std::optional<MemoryAccessAttr> op5_;
 };
 class OpAccessChain : public spv_inst {
   public:
@@ -801,17 +816,17 @@ class OpInBoundsPtrAccessChain : public spv_inst {
 class OpDecorate : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::Decorate; }
-    OpDecorate(IdRef op0, Decoration op1, DecorationAttr op2)
+    OpDecorate(IdRef op0, Decoration op1, std::optional<DecorationAttr> op2 = std::nullopt)
         : spv_inst{Op::Decorate, false}, op0_(std::move(op0)), op1_(std::move(op1)),
           op2_(std::move(op2)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> Decoration const & { return op1_; }
-    inline auto op2() const -> DecorationAttr const & { return op2_; }
+    inline auto op2() const -> std::optional<DecorationAttr> const & { return op2_; }
 
   private:
     IdRef op0_;
     Decoration op1_;
-    DecorationAttr op2_;
+    std::optional<DecorationAttr> op2_;
 };
 class OpMemberDecorate : public spv_inst {
   public:
@@ -999,7 +1014,7 @@ class OpImageSampleImplicitLod : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageSampleImplicitLod(IdResultType type, IdRef op0, IdRef op1,
-                             std::optional<ImageOperands> op2)
+                             std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSampleImplicitLod, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1039,7 +1054,7 @@ class OpImageSampleDrefImplicitLod : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageSampleDrefImplicitLod(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                                 std::optional<ImageOperands> op3)
+                                 std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSampleDrefImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1085,7 +1100,7 @@ class OpImageSampleProjImplicitLod : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageSampleProjImplicitLod(IdResultType type, IdRef op0, IdRef op1,
-                                 std::optional<ImageOperands> op2)
+                                 std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSampleProjImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1126,7 +1141,7 @@ class OpImageSampleProjDrefImplicitLod : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageSampleProjDrefImplicitLod(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                                     std::optional<ImageOperands> op3)
+                                     std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSampleProjDrefImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1168,7 +1183,8 @@ class OpImageSampleProjDrefExplicitLod : public spv_inst {
 class OpImageFetch : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageFetch; }
-    OpImageFetch(IdResultType type, IdRef op0, IdRef op1, std::optional<ImageOperands> op2)
+    OpImageFetch(IdResultType type, IdRef op0, IdRef op1,
+                 std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageFetch, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1187,7 +1203,7 @@ class OpImageGather : public spv_inst {
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageGather; }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageGather(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                  std::optional<ImageOperands> op3)
+                  std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageGather, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1208,7 +1224,7 @@ class OpImageDrefGather : public spv_inst {
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageDrefGather; }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::Shader};
     OpImageDrefGather(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                      std::optional<ImageOperands> op3)
+                      std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageDrefGather, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1227,7 +1243,8 @@ class OpImageDrefGather : public spv_inst {
 class OpImageRead : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageRead; }
-    OpImageRead(IdResultType type, IdRef op0, IdRef op1, std::optional<ImageOperands> op2)
+    OpImageRead(IdResultType type, IdRef op0, IdRef op1,
+                std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageRead, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -1244,7 +1261,7 @@ class OpImageRead : public spv_inst {
 class OpImageWrite : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageWrite; }
-    OpImageWrite(IdRef op0, IdRef op1, IdRef op2, std::optional<ImageOperands> op3)
+    OpImageWrite(IdRef op0, IdRef op1, IdRef op2, std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageWrite, false}, op0_(std::move(op0)), op1_(std::move(op1)),
           op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
@@ -4185,7 +4202,7 @@ class OpImageSparseSampleImplicitLod : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseSampleImplicitLod(IdResultType type, IdRef op0, IdRef op1,
-                                   std::optional<ImageOperands> op2)
+                                   std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSparseSampleImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4228,7 +4245,7 @@ class OpImageSparseSampleDrefImplicitLod : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseSampleDrefImplicitLod(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                                       std::optional<ImageOperands> op3)
+                                       std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSparseSampleDrefImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4276,7 +4293,7 @@ class OpImageSparseSampleProjImplicitLod : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseSampleProjImplicitLod(IdResultType type, IdRef op0, IdRef op1,
-                                       std::optional<ImageOperands> op2)
+                                       std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSparseSampleProjImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4319,7 +4336,7 @@ class OpImageSparseSampleProjDrefImplicitLod : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseSampleProjDrefImplicitLod(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                                           std::optional<ImageOperands> op3)
+                                           std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSparseSampleProjDrefImplicitLod, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4364,7 +4381,8 @@ class OpImageSparseFetch : public spv_inst {
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageSparseFetch; }
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
-    OpImageSparseFetch(IdResultType type, IdRef op0, IdRef op1, std::optional<ImageOperands> op2)
+    OpImageSparseFetch(IdResultType type, IdRef op0, IdRef op1,
+                       std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSparseFetch, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4384,7 +4402,7 @@ class OpImageSparseGather : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseGather(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                        std::optional<ImageOperands> op3)
+                        std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSparseGather, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4408,7 +4426,7 @@ class OpImageSparseDrefGather : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
     OpImageSparseDrefGather(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                            std::optional<ImageOperands> op3)
+                            std::optional<ImageOperands> op3 = std::nullopt)
         : spv_inst{Op::ImageSparseDrefGather, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4487,7 +4505,8 @@ class OpImageSparseRead : public spv_inst {
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ImageSparseRead; }
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::SparseResidency};
-    OpImageSparseRead(IdResultType type, IdRef op0, IdRef op1, std::optional<ImageOperands> op2)
+    OpImageSparseRead(IdResultType type, IdRef op0, IdRef op1,
+                      std::optional<ImageOperands> op2 = std::nullopt)
         : spv_inst{Op::ImageSparseRead, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -4997,7 +5016,7 @@ class OpGroupNonUniformIAdd : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformIAdd(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformIAdd, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5020,7 +5039,7 @@ class OpGroupNonUniformFAdd : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformFAdd(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformFAdd, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5043,7 +5062,7 @@ class OpGroupNonUniformIMul : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformIMul(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformIMul, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5066,7 +5085,7 @@ class OpGroupNonUniformFMul : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformFMul(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformFMul, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5089,7 +5108,7 @@ class OpGroupNonUniformSMin : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformSMin(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformSMin, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5112,7 +5131,7 @@ class OpGroupNonUniformUMin : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformUMin(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformUMin, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5135,7 +5154,7 @@ class OpGroupNonUniformFMin : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformFMin(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformFMin, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5158,7 +5177,7 @@ class OpGroupNonUniformSMax : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformSMax(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformSMax, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5181,7 +5200,7 @@ class OpGroupNonUniformUMax : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformUMax(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformUMax, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5204,7 +5223,7 @@ class OpGroupNonUniformFMax : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformFMax(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                          std::optional<IdRef> op3)
+                          std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformFMax, true}, type_(std::move(type)), op0_(std::move(op0)),
           op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5229,7 +5248,7 @@ class OpGroupNonUniformBitwiseAnd : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformBitwiseAnd(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                                std::optional<IdRef> op3)
+                                std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformBitwiseAnd, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5254,7 +5273,7 @@ class OpGroupNonUniformBitwiseOr : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformBitwiseOr(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                               std::optional<IdRef> op3)
+                               std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformBitwiseOr, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5279,7 +5298,7 @@ class OpGroupNonUniformBitwiseXor : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformBitwiseXor(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                                std::optional<IdRef> op3)
+                                std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformBitwiseXor, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5304,7 +5323,7 @@ class OpGroupNonUniformLogicalAnd : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformLogicalAnd(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                                std::optional<IdRef> op3)
+                                std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformLogicalAnd, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5329,7 +5348,7 @@ class OpGroupNonUniformLogicalOr : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformLogicalOr(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                               std::optional<IdRef> op3)
+                               std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformLogicalOr, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5354,7 +5373,7 @@ class OpGroupNonUniformLogicalXor : public spv_inst {
         Capability::GroupNonUniformArithmetic, Capability::GroupNonUniformClustered,
         Capability::GroupNonUniformPartitionedNV};
     OpGroupNonUniformLogicalXor(IdResultType type, IdScope op0, GroupOperation op1, IdRef op2,
-                                std::optional<IdRef> op3)
+                                std::optional<IdRef> op3 = std::nullopt)
         : spv_inst{Op::GroupNonUniformLogicalXor, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5502,15 +5521,19 @@ class OpCooperativeMatrixLoadKHR : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::CooperativeMatrixKHR};
-    OpCooperativeMatrixLoadKHR(IdResultType type, IdRef op0, IdRef op1, std::optional<IdRef> op2,
-                               std::optional<MemoryAccess> op3)
+    OpCooperativeMatrixLoadKHR(IdResultType type, IdRef op0, IdRef op1,
+                               std::optional<IdRef> op2 = std::nullopt,
+                               std::optional<MemoryAccess> op3 = std::nullopt,
+                               std::optional<MemoryAccessAttr> op4 = std::nullopt)
         : spv_inst{Op::CooperativeMatrixLoadKHR, true}, type_(std::move(type)),
-          op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
+          op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)),
+          op4_(std::move(op4)) {}
     inline auto type() const -> IdResultType const & { return type_; }
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() const -> std::optional<IdRef> const & { return op2_; }
     inline auto op3() const -> std::optional<MemoryAccess> const & { return op3_; }
+    inline auto op4() const -> std::optional<MemoryAccessAttr> const & { return op4_; }
 
   private:
     IdResultType type_;
@@ -5518,6 +5541,7 @@ class OpCooperativeMatrixLoadKHR : public spv_inst {
     IdRef op1_;
     std::optional<IdRef> op2_;
     std::optional<MemoryAccess> op3_;
+    std::optional<MemoryAccessAttr> op4_;
 };
 class OpCooperativeMatrixStoreKHR : public spv_inst {
   public:
@@ -5526,15 +5550,19 @@ class OpCooperativeMatrixStoreKHR : public spv_inst {
     }
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::CooperativeMatrixKHR};
-    OpCooperativeMatrixStoreKHR(IdRef op0, IdRef op1, IdRef op2, std::optional<IdRef> op3,
-                                std::optional<MemoryAccess> op4)
+    OpCooperativeMatrixStoreKHR(IdRef op0, IdRef op1, IdRef op2,
+                                std::optional<IdRef> op3 = std::nullopt,
+                                std::optional<MemoryAccess> op4 = std::nullopt,
+                                std::optional<MemoryAccessAttr> op5 = std::nullopt)
         : spv_inst{Op::CooperativeMatrixStoreKHR, false}, op0_(std::move(op0)),
-          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)) {}
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)),
+          op5_(std::move(op5)) {}
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() const -> IdRef const & { return op2_; }
     inline auto op3() const -> std::optional<IdRef> const & { return op3_; }
     inline auto op4() const -> std::optional<MemoryAccess> const & { return op4_; }
+    inline auto op5() const -> std::optional<MemoryAccessAttr> const & { return op5_; }
 
   private:
     IdRef op0_;
@@ -5542,6 +5570,7 @@ class OpCooperativeMatrixStoreKHR : public spv_inst {
     IdRef op2_;
     std::optional<IdRef> op3_;
     std::optional<MemoryAccess> op4_;
+    std::optional<MemoryAccessAttr> op5_;
 };
 class OpCooperativeMatrixMulAddKHR : public spv_inst {
   public:
@@ -5551,7 +5580,7 @@ class OpCooperativeMatrixMulAddKHR : public spv_inst {
     constexpr static std::array<Capability, 1> required_capabilities = {
         Capability::CooperativeMatrixKHR};
     OpCooperativeMatrixMulAddKHR(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
-                                 std::optional<CooperativeMatrixOperands> op3)
+                                 std::optional<CooperativeMatrixOperands> op3 = std::nullopt)
         : spv_inst{Op::CooperativeMatrixMulAddKHR, true}, type_(std::move(type)),
           op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto type() const -> IdResultType const & { return type_; }
@@ -5587,4 +5616,4 @@ class OpCooperativeMatrixLengthKHR : public spv_inst {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_2024115_HPP
+#endif // GENERATED_INSTRUCTIONS_2024117_HPP

@@ -65,6 +65,11 @@ scalar_type compatible_type(scalar_type a_ty, scalar_type b_ty) {
     return enum_cast<scalar_type>(max);
 }
 
+std::int32_t alignment(scalar_type ty, component_count count) {
+    const std::int32_t scale = count == component_count::v3 ? 4 : static_cast<std::int32_t>(count);
+    return scale * tinytc_scalar_type_size(static_cast<tinytc_scalar_type_t>(ty));
+}
+
 clir::data_type to_clir_ty(scalar_type ty, clir::address_space as, clir::type_qualifier q) {
     return to_clir_ty(ty, 1, as, q);
 }

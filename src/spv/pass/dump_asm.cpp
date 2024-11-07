@@ -55,10 +55,11 @@ void dump_asm_pass::pre_visit(spv_inst const &in) {
 }
 
 void dump_asm_pass::operator()(DecorationAttr const &da) {
-    std::visit(overloaded{[&](std::pair<std::string, LinkageType> const &a) {
-                   *os_ << " \"" << a.first << '"';
-                   this->operator()(a.second);
-               }},
+    std::visit(overloaded{[&](auto const &a) { this->operator()(a); },
+                          [&](std::pair<std::string, LinkageType> const &a) {
+                              *os_ << " \"" << a.first << '"';
+                              this->operator()(a.second);
+                          }},
                da);
 }
 void dump_asm_pass::operator()(ExecutionModeAttr const &ea) {
@@ -93,6 +94,8 @@ void dump_asm_pass::operator()(spv_inst *const &in) {
     if (auto s = slot_map_.find(in); s != slot_map_.end()) {
         *os_ << " %" << s->second;
     } else if (isa<OpFunction>(*in)) {
+        *os_ << " %" << declare(in);
+    } else if (isa<OpVariable>(*in)) {
         *os_ << " %" << declare(in);
     } else {
         throw status::spirv_forbidden_forward_declaration;

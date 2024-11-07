@@ -76,6 +76,17 @@ auto inst_converter::get_coopmatrix_type(value_node const &v) -> scalar_type {
     return ct->component_ty();
 }
 
+auto inst_converter::load_builtin(BuiltIn b) -> spv_inst * {
+    auto builtin = unique_.builtin_var(b);
+    if (auto it = std::find(builtins_used_by_function_.begin(), builtins_used_by_function_.end(),
+                            builtin);
+        it == builtins_used_by_function_.end()) {
+        builtins_used_by_function_.push_back(builtin);
+    }
+    return mod_->add<OpLoad>(unique_.builtin_pointee_ty(b), builtin, MemoryAccess::Aligned,
+                             unique_.builtin_alignment(b));
+}
+
 auto inst_converter::declare(value_node const &v, spv_inst *in) { vals_[&v] = in; }
 auto inst_converter::val(value_node const &v) -> spv_inst * {
     if (auto it = vals_.find(&v); it != vals_.end()) {
@@ -174,7 +185,7 @@ void inst_converter::operator()(arith_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto ty = unique_.spv_ty(*in.result(0).ty());
+    auto ty = unique_.spv_ty(in.result(0).ty());
 
     if (isa<boolean_data_type>(*in.result(0).ty())) {
         auto av = val(in.a());
@@ -243,7 +254,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
                                   spv_inst *a) -> spv_inst * {
         switch (op) {
         case arithmetic_unary::abs: {
-            auto spv_a_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, sty));
+            auto spv_a_ty = unique_.spv_ty(scalar_data_type::get(ctx_, sty));
             auto a2 = mod_->add<OpFMul>(spv_a_ty, a, a);
             auto a2_0 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{0});
             auto a2_1 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{1});
@@ -255,7 +266,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case arithmetic_unary::neg:
             return mod_->add<OpFNegate>(ty, a);
         case arithmetic_unary::conj: {
-            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(sty)));
+            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(sty)));
             auto a_im =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
             auto neg_a_im = mod_->add<OpFNegate>(spv_float_ty, a_im);
@@ -290,7 +301,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto ty = unique_.spv_ty(*in.result(0).ty());
+    auto ty = unique_.spv_ty(in.result(0).ty());
     if (isa<boolean_data_type>(*in.a().ty())) {
         auto av = val(in.a());
         declare(in.result(0), make_boolean(in.operation(), ty, av));
@@ -343,7 +354,7 @@ void inst_converter::operator()(cast_inst const &in) {
             return mod_->add<OpConvertSToF>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(to_ty)));
             auto re = mod_->add<OpConvertSToF>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -365,7 +376,7 @@ void inst_converter::operator()(cast_inst const &in) {
             return mod_->add<OpFConvert>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(to_ty)));
             auto re = mod_->add<OpFConvert>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -406,7 +417,7 @@ void inst_converter::operator()(cast_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto spv_to_ty = unique_.spv_ty(*in.result(0).ty());
+    auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
 
     if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         auto av = val(in.a());
@@ -500,7 +511,7 @@ void inst_converter::operator()(compare_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto spv_to_ty = unique_.spv_ty(*in.result(0).ty());
+    auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
     auto av = val(in.a());
     auto bv = val(in.b());
     auto a_ty = get_scalar_type(in.a());
@@ -551,13 +562,13 @@ void inst_converter::operator()(constant_inst const &in) {
                 switch (sty) {
                 case scalar_type::c32: {
                     auto spv_float_ty =
-                        unique_.spv_ty(*scalar_data_type::get(ctx_, scalar_type::f32));
+                        unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f32));
                     return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
                                                 static_cast<float>(d.imag()));
                 }
                 case scalar_type::c64: {
                     auto spv_float_ty =
-                        unique_.spv_ty(*scalar_data_type::get(ctx_, scalar_type::f64));
+                        unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f64));
                     return add_constant_complex(spv_float_ty, d.real(), d.imag());
                 }
                 default:
@@ -572,7 +583,7 @@ void inst_converter::operator()(constant_inst const &in) {
         return cst;
     };
 
-    auto spv_ty = unique_.spv_ty(*in.result(0).ty());
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
 
     if (isa<boolean_data_type>(*in.result(0).ty())) {
         if (!std::holds_alternative<bool>(in.value())) {
@@ -591,19 +602,38 @@ void inst_converter::operator()(constant_inst const &in) {
     }
 }
 
-void inst_converter::operator()(group_id_inst const &in) {}
-void inst_converter::operator()(group_size_inst const &in) {}
-void inst_converter::operator()(num_subgroups_inst const &in) {}
-void inst_converter::operator()(subgroup_id_inst const &in) {}
-void inst_converter::operator()(subgroup_local_id_inst const &in) {}
-void inst_converter::operator()(subgroup_size_inst const &in) {}
+void inst_converter::operator()(group_id_inst const &in) {
+    auto gid = load_builtin(BuiltIn::GlobalInvocationId);
+    auto index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    declare(in.result(0),
+            mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
+}
+void inst_converter::operator()(group_size_inst const &in) {
+    auto gs = load_builtin(BuiltIn::GlobalSize);
+    auto index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    declare(in.result(0),
+            mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
+}
+void inst_converter::operator()(num_subgroups_inst const &in) {
+    declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
+}
+
+void inst_converter::operator()(parallel_inst const &in) { run_on_region(in.body()); }
+
+void inst_converter::operator()(subgroup_id_inst const &in) {
+    declare(in.result(0), load_builtin(BuiltIn::SubgroupId));
+}
+void inst_converter::operator()(subgroup_local_id_inst const &in) {
+    declare(in.result(0), load_builtin(BuiltIn::SubgroupLocalInvocationId));
+}
+void inst_converter::operator()(subgroup_size_inst const &in) {
+    declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
+}
 
 void inst_converter::run_on_region(region_node const &reg) {
-    mod_->add<OpLabel>();
     for (auto const &i : reg) {
         visit(*this, i);
     }
-    mod_->add<OpReturn>();
 }
 
 void inst_converter::run_on_function(function_node const &fn, core_config const &core_cfg) {
@@ -614,23 +644,25 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
         auto params = std::vector<spv_inst *>{};
         params.reserve(fn.num_params());
         for (auto const &p : fn.params()) {
-            params.emplace_back(unique_.spv_ty(*p.ty()));
+            params.emplace_back(unique_.spv_ty(p.ty()));
         }
         return params;
     }());
 
     // Function
-    auto void_ty = unique_.spv_ty(*void_data_type::get(ctx_));
+    auto void_ty = unique_.spv_ty(void_data_type::get(ctx_));
     auto fun = mod_->add<OpFunction>(void_ty, FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
-        declare(p, mod_->add<OpFunctionParameter>(unique_.spv_ty(*p.ty())));
+        declare(p, mod_->add<OpFunctionParameter>(unique_.spv_ty(p.ty())));
     }
+    mod_->add<OpLabel>();
     run_on_region(fn.body());
+    mod_->add<OpReturn>();
     mod_->add<OpFunctionEnd>();
 
     // Entry point
     mod_->add_to<OpEntryPoint>(section::entry_point, ExecutionModel::Kernel, fun,
-                               std::string{fn.name()}, std::vector<spv_inst *>{});
+                               std::string{fn.name()}, std::move(builtins_used_by_function_));
 
     // Execution mode
     auto const work_group_size = fn.work_group_size();

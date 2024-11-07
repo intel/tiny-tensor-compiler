@@ -51,7 +51,7 @@ class spv_inst : public ilist_node<spv_inst> {
     bool has_result_id_;
 };
 
-using DecorationAttr = std::variant<std::pair<std::string, LinkageType>>;
+using DecorationAttr = std::variant<BuiltIn, std::pair<std::string, LinkageType>>;
 using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
 using LiteralContextDependentNumber
     = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
@@ -62,6 +62,7 @@ using IdResultType = spv_inst*;
 using IdRef = spv_inst*;
 using IdScope = spv_inst*;
 using IdMemorySemantics = spv_inst*;
+using MemoryAccessAttr = std::int32_t;
 using PairIdRefIdRef = std::pair<spv_inst*, spv_inst*>;
 using PairLiteralIntegerIdRef
     = std::pair<std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t>, spv_inst*>;
@@ -152,6 +153,9 @@ class Operand:
         self.name = name
         self.kind = kind
         self.quantifier = quantifier
+        self.init = None
+        if self.quantifier == '?':
+            self.init = 'std::nullopt'
 
 
 def get_operands(instruction):
@@ -189,7 +193,10 @@ def generate_op_classes(f, grammar):
                 f'constexpr static std::array<Capability, {len(caps)}> required_capabilities = {{{cap_str}}};',
                 file=f)
         f.write(f'{get_class_name(instruction)}(')
-        f.write(','.join([f'{o.kind} {o.name}' for o in operands]))
+        f.write(','.join([
+            f'{o.kind} {o.name}{f" = {o.init}" if o.init else ""}'
+            for o in operands
+        ]))
         f.write(') : ')
         initializer_list = [
             f'spv_inst{{Op::{get_opcode_name(instruction)}, {"true" if has_result_id(instruction) else "false"}}}'
@@ -270,10 +277,19 @@ def patch_grammar(grammar):
     for instruction in grammar['instructions']:
         if instruction['opname'] == 'OpDecorate':
             if instruction['operands'][-1]['kind'] == 'Decoration':
-                instruction['operands'].append({'kind': 'DecorationAttr'})
+                instruction['operands'].append({
+                    'kind': 'DecorationAttr',
+                    'quantifier': '?'
+                })
         elif instruction['opname'] == 'OpExecutionMode':
             if instruction['operands'][-1]['kind'] == 'ExecutionMode':
                 instruction['operands'].append({'kind': 'ExecutionModeAttr'})
+        elif 'operands' in instruction and instruction['operands'][-1][
+                'kind'] == 'MemoryAccess':
+            instruction['operands'].append({
+                'kind': 'MemoryAccessAttr',
+                'quantifier': '?'
+            })
     return grammar
 
 
@@ -303,7 +319,8 @@ if __name__ == '__main__':
         grammar = filter_grammar(grammar, filt)
         grammar = patch_grammar(grammar)
         generate_header(args, spv_enums, grammar, generate_enums)
-        generate_header(args, spv_names, grammar, generate_names, spv_names_includes)
+        generate_header(args, spv_names, grammar, generate_names,
+                        spv_names_includes)
         generate_cpp(args, spv_names_cpp, grammar, generate_names_cpp,
                      spv_names_cpp_includes)
         generate_header(args, spv_ops, grammar, generate_op_classes,

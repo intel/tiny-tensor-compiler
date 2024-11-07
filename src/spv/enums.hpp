@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_2024115_HPP
-#define GENERATED_ENUMS_2024115_HPP
+#ifndef GENERATED_ENUMS_2024117_HPP
+#define GENERATED_ENUMS_2024117_HPP
 
 namespace tinytc::spv {
 
@@ -1422,4 +1422,4 @@ enum class FPEncoding {};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_2024115_HPP
+#endif // GENERATED_ENUMS_2024117_HPP

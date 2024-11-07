@@ -54,6 +54,7 @@ if(SPIRVTools_FOUND)
         spv/arith.ir
         spv/arith_unary.ir
         spv/barrier.ir
+        spv/builtin.ir
         spv/cast.ir
         spv/compare.ir
         spv/unique_function_type.ir
