@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "node/region_node.hpp"
+#include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "support/ilist_base.hpp"
 #include "tinytc/tinytc.h"
 
 #include <utility>

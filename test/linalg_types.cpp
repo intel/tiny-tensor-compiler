@@ -3,6 +3,8 @@
 
 #include "linalg_types.hpp"
 
+#include <stdexcept>
+
 namespace tinytc::test {
 
 tensor_layout::tensor_layout(array_view<std::int64_t> shape, array_view<std::int64_t> stride,

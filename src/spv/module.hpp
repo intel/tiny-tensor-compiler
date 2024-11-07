@@ -4,12 +4,13 @@
 #ifndef MODULE_20241029_HPP
 #define MODULE_20241029_HPP
 
-#include "reference_counted.hpp"
 #include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <utility>
 
 namespace tinytc {
 
@@ -54,6 +55,15 @@ class mod final {
 
     inline auto major_version() const -> std::int32_t { return major_version_; }
     inline auto minor_version() const -> std::int32_t { return minor_version_; }
+
+    template <typename T, typename... Args> auto add_to(section s, Args &&...args) -> T * {
+        auto ptr = std::make_unique<T>(std::forward<Args>(args)...).release();
+        insts(s).push_back(ptr);
+        return ptr;
+    }
+    template <typename T, typename... Args> auto add(Args &&...args) -> T * {
+        return add_to<T>(section::function, std::forward<Args>(args)...);
+    }
 
   private:
     std::array<ilist<spv_inst>, num_module_sections> insts_;

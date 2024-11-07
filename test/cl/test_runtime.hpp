@@ -7,9 +7,11 @@
 #include "cl/argument_handler.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <cstddef>
+#include <cstdint>
 
 class opencl_test_runtime {
   public:

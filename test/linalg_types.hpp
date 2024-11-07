@@ -5,10 +5,13 @@
 #define LINALG_TYPES_20241023_HPP
 
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
-#include <algorithm>
 #include <array>
+#include <concepts>
+#include <cstddef>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace tinytc::test {

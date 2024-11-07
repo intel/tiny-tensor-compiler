@@ -8,9 +8,9 @@
 #include "spv/names.hpp"
 #include "spv/visit.hpp"
 
+#include <cstdint>
 #include <ostream>
 #include <unordered_map>
-#include <utility>
 
 namespace tinytc::spv {
 

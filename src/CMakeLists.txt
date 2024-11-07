@@ -67,6 +67,7 @@ set(SOURCES
     spv/names.cpp
     spv/opencl.std.cpp
     spv/pass/dump_asm.cpp
+    spv/uniquifier.cpp
     source.cpp
     tiling.cpp
     value.cpp

@@ -4,9 +4,12 @@
 #include "test_runtime.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
+#include "tinytc/types.h"
 
 #include <CL/cl_platform.h>
+#include <array>
 #include <stdexcept>
+#include <utility>
 #include <vector>
 
 using tinytc::CL_CHECK_STATUS;

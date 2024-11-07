@@ -7,11 +7,8 @@
 #include "device_info.hpp"
 #include "node/program_node.hpp"
 #include "spv/module.hpp"
-#include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <memory>
-#include <utility>
 
 namespace tinytc {
 

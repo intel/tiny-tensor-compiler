@@ -2,20 +2,36 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/convert_to_spirv.hpp"
+#include "compiler_context.hpp"
+#include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
+#include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/opencl.std.hpp"
+#include "spv/uniquifier.hpp"
+#include "support/casting.hpp"
 #include "support/fnv1a.hpp"
+#include "support/ilist_base.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <array>
+#include <complex>
+#include <cstdint>
+#include <stdexcept>
+#include <string>
 #include <unordered_map>
-#include <unordered_set>
+#include <utility>
+#include <variant>
+#include <vector>
 
 namespace tinytc {
 
@@ -23,9 +39,7 @@ class spirv_converter {
   public:
     inline spirv_converter(::tinytc_core_info const *info, spv::mod &mod,
                            tinytc_compiler_context_t ctx)
-        : info_(info), mod_(&mod), ctx_(ctx), unique_(*this) {}
-
-    auto operator()(data_type_node const &ty) -> spv::spv_inst *;
+        : info_(info), mod_(&mod), ctx_(ctx), unique_(ctx, mod) {}
 
     // Instruction nodes
     void operator()(inst_node const &in);
@@ -35,67 +49,16 @@ class spirv_converter {
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
+    void operator()(group_id_inst const &in);
+    void operator()(group_size_inst const &in);
+    void operator()(num_subgroups_inst const &in);
+    void operator()(subgroup_id_inst const &in);
+    void operator()(subgroup_local_id_inst const &in);
+    void operator()(subgroup_size_inst const &in);
 
     void run_on_program(program_node const &p);
 
   private:
-    class unique_insts {
-      public:
-        inline unique_insts(spirv_converter &conv) : conv_(conv) {}
-        inline auto bool2_ty() -> spv::spv_inst * {
-            if (!bool2_ty_) {
-                auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
-                bool2_ty_ =
-                    conv_.add_to<spv::section::type_const_var, spv::OpTypeVector>(bool_ty, 2);
-            }
-            return bool2_ty_;
-        }
-        inline auto bool_constant(bool b) {
-            if (b) {
-                if (!bool_true_) {
-                    auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
-                    bool_true_ =
-                        conv_.add_to<spv::section::type_const_var, spv::OpConstantTrue>(bool_ty);
-                }
-                return bool_true_;
-            }
-            if (!bool_false_) {
-                auto bool_ty = visit(conv_, *boolean_data_type::get(conv_.ctx_));
-                bool_false_ =
-                    conv_.add_to<spv::section::type_const_var, spv::OpConstantFalse>(bool_ty);
-            }
-            return bool_false_;
-        }
-        inline auto i32_constant(std::int32_t cst) -> spv::spv_inst * {
-            auto it = i32_cst_.find(cst);
-            if (it == i32_cst_.end()) {
-                auto i32_ty = visit(conv_, *scalar_data_type::get(conv_.ctx_, scalar_type::i32));
-                auto cst_inst = conv_.add_to<spv::section::type_const_var, spv::OpConstant>(
-                    i32_ty, spv::LiteralContextDependentNumber{cst});
-                i32_cst_[cst] = cst_inst;
-                return cst_inst;
-            }
-            return it->second;
-        }
-
-        inline auto null_constant(spv::spv_inst *spv_ty) -> spv::spv_inst * {
-            auto it = null_cst_.find(spv_ty);
-            if (it == null_cst_.end()) {
-                auto in = conv_.add_to<spv::section::type_const_var, spv::OpConstantNull>(spv_ty);
-                null_cst_[spv_ty] = in;
-                return in;
-            }
-            return it->second;
-        }
-
-      private:
-        spirv_converter &conv_;
-        spv::spv_inst *bool2_ty_ = nullptr;
-        spv::spv_inst *bool_true_ = nullptr, *bool_false_ = nullptr;
-        std::unordered_map<std::int32_t, spv::spv_inst *> i32_cst_;
-        std::unordered_map<spv::spv_inst *, spv::spv_inst *> null_cst_;
-    };
-
     auto get_scalar_type(value_node const &v) -> scalar_type;
     auto get_coopmatrix_type(value_node const &v) -> scalar_type;
     auto declare(value_node const &v, spv::spv_inst *in);
@@ -105,26 +68,14 @@ class spirv_converter {
     auto declare_function_type(std::vector<spv::spv_inst *> params) -> spv::spv_inst *;
     void run_on_region(region_node const &fn);
     void run_on_function(function_node const &fn);
-    template <spv::section S, typename T, typename... Args> auto add_to(Args &&...args) -> T * {
-        auto ptr = std::make_unique<T>(std::forward<Args>(args)...).release();
-        mod_->insts(S).push_back(ptr);
-        return ptr;
-    }
-
-    template <typename T, typename... Args> auto add(Args &&...args) -> T * {
-        return add_to<spv::section::function, T>(std::forward<Args>(args)...);
-    }
 
     ::tinytc_core_info const *info_;
     spv::mod *mod_;
     tinytc_compiler_context_t ctx_;
-    unique_insts unique_;
-    std::unordered_map<const_tinytc_data_type_t, spv::spv_inst *> spv_tys_;
+    spv::uniquifier unique_;
     std::unordered_map<const_tinytc_value_t, spv::spv_inst *> vals_;
     std::unordered_map<const_tinytc_value_t, std::vector<spv::spv_inst *>> multi_vals_;
-    std::unordered_set<spv::Capability> capabilities_;
     std::unordered_multimap<std::uint64_t, spv::OpTypeFunction *> function_tys_;
-    spv::spv_inst *opencl_ext_ = nullptr;
     core_config core_cfg_ = {};
 };
 
@@ -172,74 +123,11 @@ auto spirv_converter::declare_function_type(std::vector<spv::spv_inst *> params)
             return it->second;
         }
     }
-    auto void_ty = visit(*this, *void_data_type::get(ctx_));
+    auto void_ty = unique_.spv_ty(*void_data_type::get(ctx_));
     return function_tys_
-        .emplace(map_key, add_to<spv::section::type_const_var, spv::OpTypeFunction>(
-                              void_ty, std::move(params)))
+        .emplace(map_key, mod_->add_to<spv::OpTypeFunction>(spv::section::type_const_var, void_ty,
+                                                            std::move(params)))
         ->second;
-}
-
-auto spirv_converter::operator()(data_type_node const &ty) -> spv::spv_inst * {
-    auto it = spv_tys_.find(&ty);
-    if (it == spv_tys_.end()) {
-        auto spv_ty = visit(
-            overloaded{
-                [&](void_data_type const &) -> spv::spv_inst * {
-                    return add_to<spv::section::type_const_var, spv::OpTypeVoid>();
-                },
-                [&](boolean_data_type const &) -> spv::spv_inst * {
-                    return add_to<spv::section::type_const_var, spv::OpTypeBool>();
-                },
-                [&](scalar_data_type const &ty) -> spv::spv_inst * {
-                    switch (ty.ty()) {
-                    case scalar_type::i8:
-                        capabilities_.insert(spv::Capability::Int8);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(8, 0);
-                    case scalar_type::i16:
-                        capabilities_.insert(spv::Capability::Int16);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(16, 0);
-                    case scalar_type::i32:
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(32, 0);
-                    case scalar_type::i64:
-                        capabilities_.insert(spv::Capability::Int64);
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(64, 0);
-                    case scalar_type::index: {
-                        const auto sz = size(ty.ty());
-                        if (sz == 8) {
-                            capabilities_.insert(spv::Capability::Int64);
-                        }
-                        return add_to<spv::section::type_const_var, spv::OpTypeInt>(sz * 8, 0);
-                    }
-                    case scalar_type::f32:
-                    case scalar_type::f64:
-                        capabilities_.insert(spv::Capability::Float64);
-                        return add_to<spv::section::type_const_var, spv::OpTypeFloat>(
-                            size(ty.ty()) * 8, std::nullopt);
-                    case scalar_type::c32: {
-                        auto float_ty =
-                            visit(*this, *scalar_data_type::get(ctx_, scalar_type::f32));
-                        return add_to<spv::section::type_const_var, spv::OpTypeVector>(float_ty, 2);
-                    }
-                    case scalar_type::c64: {
-                        auto float_ty =
-                            visit(*this, *scalar_data_type::get(ctx_, scalar_type::f64));
-                        return add_to<spv::section::type_const_var, spv::OpTypeVector>(float_ty, 2);
-                    }
-                    }
-                    throw status::internal_compiler_error;
-                },
-                [&](coopmatrix_data_type const &ty) -> spv::spv_inst * {
-                    return visit(*this, *ty.ty());
-                },
-                [](auto const &) -> spv::spv_inst * {
-                    // @todo
-                    throw status::not_implemented;
-                }},
-            ty);
-        spv_tys_[&ty] = spv_ty;
-        return spv_ty;
-    }
-    return it->second;
 }
 
 void spirv_converter::operator()(inst_node const &in) {
@@ -252,11 +140,11 @@ void spirv_converter::operator()(arith_inst const &in) {
                                   spv::spv_inst *b) -> spv::spv_inst * {
         switch (op) {
         case arithmetic::and_:
-            return add<spv::OpLogicalAnd>(ty, a, b);
+            return mod_->add<spv::OpLogicalAnd>(ty, a, b);
         case arithmetic::or_:
-            return add<spv::OpLogicalOr>(ty, a, b);
+            return mod_->add<spv::OpLogicalOr>(ty, a, b);
         case arithmetic::xor_:
-            return add<spv::OpLogicalNotEqual>(ty, a, b);
+            return mod_->add<spv::OpLogicalNotEqual>(ty, a, b);
         default:
             break;
         }
@@ -266,25 +154,25 @@ void spirv_converter::operator()(arith_inst const &in) {
                               spv::spv_inst *b) -> spv::spv_inst * {
         switch (op) {
         case arithmetic::add:
-            return add<spv::OpIAdd>(ty, a, b);
+            return mod_->add<spv::OpIAdd>(ty, a, b);
         case arithmetic::sub:
-            return add<spv::OpISub>(ty, a, b);
+            return mod_->add<spv::OpISub>(ty, a, b);
         case arithmetic::mul:
-            return add<spv::OpIMul>(ty, a, b);
+            return mod_->add<spv::OpIMul>(ty, a, b);
         case arithmetic::div:
-            return add<spv::OpSDiv>(ty, a, b);
+            return mod_->add<spv::OpSDiv>(ty, a, b);
         case arithmetic::rem:
-            return add<spv::OpSRem>(ty, a, b);
+            return mod_->add<spv::OpSRem>(ty, a, b);
         case arithmetic::shl:
-            return add<spv::OpShiftLeftLogical>(ty, a, b);
+            return mod_->add<spv::OpShiftLeftLogical>(ty, a, b);
         case arithmetic::shr:
-            return add<spv::OpShiftRightArithmetic>(ty, a, b);
+            return mod_->add<spv::OpShiftRightArithmetic>(ty, a, b);
         case arithmetic::and_:
-            return add<spv::OpBitwiseAnd>(ty, a, b);
+            return mod_->add<spv::OpBitwiseAnd>(ty, a, b);
         case arithmetic::or_:
-            return add<spv::OpBitwiseOr>(ty, a, b);
+            return mod_->add<spv::OpBitwiseOr>(ty, a, b);
         case arithmetic::xor_:
-            return add<spv::OpBitwiseXor>(ty, a, b);
+            return mod_->add<spv::OpBitwiseXor>(ty, a, b);
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
@@ -292,15 +180,15 @@ void spirv_converter::operator()(arith_inst const &in) {
                                         spv::spv_inst *b) -> spv::spv_inst * {
         switch (op) {
         case arithmetic::add:
-            return add<spv::OpFAdd>(ty, a, b);
+            return mod_->add<spv::OpFAdd>(ty, a, b);
         case arithmetic::sub:
-            return add<spv::OpFSub>(ty, a, b);
+            return mod_->add<spv::OpFSub>(ty, a, b);
         case arithmetic::mul:
-            return add<spv::OpFMul>(ty, a, b);
+            return mod_->add<spv::OpFMul>(ty, a, b);
         case arithmetic::div:
-            return add<spv::OpFDiv>(ty, a, b);
+            return mod_->add<spv::OpFDiv>(ty, a, b);
         case arithmetic::rem:
-            return add<spv::OpFRem>(ty, a, b);
+            return mod_->add<spv::OpFRem>(ty, a, b);
         default:
             break;
         }
@@ -324,7 +212,7 @@ void spirv_converter::operator()(arith_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto ty = visit(*this, *in.result(0).ty());
+    auto ty = unique_.spv_ty(*in.result(0).ty());
 
     if (isa<boolean_data_type>(*in.result(0).ty())) {
         auto av = val(in.a());
@@ -356,7 +244,7 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
                                   spv::spv_inst *a) -> spv::spv_inst * {
         switch (op) {
         case arithmetic_unary::not_:
-            return add<spv::OpLogicalNot>(ty, a);
+            return mod_->add<spv::OpLogicalNot>(ty, a);
         default:
             break;
         }
@@ -366,13 +254,13 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
                               spv::spv_inst *a) -> spv::spv_inst * {
         switch (op) {
         case arithmetic_unary::abs:
-            return add<spv::OpExtInst>(ty, opencl_ext_,
-                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::s_abs),
-                                       std::vector<spv::IdRef>{a});
+            return mod_->add<spv::OpExtInst>(
+                ty, unique_.opencl_ext(), static_cast<std::int32_t>(spv::OpenCLEntrypoint::s_abs),
+                std::vector<spv::IdRef>{a});
         case arithmetic_unary::neg:
-            return add<spv::OpSNegate>(ty, a);
+            return mod_->add<spv::OpSNegate>(ty, a);
         case arithmetic_unary::not_:
-            return add<spv::OpNot>(ty, a);
+            return mod_->add<spv::OpNot>(ty, a);
         default:
             break;
         }
@@ -382,11 +270,11 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
                                 spv::spv_inst *a) -> spv::spv_inst * {
         switch (op) {
         case arithmetic_unary::abs:
-            return add<spv::OpExtInst>(ty, opencl_ext_,
-                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::fabs),
-                                       std::vector<spv::IdRef>{a});
+            return mod_->add<spv::OpExtInst>(ty, unique_.opencl_ext(),
+                                             static_cast<std::int32_t>(spv::OpenCLEntrypoint::fabs),
+                                             std::vector<spv::IdRef>{a});
         case arithmetic_unary::neg:
-            return add<spv::OpFNegate>(ty, a);
+            return mod_->add<spv::OpFNegate>(ty, a);
         default:
             break;
         }
@@ -396,29 +284,31 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
                                   spv::spv_inst *a) -> spv::spv_inst * {
         switch (op) {
         case arithmetic_unary::abs: {
-            auto spv_a_ty = visit(*this, *scalar_data_type::get(ctx_, sty));
-            auto a2 = add<spv::OpFMul>(spv_a_ty, a, a);
-            auto a2_0 = add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{0});
-            auto a2_1 = add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{1});
-            auto a2_0p1 = add<spv::OpFAdd>(ty, a2_0, a2_1);
-            return add<spv::OpExtInst>(ty, opencl_ext_,
-                                       static_cast<std::int32_t>(spv::OpenCLEntrypoint::sqrt),
-                                       std::vector<spv::IdRef>{a2_0p1});
+            auto spv_a_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, sty));
+            auto a2 = mod_->add<spv::OpFMul>(spv_a_ty, a, a);
+            auto a2_0 =
+                mod_->add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{0});
+            auto a2_1 =
+                mod_->add<spv::OpCompositeExtract>(ty, a2, std::vector<spv::LiteralInteger>{1});
+            auto a2_0p1 = mod_->add<spv::OpFAdd>(ty, a2_0, a2_1);
+            return mod_->add<spv::OpExtInst>(ty, unique_.opencl_ext(),
+                                             static_cast<std::int32_t>(spv::OpenCLEntrypoint::sqrt),
+                                             std::vector<spv::IdRef>{a2_0p1});
         }
         case arithmetic_unary::neg:
-            return add<spv::OpFNegate>(ty, a);
+            return mod_->add<spv::OpFNegate>(ty, a);
         case arithmetic_unary::conj: {
-            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(sty)));
-            auto a_im =
-                add<spv::OpCompositeExtract>(spv_float_ty, a, std::vector<spv::LiteralInteger>{1});
-            auto neg_a_im = add<spv::OpFNegate>(spv_float_ty, a_im);
-            return add<spv::OpCompositeInsert>(ty, neg_a_im, a,
-                                               std::vector<spv::LiteralInteger>{1});
+            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(sty)));
+            auto a_im = mod_->add<spv::OpCompositeExtract>(spv_float_ty, a,
+                                                           std::vector<spv::LiteralInteger>{1});
+            auto neg_a_im = mod_->add<spv::OpFNegate>(spv_float_ty, a_im);
+            return mod_->add<spv::OpCompositeInsert>(ty, neg_a_im, a,
+                                                     std::vector<spv::LiteralInteger>{1});
         }
         case arithmetic_unary::im:
-            return add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{1});
+            return mod_->add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{1});
         case arithmetic_unary::re:
-            return add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{0});
+            return mod_->add<spv::OpCompositeExtract>(ty, a, std::vector<spv::LiteralInteger>{0});
         default:
             break;
         }
@@ -444,7 +334,7 @@ void spirv_converter::operator()(arith_unary_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto ty = visit(*this, *in.result(0).ty());
+    auto ty = unique_.spv_ty(*in.result(0).ty());
     if (isa<boolean_data_type>(*in.a().ty())) {
         auto av = val(in.a());
         declare(in.result(0), make_boolean(in.operation(), ty, av));
@@ -479,7 +369,7 @@ void spirv_converter::operator()(barrier_inst const &in) {
     }
     auto scope = unique_.i32_constant(static_cast<std::int32_t>(spv::Scope::Workgroup));
     auto memory_semantics = unique_.i32_constant(fence);
-    add<spv::OpControlBarrier>(scope, scope, memory_semantics);
+    mod_->add<spv::OpControlBarrier>(scope, scope, memory_semantics);
 }
 
 void spirv_converter::operator()(cast_inst const &in) {
@@ -491,16 +381,17 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::i32:
         case scalar_type::i64:
         case scalar_type::index:
-            return add<spv::OpSConvert>(spv_to_ty, a);
+            return mod_->add<spv::OpSConvert>(spv_to_ty, a);
         case scalar_type::f32:
         case scalar_type::f64:
-            return add<spv::OpConvertSToF>(spv_to_ty, a);
+            return mod_->add<spv::OpConvertSToF>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto re = add<spv::OpConvertSToF>(spv_float_ty, a);
-            return add<spv::OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
-                                               std::vector<spv::LiteralInteger>{0});
+            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto re = mod_->add<spv::OpConvertSToF>(spv_float_ty, a);
+            return mod_->add<spv::OpCompositeInsert>(spv_to_ty, re,
+                                                     unique_.null_constant(spv_to_ty),
+                                                     std::vector<spv::LiteralInteger>{0});
         }
         }
         throw compilation_error(in.loc(), status::ir_forbidden_cast);
@@ -513,16 +404,17 @@ void spirv_converter::operator()(cast_inst const &in) {
         case scalar_type::i32:
         case scalar_type::i64:
         case scalar_type::index:
-            return add<spv::OpConvertFToS>(spv_to_ty, a);
+            return mod_->add<spv::OpConvertFToS>(spv_to_ty, a);
         case scalar_type::f32:
         case scalar_type::f64:
-            return add<spv::OpFConvert>(spv_to_ty, a);
+            return mod_->add<spv::OpFConvert>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = visit(*this, *scalar_data_type::get(ctx_, element_type(to_ty)));
-            auto re = add<spv::OpFConvert>(spv_float_ty, a);
-            return add<spv::OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
-                                               std::vector<spv::LiteralInteger>{0});
+            auto spv_float_ty = unique_.spv_ty(*scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto re = mod_->add<spv::OpFConvert>(spv_float_ty, a);
+            return mod_->add<spv::OpCompositeInsert>(spv_to_ty, re,
+                                                     unique_.null_constant(spv_to_ty),
+                                                     std::vector<spv::LiteralInteger>{0});
         }
         }
         throw compilation_error(in.loc(), status::ir_forbidden_cast);
@@ -532,7 +424,7 @@ void spirv_converter::operator()(cast_inst const &in) {
         switch (to_ty) {
         case scalar_type::c32:
         case scalar_type::c64:
-            return add<spv::OpFConvert>(spv_to_ty, a);
+            return mod_->add<spv::OpFConvert>(spv_to_ty, a);
         default:
             throw compilation_error(in.loc(), status::ir_forbidden_cast);
         }
@@ -540,7 +432,7 @@ void spirv_converter::operator()(cast_inst const &in) {
     auto const make = [&](scalar_type to_ty, scalar_type a_ty, spv::spv_inst *spv_to_ty,
                           spv::spv_inst *a) -> spv::spv_inst * {
         if (a_ty == to_ty) {
-            return add<spv::OpCopyObject>(spv_to_ty, a);
+            return mod_->add<spv::OpCopyObject>(spv_to_ty, a);
         }
         switch (a_ty) {
         case scalar_type::i8:
@@ -560,7 +452,7 @@ void spirv_converter::operator()(cast_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto spv_to_ty = visit(*this, *in.result(0).ty());
+    auto spv_to_ty = unique_.spv_ty(*in.result(0).ty());
 
     if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         auto av = val(in.a());
@@ -588,17 +480,17 @@ void spirv_converter::operator()(compare_inst const &in) {
                                  spv::spv_inst *b) -> spv::spv_inst * {
         switch (cond) {
         case cmp_condition::eq:
-            return add<spv::OpIEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpIEqual>(spv_to_ty, a, b);
         case cmp_condition::ne:
-            return add<spv::OpINotEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpINotEqual>(spv_to_ty, a, b);
         case cmp_condition::gt:
-            return add<spv::OpSGreaterThan>(spv_to_ty, a, b);
+            return mod_->add<spv::OpSGreaterThan>(spv_to_ty, a, b);
         case cmp_condition::ge:
-            return add<spv::OpSGreaterThanEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpSGreaterThanEqual>(spv_to_ty, a, b);
         case cmp_condition::lt:
-            return add<spv::OpSLessThan>(spv_to_ty, a, b);
+            return mod_->add<spv::OpSLessThan>(spv_to_ty, a, b);
         case cmp_condition::le:
-            return add<spv::OpSLessThanEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpSLessThanEqual>(spv_to_ty, a, b);
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
@@ -606,17 +498,17 @@ void spirv_converter::operator()(compare_inst const &in) {
                                    spv::spv_inst *b) -> spv::spv_inst * {
         switch (cond) {
         case cmp_condition::eq:
-            return add<spv::OpFOrdEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFOrdEqual>(spv_to_ty, a, b);
         case cmp_condition::ne:
-            return add<spv::OpFUnordNotEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFUnordNotEqual>(spv_to_ty, a, b);
         case cmp_condition::gt:
-            return add<spv::OpFOrdGreaterThan>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFOrdGreaterThan>(spv_to_ty, a, b);
         case cmp_condition::ge:
-            return add<spv::OpFOrdGreaterThanEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFOrdGreaterThanEqual>(spv_to_ty, a, b);
         case cmp_condition::lt:
-            return add<spv::OpFOrdLessThan>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFOrdLessThan>(spv_to_ty, a, b);
         case cmp_condition::le:
-            return add<spv::OpFOrdLessThanEqual>(spv_to_ty, a, b);
+            return mod_->add<spv::OpFOrdLessThanEqual>(spv_to_ty, a, b);
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
@@ -624,12 +516,12 @@ void spirv_converter::operator()(compare_inst const &in) {
                                      spv::spv_inst *b) -> spv::spv_inst * {
         switch (cond) {
         case cmp_condition::eq: {
-            auto components_equal = add<spv::OpFOrdEqual>(unique_.bool2_ty(), a, b);
-            return add<spv::OpAll>(spv_to_ty, components_equal);
+            auto components_equal = mod_->add<spv::OpFOrdEqual>(unique_.bool2_ty(), a, b);
+            return mod_->add<spv::OpAll>(spv_to_ty, components_equal);
         }
         case cmp_condition::ne: {
-            auto components_not_equal = add<spv::OpFUnordNotEqual>(unique_.bool2_ty(), a, b);
-            return add<spv::OpAll>(spv_to_ty, components_not_equal);
+            auto components_not_equal = mod_->add<spv::OpFUnordNotEqual>(unique_.bool2_ty(), a, b);
+            return mod_->add<spv::OpAll>(spv_to_ty, components_not_equal);
         }
         default:
             throw compilation_error(in.loc(), status::ir_complex_unsupported);
@@ -654,7 +546,7 @@ void spirv_converter::operator()(compare_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto spv_to_ty = visit(*this, *in.result(0).ty());
+    auto spv_to_ty = unique_.spv_ty(*in.result(0).ty());
     auto av = val(in.a());
     auto bv = val(in.b());
     auto a_ty = get_scalar_type(in.a());
@@ -665,14 +557,16 @@ void spirv_converter::operator()(constant_inst const &in) {
     auto const make = [&](scalar_type sty, spv::spv_inst *spv_ty,
                           constant_inst::value_type const &val) -> spv::spv_inst * {
         auto const add_constant = [this, &spv_ty](auto val) -> spv::spv_inst * {
-            return add_to<spv::section::type_const_var, spv::OpConstant>(spv_ty, val);
+            return mod_->add_to<spv::OpConstant>(spv::section::type_const_var, spv_ty, val);
         };
         auto const add_constant_complex = [this, &spv_ty](spv::spv_inst *spv_float_ty, auto re,
                                                           auto im) -> spv::spv_inst * {
-            auto c_re = add_to<spv::section::type_const_var, spv::OpConstant>(spv_float_ty, re);
-            auto c_im = add_to<spv::section::type_const_var, spv::OpConstant>(spv_float_ty, im);
-            return add_to<spv::section::type_const_var, spv::OpConstantComposite>(
-                spv_ty, std::vector<spv::spv_inst *>{c_re, c_im});
+            auto c_re =
+                mod_->add_to<spv::OpConstant>(spv::section::type_const_var, spv_float_ty, re);
+            auto c_im =
+                mod_->add_to<spv::OpConstant>(spv::section::type_const_var, spv_float_ty, im);
+            return mod_->add_to<spv::OpConstantComposite>(spv::section::type_const_var, spv_ty,
+                                                          std::vector<spv::spv_inst *>{c_re, c_im});
         };
         const auto visitor = overloaded{
             [&](bool) -> spv::spv_inst * { return nullptr; },
@@ -705,13 +599,13 @@ void spirv_converter::operator()(constant_inst const &in) {
                 switch (sty) {
                 case scalar_type::c32: {
                     auto spv_float_ty =
-                        visit(*this, *scalar_data_type::get(ctx_, scalar_type::f32));
+                        unique_.spv_ty(*scalar_data_type::get(ctx_, scalar_type::f32));
                     return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
                                                 static_cast<float>(d.imag()));
                 }
                 case scalar_type::c64: {
                     auto spv_float_ty =
-                        visit(*this, *scalar_data_type::get(ctx_, scalar_type::f64));
+                        unique_.spv_ty(*scalar_data_type::get(ctx_, scalar_type::f64));
                     return add_constant_complex(spv_float_ty, d.real(), d.imag());
                 }
                 default:
@@ -726,7 +620,7 @@ void spirv_converter::operator()(constant_inst const &in) {
         return cst;
     };
 
-    auto spv_ty = visit(*this, *in.result(0).ty());
+    auto spv_ty = unique_.spv_ty(*in.result(0).ty());
 
     if (isa<boolean_data_type>(*in.result(0).ty())) {
         if (!std::holds_alternative<bool>(in.value())) {
@@ -745,12 +639,19 @@ void spirv_converter::operator()(constant_inst const &in) {
     }
 }
 
+void spirv_converter::operator()(group_id_inst const &in) {}
+void spirv_converter::operator()(group_size_inst const &in) {}
+void spirv_converter::operator()(num_subgroups_inst const &in) {}
+void spirv_converter::operator()(subgroup_id_inst const &in) {}
+void spirv_converter::operator()(subgroup_local_id_inst const &in) {}
+void spirv_converter::operator()(subgroup_size_inst const &in) {}
+
 void spirv_converter::run_on_region(region_node const &reg) {
-    add<spv::OpLabel>();
+    mod_->add<spv::OpLabel>();
     for (auto const &i : reg) {
         visit(*this, i);
     }
-    add<spv::OpReturn>();
+    mod_->add<spv::OpReturn>();
 }
 
 void spirv_converter::run_on_function(function_node const &fn) {
@@ -766,49 +667,45 @@ void spirv_converter::run_on_function(function_node const &fn) {
         auto params = std::vector<spv::spv_inst *>{};
         params.reserve(fn.num_params());
         for (auto const &p : fn.params()) {
-            params.push_back(visit(*this, *p.ty()));
+            params.push_back(unique_.spv_ty(*p.ty()));
         }
         return params;
     }());
 
     // Function
-    auto void_ty = visit(*this, *void_data_type::get(ctx_));
-    auto fun = add<spv::OpFunction>(void_ty, spv::FunctionControl::None, fun_ty);
+    auto void_ty = unique_.spv_ty(*void_data_type::get(ctx_));
+    auto fun = mod_->add<spv::OpFunction>(void_ty, spv::FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
-        declare(p, add<spv::OpFunctionParameter>(visit(*this, *p.ty())));
+        declare(p, mod_->add<spv::OpFunctionParameter>(unique_.spv_ty(*p.ty())));
     }
     run_on_region(fn.body());
-    add<spv::OpFunctionEnd>();
+    mod_->add<spv::OpFunctionEnd>();
 
     // Entry point
-    add_to<spv::section::entry_point, spv::OpEntryPoint>(
-        spv::ExecutionModel::Kernel, fun, std::string{fn.name()}, std::vector<spv::spv_inst *>{});
+    mod_->add_to<spv::OpEntryPoint>(spv::section::entry_point, spv::ExecutionModel::Kernel, fun,
+                                    std::string{fn.name()}, std::vector<spv::spv_inst *>{});
 
     // Execution mode
     auto const work_group_size = fn.work_group_size();
-    add_to<spv::section::execution_mode, spv::OpExecutionMode>(
-        fun, spv::ExecutionMode::LocalSize,
-        spv::ExecutionModeAttr{
-            std::array<std::int32_t, 3u>{work_group_size[0], work_group_size[1], 1}});
-    add_to<spv::section::execution_mode, spv::OpExecutionMode>(
-        fun, spv::ExecutionMode::SubgroupSize, spv::ExecutionModeAttr{fn.subgroup_size()});
+    mod_->add_to<spv::OpExecutionMode>(spv::section::execution_mode, fun,
+                                       spv::ExecutionMode::LocalSize,
+                                       spv::ExecutionModeAttr{std::array<std::int32_t, 3u>{
+                                           work_group_size[0], work_group_size[1], 1}});
+    mod_->add_to<spv::OpExecutionMode>(spv::section::execution_mode, fun,
+                                       spv::ExecutionMode::SubgroupSize,
+                                       spv::ExecutionModeAttr{fn.subgroup_size()});
 }
 
 void spirv_converter::run_on_program(program_node const &p) {
-    capabilities_.clear();
-    capabilities_.insert(spv::Capability::Addresses);
-    capabilities_.insert(spv::Capability::Kernel);
-    capabilities_.insert(spv::Capability::SubgroupDispatch);
-    opencl_ext_ = add_to<spv::section::ext_inst, spv::OpExtInstImport>(spv::OpenCLExt);
-    add_to<spv::section::memory_model, spv::OpMemoryModel>(spv::AddressingModel::Physical64,
-                                                           spv::MemoryModel::OpenCL);
+    unique_.capability(spv::Capability::Addresses);
+    unique_.capability(spv::Capability::Kernel);
+    unique_.capability(spv::Capability::SubgroupDispatch);
+
+    mod_->add_to<spv::OpMemoryModel>(spv::section::memory_model, spv::AddressingModel::Physical64,
+                                     spv::MemoryModel::OpenCL);
 
     for (auto const &fn : p) {
         run_on_function(fn);
-    }
-
-    for (auto const &cap : capabilities_) {
-        add_to<spv::section::capability, spv::OpCapability>(cap);
     }
 }
 

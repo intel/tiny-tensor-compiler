@@ -3,8 +3,8 @@
 
 #include "linalg_blas_a3.hpp"
 
-#include <algorithm>
 #include <array>
+#include <stdexcept>
 
 namespace tinytc::test {
 

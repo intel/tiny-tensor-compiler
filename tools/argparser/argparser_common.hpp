@@ -4,6 +4,7 @@
 #ifndef ARGPARSER_COMMON_20241010_HPP
 #define ARGPARSER_COMMON_20241010_HPP
 
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstdint>

@@ -7,11 +7,13 @@
 #include "device_info.hpp"
 #include "node/data_type_node.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <clir/builder.hpp>
 #include <clir/builtin_type.hpp>
 #include <clir/expr.hpp>
+#include <clir/stmt.hpp>
 #include <clir/var.hpp>
 
 #include <array>
@@ -20,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <vector>
 
 namespace tinytc {
 

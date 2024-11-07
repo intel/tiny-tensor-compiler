@@ -3,6 +3,7 @@
 
 #include "spv/module.hpp"
 #include "spv/instructions.hpp"
+#include "support/ilist_base.hpp"
 
 namespace tinytc {
 void ilist_callbacks<spv::spv_inst>::node_added(spv::spv_inst *) {}

@@ -3,8 +3,8 @@
 
 ; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
 
-; CHECK: OpCapability Int8
 ; CHECK: OpCapability Int64
+; CHECK: OpCapability Int8
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#I8:]] = OpTypeInt 8 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32

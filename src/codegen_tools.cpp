@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "codegen_tools.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
@@ -22,6 +23,7 @@
 #include <cassert>
 #include <memory>
 #include <utility>
+#include <variant>
 
 using namespace clir;
 

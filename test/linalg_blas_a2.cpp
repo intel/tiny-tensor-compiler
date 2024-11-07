@@ -3,7 +3,6 @@
 
 #include "linalg_blas_a2.hpp"
 
-#include <algorithm>
 #include <array>
 
 namespace tinytc::test {

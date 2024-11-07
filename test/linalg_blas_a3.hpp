@@ -6,10 +6,9 @@
 
 #include "linalg_types.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
-#include <algorithm>
 #include <array>
-#include <concepts>
 #include <cstdint>
 #include <functional>
 #include <utility>

@@ -4,6 +4,7 @@
 #include "test_runtime.hpp"
 
 #include <cstdint>
+#include <utility>
 
 using tinytc::ZE_CHECK_STATUS;
 
