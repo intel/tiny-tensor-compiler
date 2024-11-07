@@ -35,7 +35,7 @@ enum class section {
     type_const_var = 6,
     function = 7
 };
-inline constexpr std::size_t num_module_sections = 8;
+inline constexpr std::int32_t num_module_sections = 8;
 
 class mod final {
   public:

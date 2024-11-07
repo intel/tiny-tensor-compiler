@@ -39,6 +39,7 @@ class inst_converter {
     void operator()(subgroup_id_inst const &in);
     void operator()(subgroup_local_id_inst const &in);
     void operator()(subgroup_size_inst const &in);
+    void operator()(work_group_inst const &in);
 
     void run_on_region(tinytc_region const &reg);
     void run_on_function(tinytc_func const &fn, core_config const &core_cfg);
@@ -62,5 +63,8 @@ class inst_converter {
     std::vector<spv_inst *> builtins_used_by_function_;
     core_config core_cfg_ = {};
 };
+
+template <typename T>
+concept spv_inst_with_required_capabilities = requires() { T::required_capabilities; };
 
 } // namespace tinytc::spv

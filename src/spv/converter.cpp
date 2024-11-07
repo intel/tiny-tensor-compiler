@@ -15,6 +15,7 @@
 #include "spv/instructions.hpp"
 #include "spv/opencl.std.hpp"
 #include "spv/uniquifier.hpp"
+#include "spv/visit.hpp"
 #include "support/casting.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
@@ -52,6 +53,19 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
             conv.run_on_function(fn, info.get_core_config(fn.subgroup_size()));
         } catch (std::out_of_range const &e) {
             throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
+        }
+    }
+
+    // Add missing capabilites
+    for (std::int32_t s = 0; s < num_module_sections; ++s) {
+        for (auto const &i : m->insts(enum_cast<section>(s))) {
+            visit(overloaded{[&]<spv_inst_with_required_capabilities I>(I const &) {
+                                 for (auto const &cap : I::required_capabilities) {
+                                     conv.unique().capability(cap);
+                                 }
+                             },
+                             [&](auto const &) {}},
+                  i);
         }
     }
 
@@ -628,6 +642,33 @@ void inst_converter::operator()(subgroup_local_id_inst const &in) {
 }
 void inst_converter::operator()(subgroup_size_inst const &in) {
     declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
+}
+
+void inst_converter::operator()(work_group_inst const &in) {
+    auto const make = [&](scalar_type sty, work_group_operation operation, spv_inst *spv_ty,
+                          spv_inst *operand) -> spv_inst * {
+        auto scope = unique_.i32_constant(static_cast<std::int32_t>(Scope::Workgroup));
+        if (operation == work_group_operation::reduce_add) {
+            switch (sty) {
+            case scalar_type::i8:
+            case scalar_type::i16:
+            case scalar_type::i32:
+            case scalar_type::i64:
+            case scalar_type::index:
+                return mod_->add<OpGroupIAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
+            case scalar_type::f32:
+            case scalar_type::f64:
+            case scalar_type::c32:
+            case scalar_type::c64:
+                return mod_->add<OpGroupFAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
+            }
+        }
+        throw compilation_error(in.loc(), status::not_implemented);
+    };
+
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto sty = get_scalar_type(in.operand());
+    declare(in.result(0), make(sty, in.operation(), spv_ty, val(in.operand())));
 }
 
 void inst_converter::run_on_region(region_node const &reg) {
