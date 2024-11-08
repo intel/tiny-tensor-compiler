@@ -11,7 +11,9 @@
 #include "tinytc/types.hpp"
 
 #include <array>
+#include <concepts>
 #include <string>
+#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -63,18 +65,26 @@ void dump_asm_pass::operator()(DecorationAttr const &da) {
                da);
 }
 void dump_asm_pass::operator()(ExecutionModeAttr const &ea) {
-    std::visit(overloaded{[&](std::int32_t const &a) { *os_ << " " << a; },
-                          [&](std::array<std::int32_t, 3u> const &a) {
-                              for (auto const &s : a) {
-                                  *os_ << " " << s;
-                              }
-                          }},
-               ea);
+    std::visit(
+        overloaded{[&](std::int32_t const &a) { *os_ << " " << static_cast<std::uint32_t>(a); },
+                   [&](std::array<std::int32_t, 3u> const &a) {
+                       for (auto const &s : a) {
+                           *os_ << " " << static_cast<uint32_t>(s);
+                       }
+                   }},
+        ea);
 }
 void dump_asm_pass::operator()(LiteralContextDependentNumber const &l) {
-    std::visit(overloaded{[&](auto const &l) { *os_ << " " << l; }}, l);
+    std::visit(overloaded{[&](std::signed_integral auto const &l) {
+                              using unsigned_t = std::make_unsigned_t<std::decay_t<decltype(l)>>;
+                              *os_ << " " << static_cast<unsigned_t>(l);
+                          },
+                          [&](auto const &l) { *os_ << " " << l; }},
+               l);
 }
-void dump_asm_pass::operator()(LiteralInteger const &l) { *os_ << " " << l; }
+void dump_asm_pass::operator()(LiteralInteger const &l) {
+    *os_ << " " << static_cast<std::make_unsigned_t<LiteralInteger>>(l);
+}
 void dump_asm_pass::operator()(LiteralString const &l) { *os_ << " \"" << l << '"'; }
 
 void dump_asm_pass::operator()(PairIdRefIdRef const &p) {
@@ -86,7 +96,11 @@ void dump_asm_pass::operator()(PairIdRefLiteralInteger const &p) {
     this->operator()(p.second);
 }
 void dump_asm_pass::operator()(PairLiteralIntegerIdRef const &p) {
-    std::visit(overloaded{[&](auto const &l) { *os_ << " " << l; }}, p.first);
+    std::visit(overloaded{[&](auto const &l) {
+                   using unsigned_t = std::make_unsigned_t<std::decay_t<decltype(l)>>;
+                   *os_ << " " << static_cast<unsigned_t>(l);
+               }},
+               p.first);
     this->operator()(p.second);
 }
 
@@ -96,6 +110,8 @@ void dump_asm_pass::operator()(spv_inst *const &in) {
     } else if (isa<OpFunction>(*in)) {
         *os_ << " %" << declare(in);
     } else if (isa<OpVariable>(*in)) {
+        *os_ << " %" << declare(in);
+    } else if (isa<OpLabel>(*in)) {
         *os_ << " %" << declare(in);
     } else {
         throw status::spirv_forbidden_forward_declaration;
@@ -114,6 +130,16 @@ auto dump_asm_pass::operator()(OpExtInst const &in) {
     }
 
     for (auto const &op : in.op2()) {
+        this->operator()(op);
+    }
+}
+
+auto dump_asm_pass::operator()(OpPhi const &in) {
+    pre_visit(in);
+    this->operator()(in.type());
+    for (auto const &op : in.op0()) {
+        // Forward references are allowed in phi instructions
+        declare(op.first);
         this->operator()(op);
     }
 }

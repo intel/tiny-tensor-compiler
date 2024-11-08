@@ -166,9 +166,10 @@ loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_va
         result(i) = value_node{init_values[i]->ty(), this, lc};
     }
     for (std::size_t i = 0; i < init_values.size(); ++i) {
-        if (!isa<scalar_data_type>(*init_values[i]->ty()) &&
+        if (!isa<boolean_data_type>(*init_values[i]->ty()) &&
+            !isa<scalar_data_type>(*init_values[i]->ty()) &&
             !isa<coopmatrix_data_type>(*init_values[i]->ty())) {
-            throw compilation_error(loc(), status::ir_expected_coopmatrix_or_scalar);
+            throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
         op(op_init() + i, init_values[i]);
     }
@@ -841,9 +842,9 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
         throw compilation_error(loc(), status::ir_expected_boolean);
     }
     for (std::size_t i = 0; i < return_types.size(); ++i) {
-        if (!isa<scalar_data_type>(*return_types[i]) &&
+        if (!isa<boolean_data_type>(*return_types[i]) && !isa<scalar_data_type>(*return_types[i]) &&
             !isa<coopmatrix_data_type>(*return_types[i])) {
-            throw compilation_error(loc(), status::ir_expected_coopmatrix_or_scalar);
+            throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
         result(i) = value_node{return_types[i], this, lc};
     }

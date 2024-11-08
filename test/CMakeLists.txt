@@ -57,6 +57,8 @@ if(SPIRVTools_FOUND)
         spv/builtin.ir
         spv/cast.ir
         spv/compare.ir
+        spv/for.ir
+        spv/if.ir
         spv/work_group.ir
         spv/unique_function_type.ir
     )

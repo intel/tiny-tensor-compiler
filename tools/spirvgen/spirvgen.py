@@ -208,6 +208,9 @@ def generate_op_classes(f, grammar):
         f.write('{}')
         for o in operands:
             print(
+                f'inline auto {o.name}() -> {o.kind}& {{ return {o.name}_; }}',
+                file=f)
+            print(
                 f'inline auto {o.name}() const -> {o.kind} const& {{ return {o.name}_; }}',
                 file=f)
         print(f'private:', file=f)

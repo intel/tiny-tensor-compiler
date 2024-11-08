@@ -1028,7 +1028,7 @@ For
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
-    return-type             = scalar-type / coopmatrix-type
+    return-type             = boolean-type / scalar-type / coopmatrix-type
 
 Overview
 ~~~~~~~~

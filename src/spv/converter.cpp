@@ -16,7 +16,6 @@
 #include "spv/opencl.std.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
-#include "support/casting.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
@@ -75,6 +74,18 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
 inst_converter::inst_converter(tinytc_compiler_context_t ctx, mod &m)
     : ctx_(ctx), mod_(&m), unique_(ctx, m) {}
 
+auto inst_converter::get_last_label() -> spv_inst * {
+    auto &insts = mod_->insts(section::function);
+    auto it = insts.end();
+    while (it != insts.begin()) {
+        auto in = (--it).get();
+        if (isa<OpLabel>(*in)) {
+            return in;
+        }
+    }
+    return nullptr;
+}
+
 auto inst_converter::get_scalar_type(value_node const &v) -> scalar_type {
     auto st = dyn_cast<scalar_data_type>(v.ty());
     if (!st) {
@@ -117,6 +128,64 @@ auto inst_converter::multi_val(value_node const &v) -> std::vector<spv_inst *> &
     }
     throw compilation_error(v.loc(), status::spirv_undefined_value);
 }
+
+auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
+                                   constant_inst::value_type const &val) -> spv_inst * {
+    auto const add_constant = [this, &spv_ty](auto val) -> spv_inst * {
+        return mod_->add_to<OpConstant>(section::type_const_var, spv_ty, val);
+    };
+    auto const add_constant_complex = [this, &spv_ty](spv_inst *spv_float_ty, auto re,
+                                                      auto im) -> spv_inst * {
+        auto c_re = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, re);
+        auto c_im = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, im);
+        return mod_->add_to<OpConstantComposite>(section::type_const_var, spv_ty,
+                                                 std::vector<spv_inst *>{c_re, c_im});
+    };
+    const auto visitor = overloaded{
+        [&](bool) -> spv_inst * { return nullptr; },
+        [&](std::int64_t i) -> spv_inst * {
+            switch (sty) {
+            case scalar_type::i8:
+                return add_constant(static_cast<std::int8_t>(i));
+            case scalar_type::i16:
+                return add_constant(static_cast<std::int16_t>(i));
+            case scalar_type::i32:
+                return add_constant(static_cast<std::int32_t>(i));
+            case scalar_type::i64:
+            case scalar_type::index:
+                return add_constant(i);
+            default:
+                return nullptr;
+            }
+        },
+        [&](double d) -> spv_inst * {
+            switch (sty) {
+            case scalar_type::f32:
+                return add_constant(static_cast<float>(d));
+            case scalar_type::f64:
+                return add_constant(d);
+            default:
+                return nullptr;
+            }
+        },
+        [&](std::complex<double> d) -> spv_inst * {
+            switch (sty) {
+            case scalar_type::c32: {
+                auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f32));
+                return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
+                                            static_cast<float>(d.imag()));
+            }
+            case scalar_type::c64: {
+                auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f64));
+                return add_constant_complex(spv_float_ty, d.real(), d.imag());
+            }
+            default:
+                return nullptr;
+            }
+        },
+    };
+    return std::visit(visitor, val);
+};
 
 void inst_converter::operator()(inst_node const &in) {
     // @todo
@@ -533,70 +602,6 @@ void inst_converter::operator()(compare_inst const &in) {
 }
 
 void inst_converter::operator()(constant_inst const &in) {
-    auto const make = [&](scalar_type sty, spv_inst *spv_ty,
-                          constant_inst::value_type const &val) -> spv_inst * {
-        auto const add_constant = [this, &spv_ty](auto val) -> spv_inst * {
-            return mod_->add_to<OpConstant>(section::type_const_var, spv_ty, val);
-        };
-        auto const add_constant_complex = [this, &spv_ty](spv_inst *spv_float_ty, auto re,
-                                                          auto im) -> spv_inst * {
-            auto c_re = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, re);
-            auto c_im = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, im);
-            return mod_->add_to<OpConstantComposite>(section::type_const_var, spv_ty,
-                                                     std::vector<spv_inst *>{c_re, c_im});
-        };
-        const auto visitor = overloaded{
-            [&](bool) -> spv_inst * { return nullptr; },
-            [&](std::int64_t i) -> spv_inst * {
-                switch (sty) {
-                case scalar_type::i8:
-                    return add_constant(static_cast<std::int8_t>(i));
-                case scalar_type::i16:
-                    return add_constant(static_cast<std::int16_t>(i));
-                case scalar_type::i32:
-                    return add_constant(static_cast<std::int32_t>(i));
-                case scalar_type::i64:
-                case scalar_type::index:
-                    return add_constant(i);
-                default:
-                    return nullptr;
-                }
-            },
-            [&](double d) -> spv_inst * {
-                switch (sty) {
-                case scalar_type::f32:
-                    return add_constant(static_cast<float>(d));
-                case scalar_type::f64:
-                    return add_constant(d);
-                default:
-                    return nullptr;
-                }
-            },
-            [&](std::complex<double> d) -> spv_inst * {
-                switch (sty) {
-                case scalar_type::c32: {
-                    auto spv_float_ty =
-                        unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f32));
-                    return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
-                                                static_cast<float>(d.imag()));
-                }
-                case scalar_type::c64: {
-                    auto spv_float_ty =
-                        unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f64));
-                    return add_constant_complex(spv_float_ty, d.real(), d.imag());
-                }
-                default:
-                    return nullptr;
-                }
-            },
-        };
-        auto cst = std::visit(visitor, val);
-        if (cst == nullptr) {
-            throw compilation_error(in.loc(), status::internal_compiler_error);
-        }
-        return cst;
-    };
-
     auto spv_ty = unique_.spv_ty(in.result(0).ty());
 
     if (isa<boolean_data_type>(*in.result(0).ty())) {
@@ -605,15 +610,141 @@ void inst_converter::operator()(constant_inst const &in) {
         }
         declare(in.result(0), unique_.bool_constant(std::get<bool>(in.value())));
     } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
-        declare(in.result(0), make(st->ty(), spv_ty, in.value()));
+        auto cst = make_constant(st->ty(), spv_ty, in.value());
+        if (cst == nullptr) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+        declare(in.result(0), cst);
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
         auto const length = ct->length(core_cfg_.subgroup_size);
-        auto cst = make(ct->component_ty(), spv_ty, in.value());
+        auto cst = make_constant(ct->component_ty(), spv_ty, in.value());
+        if (cst == nullptr) {
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
 
         multi_declare(in.result(0), std::vector<spv_inst *>(length, cst));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
+}
+
+void inst_converter::operator()(for_inst const &in) {
+    const std::int64_t num_results = num_yielded_vals(in.result_begin(), in.result_end());
+
+    auto header_label = std::make_unique<OpLabel>();
+    auto body_label = std::make_unique<OpLabel>();
+    auto continue_label = std::make_unique<OpLabel>();
+    auto merge_label = std::make_unique<OpLabel>();
+
+    mod_->add<OpLoopMerge>(merge_label.get(), continue_label.get(), LoopControl::None);
+    mod_->add<OpBranch>(header_label.get());
+
+    // Header block
+    auto spv_bool_ty = unique_.spv_ty(boolean_data_type::get(ctx_));
+    auto spv_loop_var_ty = unique_.spv_ty(in.loop_var().ty());
+    auto header_block_last_label = header_label.get();
+    mod_->insts(section::function).push_back(header_label.release());
+
+    auto condition = mod_->add<OpSLessThan>(spv_bool_ty, val(in.from()), val(in.to()));
+    mod_->add<OpBranchConditional>(condition, body_label.get(), merge_label.get(),
+                                   std::vector<LiteralInteger>{});
+
+    // Body block
+    auto body_first_label = body_label.get();
+    mod_->insts(section::function).push_back(body_label.release());
+    // nullptr needs to be replaced by the loop var update once it is defined
+    auto loop_var_phi = mod_->add<OpPhi>(
+        spv_loop_var_ty,
+        std::vector<PairIdRefIdRef>{PairIdRefIdRef{val(in.from()), header_block_last_label},
+                                    PairIdRefIdRef{nullptr, continue_label.get()}});
+    declare(in.loop_var(), loop_var_phi);
+
+    auto const &make_iter_arg_phi = [&]() -> std::vector<OpPhi *> {
+        auto phis = std::vector<OpPhi *>{};
+        phis.reserve(num_results);
+        for (std::int64_t i = 0; i < in.num_results(); ++i) {
+            auto ty = unique_.spv_ty(in.iter_arg(i).ty());
+            if (isa<coopmatrix_data_type>(*in.iter_arg(i).ty())) {
+                auto &init_vals = multi_val(in.iter_init(i));
+                auto iter_arg_vals = std::vector<spv_inst *>(init_vals.size(), nullptr);
+                for (auto init_val = init_vals.begin(), iter_arg_val = iter_arg_vals.begin();
+                     init_val != init_vals.end(); ++init_val, ++iter_arg_val) {
+                    auto phi =
+                        mod_->add<OpPhi>(ty, std::vector<PairIdRefIdRef>{
+                                                 PairIdRefIdRef{*init_val, header_block_last_label},
+                                                 PairIdRefIdRef{nullptr, continue_label.get()}});
+                    *iter_arg_val = phi;
+                    phis.emplace_back(phi);
+                }
+                multi_declare(in.iter_arg(i), std::move(iter_arg_vals));
+            } else {
+                phis.emplace_back(mod_->add<OpPhi>(
+                    ty, std::vector<PairIdRefIdRef>{
+                            PairIdRefIdRef{val(in.iter_init(i)), header_block_last_label},
+                            PairIdRefIdRef{nullptr, continue_label.get()}}));
+                declare(in.iter_arg(i), phis.back());
+            }
+        }
+        return phis;
+    };
+    auto iter_arg_phis = make_iter_arg_phi();
+
+    auto yielded_for = run_on_region_with_yield(in.body(), num_results);
+    // Update phis with yielded values
+    for (std::int64_t i = 0; i < num_results; ++i) {
+        iter_arg_phis[i]->op0().back().first = yielded_for[i];
+    }
+
+    auto body_last_label = get_last_label();
+    if (!body_last_label) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    mod_->add<OpBranch>(continue_label.get());
+
+    // Continue block
+    auto continue_block_last_label = continue_label.get();
+    mod_->insts(section::function).push_back(continue_label.release());
+    auto step = [&]() -> spv_inst * {
+        if (in.has_step()) {
+            return val(in.step());
+        }
+        return make_constant(get_scalar_type(in.loop_var()), spv_loop_var_ty, std::int64_t{1});
+    }();
+    auto loop_var_update = mod_->add<OpIAdd>(spv_loop_var_ty, val(in.loop_var()), step);
+    loop_var_phi->op0().back().first = loop_var_update;
+    auto condition2 = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_update, val(in.to()));
+    mod_->add<OpBranchConditional>(condition2, body_first_label, merge_label.get(),
+                                   std::vector<LiteralInteger>{});
+
+    // Merge block
+    mod_->insts(section::function).push_back(merge_label.release());
+
+    auto const &set_results = [&] {
+        std::int64_t val_no = 0;
+        for (std::int64_t i = 0; i < in.num_results(); ++i) {
+            auto ty = unique_.spv_ty(in.result(i).ty());
+            if (isa<coopmatrix_data_type>(*in.result(i).ty())) {
+                auto &init_vals = multi_val(in.iter_init(i));
+                auto results = std::vector<spv_inst *>(init_vals.size(), nullptr);
+                for (auto init_val = init_vals.begin(), result = results.begin();
+                     init_val != init_vals.end(); ++init_val, ++result) {
+                    *result = mod_->add<OpPhi>(
+                        ty, std::vector<PairIdRefIdRef>{
+                                PairIdRefIdRef{*init_val, header_block_last_label},
+                                PairIdRefIdRef{yielded_for[val_no++], continue_block_last_label}});
+                }
+                multi_declare(in.result(i), std::move(results));
+            } else {
+                declare(
+                    in.result(i),
+                    mod_->add<OpPhi>(
+                        ty, std::vector<PairIdRefIdRef>{
+                                PairIdRefIdRef{val(in.iter_init(i)), header_block_last_label},
+                                PairIdRefIdRef{yielded_for[val_no++], continue_block_last_label}}));
+            }
+        }
+    };
+    set_results();
 }
 
 void inst_converter::operator()(group_id_inst const &in) {
@@ -628,6 +759,60 @@ void inst_converter::operator()(group_size_inst const &in) {
     declare(in.result(0),
             mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
 }
+
+void inst_converter::operator()(if_inst const &in) {
+    const std::int64_t num_results = num_yielded_vals(in.result_begin(), in.result_end());
+
+    auto then_label = std::make_unique<OpLabel>();
+    auto otherwise_label = std::make_unique<OpLabel>();
+    auto merge_label = std::make_unique<OpLabel>();
+
+    auto conditionv = val(in.condition());
+    mod_->add<OpSelectionMerge>(merge_label.get(), SelectionControl::None);
+    mod_->add<OpBranchConditional>(conditionv, then_label.get(), otherwise_label.get(),
+                                   std::vector<LiteralInteger>{});
+    mod_->insts(section::function).push_back(then_label.release());
+    auto yielded_then = run_on_region_with_yield(in.then(), num_results);
+    mod_->add<OpBranch>(merge_label.get());
+    auto then_last_label = get_last_label();
+    if (!then_last_label) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    mod_->insts(section::function).push_back(otherwise_label.release());
+    auto yielded_otherwise = run_on_region_with_yield(in.otherwise(), num_results);
+    mod_->add<OpBranch>(merge_label.get());
+    auto otherwise_last_label = get_last_label();
+    if (!otherwise_last_label) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+
+    mod_->insts(section::function).push_back(merge_label.release());
+
+    std::int64_t val_no = 0;
+    for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        auto ty = unique_.spv_ty(in.result(i).ty());
+        if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(i).ty()); ct) {
+            const auto length = ct->length(core_cfg_.subgroup_size);
+            auto phi_insts = std::vector<spv_inst *>(length, nullptr);
+            for (auto &phi_inst : phi_insts) {
+                phi_inst = mod_->add<OpPhi>(
+                    ty, std::vector<PairIdRefIdRef>{
+                            PairIdRefIdRef{yielded_then[val_no], then_last_label},
+                            PairIdRefIdRef{yielded_otherwise[val_no], otherwise_last_label}});
+                ++val_no;
+            }
+            multi_declare(in.result(i), std::move(phi_insts));
+        } else {
+            auto phi_inst = mod_->add<OpPhi>(
+                ty, std::vector<PairIdRefIdRef>{
+                        PairIdRefIdRef{yielded_then[val_no], then_last_label},
+                        PairIdRefIdRef{yielded_otherwise[val_no], otherwise_last_label}});
+            ++val_no;
+            declare(in.result(i), phi_inst);
+        }
+    }
+}
+
 void inst_converter::operator()(num_subgroups_inst const &in) {
     declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
 }
@@ -671,10 +856,48 @@ void inst_converter::operator()(work_group_inst const &in) {
     declare(in.result(0), make(sty, in.operation(), spv_ty, val(in.operand())));
 }
 
+void inst_converter::operator()(yield_inst const &in) {
+    if (yielded_vals_.empty()) {
+        throw compilation_error(in.loc(), status::ir_unexpected_yield);
+    }
+
+    auto &top = yielded_vals_.top();
+    const std::int64_t num = num_yielded_vals(in.op_begin(), in.op_end());
+    if (static_cast<std::int64_t>(top.size()) != num) {
+        throw compilation_error(in.loc(), status::ir_yield_mismatch);
+    }
+
+    std::int64_t i = 0;
+    for (auto &op : in.operands()) {
+        if (auto ct = dyn_cast<coopmatrix_data_type>(op.ty()); ct) {
+            auto &vals = multi_val(op);
+            for (auto &v : vals) {
+                top[i++] = v;
+            }
+        } else {
+            top[i++] = val(op);
+        }
+    }
+}
+
 void inst_converter::run_on_region(region_node const &reg) {
     for (auto const &i : reg) {
         visit(*this, i);
     }
+}
+
+auto inst_converter::run_on_region_with_yield(region_node const &reg,
+                                              std::int64_t num_results) -> std::vector<spv_inst *> {
+    yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
+    run_on_region(reg);
+    auto yielded_vals = std::move(yielded_vals_.top());
+    if (static_cast<std::int64_t>(yielded_vals.size()) != num_results ||
+        std::any_of(yielded_vals.begin(), yielded_vals.end(),
+                    [](spv_inst *in) { return in == nullptr; })) {
+        throw compilation_error(reg.loc(), status::ir_yield_mismatch);
+    }
+    yielded_vals_.pop();
+    return yielded_vals;
 }
 
 void inst_converter::run_on_function(function_node const &fn, core_config const &core_cfg) {

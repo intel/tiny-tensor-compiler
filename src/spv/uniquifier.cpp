@@ -189,8 +189,9 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         const auto sz = size(ty.ty());
                         if (sz == 8) {
                             capability(Capability::Int64);
+                            return spv_ty(scalar_data_type::get(ctx_, scalar_type::i64));
                         }
-                        return mod_->add_to<OpTypeInt>(section::type_const_var, sz * 8, 0);
+                        return spv_ty(scalar_data_type::get(ctx_, scalar_type::i32));
                     }
                     case scalar_type::f32:
                     case scalar_type::f64:

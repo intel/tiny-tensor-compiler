@@ -42,6 +42,7 @@ class dump_asm_pass : public default_visitor<dump_asm_pass> {
 
     void operator()(spv_inst *const &in);
     auto operator()(OpExtInst const &in);
+    auto operator()(OpPhi const &in);
 
     void run_on_module(mod const &m);
 
