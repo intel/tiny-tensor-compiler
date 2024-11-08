@@ -18,11 +18,17 @@ spv_names = 'names.hpp'
 spv_names_includes = [spv_enums]
 spv_names_cpp = 'names.cpp'
 spv_names_cpp_includes = [spv_names, spv_enums]
+spv_defs = 'defs.hpp'
+spv_defs_includes = [
+    spv_enums, 'support/ilist_base.hpp', None, '<cstdint>', '<variant>',
+    '<string>', '<utility>'
+]
 spv_ops = 'instructions.hpp'
 spv_visitor = 'visit.hpp'
 spv_ops_includes = [
-    spv_enums, 'error.hpp', 'support/ilist_base.hpp', None, '<array>',
-    '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>', '<vector>'
+    spv_defs, spv_enums, 'error.hpp', 'support/ilist_base.hpp', None,
+    '<array>', '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>',
+    '<vector>'
 ]
 
 enumerant_subs = {
@@ -31,43 +37,6 @@ enumerant_subs = {
     '3D': 'Dim3D',
     '2x2': 'CooperativeMatrixReduce2x2'
 }
-
-spv_inst_class = """
-class spv_inst : public ilist_node<spv_inst> {
-  public:
-    inline spv_inst(Op opcode, bool has_result_id) : opcode_{opcode}, has_result_id_{has_result_id} {}
-    virtual ~spv_inst() = default;
-
-    spv_inst(spv_inst const &other) = delete;
-    spv_inst(spv_inst &&other) = delete;
-    spv_inst &operator=(spv_inst const &other) = delete;
-    spv_inst &operator=(spv_inst &&other) = delete;
-
-    inline auto opcode() const -> Op { return opcode_; }
-    inline auto has_result_id() const -> bool { return has_result_id_; }
-
-  private:
-    Op opcode_;
-    bool has_result_id_;
-};
-
-using DecorationAttr = std::variant<BuiltIn, std::pair<std::string, LinkageType>>;
-using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
-using LiteralContextDependentNumber
-    = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
-using LiteralString = std::string;
-using LiteralInteger = std::int32_t;
-using LiteralExtInstInteger = std::int32_t;
-using IdResultType = spv_inst*;
-using IdRef = spv_inst*;
-using IdScope = spv_inst*;
-using IdMemorySemantics = spv_inst*;
-using MemoryAccessAttr = std::int32_t;
-using PairIdRefIdRef = std::pair<spv_inst*, spv_inst*>;
-using PairLiteralIntegerIdRef
-    = std::pair<std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t>, spv_inst*>;
-using PairIdRefLiteralInteger = std::pair<spv_inst*, std::int32_t>;
-"""
 
 
 def get_opcode_name(instruction):
@@ -174,9 +143,47 @@ def get_operands(instruction):
     return operands
 
 
-def generate_op_classes(f, grammar):
-    print(spv_inst_class, file=f)
+def generate_defs(f, grammar):
+    print("""
+class spv_inst : public ilist_node<spv_inst> {
+  public:
+    inline spv_inst(Op opcode, bool has_result_id) : opcode_{opcode}, has_result_id_{has_result_id} {}
+    virtual ~spv_inst() = default;
 
+    spv_inst(spv_inst const &other) = delete;
+    spv_inst(spv_inst &&other) = delete;
+    spv_inst &operator=(spv_inst const &other) = delete;
+    spv_inst &operator=(spv_inst &&other) = delete;
+
+    inline auto opcode() const -> Op { return opcode_; }
+    inline auto has_result_id() const -> bool { return has_result_id_; }
+
+  private:
+    Op opcode_;
+    bool has_result_id_;
+};
+
+using DecorationAttr = std::variant<BuiltIn, std::pair<std::string, LinkageType>>;
+using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
+using LiteralContextDependentNumber
+    = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
+using LiteralString = std::string;
+using LiteralInteger = std::int32_t;
+using LiteralExtInstInteger = std::int32_t;
+using IdResultType = spv_inst*;
+using IdRef = spv_inst*;
+using IdScope = spv_inst*;
+using IdMemorySemantics = spv_inst*;
+using MemoryAccessAttr = std::int32_t;
+using PairIdRefIdRef = std::pair<spv_inst*, spv_inst*>;
+using PairLiteralIntegerIdRef
+    = std::pair<std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t>, spv_inst*>;
+using PairIdRefLiteralInteger = std::pair<spv_inst*, std::int32_t>;
+""",
+          file=f)
+
+
+def generate_op_classes(f, grammar):
     for instruction in grammar['instructions']:
         operands = get_operands(instruction)
 
@@ -326,6 +333,8 @@ if __name__ == '__main__':
                         spv_names_includes)
         generate_cpp(args, spv_names_cpp, grammar, generate_names_cpp,
                      spv_names_cpp_includes)
+        generate_header(args, spv_defs, grammar, generate_defs,
+                        spv_defs_includes)
         generate_header(args, spv_ops, grammar, generate_op_classes,
                         spv_ops_includes)
         generate_header(args, spv_visitor, grammar, generate_visitor)

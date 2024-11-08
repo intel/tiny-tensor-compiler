@@ -3,21 +3,25 @@
 
 #include "compiler_context.hpp"
 #include "device_info.hpp"
+#include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/region_node.hpp"
+#include "node/value_node.hpp"
+#include "spv/defs.hpp"
+#include "spv/enums.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "support/casting.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstdint>
 #include <memory>
 #include <stack>
 #include <unordered_map>
 #include <vector>
 
 namespace tinytc::spv {
-
-class spv_inst;
 
 auto convert_prog_to_spirv(tinytc_prog const &p,
                            tinytc_core_info const &info) -> std::unique_ptr<mod>;

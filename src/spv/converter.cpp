@@ -16,12 +16,14 @@
 #include "spv/opencl.std.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
+#include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <algorithm>
 #include <array>
 #include <complex>
 #include <cstdint>
@@ -131,13 +133,9 @@ auto inst_converter::multi_val(value_node const &v) -> std::vector<spv_inst *> &
 
 auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
                                    constant_inst::value_type const &val) -> spv_inst * {
-    auto const add_constant = [this, &spv_ty](auto val) -> spv_inst * {
-        return mod_->add_to<OpConstant>(section::type_const_var, spv_ty, val);
-    };
-    auto const add_constant_complex = [this, &spv_ty](spv_inst *spv_float_ty, auto re,
-                                                      auto im) -> spv_inst * {
-        auto c_re = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, re);
-        auto c_im = mod_->add_to<OpConstant>(section::type_const_var, spv_float_ty, im);
+    auto const add_constant_complex = [this, &spv_ty](auto cst) -> spv_inst * {
+        auto c_re = unique_.constant(cst.real());
+        auto c_im = unique_.constant(cst.imag());
         return mod_->add_to<OpConstantComposite>(section::type_const_var, spv_ty,
                                                  std::vector<spv_inst *>{c_re, c_im});
     };
@@ -146,14 +144,14 @@ auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
         [&](std::int64_t i) -> spv_inst * {
             switch (sty) {
             case scalar_type::i8:
-                return add_constant(static_cast<std::int8_t>(i));
+                return unique_.constant(static_cast<std::int8_t>(i));
             case scalar_type::i16:
-                return add_constant(static_cast<std::int16_t>(i));
+                return unique_.constant(static_cast<std::int16_t>(i));
             case scalar_type::i32:
-                return add_constant(static_cast<std::int32_t>(i));
+                return unique_.constant(static_cast<std::int32_t>(i));
             case scalar_type::i64:
             case scalar_type::index:
-                return add_constant(i);
+                return unique_.constant(i);
             default:
                 return nullptr;
             }
@@ -161,24 +159,19 @@ auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
         [&](double d) -> spv_inst * {
             switch (sty) {
             case scalar_type::f32:
-                return add_constant(static_cast<float>(d));
+                return unique_.constant(static_cast<float>(d));
             case scalar_type::f64:
-                return add_constant(d);
+                return unique_.constant(d);
             default:
                 return nullptr;
             }
         },
         [&](std::complex<double> d) -> spv_inst * {
             switch (sty) {
-            case scalar_type::c32: {
-                auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f32));
-                return add_constant_complex(spv_float_ty, static_cast<float>(d.real()),
-                                            static_cast<float>(d.imag()));
-            }
-            case scalar_type::c64: {
-                auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::f64));
-                return add_constant_complex(spv_float_ty, d.real(), d.imag());
-            }
+            case scalar_type::c32:
+                return add_constant_complex(static_cast<std::complex<float>>(d));
+            case scalar_type::c64:
+                return add_constant_complex(d);
             default:
                 return nullptr;
             }
@@ -417,8 +410,8 @@ void inst_converter::operator()(barrier_inst const &in) {
         fence = fence | static_cast<std::int32_t>(MemorySemantics::WorkgroupMemory) |
                 static_cast<std::int32_t>(MemorySemantics::SequentiallyConsistent);
     }
-    auto scope = unique_.i32_constant(static_cast<std::int32_t>(Scope::Workgroup));
-    auto memory_semantics = unique_.i32_constant(fence);
+    auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
+    auto memory_semantics = unique_.constant(fence);
     mod_->add<OpControlBarrier>(scope, scope, memory_semantics);
 }
 
@@ -832,7 +825,7 @@ void inst_converter::operator()(subgroup_size_inst const &in) {
 void inst_converter::operator()(work_group_inst const &in) {
     auto const make = [&](scalar_type sty, work_group_operation operation, spv_inst *spv_ty,
                           spv_inst *operand) -> spv_inst * {
-        auto scope = unique_.i32_constant(static_cast<std::int32_t>(Scope::Workgroup));
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         if (operation == work_group_operation::reduce_add) {
             switch (sty) {
             case scalar_type::i8:

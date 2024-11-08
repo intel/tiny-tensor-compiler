@@ -4,12 +4,14 @@
 #ifndef UNIQUIFIER_20241107_HPP
 #define UNIQUIFIER_20241107_HPP
 
+#include "spv/defs.hpp"
 #include "spv/enums.hpp"
 #include "spv/module.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <unordered_map>
 #include <unordered_set>
@@ -17,7 +19,6 @@
 
 namespace tinytc::spv {
 
-class spv_inst;
 class OpTypeFunction;
 
 class uniquifier {
@@ -30,7 +31,7 @@ class uniquifier {
     auto builtin_pointee_ty(BuiltIn b) -> spv_inst *;
     auto builtin_var(BuiltIn b) -> spv_inst *;
     void capability(Capability cap);
-    auto i32_constant(std::int32_t cst) -> spv_inst *;
+    auto constant(LiteralContextDependentNumber cst) -> spv_inst *;
     auto index3_ty() -> spv_inst *;
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
@@ -70,7 +71,7 @@ class uniquifier {
     spv_inst *opencl_ext_ = nullptr;
     std::unordered_map<BuiltIn, spv_inst *> builtin_;
     std::unordered_set<Capability> capabilities_;
-    std::unordered_map<std::int32_t, spv_inst *> i32_cst_;
+    std::unordered_map<LiteralContextDependentNumber, spv_inst *> cst_map_;
     std::unordered_map<spv_inst *, spv_inst *> null_cst_;
     std::unordered_multimap<std::uint64_t, OpTypeFunction *> spv_function_tys_;
     std::unordered_map<std::pair<StorageClass, spv_inst *>, spv_inst *, pointer_key_hash>

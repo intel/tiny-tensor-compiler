@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/module.hpp"
-#include "spv/instructions.hpp"
+#include "spv/defs.hpp"
 #include "support/ilist_base.hpp"
 
 namespace tinytc {

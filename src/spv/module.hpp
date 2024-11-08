@@ -7,7 +7,6 @@
 #include "support/ilist.hpp"
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <utility>

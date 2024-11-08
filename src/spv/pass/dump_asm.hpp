@@ -4,6 +4,7 @@
 #ifndef DUMP_ASM_20241029_HPP
 #define DUMP_ASM_20241029_HPP
 
+#include "spv/defs.hpp"
 #include "spv/instructions.hpp"
 #include "spv/names.hpp"
 #include "spv/visit.hpp"

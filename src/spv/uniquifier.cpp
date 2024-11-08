@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <optional>
+#include <type_traits>
+#include <variant>
 #include <vector>
 
 namespace tinytc::spv {
@@ -113,11 +115,13 @@ void uniquifier::capability(Capability cap) {
     }
 }
 
-auto uniquifier::i32_constant(std::int32_t cst) -> spv_inst * {
-    return lookup(i32_cst_, cst, [&](std::int32_t cst) {
-        auto i32_ty = spv_ty(scalar_data_type::get(ctx_, scalar_type::i32));
-        return mod_->add_to<OpConstant>(section::type_const_var, i32_ty,
-                                        LiteralContextDependentNumber{cst});
+auto uniquifier::constant(LiteralContextDependentNumber cst) -> spv_inst * {
+    return lookup(cst_map_, cst, [&](LiteralContextDependentNumber const &cst) {
+        scalar_type sty = std::visit(
+            overloaded{[](auto const &c) { return to_scalar_type_v<std::decay_t<decltype(c)>>; }},
+            cst);
+        auto ty = spv_ty(scalar_data_type::get(ctx_, sty));
+        return mod_->add_to<OpConstant>(section::type_const_var, ty, cst);
     });
 }
 
