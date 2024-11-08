@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <optional>
 #include <type_traits>
+#include <utility>
 #include <variant>
 #include <vector>
 
@@ -99,7 +100,8 @@ auto uniquifier::builtin_pointee_ty(BuiltIn b) -> spv_inst * {
 
 auto uniquifier::builtin_var(BuiltIn b) -> spv_inst * {
     return lookup(builtin_, b, [&](BuiltIn b) {
-        auto pointer_ty = spv_pointer_ty(StorageClass::Input, builtin_pointee_ty(b));
+        auto pointer_ty =
+            spv_pointer_ty(StorageClass::Input, builtin_pointee_ty(b), builtin_alignment(b));
         auto var = mod_->add_to<OpVariable>(section::type_const_var, pointer_ty,
                                             StorageClass::Input, std::nullopt);
         mod_->add_to<OpDecorate>(section::decoration, var, Decoration::Constant);
@@ -159,11 +161,17 @@ auto uniquifier::spv_function_ty(array_view<spv_inst *> params) -> spv_inst * {
         ->second;
 }
 
-auto uniquifier::spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty) -> spv_inst * {
-    auto key = std::make_pair(cls, pointee_ty);
-    return lookup(spv_pointer_tys_, key, [&](std::pair<StorageClass, spv_inst *> const &key) {
-        return mod_->add_to<OpTypePointer>(section::type_const_var, key.first, key.second);
-    });
+auto uniquifier::spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
+                                std::int32_t alignment) -> spv_inst * {
+    auto key = std::make_tuple(cls, pointee_ty, alignment);
+    return lookup(
+        spv_pointer_tys_, key, [&](std::tuple<StorageClass, spv_inst *, std::int32_t> const &key) {
+            auto pointer_ty = mod_->add_to<OpTypePointer>(section::type_const_var, std::get<0>(key),
+                                                          std::get<1>(key));
+            mod_->add_to<OpDecorate>(section::decoration, pointer_ty, Decoration::Alignment,
+                                     DecorationAttr{std::get<2>(key)});
+            return pointer_ty;
+        });
 }
 
 auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
@@ -175,6 +183,23 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                 },
                 [&](boolean_data_type const &) -> spv_inst * {
                     return mod_->add_to<OpTypeBool>(section::type_const_var);
+                },
+                [&](group_data_type const &g) -> spv_inst * {
+                    return spv_pointer_ty(StorageClass::CrossWorkgroup, spv_ty(g.ty()),
+                                          alignment(scalar_type::i64));
+                },
+                [&](memref_data_type const &mr) -> spv_inst * {
+                    const auto storage_cls = mr.addrspace() == address_space::local
+                                                 ? StorageClass::Workgroup
+                                                 : StorageClass::CrossWorkgroup;
+                    auto spv_element_ty = spv_ty(mr.element_data_ty());
+                    const std::int32_t align = [&](scalar_type sty) -> std::int32_t {
+                        if (is_complex_type(sty)) {
+                            return alignment(element_type(sty), component_count::v2);
+                        }
+                        return alignment(sty);
+                    }(mr.element_ty());
+                    return spv_pointer_ty(storage_cls, spv_element_ty, align);
                 },
                 [&](scalar_data_type const &ty) -> spv_inst * {
                     switch (ty.ty()) {

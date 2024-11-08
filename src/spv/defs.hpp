@@ -36,7 +36,7 @@ class spv_inst : public ilist_node<spv_inst> {
     bool has_result_id_;
 };
 
-using DecorationAttr = std::variant<BuiltIn, std::pair<std::string, LinkageType>>;
+using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;
 using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
 using LiteralContextDependentNumber =
     std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;

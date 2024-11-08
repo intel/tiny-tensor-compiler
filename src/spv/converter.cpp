@@ -20,6 +20,7 @@
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -27,6 +28,7 @@
 #include <array>
 #include <complex>
 #include <cstdint>
+#include <ranges>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -73,6 +75,30 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
     return m;
 }
 
+dope_vector::dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
+                         std::vector<std::int64_t> static_stride, spv_inst *offset_ty,
+                         std::int64_t static_offset)
+    : ty_(ty), static_shape_(std::move(static_shape)), static_stride_(std::move(static_stride)),
+      shape_(dim(), nullptr), stride_(dim(), nullptr), offset_ty_(offset_ty),
+      static_offset_(static_offset) {
+    if (static_shape_.size() != static_stride_.size()) {
+        throw status::internal_compiler_error;
+    }
+}
+
+auto dope_vector::num_dynamic() const -> std::int64_t {
+    auto const sum_dynamic = [](std::vector<std::int64_t> const &vec) {
+        std::int64_t num_dynamic = 0;
+        for (auto &v : vec) {
+            if (is_dynamic_value(v)) {
+                ++num_dynamic;
+            }
+        }
+        return num_dynamic;
+    };
+    return sum_dynamic(static_shape_) + sum_dynamic(static_stride_);
+}
+
 inst_converter::inst_converter(tinytc_compiler_context_t ctx, mod &m)
     : ctx_(ctx), mod_(&m), unique_(ctx, m) {}
 
@@ -88,14 +114,21 @@ auto inst_converter::get_last_label() -> spv_inst * {
     return nullptr;
 }
 
-auto inst_converter::get_scalar_type(value_node const &v) -> scalar_type {
+auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
+    if (auto it = dope_vec_.find(&v); it != dope_vec_.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+
+auto inst_converter::get_scalar_type(value_node const &v) const -> scalar_type {
     auto st = dyn_cast<scalar_data_type>(v.ty());
     if (!st) {
         throw compilation_error(v.loc(), status::ir_expected_scalar);
     }
     return st->ty();
 }
-auto inst_converter::get_coopmatrix_type(value_node const &v) -> scalar_type {
+auto inst_converter::get_coopmatrix_type(value_node const &v) const -> scalar_type {
     auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
     if (!ct) {
         throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
@@ -178,7 +211,33 @@ auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
         },
     };
     return std::visit(visitor, val);
-};
+}
+
+auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
+    if (dope_vec_.contains(&v)) {
+        throw compilation_error(v.loc(), status::internal_compiler_error);
+    }
+
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    return ::tinytc::visit(
+        overloaded{[&](memref_data_type const &mr) -> dope_vector * {
+                       return &(dope_vec_[&v] = dope_vector{spv_index_ty, mr.shape(), mr.stride()});
+                   },
+                   [&](group_data_type const &g) -> dope_vector * {
+                       if (auto mt = dyn_cast<memref_data_type>(g.ty()); mt) {
+                           auto pointer_ty =
+                               unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
+                                                      alignment(scalar_type::i64));
+                           return &(dope_vec_[&v] =
+                                        dope_vector{pointer_ty, mt->shape(), mt->stride(),
+                                                    spv_index_ty, g.offset()});
+                       } else {
+                           throw compilation_error(v.loc(), status::ir_expected_memref);
+                       }
+                   },
+                   [](auto const &) -> dope_vector * { return nullptr; }},
+        *v.ty());
+}
 
 void inst_converter::operator()(inst_node const &in) {
     // @todo
@@ -806,6 +865,53 @@ void inst_converter::operator()(if_inst const &in) {
     }
 }
 
+void inst_converter::operator()(load_inst const &in) {
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto spv_pointer_index_ty = unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
+                                                       alignment(scalar_type::i64));
+    auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
+    auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
+    auto dv = get_dope_vector(in.operand());
+    if (!dv) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+
+    if (auto group_ty = dyn_cast<group_data_type>(in.operand().ty()); group_ty) {
+        auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
+        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
+                                                           offset, std::vector<spv_inst *>{});
+        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer));
+        auto rdv = make_dope_vector(in.result(0));
+
+        auto const make_dope_par = [&](std::int64_t static_s, spv_inst *s) -> spv_inst * {
+            if (is_dynamic_value(static_s)) {
+                auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_index_ty, s, offset,
+                                                                   std::vector<spv_inst *>{});
+                return mod_->add<OpLoad>(spv_index_ty, pointer);
+            }
+            return s;
+        };
+        for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+            rdv->shape(i, make_dope_par(dv->static_shape(i), dv->shape(i)));
+        }
+        for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+            rdv->stride(i, make_dope_par(dv->static_stride(i), dv->stride(i)));
+        }
+    } else if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
+        auto offset = unique_.null_constant(spv_index_ty);
+        for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
+            auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
+            offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
+        }
+
+        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
+                                                           offset, std::vector<spv_inst *>{});
+        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer));
+    } else {
+        throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+    }
+}
+
 void inst_converter::operator()(num_subgroups_inst const &in) {
     declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
 }
@@ -902,6 +1008,15 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
         params.reserve(fn.num_params());
         for (auto const &p : fn.params()) {
             params.emplace_back(unique_.spv_ty(p.ty()));
+            auto dv = make_dope_vector(p);
+            if (dv) {
+                for (std::int64_t i = 0; i < dv->num_dynamic(); ++i) {
+                    params.emplace_back(dv->ty());
+                }
+                if (is_dynamic_value(dv->static_offset())) {
+                    params.emplace_back(dv->offset_ty());
+                }
+            }
         }
         return params;
     }());
@@ -911,6 +1026,22 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
     auto fun = mod_->add<OpFunction>(void_ty, FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
         declare(p, mod_->add<OpFunctionParameter>(unique_.spv_ty(p.ty())));
+        auto dv = get_dope_vector(p);
+        if (dv) {
+            auto const make_dope_par = [&](spv_inst *ty, std::int64_t s) {
+                return is_dynamic_value(s) ? mod_->add<OpFunctionParameter>(ty)
+                                           : unique_.constant(s);
+            };
+            for (std::int64_t i = 0; i < dv->dim(); ++i) {
+                dv->shape(i, make_dope_par(dv->ty(), dv->static_shape(i)));
+            }
+            for (std::int64_t i = 0; i < dv->dim(); ++i) {
+                dv->stride(i, make_dope_par(dv->ty(), dv->static_stride(i)));
+            }
+            if (dv->offset_ty()) {
+                dv->offset(make_dope_par(dv->offset_ty(), dv->static_offset()));
+            }
+        }
     }
     mod_->add<OpLabel>();
     run_on_region(fn.body());

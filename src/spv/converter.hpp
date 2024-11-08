@@ -26,6 +26,38 @@ namespace tinytc::spv {
 auto convert_prog_to_spirv(tinytc_prog const &p,
                            tinytc_core_info const &info) -> std::unique_ptr<mod>;
 
+class dope_vector {
+  public:
+    dope_vector() = default;
+    dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
+                std::vector<std::int64_t> static_stride, spv_inst *offset_ty = nullptr,
+                std::int64_t static_offset = 0);
+
+    inline auto dim() const -> std::int64_t { return static_shape_.size(); }
+    inline auto ty() const -> spv_inst * { return ty_; }
+    inline auto static_shape(std::int64_t i) const -> std::int64_t { return static_shape_[i]; }
+    inline auto static_stride(std::int64_t i) const -> std::int64_t { return static_stride_[i]; }
+    inline auto shape(std::int64_t i) const -> spv_inst * { return shape_[i]; }
+    inline auto stride(std::int64_t i) const -> spv_inst * { return stride_[i]; }
+    inline void shape(std::int64_t i, spv_inst *s) { shape_[i] = s; }
+    inline void stride(std::int64_t i, spv_inst *s) { stride_[i] = s; }
+
+    inline auto offset_ty() const -> spv_inst * { return offset_ty_; }
+    inline auto static_offset() const -> std::int64_t { return static_offset_; }
+    inline auto offset() -> spv_inst * { return offset_; }
+    inline void offset(spv_inst *offset) { offset_ = offset; }
+
+    auto num_dynamic() const -> std::int64_t;
+
+  private:
+    spv_inst *ty_ = nullptr;
+    std::vector<std::int64_t> static_shape_, static_stride_;
+    std::vector<spv_inst *> shape_, stride_;
+    spv_inst *offset_ty_ = nullptr;
+    std::int64_t static_offset_;
+    spv_inst *offset_ = nullptr;
+};
+
 class inst_converter {
   public:
     inst_converter(tinytc_compiler_context_t ctx, mod &m);
@@ -42,6 +74,7 @@ class inst_converter {
     void operator()(group_id_inst const &in);
     void operator()(group_size_inst const &in);
     void operator()(if_inst const &in);
+    void operator()(load_inst const &in);
     void operator()(num_subgroups_inst const &in);
     void operator()(parallel_inst const &in);
     void operator()(subgroup_id_inst const &in);
@@ -71,8 +104,9 @@ class inst_converter {
         return num_results;
     }
     auto get_last_label() -> spv_inst *;
-    auto get_scalar_type(tinytc_value const &v) -> scalar_type;
-    auto get_coopmatrix_type(tinytc_value const &v) -> scalar_type;
+    auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
+    auto get_scalar_type(tinytc_value const &v) const -> scalar_type;
+    auto get_coopmatrix_type(tinytc_value const &v) const -> scalar_type;
     auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
@@ -80,10 +114,12 @@ class inst_converter {
     auto multi_val(tinytc_value const &v) -> std::vector<spv_inst *> &;
     auto make_constant(scalar_type sty, spv_inst *spv_ty,
                        constant_inst::value_type const &val) -> spv_inst *;
+    auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
 
     tinytc_compiler_context_t ctx_;
     mod *mod_;
     uniquifier unique_;
+    std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::unordered_map<const_tinytc_value_t, std::vector<spv_inst *>> multi_vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;

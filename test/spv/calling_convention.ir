@@ -1,0 +1,50 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: OpDecorate %[[#PTR_F32:]] Alignment 4
+; CHECK: OpDecorate %[[#PTR_I16:]] Alignment 2
+; CHECK: OpDecorate %[[#PTR_C32:]] Alignment 8
+; CHECK: OpDecorate %[[#PTR_PTR_C32:]] Alignment 8
+; CHECK: OpDecorate %[[#PTR_I64:]] Alignment 8
+; CHECK: OpDecorate %[[#PTR_C64:]] Alignment 16
+; CHECK: OpDecorate %[[#PTR_PTR_C64:]] Alignment 8
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#PTR_F32]] = OpTypePointer CrossWorkgroup %[[#F32]]
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#I16:]] = OpTypeInt 16 0
+; CHECK: %[[#PTR_I16]] = OpTypePointer CrossWorkgroup %[[#I16]]
+; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK: %[[#PTR_C32]] = OpTypePointer CrossWorkgroup %[[#C32]]
+; CHECK: %[[#PTR_PTR_C32]] = OpTypePointer CrossWorkgroup %[[#PTR_C32]]
+; CHECK: %[[#PTR_I64]] = OpTypePointer CrossWorkgroup %[[#I64]]
+; CHECK: %[[#F64:]] = OpTypeFloat 64
+; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
+; CHECK: %[[#PTR_C64]] = OpTypePointer CrossWorkgroup %[[#C64]]
+; CHECK: %[[#PTR_PTR_C64]] = OpTypePointer CrossWorkgroup %[[#PTR_C64]]
+
+func @cc1(%0: memref<f32x?x?>, %1: memref<i16x?x5x?,strided<1,20,100>>) {
+; CHECK:      %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_F32]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I16]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+}
+
+func @cc2(%0: group<memref<c32x8x?x9>>) {
+; CHECK:      %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_PTR_C32]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+}
+
+func @cc3(%0: group<memref<c64x?>, offset: ?>) {
+; CHECK:      %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_PTR_C64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+}

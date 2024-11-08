@@ -13,9 +13,9 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
-#include <utility>
 
 namespace tinytc::spv {
 
@@ -36,7 +36,8 @@ class uniquifier {
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
     auto spv_function_ty(array_view<spv_inst *> params) -> spv_inst *;
-    auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty) -> spv_inst *;
+    auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
+                        std::int32_t alignment) -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
 
   private:
@@ -57,9 +58,9 @@ class uniquifier {
     }
 
     struct pointer_key_hash {
-        inline auto
-        operator()(std::pair<StorageClass, spv_inst *> const &key) const -> std::size_t {
-            return fnv1a_combine(key.first, key.second);
+        inline auto operator()(std::tuple<StorageClass, spv_inst *, std::int32_t> const &key) const
+            -> std::size_t {
+            return fnv1a_combine(std::get<0>(key), std::get<1>(key), std::get<2>(key));
         }
     };
 
@@ -74,7 +75,8 @@ class uniquifier {
     std::unordered_map<LiteralContextDependentNumber, spv_inst *> cst_map_;
     std::unordered_map<spv_inst *, spv_inst *> null_cst_;
     std::unordered_multimap<std::uint64_t, OpTypeFunction *> spv_function_tys_;
-    std::unordered_map<std::pair<StorageClass, spv_inst *>, spv_inst *, pointer_key_hash>
+    std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
+                       pointer_key_hash>
         spv_pointer_tys_;
     std::unordered_map<const_tinytc_data_type_t, spv_inst *> spv_tys_;
 };

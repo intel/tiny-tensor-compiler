@@ -113,6 +113,8 @@ void dump_asm_pass::operator()(spv_inst *const &in) {
         *os_ << " %" << declare(in);
     } else if (isa<OpLabel>(*in)) {
         *os_ << " %" << declare(in);
+    } else if (isa<OpTypePointer>(*in)) {
+        *os_ << " %" << declare(in);
     } else {
         throw status::spirv_forbidden_forward_declaration;
     }

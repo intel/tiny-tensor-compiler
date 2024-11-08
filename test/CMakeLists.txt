@@ -56,6 +56,7 @@ if(SPIRVTools_FOUND)
         spv/barrier.ir
         spv/builtin.ir
         spv/cast.ir
+        spv/calling_convention.ir
         spv/compare.ir
         spv/for.ir
         spv/if.ir
