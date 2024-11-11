@@ -60,6 +60,8 @@ if(SPIRVTools_FOUND)
         spv/compare.ir
         spv/for.ir
         spv/if.ir
+        spv/load.ir
+        spv/store.ir
         spv/work_group.ir
         spv/unique_function_type.ir
     )

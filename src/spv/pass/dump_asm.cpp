@@ -8,6 +8,7 @@
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
+#include "support/util.hpp"
 #include "tinytc/types.hpp"
 
 #include <array>
@@ -75,7 +76,11 @@ void dump_asm_pass::operator()(ExecutionModeAttr const &ea) {
         ea);
 }
 void dump_asm_pass::operator()(LiteralContextDependentNumber const &l) {
-    std::visit(overloaded{[&](std::signed_integral auto const &l) {
+    std::visit(overloaded{[&](std::int8_t const &l) {
+                              *os_ << " "
+                                   << static_cast<std::uint32_t>(static_cast<std::uint8_t>(l));
+                          },
+                          [&](std::signed_integral auto const &l) {
                               using unsigned_t = std::make_unsigned_t<std::decay_t<decltype(l)>>;
                               *os_ << " " << static_cast<unsigned_t>(l);
                           },
@@ -157,14 +162,9 @@ void dump_asm_pass::run_on_module(mod const &m) {
          << "; Generator: Tiny Tensor Compiler" << std::endl
          << "; Bound: " << m.bound() << std::endl
          << "; Schema: 0";
-    visit_section(section::capability);
-    visit_section(section::ext_inst);
-    visit_section(section::memory_model);
-    visit_section(section::entry_point);
-    visit_section(section::execution_mode);
-    visit_section(section::decoration);
-    visit_section(section::type_const_var);
-    visit_section(section::function);
+    for (std::int32_t s = 0; s < num_module_sections; ++s) {
+        visit_section(enum_cast<section>(s));
+    }
     *os_ << std::endl;
 }
 

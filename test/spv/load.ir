@@ -1,0 +1,51 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#F32]]
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#I64_C1:]] = OpConstant %[[#I64]] 1
+; CHECK: %[[#I64_C0:]] = OpConstant %[[#I64]] 0
+; CHECK: %[[#PTR_I64:]] = OpTypePointer CrossWorkgroup %[[#I64]]
+; CHECK: %[[#INDEX_NULL:]] = OpConstantNull %[[#I64]]
+; CHECK: %[[#PTR_PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#PTR_F32]]
+
+func @l1(%0: memref<f32x?x?>) {
+    %2 = constant 0 -> index
+    %3 = load %0[%2,%2] : memref<f32x?x?>
+; CHECK:                 %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:      %[[#L1_MR:]] = OpFunctionParameter %[[#PTR_F32]]
+; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#L1_STRIDE:]] = OpFunctionParameter %[[#I64]]
+; CHECK:         %[[#L1_TMP1:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C1]]
+; CHECK-NEXT: %[[#L1_OFFSET1:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[#L1_TMP1]]
+; CHECK-NEXT:    %[[#L1_TMP2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L1_STRIDE]]
+; CHECK-NEXT: %[[#L1_OFFSET2:]] = OpIAdd %[[#I64]] %[[#L1_OFFSET1]] %[[#L1_TMP2]]
+; CHECK-NEXT:   %[[#L1_MRSUB:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L1_MR]] %[[#L1_OFFSET2]]
+; CHECK-NEXT:            %[[#]] = OpLoad %[[#F32]] %[[#L1_MRSUB]]
+}
+
+func @l2(%0: group<memref<f32x?,strided<?>>, offset: ?>) {
+    %1 = constant 0 -> index
+    %2 = load %0[%1] : group<memref<f32x?,strided<?>>, offset: ?>
+    %3 = load %2[%1] : memref<f32x?,strided<?>>
+; CHECK:                       %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:         %[[#L2_GROUP:]] = OpFunctionParameter %[[#PTR_PTR_F32]]
+; CHECK-NEXT:     %[[#L2_PTR_SHAPE:]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:    %[[#L2_PTR_STRIDE:]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#L2_GROUP_OFFSET:]] = OpFunctionParameter %[[#I64]]
+; CHECK:            %[[#L2_OFFSET1:]] = OpIAdd %[[#I64]] %[[#L2_GROUP_OFFSET]] %[[#I64_C0]]
+; CHECK-NEXT:            %[[#L2_MR:]] = OpInBoundsPtrAccessChain %[[#PTR_PTR_F32]] %[[#L2_GROUP]] %[[#L2_OFFSET1]]
+; CHECK-NEXT:           %[[#L2_MR2:]] = OpLoad %[[#PTR_F32]] %[[#L2_MR]]
+; CHECK-NEXT:  %[[#L2_SUBPTR_SHAPE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_SHAPE]] %[[#L2_OFFSET1]]
+; CHECK-NEXT:                  %[[#]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_SHAPE]]
+; CHECK-NEXT: %[[#L2_SUBPTR_STRIDE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_STRIDE]] %[[#L2_OFFSET1]]
+; CHECK-NEXT:        %[[#L2_STRIDE:]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_STRIDE]]
+; CHECK-NEXT:           %[[#L2_TMP:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L2_STRIDE]]
+; CHECK-NEXT:       %[[#L2_OFFSET2:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[L2_TMP]]
+; CHECK-NEXT:         %[[#L2_SUBMR:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L2_MR2]] %[[#L2_OFFSET2]]
+; CHECK-NEXT:                  %[[#]] = OpLoad %[[#F32]] %[[#L2_SUBMR]]
+}

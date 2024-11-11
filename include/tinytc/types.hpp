@@ -96,6 +96,7 @@ enum class status {
     ir_constant_mismatch = tinytc_status_ir_constant_mismatch,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
+    spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,

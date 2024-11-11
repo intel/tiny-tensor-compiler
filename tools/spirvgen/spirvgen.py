@@ -199,6 +199,12 @@ def generate_op_classes(f, grammar):
             print(
                 f'constexpr static std::array<Capability, {len(caps)}> required_capabilities = {{{cap_str}}};',
                 file=f)
+        if 'extensions' in instruction:
+            exts = instruction['extensions']
+            ext_str = ','.join([f'\"{ext}\"' for ext in exts])
+            print(
+                f'constexpr static std::array<char const*, {len(exts)}> required_extensions = {{{ext_str}}};',
+                file=f)
         f.write(f'{get_class_name(instruction)}(')
         f.write(','.join([
             f'{o.kind} {o.name}{f" = {o.init}" if o.init else ""}'

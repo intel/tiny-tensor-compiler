@@ -21,6 +21,8 @@ namespace tinytc::spv {
 
 class OpTypeFunction;
 
+auto address_space_to_storage_class(address_space as) -> StorageClass;
+
 class uniquifier {
   public:
     uniquifier(tinytc_compiler_context_t ctx, mod &m);
@@ -32,6 +34,7 @@ class uniquifier {
     auto builtin_var(BuiltIn b) -> spv_inst *;
     void capability(Capability cap);
     auto constant(LiteralContextDependentNumber cst) -> spv_inst *;
+    void extension(char const *ext_name);
     auto index3_ty() -> spv_inst *;
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
@@ -73,6 +76,7 @@ class uniquifier {
     std::unordered_map<BuiltIn, spv_inst *> builtin_;
     std::unordered_set<Capability> capabilities_;
     std::unordered_map<LiteralContextDependentNumber, spv_inst *> cst_map_;
+    std::unordered_set<char const *> extensions_;
     std::unordered_map<spv_inst *, spv_inst *> null_cst_;
     std::unordered_multimap<std::uint64_t, OpTypeFunction *> spv_function_tys_;
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,

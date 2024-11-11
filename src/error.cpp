@@ -207,6 +207,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Forward declaration of id is forbidden";
     case tinytc_status_spirv_undefined_value:
         return "Undefined SPIR-V value";
+    case tinytc_status_spirv_missing_dope_vector:
+        return "Dope vector missing (internal compiler error)";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

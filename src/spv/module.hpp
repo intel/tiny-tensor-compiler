@@ -26,15 +26,16 @@ namespace spv {
 
 enum class section {
     capability = 0,
-    ext_inst = 1,
-    memory_model = 2,
-    entry_point = 3,
-    execution_mode = 4,
-    decoration = 5,
-    type_const_var = 6,
-    function = 7
+    extension = 1,
+    ext_inst = 2,
+    memory_model = 3,
+    entry_point = 4,
+    execution_mode = 5,
+    decoration = 6,
+    type_const_var = 7,
+    function = 8
 };
-inline constexpr std::int32_t num_module_sections = 8;
+inline constexpr std::int32_t num_module_sections = 9;
 
 class mod final {
   public:

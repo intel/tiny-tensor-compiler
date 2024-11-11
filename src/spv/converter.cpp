@@ -59,12 +59,24 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
         }
     }
 
-    // Add missing capabilites
+    // Add missing capabilites and extensions
     for (std::int32_t s = 0; s < num_module_sections; ++s) {
         for (auto const &i : m->insts(enum_cast<section>(s))) {
-            visit(overloaded{[&]<spv_inst_with_required_capabilities I>(I const &) {
+            visit(overloaded{[&]<spv_inst_with_required_capabilities I>(I const &in) {
+                                 if (isa<OpAtomicFAddEXT>(static_cast<spv_inst const &>(in))) {
+                                     // We manage OpAtomicFAddExt manually as the required
+                                     // capabilitites depend on the data type
+                                     return;
+                                 }
                                  for (auto const &cap : I::required_capabilities) {
                                      conv.unique().capability(cap);
+                                 }
+                             },
+                             [&](auto const &) {}},
+                  i);
+            visit(overloaded{[&]<spv_inst_with_required_extensions I>(I const &) {
+                                 for (auto const &ext_name : I::required_extensions) {
+                                     conv.unique().extension(ext_name);
                                  }
                              },
                              [&](auto const &) {}},
@@ -237,6 +249,95 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
                    },
                    [](auto const &) -> dope_vector * { return nullptr; }},
         *v.ty());
+}
+
+void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
+                                spv_inst *pointer, spv_inst *value) {
+    auto const add_fadd_caps = [&] {
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            break;
+        case scalar_type::f32:
+        case scalar_type::c32:
+            unique_.capability(Capability::AtomicFloat32AddEXT);
+            break;
+        case scalar_type::f64:
+        case scalar_type::c64:
+            unique_.capability(Capability::AtomicFloat64AddEXT);
+            break;
+        }
+    };
+    auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
+        auto component_sty = element_type(sty);
+        auto float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, component_sty));
+        const auto storage_cls = address_space_to_storage_class(as);
+        auto pointer_ty = unique_.spv_pointer_ty(storage_cls, float_ty, alignment(component_sty));
+        auto c0 = unique_.constant(std::int32_t{0});
+        auto c1 = unique_.constant(std::int32_t{1});
+        auto re_ptr = mod_->add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c0});
+        auto im_ptr = mod_->add<OpInBoundsAccessChain>(pointer_ty, pointer, std::vector<IdRef>{c1});
+        auto re_val =
+            mod_->add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{0});
+        auto im_val =
+            mod_->add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{1});
+        return {{{re_ptr, re_val}, {im_ptr, im_val}}};
+    };
+    switch (flag) {
+    case store_flag::regular:
+        mod_->add<OpStore>(pointer, value);
+        break;
+    case store_flag::atomic: {
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
+        auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
+        switch (sty) {
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto re_im = split_re_im();
+            mod_->add<OpAtomicStore>(re_im[0][0], scope, semantics, re_im[0][1]);
+            mod_->add<OpAtomicStore>(re_im[1][0], scope, semantics, re_im[1][1]);
+            break;
+        }
+        default:
+            mod_->add<OpAtomicStore>(pointer, scope, semantics, value);
+            break;
+        }
+        break;
+    }
+    case store_flag::atomic_add: {
+        auto result_ty = unique_.spv_ty(scalar_data_type::get(ctx_, sty));
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
+        auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            mod_->add<OpAtomicIAdd>(result_ty, pointer, scope, semantics, value);
+            break;
+        case scalar_type::f32:
+        case scalar_type::f64:
+            add_fadd_caps();
+            mod_->add<OpAtomicFAddEXT>(result_ty, pointer, scope, semantics, value);
+            break;
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            add_fadd_caps();
+            auto re_im = split_re_im();
+            auto component_sty = element_type(sty);
+            auto float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, component_sty));
+            mod_->add<OpAtomicFAddEXT>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
+            mod_->add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
+            break;
+        }
+        }
+        break;
+    } break;
+    }
 }
 
 void inst_converter::operator()(inst_node const &in) {
@@ -873,7 +974,7 @@ void inst_converter::operator()(load_inst const &in) {
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
     auto dv = get_dope_vector(in.operand());
     if (!dv) {
-        throw compilation_error(in.loc(), status::internal_compiler_error);
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
 
     if (auto group_ty = dyn_cast<group_data_type>(in.operand().ty()); group_ty) {
@@ -898,15 +999,20 @@ void inst_converter::operator()(load_inst const &in) {
             rdv->stride(i, make_dope_par(dv->static_stride(i), dv->stride(i)));
         }
     } else if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
-        auto offset = unique_.null_constant(spv_index_ty);
-        for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
-            auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
-            offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
-        }
+        const auto pointer = [&]() -> spv_inst * {
+            if (memref_ty->dim() == 0) {
+                return val(in.operand());
+            }
 
-        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
-                                                           offset, std::vector<spv_inst *>{});
-        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer));
+            auto offset = unique_.null_constant(spv_index_ty);
+            for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
+                auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
+                offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
+            }
+            return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
+                                                       std::vector<spv_inst *>{});
+        };
+        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer()));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
     }
@@ -917,6 +1023,36 @@ void inst_converter::operator()(num_subgroups_inst const &in) {
 }
 
 void inst_converter::operator()(parallel_inst const &in) { run_on_region(in.body()); }
+
+void inst_converter::operator()(store_inst const &in) {
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
+    auto dv = get_dope_vector(in.operand());
+    if (!dv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+
+    if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
+        const auto pointer = [&]() -> spv_inst * {
+            if (memref_ty->dim() == 0) {
+                return val(in.operand());
+            }
+
+            auto offset = unique_.null_constant(spv_index_ty);
+            for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
+                auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
+                offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
+            }
+            return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
+                                                       std::vector<spv_inst *>{});
+        };
+
+        make_store(in.flag(), memref_ty->element_ty(), memref_ty->addrspace(), pointer(),
+                   val(in.val()));
+    } else {
+        throw compilation_error(in.loc(), status::ir_expected_memref);
+    }
+}
 
 void inst_converter::operator()(subgroup_id_inst const &in) {
     declare(in.result(0), load_builtin(BuiltIn::SubgroupId));

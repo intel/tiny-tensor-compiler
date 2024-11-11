@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_2024118_HPP
-#define GENERATED_INSTRUCTIONS_2024118_HPP
+#ifndef GENERATED_INSTRUCTIONS_20241111_HPP
+#define GENERATED_INSTRUCTIONS_20241111_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -5544,6 +5544,8 @@ class OpExecutionModeId : public spv_inst {
 class OpDecorateId : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::DecorateId; }
+    constexpr static std::array<char const *, 1> required_extensions = {
+        "SPV_GOOGLE_hlsl_functionality1"};
     OpDecorateId(IdRef op0, Decoration op1)
         : spv_inst{Op::DecorateId, false}, op0_(std::move(op0)), op1_(std::move(op1)) {}
     inline auto op0() -> IdRef & { return op0_; }
@@ -6645,7 +6647,90 @@ class OpCooperativeMatrixLengthKHR : public spv_inst {
     IdResultType type_;
     IdRef op0_;
 };
+class OpAtomicFMinEXT : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AtomicFMinEXT; }
+    constexpr static std::array<Capability, 4> required_capabilities = {
+        Capability::AtomicFloat16MinMaxEXT, Capability::AtomicFloat32MinMaxEXT,
+        Capability::AtomicFloat64MinMaxEXT, Capability::AtomicFloat16VectorNV};
+    OpAtomicFMinEXT(IdResultType type, IdRef op0, IdScope op1, IdMemorySemantics op2, IdRef op3)
+        : spv_inst{Op::AtomicFMinEXT, true}, type_(std::move(type)), op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdScope & { return op1_; }
+    inline auto op1() const -> IdScope const & { return op1_; }
+    inline auto op2() -> IdMemorySemantics & { return op2_; }
+    inline auto op2() const -> IdMemorySemantics const & { return op2_; }
+    inline auto op3() -> IdRef & { return op3_; }
+    inline auto op3() const -> IdRef const & { return op3_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    IdScope op1_;
+    IdMemorySemantics op2_;
+    IdRef op3_;
+};
+class OpAtomicFMaxEXT : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AtomicFMaxEXT; }
+    constexpr static std::array<Capability, 4> required_capabilities = {
+        Capability::AtomicFloat16MinMaxEXT, Capability::AtomicFloat32MinMaxEXT,
+        Capability::AtomicFloat64MinMaxEXT, Capability::AtomicFloat16VectorNV};
+    OpAtomicFMaxEXT(IdResultType type, IdRef op0, IdScope op1, IdMemorySemantics op2, IdRef op3)
+        : spv_inst{Op::AtomicFMaxEXT, true}, type_(std::move(type)), op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdScope & { return op1_; }
+    inline auto op1() const -> IdScope const & { return op1_; }
+    inline auto op2() -> IdMemorySemantics & { return op2_; }
+    inline auto op2() const -> IdMemorySemantics const & { return op2_; }
+    inline auto op3() -> IdRef & { return op3_; }
+    inline auto op3() const -> IdRef const & { return op3_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    IdScope op1_;
+    IdMemorySemantics op2_;
+    IdRef op3_;
+};
+class OpAtomicFAddEXT : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AtomicFAddEXT; }
+    constexpr static std::array<Capability, 4> required_capabilities = {
+        Capability::AtomicFloat16AddEXT, Capability::AtomicFloat32AddEXT,
+        Capability::AtomicFloat64AddEXT, Capability::AtomicFloat16VectorNV};
+    constexpr static std::array<char const *, 1> required_extensions = {
+        "SPV_EXT_shader_atomic_float_add"};
+    OpAtomicFAddEXT(IdResultType type, IdRef op0, IdScope op1, IdMemorySemantics op2, IdRef op3)
+        : spv_inst{Op::AtomicFAddEXT, true}, type_(std::move(type)), op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdScope & { return op1_; }
+    inline auto op1() const -> IdScope const & { return op1_; }
+    inline auto op2() -> IdMemorySemantics & { return op2_; }
+    inline auto op2() const -> IdMemorySemantics const & { return op2_; }
+    inline auto op3() -> IdRef & { return op3_; }
+    inline auto op3() const -> IdRef const & { return op3_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    IdScope op1_;
+    IdMemorySemantics op2_;
+    IdRef op3_;
+};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_2024118_HPP
+#endif // GENERATED_INSTRUCTIONS_20241111_HPP

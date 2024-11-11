@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_2024118_HPP
-#define GENERATED_VISIT_2024118_HPP
+#ifndef GENERATED_VISIT_20241111_HPP
+#define GENERATED_VISIT_20241111_HPP
 
 namespace tinytc::spv {
 
@@ -704,6 +704,12 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpCooperativeMatrixMulAddKHR const &>(inst));
     case Op::CooperativeMatrixLengthKHR:
         return visitor(static_cast<OpCooperativeMatrixLengthKHR const &>(inst));
+    case Op::AtomicFMinEXT:
+        return visitor(static_cast<OpAtomicFMinEXT const &>(inst));
+    case Op::AtomicFMaxEXT:
+        return visitor(static_cast<OpAtomicFMaxEXT const &>(inst));
+    case Op::AtomicFAddEXT:
+        return visitor(static_cast<OpAtomicFAddEXT const &>(inst));
     }
     throw internal_compiler_error();
 }
@@ -2934,8 +2940,32 @@ template <typename Derived> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->operator()(in.op0());
     }
+    auto operator()(OpAtomicFMinEXT const &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+    }
+    auto operator()(OpAtomicFMaxEXT const &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+    }
+    auto operator()(OpAtomicFAddEXT const &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+    }
 };
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_2024118_HPP
+#endif // GENERATED_VISIT_20241111_HPP

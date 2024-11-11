@@ -20,6 +20,10 @@
 
 namespace tinytc::spv {
 
+auto address_space_to_storage_class(address_space as) -> StorageClass {
+    return as == address_space::local ? StorageClass::Workgroup : StorageClass::CrossWorkgroup;
+}
+
 uniquifier::uniquifier(tinytc_compiler_context_t ctx, mod &m) : ctx_(ctx), mod_(&m) {}
 
 auto uniquifier::bool2_ty() -> spv_inst * {
@@ -127,6 +131,13 @@ auto uniquifier::constant(LiteralContextDependentNumber cst) -> spv_inst * {
     });
 }
 
+void uniquifier::extension(char const *ext_name) {
+    if (!extensions_.contains(ext_name)) {
+        mod_->add_to<OpExtension>(section::extension, ext_name);
+        extensions_.insert(ext_name);
+    }
+}
+
 auto uniquifier::index3_ty() -> spv_inst * {
     return lookup(index3_ty_, [&] {
         auto index_ty = spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
@@ -189,9 +200,7 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                                           alignment(scalar_type::i64));
                 },
                 [&](memref_data_type const &mr) -> spv_inst * {
-                    const auto storage_cls = mr.addrspace() == address_space::local
-                                                 ? StorageClass::Workgroup
-                                                 : StorageClass::CrossWorkgroup;
+                    const auto storage_cls = address_space_to_storage_class(mr.addrspace());
                     auto spv_element_ty = spv_ty(mr.element_data_ty());
                     const std::int32_t align = [&](scalar_type sty) -> std::int32_t {
                         if (is_complex_type(sty)) {

@@ -77,6 +77,7 @@ class inst_converter {
     void operator()(load_inst const &in);
     void operator()(num_subgroups_inst const &in);
     void operator()(parallel_inst const &in);
+    void operator()(store_inst const &in);
     void operator()(subgroup_id_inst const &in);
     void operator()(subgroup_local_id_inst const &in);
     void operator()(subgroup_size_inst const &in);
@@ -115,6 +116,8 @@ class inst_converter {
     auto make_constant(scalar_type sty, spv_inst *spv_ty,
                        constant_inst::value_type const &val) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
+    void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
+                    spv_inst *value);
 
     tinytc_compiler_context_t ctx_;
     mod *mod_;
@@ -129,5 +132,7 @@ class inst_converter {
 
 template <typename T>
 concept spv_inst_with_required_capabilities = requires() { T::required_capabilities; };
+template <typename T>
+concept spv_inst_with_required_extensions = requires() { T::required_extensions; };
 
 } // namespace tinytc::spv

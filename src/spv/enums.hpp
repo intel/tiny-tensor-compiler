@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_2024118_HPP
-#define GENERATED_ENUMS_2024118_HPP
+#ifndef GENERATED_ENUMS_20241111_HPP
+#define GENERATED_ENUMS_20241111_HPP
 
 namespace tinytc::spv {
 
@@ -354,6 +354,9 @@ enum class Op {
     CooperativeMatrixStoreKHR = 4458,
     CooperativeMatrixMulAddKHR = 4459,
     CooperativeMatrixLengthKHR = 4460,
+    AtomicFMinEXT = 5614,
+    AtomicFMaxEXT = 5615,
+    AtomicFAddEXT = 6035,
 };
 enum class ImageOperands {
     None = 0x0000,
@@ -1422,4 +1425,4 @@ enum class FPEncoding {};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_2024118_HPP
+#endif // GENERATED_ENUMS_20241111_HPP
