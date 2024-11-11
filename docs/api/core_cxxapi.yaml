@@ -31,6 +31,8 @@ Core C++-API:
       - tinytc::list_function_passes
       - tinytc::compile_to_opencl
       - tinytc::compile_to_spirv
+      - tinytc::compile_to_spirv_and_assemble
+      - tinytc::spirv_assemble
   Compiler Context:
     function:
       - tinytc::make_compiler_context
@@ -72,6 +74,9 @@ Core C++-API:
       - tinytc::auto_mem_type_v
       - tinytc::is_supported_scalar_type
       - tinytc::is_usm_pointer_type
+  SPIR-V module:
+    class:
+      - tinytc::spv_mod
   Source:
     class:
       - tinytc::source

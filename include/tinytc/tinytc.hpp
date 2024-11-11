@@ -1723,6 +1723,50 @@ inline prog make_prog(compiler_context const &ctx, location const &loc = {}) {
 }
 
 ////////////////////////////
+/////// SPIR-V Module //////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_spv_mod_t> {
+    static auto retain(tinytc_spv_mod_t handle) -> tinytc_status_t {
+        return tinytc_spv_mod_retain(handle);
+    }
+    static auto release(tinytc_spv_mod_t handle) -> tinytc_status_t {
+        return tinytc_spv_mod_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_spv_mod_t
+class spv_mod : public shared_handle<tinytc_spv_mod_t> {
+  public:
+    using shared_handle::shared_handle;
+
+    /**
+     * @brief Dump module to stderr
+     */
+    void dump() const { CHECK_STATUS(tinytc_spv_mod_dump(obj_)); }
+    /**
+     * @brief Dump module to file
+     *
+     * @param filename Path to file
+     */
+    void print_to_file(char const *filename) const {
+        CHECK_STATUS(tinytc_spv_mod_print_to_file(obj_, filename));
+    }
+    /**
+     * @brief Dump module to string
+     *
+     * @return C-string (unique handle)
+     */
+    auto print_to_string() const -> unique_handle<char *> {
+        char *str;
+        CHECK_STATUS(tinytc_spv_mod_print_to_string(obj_, &str));
+        return unique_handle<char *>{str};
+    }
+};
+
+////////////////////////////
 ////////// Builder /////////
 ////////////////////////////
 
@@ -2279,16 +2323,43 @@ inline auto compile_to_opencl(prog prg, core_info const &info) -> source {
 }
 
 /**
- * @brief Compile program to SPIR-V
+ * @brief Convert tensor language to SPIR-V
+ *
+ * @param prg Program
+ * @param info Core info
+ *
+ * @return SPIR-V module
+ */
+inline auto compile_to_spirv(prog prg, core_info const &info) -> spv_mod {
+    tinytc_spv_mod_t mod;
+    CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg.get(), info.get()));
+    return spv_mod{mod};
+}
+
+/**
+ * @brief Compile program to SPIR-V and assemble
  *
  * @param prg Program
  * @param info Core info
  *
  * @return Binary
  */
-inline auto compile_to_spirv(prog prg, core_info const &info) -> binary {
+inline auto compile_to_spirv_and_assemble(prog prg, core_info const &info) -> binary {
     tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_prog_compile_to_spirv(&bin, prg.get(), info.get()));
+    CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, prg.get(), info.get()));
+    return binary{bin};
+}
+
+/**
+ * @brief Assemble SPIR-V module
+ *
+ * @param mod [in] SPIR-V module
+ *
+ * @return Binary
+ */
+inline auto spirv_assemble(spv_mod const &mod) -> binary {
+    tinytc_binary_t bin;
+    CHECK_STATUS(tinytc_spirv_assemble(&bin, mod.get()));
     return binary{bin};
 }
 

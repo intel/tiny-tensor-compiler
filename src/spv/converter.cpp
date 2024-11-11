@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/converter.hpp"
-#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
@@ -21,13 +20,13 @@
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
-#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <array>
 #include <complex>
 #include <cstdint>
+#include <memory>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -39,10 +38,11 @@
 namespace tinytc::spv {
 
 auto convert_prog_to_spirv(tinytc_prog const &p,
-                           tinytc_core_info const &info) -> std::unique_ptr<mod> {
-    auto m = std::make_unique<mod>();
+                           tinytc_core_info const &info) -> ::tinytc::spv_mod {
+    auto m = ::tinytc::spv_mod{
+        std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
-    auto conv = inst_converter{p.context(), *m};
+    auto conv = inst_converter{*m};
 
     conv.unique().capability(Capability::Addresses);
     conv.unique().capability(Capability::Kernel);
@@ -111,8 +111,7 @@ auto dope_vector::num_dynamic() const -> std::int64_t {
     return sum_dynamic(static_shape_) + sum_dynamic(static_stride_);
 }
 
-inst_converter::inst_converter(tinytc_compiler_context_t ctx, mod &m)
-    : ctx_(ctx), mod_(&m), unique_(ctx, m) {}
+inst_converter::inst_converter(tinytc_spv_mod &m) : mod_(&m), unique_(m) {}
 
 auto inst_converter::get_last_label() -> spv_inst * {
     auto &insts = mod_->insts(section::function);
@@ -230,7 +229,7 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
         throw compilation_error(v.loc(), status::internal_compiler_error);
     }
 
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     return ::tinytc::visit(
         overloaded{[&](memref_data_type const &mr) -> dope_vector * {
                        return &(dope_vec_[&v] = dope_vector{spv_index_ty, mr.shape(), mr.stride()});
@@ -273,7 +272,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
     };
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = element_type(sty);
-        auto float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, component_sty));
+        auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
         const auto storage_cls = address_space_to_storage_class(as);
         auto pointer_ty = unique_.spv_pointer_ty(storage_cls, float_ty, alignment(component_sty));
         auto c0 = unique_.constant(std::int32_t{0});
@@ -308,7 +307,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         break;
     }
     case store_flag::atomic_add: {
-        auto result_ty = unique_.spv_ty(scalar_data_type::get(ctx_, sty));
+        auto result_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), sty));
         auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
         switch (sty) {
@@ -329,7 +328,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
             add_fadd_caps();
             auto re_im = split_re_im();
             auto component_sty = element_type(sty);
-            auto float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, component_sty));
+            auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
             break;
@@ -490,7 +489,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
                                   spv_inst *a) -> spv_inst * {
         switch (op) {
         case arithmetic_unary::abs: {
-            auto spv_a_ty = unique_.spv_ty(scalar_data_type::get(ctx_, sty));
+            auto spv_a_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), sty));
             auto a2 = mod_->add<OpFMul>(spv_a_ty, a, a);
             auto a2_0 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{0});
             auto a2_1 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{1});
@@ -502,7 +501,8 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case arithmetic_unary::neg:
             return mod_->add<OpFNegate>(ty, a);
         case arithmetic_unary::conj: {
-            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(sty)));
+            auto spv_float_ty =
+                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(sty)));
             auto a_im =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
             auto neg_a_im = mod_->add<OpFNegate>(spv_float_ty, a_im);
@@ -590,7 +590,8 @@ void inst_converter::operator()(cast_inst const &in) {
             return mod_->add<OpConvertSToF>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto spv_float_ty =
+                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(to_ty)));
             auto re = mod_->add<OpConvertSToF>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -612,7 +613,8 @@ void inst_converter::operator()(cast_inst const &in) {
             return mod_->add<OpFConvert>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(scalar_data_type::get(ctx_, element_type(to_ty)));
+            auto spv_float_ty =
+                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(to_ty)));
             auto re = mod_->add<OpFConvert>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -793,7 +795,7 @@ void inst_converter::operator()(for_inst const &in) {
     mod_->add<OpBranch>(header_label.get());
 
     // Header block
-    auto spv_bool_ty = unique_.spv_ty(boolean_data_type::get(ctx_));
+    auto spv_bool_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
     auto spv_loop_var_ty = unique_.spv_ty(in.loop_var().ty());
     auto header_block_last_label = header_label.get();
     mod_->insts(section::function).push_back(header_label.release());
@@ -902,13 +904,13 @@ void inst_converter::operator()(for_inst const &in) {
 
 void inst_converter::operator()(group_id_inst const &in) {
     auto gid = load_builtin(BuiltIn::GlobalInvocationId);
-    auto index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     declare(in.result(0),
             mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
 }
 void inst_converter::operator()(group_size_inst const &in) {
     auto gs = load_builtin(BuiltIn::GlobalSize);
-    auto index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     declare(in.result(0),
             mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
 }
@@ -967,7 +969,7 @@ void inst_converter::operator()(if_inst const &in) {
 }
 
 void inst_converter::operator()(load_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     auto spv_pointer_index_ty = unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
                                                        alignment(scalar_type::i64));
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
@@ -1033,7 +1035,7 @@ void inst_converter::operator()(size_inst const &in) {
 }
 
 void inst_converter::operator()(store_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
     auto dv = get_dope_vector(in.operand());
     if (!dv) {
@@ -1166,7 +1168,7 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
     }());
 
     // Function
-    auto void_ty = unique_.spv_ty(void_data_type::get(ctx_));
+    auto void_ty = unique_.spv_ty(void_data_type::get(mod_->context()));
     auto fun = mod_->add<OpFunction>(void_ty, FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
         declare(p, mod_->add<OpFunctionParameter>(unique_.spv_ty(p.ty())));

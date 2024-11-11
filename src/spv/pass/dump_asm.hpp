@@ -8,14 +8,11 @@
 #include "spv/instructions.hpp"
 #include "spv/names.hpp"
 #include "spv/visit.hpp"
+#include "tinytc/types.h"
 
-#include <cstdint>
 #include <ostream>
-#include <unordered_map>
 
 namespace tinytc::spv {
-
-class mod;
 
 class dump_asm_pass : public default_visitor<dump_asm_pass> {
   public:
@@ -42,18 +39,12 @@ class dump_asm_pass : public default_visitor<dump_asm_pass> {
     void operator()(PairLiteralIntegerIdRef const &p);
 
     void operator()(spv_inst *const &in);
-    auto operator()(OpExtInst const &in);
-    auto operator()(OpPhi const &in);
+    void operator()(OpExtInst const &in);
 
-    void run_on_module(mod const &m);
+    void run_on_module(tinytc_spv_mod const &m);
 
   private:
-    auto declare(spv_inst const *in) -> std::int64_t;
-
     std::ostream *os_;
-
-    std::int64_t slot_ = 0;
-    std::unordered_map<spv_inst const *, std::int64_t> slot_map_;
 };
 
 } // namespace tinytc::spv

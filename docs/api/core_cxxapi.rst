@@ -436,6 +436,21 @@ is_usm_pointer_type
 
 .. doxygenvariable:: tinytc::is_usm_pointer_type
 
+SPIR-V module
+=============
+
+* Classes
+
+  * :ref:`spv_mod`
+
+SPIR-V module Classes
+---------------------
+
+spv_mod
+.......
+
+.. doxygenclass:: tinytc::spv_mod
+
 Source
 ======
 

@@ -7,7 +7,11 @@
 #ifndef GENERATED_ENUMS_20241111_HPP
 #define GENERATED_ENUMS_20241111_HPP
 
+#include <cstdint>
+
 namespace tinytc::spv {
+
+constexpr std::int32_t magic_number = 0x07230203;
 
 enum class Op {
     Nop = 0,

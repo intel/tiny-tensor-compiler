@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
 
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#F32]]

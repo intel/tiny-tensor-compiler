@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/uniquifier.hpp"
-#include "compiler_context.hpp"
-#include "node/data_type_node.hpp"
 #include "scalar_type.hpp"
 #include "spv/instructions.hpp"
 #include "spv/opencl.std.hpp"
@@ -24,11 +22,11 @@ auto address_space_to_storage_class(address_space as) -> StorageClass {
     return as == address_space::local ? StorageClass::Workgroup : StorageClass::CrossWorkgroup;
 }
 
-uniquifier::uniquifier(tinytc_compiler_context_t ctx, mod &m) : ctx_(ctx), mod_(&m) {}
+uniquifier::uniquifier(tinytc_spv_mod &m) : mod_(&m) {}
 
 auto uniquifier::bool2_ty() -> spv_inst * {
     return lookup(bool2_ty_, [&] {
-        auto bool_ty = spv_ty(boolean_data_type::get(ctx_));
+        auto bool_ty = spv_ty(boolean_data_type::get(mod_->context()));
         return mod_->add_to<OpTypeVector>(section::type_const_var, bool_ty, 2);
     });
 }
@@ -36,12 +34,12 @@ auto uniquifier::bool2_ty() -> spv_inst * {
 auto uniquifier::bool_constant(bool b) -> spv_inst * {
     if (b) {
         return lookup(bool_true_, [&] {
-            auto bool_ty = spv_ty(boolean_data_type::get(ctx_));
+            auto bool_ty = spv_ty(boolean_data_type::get(mod_->context()));
             return mod_->add_to<OpConstantTrue>(section::type_const_var, bool_ty);
         });
     }
     return lookup(bool_false_, [&] {
-        auto bool_ty = spv_ty(boolean_data_type::get(ctx_));
+        auto bool_ty = spv_ty(boolean_data_type::get(mod_->context()));
         return mod_->add_to<OpConstantFalse>(section::type_const_var, bool_ty);
     });
 }
@@ -83,10 +81,10 @@ auto uniquifier::builtin_pointee_ty(BuiltIn b) -> spv_inst * {
     case BuiltIn::NumEnqueuedSubgroups:
     case BuiltIn::SubgroupId:
     case BuiltIn::SubgroupLocalInvocationId:
-        return spv_ty(scalar_data_type::get(ctx_, scalar_type::i32));
+        return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i32));
     case BuiltIn::GlobalLinearId:
     case BuiltIn::LocalInvocationIndex:
-        return spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+        return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     case BuiltIn::GlobalSize:
     case BuiltIn::GlobalInvocationId:
     case BuiltIn::WorkgroupSize:
@@ -126,7 +124,7 @@ auto uniquifier::constant(LiteralContextDependentNumber cst) -> spv_inst * {
         scalar_type sty = std::visit(
             overloaded{[](auto const &c) { return to_scalar_type_v<std::decay_t<decltype(c)>>; }},
             cst);
-        auto ty = spv_ty(scalar_data_type::get(ctx_, sty));
+        auto ty = spv_ty(scalar_data_type::get(mod_->context(), sty));
         return mod_->add_to<OpConstant>(section::type_const_var, ty, cst);
     });
 }
@@ -140,7 +138,7 @@ void uniquifier::extension(char const *ext_name) {
 
 auto uniquifier::index3_ty() -> spv_inst * {
     return lookup(index3_ty_, [&] {
-        auto index_ty = spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
+        auto index_ty = spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
         return mod_->add_to<OpTypeVector>(section::type_const_var, index_ty, 3);
     });
 }
@@ -165,7 +163,7 @@ auto uniquifier::spv_function_ty(array_view<spv_inst *> params) -> spv_inst * {
             return it->second;
         }
     }
-    auto void_ty = spv_ty(void_data_type::get(ctx_));
+    auto void_ty = spv_ty(void_data_type::get(mod_->context()));
     return spv_function_tys_
         .emplace(map_key,
                  mod_->add_to<OpTypeFunction>(section::type_const_var, void_ty, std::move(params)))
@@ -227,9 +225,9 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         const auto sz = size(ty.ty());
                         if (sz == 8) {
                             capability(Capability::Int64);
-                            return spv_ty(scalar_data_type::get(ctx_, scalar_type::i64));
+                            return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i64));
                         }
-                        return spv_ty(scalar_data_type::get(ctx_, scalar_type::i32));
+                        return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i32));
                     }
                     case scalar_type::f32:
                     case scalar_type::f64:
@@ -237,11 +235,13 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         return mod_->add_to<OpTypeFloat>(section::type_const_var, size(ty.ty()) * 8,
                                                          std::nullopt);
                     case scalar_type::c32: {
-                        auto float_ty = spv_ty(scalar_data_type::get(ctx_, scalar_type::f32));
+                        auto float_ty =
+                            spv_ty(scalar_data_type::get(mod_->context(), scalar_type::f32));
                         return mod_->add_to<OpTypeVector>(section::type_const_var, float_ty, 2);
                     }
                     case scalar_type::c64: {
-                        auto float_ty = spv_ty(scalar_data_type::get(ctx_, scalar_type::f64));
+                        auto float_ty =
+                            spv_ty(scalar_data_type::get(mod_->context(), scalar_type::f64));
                         return mod_->add_to<OpTypeVector>(section::type_const_var, float_ty, 2);
                     }
                     }

@@ -21,7 +21,8 @@
 #include "reference_counted.hpp"
 #include "required_extensions.hpp"
 #include "source.hpp"
-#include "spv/pass/dump_asm.hpp"
+#include "spv/pass/assemble.hpp"
+#include "spv/pass/assign_ids.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -152,23 +153,37 @@ tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_
         prg->context());
 }
 
-tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_binary_t *bin, tinytc_prog_t prg,
+tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_spv_mod_t *mod, tinytc_prog_t prg,
                                              const_tinytc_core_info_t info) {
-    if (bin == nullptr || prg == nullptr || info == nullptr) {
+    if (mod == nullptr || prg == nullptr || info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
         [&] {
             apply_default_optimization_pipeline(prg, info);
 
-            // opencl
-            auto mod = convert_to_spirv_pass{info}.run_on_program(*prg);
-            spv::dump_asm_pass{std::cout}.run_on_module(*mod);
-
-            //*bin = std::make_unique<::tinytc_binary>(prg->share_context(), mod.to_binary(),
-            // bundle_format::spirv, info->core_features())
-            //.release();
+            *mod = convert_to_spirv_pass{info}.run_on_program(*prg).release();
+            spv::id_assigner{}.run_on_module(**mod);
         },
         prg->context());
+}
+
+tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(tinytc_binary_t *bin, tinytc_prog_t prg,
+                                                          const_tinytc_core_info_t info) {
+    if (bin == nullptr || prg == nullptr || info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    tinytc_spv_mod_t mod;
+    TINYTC_CHECK_STATUS(tinytc_prog_compile_to_spirv(&mod, prg, info));
+    auto mod_ = spv_mod{mod}; // For clean-up
+    TINYTC_CHECK_STATUS(tinytc_spirv_assemble(bin, mod_.get()));
+    return tinytc_status_success;
+}
+
+tinytc_status_t tinytc_spirv_assemble(tinytc_binary_t *bin, const_tinytc_spv_mod_t mod) {
+    if (bin == nullptr || mod == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *bin = spv::assembler{}.run_on_module(*mod).release(); });
 }
 }

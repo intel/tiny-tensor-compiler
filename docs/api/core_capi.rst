@@ -48,6 +48,8 @@ Common
 
   * :ref:`tinytc_source_t`
 
+  * :ref:`tinytc_spv_mod_t`
+
   * :ref:`tinytc_compiler_context_t`
 
   * :ref:`const_tinytc_binary_t`
@@ -59,6 +61,8 @@ Common
   * :ref:`const_tinytc_recipe_handler_t`
 
   * :ref:`const_tinytc_source_t`
+
+  * :ref:`const_tinytc_spv_mod_t`
 
   * :ref:`const_tinytc_compiler_context_t`
 
@@ -156,6 +160,11 @@ tinytc_source_t
 
 .. doxygentypedef:: tinytc_source_t
 
+tinytc_spv_mod_t
+................
+
+.. doxygentypedef:: tinytc_spv_mod_t
+
 tinytc_compiler_context_t
 .........................
 
@@ -185,6 +194,11 @@ const_tinytc_source_t
 .....................
 
 .. doxygentypedef:: const_tinytc_source_t
+
+const_tinytc_spv_mod_t
+......................
+
+.. doxygentypedef:: const_tinytc_spv_mod_t
 
 const_tinytc_compiler_context_t
 ...............................
@@ -613,6 +627,28 @@ tinytc_recipe_handler_retain
 ............................
 
 .. doxygenfunction:: tinytc_recipe_handler_retain
+
+SPIR-V module
+=============
+
+* Functions
+
+  * :ref:`tinytc_spv_mod_release`
+
+  * :ref:`tinytc_spv_mod_retain`
+
+SPIR-V module Functions
+-----------------------
+
+tinytc_spv_mod_release
+......................
+
+.. doxygenfunction:: tinytc_spv_mod_release
+
+tinytc_spv_mod_retain
+.....................
+
+.. doxygenfunction:: tinytc_spv_mod_retain
 
 Source
 ======

@@ -14,17 +14,19 @@ import shutil
 from gen import generate_cpp, generate_header
 
 spv_enums = 'enums.hpp'
+spv_enums_includes = ['<cstdint>']
 spv_names = 'names.hpp'
 spv_names_includes = [spv_enums]
 spv_names_cpp = 'names.cpp'
 spv_names_cpp_includes = [spv_names, spv_enums]
 spv_defs = 'defs.hpp'
 spv_defs_includes = [
-    spv_enums, 'support/ilist_base.hpp', None, '<cstdint>', '<variant>',
-    '<string>', '<utility>'
+    spv_enums, 'support/ilist_base.hpp', None, '<cstdint>', '<limits>',
+    '<variant>', '<string>', '<utility>'
 ]
 spv_ops = 'instructions.hpp'
 spv_visitor = 'visit.hpp'
+spv_visitor_includes = [spv_defs, spv_enums, spv_ops]
 spv_ops_includes = [
     spv_defs, spv_enums, 'error.hpp', 'support/ilist_base.hpp', None,
     '<array>', '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>',
@@ -48,6 +50,10 @@ def get_class_name(instruction):
 
 
 def generate_enums(f, grammar):
+    print(f'constexpr std::int32_t magic_number = {grammar["magic_number"]};',
+          file=f)
+    print(file=f)
+
     print('enum class Op {', file=f)
     for inst in grammar['instructions']:
         print(f'{get_opcode_name(inst)} = {inst["opcode"]},', file=f)
@@ -147,7 +153,8 @@ def generate_defs(f, grammar):
     print("""
 class spv_inst : public ilist_node<spv_inst> {
   public:
-    inline spv_inst(Op opcode, bool has_result_id) : opcode_{opcode}, has_result_id_{has_result_id} {}
+    inline spv_inst(Op opcode, bool has_result_id)
+        : opcode_{opcode}, id_{has_result_id ? 0 : std::numeric_limits<std::uint32_t>::max()} {}
     virtual ~spv_inst() = default;
 
     spv_inst(spv_inst const &other) = delete;
@@ -156,11 +163,15 @@ class spv_inst : public ilist_node<spv_inst> {
     spv_inst &operator=(spv_inst &&other) = delete;
 
     inline auto opcode() const -> Op { return opcode_; }
-    inline auto has_result_id() const -> bool { return has_result_id_; }
+    // SPIR-V requires 0 < id < Bound, therefore, we can reserve 0 for encoding "produces result; id not yet assigned"
+    // and uint32_max for encoding "does not produce result"
+    inline auto has_result_id() const -> bool { return id_ != std::numeric_limits<std::uint32_t>::max(); }
+    inline auto id() const -> std::uint32_t { return id_; }
+    inline void id(std::uint32_t id) { id_ = id; }
 
   private:
     Op opcode_;
-    bool has_result_id_;
+    std::uint32_t id_;
 };
 
 using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;
@@ -238,30 +249,46 @@ def generate_visitor(f, grammar):
     print("""template <class... Ts> struct overloaded : Ts... {
     using Ts::operator()...;
 };
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
-        template <typename Visitor> auto visit(Visitor&& visitor, spv_inst const& inst) {
-    switch (inst.opcode()) {""",
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;""",
           file=f)
-    for instruction in grammar['instructions']:
-        print(f"""case Op::{get_opcode_name(instruction)}:
-                  return visitor(static_cast<{get_class_name(instruction)} const&>(inst));""",
-              file=f)
-    print("""}
+
+    for const in ["", "const"]:
+        print('template <typename Visitor>', file=f)
+        print(
+            f'auto visit(Visitor&& visitor, spv_inst {const}& inst) {{ switch(inst.opcode()) {{',
+            file=f)
+        for instruction in grammar['instructions']:
+            print(f"""case Op::{get_opcode_name(instruction)}:
+                      return visitor(static_cast<{get_class_name(instruction)} {const}&>(inst));""",
+                  file=f)
+        print("""}
     throw internal_compiler_error();
-}""", file=f)
+}
+""", file=f)
 
-    print('template <typename Derived> class default_visitor { public:',
-          file=f)
-    print('auto pre_visit(spv_inst const&) {}', file=f)
+    print(
+        'template <typename Derived, bool IsConst=true> class default_visitor { public:',
+        file=f)
+    print(
+        'template <typename T> using const_t = std::conditional_t<IsConst, std::add_const_t<T>, T>;',
+        file=f)
+    print('auto pre_visit(const_t<spv_inst>&) {}', file=f)
+    print('auto visit_result(const_t<spv_inst>&) {}', file=f)
+    print('auto post_visit(const_t<spv_inst>&) {}', file=f)
     for instruction in grammar['instructions']:
         print(
-            f"""auto operator()({get_class_name(instruction)} const& in) {{""",
+            f"""auto operator()(const_t<{get_class_name(instruction)}>& in) {{""",
             file=f)
         print(f'static_cast<Derived*>(this)->pre_visit(in);', file=f)
-        for o in get_operands(instruction):
+        operands = get_operands(instruction)
+        if len(operands) > 0 and operands[0].name == 'type':
+            print(format_call('in.type()'), file=f)
+            operands.pop(0)
+        if has_result_id(instruction):
+            print(f'static_cast<Derived*>(this)->visit_result(in);', file=f)
+        for o in operands:
             if o.quantifier == '*':
-                print(f"""for (auto const& op : in.{o.name}()) {{
+                print(f"""for (auto& op : in.{o.name}()) {{
     {format_call('op')}
 }}
 """,
@@ -274,6 +301,7 @@ template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
                       file=f)
             else:
                 print(format_call(f'in.{o.name}()'), file=f)
+        print(f'static_cast<Derived*>(this)->post_visit(in);', file=f)
         print('}', file=f)
     print('};', file=f)
 
@@ -334,7 +362,8 @@ if __name__ == '__main__':
 
         grammar = filter_grammar(grammar, filt)
         grammar = patch_grammar(grammar)
-        generate_header(args, spv_enums, grammar, generate_enums)
+        generate_header(args, spv_enums, grammar, generate_enums,
+                        spv_enums_includes)
         generate_header(args, spv_names, grammar, generate_names,
                         spv_names_includes)
         generate_cpp(args, spv_names_cpp, grammar, generate_names_cpp,
@@ -343,6 +372,7 @@ if __name__ == '__main__':
                         spv_defs_includes)
         generate_header(args, spv_ops, grammar, generate_op_classes,
                         spv_ops_includes)
-        generate_header(args, spv_visitor, grammar, generate_visitor)
+        generate_header(args, spv_visitor, grammar, generate_visitor,
+                        spv_visitor_includes)
     else:
         print(f'Could not find clang-format: {args.c}')

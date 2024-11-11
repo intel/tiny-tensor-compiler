@@ -22,12 +22,14 @@ Core C-API:
       - tinytc_recipe_t
       - tinytc_recipe_handler_t
       - tinytc_source_t
+      - tinytc_spv_mod_t
       - tinytc_compiler_context_t
       - const_tinytc_binary_t
       - const_tinytc_core_info_t
       - const_tinytc_recipe_t
       - const_tinytc_recipe_handler_t
       - const_tinytc_source_t
+      - const_tinytc_spv_mod_t
       - const_tinytc_compiler_context_t
       - tinytc_error_reporter_t
   Binary:
@@ -47,6 +49,8 @@ Core C-API:
       - tinytc_list_function_passes
       - tinytc_prog_compile_to_opencl
       - tinytc_prog_compile_to_spirv
+      - tinytc_prog_compile_to_spirv_and_assemble
+      - tinytc_spirv_assemble
   Compiler Context:
     function:
       - tinytc_compiler_context_create
@@ -96,6 +100,13 @@ Core C-API:
       - tinytc_recipe_retain
       - tinytc_recipe_handler_release
       - tinytc_recipe_handler_retain
+  SPIR-V module:
+    function:
+      - tinytc_spv_mod_dump
+      - tinytc_spv_mod_print_to_file
+      - tinytc_spv_mod_print_to_string
+      - tinytc_spv_mod_release
+      - tinytc_spv_mod_retain
   Source:
     function:
       - tinytc_source_get_code

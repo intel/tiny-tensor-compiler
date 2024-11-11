@@ -4,7 +4,12 @@
 #ifndef MODULE_20241029_HPP
 #define MODULE_20241029_HPP
 
+#include "compiler_context.hpp"
+#include "reference_counted.hpp"
+#include "spv/defs.hpp"
 #include "support/ilist.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 
 #include <array>
 #include <cstdint>
@@ -12,10 +17,6 @@
 #include <utility>
 
 namespace tinytc {
-
-namespace spv {
-class spv_inst;
-}
 
 template <> struct ilist_callbacks<spv::spv_inst> {
     void node_added(spv::spv_inst *node);
@@ -37,40 +38,57 @@ enum class section {
 };
 inline constexpr std::int32_t num_module_sections = 9;
 
-class mod final {
+} // namespace spv
+} // namespace tinytc
+
+struct tinytc_spv_mod final : tinytc::reference_counted {
   public:
-    using iterator = ilist<spv_inst>::iterator;
-    using const_iterator = ilist<spv_inst>::const_iterator;
+    using iterator = tinytc::ilist<tinytc::spv::spv_inst>::iterator;
+    using const_iterator = tinytc::ilist<tinytc::spv::spv_inst>::const_iterator;
 
-    mod(std::int32_t major_version = 1, std::int32_t minor_version = 6);
-    ~mod();
+    tinytc_spv_mod(tinytc::compiler_context ctx, tinytc_core_feature_flags_t core_features,
+                   std::int32_t major_version = 1, std::int32_t minor_version = 6);
+    ~tinytc_spv_mod();
 
-    auto bound() const -> std::int32_t;
+    inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }
+    inline auto share_context() const -> tinytc::compiler_context { return ctx_; }
+    inline auto core_features() const -> tinytc_core_feature_flags_t { return core_features_; }
 
-    inline auto insts(section s) -> ilist<spv_inst> & { return insts_[static_cast<int>(s)]; }
-    inline auto insts(section s) const -> ilist<spv_inst> const & {
+    auto bound() const -> std::uint32_t;
+
+    inline auto insts(tinytc::spv::section s) -> tinytc::ilist<tinytc::spv::spv_inst> & {
         return insts_[static_cast<int>(s)];
     }
-    inline auto empty(section s) const -> bool { return insts_[static_cast<int>(s)].empty(); }
+    inline auto
+    insts(tinytc::spv::section s) const -> tinytc::ilist<tinytc::spv::spv_inst> const & {
+        return insts_[static_cast<int>(s)];
+    }
+    inline auto empty(tinytc::spv::section s) const -> bool {
+        return insts_[static_cast<int>(s)].empty();
+    }
 
     inline auto major_version() const -> std::int32_t { return major_version_; }
     inline auto minor_version() const -> std::int32_t { return minor_version_; }
 
-    template <typename T, typename... Args> auto add_to(section s, Args &&...args) -> T * {
+    template <typename T, typename... Args>
+    auto add_to(tinytc::spv::section s, Args &&...args) -> T * {
         auto ptr = std::make_unique<T>(std::forward<Args>(args)...).release();
         insts(s).push_back(ptr);
         return ptr;
     }
     template <typename T, typename... Args> auto add(Args &&...args) -> T * {
-        return add_to<T>(section::function, std::forward<Args>(args)...);
+        return add_to<T>(tinytc::spv::section::function, std::forward<Args>(args)...);
     }
 
   private:
-    std::array<ilist<spv_inst>, num_module_sections> insts_;
+    tinytc::compiler_context ctx_;
+    tinytc_core_feature_flags_t core_features_;
+    std::array<tinytc::ilist<tinytc::spv::spv_inst>, tinytc::spv::num_module_sections> insts_;
     std::int32_t major_version_, minor_version_;
 };
 
-} // namespace spv
-} // namespace tinytc
+namespace tinytc::spv {
+// using mod = ::tinytc_spv_mod;
+} // namespace tinytc::spv
 
 #endif // MODULE_20241029_HPP

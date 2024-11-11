@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
 
 ; CHECK: OpCapability Int64
 ; CHECK: %[[#EXT:]] = OpExtInstImport "OpenCL.std"

@@ -9,10 +9,10 @@
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
-#include "tinytc/types.hpp"
 
 #include <array>
 #include <concepts>
+#include <cstdint>
 #include <string>
 #include <type_traits>
 #include <utility>
@@ -22,16 +22,6 @@
 namespace tinytc::spv {
 
 dump_asm_pass::dump_asm_pass(std::ostream &os) : os_(&os) {}
-
-auto dump_asm_pass::declare(spv_inst const *in) -> std::int64_t {
-    auto s = slot_map_.find(in);
-    if (s == slot_map_.end()) {
-        const auto slot = slot_++;
-        slot_map_[in] = slot;
-        return slot;
-    }
-    return s->second;
-}
 
 void dump_asm_pass::pre_visit(spv_inst const &in) {
     auto const num_digits = [](std::int64_t number) {
@@ -43,12 +33,12 @@ void dump_asm_pass::pre_visit(spv_inst const &in) {
     };
     *os_ << std::endl;
     if (in.has_result_id()) {
-        const auto slot = declare(&in);
+        const auto id = in.id();
 
-        for (int i = 0; i < rhs_indent - 4 - num_digits(slot); ++i) {
+        for (int i = 0; i < rhs_indent - 4 - num_digits(id); ++i) {
             *os_ << ' ';
         }
-        *os_ << "%" << slot << " = ";
+        *os_ << "%" << id << " = ";
     } else {
         for (int i = 0; i < rhs_indent; ++i) {
             *os_ << ' ';
@@ -109,24 +99,11 @@ void dump_asm_pass::operator()(PairLiteralIntegerIdRef const &p) {
     this->operator()(p.second);
 }
 
-void dump_asm_pass::operator()(spv_inst *const &in) {
-    if (auto s = slot_map_.find(in); s != slot_map_.end()) {
-        *os_ << " %" << s->second;
-    } else if (isa<OpFunction>(*in)) {
-        *os_ << " %" << declare(in);
-    } else if (isa<OpVariable>(*in)) {
-        *os_ << " %" << declare(in);
-    } else if (isa<OpLabel>(*in)) {
-        *os_ << " %" << declare(in);
-    } else if (isa<OpTypePointer>(*in)) {
-        *os_ << " %" << declare(in);
-    } else {
-        throw status::spirv_forbidden_forward_declaration;
-    }
-}
-auto dump_asm_pass::operator()(OpExtInst const &in) {
+void dump_asm_pass::operator()(spv_inst *const &in) { *os_ << " %" << in->id(); }
+void dump_asm_pass::operator()(OpExtInst const &in) {
     pre_visit(in);
     this->operator()(in.type());
+    visit_result(in);
     this->operator()(in.op0());
 
     if (auto extimport = dyn_cast<OpExtInstImport>(in.op0());
@@ -139,19 +116,10 @@ auto dump_asm_pass::operator()(OpExtInst const &in) {
     for (auto const &op : in.op2()) {
         this->operator()(op);
     }
+    post_visit(in);
 }
 
-auto dump_asm_pass::operator()(OpPhi const &in) {
-    pre_visit(in);
-    this->operator()(in.type());
-    for (auto const &op : in.op0()) {
-        // Forward references are allowed in phi instructions
-        declare(op.first);
-        this->operator()(op);
-    }
-}
-
-void dump_asm_pass::run_on_module(mod const &m) {
+void dump_asm_pass::run_on_module(tinytc_spv_mod const &m) {
     auto const visit_section = [&](section s) {
         for (auto const &i : m.insts(s)) {
             visit(*this, i);

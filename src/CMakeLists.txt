@@ -64,9 +64,12 @@ set(SOURCES
     required_extensions.cpp
     scalar_type.cpp
     spv/converter.cpp
+    spv/inst_assembler.cpp
     spv/module.cpp
     spv/names.cpp
     spv/opencl.std.cpp
+    spv/pass/assemble.cpp
+    spv/pass/assign_ids.cpp
     spv/pass/dump_asm.cpp
     spv/uniquifier.cpp
     source.cpp

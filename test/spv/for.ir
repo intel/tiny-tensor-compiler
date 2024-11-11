@@ -16,7 +16,7 @@
 ; CHECK: %[[#I16_C6:]] = OpConstant %[[#I16]] 6
 ; CHECK: %[[#I16_C1:]] = OpConstant %[[#I16]] 1
 
-; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
 func @for1() {
   %lb = constant 0 -> i16
   %ub = constant 10 -> i16

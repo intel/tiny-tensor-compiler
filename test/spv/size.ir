@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
 
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#I64_C8:]] = OpConstant %[[#I64]] 8

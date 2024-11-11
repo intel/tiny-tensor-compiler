@@ -11,6 +11,7 @@
 #include "support/ilist_base.hpp"
 
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <utility>
 #include <variant>
@@ -20,7 +21,7 @@ namespace tinytc::spv {
 class spv_inst : public ilist_node<spv_inst> {
   public:
     inline spv_inst(Op opcode, bool has_result_id)
-        : opcode_{opcode}, has_result_id_{has_result_id} {}
+        : opcode_{opcode}, id_{has_result_id ? 0 : std::numeric_limits<std::uint32_t>::max()} {}
     virtual ~spv_inst() = default;
 
     spv_inst(spv_inst const &other) = delete;
@@ -29,11 +30,17 @@ class spv_inst : public ilist_node<spv_inst> {
     spv_inst &operator=(spv_inst &&other) = delete;
 
     inline auto opcode() const -> Op { return opcode_; }
-    inline auto has_result_id() const -> bool { return has_result_id_; }
+    // SPIR-V requires 0 < id < Bound, therefore, we can reserve 0 for encoding "produces result; id
+    // not yet assigned" and uint32_max for encoding "does not produce result"
+    inline auto has_result_id() const -> bool {
+        return id_ != std::numeric_limits<std::uint32_t>::max();
+    }
+    inline auto id() const -> std::uint32_t { return id_; }
+    inline void id(std::uint32_t id) { id_ = id; }
 
   private:
     Op opcode_;
-    bool has_result_id_;
+    std::uint32_t id_;
 };
 
 using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;

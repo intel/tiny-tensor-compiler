@@ -6,9 +6,7 @@
 
 #include "device_info.hpp"
 #include "node/program_node.hpp"
-#include "spv/module.hpp"
-
-#include <memory>
+#include "tinytc/tinytc.hpp"
 
 namespace tinytc {
 
@@ -16,7 +14,7 @@ class convert_to_spirv_pass {
   public:
     convert_to_spirv_pass(::tinytc_core_info const *info);
 
-    auto run_on_program(program_node const &p) -> std::unique_ptr<spv::mod>;
+    auto run_on_program(program_node const &p) -> spv_mod;
 
   private:
     ::tinytc_core_info const *info_;

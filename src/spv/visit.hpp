@@ -7,12 +7,715 @@
 #ifndef GENERATED_VISIT_20241111_HPP
 #define GENERATED_VISIT_20241111_HPP
 
+#include "defs.hpp"
+#include "enums.hpp"
+#include "instructions.hpp"
+
 namespace tinytc::spv {
 
 template <class... Ts> struct overloaded : Ts... {
     using Ts::operator()...;
 };
 template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
+    switch (inst.opcode()) {
+    case Op::Nop:
+        return visitor(static_cast<OpNop &>(inst));
+    case Op::Undef:
+        return visitor(static_cast<OpUndef &>(inst));
+    case Op::SourceContinued:
+        return visitor(static_cast<OpSourceContinued &>(inst));
+    case Op::Source:
+        return visitor(static_cast<OpSource &>(inst));
+    case Op::SourceExtension:
+        return visitor(static_cast<OpSourceExtension &>(inst));
+    case Op::Name:
+        return visitor(static_cast<OpName &>(inst));
+    case Op::MemberName:
+        return visitor(static_cast<OpMemberName &>(inst));
+    case Op::String:
+        return visitor(static_cast<OpString &>(inst));
+    case Op::Line:
+        return visitor(static_cast<OpLine &>(inst));
+    case Op::Extension:
+        return visitor(static_cast<OpExtension &>(inst));
+    case Op::ExtInstImport:
+        return visitor(static_cast<OpExtInstImport &>(inst));
+    case Op::ExtInst:
+        return visitor(static_cast<OpExtInst &>(inst));
+    case Op::MemoryModel:
+        return visitor(static_cast<OpMemoryModel &>(inst));
+    case Op::EntryPoint:
+        return visitor(static_cast<OpEntryPoint &>(inst));
+    case Op::ExecutionMode:
+        return visitor(static_cast<OpExecutionMode &>(inst));
+    case Op::Capability:
+        return visitor(static_cast<OpCapability &>(inst));
+    case Op::TypeVoid:
+        return visitor(static_cast<OpTypeVoid &>(inst));
+    case Op::TypeBool:
+        return visitor(static_cast<OpTypeBool &>(inst));
+    case Op::TypeInt:
+        return visitor(static_cast<OpTypeInt &>(inst));
+    case Op::TypeFloat:
+        return visitor(static_cast<OpTypeFloat &>(inst));
+    case Op::TypeVector:
+        return visitor(static_cast<OpTypeVector &>(inst));
+    case Op::TypeMatrix:
+        return visitor(static_cast<OpTypeMatrix &>(inst));
+    case Op::TypeImage:
+        return visitor(static_cast<OpTypeImage &>(inst));
+    case Op::TypeSampler:
+        return visitor(static_cast<OpTypeSampler &>(inst));
+    case Op::TypeSampledImage:
+        return visitor(static_cast<OpTypeSampledImage &>(inst));
+    case Op::TypeArray:
+        return visitor(static_cast<OpTypeArray &>(inst));
+    case Op::TypeRuntimeArray:
+        return visitor(static_cast<OpTypeRuntimeArray &>(inst));
+    case Op::TypeStruct:
+        return visitor(static_cast<OpTypeStruct &>(inst));
+    case Op::TypeOpaque:
+        return visitor(static_cast<OpTypeOpaque &>(inst));
+    case Op::TypePointer:
+        return visitor(static_cast<OpTypePointer &>(inst));
+    case Op::TypeFunction:
+        return visitor(static_cast<OpTypeFunction &>(inst));
+    case Op::TypeEvent:
+        return visitor(static_cast<OpTypeEvent &>(inst));
+    case Op::TypeDeviceEvent:
+        return visitor(static_cast<OpTypeDeviceEvent &>(inst));
+    case Op::TypeReserveId:
+        return visitor(static_cast<OpTypeReserveId &>(inst));
+    case Op::TypeQueue:
+        return visitor(static_cast<OpTypeQueue &>(inst));
+    case Op::TypePipe:
+        return visitor(static_cast<OpTypePipe &>(inst));
+    case Op::TypeForwardPointer:
+        return visitor(static_cast<OpTypeForwardPointer &>(inst));
+    case Op::ConstantTrue:
+        return visitor(static_cast<OpConstantTrue &>(inst));
+    case Op::ConstantFalse:
+        return visitor(static_cast<OpConstantFalse &>(inst));
+    case Op::Constant:
+        return visitor(static_cast<OpConstant &>(inst));
+    case Op::ConstantComposite:
+        return visitor(static_cast<OpConstantComposite &>(inst));
+    case Op::ConstantSampler:
+        return visitor(static_cast<OpConstantSampler &>(inst));
+    case Op::ConstantNull:
+        return visitor(static_cast<OpConstantNull &>(inst));
+    case Op::Function:
+        return visitor(static_cast<OpFunction &>(inst));
+    case Op::FunctionParameter:
+        return visitor(static_cast<OpFunctionParameter &>(inst));
+    case Op::FunctionEnd:
+        return visitor(static_cast<OpFunctionEnd &>(inst));
+    case Op::FunctionCall:
+        return visitor(static_cast<OpFunctionCall &>(inst));
+    case Op::Variable:
+        return visitor(static_cast<OpVariable &>(inst));
+    case Op::ImageTexelPointer:
+        return visitor(static_cast<OpImageTexelPointer &>(inst));
+    case Op::Load:
+        return visitor(static_cast<OpLoad &>(inst));
+    case Op::Store:
+        return visitor(static_cast<OpStore &>(inst));
+    case Op::CopyMemory:
+        return visitor(static_cast<OpCopyMemory &>(inst));
+    case Op::CopyMemorySized:
+        return visitor(static_cast<OpCopyMemorySized &>(inst));
+    case Op::AccessChain:
+        return visitor(static_cast<OpAccessChain &>(inst));
+    case Op::InBoundsAccessChain:
+        return visitor(static_cast<OpInBoundsAccessChain &>(inst));
+    case Op::PtrAccessChain:
+        return visitor(static_cast<OpPtrAccessChain &>(inst));
+    case Op::ArrayLength:
+        return visitor(static_cast<OpArrayLength &>(inst));
+    case Op::GenericPtrMemSemantics:
+        return visitor(static_cast<OpGenericPtrMemSemantics &>(inst));
+    case Op::InBoundsPtrAccessChain:
+        return visitor(static_cast<OpInBoundsPtrAccessChain &>(inst));
+    case Op::Decorate:
+        return visitor(static_cast<OpDecorate &>(inst));
+    case Op::MemberDecorate:
+        return visitor(static_cast<OpMemberDecorate &>(inst));
+    case Op::DecorationGroup:
+        return visitor(static_cast<OpDecorationGroup &>(inst));
+    case Op::GroupDecorate:
+        return visitor(static_cast<OpGroupDecorate &>(inst));
+    case Op::GroupMemberDecorate:
+        return visitor(static_cast<OpGroupMemberDecorate &>(inst));
+    case Op::VectorExtractDynamic:
+        return visitor(static_cast<OpVectorExtractDynamic &>(inst));
+    case Op::VectorInsertDynamic:
+        return visitor(static_cast<OpVectorInsertDynamic &>(inst));
+    case Op::VectorShuffle:
+        return visitor(static_cast<OpVectorShuffle &>(inst));
+    case Op::CompositeConstruct:
+        return visitor(static_cast<OpCompositeConstruct &>(inst));
+    case Op::CompositeExtract:
+        return visitor(static_cast<OpCompositeExtract &>(inst));
+    case Op::CompositeInsert:
+        return visitor(static_cast<OpCompositeInsert &>(inst));
+    case Op::CopyObject:
+        return visitor(static_cast<OpCopyObject &>(inst));
+    case Op::Transpose:
+        return visitor(static_cast<OpTranspose &>(inst));
+    case Op::SampledImage:
+        return visitor(static_cast<OpSampledImage &>(inst));
+    case Op::ImageSampleImplicitLod:
+        return visitor(static_cast<OpImageSampleImplicitLod &>(inst));
+    case Op::ImageSampleExplicitLod:
+        return visitor(static_cast<OpImageSampleExplicitLod &>(inst));
+    case Op::ImageSampleDrefImplicitLod:
+        return visitor(static_cast<OpImageSampleDrefImplicitLod &>(inst));
+    case Op::ImageSampleDrefExplicitLod:
+        return visitor(static_cast<OpImageSampleDrefExplicitLod &>(inst));
+    case Op::ImageSampleProjImplicitLod:
+        return visitor(static_cast<OpImageSampleProjImplicitLod &>(inst));
+    case Op::ImageSampleProjExplicitLod:
+        return visitor(static_cast<OpImageSampleProjExplicitLod &>(inst));
+    case Op::ImageSampleProjDrefImplicitLod:
+        return visitor(static_cast<OpImageSampleProjDrefImplicitLod &>(inst));
+    case Op::ImageSampleProjDrefExplicitLod:
+        return visitor(static_cast<OpImageSampleProjDrefExplicitLod &>(inst));
+    case Op::ImageFetch:
+        return visitor(static_cast<OpImageFetch &>(inst));
+    case Op::ImageGather:
+        return visitor(static_cast<OpImageGather &>(inst));
+    case Op::ImageDrefGather:
+        return visitor(static_cast<OpImageDrefGather &>(inst));
+    case Op::ImageRead:
+        return visitor(static_cast<OpImageRead &>(inst));
+    case Op::ImageWrite:
+        return visitor(static_cast<OpImageWrite &>(inst));
+    case Op::Image:
+        return visitor(static_cast<OpImage &>(inst));
+    case Op::ImageQueryFormat:
+        return visitor(static_cast<OpImageQueryFormat &>(inst));
+    case Op::ImageQueryOrder:
+        return visitor(static_cast<OpImageQueryOrder &>(inst));
+    case Op::ImageQuerySizeLod:
+        return visitor(static_cast<OpImageQuerySizeLod &>(inst));
+    case Op::ImageQuerySize:
+        return visitor(static_cast<OpImageQuerySize &>(inst));
+    case Op::ImageQueryLod:
+        return visitor(static_cast<OpImageQueryLod &>(inst));
+    case Op::ImageQueryLevels:
+        return visitor(static_cast<OpImageQueryLevels &>(inst));
+    case Op::ImageQuerySamples:
+        return visitor(static_cast<OpImageQuerySamples &>(inst));
+    case Op::ConvertFToU:
+        return visitor(static_cast<OpConvertFToU &>(inst));
+    case Op::ConvertFToS:
+        return visitor(static_cast<OpConvertFToS &>(inst));
+    case Op::ConvertSToF:
+        return visitor(static_cast<OpConvertSToF &>(inst));
+    case Op::ConvertUToF:
+        return visitor(static_cast<OpConvertUToF &>(inst));
+    case Op::UConvert:
+        return visitor(static_cast<OpUConvert &>(inst));
+    case Op::SConvert:
+        return visitor(static_cast<OpSConvert &>(inst));
+    case Op::FConvert:
+        return visitor(static_cast<OpFConvert &>(inst));
+    case Op::QuantizeToF16:
+        return visitor(static_cast<OpQuantizeToF16 &>(inst));
+    case Op::ConvertPtrToU:
+        return visitor(static_cast<OpConvertPtrToU &>(inst));
+    case Op::SatConvertSToU:
+        return visitor(static_cast<OpSatConvertSToU &>(inst));
+    case Op::SatConvertUToS:
+        return visitor(static_cast<OpSatConvertUToS &>(inst));
+    case Op::ConvertUToPtr:
+        return visitor(static_cast<OpConvertUToPtr &>(inst));
+    case Op::PtrCastToGeneric:
+        return visitor(static_cast<OpPtrCastToGeneric &>(inst));
+    case Op::GenericCastToPtr:
+        return visitor(static_cast<OpGenericCastToPtr &>(inst));
+    case Op::GenericCastToPtrExplicit:
+        return visitor(static_cast<OpGenericCastToPtrExplicit &>(inst));
+    case Op::Bitcast:
+        return visitor(static_cast<OpBitcast &>(inst));
+    case Op::SNegate:
+        return visitor(static_cast<OpSNegate &>(inst));
+    case Op::FNegate:
+        return visitor(static_cast<OpFNegate &>(inst));
+    case Op::IAdd:
+        return visitor(static_cast<OpIAdd &>(inst));
+    case Op::FAdd:
+        return visitor(static_cast<OpFAdd &>(inst));
+    case Op::ISub:
+        return visitor(static_cast<OpISub &>(inst));
+    case Op::FSub:
+        return visitor(static_cast<OpFSub &>(inst));
+    case Op::IMul:
+        return visitor(static_cast<OpIMul &>(inst));
+    case Op::FMul:
+        return visitor(static_cast<OpFMul &>(inst));
+    case Op::UDiv:
+        return visitor(static_cast<OpUDiv &>(inst));
+    case Op::SDiv:
+        return visitor(static_cast<OpSDiv &>(inst));
+    case Op::FDiv:
+        return visitor(static_cast<OpFDiv &>(inst));
+    case Op::UMod:
+        return visitor(static_cast<OpUMod &>(inst));
+    case Op::SRem:
+        return visitor(static_cast<OpSRem &>(inst));
+    case Op::SMod:
+        return visitor(static_cast<OpSMod &>(inst));
+    case Op::FRem:
+        return visitor(static_cast<OpFRem &>(inst));
+    case Op::FMod:
+        return visitor(static_cast<OpFMod &>(inst));
+    case Op::VectorTimesScalar:
+        return visitor(static_cast<OpVectorTimesScalar &>(inst));
+    case Op::MatrixTimesScalar:
+        return visitor(static_cast<OpMatrixTimesScalar &>(inst));
+    case Op::VectorTimesMatrix:
+        return visitor(static_cast<OpVectorTimesMatrix &>(inst));
+    case Op::MatrixTimesVector:
+        return visitor(static_cast<OpMatrixTimesVector &>(inst));
+    case Op::MatrixTimesMatrix:
+        return visitor(static_cast<OpMatrixTimesMatrix &>(inst));
+    case Op::OuterProduct:
+        return visitor(static_cast<OpOuterProduct &>(inst));
+    case Op::Dot:
+        return visitor(static_cast<OpDot &>(inst));
+    case Op::IAddCarry:
+        return visitor(static_cast<OpIAddCarry &>(inst));
+    case Op::ISubBorrow:
+        return visitor(static_cast<OpISubBorrow &>(inst));
+    case Op::UMulExtended:
+        return visitor(static_cast<OpUMulExtended &>(inst));
+    case Op::SMulExtended:
+        return visitor(static_cast<OpSMulExtended &>(inst));
+    case Op::Any:
+        return visitor(static_cast<OpAny &>(inst));
+    case Op::All:
+        return visitor(static_cast<OpAll &>(inst));
+    case Op::IsNan:
+        return visitor(static_cast<OpIsNan &>(inst));
+    case Op::IsInf:
+        return visitor(static_cast<OpIsInf &>(inst));
+    case Op::IsFinite:
+        return visitor(static_cast<OpIsFinite &>(inst));
+    case Op::IsNormal:
+        return visitor(static_cast<OpIsNormal &>(inst));
+    case Op::SignBitSet:
+        return visitor(static_cast<OpSignBitSet &>(inst));
+    case Op::LessOrGreater:
+        return visitor(static_cast<OpLessOrGreater &>(inst));
+    case Op::Ordered:
+        return visitor(static_cast<OpOrdered &>(inst));
+    case Op::Unordered:
+        return visitor(static_cast<OpUnordered &>(inst));
+    case Op::LogicalEqual:
+        return visitor(static_cast<OpLogicalEqual &>(inst));
+    case Op::LogicalNotEqual:
+        return visitor(static_cast<OpLogicalNotEqual &>(inst));
+    case Op::LogicalOr:
+        return visitor(static_cast<OpLogicalOr &>(inst));
+    case Op::LogicalAnd:
+        return visitor(static_cast<OpLogicalAnd &>(inst));
+    case Op::LogicalNot:
+        return visitor(static_cast<OpLogicalNot &>(inst));
+    case Op::Select:
+        return visitor(static_cast<OpSelect &>(inst));
+    case Op::IEqual:
+        return visitor(static_cast<OpIEqual &>(inst));
+    case Op::INotEqual:
+        return visitor(static_cast<OpINotEqual &>(inst));
+    case Op::UGreaterThan:
+        return visitor(static_cast<OpUGreaterThan &>(inst));
+    case Op::SGreaterThan:
+        return visitor(static_cast<OpSGreaterThan &>(inst));
+    case Op::UGreaterThanEqual:
+        return visitor(static_cast<OpUGreaterThanEqual &>(inst));
+    case Op::SGreaterThanEqual:
+        return visitor(static_cast<OpSGreaterThanEqual &>(inst));
+    case Op::ULessThan:
+        return visitor(static_cast<OpULessThan &>(inst));
+    case Op::SLessThan:
+        return visitor(static_cast<OpSLessThan &>(inst));
+    case Op::ULessThanEqual:
+        return visitor(static_cast<OpULessThanEqual &>(inst));
+    case Op::SLessThanEqual:
+        return visitor(static_cast<OpSLessThanEqual &>(inst));
+    case Op::FOrdEqual:
+        return visitor(static_cast<OpFOrdEqual &>(inst));
+    case Op::FUnordEqual:
+        return visitor(static_cast<OpFUnordEqual &>(inst));
+    case Op::FOrdNotEqual:
+        return visitor(static_cast<OpFOrdNotEqual &>(inst));
+    case Op::FUnordNotEqual:
+        return visitor(static_cast<OpFUnordNotEqual &>(inst));
+    case Op::FOrdLessThan:
+        return visitor(static_cast<OpFOrdLessThan &>(inst));
+    case Op::FUnordLessThan:
+        return visitor(static_cast<OpFUnordLessThan &>(inst));
+    case Op::FOrdGreaterThan:
+        return visitor(static_cast<OpFOrdGreaterThan &>(inst));
+    case Op::FUnordGreaterThan:
+        return visitor(static_cast<OpFUnordGreaterThan &>(inst));
+    case Op::FOrdLessThanEqual:
+        return visitor(static_cast<OpFOrdLessThanEqual &>(inst));
+    case Op::FUnordLessThanEqual:
+        return visitor(static_cast<OpFUnordLessThanEqual &>(inst));
+    case Op::FOrdGreaterThanEqual:
+        return visitor(static_cast<OpFOrdGreaterThanEqual &>(inst));
+    case Op::FUnordGreaterThanEqual:
+        return visitor(static_cast<OpFUnordGreaterThanEqual &>(inst));
+    case Op::ShiftRightLogical:
+        return visitor(static_cast<OpShiftRightLogical &>(inst));
+    case Op::ShiftRightArithmetic:
+        return visitor(static_cast<OpShiftRightArithmetic &>(inst));
+    case Op::ShiftLeftLogical:
+        return visitor(static_cast<OpShiftLeftLogical &>(inst));
+    case Op::BitwiseOr:
+        return visitor(static_cast<OpBitwiseOr &>(inst));
+    case Op::BitwiseXor:
+        return visitor(static_cast<OpBitwiseXor &>(inst));
+    case Op::BitwiseAnd:
+        return visitor(static_cast<OpBitwiseAnd &>(inst));
+    case Op::Not:
+        return visitor(static_cast<OpNot &>(inst));
+    case Op::BitFieldInsert:
+        return visitor(static_cast<OpBitFieldInsert &>(inst));
+    case Op::BitFieldSExtract:
+        return visitor(static_cast<OpBitFieldSExtract &>(inst));
+    case Op::BitFieldUExtract:
+        return visitor(static_cast<OpBitFieldUExtract &>(inst));
+    case Op::BitReverse:
+        return visitor(static_cast<OpBitReverse &>(inst));
+    case Op::BitCount:
+        return visitor(static_cast<OpBitCount &>(inst));
+    case Op::DPdx:
+        return visitor(static_cast<OpDPdx &>(inst));
+    case Op::DPdy:
+        return visitor(static_cast<OpDPdy &>(inst));
+    case Op::Fwidth:
+        return visitor(static_cast<OpFwidth &>(inst));
+    case Op::DPdxFine:
+        return visitor(static_cast<OpDPdxFine &>(inst));
+    case Op::DPdyFine:
+        return visitor(static_cast<OpDPdyFine &>(inst));
+    case Op::FwidthFine:
+        return visitor(static_cast<OpFwidthFine &>(inst));
+    case Op::DPdxCoarse:
+        return visitor(static_cast<OpDPdxCoarse &>(inst));
+    case Op::DPdyCoarse:
+        return visitor(static_cast<OpDPdyCoarse &>(inst));
+    case Op::FwidthCoarse:
+        return visitor(static_cast<OpFwidthCoarse &>(inst));
+    case Op::EmitVertex:
+        return visitor(static_cast<OpEmitVertex &>(inst));
+    case Op::EndPrimitive:
+        return visitor(static_cast<OpEndPrimitive &>(inst));
+    case Op::EmitStreamVertex:
+        return visitor(static_cast<OpEmitStreamVertex &>(inst));
+    case Op::EndStreamPrimitive:
+        return visitor(static_cast<OpEndStreamPrimitive &>(inst));
+    case Op::ControlBarrier:
+        return visitor(static_cast<OpControlBarrier &>(inst));
+    case Op::MemoryBarrier:
+        return visitor(static_cast<OpMemoryBarrier &>(inst));
+    case Op::AtomicLoad:
+        return visitor(static_cast<OpAtomicLoad &>(inst));
+    case Op::AtomicStore:
+        return visitor(static_cast<OpAtomicStore &>(inst));
+    case Op::AtomicExchange:
+        return visitor(static_cast<OpAtomicExchange &>(inst));
+    case Op::AtomicCompareExchange:
+        return visitor(static_cast<OpAtomicCompareExchange &>(inst));
+    case Op::AtomicCompareExchangeWeak:
+        return visitor(static_cast<OpAtomicCompareExchangeWeak &>(inst));
+    case Op::AtomicIIncrement:
+        return visitor(static_cast<OpAtomicIIncrement &>(inst));
+    case Op::AtomicIDecrement:
+        return visitor(static_cast<OpAtomicIDecrement &>(inst));
+    case Op::AtomicIAdd:
+        return visitor(static_cast<OpAtomicIAdd &>(inst));
+    case Op::AtomicISub:
+        return visitor(static_cast<OpAtomicISub &>(inst));
+    case Op::AtomicSMin:
+        return visitor(static_cast<OpAtomicSMin &>(inst));
+    case Op::AtomicUMin:
+        return visitor(static_cast<OpAtomicUMin &>(inst));
+    case Op::AtomicSMax:
+        return visitor(static_cast<OpAtomicSMax &>(inst));
+    case Op::AtomicUMax:
+        return visitor(static_cast<OpAtomicUMax &>(inst));
+    case Op::AtomicAnd:
+        return visitor(static_cast<OpAtomicAnd &>(inst));
+    case Op::AtomicOr:
+        return visitor(static_cast<OpAtomicOr &>(inst));
+    case Op::AtomicXor:
+        return visitor(static_cast<OpAtomicXor &>(inst));
+    case Op::Phi:
+        return visitor(static_cast<OpPhi &>(inst));
+    case Op::LoopMerge:
+        return visitor(static_cast<OpLoopMerge &>(inst));
+    case Op::SelectionMerge:
+        return visitor(static_cast<OpSelectionMerge &>(inst));
+    case Op::Label:
+        return visitor(static_cast<OpLabel &>(inst));
+    case Op::Branch:
+        return visitor(static_cast<OpBranch &>(inst));
+    case Op::BranchConditional:
+        return visitor(static_cast<OpBranchConditional &>(inst));
+    case Op::Switch:
+        return visitor(static_cast<OpSwitch &>(inst));
+    case Op::Kill:
+        return visitor(static_cast<OpKill &>(inst));
+    case Op::Return:
+        return visitor(static_cast<OpReturn &>(inst));
+    case Op::ReturnValue:
+        return visitor(static_cast<OpReturnValue &>(inst));
+    case Op::Unreachable:
+        return visitor(static_cast<OpUnreachable &>(inst));
+    case Op::LifetimeStart:
+        return visitor(static_cast<OpLifetimeStart &>(inst));
+    case Op::LifetimeStop:
+        return visitor(static_cast<OpLifetimeStop &>(inst));
+    case Op::GroupAsyncCopy:
+        return visitor(static_cast<OpGroupAsyncCopy &>(inst));
+    case Op::GroupWaitEvents:
+        return visitor(static_cast<OpGroupWaitEvents &>(inst));
+    case Op::GroupAll:
+        return visitor(static_cast<OpGroupAll &>(inst));
+    case Op::GroupAny:
+        return visitor(static_cast<OpGroupAny &>(inst));
+    case Op::GroupBroadcast:
+        return visitor(static_cast<OpGroupBroadcast &>(inst));
+    case Op::GroupIAdd:
+        return visitor(static_cast<OpGroupIAdd &>(inst));
+    case Op::GroupFAdd:
+        return visitor(static_cast<OpGroupFAdd &>(inst));
+    case Op::GroupFMin:
+        return visitor(static_cast<OpGroupFMin &>(inst));
+    case Op::GroupUMin:
+        return visitor(static_cast<OpGroupUMin &>(inst));
+    case Op::GroupSMin:
+        return visitor(static_cast<OpGroupSMin &>(inst));
+    case Op::GroupFMax:
+        return visitor(static_cast<OpGroupFMax &>(inst));
+    case Op::GroupUMax:
+        return visitor(static_cast<OpGroupUMax &>(inst));
+    case Op::GroupSMax:
+        return visitor(static_cast<OpGroupSMax &>(inst));
+    case Op::ReadPipe:
+        return visitor(static_cast<OpReadPipe &>(inst));
+    case Op::WritePipe:
+        return visitor(static_cast<OpWritePipe &>(inst));
+    case Op::ReservedReadPipe:
+        return visitor(static_cast<OpReservedReadPipe &>(inst));
+    case Op::ReservedWritePipe:
+        return visitor(static_cast<OpReservedWritePipe &>(inst));
+    case Op::ReserveReadPipePackets:
+        return visitor(static_cast<OpReserveReadPipePackets &>(inst));
+    case Op::ReserveWritePipePackets:
+        return visitor(static_cast<OpReserveWritePipePackets &>(inst));
+    case Op::CommitReadPipe:
+        return visitor(static_cast<OpCommitReadPipe &>(inst));
+    case Op::CommitWritePipe:
+        return visitor(static_cast<OpCommitWritePipe &>(inst));
+    case Op::IsValidReserveId:
+        return visitor(static_cast<OpIsValidReserveId &>(inst));
+    case Op::GetNumPipePackets:
+        return visitor(static_cast<OpGetNumPipePackets &>(inst));
+    case Op::GetMaxPipePackets:
+        return visitor(static_cast<OpGetMaxPipePackets &>(inst));
+    case Op::GroupReserveReadPipePackets:
+        return visitor(static_cast<OpGroupReserveReadPipePackets &>(inst));
+    case Op::GroupReserveWritePipePackets:
+        return visitor(static_cast<OpGroupReserveWritePipePackets &>(inst));
+    case Op::GroupCommitReadPipe:
+        return visitor(static_cast<OpGroupCommitReadPipe &>(inst));
+    case Op::GroupCommitWritePipe:
+        return visitor(static_cast<OpGroupCommitWritePipe &>(inst));
+    case Op::EnqueueMarker:
+        return visitor(static_cast<OpEnqueueMarker &>(inst));
+    case Op::EnqueueKernel:
+        return visitor(static_cast<OpEnqueueKernel &>(inst));
+    case Op::GetKernelNDrangeSubGroupCount:
+        return visitor(static_cast<OpGetKernelNDrangeSubGroupCount &>(inst));
+    case Op::GetKernelNDrangeMaxSubGroupSize:
+        return visitor(static_cast<OpGetKernelNDrangeMaxSubGroupSize &>(inst));
+    case Op::GetKernelWorkGroupSize:
+        return visitor(static_cast<OpGetKernelWorkGroupSize &>(inst));
+    case Op::GetKernelPreferredWorkGroupSizeMultiple:
+        return visitor(static_cast<OpGetKernelPreferredWorkGroupSizeMultiple &>(inst));
+    case Op::RetainEvent:
+        return visitor(static_cast<OpRetainEvent &>(inst));
+    case Op::ReleaseEvent:
+        return visitor(static_cast<OpReleaseEvent &>(inst));
+    case Op::CreateUserEvent:
+        return visitor(static_cast<OpCreateUserEvent &>(inst));
+    case Op::IsValidEvent:
+        return visitor(static_cast<OpIsValidEvent &>(inst));
+    case Op::SetUserEventStatus:
+        return visitor(static_cast<OpSetUserEventStatus &>(inst));
+    case Op::CaptureEventProfilingInfo:
+        return visitor(static_cast<OpCaptureEventProfilingInfo &>(inst));
+    case Op::GetDefaultQueue:
+        return visitor(static_cast<OpGetDefaultQueue &>(inst));
+    case Op::BuildNDRange:
+        return visitor(static_cast<OpBuildNDRange &>(inst));
+    case Op::ImageSparseSampleImplicitLod:
+        return visitor(static_cast<OpImageSparseSampleImplicitLod &>(inst));
+    case Op::ImageSparseSampleExplicitLod:
+        return visitor(static_cast<OpImageSparseSampleExplicitLod &>(inst));
+    case Op::ImageSparseSampleDrefImplicitLod:
+        return visitor(static_cast<OpImageSparseSampleDrefImplicitLod &>(inst));
+    case Op::ImageSparseSampleDrefExplicitLod:
+        return visitor(static_cast<OpImageSparseSampleDrefExplicitLod &>(inst));
+    case Op::ImageSparseSampleProjImplicitLod:
+        return visitor(static_cast<OpImageSparseSampleProjImplicitLod &>(inst));
+    case Op::ImageSparseSampleProjExplicitLod:
+        return visitor(static_cast<OpImageSparseSampleProjExplicitLod &>(inst));
+    case Op::ImageSparseSampleProjDrefImplicitLod:
+        return visitor(static_cast<OpImageSparseSampleProjDrefImplicitLod &>(inst));
+    case Op::ImageSparseSampleProjDrefExplicitLod:
+        return visitor(static_cast<OpImageSparseSampleProjDrefExplicitLod &>(inst));
+    case Op::ImageSparseFetch:
+        return visitor(static_cast<OpImageSparseFetch &>(inst));
+    case Op::ImageSparseGather:
+        return visitor(static_cast<OpImageSparseGather &>(inst));
+    case Op::ImageSparseDrefGather:
+        return visitor(static_cast<OpImageSparseDrefGather &>(inst));
+    case Op::ImageSparseTexelsResident:
+        return visitor(static_cast<OpImageSparseTexelsResident &>(inst));
+    case Op::NoLine:
+        return visitor(static_cast<OpNoLine &>(inst));
+    case Op::AtomicFlagTestAndSet:
+        return visitor(static_cast<OpAtomicFlagTestAndSet &>(inst));
+    case Op::AtomicFlagClear:
+        return visitor(static_cast<OpAtomicFlagClear &>(inst));
+    case Op::ImageSparseRead:
+        return visitor(static_cast<OpImageSparseRead &>(inst));
+    case Op::SizeOf:
+        return visitor(static_cast<OpSizeOf &>(inst));
+    case Op::TypePipeStorage:
+        return visitor(static_cast<OpTypePipeStorage &>(inst));
+    case Op::ConstantPipeStorage:
+        return visitor(static_cast<OpConstantPipeStorage &>(inst));
+    case Op::CreatePipeFromPipeStorage:
+        return visitor(static_cast<OpCreatePipeFromPipeStorage &>(inst));
+    case Op::GetKernelLocalSizeForSubgroupCount:
+        return visitor(static_cast<OpGetKernelLocalSizeForSubgroupCount &>(inst));
+    case Op::GetKernelMaxNumSubgroups:
+        return visitor(static_cast<OpGetKernelMaxNumSubgroups &>(inst));
+    case Op::TypeNamedBarrier:
+        return visitor(static_cast<OpTypeNamedBarrier &>(inst));
+    case Op::NamedBarrierInitialize:
+        return visitor(static_cast<OpNamedBarrierInitialize &>(inst));
+    case Op::MemoryNamedBarrier:
+        return visitor(static_cast<OpMemoryNamedBarrier &>(inst));
+    case Op::ModuleProcessed:
+        return visitor(static_cast<OpModuleProcessed &>(inst));
+    case Op::ExecutionModeId:
+        return visitor(static_cast<OpExecutionModeId &>(inst));
+    case Op::DecorateId:
+        return visitor(static_cast<OpDecorateId &>(inst));
+    case Op::GroupNonUniformElect:
+        return visitor(static_cast<OpGroupNonUniformElect &>(inst));
+    case Op::GroupNonUniformAll:
+        return visitor(static_cast<OpGroupNonUniformAll &>(inst));
+    case Op::GroupNonUniformAny:
+        return visitor(static_cast<OpGroupNonUniformAny &>(inst));
+    case Op::GroupNonUniformAllEqual:
+        return visitor(static_cast<OpGroupNonUniformAllEqual &>(inst));
+    case Op::GroupNonUniformBroadcast:
+        return visitor(static_cast<OpGroupNonUniformBroadcast &>(inst));
+    case Op::GroupNonUniformBroadcastFirst:
+        return visitor(static_cast<OpGroupNonUniformBroadcastFirst &>(inst));
+    case Op::GroupNonUniformBallot:
+        return visitor(static_cast<OpGroupNonUniformBallot &>(inst));
+    case Op::GroupNonUniformInverseBallot:
+        return visitor(static_cast<OpGroupNonUniformInverseBallot &>(inst));
+    case Op::GroupNonUniformBallotBitExtract:
+        return visitor(static_cast<OpGroupNonUniformBallotBitExtract &>(inst));
+    case Op::GroupNonUniformBallotBitCount:
+        return visitor(static_cast<OpGroupNonUniformBallotBitCount &>(inst));
+    case Op::GroupNonUniformBallotFindLSB:
+        return visitor(static_cast<OpGroupNonUniformBallotFindLSB &>(inst));
+    case Op::GroupNonUniformBallotFindMSB:
+        return visitor(static_cast<OpGroupNonUniformBallotFindMSB &>(inst));
+    case Op::GroupNonUniformShuffle:
+        return visitor(static_cast<OpGroupNonUniformShuffle &>(inst));
+    case Op::GroupNonUniformShuffleXor:
+        return visitor(static_cast<OpGroupNonUniformShuffleXor &>(inst));
+    case Op::GroupNonUniformShuffleUp:
+        return visitor(static_cast<OpGroupNonUniformShuffleUp &>(inst));
+    case Op::GroupNonUniformShuffleDown:
+        return visitor(static_cast<OpGroupNonUniformShuffleDown &>(inst));
+    case Op::GroupNonUniformIAdd:
+        return visitor(static_cast<OpGroupNonUniformIAdd &>(inst));
+    case Op::GroupNonUniformFAdd:
+        return visitor(static_cast<OpGroupNonUniformFAdd &>(inst));
+    case Op::GroupNonUniformIMul:
+        return visitor(static_cast<OpGroupNonUniformIMul &>(inst));
+    case Op::GroupNonUniformFMul:
+        return visitor(static_cast<OpGroupNonUniformFMul &>(inst));
+    case Op::GroupNonUniformSMin:
+        return visitor(static_cast<OpGroupNonUniformSMin &>(inst));
+    case Op::GroupNonUniformUMin:
+        return visitor(static_cast<OpGroupNonUniformUMin &>(inst));
+    case Op::GroupNonUniformFMin:
+        return visitor(static_cast<OpGroupNonUniformFMin &>(inst));
+    case Op::GroupNonUniformSMax:
+        return visitor(static_cast<OpGroupNonUniformSMax &>(inst));
+    case Op::GroupNonUniformUMax:
+        return visitor(static_cast<OpGroupNonUniformUMax &>(inst));
+    case Op::GroupNonUniformFMax:
+        return visitor(static_cast<OpGroupNonUniformFMax &>(inst));
+    case Op::GroupNonUniformBitwiseAnd:
+        return visitor(static_cast<OpGroupNonUniformBitwiseAnd &>(inst));
+    case Op::GroupNonUniformBitwiseOr:
+        return visitor(static_cast<OpGroupNonUniformBitwiseOr &>(inst));
+    case Op::GroupNonUniformBitwiseXor:
+        return visitor(static_cast<OpGroupNonUniformBitwiseXor &>(inst));
+    case Op::GroupNonUniformLogicalAnd:
+        return visitor(static_cast<OpGroupNonUniformLogicalAnd &>(inst));
+    case Op::GroupNonUniformLogicalOr:
+        return visitor(static_cast<OpGroupNonUniformLogicalOr &>(inst));
+    case Op::GroupNonUniformLogicalXor:
+        return visitor(static_cast<OpGroupNonUniformLogicalXor &>(inst));
+    case Op::GroupNonUniformQuadBroadcast:
+        return visitor(static_cast<OpGroupNonUniformQuadBroadcast &>(inst));
+    case Op::GroupNonUniformQuadSwap:
+        return visitor(static_cast<OpGroupNonUniformQuadSwap &>(inst));
+    case Op::CopyLogical:
+        return visitor(static_cast<OpCopyLogical &>(inst));
+    case Op::PtrEqual:
+        return visitor(static_cast<OpPtrEqual &>(inst));
+    case Op::PtrNotEqual:
+        return visitor(static_cast<OpPtrNotEqual &>(inst));
+    case Op::PtrDiff:
+        return visitor(static_cast<OpPtrDiff &>(inst));
+    case Op::TypeCooperativeMatrixKHR:
+        return visitor(static_cast<OpTypeCooperativeMatrixKHR &>(inst));
+    case Op::CooperativeMatrixLoadKHR:
+        return visitor(static_cast<OpCooperativeMatrixLoadKHR &>(inst));
+    case Op::CooperativeMatrixStoreKHR:
+        return visitor(static_cast<OpCooperativeMatrixStoreKHR &>(inst));
+    case Op::CooperativeMatrixMulAddKHR:
+        return visitor(static_cast<OpCooperativeMatrixMulAddKHR &>(inst));
+    case Op::CooperativeMatrixLengthKHR:
+        return visitor(static_cast<OpCooperativeMatrixLengthKHR &>(inst));
+    case Op::AtomicFMinEXT:
+        return visitor(static_cast<OpAtomicFMinEXT &>(inst));
+    case Op::AtomicFMaxEXT:
+        return visitor(static_cast<OpAtomicFMaxEXT &>(inst));
+    case Op::AtomicFAddEXT:
+        return visitor(static_cast<OpAtomicFAddEXT &>(inst));
+    }
+    throw internal_compiler_error();
+}
 
 template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) {
     switch (inst.opcode()) {
@@ -713,19 +1416,29 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
     }
     throw internal_compiler_error();
 }
-template <typename Derived> class default_visitor {
+
+template <typename Derived, bool IsConst = true> class default_visitor {
   public:
-    auto pre_visit(spv_inst const &) {}
-    auto operator()(OpNop const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpUndef const &in) {
+    template <typename T> using const_t = std::conditional_t<IsConst, std::add_const_t<T>, T>;
+    auto pre_visit(const_t<spv_inst> &) {}
+    auto visit_result(const_t<spv_inst> &) {}
+    auto post_visit(const_t<spv_inst> &) {}
+    auto operator()(const_t<OpNop> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpUndef> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSourceContinued const &in) {
+    auto operator()(const_t<OpSourceContinued> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSource const &in) {
+    auto operator()(const_t<OpSource> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -736,99 +1449,136 @@ template <typename Derived> class default_visitor {
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSourceExtension const &in) {
+    auto operator()(const_t<OpSourceExtension> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpName const &in) {
+    auto operator()(const_t<OpName> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMemberName const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpString const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpLine const &in) {
+    auto operator()(const_t<OpMemberName> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpExtension const &in) {
+    auto operator()(const_t<OpString> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLine> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpExtInstImport const &in) {
+    auto operator()(const_t<OpExtension> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpExtInst const &in) {
+    auto operator()(const_t<OpExtInstImport> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpExtInst> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMemoryModel const &in) {
+    auto operator()(const_t<OpMemoryModel> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpEntryPoint const &in) {
+    auto operator()(const_t<OpEntryPoint> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
-        for (auto const &op : in.op3()) {
+        for (auto &op : in.op3()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpExecutionMode const &in) {
+    auto operator()(const_t<OpExecutionMode> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCapability const &in) {
+    auto operator()(const_t<OpCapability> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeVoid const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeBool const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeInt const &in) {
+    auto operator()(const_t<OpTypeVoid> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeBool> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeInt> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeFloat const &in) {
+    auto operator()(const_t<OpTypeFloat> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         if (in.op1()) {
             static_cast<Derived *>(this)->operator()(*in.op1());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeVector const &in) {
+    auto operator()(const_t<OpTypeVector> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeMatrix const &in) {
+    auto operator()(const_t<OpTypeMatrix> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeImage const &in) {
+    auto operator()(const_t<OpTypeImage> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
@@ -839,124 +1589,194 @@ template <typename Derived> class default_visitor {
         if (in.op7()) {
             static_cast<Derived *>(this)->operator()(*in.op7());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeSampler const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeSampledImage const &in) {
+    auto operator()(const_t<OpTypeSampler> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeArray const &in) {
+    auto operator()(const_t<OpTypeSampledImage> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeArray> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeRuntimeArray> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeStruct> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        for (auto &op : in.op0()) {
+            static_cast<Derived *>(this)->operator()(op);
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeOpaque> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypePointer> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeFunction> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        for (auto &op : in.op1()) {
+            static_cast<Derived *>(this)->operator()(op);
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeEvent> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeDeviceEvent> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeReserveId> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeQueue> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypePipe> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeForwardPointer> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeRuntimeArray const &in) {
+    auto operator()(const_t<OpConstantTrue> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpConstantFalse> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpConstant> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeStruct const &in) {
+    auto operator()(const_t<OpConstantComposite> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        for (auto const &op : in.op0()) {
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        for (auto &op : in.op0()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeOpaque const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpTypePointer const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpTypeFunction const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
-            static_cast<Derived *>(this)->operator()(op);
-        }
-    }
-    auto operator()(OpTypeEvent const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeDeviceEvent const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeReserveId const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypeQueue const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpTypePipe const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpTypeForwardPointer const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpConstantTrue const &in) {
+    auto operator()(const_t<OpConstantSampler> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-    }
-    auto operator()(OpConstantFalse const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-    }
-    auto operator()(OpConstant const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConstantComposite const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        for (auto const &op : in.op0()) {
-            static_cast<Derived *>(this)->operator()(op);
-        }
-    }
-    auto operator()(OpConstantSampler const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpConstantNull const &in) {
+    auto operator()(const_t<OpConstantNull> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFunction const &in) {
+    auto operator()(const_t<OpFunction> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFunctionParameter const &in) {
+    auto operator()(const_t<OpFunctionParameter> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFunctionEnd const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpFunctionCall const &in) {
+    auto operator()(const_t<OpFunctionEnd> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpFunctionCall> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpVariable const &in) {
+    auto operator()(const_t<OpVariable> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         if (in.op1()) {
             static_cast<Derived *>(this)->operator()(*in.op1());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageTexelPointer const &in) {
+    auto operator()(const_t<OpImageTexelPointer> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLoad const &in) {
+    auto operator()(const_t<OpLoad> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         if (in.op1()) {
             static_cast<Derived *>(this)->operator()(*in.op1());
@@ -965,8 +1785,10 @@ template <typename Derived> class default_visitor {
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpStore const &in) {
+    auto operator()(const_t<OpStore> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -977,8 +1799,10 @@ template <typename Derived> class default_visitor {
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCopyMemory const &in) {
+    auto operator()(const_t<OpCopyMemory> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -993,8 +1817,10 @@ template <typename Derived> class default_visitor {
         if (in.op4()) {
             static_cast<Derived *>(this)->operator()(*in.op4());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCopyMemorySized const &in) {
+    auto operator()(const_t<OpCopyMemorySized> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -1010,250 +1836,333 @@ template <typename Derived> class default_visitor {
         if (in.op5()) {
             static_cast<Derived *>(this)->operator()(*in.op5());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAccessChain const &in) {
+    auto operator()(const_t<OpAccessChain> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpInBoundsAccessChain const &in) {
+    auto operator()(const_t<OpInBoundsAccessChain> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpPtrAccessChain const &in) {
+    auto operator()(const_t<OpPtrAccessChain> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpArrayLength const &in) {
+    auto operator()(const_t<OpArrayLength> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGenericPtrMemSemantics const &in) {
+    auto operator()(const_t<OpGenericPtrMemSemantics> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpInBoundsPtrAccessChain const &in) {
+    auto operator()(const_t<OpInBoundsPtrAccessChain> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDecorate const &in) {
+    auto operator()(const_t<OpDecorate> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMemberDecorate const &in) {
+    auto operator()(const_t<OpMemberDecorate> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDecorationGroup const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpGroupDecorate const &in) {
+    auto operator()(const_t<OpDecorationGroup> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupDecorate> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupMemberDecorate const &in) {
+    auto operator()(const_t<OpGroupMemberDecorate> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpVectorExtractDynamic const &in) {
+    auto operator()(const_t<OpVectorExtractDynamic> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpVectorInsertDynamic const &in) {
+    auto operator()(const_t<OpVectorInsertDynamic> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpVectorShuffle const &in) {
+    auto operator()(const_t<OpVectorShuffle> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCompositeConstruct const &in) {
+    auto operator()(const_t<OpCompositeConstruct> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        for (auto const &op : in.op0()) {
+        static_cast<Derived *>(this)->visit_result(in);
+        for (auto &op : in.op0()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCompositeExtract const &in) {
+    auto operator()(const_t<OpCompositeExtract> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        for (auto const &op : in.op1()) {
+        for (auto &op : in.op1()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCompositeInsert const &in) {
+    auto operator()(const_t<OpCompositeInsert> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCopyObject const &in) {
+    auto operator()(const_t<OpCopyObject> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTranspose const &in) {
+    auto operator()(const_t<OpTranspose> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSampledImage const &in) {
+    auto operator()(const_t<OpSampledImage> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleImplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleExplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleDrefImplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleDrefImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleDrefExplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleDrefExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleProjImplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleProjImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleProjExplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleProjExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleProjDrefImplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleProjDrefImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSampleProjDrefExplicitLod const &in) {
+    auto operator()(const_t<OpImageSampleProjDrefExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageFetch const &in) {
+    auto operator()(const_t<OpImageFetch> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageGather const &in) {
+    auto operator()(const_t<OpImageGather> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageDrefGather const &in) {
+    auto operator()(const_t<OpImageDrefGather> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageRead const &in) {
+    auto operator()(const_t<OpImageRead> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageWrite const &in) {
+    auto operator()(const_t<OpImageWrite> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -1261,1056 +2170,1399 @@ template <typename Derived> class default_visitor {
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImage const &in) {
+    auto operator()(const_t<OpImage> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageQueryFormat const &in) {
+    auto operator()(const_t<OpImageQueryFormat> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageQueryOrder const &in) {
+    auto operator()(const_t<OpImageQueryOrder> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageQuerySizeLod const &in) {
+    auto operator()(const_t<OpImageQuerySizeLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpImageQuerySize const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpImageQueryLod const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageQueryLevels const &in) {
+    auto operator()(const_t<OpImageQuerySize> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageQuerySamples const &in) {
+    auto operator()(const_t<OpImageQueryLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertFToU const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertFToS const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertSToF const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertUToF const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpUConvert const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpSConvert const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpFConvert const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpQuantizeToF16 const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertPtrToU const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpSatConvertSToU const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpSatConvertUToS const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpConvertUToPtr const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpPtrCastToGeneric const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpGenericCastToPtr const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpGenericCastToPtrExplicit const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitcast const &in) {
+    auto operator()(const_t<OpImageQueryLevels> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSNegate const &in) {
+    auto operator()(const_t<OpImageQuerySamples> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFNegate const &in) {
+    auto operator()(const_t<OpConvertFToU> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIAdd const &in) {
+    auto operator()(const_t<OpConvertFToS> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFAdd const &in) {
+    auto operator()(const_t<OpConvertSToF> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpISub const &in) {
+    auto operator()(const_t<OpConvertUToF> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFSub const &in) {
+    auto operator()(const_t<OpUConvert> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIMul const &in) {
+    auto operator()(const_t<OpSConvert> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFMul const &in) {
+    auto operator()(const_t<OpFConvert> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUDiv const &in) {
+    auto operator()(const_t<OpQuantizeToF16> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSDiv const &in) {
+    auto operator()(const_t<OpConvertPtrToU> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFDiv const &in) {
+    auto operator()(const_t<OpSatConvertSToU> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUMod const &in) {
+    auto operator()(const_t<OpSatConvertUToS> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSRem const &in) {
+    auto operator()(const_t<OpConvertUToPtr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSMod const &in) {
+    auto operator()(const_t<OpPtrCastToGeneric> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFRem const &in) {
+    auto operator()(const_t<OpGenericCastToPtr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFMod const &in) {
+    auto operator()(const_t<OpGenericCastToPtrExplicit> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpVectorTimesScalar const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpMatrixTimesScalar const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpVectorTimesMatrix const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpMatrixTimesVector const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMatrixTimesMatrix const &in) {
+    auto operator()(const_t<OpBitcast> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpSNegate> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpFNegate> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIAdd> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpOuterProduct const &in) {
+    auto operator()(const_t<OpFAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDot const &in) {
+    auto operator()(const_t<OpISub> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIAddCarry const &in) {
+    auto operator()(const_t<OpFSub> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpISubBorrow const &in) {
+    auto operator()(const_t<OpIMul> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUMulExtended const &in) {
+    auto operator()(const_t<OpFMul> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSMulExtended const &in) {
+    auto operator()(const_t<OpUDiv> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAny const &in) {
+    auto operator()(const_t<OpSDiv> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpAll const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpIsNan const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpIsInf const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpIsFinite const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpIsNormal const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpSignBitSet const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpLessOrGreater const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpOrdered const &in) {
+    auto operator()(const_t<OpFDiv> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUnordered const &in) {
+    auto operator()(const_t<OpUMod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLogicalEqual const &in) {
+    auto operator()(const_t<OpSRem> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLogicalNotEqual const &in) {
+    auto operator()(const_t<OpSMod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLogicalOr const &in) {
+    auto operator()(const_t<OpFRem> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLogicalAnd const &in) {
+    auto operator()(const_t<OpFMod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLogicalNot const &in) {
+    auto operator()(const_t<OpVectorTimesScalar> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSelect const &in) {
+    auto operator()(const_t<OpMatrixTimesScalar> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpVectorTimesMatrix> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpMatrixTimesVector> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpMatrixTimesMatrix> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpOuterProduct> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpDot> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIAddCarry> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpISubBorrow> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpUMulExtended> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpSMulExtended> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAny> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAll> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIsNan> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIsInf> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIsFinite> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpIsNormal> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpSignBitSet> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLessOrGreater> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpOrdered> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpUnordered> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLogicalEqual> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLogicalNotEqual> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLogicalOr> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLogicalAnd> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLogicalNot> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpSelect> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIEqual const &in) {
+    auto operator()(const_t<OpIEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpINotEqual const &in) {
+    auto operator()(const_t<OpINotEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUGreaterThan const &in) {
+    auto operator()(const_t<OpUGreaterThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSGreaterThan const &in) {
+    auto operator()(const_t<OpSGreaterThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUGreaterThanEqual const &in) {
+    auto operator()(const_t<OpUGreaterThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSGreaterThanEqual const &in) {
+    auto operator()(const_t<OpSGreaterThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpULessThan const &in) {
+    auto operator()(const_t<OpULessThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSLessThan const &in) {
+    auto operator()(const_t<OpSLessThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpULessThanEqual const &in) {
+    auto operator()(const_t<OpULessThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSLessThanEqual const &in) {
+    auto operator()(const_t<OpSLessThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdEqual const &in) {
+    auto operator()(const_t<OpFOrdEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordEqual const &in) {
+    auto operator()(const_t<OpFUnordEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdNotEqual const &in) {
+    auto operator()(const_t<OpFOrdNotEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordNotEqual const &in) {
+    auto operator()(const_t<OpFUnordNotEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdLessThan const &in) {
+    auto operator()(const_t<OpFOrdLessThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordLessThan const &in) {
+    auto operator()(const_t<OpFUnordLessThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdGreaterThan const &in) {
+    auto operator()(const_t<OpFOrdGreaterThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordGreaterThan const &in) {
+    auto operator()(const_t<OpFUnordGreaterThan> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdLessThanEqual const &in) {
+    auto operator()(const_t<OpFOrdLessThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordLessThanEqual const &in) {
+    auto operator()(const_t<OpFUnordLessThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFOrdGreaterThanEqual const &in) {
+    auto operator()(const_t<OpFOrdGreaterThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFUnordGreaterThanEqual const &in) {
+    auto operator()(const_t<OpFUnordGreaterThanEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpShiftRightLogical const &in) {
+    auto operator()(const_t<OpShiftRightLogical> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpShiftRightArithmetic const &in) {
+    auto operator()(const_t<OpShiftRightArithmetic> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpShiftLeftLogical const &in) {
+    auto operator()(const_t<OpShiftLeftLogical> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitwiseOr const &in) {
+    auto operator()(const_t<OpBitwiseOr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitwiseXor const &in) {
+    auto operator()(const_t<OpBitwiseXor> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitwiseAnd const &in) {
+    auto operator()(const_t<OpBitwiseAnd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpNot const &in) {
+    auto operator()(const_t<OpNot> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitFieldInsert const &in) {
+    auto operator()(const_t<OpBitFieldInsert> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitFieldSExtract const &in) {
+    auto operator()(const_t<OpBitFieldSExtract> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitFieldUExtract const &in) {
+    auto operator()(const_t<OpBitFieldUExtract> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitReverse const &in) {
+    auto operator()(const_t<OpBitReverse> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBitCount const &in) {
+    auto operator()(const_t<OpBitCount> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdx const &in) {
+    auto operator()(const_t<OpDPdx> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdy const &in) {
+    auto operator()(const_t<OpDPdy> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFwidth const &in) {
+    auto operator()(const_t<OpFwidth> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdxFine const &in) {
+    auto operator()(const_t<OpDPdxFine> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdyFine const &in) {
+    auto operator()(const_t<OpDPdyFine> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFwidthFine const &in) {
+    auto operator()(const_t<OpFwidthFine> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdxCoarse const &in) {
+    auto operator()(const_t<OpDPdxCoarse> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpDPdyCoarse const &in) {
+    auto operator()(const_t<OpDPdyCoarse> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpFwidthCoarse const &in) {
+    auto operator()(const_t<OpFwidthCoarse> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpEmitVertex const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpEndPrimitive const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpEmitStreamVertex const &in) {
+    auto operator()(const_t<OpEmitVertex> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpEndPrimitive> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpEmitStreamVertex> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpEndStreamPrimitive const &in) {
+    auto operator()(const_t<OpEndStreamPrimitive> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpControlBarrier const &in) {
+    auto operator()(const_t<OpControlBarrier> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMemoryBarrier const &in) {
+    auto operator()(const_t<OpMemoryBarrier> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicLoad const &in) {
+    auto operator()(const_t<OpAtomicLoad> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicStore const &in) {
+    auto operator()(const_t<OpAtomicStore> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicExchange const &in) {
+    auto operator()(const_t<OpAtomicExchange> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicCompareExchange const &in) {
+    auto operator()(const_t<OpAtomicCompareExchange> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
         static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicCompareExchangeWeak const &in) {
+    auto operator()(const_t<OpAtomicCompareExchangeWeak> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
         static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicIIncrement const &in) {
+    auto operator()(const_t<OpAtomicIIncrement> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicIDecrement const &in) {
+    auto operator()(const_t<OpAtomicIDecrement> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicIAdd const &in) {
+    auto operator()(const_t<OpAtomicIAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        static_cast<Derived *>(this)->operator()(in.op3());
-    }
-    auto operator()(OpAtomicISub const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        static_cast<Derived *>(this)->operator()(in.op3());
-    }
-    auto operator()(OpAtomicSMin const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicUMin const &in) {
+    auto operator()(const_t<OpAtomicISub> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicSMax const &in) {
+    auto operator()(const_t<OpAtomicSMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicUMax const &in) {
+    auto operator()(const_t<OpAtomicUMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicAnd const &in) {
+    auto operator()(const_t<OpAtomicSMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicOr const &in) {
+    auto operator()(const_t<OpAtomicUMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicXor const &in) {
+    auto operator()(const_t<OpAtomicAnd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpPhi const &in) {
+    auto operator()(const_t<OpAtomicOr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        for (auto const &op : in.op0()) {
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAtomicXor> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpPhi> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        for (auto &op : in.op0()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLoopMerge const &in) {
+    auto operator()(const_t<OpLoopMerge> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSelectionMerge const &in) {
+    auto operator()(const_t<OpSelectionMerge> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLabel const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpBranch const &in) {
+    auto operator()(const_t<OpLabel> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpBranch> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpBranchConditional const &in) {
+    auto operator()(const_t<OpBranchConditional> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
-        for (auto const &op : in.op3()) {
+        for (auto &op : in.op3()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSwitch const &in) {
+    auto operator()(const_t<OpSwitch> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        for (auto const &op : in.op2()) {
+        for (auto &op : in.op2()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpKill const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpReturn const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpReturnValue const &in) {
+    auto operator()(const_t<OpKill> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpReturn> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpReturnValue> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpUnreachable const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpLifetimeStart const &in) {
+    auto operator()(const_t<OpUnreachable> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpLifetimeStart> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpLifetimeStop const &in) {
+    auto operator()(const_t<OpLifetimeStop> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupAsyncCopy const &in) {
+    auto operator()(const_t<OpGroupAsyncCopy> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
         static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupWaitEvents const &in) {
+    auto operator()(const_t<OpGroupWaitEvents> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupAll const &in) {
+    auto operator()(const_t<OpGroupAll> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupAny const &in) {
+    auto operator()(const_t<OpGroupAny> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupBroadcast const &in) {
+    auto operator()(const_t<OpGroupBroadcast> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpGroupIAdd const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpGroupFAdd const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupFMin const &in) {
+    auto operator()(const_t<OpGroupIAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupUMin const &in) {
+    auto operator()(const_t<OpGroupFAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupSMin const &in) {
+    auto operator()(const_t<OpGroupFMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupFMax const &in) {
+    auto operator()(const_t<OpGroupUMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupUMax const &in) {
+    auto operator()(const_t<OpGroupSMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupSMax const &in) {
+    auto operator()(const_t<OpGroupFMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReadPipe const &in) {
+    auto operator()(const_t<OpGroupUMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupSMax> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpReadPipe> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpWritePipe const &in) {
+    auto operator()(const_t<OpWritePipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReservedReadPipe const &in) {
+    auto operator()(const_t<OpReservedReadPipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
         static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReservedWritePipe const &in) {
+    auto operator()(const_t<OpReservedWritePipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
         static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReserveReadPipePackets const &in) {
+    auto operator()(const_t<OpReserveReadPipePackets> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReserveWritePipePackets const &in) {
+    auto operator()(const_t<OpReserveWritePipePackets> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCommitReadPipe const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        static_cast<Derived *>(this)->operator()(in.op3());
-    }
-    auto operator()(OpCommitWritePipe const &in) {
+    auto operator()(const_t<OpCommitReadPipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIsValidReserveId const &in) {
+    auto operator()(const_t<OpCommitWritePipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpGetNumPipePackets const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpGetMaxPipePackets const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpGroupReserveReadPipePackets const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
-        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupReserveWritePipePackets const &in) {
+    auto operator()(const_t<OpIsValidReserveId> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGetNumPipePackets> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
-        static_cast<Derived *>(this)->operator()(in.op3());
-        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupCommitReadPipe const &in) {
+    auto operator()(const_t<OpGetMaxPipePackets> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupReserveReadPipePackets> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupCommitWritePipe const &in) {
+    auto operator()(const_t<OpGroupReserveWritePipePackets> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupCommitReadPipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpEnqueueMarker const &in) {
+    auto operator()(const_t<OpGroupCommitWritePipe> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpEnqueueKernel const &in) {
+    auto operator()(const_t<OpEnqueueMarker> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpEnqueueKernel> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
@@ -2321,579 +3573,760 @@ template <typename Derived> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op7());
         static_cast<Derived *>(this)->operator()(in.op8());
         static_cast<Derived *>(this)->operator()(in.op9());
-        for (auto const &op : in.op10()) {
+        for (auto &op : in.op10()) {
             static_cast<Derived *>(this)->operator()(op);
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelNDrangeSubGroupCount const &in) {
+    auto operator()(const_t<OpGetKernelNDrangeSubGroupCount> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelNDrangeMaxSubGroupSize const &in) {
+    auto operator()(const_t<OpGetKernelNDrangeMaxSubGroupSize> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelWorkGroupSize const &in) {
+    auto operator()(const_t<OpGetKernelWorkGroupSize> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelPreferredWorkGroupSizeMultiple const &in) {
+    auto operator()(const_t<OpGetKernelPreferredWorkGroupSizeMultiple> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpRetainEvent const &in) {
+    auto operator()(const_t<OpRetainEvent> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpReleaseEvent const &in) {
+    auto operator()(const_t<OpReleaseEvent> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCreateUserEvent const &in) {
+    auto operator()(const_t<OpCreateUserEvent> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpIsValidEvent const &in) {
+    auto operator()(const_t<OpIsValidEvent> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSetUserEventStatus const &in) {
+    auto operator()(const_t<OpSetUserEventStatus> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCaptureEventProfilingInfo const &in) {
+    auto operator()(const_t<OpCaptureEventProfilingInfo> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-    }
-    auto operator()(OpGetDefaultQueue const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-    }
-    auto operator()(OpBuildNDRange const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleImplicitLod const &in) {
+    auto operator()(const_t<OpGetDefaultQueue> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpBuildNDRange> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpImageSparseSampleImplicitLod> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleExplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleDrefImplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleDrefImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleDrefExplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleDrefExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleProjImplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleProjImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleProjExplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleProjExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleProjDrefImplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleProjDrefImplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseSampleProjDrefExplicitLod const &in) {
+    auto operator()(const_t<OpImageSparseSampleProjDrefExplicitLod> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseFetch const &in) {
+    auto operator()(const_t<OpImageSparseFetch> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseGather const &in) {
+    auto operator()(const_t<OpImageSparseGather> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseDrefGather const &in) {
+    auto operator()(const_t<OpImageSparseDrefGather> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseTexelsResident const &in) {
+    auto operator()(const_t<OpImageSparseTexelsResident> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpNoLine const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpAtomicFlagTestAndSet const &in) {
+    auto operator()(const_t<OpNoLine> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAtomicFlagTestAndSet> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicFlagClear const &in) {
+    auto operator()(const_t<OpAtomicFlagClear> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpImageSparseRead const &in) {
+    auto operator()(const_t<OpImageSparseRead> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
             static_cast<Derived *>(this)->operator()(*in.op2());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpSizeOf const &in) {
+    auto operator()(const_t<OpSizeOf> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypePipeStorage const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpConstantPipeStorage const &in) {
+    auto operator()(const_t<OpTypePipeStorage> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpConstantPipeStorage> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCreatePipeFromPipeStorage const &in) {
+    auto operator()(const_t<OpCreatePipeFromPipeStorage> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelLocalSizeForSubgroupCount const &in) {
+    auto operator()(const_t<OpGetKernelLocalSizeForSubgroupCount> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGetKernelMaxNumSubgroups const &in) {
+    auto operator()(const_t<OpGetKernelMaxNumSubgroups> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeNamedBarrier const &in) { static_cast<Derived *>(this)->pre_visit(in); }
-    auto operator()(OpNamedBarrierInitialize const &in) {
+    auto operator()(const_t<OpTypeNamedBarrier> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpNamedBarrierInitialize> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpMemoryNamedBarrier const &in) {
+    auto operator()(const_t<OpMemoryNamedBarrier> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpModuleProcessed const &in) {
+    auto operator()(const_t<OpModuleProcessed> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpExecutionModeId const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpDecorateId const &in) {
+    auto operator()(const_t<OpExecutionModeId> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformElect const &in) {
+    auto operator()(const_t<OpDecorateId> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpGroupNonUniformAll const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformAny const &in) {
+    auto operator()(const_t<OpGroupNonUniformElect> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformAll> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformAllEqual const &in) {
+    auto operator()(const_t<OpGroupNonUniformAny> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBroadcast const &in) {
+    auto operator()(const_t<OpGroupNonUniformAllEqual> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBroadcastFirst const &in) {
+    auto operator()(const_t<OpGroupNonUniformBroadcast> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpGroupNonUniformBallot const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpGroupNonUniformInverseBallot const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpGroupNonUniformBallotBitExtract const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBallotBitCount const &in) {
+    auto operator()(const_t<OpGroupNonUniformBroadcastFirst> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformBallot> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformInverseBallot> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformBallotBitExtract> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBallotFindLSB const &in) {
+    auto operator()(const_t<OpGroupNonUniformBallotBitCount> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpGroupNonUniformBallotFindMSB const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpGroupNonUniformShuffle const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformShuffleXor const &in) {
+    auto operator()(const_t<OpGroupNonUniformBallotFindLSB> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformBallotFindMSB> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformShuffle> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformShuffleUp const &in) {
+    auto operator()(const_t<OpGroupNonUniformShuffleXor> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformShuffleDown const &in) {
+    auto operator()(const_t<OpGroupNonUniformShuffleUp> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformIAdd const &in) {
+    auto operator()(const_t<OpGroupNonUniformShuffleDown> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
-        if (in.op3()) {
-            static_cast<Derived *>(this)->operator()(*in.op3());
-        }
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformFAdd const &in) {
+    auto operator()(const_t<OpGroupNonUniformIAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        if (in.op3()) {
-            static_cast<Derived *>(this)->operator()(*in.op3());
-        }
-    }
-    auto operator()(OpGroupNonUniformIMul const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        if (in.op3()) {
-            static_cast<Derived *>(this)->operator()(*in.op3());
-        }
-    }
-    auto operator()(OpGroupNonUniformFMul const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        if (in.op3()) {
-            static_cast<Derived *>(this)->operator()(*in.op3());
-        }
-    }
-    auto operator()(OpGroupNonUniformSMin const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        if (in.op3()) {
-            static_cast<Derived *>(this)->operator()(*in.op3());
-        }
-    }
-    auto operator()(OpGroupNonUniformUMin const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformFMin const &in) {
+    auto operator()(const_t<OpGroupNonUniformFAdd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformSMax const &in) {
+    auto operator()(const_t<OpGroupNonUniformIMul> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformUMax const &in) {
+    auto operator()(const_t<OpGroupNonUniformFMul> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformFMax const &in) {
+    auto operator()(const_t<OpGroupNonUniformSMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBitwiseAnd const &in) {
+    auto operator()(const_t<OpGroupNonUniformUMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBitwiseOr const &in) {
+    auto operator()(const_t<OpGroupNonUniformFMin> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformBitwiseXor const &in) {
+    auto operator()(const_t<OpGroupNonUniformSMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformLogicalAnd const &in) {
+    auto operator()(const_t<OpGroupNonUniformUMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformLogicalOr const &in) {
+    auto operator()(const_t<OpGroupNonUniformFMax> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformLogicalXor const &in) {
+    auto operator()(const_t<OpGroupNonUniformBitwiseAnd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformQuadBroadcast const &in) {
+    auto operator()(const_t<OpGroupNonUniformBitwiseOr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpGroupNonUniformQuadSwap const &in) {
+    auto operator()(const_t<OpGroupNonUniformBitwiseXor> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCopyLogical const &in) {
+    auto operator()(const_t<OpGroupNonUniformLogicalAnd> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-    }
-    auto operator()(OpPtrEqual const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-    }
-    auto operator()(OpPtrNotEqual const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpPtrDiff const &in) {
+    auto operator()(const_t<OpGroupNonUniformLogicalOr> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpTypeCooperativeMatrixKHR const &in) {
+    auto operator()(const_t<OpGroupNonUniformLogicalXor> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformQuadBroadcast> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpGroupNonUniformQuadSwap> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpCopyLogical> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpPtrEqual> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpPtrNotEqual> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpPtrDiff> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpTypeCooperativeMatrixKHR> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
         static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCooperativeMatrixLoadKHR const &in) {
+    auto operator()(const_t<OpCooperativeMatrixLoadKHR> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         if (in.op2()) {
@@ -2907,8 +4340,10 @@ template <typename Derived> class default_visitor {
         if (in.op4()) {
             static_cast<Derived *>(this)->operator()(*in.op4());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCooperativeMatrixStoreKHR const &in) {
+    auto operator()(const_t<OpCooperativeMatrixStoreKHR> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
@@ -2924,45 +4359,58 @@ template <typename Derived> class default_visitor {
         if (in.op5()) {
             static_cast<Derived *>(this)->operator()(*in.op5());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCooperativeMatrixMulAddKHR const &in) {
+    auto operator()(const_t<OpCooperativeMatrixMulAddKHR> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         if (in.op3()) {
             static_cast<Derived *>(this)->operator()(*in.op3());
         }
+
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpCooperativeMatrixLengthKHR const &in) {
+    auto operator()(const_t<OpCooperativeMatrixLengthKHR> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicFMinEXT const &in) {
+    auto operator()(const_t<OpAtomicFMinEXT> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
-        static_cast<Derived *>(this)->operator()(in.op0());
-        static_cast<Derived *>(this)->operator()(in.op1());
-        static_cast<Derived *>(this)->operator()(in.op2());
-        static_cast<Derived *>(this)->operator()(in.op3());
-    }
-    auto operator()(OpAtomicFMaxEXT const &in) {
-        static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
-    auto operator()(OpAtomicFAddEXT const &in) {
+    auto operator()(const_t<OpAtomicFMaxEXT> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAtomicFAddEXT> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
     }
 };
 

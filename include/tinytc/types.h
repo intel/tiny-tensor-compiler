@@ -442,6 +442,14 @@ typedef struct tinytc_prog *tinytc_prog_t;
 //! @brief const prog handle
 typedef const struct tinytc_prog *const_tinytc_prog_t;
 
+//! @struct tinytc_spv_mod
+//! @brief Opaque struct for a SPIR-V module
+struct tinytc_spv_mod;
+//! @brief spv_mod handle
+typedef struct tinytc_spv_mod *tinytc_spv_mod_t;
+//! @brief const spv_mod handle
+typedef const struct tinytc_spv_mod *const_tinytc_spv_mod_t;
+
 //! @struct tinytc_core_info;
 //! @brief Opaque struct for core information
 struct tinytc_core_info;

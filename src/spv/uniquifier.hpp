@@ -4,12 +4,14 @@
 #ifndef UNIQUIFIER_20241107_HPP
 #define UNIQUIFIER_20241107_HPP
 
+#include "node/data_type_node.hpp"
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
 #include "spv/module.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -25,7 +27,7 @@ auto address_space_to_storage_class(address_space as) -> StorageClass;
 
 class uniquifier {
   public:
-    uniquifier(tinytc_compiler_context_t ctx, mod &m);
+    uniquifier(tinytc_spv_mod &m);
 
     auto bool2_ty() -> spv_inst *;
     auto bool_constant(bool b) -> spv_inst *;
@@ -67,8 +69,7 @@ class uniquifier {
         }
     };
 
-    tinytc_compiler_context_t ctx_;
-    mod *mod_;
+    tinytc_spv_mod_t mod_;
     spv_inst *bool2_ty_ = nullptr;
     spv_inst *bool_true_ = nullptr, *bool_false_ = nullptr;
     spv_inst *index3_ty_ = nullptr;

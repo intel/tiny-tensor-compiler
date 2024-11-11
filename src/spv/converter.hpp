@@ -1,7 +1,9 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "compiler_context.hpp"
+#ifndef CONVERTER_20241111_HPP
+#define CONVERTER_20241111_HPP
+
 #include "device_info.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
@@ -12,19 +14,18 @@
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "support/casting.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <stack>
 #include <unordered_map>
 #include <vector>
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p,
-                           tinytc_core_info const &info) -> std::unique_ptr<mod>;
+auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
 
 class dope_vector {
   public:
@@ -60,7 +61,7 @@ class dope_vector {
 
 class inst_converter {
   public:
-    inst_converter(tinytc_compiler_context_t ctx, mod &m);
+    inst_converter(tinytc_spv_mod &m);
 
     // Instruction nodes
     void operator()(inst_node const &in);
@@ -120,8 +121,7 @@ class inst_converter {
     void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
                     spv_inst *value);
 
-    tinytc_compiler_context_t ctx_;
-    mod *mod_;
+    tinytc_spv_mod_t mod_;
     uniquifier unique_;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
@@ -137,3 +137,5 @@ template <typename T>
 concept spv_inst_with_required_extensions = requires() { T::required_extensions; };
 
 } // namespace tinytc::spv
+
+#endif // CONVERTER_20241111_HPP

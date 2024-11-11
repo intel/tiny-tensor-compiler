@@ -1135,6 +1135,30 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
 TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
 ////////////////////////////
+/////// SPIR-V Module //////
+////////////////////////////
+
+/**
+ * @brief Release SPIR-V module
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param mod [inout] SPIR-V module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_release(tinytc_spv_mod_t mod);
+
+/**
+ * @brief Increase reference count of SPIR-V module by 1
+ *
+ * @param mod [inout] SPIR-V module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_retain(tinytc_spv_mod_t mod);
+
+////////////////////////////
 // Visitors and transforms /
 ////////////////////////////
 
@@ -1169,6 +1193,39 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg,
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str);
+
+/**
+ * @brief Dump SPIR-V module to stderr
+ *
+ * @param mod [in] module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_dump(const_tinytc_spv_mod_t mod);
+
+/**
+ * @brief Print SPIR-V module to file
+ *
+ * @param mod [in] module
+ * @param filename [in] filename
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_print_to_file(const_tinytc_spv_mod_t mod,
+                                                           char const *filename);
+
+/**
+ * @brief Print SPIR-V module to string
+ *
+ * The user is responsible to dispose the string with tinytc_string_destroy.
+ *
+ * @param mod [in] module
+ * @param str [out] pointer to string
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_print_to_string(const_tinytc_spv_mod_t mod,
+                                                             char **str);
 
 /**
  * @brief Delete a (non-const) string returned from tinytc API
@@ -1486,7 +1543,19 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src
                                                             const_tinytc_core_info_t info);
 
 /**
- * @brief Compiler tensor language to SPIR-V
+ * @brief Compile tensor language to SPIR-V
+ *
+ * @param mod [out] pointer to the SPIR-V module created
+ * @param prg [inout] tensor program; modified as compiler passes are run
+ * @param info [in] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_spv_mod_t *mod, tinytc_prog_t prg,
+                                                           const_tinytc_core_info_t info);
+
+/**
+ * @brief Compiler tensor language to SPIR-V and assemble
  *
  * @param bin [out] pointer to the binary object created
  * @param prg [inout] tensor program; modified as compiler passes are run
@@ -1494,8 +1563,19 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_binary_t *bin, tinytc_prog_t prg,
-                                                           const_tinytc_core_info_t info);
+TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(
+    tinytc_binary_t *bin, tinytc_prog_t prg, const_tinytc_core_info_t info);
+
+/**
+ * @brief Assemble SPIR-V module
+ *
+ * @param bin [out] pointer to the binary object created
+ * @param mod [in] SPIR-V module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spirv_assemble(tinytc_binary_t *bin,
+                                                    const_tinytc_spv_mod_t mod);
 
 /**
  * @brief Get source text
