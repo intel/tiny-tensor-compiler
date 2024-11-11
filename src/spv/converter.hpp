@@ -77,6 +77,7 @@ class inst_converter {
     void operator()(load_inst const &in);
     void operator()(num_subgroups_inst const &in);
     void operator()(parallel_inst const &in);
+    void operator()(size_inst const &in);
     void operator()(store_inst const &in);
     void operator()(subgroup_id_inst const &in);
     void operator()(subgroup_local_id_inst const &in);

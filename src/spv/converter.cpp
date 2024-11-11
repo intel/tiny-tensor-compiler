@@ -1024,6 +1024,14 @@ void inst_converter::operator()(num_subgroups_inst const &in) {
 
 void inst_converter::operator()(parallel_inst const &in) { run_on_region(in.body()); }
 
+void inst_converter::operator()(size_inst const &in) {
+    auto dv = get_dope_vector(in.operand());
+    if (!dv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    declare(in.result(0), dv->shape(in.mode()));
+}
+
 void inst_converter::operator()(store_inst const &in) {
     auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(ctx_, scalar_type::index));
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());

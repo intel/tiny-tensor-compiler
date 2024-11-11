@@ -1,0 +1,27 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -O0 < %s | filecheck %s
+
+; CHECK: %[[#I64:]] = OpTypeInt 64 0
+; CHECK: %[[#I64_C8:]] = OpConstant %[[#I64]] 8
+; CHECK: %[[#I64_C32:]] = OpConstant %[[#I64]] 32
+
+func @size(%0: memref<i32x?x?x8x32>) {
+    %1 = size %0[0] : memref<i32x?x?x8x32>
+    %2 = size %0[1] : memref<i32x?x?x8x32>
+    %3 = size %0[2] : memref<i32x?x?x8x32>
+    %4 = size %0[3] : memref<i32x?x?x8x32>
+    %5 = arith.add %1, %2 : index
+    %6 = arith.add %3, %4 : index
+; CHECK:              %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:         %[[#]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT:  %[[#SHAPE1:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT:  %[[#SHAPE2:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT: %[[#STRIDE1:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT: %[[#STRIDE2:]] = OpFunctionParameter %[[#]]
+; CHECK-NEXT: %[[#STRIDE3:]] = OpFunctionParameter %[[#]]
+; CHECK:              %[[#]] = OpIAdd %[[#]] %[[#SHAPE1]] %[[#SHAPE2]]
+; CHECK:              %[[#]] = OpIAdd %[[#]] %[[#I64_C8]] %[[#I64_C32]]
+}
+
