@@ -202,6 +202,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Scalar types violate compatibility rules";
     case tinytc_status_ir_constant_mismatch:
         return "Type of constant does not match type of returned value";
+    case tinytc_status_ir_insufficient_alignment:
+        return "Pointer does not satisfy minimum alignment requirements";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

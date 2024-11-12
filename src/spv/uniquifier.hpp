@@ -40,6 +40,7 @@ class uniquifier {
     auto index3_ty() -> spv_inst *;
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
+    auto spv_array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
     auto spv_function_ty(array_view<spv_inst *> params) -> spv_inst *;
     auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
                         std::int32_t alignment) -> spv_inst *;
@@ -62,6 +63,12 @@ class uniquifier {
         return var;
     }
 
+    struct array_key_hash {
+        inline auto
+        operator()(std::pair<spv_inst *, std::int32_t> const &key) const -> std::size_t {
+            return fnv1a_combine(key.first, key.second);
+        }
+    };
     struct pointer_key_hash {
         inline auto operator()(std::tuple<StorageClass, spv_inst *, std::int32_t> const &key) const
             -> std::size_t {
@@ -79,6 +86,8 @@ class uniquifier {
     std::unordered_map<LiteralContextDependentNumber, spv_inst *> cst_map_;
     std::unordered_set<char const *> extensions_;
     std::unordered_map<spv_inst *, spv_inst *> null_cst_;
+    std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash>
+        spv_array_tys_;
     std::unordered_multimap<std::uint64_t, OpTypeFunction *> spv_function_tys_;
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
                        pointer_key_hash>

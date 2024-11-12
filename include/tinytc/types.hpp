@@ -94,6 +94,7 @@ enum class status {
     ir_unsupported_coopmatrix_shape = tinytc_status_ir_unsupported_coopmatrix_shape,
     ir_incompatible_scalar_types = tinytc_status_ir_incompatible_scalar_types,
     ir_constant_mismatch = tinytc_status_ir_constant_mismatch,
+    ir_insufficient_alignment = tinytc_status_ir_insufficient_alignment,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,

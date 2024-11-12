@@ -51,6 +51,7 @@ add_dependencies(lit-check tinytc-oc tinytc-opt)
 
 if(SPIRVTools_FOUND)
     set(SPIRV_VAL_SOURCES
+        spv/alloca.ir
         spv/arith.ir
         spv/arith_unary.ir
         spv/barrier.ir

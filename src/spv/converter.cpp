@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/converter.hpp"
+#include "analysis/stack.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
@@ -132,6 +133,14 @@ auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     return nullptr;
 }
 
+auto inst_converter::get_memref_type(tinytc_value const &v) const -> memref_data_type const * {
+    auto mt = dyn_cast<memref_data_type>(v.ty());
+    if (!mt) {
+        throw compilation_error(v.loc(), status::ir_expected_memref);
+    }
+    return mt;
+}
+
 auto inst_converter::get_scalar_type(value_node const &v) const -> scalar_type {
     auto st = dyn_cast<scalar_data_type>(v.ty());
     if (!st) {
@@ -149,10 +158,9 @@ auto inst_converter::get_coopmatrix_type(value_node const &v) const -> scalar_ty
 
 auto inst_converter::load_builtin(BuiltIn b) -> spv_inst * {
     auto builtin = unique_.builtin_var(b);
-    if (auto it = std::find(builtins_used_by_function_.begin(), builtins_used_by_function_.end(),
-                            builtin);
-        it == builtins_used_by_function_.end()) {
-        builtins_used_by_function_.push_back(builtin);
+    if (auto it = std::find(vars_used_by_function_.begin(), vars_used_by_function_.end(), builtin);
+        it == vars_used_by_function_.end()) {
+        vars_used_by_function_.push_back(builtin);
     }
     return mod_->add<OpLoad>(unique_.builtin_pointee_ty(b), builtin, MemoryAccess::Aligned,
                              unique_.builtin_alignment(b));
@@ -342,6 +350,40 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
 void inst_converter::operator()(inst_node const &in) {
     // @todo
     throw compilation_error(in.loc(), status::not_implemented);
+}
+
+void inst_converter::operator()(alloca_inst const &in) {
+    if (in.stack_ptr() < 0) {
+        throw compilation_error(in.loc(), status::internal_compiler_error,
+                                "Invalid stack_ptr in alloca. Did you run set_stack_ptrs?");
+    }
+    if (!stack_) {
+        throw compilation_error(in.loc(), status::internal_compiler_error,
+                                "Stack required but not allocated");
+    }
+
+    auto mt = get_memref_type(in.result(0));
+    if (in.stack_ptr() % mt->alignment() != 0) {
+        throw compilation_error(in.loc(), status::ir_insufficient_alignment);
+    }
+
+    auto stack_element_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i8));
+    auto stack_ptr_ty = unique_.spv_pointer_ty(StorageClass::Workgroup, stack_element_ty,
+                                               alignment(scalar_type::i8));
+    auto stack_ptr = mod_->add<OpInBoundsAccessChain>(
+        stack_ptr_ty, stack_, std::vector<IdRef>{unique_.constant(in.stack_ptr())});
+
+    auto memref_ptr_ty = unique_.spv_ty(mt);
+    declare(in.result(0), mod_->add<OpBitcast>(memref_ptr_ty, stack_ptr));
+
+    // alloca only accepts fixed-size memrefs => dope vector is constant
+    auto rdv = make_dope_vector(in.result(0));
+    for (std::int64_t i = 0; i < mt->dim(); ++i) {
+        rdv->shape(i, unique_.constant(mt->shape(i)));
+    }
+    for (std::int64_t i = 0; i < mt->dim(); ++i) {
+        rdv->stride(i, unique_.constant(mt->stride(i)));
+    }
 }
 
 void inst_converter::operator()(arith_inst const &in) {
@@ -968,6 +1010,8 @@ void inst_converter::operator()(if_inst const &in) {
     }
 }
 
+void inst_converter::operator()(lifetime_stop_inst const &) {}
+
 void inst_converter::operator()(load_inst const &in) {
     auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
     auto spv_pointer_index_ty = unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
@@ -1148,6 +1192,25 @@ auto inst_converter::run_on_region_with_yield(region_node const &reg,
 void inst_converter::run_on_function(function_node const &fn, core_config const &core_cfg) {
     core_cfg_ = core_cfg;
 
+    // Stack
+    auto const make_stack = [&] {
+        const auto high_water_mark = stack_high_water_mark{}.run_on_function(fn);
+        if (high_water_mark > 0) {
+            auto stack_element_ty =
+                unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i8));
+            auto stack_array_ty = unique_.spv_array_ty(stack_element_ty, high_water_mark);
+            auto stack_ptr_ty =
+                unique_.spv_pointer_ty(StorageClass::Workgroup, stack_array_ty,
+                                       alignment(scalar_type::f64, component_count::v2));
+            stack_ = mod_->add_to<OpVariable>(section::type_const_var, stack_ptr_ty,
+                                              StorageClass::Workgroup);
+            vars_used_by_function_.emplace_back(stack_);
+        } else {
+            stack_ = nullptr;
+        }
+    };
+    make_stack();
+
     // Function type
     auto fun_ty = unique_.spv_function_ty([&] {
         auto params = std::vector<spv_inst *>{};
@@ -1196,7 +1259,7 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
 
     // Entry point
     mod_->add_to<OpEntryPoint>(section::entry_point, ExecutionModel::Kernel, fun,
-                               std::string{fn.name()}, std::move(builtins_used_by_function_));
+                               std::string{fn.name()}, std::move(vars_used_by_function_));
 
     // Execution mode
     auto const work_group_size = fn.work_group_size();

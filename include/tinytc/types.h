@@ -86,6 +86,7 @@ typedef enum {
     tinytc_status_ir_unsupported_coopmatrix_shape = 0x125, ///< Unsupported coopmatrix shape
     tinytc_status_ir_incompatible_scalar_types = 0x126,    ///< Incompatible scalar types
     tinytc_status_ir_constant_mismatch = 0x127,            ///< Constant mismatch
+    tinytc_status_ir_insufficient_alignment = 0x128,       ///< Insufficient alignment
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

@@ -154,6 +154,13 @@ auto uniquifier::opencl_ext() -> spv_inst * {
                   [&] { return mod_->add_to<OpExtInstImport>(section::ext_inst, OpenCLExt); });
 }
 
+auto uniquifier::spv_array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst * {
+    auto key = std::make_pair(element_ty, length);
+    return lookup(spv_array_tys_, key, [&](std::pair<spv_inst *, std::int32_t> const &key) {
+        return mod_->add_to<OpTypeArray>(section::type_const_var, key.first, constant(key.second));
+    });
+}
+
 auto uniquifier::spv_function_ty(array_view<spv_inst *> params) -> spv_inst * {
     const auto map_key = fnv1a_step(fnv1a0(), params);
     auto range = spv_function_tys_.equal_range(map_key);
@@ -177,8 +184,10 @@ auto uniquifier::spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
         spv_pointer_tys_, key, [&](std::tuple<StorageClass, spv_inst *, std::int32_t> const &key) {
             auto pointer_ty = mod_->add_to<OpTypePointer>(section::type_const_var, std::get<0>(key),
                                                           std::get<1>(key));
-            mod_->add_to<OpDecorate>(section::decoration, pointer_ty, Decoration::Alignment,
-                                     DecorationAttr{std::get<2>(key)});
+            if (std::get<2>(key) > 0) {
+                mod_->add_to<OpDecorate>(section::decoration, pointer_ty, Decoration::Alignment,
+                                         DecorationAttr{std::get<2>(key)});
+            }
             return pointer_ty;
         });
 }
@@ -200,12 +209,7 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                 [&](memref_data_type const &mr) -> spv_inst * {
                     const auto storage_cls = address_space_to_storage_class(mr.addrspace());
                     auto spv_element_ty = spv_ty(mr.element_data_ty());
-                    const std::int32_t align = [&](scalar_type sty) -> std::int32_t {
-                        if (is_complex_type(sty)) {
-                            return alignment(element_type(sty), component_count::v2);
-                        }
-                        return alignment(sty);
-                    }(mr.element_ty());
+                    const auto align = mr.alignment();
                     return spv_pointer_ty(storage_cls, spv_element_ty, align);
                 },
                 [&](scalar_data_type const &ty) -> spv_inst * {

@@ -65,6 +65,7 @@ class inst_converter {
 
     // Instruction nodes
     void operator()(inst_node const &in);
+    void operator()(alloca_inst const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
     void operator()(barrier_inst const &in);
@@ -75,6 +76,7 @@ class inst_converter {
     void operator()(group_id_inst const &in);
     void operator()(group_size_inst const &in);
     void operator()(if_inst const &in);
+    void operator()(lifetime_stop_inst const &in);
     void operator()(load_inst const &in);
     void operator()(num_subgroups_inst const &in);
     void operator()(parallel_inst const &in);
@@ -108,6 +110,7 @@ class inst_converter {
     }
     auto get_last_label() -> spv_inst *;
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
+    auto get_memref_type(tinytc_value const &v) const -> memref_data_type const *;
     auto get_scalar_type(tinytc_value const &v) const -> scalar_type;
     auto get_coopmatrix_type(tinytc_value const &v) const -> scalar_type;
     auto load_builtin(BuiltIn b) -> spv_inst *;
@@ -127,7 +130,8 @@ class inst_converter {
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::unordered_map<const_tinytc_value_t, std::vector<spv_inst *>> multi_vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;
-    std::vector<spv_inst *> builtins_used_by_function_;
+    std::vector<spv_inst *> vars_used_by_function_;
+    spv_inst *stack_ = nullptr;
     core_config core_cfg_ = {};
 };
 

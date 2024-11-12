@@ -4,6 +4,7 @@
 #include "node/data_type_node.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
+#include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "support/fnv1a.hpp"
 #include "support/fnv1a_array_view.hpp"
@@ -119,6 +120,20 @@ memref_data_type::memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_ty
 
 scalar_type memref_data_type::element_ty() const {
     return dyn_cast<scalar_data_type>(element_ty_)->ty();
+}
+
+auto memref_data_type::alignment() const -> std::int32_t {
+    return ::tinytc::alignment(element_ty());
+}
+auto memref_data_type::size_in_bytes() const -> std::int64_t {
+    if (is_dynamic()) {
+        return dynamic;
+    }
+    std::size_t s = size(element_ty());
+    if (dim() > 0) {
+        s *= stride_.back() * shape_.back();
+    }
+    return s;
 }
 
 auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,

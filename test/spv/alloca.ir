@@ -1,0 +1,45 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
+
+; CHECK:                         OpEntryPoint Kernel %[[#]] "alloca" %[[#STACK_VAR:]]
+; CHECK:                         OpDecorate %[[#STACK_PTR_TY:]] Alignment 16
+; CHECK:                         OpDecorate %[[#I8_PTR:]] Alignment 1
+; CHECK:                         OpDecorate %[[#F32_PTR:]] Alignment 4
+; CHECK:                         OpDecorate %[[#I16_PTR:]] Alignment 2
+; CHECK:             %[[#I8:]] = OpTypeInt 8 0
+; CHECK:     %[[#STACK_SIZE:]] = OpConstant %[[#]] 264
+; CHECK: %[[#STACK_ARRAY_TY:]] = OpTypeArray %[[#I8]] %[[#STACK_SIZE]]
+; CHECK:    %[[#STACK_PTR_TY]] = OpTypePointer Workgroup %[[#STACK_ARRAY_TY]]
+; CHECK:       %[[#STACK_VAR]] = OpVariable %[[#STACK_PTR_TY]] Workgroup
+; CHECK:            %[[#I64:]] = OpTypeInt 64 0
+; CHECK:         %[[#I64_C0:]] = OpConstant %[[#I64]] 0
+; CHECK:          %[[#I8_PTR]] = OpTypePointer Workgroup %[[I8]]
+; CHECK:         %[[#I64_C8:]] = OpConstant %[[#I64]] 8
+; CHECK:            %[[#F32:]] = OpTypeFloat 32
+; CHECK:         %[[#F32_PTR]] = OpTypePointer Workgroup %[[F32]]
+; CHECK:         %[[#I64_C4:]] = OpConstant %[[#I64]] 4
+; CHECK:         %[[#I64_C6:]] = OpConstant %[[#I64]] 6
+; CHECK:            %[[#I16:]] = OpTypeInt 16 0
+; CHECK:         %[[#I16_PTR]] = OpTypePointer Workgroup %[[I16]]
+
+func @alloca() {
+    %c0 = constant 0 -> index
+    %0 = alloca -> memref<i8x5,local>
+    %1 = alloca -> memref<f32x16x4,local>
+    %2 = alloca -> memref<i16,local>
+    %3 = load %0[%c0] : memref<i8x5,local>
+    %4 = load %1[%c0,%c0] : memref<f32x16x4,local>
+    %5 = load %2[] : memref<i16,local>
+    %6 = size %1[1] : memref<f32x16x4,local>
+    %7 = arith.not %6 : index
+; CHECK:                    %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#STACK_PTR_I8:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C0]]
+; CHECK-NEXT:               %[[#]] = OpBitcast %[[#I8_PTR]] %[[#STACK_PTR_I8]]
+; CHECK-NEXT: %[[#STACK_PTR_F32:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C8]]
+; CHECK-NEXT:               %[[#]] = OpBitcast %[[#F32_PTR]] %[[#STACK_PTR_F32]]
+; CHECK-NEXT: %[[#STACK_PTR_I16:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C6]]
+; CHECK-NEXT:               %[[#]] = OpBitcast %[[#I16_PTR]] %[[#STACK_PTR_I16]]
+; CHECK:                    %[[#]] = OpNot %[[#I64]] %[[I64_C4]]
+}

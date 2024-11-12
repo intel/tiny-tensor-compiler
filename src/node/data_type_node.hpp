@@ -124,9 +124,6 @@ class memref_data_type : public data_type_node {
     inline std::int64_t shape(std::int64_t i) const { return shape_[i]; }
     inline auto const &stride() const { return stride_; }
     inline std::int64_t stride(std::int64_t i) const { return stride_[i]; }
-    inline std::int64_t size_in_bytes() const {
-        return is_dynamic() ? dynamic : size(element_ty()) * stride_.back() * shape_.back();
-    }
     inline auto addrspace() const -> address_space { return addrspace_; }
     inline void addrspace(address_space space) { addrspace_ = space; }
 
@@ -138,6 +135,9 @@ class memref_data_type : public data_type_node {
     }
     inline bool is_dynamic() const { return is_dynamic_shape() || is_dynamic_stride(); }
     inline bool is_canonical_stride() const { return stride_ == canonical_stride(shape_); }
+
+    auto alignment() const -> std::int32_t;
+    auto size_in_bytes() const -> std::int64_t;
 
   protected:
     memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t element_ty,

@@ -21,6 +21,7 @@ set(SOURCES
     analysis/alias.cpp
     analysis/cfg.cpp
     analysis/equal.cpp
+    analysis/stack.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
