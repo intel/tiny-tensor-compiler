@@ -60,6 +60,7 @@ if(SPIRVTools_FOUND)
         spv/calling_convention.ir
         spv/compare.ir
         spv/for.ir
+        spv/fuse.ir
         spv/if.ir
         spv/load.ir
         spv/size.ir

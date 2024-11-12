@@ -944,6 +944,52 @@ void inst_converter::operator()(for_inst const &in) {
     set_results();
 }
 
+void inst_converter::operator()(fuse_inst const &in) {
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+
+    auto shape = std::vector<spv_inst *>{};
+    auto stride = std::vector<spv_inst *>{};
+    auto const make_shape_stride = [&] {
+        auto mt = get_memref_type(in.operand());
+        auto dv = get_dope_vector(in.operand());
+        if (!dv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+        shape.reserve(mt->dim());
+        stride.reserve(mt->dim());
+        std::int64_t i = 0;
+        for (; i < in.from(); ++i) {
+            shape.push_back(dv->shape(i));
+            stride.push_back(dv->stride(i));
+        }
+        spv_inst *prod = dv->shape(i++);
+        for (; i <= in.to(); ++i) {
+            prod = mod_->add<OpIMul>(spv_index_ty, prod, dv->shape(i));
+        }
+        shape.push_back(prod);
+        stride.push_back(dv->stride(in.from()));
+        for (i = in.to() + 1; i < mt->dim(); ++i) {
+            shape.push_back(dv->shape(i));
+            stride.push_back(dv->stride(i));
+        }
+    };
+    make_shape_stride();
+    declare(in.result(0), val(in.operand()));
+
+    auto rdv = make_dope_vector(in.result(0));
+
+    if (shape.size() != static_cast<std::size_t>(rdv->dim()) ||
+        stride.size() != static_cast<std::size_t>(rdv->dim())) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->shape(i, shape[i]);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->stride(i, stride[i]);
+    }
+}
+
 void inst_converter::operator()(group_id_inst const &in) {
     auto gid = load_builtin(BuiltIn::GlobalInvocationId);
     auto index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
@@ -1119,9 +1165,7 @@ void inst_converter::operator()(subgroup_size_inst const &in) {
 }
 
 void inst_converter::operator()(subview_inst const &in) {
-
     auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
-    auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
 
     auto shape_out = std::vector<spv_inst *>{};
