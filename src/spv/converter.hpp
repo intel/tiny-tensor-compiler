@@ -85,6 +85,7 @@ class inst_converter {
     void operator()(subgroup_id_inst const &in);
     void operator()(subgroup_local_id_inst const &in);
     void operator()(subgroup_size_inst const &in);
+    void operator()(subview_inst const &in);
     void operator()(work_group_inst const &in);
     void operator()(yield_inst const &in);
 

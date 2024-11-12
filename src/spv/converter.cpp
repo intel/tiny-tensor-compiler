@@ -1118,6 +1118,73 @@ void inst_converter::operator()(subgroup_size_inst const &in) {
     declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
 }
 
+void inst_converter::operator()(subview_inst const &in) {
+
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
+    auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
+
+    auto shape_out = std::vector<spv_inst *>{};
+    auto stride_out = std::vector<spv_inst *>{};
+    auto const make_offset_and_shape_stride = [&] {
+        auto mt = get_memref_type(in.operand());
+        auto dv = get_dope_vector(in.operand());
+        if (!dv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+
+        int j = 0;
+        shape_out.reserve(mt->dim());
+        stride_out.reserve(mt->dim());
+        auto dyn_offsets = in.offsets();
+        auto dyn_sizes = in.sizes();
+        auto offset_acc = unique_.null_constant(spv_index_ty);
+        for (std::int64_t i = 0, joffset = 0, jsize = 0; i < mt->dim(); ++i) {
+            const std::int64_t offset = in.static_offsets()[i];
+
+            auto const offset_inst = [&]() -> spv_inst * {
+                if (is_dynamic_value(offset)) {
+                    return val(dyn_offsets[joffset++]);
+                }
+                return unique_.constant(offset);
+            };
+            auto tmp = mod_->add<OpIMul>(spv_index_ty, offset_inst(), dv->stride(j));
+            offset_acc = mod_->add<OpIAdd>(spv_index_ty, offset_acc, tmp);
+
+            const std::int64_t size = in.static_sizes()[i];
+            if (size > 0 || is_dynamic_value(size)) {
+                auto const size_inst = [&]() -> spv_inst * {
+                    if (is_dynamic_value(size)) {
+                        return val(dyn_sizes[jsize++]);
+                    }
+                    return unique_.constant(size);
+                };
+                shape_out.emplace_back(size_inst());
+                stride_out.emplace_back(dv->stride(j));
+            }
+            ++j;
+        }
+        return offset_acc;
+    };
+
+    auto offset = make_offset_and_shape_stride();
+    declare(in.result(0), mod_->add<OpInBoundsPtrAccessChain>(spv_result_ty, val(in.operand()),
+                                                              offset, std::vector<spv_inst *>{}));
+
+    auto rdv = make_dope_vector(in.result(0));
+
+    if (shape_out.size() != static_cast<std::size_t>(rdv->dim()) ||
+        stride_out.size() != static_cast<std::size_t>(rdv->dim())) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->shape(i, shape_out[i]);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->stride(i, stride_out[i]);
+    }
+}
+
 void inst_converter::operator()(work_group_inst const &in) {
     auto const make = [&](scalar_type sty, work_group_operation operation, spv_inst *spv_ty,
                           spv_inst *operand) -> spv_inst * {
