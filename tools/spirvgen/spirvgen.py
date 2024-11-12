@@ -334,6 +334,21 @@ def patch_grammar(grammar):
                 'kind': 'MemoryAccessAttr',
                 'quantifier': '?'
             })
+
+    version = grammar["major_version"] * 256 + grammar["minor_version"]
+    # Old grammar files have duplicate enumerants that need to be filtered
+    if version < 1 * 256 + 6:
+        for opkind in grammar['operand_kinds']:
+            category = opkind['category']
+            if category != 'BitEnum' and category != 'ValueEnum':
+                continue
+            available_values = set()
+            new_enumerants = list()
+            for enumerant in opkind['enumerants']:
+                if enumerant['value'] not in available_values:
+                    new_enumerants.append(enumerant)
+                    available_values.add(enumerant['value'])
+            opkind['enumerants'] = new_enumerants
     return grammar
 
 

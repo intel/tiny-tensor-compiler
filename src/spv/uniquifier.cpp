@@ -232,8 +232,8 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                     case scalar_type::f32:
                     case scalar_type::f64:
                         capability(Capability::Float64);
-                        return mod_->add_to<OpTypeFloat>(section::type_const_var, size(ty.ty()) * 8,
-                                                         std::nullopt);
+                        return mod_->add_to<OpTypeFloat>(section::type_const_var,
+                                                         size(ty.ty()) * 8);
                     case scalar_type::c32: {
                         auto float_ty =
                             spv_ty(scalar_data_type::get(mod_->context(), scalar_type::f32));
