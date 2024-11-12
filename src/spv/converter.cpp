@@ -183,6 +183,67 @@ auto inst_converter::multi_val(value_node const &v) -> std::vector<spv_inst *> &
     throw compilation_error(v.loc(), status::spirv_undefined_value);
 }
 
+auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a,
+                                    spv_inst *b, location const &loc) -> spv_inst * {
+    auto const make_int = [&](arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
+        switch (op) {
+        case arithmetic::add:
+            return mod_->add<OpIAdd>(ty, a, b);
+        case arithmetic::sub:
+            return mod_->add<OpISub>(ty, a, b);
+        case arithmetic::mul:
+            return mod_->add<OpIMul>(ty, a, b);
+        case arithmetic::div:
+            return mod_->add<OpSDiv>(ty, a, b);
+        case arithmetic::rem:
+            return mod_->add<OpSRem>(ty, a, b);
+        case arithmetic::shl:
+            return mod_->add<OpShiftLeftLogical>(ty, a, b);
+        case arithmetic::shr:
+            return mod_->add<OpShiftRightArithmetic>(ty, a, b);
+        case arithmetic::and_:
+            return mod_->add<OpBitwiseAnd>(ty, a, b);
+        case arithmetic::or_:
+            return mod_->add<OpBitwiseOr>(ty, a, b);
+        case arithmetic::xor_:
+            return mod_->add<OpBitwiseXor>(ty, a, b);
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+    auto const make_float_complex = [&](arithmetic op, spv_inst *ty, spv_inst *a,
+                                        spv_inst *b) -> spv_inst * {
+        switch (op) {
+        case arithmetic::add:
+            return mod_->add<OpFAdd>(ty, a, b);
+        case arithmetic::sub:
+            return mod_->add<OpFSub>(ty, a, b);
+        case arithmetic::mul:
+            return mod_->add<OpFMul>(ty, a, b);
+        case arithmetic::div:
+            return mod_->add<OpFDiv>(ty, a, b);
+        case arithmetic::rem:
+            return mod_->add<OpFRem>(ty, a, b);
+        default:
+            break;
+        }
+        throw compilation_error(loc, status::ir_fp_unsupported);
+    };
+    switch (sty) {
+    case scalar_type::i8:
+    case scalar_type::i16:
+    case scalar_type::i32:
+    case scalar_type::i64:
+    case scalar_type::index:
+        return make_int(op, ty, a, b);
+    case scalar_type::f32:
+    case scalar_type::f64:
+    case scalar_type::c32:
+    case scalar_type::c64:
+        return make_float_complex(op, ty, a, b);
+    }
+    throw compilation_error(loc, status::internal_compiler_error);
+}
+
 auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
                                    constant_inst::value_type const &val) -> spv_inst * {
     auto const add_constant_complex = [this, &spv_ty](auto cst) -> spv_inst * {
@@ -401,66 +462,6 @@ void inst_converter::operator()(arith_inst const &in) {
         }
         throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
-    auto const make_int = [&](arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
-        switch (op) {
-        case arithmetic::add:
-            return mod_->add<OpIAdd>(ty, a, b);
-        case arithmetic::sub:
-            return mod_->add<OpISub>(ty, a, b);
-        case arithmetic::mul:
-            return mod_->add<OpIMul>(ty, a, b);
-        case arithmetic::div:
-            return mod_->add<OpSDiv>(ty, a, b);
-        case arithmetic::rem:
-            return mod_->add<OpSRem>(ty, a, b);
-        case arithmetic::shl:
-            return mod_->add<OpShiftLeftLogical>(ty, a, b);
-        case arithmetic::shr:
-            return mod_->add<OpShiftRightArithmetic>(ty, a, b);
-        case arithmetic::and_:
-            return mod_->add<OpBitwiseAnd>(ty, a, b);
-        case arithmetic::or_:
-            return mod_->add<OpBitwiseOr>(ty, a, b);
-        case arithmetic::xor_:
-            return mod_->add<OpBitwiseXor>(ty, a, b);
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-    auto const make_float_complex = [&](arithmetic op, spv_inst *ty, spv_inst *a,
-                                        spv_inst *b) -> spv_inst * {
-        switch (op) {
-        case arithmetic::add:
-            return mod_->add<OpFAdd>(ty, a, b);
-        case arithmetic::sub:
-            return mod_->add<OpFSub>(ty, a, b);
-        case arithmetic::mul:
-            return mod_->add<OpFMul>(ty, a, b);
-        case arithmetic::div:
-            return mod_->add<OpFDiv>(ty, a, b);
-        case arithmetic::rem:
-            return mod_->add<OpFRem>(ty, a, b);
-        default:
-            break;
-        }
-        throw compilation_error(in.loc(), status::ir_fp_unsupported);
-    };
-    auto const make = [&](scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a,
-                          spv_inst *b) -> spv_inst * {
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return make_int(op, ty, a, b);
-        case scalar_type::f32:
-        case scalar_type::f64:
-        case scalar_type::c32:
-        case scalar_type::c64:
-            return make_float_complex(op, ty, a, b);
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
 
     auto ty = unique_.spv_ty(in.result(0).ty());
 
@@ -471,7 +472,7 @@ void inst_converter::operator()(arith_inst const &in) {
     } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         auto av = val(in.a());
         auto bv = val(in.b());
-        declare(in.result(0), make(st->ty(), in.operation(), ty, av, bv));
+        declare(in.result(0), make_binary_op(st->ty(), in.operation(), ty, av, bv, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
         auto const length = ct->length(core_cfg_.subgroup_size);
         auto insts = std::vector<spv_inst *>{};
@@ -480,7 +481,8 @@ void inst_converter::operator()(arith_inst const &in) {
         auto &av = multi_val(in.a());
         auto &bv = multi_val(in.b());
         for (std::int64_t i = 0; i < length; ++i) {
-            insts.emplace_back(make(ct->component_ty(), in.operation(), ty, av[i], bv[i]));
+            insts.emplace_back(
+                make_binary_op(ct->component_ty(), in.operation(), ty, av[i], bv[i], in.loc()));
         }
 
         multi_declare(in.result(0), std::move(insts));
@@ -824,6 +826,24 @@ void inst_converter::operator()(constant_inst const &in) {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
 }
+
+void inst_converter::operator()(cooperative_matrix_load_inst const &in) {}
+void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {}
+void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
+    auto av = val(in.a());
+    auto &bv = multi_val(in.b());
+
+    auto insts = std::vector<spv_inst *>{};
+    insts.reserve(bv.size());
+
+    for (std::size_t i = 0; i < bv.size(); ++i) {
+        insts.emplace_back(make_binary_op(get_coopmatrix_type(in.result(0)), arithmetic::mul,
+                                          unique_.spv_ty(in.a().ty()), av, bv[i], in.loc()));
+    }
+
+    multi_declare(in.result(0), std::move(insts));
+}
+void inst_converter::operator()(cooperative_matrix_store_inst const &in) {}
 
 void inst_converter::operator()(expand_inst const &in) {
     auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));

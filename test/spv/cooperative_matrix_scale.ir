@@ -1,0 +1,18 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_CPI:]] = OpConstant %[[#F32]] 0x1.921fb6p+1
+; CHECK: %[[#F32_C13_369:]] = OpConstant %[[#F32]] 0x1.abcefap+3
+
+func @scale() subgroup_size(16) {
+    %0 = constant 3.14159265358979323846 -> f32
+    %1 = constant 13.36901521971920820459 -> coopmatrix<f32x16x4,matrix_acc>
+    %2 = cooperative_matrix_scale %0, %1 : f32, coopmatrix<f32x16x4,matrix_acc>
+; CHECK:      %[[#]] = OpFMul %[[#F32]] %[[#F32_CPI]] %[[#F32_C13_369]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#F32_CPI]] %[[#F32_C13_369]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#F32_CPI]] %[[#F32_C13_369]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#F32_CPI]] %[[#F32_C13_369]]
+}

@@ -74,7 +74,11 @@ void dump_asm_pass::operator()(LiteralContextDependentNumber const &l) {
                               using unsigned_t = std::make_unsigned_t<std::decay_t<decltype(l)>>;
                               *os_ << " " << static_cast<unsigned_t>(l);
                           },
-                          [&](auto const &l) { *os_ << " " << l; }},
+                          [&](std::floating_point auto const &l) {
+                              auto flags = os_->flags();
+                              *os_ << " " << std::hexfloat << l;
+                              os_->flags(flags);
+                          }},
                l);
 }
 void dump_asm_pass::operator()(LiteralInteger const &l) {

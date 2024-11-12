@@ -8,8 +8,8 @@
 ; CHECK: %[[#BOOL_TRUE:]] = OpConstantTrue
 ; CHECK: %[[#I32_0:]] = OpConstant %[[#I32]] 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
-; CHECK: %[[#CST1:]] = OpConstant %[[#F32]] 1
-; CHECK: %[[#CST0:]] = OpConstant %[[#F32]] 0
+; CHECK: %[[#CST1:]] = OpConstant %[[#F32]] 0x1p+0
+; CHECK: %[[#CST0:]] = OpConstant %[[#F32]] 0x0p+0
 
 func @if0(%0: i32) {
     %c42 = constant 42 -> i32

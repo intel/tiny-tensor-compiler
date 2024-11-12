@@ -72,6 +72,10 @@ class inst_converter {
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
+    void operator()(cooperative_matrix_load_inst const &in);
+    void operator()(cooperative_matrix_mul_add_inst const &in);
+    void operator()(cooperative_matrix_scale_inst const &in);
+    void operator()(cooperative_matrix_store_inst const &in);
     void operator()(expand_inst const &in);
     void operator()(for_inst const &in);
     void operator()(fuse_inst const &in);
@@ -121,6 +125,8 @@ class inst_converter {
     auto val(tinytc_value const &v) -> spv_inst *;
     auto multi_declare(tinytc_value const &v, std::vector<spv_inst *> insts);
     auto multi_val(tinytc_value const &v) -> std::vector<spv_inst *> &;
+    auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
+                        location const &loc) -> spv_inst *;
     auto make_constant(scalar_type sty, spv_inst *spv_ty,
                        constant_inst::value_type const &val) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
