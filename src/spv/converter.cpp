@@ -825,6 +825,63 @@ void inst_converter::operator()(constant_inst const &in) {
     }
 }
 
+void inst_converter::operator()(expand_inst const &in) {
+    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+
+    auto shape = std::vector<spv_inst *>{};
+    auto stride = std::vector<spv_inst *>{};
+    auto const make_shape_stride = [&] {
+        auto mt = get_memref_type(in.operand());
+        auto dv = get_dope_vector(in.operand());
+        if (!dv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+        auto static_shape = in.static_expand_shape();
+        auto dyn_shape = in.expand_shape();
+
+        shape.reserve(mt->dim() + static_shape.size() - 1);
+        stride.reserve(mt->dim() + static_shape.size() - 1);
+
+        for (std::int64_t i = 0; i < in.expanded_mode(); ++i) {
+            shape.push_back(dv->shape(i));
+            stride.push_back(dv->stride(i));
+        }
+
+        auto get_shape = [&, j = std::size_t{0}](std::int64_t s) mutable {
+            if (is_dynamic_value(s)) {
+                return val(dyn_shape[j++]);
+            }
+            return unique_.constant(s);
+        };
+        stride.push_back(dv->stride(in.expanded_mode()));
+        shape.push_back(get_shape(static_shape[0]));
+        for (std::size_t j = 1; j < static_shape.size(); ++j) {
+            stride.push_back(mod_->add<OpIMul>(spv_index_ty, stride.back(), shape.back()));
+            shape.push_back(get_shape(static_shape[j]));
+        }
+
+        for (std::int64_t i = in.expanded_mode() + 1; i < mt->dim(); ++i) {
+            shape.push_back(dv->shape(i));
+            stride.push_back(dv->stride(i));
+        }
+    };
+    make_shape_stride();
+    declare(in.result(0), val(in.operand()));
+
+    auto rdv = make_dope_vector(in.result(0));
+
+    if (shape.size() != static_cast<std::size_t>(rdv->dim()) ||
+        stride.size() != static_cast<std::size_t>(rdv->dim())) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->shape(i, shape[i]);
+    }
+    for (std::int64_t i = 0; i < rdv->dim(); ++i) {
+        rdv->stride(i, stride[i]);
+    }
+}
+
 void inst_converter::operator()(for_inst const &in) {
     const std::int64_t num_results = num_yielded_vals(in.result_begin(), in.result_end());
 

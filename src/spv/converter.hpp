@@ -72,6 +72,7 @@ class inst_converter {
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
+    void operator()(expand_inst const &in);
     void operator()(for_inst const &in);
     void operator()(fuse_inst const &in);
     void operator()(group_id_inst const &in);
