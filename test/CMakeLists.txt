@@ -59,7 +59,9 @@ if(SPIRVTools_FOUND)
         spv/cast.ir
         spv/calling_convention.ir
         spv/compare.ir
+        spv/cooperative_matrix_load.ir
         spv/cooperative_matrix_scale.ir
+        spv/cooperative_matrix_store.ir
         spv/expand.ir
         spv/for.ir
         spv/fuse.ir

@@ -19,6 +19,7 @@
 #include "tinytc/types.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <stack>
 #include <unordered_map>
 #include <vector>
@@ -127,6 +128,9 @@ class inst_converter {
     auto multi_val(tinytc_value const &v) -> std::vector<spv_inst *> &;
     auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
                         location const &loc) -> spv_inst *;
+    auto make_conditional_execution(spv_inst *returned_element_ty, spv_inst *condition,
+                                    std::function<std::vector<spv_inst *>()> conditional_code,
+                                    location const &loc) -> std::vector<spv_inst *>;
     auto make_constant(scalar_type sty, spv_inst *spv_ty,
                        constant_inst::value_type const &val) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
