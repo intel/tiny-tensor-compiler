@@ -15,6 +15,13 @@ from gen import generate_cpp, generate_header
 
 spv_enums = 'enums.hpp'
 spv_enums_includes = ['<cstdint>']
+spv_capex = 'capex_util.hpp'
+spv_capex_includes = [spv_enums, "tinytc/tinytc.hpp"]
+spv_capex_cpp = 'capex_util.cpp'
+spv_capex_cpp_includes = [spv_capex]
+spv_capex_required_enums = [
+    'AddressingModel', 'ExecutionMode', 'ExecutionModel', 'MemoryModel'
+]
 spv_names = 'names.hpp'
 spv_names_includes = [spv_enums]
 spv_names_cpp = 'names.cpp'
@@ -47,6 +54,50 @@ def get_opcode_name(instruction):
 
 def get_class_name(instruction):
     return instruction['opname']
+
+
+def generate_capex(f, grammar):
+    for name, ty in zip(['capabilities', 'extensions'],
+                        ['Capability', 'char const*']):
+        for opkind in grammar['operand_kinds']:
+            if opkind['kind'] in spv_capex_required_enums:
+                print(f'auto {name}({opkind["kind"]} op) -> array_view<{ty}>;',
+                      file=f)
+
+
+def generate_capex_cpp(f, grammar):
+    # Need to go through capabilities to filter aliases later on
+    capabilities = set()
+    for opkind in grammar['operand_kinds']:
+        if opkind['kind'] == 'Capability':
+            for enumerant in opkind['enumerants']:
+                capabilities.add(enumerant['enumerant'])
+
+    def print_function(name, ty, trans, filt):
+        for opkind in grammar['operand_kinds']:
+            if opkind['kind'] in spv_capex_required_enums:
+                print(
+                    f'auto {name}({opkind["kind"]} e) -> array_view<{ty}> {{ switch(e) {{',
+                    file=f)
+                for enumerant in opkind['enumerants']:
+                    if name in enumerant:
+                        ename = enumerant["enumerant"]
+                        values = enumerant[name]
+                        values_str = ','.join(
+                            [trans(v) for v in values if filt(v)])
+                        print(
+                            f'case {opkind["kind"]}::{enumerant_subs.get(ename, ename)}: {{',
+                            file=f)
+                        print(
+                            f'constexpr static {ty} values[] = {{{values_str}}};',
+                            file=f)
+                        print(f'return {{values, {len(values)}}}; }}', file=f)
+                print('default: return {}; }}', file=f)
+
+    print_function('capabilities', 'Capability', lambda x: f'Capability::{x}',
+                   lambda x: x in capabilities)
+    print_function('extensions', 'char const*', lambda x: f'"{x}"',
+                   lambda x: True)
 
 
 def generate_enums(f, grammar):
@@ -377,6 +428,10 @@ if __name__ == '__main__':
 
         grammar = filter_grammar(grammar, filt)
         grammar = patch_grammar(grammar)
+        generate_header(args, spv_capex, grammar, generate_capex,
+                        spv_capex_includes)
+        generate_cpp(args, spv_capex_cpp, grammar, generate_capex_cpp,
+                     spv_capex_cpp_includes)
         generate_header(args, spv_enums, grammar, generate_enums,
                         spv_enums_includes)
         generate_header(args, spv_names, grammar, generate_names,

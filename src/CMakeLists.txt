@@ -64,6 +64,7 @@ set(SOURCES
     region.cpp
     required_extensions.cpp
     scalar_type.cpp
+    spv/capex_util.cpp
     spv/converter.cpp
     spv/inst_assembler.cpp
     spv/module.cpp
@@ -72,6 +73,7 @@ set(SOURCES
     spv/pass/assemble.cpp
     spv/pass/assign_ids.cpp
     spv/pass/dump_asm.cpp
+    spv/pass/capex.cpp
     spv/uniquifier.cpp
     source.cpp
     tiling.cpp

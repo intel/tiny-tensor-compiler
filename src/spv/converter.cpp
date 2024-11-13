@@ -14,6 +14,7 @@
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/opencl.std.hpp"
+#include "spv/pass/capex.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
 #include "support/ilist.hpp"
@@ -45,10 +46,6 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
 
     auto conv = inst_converter{*m};
 
-    conv.unique().capability(Capability::Addresses);
-    conv.unique().capability(Capability::Kernel);
-    conv.unique().capability(Capability::SubgroupDispatch);
-
     m->add_to<OpMemoryModel>(section::memory_model, AddressingModel::Physical64,
                              MemoryModel::OpenCL);
 
@@ -61,27 +58,10 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
     }
 
     // Add missing capabilites and extensions
+    auto cx = capex{conv.unique()};
     for (std::int32_t s = 0; s < num_module_sections; ++s) {
         for (auto const &i : m->insts(enum_cast<section>(s))) {
-            visit(overloaded{[&]<spv_inst_with_required_capabilities I>(I const &in) {
-                                 if (isa<OpAtomicFAddEXT>(static_cast<spv_inst const &>(in))) {
-                                     // We manage OpAtomicFAddExt manually as the required
-                                     // capabilitites depend on the data type
-                                     return;
-                                 }
-                                 for (auto const &cap : I::required_capabilities) {
-                                     conv.unique().capability(cap);
-                                 }
-                             },
-                             [&](auto const &) {}},
-                  i);
-            visit(overloaded{[&]<spv_inst_with_required_extensions I>(I const &) {
-                                 for (auto const &ext_name : I::required_extensions) {
-                                     conv.unique().extension(ext_name);
-                                 }
-                             },
-                             [&](auto const &) {}},
-                  i);
+            visit(cx, i);
         }
     }
 
@@ -148,12 +128,13 @@ auto inst_converter::get_scalar_type(value_node const &v) const -> scalar_type {
     }
     return st->ty();
 }
-auto inst_converter::get_coopmatrix_type(value_node const &v) const -> scalar_type {
+auto inst_converter::get_coopmatrix_type(value_node const &v) const
+    -> coopmatrix_data_type const * {
     auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
     if (!ct) {
         throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
     }
-    return ct->component_ty();
+    return ct;
 }
 
 auto inst_converter::load_builtin(BuiltIn b) -> spv_inst * {
@@ -321,24 +302,6 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
 
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
                                 spv_inst *pointer, spv_inst *value) {
-    auto const add_fadd_caps = [&] {
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            break;
-        case scalar_type::f32:
-        case scalar_type::c32:
-            unique_.capability(Capability::AtomicFloat32AddEXT);
-            break;
-        case scalar_type::f64:
-        case scalar_type::c64:
-            unique_.capability(Capability::AtomicFloat64AddEXT);
-            break;
-        }
-    };
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = element_type(sty);
         auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
@@ -389,12 +352,10 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
             break;
         case scalar_type::f32:
         case scalar_type::f64:
-            add_fadd_caps();
             mod_->add<OpAtomicFAddEXT>(result_ty, pointer, scope, semantics, value);
             break;
         case scalar_type::c32:
         case scalar_type::c64: {
-            add_fadd_caps();
             auto re_im = split_re_im();
             auto component_sty = element_type(sty);
             auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
@@ -711,7 +672,7 @@ void inst_converter::operator()(cast_inst const &in) {
         insts.reserve(length);
 
         auto &av = multi_val(in.a());
-        auto a_ty = get_coopmatrix_type(in.a());
+        auto a_ty = get_coopmatrix_type(in.a())->component_ty();
         for (std::int64_t i = 0; i < length; ++i) {
             insts.emplace_back(make(ct->component_ty(), a_ty, spv_to_ty, av[i]));
         }
@@ -837,8 +798,9 @@ void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     insts.reserve(bv.size());
 
     for (std::size_t i = 0; i < bv.size(); ++i) {
-        insts.emplace_back(make_binary_op(get_coopmatrix_type(in.result(0)), arithmetic::mul,
-                                          unique_.spv_ty(in.a().ty()), av, bv[i], in.loc()));
+        insts.emplace_back(make_binary_op(get_coopmatrix_type(in.result(0))->component_ty(),
+                                          arithmetic::mul, unique_.spv_ty(in.a().ty()), av, bv[i],
+                                          in.loc()));
     }
 
     multi_declare(in.result(0), std::move(insts));

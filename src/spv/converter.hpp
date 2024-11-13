@@ -119,7 +119,7 @@ class inst_converter {
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto get_memref_type(tinytc_value const &v) const -> memref_data_type const *;
     auto get_scalar_type(tinytc_value const &v) const -> scalar_type;
-    auto get_coopmatrix_type(tinytc_value const &v) const -> scalar_type;
+    auto get_coopmatrix_type(tinytc_value const &v) const -> coopmatrix_data_type const *;
     auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
@@ -143,11 +143,6 @@ class inst_converter {
     spv_inst *stack_ = nullptr;
     core_config core_cfg_ = {};
 };
-
-template <typename T>
-concept spv_inst_with_required_capabilities = requires() { T::required_capabilities; };
-template <typename T>
-concept spv_inst_with_required_extensions = requires() { T::required_extensions; };
 
 } // namespace tinytc::spv
 

@@ -699,6 +699,10 @@ auto to_string(Op op) -> char const * {
         return "CooperativeMatrixMulAddKHR";
     case Op::CooperativeMatrixLengthKHR:
         return "CooperativeMatrixLengthKHR";
+    case Op::SubgroupBlockReadINTEL:
+        return "SubgroupBlockReadINTEL";
+    case Op::SubgroupBlockWriteINTEL:
+        return "SubgroupBlockWriteINTEL";
     case Op::AtomicFMinEXT:
         return "AtomicFMinEXT";
     case Op::AtomicFMaxEXT:

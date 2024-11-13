@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20241111_HPP
-#define GENERATED_ENUMS_20241111_HPP
+#ifndef GENERATED_ENUMS_20241113_HPP
+#define GENERATED_ENUMS_20241113_HPP
 
 #include <cstdint>
 
@@ -358,6 +358,8 @@ enum class Op {
     CooperativeMatrixStoreKHR = 4458,
     CooperativeMatrixMulAddKHR = 4459,
     CooperativeMatrixLengthKHR = 4460,
+    SubgroupBlockReadINTEL = 5575,
+    SubgroupBlockWriteINTEL = 5576,
     AtomicFMinEXT = 5614,
     AtomicFMaxEXT = 5615,
     AtomicFAddEXT = 6035,
@@ -1429,4 +1431,4 @@ enum class FPEncoding {};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20241111_HPP
+#endif // GENERATED_ENUMS_20241113_HPP

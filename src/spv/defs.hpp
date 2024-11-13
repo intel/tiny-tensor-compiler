@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_DEFS_20241111_HPP
-#define GENERATED_DEFS_20241111_HPP
+#ifndef GENERATED_DEFS_20241113_HPP
+#define GENERATED_DEFS_20241113_HPP
 
 #include "enums.hpp"
 #include "support/ilist_base.hpp"
@@ -62,4 +62,4 @@ using PairIdRefLiteralInteger = std::pair<spv_inst *, std::int32_t>;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_DEFS_20241111_HPP
+#endif // GENERATED_DEFS_20241113_HPP

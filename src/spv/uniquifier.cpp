@@ -215,27 +215,22 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                 [&](scalar_data_type const &ty) -> spv_inst * {
                     switch (ty.ty()) {
                     case scalar_type::i8:
-                        capability(Capability::Int8);
                         return mod_->add_to<OpTypeInt>(section::type_const_var, 8, 0);
                     case scalar_type::i16:
-                        capability(Capability::Int16);
                         return mod_->add_to<OpTypeInt>(section::type_const_var, 16, 0);
                     case scalar_type::i32:
                         return mod_->add_to<OpTypeInt>(section::type_const_var, 32, 0);
                     case scalar_type::i64:
-                        capability(Capability::Int64);
                         return mod_->add_to<OpTypeInt>(section::type_const_var, 64, 0);
                     case scalar_type::index: {
                         const auto sz = size(ty.ty());
                         if (sz == 8) {
-                            capability(Capability::Int64);
                             return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i64));
                         }
                         return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i32));
                     }
                     case scalar_type::f32:
                     case scalar_type::f64:
-                        capability(Capability::Float64);
                         return mod_->add_to<OpTypeFloat>(section::type_const_var,
                                                          size(ty.ty()) * 8);
                     case scalar_type::c32: {

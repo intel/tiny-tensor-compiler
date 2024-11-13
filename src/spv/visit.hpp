@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20241111_HPP
-#define GENERATED_VISIT_20241111_HPP
+#ifndef GENERATED_VISIT_20241113_HPP
+#define GENERATED_VISIT_20241113_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -707,6 +707,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
         return visitor(static_cast<OpCooperativeMatrixMulAddKHR &>(inst));
     case Op::CooperativeMatrixLengthKHR:
         return visitor(static_cast<OpCooperativeMatrixLengthKHR &>(inst));
+    case Op::SubgroupBlockReadINTEL:
+        return visitor(static_cast<OpSubgroupBlockReadINTEL &>(inst));
+    case Op::SubgroupBlockWriteINTEL:
+        return visitor(static_cast<OpSubgroupBlockWriteINTEL &>(inst));
     case Op::AtomicFMinEXT:
         return visitor(static_cast<OpAtomicFMinEXT &>(inst));
     case Op::AtomicFMaxEXT:
@@ -1407,6 +1411,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpCooperativeMatrixMulAddKHR const &>(inst));
     case Op::CooperativeMatrixLengthKHR:
         return visitor(static_cast<OpCooperativeMatrixLengthKHR const &>(inst));
+    case Op::SubgroupBlockReadINTEL:
+        return visitor(static_cast<OpSubgroupBlockReadINTEL const &>(inst));
+    case Op::SubgroupBlockWriteINTEL:
+        return visitor(static_cast<OpSubgroupBlockWriteINTEL const &>(inst));
     case Op::AtomicFMinEXT:
         return visitor(static_cast<OpAtomicFMinEXT const &>(inst));
     case Op::AtomicFMaxEXT:
@@ -4382,6 +4390,19 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->post_visit(in);
     }
+    auto operator()(const_t<OpSubgroupBlockReadINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpSubgroupBlockWriteINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
     auto operator()(const_t<OpAtomicFMinEXT> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
@@ -4416,4 +4437,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20241111_HPP
+#endif // GENERATED_VISIT_20241113_HPP

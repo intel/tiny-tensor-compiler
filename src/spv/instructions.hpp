@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_20241111_HPP
-#define GENERATED_INSTRUCTIONS_20241111_HPP
+#ifndef GENERATED_INSTRUCTIONS_20241113_HPP
+#define GENERATED_INSTRUCTIONS_20241113_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -6647,6 +6647,44 @@ class OpCooperativeMatrixLengthKHR : public spv_inst {
     IdResultType type_;
     IdRef op0_;
 };
+class OpSubgroupBlockReadINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::SubgroupBlockReadINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::SubgroupBufferBlockIOINTEL};
+    OpSubgroupBlockReadINTEL(IdResultType type, IdRef op0)
+        : spv_inst{Op::SubgroupBlockReadINTEL, true}, type_(std::move(type)), op0_(std::move(op0)) {
+    }
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+};
+class OpSubgroupBlockWriteINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::SubgroupBlockWriteINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::SubgroupBufferBlockIOINTEL};
+    OpSubgroupBlockWriteINTEL(IdRef op0, IdRef op1)
+        : spv_inst{Op::SubgroupBlockWriteINTEL, false}, op0_(std::move(op0)), op1_(std::move(op1)) {
+    }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdRef & { return op1_; }
+    inline auto op1() const -> IdRef const & { return op1_; }
+
+  private:
+    IdRef op0_;
+    IdRef op1_;
+};
 class OpAtomicFMinEXT : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AtomicFMinEXT; }
@@ -6733,4 +6771,4 @@ class OpAtomicFAddEXT : public spv_inst {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_20241111_HPP
+#endif // GENERATED_INSTRUCTIONS_20241113_HPP
