@@ -157,7 +157,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_unexpected_yield:
         return "Yield encountered in non-yielding region";
     case tinytc_status_ir_yield_mismatch:
-        return "Number of yielded values does not match number of values yielded by region";
+        return "Number of yielded values does not match number of values yielded by region or the "
+               "types are different";
     case tinytc_status_ir_subview_mismatch:
         return "Number of dynamic offsets and sizes must match number of dynamic operands";
     case tinytc_status_ir_invalid_slice:
@@ -204,6 +205,10 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Type of constant does not match type of returned value";
     case tinytc_status_ir_insufficient_alignment:
         return "Pointer does not satisfy minimum alignment requirements";
+    case tinytc_status_ir_must_have_yield:
+        return "Last instruction of region that returns values must be \"yield\"";
+    case tinytc_status_ir_yield_in_else_branch_missing:
+        return "Else-branch must have yield instruction if then-branch has yield instruction";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

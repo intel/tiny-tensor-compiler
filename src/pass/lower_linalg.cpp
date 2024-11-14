@@ -52,10 +52,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     }();
     auto coopmatrix_c_ty = get_coopmatrix(c_ty, m_block_size, n_block_size, matrix_use::acc, loc);
     auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, value K0, value K1,
-                               value c_init) -> value {
+                               value c_acc) -> value {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
         auto return_values = bb.for_loop(
-            K0, K1, c_step, {c_init}, index_ty, [&](region_builder &bb, array_view<value> p) {
+            K0, K1, c_step, {c_acc}, index_ty, [&](region_builder &bb, array_view<value> p) {
                 const auto k = p[0];
 
                 value pos_a[2] = {m_block, k};
@@ -82,7 +82,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         return return_values[0];
     };
 
-    auto c_init = bb.add(make_constant_zero(coopmatrix_c_ty, loc));
+    auto c_acc = bb.add(make_constant_zero(coopmatrix_c_ty, loc));
 
     auto k_block_size = max_K_unrolling;
 
@@ -95,25 +95,25 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto c_k_block_size = bb.add(make_constant(k_block_size, index_ty, loc));
     auto tmp = instant_constant_fold_add(bb, make_arith(arithmetic::div, K, c_k_block_size, loc));
     auto K0 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, tmp, c_k_block_size, loc));
-    c_init = compute_c(bb, k_block_size, c_zero, K0, c_init);
+    c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc);
     auto needs_remainder = instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, loc));
     auto r = get_bool_constant(needs_remainder);
     if (r) {
         if (*r != 0) {
-            c_init = compute_c(bb, 1, K0, K, c_init);
+            c_acc = compute_c(bb, 1, K0, K, c_acc);
         }
     } else {
-        auto remainder = bb.if_condition(
+        auto remainder = bb.ifelse(
             needs_remainder,
             [&](region_builder &bb) {
-                auto c_next = compute_c(bb, 1, K0, K, c_init);
+                auto c_next = compute_c(bb, 1, K0, K, c_acc);
                 bb.add(make_yield(c_next, loc));
             },
-            {coopmatrix_c_ty}, loc);
-        c_init = remainder[0];
+            [&](region_builder &bb) { bb.add(make_yield(c_acc, loc)); }, {coopmatrix_c_ty}, loc);
+        c_acc = remainder[0];
     }
 
-    auto alpha_ab = mixed_precision_coopmatrix_scale(bb, alpha, c_init, loc);
+    auto alpha_ab = mixed_precision_coopmatrix_scale(bb, alpha, c_acc, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -437,7 +437,7 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
             [&](region_builder &bb) {
                 blas_update(bb, in.atomic(), &in.alpha(), sum, &in.beta(), &in.B(), {}, in.loc());
             },
-            {}, in.loc());
+            in.loc());
     } else if (bt->dim() == 1) {
         auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.B(), 0, in.loc()));
         auto c_trip_count = instant_constant_fold_add(

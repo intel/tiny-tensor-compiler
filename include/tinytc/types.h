@@ -87,6 +87,9 @@ typedef enum {
     tinytc_status_ir_incompatible_scalar_types = 0x126,    ///< Incompatible scalar types
     tinytc_status_ir_constant_mismatch = 0x127,            ///< Constant mismatch
     tinytc_status_ir_insufficient_alignment = 0x128,       ///< Insufficient alignment
+    tinytc_status_ir_must_have_yield = 0x129,              ///< Must have yield instruction
+    tinytc_status_ir_yield_in_else_branch_missing =
+        0x130, ///< Must have yield instruction in else branch
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

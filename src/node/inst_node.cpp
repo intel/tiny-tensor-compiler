@@ -161,6 +161,7 @@ loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_va
 
     body().set_num_params(1 + init_values.size());
     body().set_param(0, loop_var_type, lc);
+    body().loc(lc);
     for (std::size_t i = 0; i < init_values.size(); ++i) {
         body().set_param(1 + i, init_values[i]->ty(), lc);
         result(i) = value_node{init_values[i]->ty(), this, lc};
@@ -838,6 +839,8 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     : standard_inst{IK::if_, 1, static_cast<int64_t>(return_types.size())} {
     op(0, condition);
     loc(lc);
+    then().loc(lc);
+    otherwise().loc(lc);
     if (!isa<boolean_data_type>(*condition->ty())) {
         throw compilation_error(loc(), status::ir_expected_boolean);
     }

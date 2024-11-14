@@ -3,12 +3,45 @@
 
 #include "pass/check_ir.hpp"
 #include "error.hpp"
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
+#include "support/casting.hpp"
+#include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 
 namespace tinytc {
+
+void check_ir_pass::check_yield(region_node const &reg, inst_node const &in,
+                                status yield_missing_status) {
+    auto last_inst = --reg.end();
+    if (last_inst == reg.end()) {
+        throw compilation_error(reg.loc(), yield_missing_status);
+    }
+    auto yield = dyn_cast<const yield_inst>(last_inst.get());
+    if (!yield) {
+        throw compilation_error(reg.loc(), yield_missing_status);
+    }
+    if (yield->num_operands() != in.num_results()) {
+        throw compilation_error(reg.loc(), status::ir_yield_mismatch);
+    }
+    for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        if (yield->op(i).ty() != in.result(i).ty()) {
+            throw compilation_error(reg.loc(), status::ir_yield_mismatch);
+        }
+    }
+}
+
+void check_ir_pass::operator()(inst_node const &) {}
+void check_ir_pass::operator()(for_inst const &in) {
+    if (in.num_results() > 0) {
+        check_yield(in.body(), in);
+    }
+}
+void check_ir_pass::operator()(if_inst const &in) {
+    if (in.num_results() > 0) {
+        check_yield(in.then(), in);
+        check_yield(in.otherwise(), in, status::ir_yield_in_else_branch_missing);
+    }
+}
 
 void check_ir_pass::run_on_function(function_node &fn) {
     walk(fn, [this](inst_node const &i, walk_stage const &stage) {
@@ -30,6 +63,8 @@ void check_ir_pass::run_on_function(function_node &fn) {
         if (child_region_is_spmd_region && stage.is_after_all_regions()) {
             inside_spmd_region_ = false;
         }
+
+        visit(*this, i);
     });
 }
 

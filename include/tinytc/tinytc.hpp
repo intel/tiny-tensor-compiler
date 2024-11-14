@@ -1914,27 +1914,26 @@ class region_builder {
     /**
      * @brief Build if with functor then(region_builder&) -> void
      *
+     * Note: If the if instruction returns values then we must have a "yield" instruction in both
+     * the "then" and the "else" branch. So to return values use the "ifelse" function.
+     *
      * @tparam F Functor type
      * @param condition Condition value
      * @param then Then region functor
-     * @param return_type_list Types of returned values
      * @param loc Source code location
      *
      * @return Returned values
      */
-    template <typename F>
-    auto if_condition(value condition, F &&then, array_view<data_type> return_type_list = {},
-                      location const &loc = {}) -> std::vector<value> {
-        auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
+    template <typename F> void if_condition(value condition, F &&then, location const &loc = {}) {
+        auto ii = ::tinytc::make_if(std::move(condition), {}, loc);
         auto reg = region{};
         ii.get_regions(reg);
         if (!reg) {
             throw status::internal_compiler_error;
         }
-        auto results = add_multivalued(std::move(ii));
+        reg_.add_instruction(std::move(ii));
         auto bb = region_builder{reg};
         then(bb);
-        return results;
     }
     /**
      * @brief Build if/else with functors then(region_builder&) -> void and

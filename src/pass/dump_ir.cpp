@@ -236,7 +236,7 @@ void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
     *os_ << ", ";
     visit(*this, *c.b().ty());
     *os_ << ", ";
-    visit(*this, *c.b().ty());
+    visit(*this, *c.c().ty());
     *os_ << " -> ";
     visit(*this, *c.result(0).ty());
 }
@@ -412,6 +412,12 @@ void dump_ir_pass::operator()(if_inst const &in) {
     *os_ << "if ";
     dump_val(in.condition());
     *os_ << " ";
+    if (in.num_results() > 0) {
+        *os_ << "-> (";
+        do_with_infix(in.result_begin(), in.result_end(),
+                      [this](auto const &i) { visit(*this, *i.ty()); });
+        *os_ << ") ";
+    }
     dump_region(in.then());
     if (!in.is_otherwise_empty()) {
         *os_ << " else ";
