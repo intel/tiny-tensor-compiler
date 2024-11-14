@@ -13,6 +13,7 @@ func @tbool(%a: bool, %b: bool) {
     %0 = arith.and %a, %b : bool
     %1 = arith.or %a, %b : bool
     %2 = arith.xor %a, %b : bool
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpLogicalOr %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpLogicalNotEqual %[[#BOOL]] %[[#]] %[[#]]
@@ -29,6 +30,7 @@ func @tint(%a: i64, %b: i64) {
     %7 = arith.and %a, %b : i64
     %8 = arith.or %a, %b : i64
     %9 = arith.xor %a, %b : i64
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpIAdd %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpISub %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpIMul %[[#I64]] %[[#]] %[[#]]
@@ -47,6 +49,7 @@ func @tfloat(%a: f32, %b: f32) {
     %2 = arith.mul %a, %b : f32
     %3 = arith.div %a, %b : f32
     %4 = arith.rem %a, %b : f32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
@@ -59,10 +62,31 @@ func @tcomplex(%a: c32, %b: c32) {
     %1 = arith.sub %a, %b : c32
     %2 = arith.mul %a, %b : c32
     %3 = arith.div %a, %b : c32
-; CHECK:      %[[#]] = OpFAdd %[[#C32]] %[[#]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpFSub %[[#C32]] %[[#]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpFMul %[[#C32]] %[[#]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpFDiv %[[#C32]] %[[#]] %[[#]]
+; CHECK-LABEL:                        %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:                    %[[#TC_A:]] = OpFunctionParameter %[[#C32]]
+; CHECK-NEXT:                    %[[#TC_B:]] = OpFunctionParameter %[[#C32]]
+; CHECK:                              %[[#]] = OpFAdd %[[#C32]] %[[#TC_A]] %[[#TC_B]]
+; CHECK-NEXT:                         %[[#]] = OpFSub %[[#C32]] %[[#TC_A]] %[[#TC_B]]
+; CHECK-NEXT:                %[[#TC_NEG_A:]] = OpFNegate %[[#C32]] %[[#TC_A]]
+; CHECK-NEXT:            %[[#TC_A_TIMES_I:]] = OpVectorShuffle %[[#C32]] %[[#TC_NEG_A]] %[[#TC_A]] 1 2
+; CHECK-NEXT:                  %[[#TC_B_1:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 1 1
+; CHECK-NEXT:        %[[#TC_B_1_A_TIMES_I:]] = OpFMul %[[#C32]] %[[#TC_B_1]] %[[#TC_A_TIMES_I]]
+; CHECK-NEXT:                  %[[#TC_B_0:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 0 0
+; CHECK-NEXT:                         %[[#]] = OpExtInst %[[#C32]] %[[#]] fma %[[#TC_A]] %[[#TC_B_0]] %[[#TC_B_1_A_TIMES_I]]
+; CHECK-NEXT:              %[[#TC_NEG_A_2:]] = OpFNegate %[[#C32]] %[[#TC_A]]
+; CHECK-NEXT:       %[[#TC_A_TIMES_CONJ_I:]] = OpVectorShuffle %[[#C32]] %[[#TC_A]] %[[#TC_NEG_A_2]] 1 2
+; CHECK-NEXT:                %[[#TC_B_1_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 1 1
+; CHECK-NEXT: %[[#TC_B_1_2_A_TIMES_CONJ_I:]] = OpFMul %[[#C32]] %[[#TC_B_1_2]] %[[#TC_A_TIMES_CONJ_I]]
+; CHECK-NEXT:                %[[#TC_B_0_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B]] %[[#TC_B]] 0 0
+; CHECK-NEXT:       %[[#TC_A_TIMES_CONJ_B:]] = OpExtInst %[[#C32]] %1 fma %[[#TC_A]] %[[#TC_B_0_2]] %[[#TC_B_1_2_A_TIMES_CONJ_I]]
+; CHECK-NEXT:            %[[#TC_B_SQUARED:]] = OpFMul %[[#C32]] %[[#TC_B]] %[[#TC_B]]
+; CHECK-NEXT:          %[[#TC_B_SQUARED_0:]] = OpCompositeExtract %[[#F32]] %[[#TC_B_SQUARED]] 0
+; CHECK-NEXT:          %[[#TC_B_SQUARED_1:]] = OpCompositeExtract %[[#F32]] %[[#TC_B_SQUARED]] 1
+; CHECK-NEXT:                %[[#TC_B_ABS:]] = OpFAdd %[[#F32]] %[[#TC_B_SQUARED_0]] %[[#TC_B_SQUARED_1]]
+; CHECK-NEXT:                %[[#TC_DUMMY:]] = OpUndef %[[#C32]]
+; CHECK-NEXT:              %[[#TC_B_ABS_1:]] = OpCompositeInsert %[[#C32]] %[[#TC_B_ABS]] %[[#TC_DUMMY]] 0
+; CHECK-NEXT:              %[[#TC_B_ABS_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B_ABS_1]] %[[#TC_DUMMY]] 0 0
+; CHECK-NEXT:                         %[[#]] = OpFDiv %[[#C32]] %[[#TC_A_TIMES_CONJ_B]] %[[#TC_B_ABS_2]]
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
@@ -72,6 +96,7 @@ func @tfloatcoopmatrix() subgroup_size(16) {
     %3 = arith.sub %0, %1 : coopmatrix<f32x16x4,matrix_a>
     %4 = arith.mul %0, %1 : coopmatrix<f32x16x4,matrix_a>
     %5 = arith.div %0, %1 : coopmatrix<f32x16x4,matrix_a>
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]

@@ -128,6 +128,12 @@ class inst_converter {
     auto multi_val(tinytc_value const &v) -> std::vector<spv_inst *> &;
     auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
                         location const &loc) -> spv_inst *;
+    auto make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
+                          bool conj_b = false) -> spv_inst *;
+    auto make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty, spv_inst *a,
+                                  spv_inst *b, spv_inst *c, location const &loc) -> spv_inst *;
+    auto make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty, spv_inst *a,
+                   location const &loc) -> spv_inst *;
     auto make_conditional_execution(spv_inst *returned_element_ty, spv_inst *condition,
                                     std::function<std::vector<spv_inst *>()> conditional_code,
                                     location const &loc) -> std::vector<spv_inst *>;

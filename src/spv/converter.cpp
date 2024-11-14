@@ -191,8 +191,8 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
         }
         throw compilation_error(loc, status::internal_compiler_error);
     };
-    auto const make_float_complex = [&](arithmetic op, spv_inst *ty, spv_inst *a,
-                                        spv_inst *b) -> spv_inst * {
+    auto const make_float = [&](arithmetic op, spv_inst *ty, spv_inst *a,
+                                spv_inst *b) -> spv_inst * {
         switch (op) {
         case arithmetic::add:
             return mod_->add<OpFAdd>(ty, a, b);
@@ -209,6 +209,35 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
         }
         throw compilation_error(loc, status::ir_fp_unsupported);
     };
+    auto const make_complex = [&](arithmetic op, spv_inst *ty, spv_inst *float_ty, spv_inst *a,
+                                  spv_inst *b) -> spv_inst * {
+        switch (op) {
+        case arithmetic::add:
+            return mod_->add<OpFAdd>(ty, a, b);
+        case arithmetic::sub:
+            return mod_->add<OpFSub>(ty, a, b);
+        case arithmetic::mul: {
+            return make_complex_mul(ty, a, b);
+        }
+        case arithmetic::div: {
+            auto a_times_conj_b = make_complex_mul(ty, a, b, true);
+
+            auto b_squared = mod_->add<OpFMul>(ty, b, b);
+            auto b_squared_0 =
+                mod_->add<OpCompositeExtract>(float_ty, b_squared, std::vector<LiteralInteger>{0});
+            auto b_squared_1 =
+                mod_->add<OpCompositeExtract>(float_ty, b_squared, std::vector<LiteralInteger>{1});
+            spv_inst *b_abs = mod_->add<OpFAdd>(float_ty, b_squared_0, b_squared_1);
+            auto dummy = mod_->add<OpUndef>(ty);
+            b_abs = mod_->add<OpCompositeInsert>(ty, b_abs, dummy, std::vector<LiteralInteger>{0});
+            b_abs = mod_->add<OpVectorShuffle>(ty, b_abs, dummy, std::vector<LiteralInteger>{0, 0});
+            return mod_->add<OpFDiv>(ty, a_times_conj_b, b_abs);
+        }
+        default:
+            break;
+        }
+        throw compilation_error(loc, status::ir_complex_unsupported);
+    };
     switch (sty) {
     case scalar_type::i8:
     case scalar_type::i16:
@@ -218,9 +247,101 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
         return make_int(op, ty, a, b);
     case scalar_type::f32:
     case scalar_type::f64:
+        return make_float(op, ty, a, b);
     case scalar_type::c32:
     case scalar_type::c64:
-        return make_float_complex(op, ty, a, b);
+        return make_complex(op, ty, unique_.spv_ty(element_type(sty)), a, b);
+    }
+    throw compilation_error(loc, status::internal_compiler_error);
+}
+
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
+                                      bool conj_b) -> spv_inst * {
+    auto neg_a = mod_->add<OpFNegate>(ty, a);
+    auto a_times_i =
+        conj_b ? mod_->add<OpVectorShuffle>(ty, a, neg_a, std::vector<LiteralInteger>{1, 2})
+               : mod_->add<OpVectorShuffle>(ty, neg_a, a, std::vector<LiteralInteger>{1, 2});
+    auto b_1 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{1, 1});
+    auto b_1_a_times_i = mod_->add<OpFMul>(ty, b_1, a_times_i);
+    auto b_0 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{0, 0});
+    return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                static_cast<std::int32_t>(OpenCLEntrypoint::fma),
+                                std::vector<IdRef>{a, b_0, b_1_a_times_i});
+}
+
+auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty,
+                               spv_inst *a, location const &loc) -> spv_inst * {
+    auto const cast_from_int = [&](scalar_type to_ty, spv_inst *spv_to_ty,
+                                   spv_inst *a) -> spv_inst * {
+        switch (to_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpSConvert>(spv_to_ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod_->add<OpConvertSToF>(spv_to_ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto spv_float_ty = unique_.spv_ty(element_type(to_ty));
+            auto re = mod_->add<OpConvertSToF>(spv_float_ty, a);
+            return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
+                                                std::vector<LiteralInteger>{0});
+        }
+        }
+        throw compilation_error(loc, status::ir_forbidden_cast);
+    };
+    auto const cast_from_float = [&](scalar_type to_ty, spv_inst *spv_to_ty,
+                                     spv_inst *a) -> spv_inst * {
+        switch (to_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpConvertFToS>(spv_to_ty, a);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod_->add<OpFConvert>(spv_to_ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto spv_float_ty = unique_.spv_ty(element_type(to_ty));
+            auto re = mod_->add<OpFConvert>(spv_float_ty, a);
+            return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
+                                                std::vector<LiteralInteger>{0});
+        }
+        }
+        throw compilation_error(loc, status::ir_forbidden_cast);
+    };
+    auto const cast_from_complex = [&](scalar_type to_ty, spv_inst *spv_to_ty,
+                                       spv_inst *a) -> spv_inst * {
+        switch (to_ty) {
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return mod_->add<OpFConvert>(spv_to_ty, a);
+        default:
+            throw compilation_error(loc, status::ir_forbidden_cast);
+        }
+    };
+    if (a_ty == to_ty) {
+        return mod_->add<OpCopyObject>(spv_to_ty, a);
+    }
+    switch (a_ty) {
+    case scalar_type::i8:
+    case scalar_type::i16:
+    case scalar_type::i32:
+    case scalar_type::i64:
+    case scalar_type::index:
+        return cast_from_int(to_ty, spv_to_ty, a);
+    case scalar_type::f32:
+    case scalar_type::f64:
+        return cast_from_float(to_ty, spv_to_ty, a);
+    case scalar_type::c32:
+    case scalar_type::c64: {
+        return cast_from_complex(to_ty, spv_to_ty, a);
+    }
     }
     throw compilation_error(loc, status::internal_compiler_error);
 }
@@ -314,7 +435,7 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
         throw compilation_error(v.loc(), status::internal_compiler_error);
     }
 
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     return ::tinytc::visit(
         overloaded{[&](memref_data_type const &mr) -> dope_vector * {
                        return &(dope_vec_[&v] = dope_vector{spv_index_ty, mr.shape(), mr.stride()});
@@ -335,11 +456,82 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
         *v.ty());
 }
 
+auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty,
+                                              spv_inst *a, spv_inst *b, spv_inst *c,
+                                              location const &loc) -> spv_inst * {
+    auto const make_mul_same_type = [this, &loc](scalar_type mul_ty, spv_inst *spv_mul_ty,
+                                                 spv_inst *a, spv_inst *b) -> spv_inst * {
+        switch (mul_ty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpIMul>(spv_mul_ty, a, b);
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod_->add<OpFMul>(spv_mul_ty, a, b);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return make_complex_mul(spv_mul_ty, a, b);
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+    auto const make_mul_mixed_type = [this, &loc, &make_mul_same_type](
+                                         scalar_type mul_ty, scalar_type a_ty, scalar_type b_ty,
+                                         spv_inst *a, spv_inst *b) {
+        const bool a_non_complex_b_complex = !is_complex_type(a_ty) && is_complex_type(b_ty);
+        const bool a_complex_b_non_complex = is_complex_type(a_ty) && !is_complex_type(b_ty);
+        if (a_non_complex_b_complex || a_complex_b_non_complex) {
+            if (a_complex_b_non_complex) {
+                std::swap(a, b);
+                std::swap(a_ty, b_ty);
+            }
+            mul_ty = element_type(mul_ty);
+            auto spv_mul_ty = unique_.spv_ty(mul_ty);
+            if (a_ty != mul_ty) {
+                a = make_cast(mul_ty, a_ty, spv_mul_ty, a, loc);
+            }
+            auto spv_b_ty = unique_.spv_ty(b_ty);
+            auto dummy = mod_->add<OpUndef>(spv_b_ty);
+            a = mod_->add<OpCompositeInsert>(spv_b_ty, a, dummy, std::vector<LiteralInteger>{0});
+            a = mod_->add<OpVectorShuffle>(spv_b_ty, a, dummy, std::vector<LiteralInteger>{0, 0});
+            return make_mul_same_type(mul_ty, spv_mul_ty, a, b);
+        } else {
+            auto spv_mul_ty = unique_.spv_ty(mul_ty);
+            if (a_ty != mul_ty) {
+                a = make_cast(mul_ty, a_ty, spv_mul_ty, a, loc);
+            }
+            if (b_ty != mul_ty) {
+                b = make_cast(mul_ty, b_ty, spv_mul_ty, b, loc);
+            }
+            return make_mul_same_type(mul_ty, spv_mul_ty, a, b);
+        }
+    };
+
+    if (a_ty == b_ty && b_ty == c_ty && !is_complex_type(a_ty)) {
+        auto spv_c_ty = unique_.spv_ty(c_ty);
+        return mod_->add<OpExtInst>(spv_c_ty, unique_.opencl_ext(),
+                                    static_cast<std::int32_t>(OpenCLEntrypoint::fma),
+                                    std::vector<IdRef>{a, b, c});
+    }
+
+    auto mul_ty = compatible_type(a_ty, b_ty);
+    auto product = make_mul_mixed_type(mul_ty, a_ty, b_ty, a, b);
+
+    auto add_ty = compatible_type(mul_ty, c_ty);
+    auto spv_add_ty = unique_.spv_ty(add_ty);
+    if (mul_ty != add_ty) {
+        product = make_cast(add_ty, mul_ty, spv_add_ty, product, loc);
+    }
+    return make_binary_op(add_ty, arithmetic::add, spv_add_ty, c, product, loc);
+}
+
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
                                 spv_inst *pointer, spv_inst *value) {
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = element_type(sty);
-        auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
+        auto float_ty = unique_.spv_ty(component_sty);
         const auto storage_cls = address_space_to_storage_class(as);
         auto pointer_ty = unique_.spv_pointer_ty(storage_cls, float_ty, alignment(component_sty));
         auto c0 = unique_.constant(std::int32_t{0});
@@ -374,7 +566,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         break;
     }
     case store_flag::atomic_add: {
-        auto result_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), sty));
+        auto result_ty = unique_.spv_ty(sty);
         auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
         switch (sty) {
@@ -393,7 +585,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         case scalar_type::c64: {
             auto re_im = split_re_im();
             auto component_sty = element_type(sty);
-            auto float_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), component_sty));
+            auto float_ty = unique_.spv_ty(component_sty);
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
             break;
@@ -424,7 +616,7 @@ void inst_converter::operator()(alloca_inst const &in) {
         throw compilation_error(in.loc(), status::ir_insufficient_alignment);
     }
 
-    auto stack_element_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i8));
+    auto stack_element_ty = unique_.spv_ty(scalar_type::i8);
     auto stack_ptr_ty = unique_.spv_pointer_ty(StorageClass::Workgroup, stack_element_ty,
                                                alignment(scalar_type::i8));
     auto stack_ptr = mod_->add<OpInBoundsAccessChain>(
@@ -529,7 +721,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
                                   spv_inst *a) -> spv_inst * {
         switch (op) {
         case arithmetic_unary::abs: {
-            auto spv_a_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), sty));
+            auto spv_a_ty = unique_.spv_ty(sty);
             auto a2 = mod_->add<OpFMul>(spv_a_ty, a, a);
             auto a2_0 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{0});
             auto a2_1 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{1});
@@ -541,8 +733,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case arithmetic_unary::neg:
             return mod_->add<OpFNegate>(ty, a);
         case arithmetic_unary::conj: {
-            auto spv_float_ty =
-                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(sty)));
+            auto spv_float_ty = unique_.spv_ty(element_type(sty));
             auto a_im =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
             auto neg_a_im = mod_->add<OpFNegate>(spv_float_ty, a_im);
@@ -616,91 +807,12 @@ void inst_converter::operator()(barrier_inst const &in) {
 }
 
 void inst_converter::operator()(cast_inst const &in) {
-    auto const cast_from_int = [&](scalar_type to_ty, spv_inst *spv_to_ty,
-                                   spv_inst *a) -> spv_inst * {
-        switch (to_ty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return mod_->add<OpSConvert>(spv_to_ty, a);
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return mod_->add<OpConvertSToF>(spv_to_ty, a);
-        case scalar_type::c32:
-        case scalar_type::c64: {
-            auto spv_float_ty =
-                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(to_ty)));
-            auto re = mod_->add<OpConvertSToF>(spv_float_ty, a);
-            return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
-                                                std::vector<LiteralInteger>{0});
-        }
-        }
-        throw compilation_error(in.loc(), status::ir_forbidden_cast);
-    };
-    auto const cast_from_float = [&](scalar_type to_ty, spv_inst *spv_to_ty,
-                                     spv_inst *a) -> spv_inst * {
-        switch (to_ty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return mod_->add<OpConvertFToS>(spv_to_ty, a);
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return mod_->add<OpFConvert>(spv_to_ty, a);
-        case scalar_type::c32:
-        case scalar_type::c64: {
-            auto spv_float_ty =
-                unique_.spv_ty(scalar_data_type::get(mod_->context(), element_type(to_ty)));
-            auto re = mod_->add<OpFConvert>(spv_float_ty, a);
-            return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
-                                                std::vector<LiteralInteger>{0});
-        }
-        }
-        throw compilation_error(in.loc(), status::ir_forbidden_cast);
-    };
-    auto const cast_from_complex = [&](scalar_type to_ty, spv_inst *spv_to_ty,
-                                       spv_inst *a) -> spv_inst * {
-        switch (to_ty) {
-        case scalar_type::c32:
-        case scalar_type::c64:
-            return mod_->add<OpFConvert>(spv_to_ty, a);
-        default:
-            throw compilation_error(in.loc(), status::ir_forbidden_cast);
-        }
-    };
-    auto const make = [&](scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty,
-                          spv_inst *a) -> spv_inst * {
-        if (a_ty == to_ty) {
-            return mod_->add<OpCopyObject>(spv_to_ty, a);
-        }
-        switch (a_ty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return cast_from_int(to_ty, spv_to_ty, a);
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return cast_from_float(to_ty, spv_to_ty, a);
-        case scalar_type::c32:
-        case scalar_type::c64: {
-            return cast_from_complex(to_ty, spv_to_ty, a);
-        }
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-
     auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
 
     if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
         auto av = val(in.a());
         auto a_ty = get_scalar_type(in.a());
-        declare(in.result(0), make(st->ty(), a_ty, spv_to_ty, av));
+        declare(in.result(0), make_cast(st->ty(), a_ty, spv_to_ty, av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
         auto const length = ct->length(core_cfg_.subgroup_size);
         auto insts = std::vector<spv_inst *>{};
@@ -709,7 +821,7 @@ void inst_converter::operator()(cast_inst const &in) {
         auto &av = multi_val(in.a());
         auto a_ty = get_coopmatrix_type(in.a())->component_ty();
         for (std::int64_t i = 0; i < length; ++i) {
-            insts.emplace_back(make(ct->component_ty(), a_ty, spv_to_ty, av[i]));
+            insts.emplace_back(make_cast(ct->component_ty(), a_ty, spv_to_ty, av[i], in.loc()));
         }
 
         multi_declare(in.result(0), std::move(insts));
@@ -825,7 +937,7 @@ void inst_converter::operator()(constant_inst const &in) {
 
 void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
     auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
     auto spv_ty = unique_.spv_ty(in.result(0).ty());
     auto ot = get_memref_type(in.operand());
@@ -865,7 +977,7 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
         auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
                                                                std::vector<spv_inst *>{});
         auto const cast_load_cast = [&](scalar_type int_sty) {
-            auto int_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), int_sty));
+            auto int_ty = unique_.spv_ty(int_sty);
             const auto storage_cls = address_space_to_storage_class(ot->addrspace());
             auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, ot->alignment());
             auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
@@ -958,7 +1070,85 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
     }
     multi_declare(in.result(0), std::move(loaded_values));
 }
-void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {}
+void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
+    auto at = get_coopmatrix_type(in.a());
+    auto bt = get_coopmatrix_type(in.b());
+    auto ct = get_coopmatrix_type(in.c());
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto &av = multi_val(in.a());
+    auto &bv = multi_val(in.b());
+    auto &cv = multi_val(in.c());
+
+    const auto a_ty = at->component_ty();
+    const auto b_ty = bt->component_ty();
+    const auto b_component_ty = bt->component_ty();
+    const auto c_ty = ct->component_ty();
+    const auto r_ty = rt->component_ty();
+    const auto spv_b_ty = unique_.spv_ty(bt->ty());
+    const auto spv_b_component_ty = unique_.spv_ty(b_component_ty);
+    const auto spv_c_ty = unique_.spv_ty(ct->ty());
+    const auto spv_r_ty = unique_.spv_ty(rt->ty());
+    const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
+
+    const std::int64_t N = rt->cols(), K = at->cols();
+
+    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    constexpr std::int64_t nbb = 4;
+    auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+
+    auto result = std::vector<spv_inst *>(cv.begin(), cv.end());
+    auto result_im = a_and_b_complex
+                         ? std::vector<spv_inst *>(cv.size(), unique_.null_constant(spv_c_ty))
+                         : std::vector<spv_inst *>{};
+    for (std::int64_t m_block = 0; m_block < num_blocks; ++m_block) {
+        for (std::int64_t nb = 0; nb < N; nb += nbb) {
+            for (std::int64_t k = 0; k < K; ++k) {
+                for (std::int64_t n = 0; n < nbb; ++n) {
+                    if (nb + n < N) {
+                        auto const n_block = (nb + n) / core_cfg_.subgroup_size;
+                        auto n_offset = unique_.constant((nb + n) % core_cfg_.subgroup_size);
+
+                        auto a = av[k + m_block * K];
+                        auto b = bv[k + n_block * K];
+                        auto b_bc =
+                            mod_->add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b, n_offset);
+                        auto &c = result[nb + n + m_block * N];
+
+                        if (a_and_b_complex) {
+                            auto &c_im = result_im[nb + n + m_block * N];
+                            auto b_bc_re = mod_->add<OpCompositeExtract>(
+                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{0});
+                            auto b_bc_im = mod_->add<OpCompositeExtract>(
+                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{1});
+                            c = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_re, c,
+                                                         in.loc());
+                            c_im = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_im,
+                                                            c, in.loc());
+                        } else {
+                            c = make_mixed_precision_fma(a_ty, b_ty, c_ty, a, b_bc, c, in.loc());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (a_and_b_complex) {
+        for (std::size_t i = 0; i < result.size(); ++i) {
+            auto &c = result[i];
+            auto c_im = result_im[i];
+            auto neg_c_im = mod_->add<OpFNegate>(spv_c_ty, c_im);
+            auto c_im_times_i = mod_->add<OpVectorShuffle>(spv_c_ty, neg_c_im, c_im,
+                                                           std::vector<LiteralInteger>{1, 2});
+            c = mod_->add<OpFAdd>(spv_c_ty, c, c_im_times_i);
+        }
+    }
+    for (auto &r : result) {
+        if (c_ty != r_ty) {
+            r = make_cast(r_ty, c_ty, spv_r_ty, r, in.loc());
+        }
+    }
+    multi_declare(in.result(0), std::move(result));
+}
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     auto av = val(in.a());
     auto &bv = multi_val(in.b());
@@ -976,7 +1166,7 @@ void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
 }
 void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
     auto spv_ty = unique_.spv_ty(in.val().ty());
     auto ot = get_memref_type(in.operand());
@@ -1086,7 +1276,7 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
 }
 
 void inst_converter::operator()(expand_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
 
     auto shape = std::vector<spv_inst *>{};
     auto stride = std::vector<spv_inst *>{};
@@ -1262,7 +1452,7 @@ void inst_converter::operator()(for_inst const &in) {
 }
 
 void inst_converter::operator()(fuse_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
 
     auto shape = std::vector<spv_inst *>{};
     auto stride = std::vector<spv_inst *>{};
@@ -1309,13 +1499,13 @@ void inst_converter::operator()(fuse_inst const &in) {
 
 void inst_converter::operator()(group_id_inst const &in) {
     auto gid = load_builtin(BuiltIn::GlobalInvocationId);
-    auto index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto index_ty = unique_.spv_ty(scalar_type::index);
     declare(in.result(0),
             mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
 }
 void inst_converter::operator()(group_size_inst const &in) {
     auto gs = load_builtin(BuiltIn::GlobalSize);
-    auto index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto index_ty = unique_.spv_ty(scalar_type::index);
     declare(in.result(0),
             mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
 }
@@ -1376,7 +1566,7 @@ void inst_converter::operator()(if_inst const &in) {
 void inst_converter::operator()(lifetime_stop_inst const &) {}
 
 void inst_converter::operator()(load_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_pointer_index_ty = unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
                                                        alignment(scalar_type::i64));
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
@@ -1442,7 +1632,7 @@ void inst_converter::operator()(size_inst const &in) {
 }
 
 void inst_converter::operator()(store_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());
     auto dv = get_dope_vector(in.operand());
     if (!dv) {
@@ -1482,7 +1672,7 @@ void inst_converter::operator()(subgroup_size_inst const &in) {
 }
 
 void inst_converter::operator()(subview_inst const &in) {
-    auto spv_index_ty = unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
 
     auto shape_out = std::vector<spv_inst *>{};
@@ -1624,8 +1814,7 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
     auto const make_stack = [&] {
         const auto high_water_mark = stack_high_water_mark{}.run_on_function(fn);
         if (high_water_mark > 0) {
-            auto stack_element_ty =
-                unique_.spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i8));
+            auto stack_element_ty = unique_.spv_ty(scalar_type::i8);
             auto stack_array_ty = unique_.spv_array_ty(stack_element_ty, high_water_mark);
             auto stack_ptr_ty =
                 unique_.spv_pointer_ty(StorageClass::Workgroup, stack_array_ty,

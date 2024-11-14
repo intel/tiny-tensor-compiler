@@ -50,6 +50,7 @@ void capex::operator()(OpExecutionMode const &in) {
         unique_->capability(cap);
     }
 }
+void capex::operator()(OpGroupBroadcast const &) { unique_->capability(Capability::Groups); }
 void capex::operator()(OpGroupFAdd const &) { unique_->capability(Capability::Groups); }
 void capex::operator()(OpGroupIAdd const &) { unique_->capability(Capability::Groups); }
 void capex::operator()(OpInBoundsPtrAccessChain const &) {

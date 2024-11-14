@@ -255,5 +255,9 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
     });
 }
 
+auto uniquifier::spv_ty(scalar_type sty) -> spv_inst * {
+    return spv_ty(scalar_data_type::get(mod_->context(), sty));
+}
+
 } // namespace tinytc::spv
 

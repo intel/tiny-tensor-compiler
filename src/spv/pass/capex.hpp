@@ -19,6 +19,7 @@ class capex {
     void operator()(OpAtomicFAddEXT const &in);
     void operator()(OpEntryPoint const &in);
     void operator()(OpExecutionMode const &in);
+    void operator()(OpGroupBroadcast const &in);
     void operator()(OpGroupFAdd const &in);
     void operator()(OpGroupIAdd const &in);
     void operator()(OpInBoundsPtrAccessChain const &in);
