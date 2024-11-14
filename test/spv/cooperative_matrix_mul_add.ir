@@ -1,0 +1,98 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -O0 -gspirv -S < %s | filecheck %s
+
+; CHECK:        %[[#F32:]] = OpTypeFloat 32
+; CHECK:     %[[#F32_C1:]] = OpConstant %[[#F32]] 0x1p+0
+; CHECK:     %[[#F32_C2:]] = OpConstant %[[#F32]] 0x1p+1
+; CHECK:     %[[#F32_C3:]] = OpConstant %[[#F32]] 0x1.8p+1
+; CHECK:        %[[#I32:]] = OpTypeInt 32 0
+; CHECK:     %[[#I32_C3:]] = OpConstant %[[#I32]] 3
+; CHECK:     %[[#I32_C0:]] = OpConstant %[[#I32]] 0
+; CHECK:     %[[#I32_C1:]] = OpConstant %[[#I32]] 1
+; CHECK:        %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK:     %[[#F32_C0:]] = OpConstant %[[#F32]] 0x0p+0
+; CHECK:   %[[#C32_C1_0:]] = OpConstantComposite %[[#C32]] %[[#F32_C1]] %[[#F32_C0]]
+; CHECK:   %[[#C32_C3_0:]] = OpConstantComposite %[[#C32]] %[[#F32_C3]] %[[#F32_C0]]
+; CHECK:     %[[#I32_C2:]] = OpConstant %[[#I32]] 2
+; CHECK: %[[#C32_C1_0_2:]] = OpConstantComposite %[[#C32]] %[[#F32_C1]] %[[#F32_C0]]
+; CHECK:   %[[#C32_C2_0:]] = OpConstantComposite %[[#C32]] %[[#F32_C2]] %[[#F32_C0]]
+; CHECK: %[[#C32_C3_0_2:]] = OpConstantComposite %[[#C32]] %[[#F32_C3]] %[[#F32_C0]]
+; CHECK:   %[[#C32_NULL:]] = OpConstantNull %[[#C32]]
+; CHECK:        %[[#I16:]] = OpTypeInt 16 0
+; CHECK:     %[[#I16_C1:]] = OpConstant %[[#I16]] 1
+; CHECK:        %[[#I64:]] = OpTypeInt 64 0
+; CHECK:     %[[#I64_C3:]] = OpConstant %[[#I64]] 3
+
+func @coopmatrix_mul_add_ff() subgroup_size(16) {
+    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
+    %b = constant 2.0 -> coopmatrix<f32x2x2,matrix_b>
+    %c = constant 3.0 -> coopmatrix<f32x16x2,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<f32x2x2,matrix_b>,
+              coopmatrix<f32x16x2,matrix_acc> -> coopmatrix<f32x16x2,matrix_acc>
+; CHECK-LABEL:       %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#FF_B0:]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C0]]
+; CHECK-NEXT:  %[[#FF_C0:]] = OpExtInst %[[#F32]] %[[#]] fma %[[#F32_C1]] %[[#FF_B0]] %[[#F32_C3]]
+; CHECK-NEXT:  %[[#FF_B1:]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C1]]
+; CHECK-NEXT:  %[[#FF_C1:]] = OpExtInst %[[#F32]] %[[#]] fma %[[#F32_C1]] %[[#FF_B1]] %[[#F32_C3]]
+; CHECK-NEXT:  %[[#FF_B2:]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C0]]
+; CHECK-NEXT:        %[[#]] = OpExtInst %[[#F32]] %[[#]] fma %[[#F32_C1]] %[[#FF_B2]] %[[#FF_C0]]
+; CHECK-NEXT:  %[[#FF_B3:]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C1]]
+; CHECK-NEXT:        %[[#]] = OpExtInst %[[#F32]] %[[#]] fma %[[#F32_C1]] %[[#FF_B3]] %[[#FF_C1]]
+}
+
+func @coopmatrix_mul_add_cf() subgroup_size(16) {
+    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
+    %b = constant 2.0 -> coopmatrix<f32x2x4,matrix_b>
+    %c = constant [3.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
+              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+; CHECK-LABEL:              %[[#]] = OpFunction {{.*}}
+; CHECK:             %[[#CF_B0:]]  = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C0]]
+; CHECK-NEXT:     %[[#CF_DUMMY:]]  = OpUndef %[[#C32]] 
+; CHECK-NEXT:  %[[#CF_B0_SPLAT1:]] = OpCompositeInsert %[[#C32]] %[[#CF_B0]] %[[#CF_DUMMY]] 0
+; CHECK-NEXT:  %[[#CF_B0_SPLAT2:]] = OpVectorShuffle %[[#C32]] %[[#CF_B0_SPLAT1]] %[[#CF_DUMMY]] 0 0
+; CHECK-NEXT:               %[[#]] = OpExtInst %[[#C32]] %[[#]] fma %[[#CF_B0_SPLAT2]] %[[#C32_C1_0]] %[[#C32_C3_0]]
+}
+
+func @coopmatrix_mul_add_cc() subgroup_size(16) {
+    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
+    %b = constant [2.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
+    %c = constant [3.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
+              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
+; CHECK:                %[[#CC_B0:]] = OpGroupBroadcast %[[#C32]] %[[#I32_C3]] %[[#C32_C2_0]] %[[#I32_C0]]
+; CHECK-NEXT:        %[[#CC_B0_RE:]] = OpCompositeExtract %[[#F32]] %[[#CC_B0]] 0
+; CHECK-NEXT:        %[[#CC_B0_IM:]] = OpCompositeExtract %[[#F32]] %[[#CC_B0]] 1
+; CHECK-NEXT:        %[[#CC_DUMMY:]] = OpUndef %[[#C32]] 
+; CHECK-NEXT: %[[#CC_B0_RE_SPLAT1:]] = OpCompositeInsert %[[#C32]] %[[#CC_B0_RE]] %[[#CC_DUMMY]] 0
+; CHECK-NEXT: %[[#CC_B0_RE_SPLAT2:]] = OpVectorShuffle %[[#C32]] %[[#CC_B0_RE_SPLAT1]] %[[#CC_DUMMY]] 0 0
+; CHECK-NEXT:                 %[[#]] = OpExtInst %[[#C32]] %[[#]] fma %[[#CC_B0_RE_SPLAT2]] %[[#C32_C1_0_2]] %[[#C32_C3_0_2]]
+; CHECK-NEXT:       %[[#CC_DUMMY2:]] = OpUndef %[[#C32]] 
+; CHECK-NEXT: %[[#CC_B0_IM_SPLAT1:]] = OpCompositeInsert %[[#C32]] %[[#CC_B0_IM]] %[[#CC_DUMMY2]] 0
+; CHECK-NEXT: %[[#CC_B0_IM_SPLAT2:]] = OpVectorShuffle %[[#C32]] %[[#CC_B0_IM_SPLAT1]] %[[#CC_DUMMY2]] 0 0
+; CHECK-NEXT:                 %[[#]] = OpExtInst %[[#C32]] %[[#]] fma %[[#CC_B0_IM_SPLAT2]] %[[#C32_C1_0_2]] %[[#C32_NULL]]
+; CHECK:            %[[#CC_NEG_IM:]] = OpFNegate %[[#C32]] %[[#CC_IM:]]
+; CHECK-NEXT:      %[[#CC_IM_CONJ:]] = OpVectorShuffle %[[#C32]] %[[#CC_NEG_IM]] %[[#CC_IM]] 1 2
+; CHECK-NEXT:                 %[[#]] = OpFAdd %[[#C32]] %[[#]] %[[#CC_IM_CONJ]]
+}
+
+func @coopmatrix_mul_add_ii_mixed() subgroup_size(16) {
+    %a = constant 1 -> coopmatrix<i16x16x2,matrix_a>
+    %b = constant 2 -> coopmatrix<i32x2x4,matrix_b>
+    %c = constant 3 -> coopmatrix<i64x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c
+            : coopmatrix<i16x16x2,matrix_a>, coopmatrix<i32x2x4,matrix_b>,
+              coopmatrix<i64x16x4,matrix_acc> -> coopmatrix<i32x16x4,matrix_acc>
+; CHECK-LABEL:           %[[#]] = OpFunction {{.*}}
+; CHECK:           %[[#II_BC:]] = OpGroupBroadcast %[[#I32]] %[[#I32_C3]] %[[#I32_C2]] %[[#I32_C0]]
+; CHECK-NEXT:   %[[#II_A_I32:]] = OpSConvert %[[#I32]] %[[#I16_C1]]
+; CHECK-NEXT:     %[[#II_MUL:]] = OpIMul %[[#I32]] %[[#II_A_I32]] %[[#II_BC]]
+; CHECK-NEXT: %[[#II_MUL_I64:]] = OpSConvert %[[#I64]] %[[#II_MUL]]
+; CHECK-NEXT:            %[[#]] = OpIAdd %[[#I64]] %[[#I64_C3]] %[[#II_MUL_I64]]
+}

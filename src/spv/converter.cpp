@@ -459,68 +459,49 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
 auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty,
                                               spv_inst *a, spv_inst *b, spv_inst *c,
                                               location const &loc) -> spv_inst * {
-    auto const make_mul_same_type = [this, &loc](scalar_type mul_ty, spv_inst *spv_mul_ty,
-                                                 spv_inst *a, spv_inst *b) -> spv_inst * {
-        switch (mul_ty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return mod_->add<OpIMul>(spv_mul_ty, a, b);
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return mod_->add<OpFMul>(spv_mul_ty, a, b);
-        case scalar_type::c32:
-        case scalar_type::c64:
-            return make_complex_mul(spv_mul_ty, a, b);
-        }
-        throw compilation_error(loc, status::internal_compiler_error);
-    };
-    auto const make_mul_mixed_type = [this, &loc, &make_mul_same_type](
-                                         scalar_type mul_ty, scalar_type a_ty, scalar_type b_ty,
-                                         spv_inst *a, spv_inst *b) {
-        const bool a_non_complex_b_complex = !is_complex_type(a_ty) && is_complex_type(b_ty);
-        const bool a_complex_b_non_complex = is_complex_type(a_ty) && !is_complex_type(b_ty);
-        if (a_non_complex_b_complex || a_complex_b_non_complex) {
-            if (a_complex_b_non_complex) {
-                std::swap(a, b);
-                std::swap(a_ty, b_ty);
-            }
-            mul_ty = element_type(mul_ty);
-            auto spv_mul_ty = unique_.spv_ty(mul_ty);
-            if (a_ty != mul_ty) {
-                a = make_cast(mul_ty, a_ty, spv_mul_ty, a, loc);
-            }
-            auto spv_b_ty = unique_.spv_ty(b_ty);
-            auto dummy = mod_->add<OpUndef>(spv_b_ty);
-            a = mod_->add<OpCompositeInsert>(spv_b_ty, a, dummy, std::vector<LiteralInteger>{0});
-            a = mod_->add<OpVectorShuffle>(spv_b_ty, a, dummy, std::vector<LiteralInteger>{0, 0});
-            return make_mul_same_type(mul_ty, spv_mul_ty, a, b);
-        } else {
-            auto spv_mul_ty = unique_.spv_ty(mul_ty);
-            if (a_ty != mul_ty) {
-                a = make_cast(mul_ty, a_ty, spv_mul_ty, a, loc);
-            }
-            if (b_ty != mul_ty) {
-                b = make_cast(mul_ty, b_ty, spv_mul_ty, b, loc);
-            }
-            return make_mul_same_type(mul_ty, spv_mul_ty, a, b);
-        }
-    };
+    const auto mul_ty = compatible_type(a_ty, b_ty);
+    const auto add_ty = compatible_type(mul_ty, c_ty);
+    auto spv_mul_ty = unique_.spv_ty(mul_ty);
+    auto spv_add_ty = unique_.spv_ty(add_ty);
 
-    if (a_ty == b_ty && b_ty == c_ty && !is_complex_type(a_ty)) {
-        auto spv_c_ty = unique_.spv_ty(c_ty);
-        return mod_->add<OpExtInst>(spv_c_ty, unique_.opencl_ext(),
+    // Normalize such that a is compatible with b and we cast to the type of b
+    if (a_ty != mul_ty && b_ty != mul_ty) {
+        throw compilation_error(loc, status::internal_compiler_error,
+                                "compatible type must be either type of a or type of b");
+    }
+    if (b_ty != mul_ty) {
+        std::swap(a, b);
+        std::swap(a_ty, b_ty);
+    }
+
+    const bool a_non_complex_b_complex = !is_complex_type(a_ty) && is_complex_type(b_ty);
+    const bool a_complex_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
+    const auto a_cast_ty = a_non_complex_b_complex ? element_type(mul_ty) : mul_ty;
+    auto spv_a_cast_ty = unique_.spv_ty(a_cast_ty);
+
+    if (a_ty != a_cast_ty) {
+        a = make_cast(a_cast_ty, a_ty, spv_a_cast_ty, a, loc);
+    }
+    if (a_cast_ty != mul_ty) {
+        auto dummy = mod_->add<OpUndef>(spv_mul_ty);
+        a = mod_->add<OpCompositeInsert>(spv_mul_ty, a, dummy, std::vector<LiteralInteger>{0});
+        a = mod_->add<OpVectorShuffle>(spv_mul_ty, a, dummy, std::vector<LiteralInteger>{0, 0});
+    }
+    if (!a_complex_b_complex && mul_ty == add_ty) {
+        return mod_->add<OpExtInst>(spv_mul_ty, unique_.opencl_ext(),
                                     static_cast<std::int32_t>(OpenCLEntrypoint::fma),
                                     std::vector<IdRef>{a, b, c});
     }
 
-    auto mul_ty = compatible_type(a_ty, b_ty);
-    auto product = make_mul_mixed_type(mul_ty, a_ty, b_ty, a, b);
+    auto product = [&]() -> spv_inst * {
+        if (a_complex_b_complex) {
+            return make_complex_mul(spv_mul_ty, a, b);
+        } else if (a_non_complex_b_complex || is_floating_type(mul_ty)) {
+            return mod_->add<OpFMul>(spv_mul_ty, a, b);
+        }
+        return mod_->add<OpIMul>(spv_mul_ty, a, b);
+    }();
 
-    auto add_ty = compatible_type(mul_ty, c_ty);
-    auto spv_add_ty = unique_.spv_ty(add_ty);
     if (mul_ty != add_ty) {
         product = make_cast(add_ty, mul_ty, spv_add_ty, product, loc);
     }
@@ -1081,7 +1062,7 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
 
     const auto a_ty = at->component_ty();
     const auto b_ty = bt->component_ty();
-    const auto b_component_ty = bt->component_ty();
+    const auto b_component_ty = element_type(b_ty);
     const auto c_ty = ct->component_ty();
     const auto r_ty = rt->component_ty();
     const auto spv_b_ty = unique_.spv_ty(bt->ty());
@@ -1090,20 +1071,20 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
     const auto spv_r_ty = unique_.spv_ty(rt->ty());
     const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
 
-    const std::int64_t N = rt->cols(), K = at->cols();
+    const std::int32_t N = rt->cols(), K = at->cols();
 
-    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
-    constexpr std::int64_t nbb = 4;
+    const std::int32_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    constexpr std::int32_t nbb = 4;
     auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
 
     auto result = std::vector<spv_inst *>(cv.begin(), cv.end());
     auto result_im = a_and_b_complex
                          ? std::vector<spv_inst *>(cv.size(), unique_.null_constant(spv_c_ty))
                          : std::vector<spv_inst *>{};
-    for (std::int64_t m_block = 0; m_block < num_blocks; ++m_block) {
-        for (std::int64_t nb = 0; nb < N; nb += nbb) {
-            for (std::int64_t k = 0; k < K; ++k) {
-                for (std::int64_t n = 0; n < nbb; ++n) {
+    for (std::int32_t m_block = 0; m_block < num_blocks; ++m_block) {
+        for (std::int32_t nb = 0; nb < N; nb += nbb) {
+            for (std::int32_t k = 0; k < K; ++k) {
+                for (std::int32_t n = 0; n < nbb; ++n) {
                     if (nb + n < N) {
                         auto const n_block = (nb + n) / core_cfg_.subgroup_size;
                         auto n_offset = unique_.constant((nb + n) % core_cfg_.subgroup_size);
@@ -1123,7 +1104,7 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
                             c = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_re, c,
                                                          in.loc());
                             c_im = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_im,
-                                                            c, in.loc());
+                                                            c_im, in.loc());
                         } else {
                             c = make_mixed_precision_fma(a_ty, b_ty, c_ty, a, b_bc, c, in.loc());
                         }
