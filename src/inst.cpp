@@ -639,15 +639,20 @@ tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from
     });
 }
 
-tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
-                                           tinytc_value_t to, tinytc_data_type_t loop_var_type,
+tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
+                                           const tinytc_value_t *from_list,
+                                           const tinytc_value_t *to_list,
+                                           tinytc_data_type_t loop_var_type,
                                            const tinytc_location_t *loc) {
-    if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr) {
+    if (instr == nullptr || loop_var_type == nullptr || from_list == nullptr ||
+        to_list == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
         *instr =
-            std::make_unique<foreach_inst>(from, to, loop_var_type, get_optional(loc)).release();
+            std::make_unique<foreach_inst>(array_view{from_list, dim}, array_view{to_list, dim},
+                                           loop_var_type, get_optional(loc))
+                .release();
     });
 }
 

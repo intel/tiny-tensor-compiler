@@ -671,17 +671,18 @@ init_value:
 ;
 
 foreach_inst:
-    FOREACH LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] for_loop_var_type <inst>{
-        check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
+    FOREACH LPAREN identifier_list[loop_var] RPAREN EQUALS
+            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN for_loop_var_type <inst>{
         try {
             location loc = @FOREACH;
             loc.end = @for_loop_var_type.end;
             auto inode =
                 std::make_unique<foreach_inst>($from, $to, $for_loop_var_type, loc);
             ctx.push_scope();
-            auto &loop_var = inode->loop_var();
-            ctx.val($loop_var, loop_var, @loop_var);
+            auto loop_vars = inode->loop_vars().begin();
+            for (std::int64_t i = 0; i < inode->dim(); ++i) {
+                ctx.val($loop_var[i], loop_vars[i], @loop_var);
+            }
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {

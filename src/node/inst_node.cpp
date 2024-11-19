@@ -147,50 +147,6 @@ blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
     }
 }
 
-loop_inst::loop_inst(IK tid, tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
-                     array_view<tinytc_value_t> init_values, tinytc_data_type_t loop_var_type,
-                     location const &lc)
-    : standard_inst{tid, (step0 ? 3 : 2) + static_cast<std::int64_t>(init_values.size()),
-                    static_cast<std::int64_t>(init_values.size())} {
-
-    op(op_from, from0);
-    op(op_to, to0);
-    if (step0) {
-        op(op_step, step0);
-    }
-
-    body().set_num_params(1 + init_values.size());
-    body().set_param(0, loop_var_type, lc);
-    body().loc(lc);
-    for (std::size_t i = 0; i < init_values.size(); ++i) {
-        body().set_param(1 + i, init_values[i]->ty(), lc);
-        result(i) = value_node{init_values[i]->ty(), this, lc};
-    }
-    for (std::size_t i = 0; i < init_values.size(); ++i) {
-        if (!isa<boolean_data_type>(*init_values[i]->ty()) &&
-            !isa<scalar_data_type>(*init_values[i]->ty()) &&
-            !isa<coopmatrix_data_type>(*init_values[i]->ty())) {
-            throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
-        }
-        op(op_init() + i, init_values[i]);
-    }
-    loc(lc);
-
-    auto lvt = get_scalar_type(loc(), loop_var());
-    auto fromt = get_scalar_type(loc(), from());
-    auto tot = get_scalar_type(loc(), to());
-    bool step_ok = true;
-    if (has_step()) {
-        auto stept = get_scalar_type(loc(), step());
-        step_ok = lvt->ty() == stept->ty();
-    }
-
-    if (!is_integer_type(lvt->ty()) || lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() ||
-        !step_ok) {
-        throw compilation_error(loc(), status::ir_scalar_mismatch);
-    }
-}
-
 alloca_inst::alloca_inst(tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::alloca}, stack_ptr_{-1} {
     loc(lc);
@@ -658,6 +614,84 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
     result(0) = value_node{result_ty, this, lc};
 }
 
+for_inst::for_inst(tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
+                   array_view<tinytc_value_t> init_values, tinytc_data_type_t loop_var_type,
+                   location const &lc)
+    : loop_inst{IK::for_loop, (step0 ? 3 : 2) + static_cast<std::int64_t>(init_values.size()),
+                static_cast<std::int64_t>(init_values.size())} {
+    op(op_from, from0);
+    op(op_to, to0);
+    if (step0) {
+        op(op_step, step0);
+    }
+
+    body().set_num_params(1 + init_values.size());
+    body().set_param(0, loop_var_type, lc);
+    body().loc(lc);
+    for (std::size_t i = 0; i < init_values.size(); ++i) {
+        body().set_param(1 + i, init_values[i]->ty(), lc);
+        result(i) = value_node{init_values[i]->ty(), this, lc};
+    }
+    for (std::size_t i = 0; i < init_values.size(); ++i) {
+        if (!isa<boolean_data_type>(*init_values[i]->ty()) &&
+            !isa<scalar_data_type>(*init_values[i]->ty()) &&
+            !isa<coopmatrix_data_type>(*init_values[i]->ty())) {
+            throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
+        }
+        op(op_init() + i, init_values[i]);
+    }
+    loc(lc);
+
+    auto lvt = get_scalar_type(loc(), loop_var());
+    auto fromt = get_scalar_type(loc(), from());
+    auto tot = get_scalar_type(loc(), to());
+    bool step_ok = true;
+    if (has_step()) {
+        auto stept = get_scalar_type(loc(), step());
+        step_ok = lvt->ty() == stept->ty();
+    }
+
+    if (!is_integer_type(lvt->ty()) || lvt->ty() != fromt->ty() || lvt->ty() != tot->ty() ||
+        !step_ok) {
+        throw compilation_error(loc(), status::ir_scalar_mismatch);
+    }
+}
+
+foreach_inst::foreach_inst(array_view<tinytc_value_t> from, array_view<tinytc_value_t> to,
+                           tinytc_data_type_t loop_var_type, location const &lc)
+    : loop_inst{IK::foreach_loop, static_cast<std::int64_t>(from.size() + to.size()),
+                std::int64_t{0}} {
+    std::int64_t op_no = 0;
+    for (auto &v : from) {
+        op(op_no++, v);
+    }
+    for (auto &v : to) {
+        op(op_no++, v);
+    }
+    body().set_num_params(from.size());
+    for (std::int64_t i = 0; i < static_cast<std::int64_t>(from.size()); ++i) {
+        body().set_param(i, loop_var_type, lc);
+    }
+    body().loc(lc);
+    child_region(0).kind(region_kind::spmd);
+    loc(lc);
+
+    if (from.size() == 0 || from.size() != to.size()) {
+        throw compilation_error(loc(), status::ir_from_to_mismatch);
+    }
+
+    if (auto lv_ty = dyn_cast<scalar_data_type>(loop_var_type); lv_ty) {
+        if (!is_integer_type(lv_ty->ty()) ||
+            std::any_of(op_begin(), op_end(), [&loop_var_type](tinytc_value &val) {
+                return val.ty() != loop_var_type;
+            })) {
+            throw compilation_error(loc(), status::ir_scalar_mismatch);
+        }
+    } else {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+}
+
 fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, location const &lc)
     : standard_inst{IK::fuse}, from_(from), to_(to) {
     op(0, op0);
@@ -801,12 +835,6 @@ ger_inst::ger_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
         oss << "C=" << c->shape(0) << "x" << c->shape(1);
         throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
     }
-}
-
-foreach_inst::foreach_inst(tinytc_value_t from, tinytc_value_t to, tinytc_data_type_t loop_var_type,
-                           location const &loc)
-    : loop_inst{IK::foreach_loop, std::move(from), std::move(to), nullptr, {}, loop_var_type, loc} {
-    child_region(0).kind(region_kind::spmd);
 }
 
 hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,

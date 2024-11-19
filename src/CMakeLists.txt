@@ -43,6 +43,7 @@ set(SOURCES
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp
+    pass/clone.cpp
     pass/constant_folding.cpp
     pass/constant_propagation.cpp
     pass/convert_to_opencl.cpp
@@ -53,6 +54,7 @@ set(SOURCES
     pass/dump_ir.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
+    pass/lower_foreach.cpp
     pass/lower_linalg.cpp
     pass/slot_tracker.cpp
     pass/stack.cpp

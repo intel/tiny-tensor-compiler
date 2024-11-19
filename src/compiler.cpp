@@ -14,6 +14,7 @@
 #include "pass/dump_ir.hpp"
 #include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"
+#include "pass/lower_foreach.hpp"
 #include "pass/lower_linalg.hpp"
 #include "pass/stack.hpp"
 #include "pass/work_group_size.hpp"
@@ -73,6 +74,7 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
     run_function_pass(work_group_size_pass{info}, *prg);
 
     run_function_pass(lower_linalg_pass{info}, *prg);
+    run_function_pass(lower_foreach_pass{info}, *prg);
     if (opt_level >= 1) {
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);

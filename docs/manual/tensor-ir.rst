@@ -393,19 +393,38 @@ Foreach
 
 .. code:: abnf
 
-    instruction     =/ "foreach" local-identifier "=" local-identifier "," local-identifier
+    instruction     =/ "foreach" "(" local-identifier-list ")" "="
+                       "(" local-identifier-list ")" "," "(" local-identifier-list ")"
                        [":" integer-type] region
 
 Overview
 ~~~~~~~~
 
-A foreach loop that executes the loop's range [from; to) without any sequence guarantee.
+A foreach loop that executes the loop's range without any sequence guarantee.
 The region of a foreach is a *spmd region*.
 
-The trip count is stored in the first local identifier and is accessible within the loop body.
-The loop's range [from; to) is given by the first and the second local identifier after the equals sign.
+The three local identifier lists define the loop range and the local identifiers that
+make the trip count available within the loop body.
+All three lists must have the same length and have the following format:
+
+.. math::
+
+    (\text{var}_1, \dots, \text{var}_N) = (\text{from}_1, \dots, \text{from}_N),
+                                          (\text{to}_1, \dots, \text{to}_N),
+
+where :math:`N` is the common length of each of the three lists.
+The loop range is defined as the cartesian product of the half-open intervals
+:math:`[\text{from}_i; \text{to}_i)` such that the trip count take the values
+
+.. math::
+
+    (\text{var}_1, \dots, \text{var}_N) \in [\text{from}_1; \text{to}_1) \times \dots \times
+    [\text{from}_N; \text{to}_N)
+
 The integer type of the loop variable and the loop bounds is given after the colon and
 the default integer type is ``index``.
+
+The mapping of trip count to work-item is implementation-defined.
 
 GEMM
 ....

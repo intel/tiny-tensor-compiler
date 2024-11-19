@@ -97,6 +97,7 @@ enum class status {
     ir_insufficient_alignment = tinytc_status_ir_insufficient_alignment,
     ir_must_have_yield = tinytc_status_ir_must_have_yield,
     ir_yield_in_else_branch_missing = tinytc_status_ir_yield_in_else_branch_missing,
+    ir_from_to_mismatch = tinytc_status_ir_from_to_mismatch,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,

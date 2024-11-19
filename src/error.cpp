@@ -209,6 +209,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Last instruction of region that returns values must be \"yield\"";
     case tinytc_status_ir_yield_in_else_branch_missing:
         return "Else-branch must have yield instruction if then-branch has yield instruction";
+    case tinytc_status_ir_from_to_mismatch:
+        return "length(from) must equal length(to) and length must be greater than 0";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

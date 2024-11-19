@@ -385,17 +385,18 @@ void dump_ir_pass::operator()(for_inst const &in) {
     dump_region(in.body());
 }
 
-void dump_ir_pass::operator()(foreach_inst const &p) {
-    *os_ << "foreach ";
-    dump_val(p.loop_var());
-    *os_ << "=";
-    dump_val(p.from());
+void dump_ir_pass::operator()(foreach_inst const &in) {
+    *os_ << "foreach (";
+    do_with_infix(in.loop_vars().begin(), in.loop_vars().end(),
+                  [this](auto const &i) { dump_val(i); });
+    *os_ << ")=";
+    do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
     *os_ << ",";
-    dump_val(p.to());
+    do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
     *os_ << " : ";
-    visit(*this, *p.loop_var().ty());
+    visit(*this, *in.loop_vars().begin()->ty());
     *os_ << " ";
-    dump_region(p.body());
+    dump_region(in.body());
 }
 
 void dump_ir_pass::operator()(hadamard_inst const &g) {

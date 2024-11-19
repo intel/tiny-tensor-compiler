@@ -848,21 +848,23 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
  * @brief Create foreach loop
  *
  * @code
- * foreach %loop_var = %from, %to : loop_var_type { }
- * ; loop_var_type == type(%from)
- * ; loop_var_type == type(%to)
+ * foreach (loop_var_list) = (from_list), (to_list) : loop_var_type { }
+ * ; loop_var_type == type(%f) forall %f in from_list
+ * ; loop_var_type == type(%t) forall %t in to_list
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param from [in] loop begion
- * @param to [in] loop bound
+ * @param dim [in] length of from and to array; must be > 0
+ * @param from_list [in][range(1, dim)] loop begion
+ * @param to_list [in][range(1, dim)] loop bound
  * @param loop_var_type [in] type of loop variable
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
-                                                         tinytc_value_t to,
+TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
+                                                         const tinytc_value_t *from_list,
+                                                         const tinytc_value_t *to_list,
                                                          tinytc_data_type_t loop_var_type,
                                                          const tinytc_location_t *loc);
 

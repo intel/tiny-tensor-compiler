@@ -20,7 +20,7 @@ class dead_code_analysis {
   public:
     auto operator()(inst_node &in) -> bool;
     auto operator()(if_inst &in) -> bool;
-    auto operator()(loop_inst &in) -> bool;
+    auto operator()(for_inst &in) -> bool;
 };
 
 auto dead_code_analysis::operator()(inst_node &in) -> bool {
@@ -51,7 +51,7 @@ auto dead_code_analysis::operator()(if_inst &in) -> bool {
     return false;
 }
 
-auto dead_code_analysis::operator()(loop_inst &in) -> bool {
+auto dead_code_analysis::operator()(for_inst &in) -> bool {
     constant_inst *from_const = dyn_cast<constant_inst>(in.from().defining_inst());
     constant_inst *to_const = dyn_cast<constant_inst>(in.to().defining_inst());
     if (in.num_results() == 0 && from_const && to_const) {

@@ -1240,7 +1240,8 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(for_inst const &in) {
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p) {
-    auto lv = declare(p.loop_var());
+    throw compilation_error(p.loc(), status::not_implemented);
+    /*auto lv = declare(p.loop_var());
     auto lv_ty = visit(*this, *p.loop_var().ty());
     auto from = val(p.from());
     auto to = val(p.to());
@@ -1254,7 +1255,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(foreach_inst const &p
             bb.add(clir::declaration_assignment(lv_ty, lv, std::move(block) + m + from));
             bb.add(run_on_region(p.body()));
         });
-    return {bb.get_product()};
+    return {bb.get_product()};*/
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(hadamard_inst const &g) {

@@ -89,7 +89,8 @@ typedef enum {
     tinytc_status_ir_insufficient_alignment = 0x128,       ///< Insufficient alignment
     tinytc_status_ir_must_have_yield = 0x129,              ///< Must have yield instruction
     tinytc_status_ir_yield_in_else_branch_missing =
-        0x130, ///< Must have yield instruction in else branch
+        0x130,                                 ///< Must have yield instruction in else branch
+    tinytc_status_ir_from_to_mismatch = 0x131, ///< size(from) != size(to) in foreach
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden
