@@ -134,19 +134,41 @@ class linalg_generator {
   public:
     linalg_generator(local_tiling tiling, core_config core_cfg)
         : tiling_{std::move(tiling)}, core_cfg_{std::move(core_cfg)} {}
-    auto operator()(inst_node &) -> inst { return inst{}; }
-    auto operator()(axpby_inst &in) -> inst;
-    auto operator()(ger_inst &in) -> inst;
-    auto operator()(gemm_inst &in) -> inst;
-    auto operator()(gemv_inst &in) -> inst;
-    auto operator()(hadamard_inst &in) -> inst;
-    auto operator()(sum_inst &in) -> inst;
+    inline void operator()(inst_node &in) {
+        throw compilation_error(in.loc(), status::not_implemented);
+    }
+    void operator()(axpby_inst &in);
+    void operator()(ger_inst &in);
+    void operator()(gemm_inst &in);
+    void operator()(gemv_inst &in);
+    void operator()(hadamard_inst &in);
+    void operator()(sum_inst &in);
+
+    inline auto insertion_point() const -> region_node::iterator { return ip_; }
+    inline auto insertion_point(region_node::iterator ip) { ip_ = ip; }
+
+    inline auto add(inst in) -> value {
+        auto result = value{};
+        in.get_values(result);
+        ip_ = ip_->parent()->insts().insert(++ip_, in.release());
+        return result;
+    }
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
 
+    template <typename F>
+    void add_foreach(array_view<tinytc_value_t> from, array_view<tinytc_value_t> to,
+                     data_type loop_var_ty, F &&f, location const &loc = {}) {
+        auto fi = std::make_unique<foreach_inst>(std::move(from), std::move(to), loop_var_ty, loc);
+        auto bb = region_builder{&fi->body()};
+        f(bb, fi->loop_vars());
+        add(inst{fi.release()});
+    }
+
     local_tiling tiling_ = {};
     core_config core_cfg_ = {};
+    region_node::iterator ip_;
 };
 
 auto linalg_generator::get_memref_type(value_node const &v) const -> const memref_data_type * {
@@ -157,111 +179,77 @@ auto linalg_generator::get_memref_type(value_node const &v) const -> const memre
     return t;
 }
 
-auto linalg_generator::operator()(axpby_inst &in) -> inst {
-    auto parallel = make_parallel(in.loc());
-    tinytc_region_t body = &parallel->child_region(0);
-    auto bb = region_builder{body};
-
+void linalg_generator::operator()(axpby_inst &in) {
     auto ctx = compiler_context{in.alpha().context(), true};
     auto index_ty = get_scalar(ctx, scalar_type::index);
-    auto i32_ty = get_scalar(ctx, scalar_type::i32);
 
     auto bt = get_memref_type(in.B());
-
-    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
-
-    auto const inner_loop = [&](region_builder &bb, value Ab, value Bb, value trip_count,
-                                int num_tiles, value sgid) {
-        tile_loop_by_sgs_standard(bb, trip_count, core_cfg_.subgroup_size, num_tiles, sgid,
-                                  [&](region_builder &bb, value mm) {
-                                      auto a = bb.add(make_load(Ab, {mm}, in.loc()));
-                                      blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), Bb,
-                                                  {mm}, in.loc());
-                                  });
-    };
-
     if (bt->dim() == 0) {
-        auto m = bb.add(make_subgroup_local_id(ctx, in.loc()));
+        auto parallel = make_parallel(in.loc());
+        tinytc_region_t body = &parallel->child_region(0);
+        auto bb = region_builder{body};
+
+        auto sg_id = bb.add(make_subgroup_id(ctx, in.loc()));
+        auto sg_lid = bb.add(make_subgroup_local_id(ctx, in.loc()));
+        auto i32_ty = get_scalar(ctx, scalar_type::i32);
         auto c0 = bb.add(make_constant(0, i32_ty));
-        auto cond0 = bb.add(make_cmp(cmp_condition::eq, sgid, c0));
-        auto cond1 = bb.add(make_cmp(cmp_condition::eq, m, c0));
+        auto cond0 = bb.add(make_cmp(cmp_condition::eq, sg_id, c0));
+        auto cond1 = bb.add(make_cmp(cmp_condition::eq, sg_lid, c0));
         auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1));
         bb.if_condition(cond, [&](region_builder &bb) {
             auto a = bb.add(make_load(&in.A(), {}, in.loc()));
             blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
         });
+
+        add(std::move(parallel));
     } else if (bt->dim() == 1) {
-        auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.B(), 0, in.loc()));
-        inner_loop(bb, &in.A(), &in.B(), c_shape0, tiling_.m_tiles() * tiling_.n_tiles(), sgid);
+        auto c0 = add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
+        add_foreach(
+            {c0.get()}, {c_shape0.get()}, index_ty,
+            [&](region_builder &bb, auto loop_vars) {
+                auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
+                blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {&loop_vars[0]},
+                            in.loc());
+            },
+            in.loc());
     } else if (bt->dim() == 2) {
-        auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
-        auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, in.loc()));
-        auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, in.loc()));
-
-        auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.B(), 0, in.loc()));
-        auto c_shape1 = instant_constant_fold_add(bb, make_size(&in.B(), 1, in.loc()));
-        tile_loop_uniformly_new(
-            bb, c_shape1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_n,
-            [&](region_builder &bb, value block, value trip_count) {
-                auto zero = bb.add(make_constant(0, index_ty));
-                bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
-                    auto nn = bb.add(make_arith(arithmetic::add, block, n, in.loc()));
-                    auto static_offset_list = std::array<std::int64_t, 2u>{0, dynamic};
-                    auto static_size_list = std::array<std::int64_t, 2u>{dynamic, 0};
-                    auto Bb = bb.add(make_subview(&in.B(), static_offset_list, static_size_list,
-                                                  {nn}, {c_shape0}, in.loc()));
-                    if (in.tA() == transpose::T) {
-                        std::swap(static_offset_list[0], static_offset_list[1]);
-                        std::swap(static_size_list[0], static_size_list[1]);
-                    }
-                    auto Ab = bb.add(make_subview(&in.A(), static_offset_list, static_size_list,
-                                                  {nn}, {c_shape0}, in.loc()));
-                    inner_loop(bb, Ab, Bb, c_shape0, tiling_.m_tiles(), sg_m);
-                });
-            });
+        auto c0 = add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
+        auto c_shape1 = add(make_size(&in.B(), 1, in.loc()));
+        add_foreach(
+            {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
+            [&](region_builder &bb, auto loop_vars) {
+                auto a_idx = std::array<value, 2u>{&loop_vars[0], &loop_vars[1]};
+                if (in.tA() == transpose::T) {
+                    std::swap(a_idx[0], a_idx[1]);
+                }
+                auto a = bb.add(make_load(&in.A(), a_idx, in.loc()));
+                blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(),
+                            {&loop_vars[0], &loop_vars[1]}, in.loc());
+            },
+            in.loc());
     }
-
-    return parallel;
 }
 
-auto linalg_generator::operator()(ger_inst &in) -> inst {
-    auto parallel = make_parallel(in.loc());
-    tinytc_region_t body = &parallel->child_region(0);
-    auto bb = region_builder{body};
-
-    auto ctx = compiler_context{in.alpha().context(), true};
-    auto i32_ty = get_scalar(ctx, scalar_type::i32);
-    auto index_ty = get_scalar(ctx, scalar_type::index);
-
-    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
-    auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
-    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, in.loc()));
-    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, in.loc()));
-
-    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, in.loc()));
-    auto c_shape1 = instant_constant_fold_add(bb, make_size(&in.C(), 1, in.loc()));
-    tile_loop_uniformly_new(
-        bb, c_shape1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_n,
-        [&](region_builder &bb, value block, value trip_count) {
-            auto zero = bb.add(make_constant(0, index_ty));
-            bb.for_loop(zero, trip_count, index_ty, [&](region_builder &bb, value n) {
-                auto nn = bb.add(make_arith(arithmetic::add, block, n, in.loc()));
-                auto b = bb.add(make_load(&in.B(), {nn}, in.loc()));
-                tile_loop_by_sgs_standard(bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles(),
-                                          sg_m, [&](region_builder &bb, value mm) {
-                                              auto a = bb.add(make_load(&in.A(), {mm}, in.loc()));
-                                              auto ab = mixed_precision_arithmetic(
-                                                  bb, arithmetic::mul, a, b, in.loc());
-                                              blas_update(bb, in.atomic(), &in.alpha(), ab,
-                                                          &in.beta(), &in.C(), {mm, nn}, in.loc());
-                                          });
-            });
-        });
-
-    return parallel;
+void linalg_generator::operator()(ger_inst &in) {
+    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto c0 = add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
+    auto c_shape1 = add(make_size(&in.C(), 1, in.loc()));
+    add_foreach(
+        {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
+        [&](region_builder &bb, auto loop_vars) {
+            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
+            auto b = bb.add(make_load(&in.B(), {&loop_vars[1]}, in.loc()));
+            auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
+                        {&loop_vars[0], &loop_vars[1]}, in.loc());
+        },
+        in.loc());
 }
 
-auto linalg_generator::operator()(gemm_inst &in) -> inst {
+void linalg_generator::operator()(gemm_inst &in) {
     auto parallel = make_parallel(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
@@ -329,35 +317,22 @@ auto linalg_generator::operator()(gemm_inst &in) -> inst {
                              });
     }
 
-    return parallel;
+    add(std::move(parallel));
 }
 
-auto linalg_generator::operator()(gemv_inst &in) -> inst {
-    auto parallel = make_parallel(in.loc());
-    tinytc_region_t body = &parallel->child_region(0);
-    auto bb = region_builder{body};
-
+void linalg_generator::operator()(gemv_inst &in) {
+    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto c0 = add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
     auto ct = get_memref_type(in.C());
-
-    auto ctx = compiler_context{in.alpha().context(), true};
-    auto index_ty = get_scalar(ctx, scalar_type::index);
-
-    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
-
-    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, in.loc()));
-    auto K = instant_constant_fold_add(
-        bb, make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
-
-    tile_loop_by_sgs_standard(
-        bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
-        [&](region_builder &bb, value mm) {
-            auto c_zero = bb.add(make_constant(0, index_ty));
-            auto c_step = bb.add(make_constant(1, index_ty));
+    add_foreach(
+        {c0.get()}, {c_shape0.get()}, index_ty,
+        [&](region_builder &bb, auto loop_vars) {
             auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
+            auto K = bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
             auto c_acc = bb.for_loop(
-                c_zero, K, c_step, {c_init}, index_ty,
-                [&](region_builder &bb, array_view<value> p) {
-                    auto a_idx = std::array<value, 2u>{mm, p[0]};
+                c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> p) {
+                    auto a_idx = std::array<value, 2u>{&loop_vars[0], p[0]};
                     if (in.tA() == transpose::T) {
                         std::swap(a_idx[0], a_idx[1]);
                     }
@@ -367,35 +342,29 @@ auto linalg_generator::operator()(gemv_inst &in) -> inst {
                     auto ab_c = mixed_precision_arithmetic(bb, arithmetic::add, p[1], ab, in.loc());
                     bb.add(make_yield({ab_c}, in.loc()));
                 });
-            blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {mm},
-                        in.loc());
-        });
-
-    return parallel;
+            blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(),
+                        {&loop_vars[0]}, in.loc());
+        },
+        in.loc());
 }
 
-auto linalg_generator::operator()(hadamard_inst &in) -> inst {
-    auto parallel = make_parallel(in.loc());
-    tinytc_region_t body = &parallel->child_region(0);
-    auto bb = region_builder{body};
-
-    auto ctx = compiler_context{in.alpha().context(), true};
-    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
-
-    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, in.loc()));
-    tile_loop_by_sgs_standard(
-        bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
-        [&](region_builder &bb, value mm) {
-            auto a = bb.add(make_load(&in.A(), {mm}, in.loc()));
-            auto b = bb.add(make_load(&in.B(), {mm}, in.loc()));
+void linalg_generator::operator()(hadamard_inst &in) {
+    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto c0 = add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
+    add_foreach(
+        {c0.get()}, {c_shape0.get()}, index_ty,
+        [&](region_builder &bb, auto loop_vars) {
+            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
+            auto b = bb.add(make_load(&in.B(), {&loop_vars[0]}, in.loc()));
             auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
-            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {mm}, in.loc());
-        });
-
-    return parallel;
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {&loop_vars[0]},
+                        in.loc());
+        },
+        in.loc());
 }
 
-auto linalg_generator::operator()(sum_inst &in) -> inst {
+void linalg_generator::operator()(sum_inst &in) {
     auto parallel = make_parallel(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
@@ -405,9 +374,6 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
     auto bt = get_memref_type(in.B());
-
-    auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
-
     if (bt->dim() == 0) {
         auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
         auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
@@ -439,31 +405,32 @@ auto linalg_generator::operator()(sum_inst &in) -> inst {
             },
             in.loc());
     } else if (bt->dim() == 1) {
-        auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.B(), 0, in.loc()));
-        auto c_trip_count = instant_constant_fold_add(
-            bb, make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
-        tile_loop_by_sgs_standard(
-            bb, c_shape0, core_cfg_.subgroup_size, tiling_.m_tiles() * tiling_.n_tiles(), sgid,
-            [&](region_builder &bb, value mm) {
-                auto from = bb.add(make_constant(0, index_ty));
-                auto zero = bb.add(make_constant_zero(bt->element_data_ty()));
-                auto acc =
-                    bb.for_loop(from, c_trip_count, {}, {zero}, index_ty,
-                                [&](region_builder &bb, array_view<value> args) {
-                                    auto index_list = std::array<value, 2u>{mm, args[0]};
-                                    if (in.tA() == transpose::T) {
-                                        std::swap(index_list[0], index_list[1]);
-                                    }
-                                    auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
-                                    auto sum = mixed_precision_arithmetic(bb, arithmetic::add,
-                                                                          args[1], a, in.loc());
-                                    bb.add(make_yield({sum}, in.loc()));
-                                });
-                blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(), {mm},
-                            in.loc());
-            });
+        auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+        auto c0 = add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
+        add_foreach(
+            {c0.get()}, {c_shape0.get()}, index_ty,
+            [&](region_builder &bb, auto loop_vars) {
+                auto K = bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+                auto c_init = bb.add(make_constant_zero(bt->element_data_ty()));
+                auto acc = bb.for_loop(
+                    c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> args) {
+                        auto index_list = std::array<value, 2u>{&loop_vars[0], args[0]};
+                        if (in.tA() == transpose::T) {
+                            std::swap(index_list[0], index_list[1]);
+                        }
+                        auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
+                        auto sum =
+                            mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
+                        bb.add(make_yield({sum}, in.loc()));
+                    });
+                blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),
+                            {&loop_vars[0]}, in.loc());
+            },
+            in.loc());
     }
-    return parallel;
+
+    add(std::move(parallel));
 }
 
 lower_linalg_pass::lower_linalg_pass(::tinytc_core_info const *info) : info_(std::move(info)) {
@@ -485,12 +452,14 @@ void lower_linalg_pass::run_on_function(function_node &fn) {
     tiling[0] = work_group_size[0] / subgroup_size;
     tiling[1] = work_group_size[1];
 
+    auto gen = linalg_generator{tiling, core_cfg};
     walk<walk_order::post_order>(fn, [&](region_node &reg) {
         for (auto it = reg.begin(); it != reg.end(); ++it) {
-            auto lowered_inst = visit(linalg_generator{tiling, core_cfg}, *it);
-            if (lowered_inst) {
-                it = reg.insts().erase(it);
-                it = reg.insts().insert(it, lowered_inst.release());
+            if (isa<blas_a2_inst>(*it) || isa<blas_a3_inst>(*it)) {
+                gen.insertion_point(it);
+                visit(gen, *it);
+                reg.insts().erase(it);
+                it = gen.insertion_point();
             }
         }
     });

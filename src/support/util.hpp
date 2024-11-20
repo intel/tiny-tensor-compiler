@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <iterator>
 #include <type_traits>
 #include <utility>
 
@@ -20,6 +21,12 @@ template <typename ItT> class iterator_range_wrapper {
     iterator_range_wrapper(ItT begin, ItT end) : begin_(std::move(begin)), end_(std::move(end)) {}
     ItT begin() { return begin_; }
     ItT end() { return end_; }
+
+    auto &operator[](std::size_t n)
+    requires std::random_access_iterator<ItT>
+    {
+        return begin()[n];
+    }
 
   private:
     ItT begin_, end_;
