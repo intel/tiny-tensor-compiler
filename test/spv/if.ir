@@ -13,7 +13,7 @@
 
 func @if0(%0: i32) {
     %c42 = constant 42 -> i32
-    %1 = cmp.lt %0, %c42 : i32
+    %1 = cmp.lt %0, %c42 : bool
     if %1 {
         %2 = arith.neg %0 : i32
     } else {

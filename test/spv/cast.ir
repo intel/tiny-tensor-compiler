@@ -13,10 +13,10 @@
 ; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
 
 func @tint(%a: i64) {
-    %0 = cast %a : i64 -> i64
-    %1 = cast %a : i64 -> i8
-    %2 = cast %a : i64 -> f32
-    %3 = cast %a : i64 -> c64
+    %0 = cast %a : i64
+    %1 = cast %a : i8
+    %2 = cast %a : f32
+    %3 = cast %a : c64
 ; CHECK:      %[[#]] = OpCopyObject %[[#I64]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpSConvert %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertSToF %[[#F32]] %[[#]]
@@ -25,9 +25,9 @@ func @tint(%a: i64) {
 }
 
 func @tfloat(%a: f32) {
-    %1 = cast %a : f32 -> i8
-    %2 = cast %a : f32 -> f64
-    %3 = cast %a : f32 -> c64
+    %1 = cast %a : i8
+    %2 = cast %a : f64
+    %3 = cast %a : c64
 ; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#F32_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
@@ -35,13 +35,13 @@ func @tfloat(%a: f32) {
 }
 
 func @tcomplex(%a: c32) {
-    %1 = cast %a : c32 -> c64
+    %1 = cast %a : c64
 ; CHECK:      %[[#]] = OpFConvert %[[#C64]] %[[#]]
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
     %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
-    %2 = cast %0  : coopmatrix<f32x16x4,matrix_a> -> coopmatrix<i8x16x4,matrix_a>
+    %2 = cast %0  : coopmatrix<i8x16x4,matrix_a>
 ; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertFToS %[[#I8]] %[[#]]

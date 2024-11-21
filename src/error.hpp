@@ -29,7 +29,7 @@ class compilation_error : public std::exception {
 
     //! ctor; taking location, status code, and expanatory string
     compilation_error(location const &loc, status code, std::string extra_info = {});
-    compilation_error(location const &loc, array_view<tinytc_value_t> ref_values, status code,
+    compilation_error(location const &loc, array_view<const_tinytc_value_t> ref_values, status code,
                       std::string extra_info = {});
     //! Get status code
     inline auto code() const noexcept { return code_; }

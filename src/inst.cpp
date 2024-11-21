@@ -178,15 +178,15 @@ tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
 }
 
 tinytc_status_t tinytc_cmp_inst_create(tinytc_inst_t *instr, tinytc_cmp_condition_t cond,
-                                       tinytc_value_t a, tinytc_value_t b,
+                                       tinytc_value_t a, tinytc_value_t b, tinytc_data_type_t ty,
                                        const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<compare_inst>(enum_cast<cmp_condition>(cond), a, b, get_optional(loc))
-                .release();
+        *instr = std::make_unique<compare_inst>(enum_cast<cmp_condition>(cond), a, b, ty,
+                                                get_optional(loc))
+                     .release();
     });
 }
 

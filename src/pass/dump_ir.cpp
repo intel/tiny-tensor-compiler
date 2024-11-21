@@ -143,9 +143,7 @@ void dump_ir_pass::operator()(cast_inst const &c) {
     *os_ << " = cast ";
     dump_val(c.a());
     *os_ << " : ";
-    visit(*this, *c.a().ty());
-    *os_ << " -> ";
-    visit(*this, *c.result()->ty());
+    visit(*this, *c.result(0).ty());
 }
 
 void dump_ir_pass::operator()(compare_inst const &a) {
@@ -155,7 +153,7 @@ void dump_ir_pass::operator()(compare_inst const &a) {
     *os_ << ", ";
     dump_val(a.b());
     *os_ << " : ";
-    visit(*this, *a.a().ty());
+    visit(*this, *a.result(0).ty());
 }
 
 void dump_ir_pass::operator()(constant_inst const &c) {

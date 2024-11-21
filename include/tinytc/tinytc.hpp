@@ -926,14 +926,16 @@ inline inst make_cast(value a, data_type to_ty, location const &loc = {}) {
  * @param cond Condition type
  * @param a First operand
  * @param b Second operand
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_cmp(cmp_condition cond, value a, value b, location const &loc = {}) {
+inline inst make_cmp(cmp_condition cond, value a, value b, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
-        tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a, b, &loc), loc);
+        tinytc_cmp_inst_create(&instr, static_cast<tinytc_cmp_condition_t>(cond), a, b, ty, &loc),
+        loc);
     return inst(instr);
 }
 

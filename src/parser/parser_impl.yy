@@ -821,8 +821,7 @@ arith_unary_inst:
 
 
 cast_inst:
-    CAST var[a] COLON data_type[from] ARROW data_type[to] {
-        check_type($a, $from, @a, @from);
+    CAST var[a] COLON data_type[to] {
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {
@@ -833,13 +832,11 @@ cast_inst:
 ;
 
 compare_inst:
-    CMP CMP_CONDITION var[a] COMMA var[b] COLON scalar_type[ty] {
-        check_type($a, $ty, @a, @ty);
-        check_type($b, $ty, @b, @ty);
+    CMP CMP_CONDITION var[a] COMMA var[b] COLON boolean_type {
         try {
             $$ = inst {
                 std::make_unique<compare_inst>($CMP_CONDITION, std::move($a), std::move($b),
-                                               @compare_inst)
+                                               std::move($boolean_type), @compare_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

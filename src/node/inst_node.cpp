@@ -81,7 +81,7 @@ namespace tinytc {
 scalar_data_type *get_scalar_type(location const &loc, tinytc_value const &v) {
     auto m = dyn_cast<scalar_data_type>(v.ty());
     if (m == nullptr) {
-        throw compilation_error(loc, status::ir_expected_scalar);
+        throw compilation_error(loc, {&v}, status::ir_expected_scalar);
     }
     return m;
 }
@@ -89,7 +89,7 @@ scalar_data_type *get_scalar_type(location const &loc, tinytc_value const &v) {
 memref_data_type *get_memref_type(location const &loc, tinytc_value const &v) {
     auto m = dyn_cast<memref_data_type>(v.ty());
     if (m == nullptr) {
-        throw compilation_error(loc, status::ir_expected_memref);
+        throw compilation_error(loc, {&v}, status::ir_expected_memref);
     }
     return m;
 }
@@ -342,47 +342,50 @@ cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const
     op(op_a, a0);
     loc(lc);
 
-    auto const check_scalar_casting_rules = [](scalar_type a_ty, scalar_type r_ty,
-                                               location const &lc) {
+    auto const check_scalar_casting_rules = [&](scalar_type a_ty, scalar_type r_ty) {
         if (is_complex_type(a_ty) && !is_complex_type(r_ty)) {
-            throw compilation_error(lc, status::ir_forbidden_cast);
+            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
         }
     };
 
-    if (auto ct = dyn_cast<coopmatrix_data_type>(a().ty()); ct) {
-        auto rt = dyn_cast<coopmatrix_data_type>(to_ty);
-        if (!rt) {
-            throw compilation_error(loc(), status::ir_expected_coopmatrix);
+    if (auto rt = dyn_cast<coopmatrix_data_type>(to_ty); rt) {
+        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
+        if (!ct) {
+            throw compilation_error(loc(), {&a()}, status::ir_expected_coopmatrix);
         }
         if (ct->rows() != rt->rows() || ct->cols() != rt->cols() || ct->use() != rt->use()) {
-            throw compilation_error(lc, status::ir_forbidden_cast);
+            throw compilation_error(lc, {&a()}, status::ir_forbidden_cast);
         }
-        check_scalar_casting_rules(ct->component_ty(), rt->component_ty(), loc());
+        check_scalar_casting_rules(ct->component_ty(), rt->component_ty());
     } else {
-        auto rt = dyn_cast<scalar_data_type>(to_ty);
-        if (rt == nullptr) {
+        auto to_ty_scalar = dyn_cast<scalar_data_type>(to_ty);
+        if (to_ty_scalar == nullptr) {
             throw compilation_error(lc, status::ir_expected_scalar);
         }
 
         auto at = get_scalar_type(loc(), a());
-        check_scalar_casting_rules(at->ty(), rt->ty(), loc());
+        check_scalar_casting_rules(at->ty(), to_ty_scalar->ty());
     }
 
     result(0) = value_node{to_ty, this, loc()};
 }
 
 compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t b0,
-                           location const &lc)
+                           tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::compare}, cond_(cond) {
     op(op_a, a0);
     op(op_b, b0);
     loc(lc);
 
+    if (!isa<boolean_data_type>(*ty)) {
+        throw compilation_error(loc(), status::ir_expected_boolean);
+    }
+
     auto at = get_scalar_type(loc(), a());
     auto bt = get_scalar_type(loc(), b());
 
     if (at->ty() != bt->ty()) {
-        throw compilation_error(loc(), status::ir_scalar_mismatch);
+        throw compilation_error(loc(), {&a(), &b()}, status::ir_scalar_mismatch);
     }
 
     bool inst_supports_complex = true;
@@ -398,11 +401,10 @@ compare_inst::compare_inst(cmp_condition cond, tinytc_value_t a0, tinytc_value_t
         break;
     }
     if (!inst_supports_complex && is_complex_type(at->ty())) {
-        throw compilation_error(loc(), status::ir_complex_unsupported);
+        throw compilation_error(loc(), {&a(), &b()}, status::ir_complex_unsupported);
     }
 
-    auto result_ty = boolean_data_type::get(at->context());
-    result(0) = value_node{result_ty, this, lc};
+    result(0) = value_node{ty, this, lc};
 }
 
 constant_inst::constant_inst(value_type const &value, tinytc_data_type_t ty, location const &lc)

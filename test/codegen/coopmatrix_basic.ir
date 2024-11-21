@@ -42,7 +42,7 @@ func @coopmatrix_neg() subgroup_size(16) {
 
 func @coopmatrix_cast() subgroup_size(16) {
     %0 = constant 1 -> coopmatrix<i8x16x8, matrix_a>
-    %1 = cast %0 : coopmatrix<i8x16x8, matrix_a> -> coopmatrix<c32x16x8, matrix_a>
+    %1 = cast %0 : coopmatrix<c32x16x8, matrix_a>
 ; CHECK-LABEL: void coopmatrix_cast({{.*}}
 ; CHECK:      float2 x1[8];
 ; CHECK-NEXT: x1[0] = (float2) (x[0], 0);

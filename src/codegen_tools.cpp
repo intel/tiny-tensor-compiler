@@ -490,6 +490,7 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
 void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                           value sg_id, sgs_loop_body_builder_new const &body) {
     auto ity = loop_trip_count->ty();
+    auto bool_ty = boolean_data_type::get(ity->context());
     auto c_sgs = bb.add(make_constant(sgs, ity));
     auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, ity));
     auto c0 = bb.add(make_constant(0, ity));
@@ -501,7 +502,8 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
         instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, c_sgs, ity));
 
     auto sg_id_cast = instant_constant_fold_add(bb, make_cast(sg_id, ity));
-    auto is_blocks_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, blocks, c0));
+    auto is_blocks_gt_0 =
+        instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, blocks, c0, bool_ty));
     bb.if_condition(is_blocks_gt_0, [&](region_builder &bb) {
         auto block_start =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, sg_id_cast, ity));
@@ -511,10 +513,10 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
                     [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
     });
 
-    auto condition0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0));
+    auto condition0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0, bool_ty));
     bb.if_condition(condition0, [&](region_builder &bb) {
-        auto condition1 =
-            instant_constant_fold_add(bb, make_cmp(cmp_condition::eq, sg_id_cast, c_tiles_1));
+        auto condition1 = instant_constant_fold_add(
+            bb, make_cmp(cmp_condition::eq, sg_id_cast, c_tiles_1, bool_ty));
         bb.if_condition(condition1, [&](region_builder &bb) {
             auto block =
                 instant_constant_fold_add(bb, make_arith(arithmetic::mul, blocks, c_sgs, ity));
@@ -527,6 +529,7 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
                              int num_tiles, value sg_id,
                              uniform_loop_body_builder_new const &body) {
     auto ity = loop_trip_count->ty();
+    auto bool_ty = boolean_data_type::get(ity->context());
     auto c0 = bb.add(make_constant(0, ity));
     auto c1 = bb.add(make_constant(1, ity));
     auto c_tiles = bb.add(make_constant(num_tiles, ity));
@@ -555,7 +558,7 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
     // The following if makes it easy to eliminate the remainder handler in optimization if rem
     // == 0 is known at compile time. Without the if, we would need to prove that block_start_1
     // is non-negative to eliminate the for-loop.
-    auto is_rem_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0));
+    auto is_rem_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0, bool_ty));
     bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
         auto block_start_1 =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, sg_id_cast, ity));

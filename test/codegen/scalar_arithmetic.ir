@@ -37,12 +37,12 @@ func @t1(%a: i32, %b: i32, %a1: bool, %b1: bool) {
 ; CHECK-NEXT: int x15 = abs(a);
 }
 func @t2(%a: i32, %b: i32) {
-  %1 = cmp.eq %a, %b : i32
-  %2 = cmp.ne %a, %b : i32
-  %3 = cmp.gt %a, %b : i32
-  %4 = cmp.ge %a, %b : i32
-  %5 = cmp.lt %a, %b : i32
-  %6 = cmp.le %a, %b : i32
+  %1 = cmp.eq %a, %b : bool
+  %2 = cmp.ne %a, %b : bool
+  %3 = cmp.gt %a, %b : bool
+  %4 = cmp.ge %a, %b : bool
+  %5 = cmp.lt %a, %b : bool
+  %6 = cmp.le %a, %b : bool
 ; CHECK:      bool x = a == b;
 ; CHECK-NEXT: bool x1 = a != b;
 ; CHECK-NEXT: bool x2 = a > b;
@@ -67,12 +67,12 @@ func @t3(%a: f32, %b: f32) {
 ; CHECK-NEXT: float x6 = fabs(a);
 }
 func @t4(%a: f32, %b: f32) {
-  %1 = cmp.eq %a, %b : f32
-  %2 = cmp.ne %a, %b : f32
-  %3 = cmp.gt %a, %b : f32
-  %4 = cmp.ge %a, %b : f32
-  %5 = cmp.lt %a, %b : f32
-  %6 = cmp.le %a, %b : f32
+  %1 = cmp.eq %a, %b : bool
+  %2 = cmp.ne %a, %b : bool
+  %3 = cmp.gt %a, %b : bool
+  %4 = cmp.ge %a, %b : bool
+  %5 = cmp.lt %a, %b : bool
+  %6 = cmp.le %a, %b : bool
 ; CHECK:      bool x = a == b;
 ; CHECK-NEXT: bool x1 = a != b;
 ; CHECK-NEXT: bool x2 = a > b;
@@ -81,7 +81,7 @@ func @t4(%a: f32, %b: f32) {
 ; CHECK-NEXT: bool x5 = a <= b;
 }
 func @t5(%a: i32) {
-  %b = cast %a : i32 -> index
+  %b = cast %a : index
 ; CHECK: long b = (long) a;
 }
 func @t6(%a: c32, %b: c32) {

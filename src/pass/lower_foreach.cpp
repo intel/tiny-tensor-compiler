@@ -19,17 +19,18 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
                 F &&make_body, location const &loc) {
     auto ity = from->ty();
     auto ctx = compiler_context{sg_id->context(), true};
-    auto sg_lid_i32 = bb.add(make_subgroup_local_id(ctx));
-    auto sg_lid = bb.add(make_cast(sg_lid_i32, ity));
+    auto bool_ty = get_boolean(ctx);
+    auto sg_lid_i32 = bb.add(make_subgroup_local_id(ctx, loc));
+    auto sg_lid = bb.add(make_cast(sg_lid_i32, ity, loc));
     auto size = bb.add(make_arith(arithmetic::sub, to, from, ity, loc));
-    auto work_item_offset = bb.add(make_arith(arithmetic::add, from, sg_lid, ity));
+    auto work_item_offset = bb.add(make_arith(arithmetic::add, from, sg_lid, ity, loc));
     tile_loop_by_sgs_new(
         bb, size, sgs, num_tiles, sg_id,
         [&](region_builder &bb, value block, bool is_remainder, value trip_count) {
-            auto loop_var0 = bb.add(make_arith(arithmetic::add, block, work_item_offset, ity));
+            auto loop_var0 = bb.add(make_arith(arithmetic::add, block, work_item_offset, ity, loc));
             if (is_remainder) {
-                auto cond = bb.add(make_cmp(cmp_condition::lt, sg_lid, trip_count));
-                bb.if_condition(cond, [&](region_builder &bb) { make_body(bb, loop_var0); });
+                auto cond = bb.add(make_cmp(cmp_condition::lt, sg_lid, trip_count, bool_ty, loc));
+                bb.if_condition(cond, [&](region_builder &bb) { make_body(bb, loop_var0); }, loc);
             } else {
                 make_body(bb, loop_var0);
             }

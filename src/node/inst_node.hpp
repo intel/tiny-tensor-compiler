@@ -427,7 +427,8 @@ class compare_inst : public standard_inst<2, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::compare; }
     enum op_number { op_a = 0, op_b = 1 };
-    compare_inst(cmp_condition cond, tinytc_value_t a, tinytc_value_t b, location const &lc = {});
+    compare_inst(cmp_condition cond, tinytc_value_t a, tinytc_value_t b, tinytc_data_type_t ty,
+                 location const &lc = {});
 
     inline cmp_condition cond() const { return cond_; }
     inline auto a() -> tinytc_value & { return op(op_a); }

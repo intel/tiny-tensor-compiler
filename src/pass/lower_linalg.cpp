@@ -36,6 +36,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                       std::int64_t n_block_size, bool n_check, data_type a_ty, data_type b_ty,
                       data_type c_ty, location const &loc) {
     auto ctx = m_block->context();
+    auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
 
     const auto check_a = m_check ? checked_flag::rows : checked_flag::none;
@@ -98,7 +99,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto K0 = instant_constant_fold_add(
         bb, make_arith(arithmetic::mul, tmp, c_k_block_size, index_ty, loc));
     c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc);
-    auto needs_remainder = instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, loc));
+    auto needs_remainder =
+        instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, bool_ty, loc));
     auto r = get_bool_constant(needs_remainder);
     if (r) {
         if (*r != 0) {
@@ -184,6 +186,7 @@ auto linalg_generator::get_memref_type(value_node const &v) const -> const memre
 
 void linalg_generator::operator()(axpby_inst &in) {
     auto ctx = compiler_context{in.alpha().context(), true};
+    auto bool_ty = get_boolean(ctx);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
     auto bt = get_memref_type(in.B());
@@ -196,8 +199,8 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto sg_lid = bb.add(make_subgroup_local_id(ctx, in.loc()));
         auto i32_ty = get_scalar(ctx, scalar_type::i32);
         auto c0 = bb.add(make_constant(0, i32_ty));
-        auto cond0 = bb.add(make_cmp(cmp_condition::eq, sg_id, c0));
-        auto cond1 = bb.add(make_cmp(cmp_condition::eq, sg_lid, c0));
+        auto cond0 = bb.add(make_cmp(cmp_condition::eq, sg_id, c0, bool_ty, in.loc()));
+        auto cond1 = bb.add(make_cmp(cmp_condition::eq, sg_lid, c0, bool_ty, in.loc()));
         auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1, cond0->ty()));
         bb.if_condition(cond, [&](region_builder &bb) {
             auto a = bb.add(make_load(&in.A(), {}, in.loc()));
@@ -373,6 +376,7 @@ void linalg_generator::operator()(sum_inst &in) {
     auto bb = region_builder{body};
 
     auto ctx = compiler_context{in.alpha().context(), true};
+    auto bool_ty = get_boolean(ctx);
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
@@ -386,7 +390,7 @@ void linalg_generator::operator()(sum_inst &in) {
         auto from_index = bb.add(make_cast(from1, index_ty, in.loc()));
 
         auto c_zero = bb.add(make_constant_zero(i32_ty, in.loc()));
-        auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, in.loc()));
+        auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, bool_ty, in.loc()));
 
         auto c_trip_count = instant_constant_fold_add(bb, make_size(&in.A(), 0, in.loc()));
         auto c_step = bb.add(make_constant(

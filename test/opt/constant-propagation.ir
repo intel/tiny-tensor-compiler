@@ -93,34 +93,34 @@ func @known_arith() {
 func @known_cast() {
     %c0 = constant 32768 -> i32
     %c1 = constant [3.0, -2.0] -> c32
-    %0 = cast %c0 : i32 -> i16
-    %1 = cast %c0 : i32 -> f32
-    %2 = cast %c0 : i32 -> c32
-    %3 = cast %c0 : i32 -> c32
-    %4 = cast %c1 : c32 -> c64
+    %0 = cast %c0 : i16
+    %1 = cast %c0 : f32
+    %2 = cast %c0 : c32
+    %3 = cast %c0 : c32
+    %4 = cast %c1 : c64
 ; CHECK-LABEL: func @known_cast({{.*}}
 ; CHECK:       %0 = constant -32768 -> i16
-; CHECK-NEXT:  %1 = cast %c0 : i32 -> i16
+; CHECK-NEXT:  %1 = cast %c0 : i16
 ; CHECK-NEXT:  %2 = constant 0x1p+15 -> f32
-; CHECK-NEXT:  %3 = cast %c0 : i32 -> f32
+; CHECK-NEXT:  %3 = cast %c0 : f32
 ; CHECK-NEXT:  %4 = constant [0x1p+15,0x0p+0] -> c32
-; CHECK-NEXT:  %5 = cast %c0 : i32 -> c32
+; CHECK-NEXT:  %5 = cast %c0 : c32
 ; CHECK-NEXT:  %6 = constant [0x1p+15,0x0p+0] -> c32
-; CHECK-NEXT:  %7 = cast %c0 : i32 -> c32
+; CHECK-NEXT:  %7 = cast %c0 : c32
 ; CHECK-NEXT:  %8 = constant [0x1.8p+1,-0x1p+1] -> c64
-; CHECK-NEXT:  %9 = cast %c1 : c32 -> c64
+; CHECK-NEXT:  %9 = cast %c1 : c64
 }
 
 func @known_compare() {
     %0 = constant 1.0 -> f32
     %1 = constant 2.0 -> f32
-    %2 = cmp.eq %0, %0 : f32
-    %3 = cmp.eq %0, %1 : f32
+    %2 = cmp.eq %0, %0 : bool
+    %3 = cmp.eq %0, %1 : bool
 ; CHECK-LABEL: func @known_compare({{.*}}
 ; CHECK:       %2 = constant true -> bool
-; CHECK-NEXT:  %3 = cmp.eq %0, %0 : f32
+; CHECK-NEXT:  %3 = cmp.eq %0, %0 : bool
 ; CHECK-NEXT:  %4 = constant false -> bool
-; CHECK-NEXT:  %5 = cmp.eq %0, %1 : f32
+; CHECK-NEXT:  %5 = cmp.eq %0, %1 : bool
 }
 
 func @known_arith_complex() {

@@ -16,8 +16,9 @@ compilation_error::compilation_error(location const &loc, status code, std::stri
     : loc_(loc), ref_values_{}, num_ref_values_{0}, code_(code),
       extra_info_(std::move(extra_info)) {}
 
-compilation_error::compilation_error(location const &loc, array_view<tinytc_value_t> ref_values,
-                                     status code, std::string extra_info)
+compilation_error::compilation_error(location const &loc,
+                                     array_view<const_tinytc_value_t> ref_values, status code,
+                                     std::string extra_info)
     : loc_(loc), code_(code), extra_info_(std::move(extra_info)) {
     num_ref_values_ = std::min(error_max_ref, ref_values.size());
     for (std::size_t i = 0; i < num_ref_values_; ++i) {

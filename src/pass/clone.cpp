@@ -39,7 +39,8 @@ auto inst_cloner::operator()(cast_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cast_inst>(subs(&in.a()), in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(compare_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<compare_inst>(in.cond(), subs(&in.a()), subs(&in.b()), in.loc());
+    return std::make_unique<compare_inst>(in.cond(), subs(&in.a()), subs(&in.b()),
+                                          in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(constant_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<constant_inst>(in.value(), in.result(0).ty(), in.loc());

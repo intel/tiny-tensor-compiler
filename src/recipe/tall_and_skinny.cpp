@@ -92,6 +92,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     return exception_to_status_code(
         [&] {
             auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
+            auto const bool_ty = get_boolean(ctx_);
             auto const index_ty = get_scalar(ctx_, scalar_type::index);
 
             auto const shapes =
@@ -144,8 +145,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto M_val = bb.add(make_size(C, 0, my_loc()));
                     auto M_val_sub_m =
                         bb.add(make_arith(arithmetic::sub, M_val, m, m.get_type(), my_loc()));
-                    auto cond =
-                        bb.add(make_cmp(cmp_condition::lt, M_val_sub_m, c_M_block_size, my_loc()));
+                    auto cond = bb.add(make_cmp(cmp_condition::lt, M_val_sub_m, c_M_block_size,
+                                                bool_ty, my_loc()));
                     bb.ifelse(
                         cond, [&](region_builder &bb) { dynamic_gemm(bb, M_val_sub_m); },
                         [&](region_builder &bb) { static_gemm(bb); }, {}, my_loc());
