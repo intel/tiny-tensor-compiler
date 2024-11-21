@@ -1443,14 +1443,14 @@ inline inst make_subgroup_size(compiler_context const &ctx, location const &loc 
  * contains "dynamic"
  * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
  * "dynamic"
+ * @param ty Return type
  * @param loc Source code location
  *
  * @return Instruction
  */
 inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
-                         array_view<std::int64_t> static_size_list,
-                         array_view<value> offset_list = {}, array_view<value> size_list = {},
-                         location const &loc = {}) {
+                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
+                         array_view<value> size_list, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(
@@ -1472,7 +1472,7 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
     const tinytc_value_t *sl = reinterpret_cast<const tinytc_value_t *>(size_list.data());
     CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a, static_len, static_offset_list.data(),
                                                 static_size_list.data(), offset_len, ol, size_len,
-                                                sl, &loc),
+                                                sl, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -1527,24 +1527,31 @@ inline inst make_sum(transpose tA, bool atomic, value alpha, value A, value beta
 /**
  * @brief Make for loop instruction
  *
+ * @param loop_var_type Type of loop variable
  * @param from Loop variable start
  * @param to Loop variable bound
  * @param step Loop variable step; can be {}
  * @param initial_value_list Array of initial values; can be {}
- * @param loop_var_type Type of loop variable
+ * @param return_type_list Array of return types; can be {}
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_for(value from, value to, value step, array_view<value> initial_value_list,
-                     data_type loop_var_type, location const &loc = {}) {
+inline inst make_for(data_type loop_var_type, value from, value to, value step,
+                     array_view<value> initial_value_list, array_view<data_type> return_type_list,
+                     location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = initial_value_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("initial value list too long");
     }
+    if (len != return_type_list.size()) {
+        throw std::invalid_argument(
+            "initial value list must have the same length as the return type list");
+    }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(initial_value_list.data());
-    CHECK_STATUS_LOC(tinytc_for_inst_create(&instr, from, to, step, len, il, loop_var_type, &loc),
+    CHECK_STATUS_LOC(tinytc_for_inst_create(&instr, loop_var_type, from, to, step, len, il,
+                                            return_type_list.data(), &loc),
                      loc);
     return inst(instr);
 }
@@ -1552,15 +1559,15 @@ inline inst make_for(value from, value to, value step, array_view<value> initial
 /**
  * @brief Make foreach loop instruction
  *
+ * @param loop_var_type Type of loop variable
  * @param from_list List of loop variable start
  * @param to_list List of loop variable bound
- * @param loop_var_type Type of loop variable
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_foreach(array_view<value> from_list, array_view<value> to_list,
-                         data_type loop_var_type, location const &loc = {}) {
+inline inst make_foreach(data_type loop_var_type, array_view<value> from_list,
+                         array_view<value> to_list, location const &loc = {}) {
 
     tinytc_inst_t instr;
     if (from_list.size() != to_list.size()) {
@@ -1576,7 +1583,7 @@ inline inst make_foreach(array_view<value> from_list, array_view<value> to_list,
     }
     const tinytc_value_t *fl = reinterpret_cast<const tinytc_value_t *>(from_list.data());
     const tinytc_value_t *tl = reinterpret_cast<const tinytc_value_t *>(to_list.data());
-    CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr, from_len, fl, tl, loop_var_type, &loc),
+    CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr, loop_var_type, from_len, fl, tl, &loc),
                      loc);
     return inst(instr);
 }
@@ -1602,12 +1609,22 @@ inline inst make_if(value condition, array_view<data_type> return_type_list = {}
     return inst(instr);
 }
 
-inline inst make_work_group(work_group_operation operation, value operand,
+/**
+ * @brief Make work group instruction
+ *
+ * @param operation Work group operation
+ * @param operand Operand
+ * @param ty Return type
+ * @param loc Location
+ *
+ * @return
+ */
+inline inst make_work_group(work_group_operation operation, value operand, data_type ty,
                             location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
         tinytc_work_group_inst_create(&instr, static_cast<tinytc_work_group_operation_t>(operation),
-                                      operand, &loc),
+                                      operand, ty, &loc),
         loc);
     return inst(instr);
 }
@@ -1862,8 +1879,8 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, data_type loop_var_ty, F &&f, location const &loc = {}) {
-        for_loop<F>(std::move(from), std::move(to), nullptr, std::move(loop_var_ty),
+    void for_loop(data_type loop_var_ty, value from, value to, F &&f, location const &loc = {}) {
+        for_loop<F>(std::move(loop_var_ty), std::move(from), std::move(to), nullptr,
                     std::forward<F>(f), loc);
     }
     /**
@@ -1872,17 +1889,17 @@ class region_builder {
      * The loop trip count is passed as second argument to the functor.
      *
      * @tparam F Functor type
+     * @param loop_var_ty Type of loop variable
      * @param from Loop variable start
      * @param to Loop variable bound
      * @param step Loop variable step
-     * @param loop_var_ty Type of loop variable
      * @param f Functor
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, value step, data_type loop_var_ty, F &&f,
+    void for_loop(data_type loop_var_ty, value from, value to, value step, F &&f,
                   location const &loc = {}) {
-        auto fi = ::tinytc::make_for(from, to, step, {}, loop_var_ty, loc);
+        auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, {}, {}, loc);
         auto reg = region{};
         fi.get_regions(reg);
         auto loop_var = value{};
@@ -1901,18 +1918,21 @@ class region_builder {
      * The following values are the loop-carried values.
      *
      * @tparam F Functor type
+     * @param loop_var_ty Type of loop variable
      * @param from Loop variable start
      * @param to Loop variable bound
      * @param step Loop variable step
      * @param initial_value_list Array of initial values; can be {}
-     * @param loop_var_ty Type of loop variable
+     * @param return_type_list Array of return types; can be {}
      * @param f Functor
      * @param loc Source code location
      */
     template <typename F>
-    auto for_loop(value from, value to, value step, array_view<value> initial_value_list,
-                  data_type loop_var_ty, F &&f, location const &loc = {}) -> std::vector<value> {
-        auto fi = ::tinytc::make_for(from, to, step, initial_value_list, loop_var_ty, loc);
+    auto for_loop(data_type loop_var_ty, value from, value to, value step,
+                  array_view<value> initial_value_list, array_view<data_type> return_type_list,
+                  F &&f, location const &loc = {}) -> std::vector<value> {
+        auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, initial_value_list,
+                                     return_type_list, loc);
         auto reg = region{};
         fi.get_regions(reg);
         auto num_params = reg.get_parameters({});
@@ -1930,16 +1950,16 @@ class region_builder {
      * @brief Build foreach-loop with functor f(region_builder&, array_view<value>) -> void
      *
      * @tparam F Functor type
+     * @param loop_var_ty Type of loop variable
      * @param from Loop variable start list
      * @param to Loop variable bound list
-     * @param loop_var_ty Type of loop variable
      * @param f functor
      * @param loc Source code location
      */
     template <typename F>
-    void foreach (array_view<value> from, array_view<value> to, data_type loop_var_ty, F && f,
+    void foreach (data_type loop_var_ty, array_view<value> from, array_view<value> to, F && f,
                   location const &loc = {}) {
-        auto fi = ::tinytc::make_foreach(std::move(from), std::move(to), loop_var_ty, loc);
+        auto fi = ::tinytc::make_foreach(loop_var_ty, std::move(from), std::move(to), loc);
         auto reg = region{};
         fi.get_regions(reg);
         auto num_params = reg.get_parameters({});

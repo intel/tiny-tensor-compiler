@@ -509,7 +509,7 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, sg_id_cast, ity));
         auto block_end =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, blocks, ity));
-        bb.for_loop(std::move(block_start), std::move(block_end), c_sgs_tiles, ity,
+        bb.for_loop(ity, std::move(block_start), std::move(block_end), c_sgs_tiles,
                     [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
     });
 
@@ -566,7 +566,7 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
         auto step_1 =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, c_tiles, ity));
-        bb.for_loop(std::move(block_start_1), std::move(block_end_1), std::move(step_1), ity,
+        bb.for_loop(ity, std::move(block_start_1), std::move(block_end_1), std::move(step_1),
                     [&](region_builder &bb, value block) { body(bb, block, bs_1); });
     });
 
@@ -577,7 +577,7 @@ void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int bloc
     auto tmp3 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
     auto block_start = instant_constant_fold_add(bb, make_arith(arithmetic::add, tmp3, tmp2, ity));
     auto step = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, c_tiles, ity));
-    bb.for_loop(std::move(block_start), loop_trip_count, std::move(step), ity,
+    bb.for_loop(ity, std::move(block_start), loop_trip_count, std::move(step),
                 [&](region_builder &bb, value block) { body(bb, block, bs); });
 }
 

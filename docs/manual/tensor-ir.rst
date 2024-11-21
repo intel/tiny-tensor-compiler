@@ -1206,7 +1206,7 @@ Example:
        %f1 = constant 1 -> i64
        %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
            %fn = arith.add %fn_2, %fn_1 : i64
-           yield %fn_1, %fn : i64, i64
+           yield (%fn_1, %fn)
        }
        ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
 
@@ -1327,9 +1327,10 @@ Example:
 
        %1 = cmp.lt %0, 16 : i32
        %x = if %1 -> (i32) {
-           yield %0 : i32
+           yield (%0)
        } else {
-           yield 16 : i32
+           %c16 = constant 16 : i32
+           yield (%c16)
        }
 
 
@@ -1463,6 +1464,7 @@ Restrictions
 
 The memref type of the result must conform with the following rules:
 
+#. Element type and address space must match the operand's memref type.
 #. **Invariant-stride:** The stride is not changed or replaced with '?'.
 
    .. code::
@@ -1569,7 +1571,7 @@ Yield
 
 .. code:: abnf
 
-    instruction                 =/ "yield" [local-identifier-list]  ":" [return-type-list]
+    instruction                 =/ "yield" "(" [local-identifier-list] ")"
 
 Overview
 ~~~~~~~~

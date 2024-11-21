@@ -51,54 +51,58 @@ typedef enum {
     tinytc_status_ir_invalid_number_of_indices = 0x105, /// Invalid number of indices
     tinytc_status_ir_expected_boolean = 0x106,          ///< Expected a value of boolean type
     tinytc_status_ir_expected_scalar = 0x107,           ///< Expected a value of scalar type
-    tinytc_status_ir_expected_index = 0x108,            ///< Expected a value of index type
-    tinytc_status_ir_expected_coopmatrix = 0x109,       ///< Expected a value of coopmatrix type
+    tinytc_status_ir_expected_int = 0x108,              ///< Expected a value of integer type
+    tinytc_status_ir_expected_float = 0x109,            ///< Expected a value of float type
+    tinytc_status_ir_expected_complex = 0x10a,          ///< Expected a value of complex type
+    tinytc_status_ir_expected_index = 0x10b,            ///< Expected a value of index type
+    tinytc_status_ir_expected_coopmatrix = 0x10c,       ///< Expected a value of coopmatrix type
     tinytc_status_ir_expected_coopmatrix_or_scalar =
-        0x10a, ///< Expected a value of coopmatrix or scalar type
+        0x10d, ///< Expected a value of coopmatrix or scalar type
     tinytc_status_ir_expected_coopmatrix_scalar_or_boolean =
-        0x10b, ///< Expected a value of coopmatrix, scalar type, or boolean
-    tinytc_status_ir_expected_memref = 0x10c,           ///< Expected a value of memref type
-    tinytc_status_ir_expected_memref_or_scalar = 0x10d, ///< Expected memref or scalar type
-    tinytc_status_ir_expected_memref_or_group = 0x10e, ///< Expected a value of memref or group type
-    tinytc_status_ir_expected_memref_order_0 = 0x10f,  ///< Expected memref of order 0
-    tinytc_status_ir_expected_memref_order_1 = 0x110,  ///< Expected memref of order 1
-    tinytc_status_ir_expected_memref_order_2 = 0x111,  ///< Expected memref of order 2
-    tinytc_status_ir_expected_memref_order_0_or_1 = 0x112,   ///< Expected memref of order 0 or 1
-    tinytc_status_ir_expected_memref_order_1_or_2 = 0x113,   ///< Expected memref of order 1 or 2
-    tinytc_status_ir_expected_memref_order_0_1_or_2 = 0x114, ///< Expected memref of order 0, 1 or 2
-    tinytc_status_ir_unexpected_yield = 0x115,               ///< Unexpected yield instruction
-    tinytc_status_ir_yield_mismatch = 0x116,                 ///< Wrong number of yielded values
-    tinytc_status_ir_subview_mismatch = 0x117,               ///< Mismatch in subview
-    tinytc_status_ir_invalid_slice = 0x118,                  ///< Invalid slice
-    tinytc_status_ir_expand_shape_order_too_small = 0x119,   ///< Expand shape too small
-    tinytc_status_ir_expand_shape_mismatch = 0x11a,          ///< Invalid expand shape
-    tinytc_status_ir_collective_called_from_spmd = 0x11b,    ///< Collective instruction from SPMD
-    tinytc_status_ir_fp_unsupported = 0x11c, ///< Instruction does not support floating type
-    tinytc_status_ir_spmd_called_from_collective = 0x11d,   ///< SPMD instruction from collective
-    tinytc_status_ir_expected_local_address_space = 0x11e,  ///< Expected local address space
-    tinytc_status_ir_expected_global_address_space = 0x11f, ///< Expected global address space
-    tinytc_status_ir_address_space_mismatch = 0x120,        ///< Address space must match
-    tinytc_status_ir_invalid_offset = 0x121,                ///< Invalid offset
-    tinytc_status_ir_int_unsupported = 0x122,     ///< Instruction does not support int type
-    tinytc_status_ir_boolean_unsupported = 0x123, ///< Instruction does not support boolean type
-    tinytc_status_ir_complex_unsupported = 0x124, ///< Instruction does not support complex type
+        0x10e, ///< Expected a value of coopmatrix, scalar type, or boolean
+    tinytc_status_ir_expected_memref = 0x10f,           ///< Expected a value of memref type
+    tinytc_status_ir_expected_memref_or_scalar = 0x110, ///< Expected memref or scalar type
+    tinytc_status_ir_expected_memref_or_group = 0x111, ///< Expected a value of memref or group type
+    tinytc_status_ir_expected_memref_order_0 = 0x112,  ///< Expected memref of order 0
+    tinytc_status_ir_expected_memref_order_1 = 0x113,  ///< Expected memref of order 1
+    tinytc_status_ir_expected_memref_order_2 = 0x114,  ///< Expected memref of order 2
+    tinytc_status_ir_expected_memref_order_0_or_1 = 0x115,   ///< Expected memref of order 0 or 1
+    tinytc_status_ir_expected_memref_order_1_or_2 = 0x116,   ///< Expected memref of order 1 or 2
+    tinytc_status_ir_expected_memref_order_0_1_or_2 = 0x117, ///< Expected memref of order 0, 1 or 2
+    tinytc_status_ir_unexpected_yield = 0x118,               ///< Unexpected yield instruction
+    tinytc_status_ir_yield_mismatch = 0x119,                 ///< Wrong number of yielded values
+    tinytc_status_ir_subview_mismatch = 0x11a,               ///< Mismatch in subview
+    tinytc_status_ir_invalid_slice = 0x11b,                  ///< Invalid slice
+    tinytc_status_ir_expand_shape_order_too_small = 0x11c,   ///< Expand shape too small
+    tinytc_status_ir_expand_shape_mismatch = 0x11d,          ///< Invalid expand shape
+    tinytc_status_ir_collective_called_from_spmd = 0x11e,    ///< Collective instruction from SPMD
+    tinytc_status_ir_fp_unsupported = 0x11f, ///< Instruction does not support floating type
+    tinytc_status_ir_spmd_called_from_collective = 0x120,   ///< SPMD instruction from collective
+    tinytc_status_ir_expected_local_address_space = 0x121,  ///< Expected local address space
+    tinytc_status_ir_expected_global_address_space = 0x122, ///< Expected global address space
+    tinytc_status_ir_address_space_mismatch = 0x123,        ///< Address space must match
+    tinytc_status_ir_invalid_offset = 0x124,                ///< Invalid offset
+    tinytc_status_ir_int_unsupported = 0x125,     ///< Instruction does not support int type
+    tinytc_status_ir_boolean_unsupported = 0x126, ///< Instruction does not support boolean type
+    tinytc_status_ir_complex_unsupported = 0x127, ///< Instruction does not support complex type
     tinytc_status_ir_coopmatrix_unsupported =
-        0x125,                                     ///< Instruction does not support coopmatrix type
-    tinytc_status_ir_forbidden_cast = 0x126,       ///< Forbidden cast
-    tinytc_status_ir_invalid_beta = 0x127,         ///< Invalid beta value
-    tinytc_status_ir_init_return_mismatch = 0x128, ///< Mismatch of init values and returned values
-    tinytc_status_ir_invalid_matrix_use = 0x129,   ///< Invalid matrix use
-    tinytc_status_ir_unsupported_coopmatrix_shape = 0x12a, ///< Unsupported coopmatrix shape
-    tinytc_status_ir_incompatible_scalar_types = 0x12b,    ///< Incompatible scalar types
-    tinytc_status_ir_constant_mismatch = 0x12c,            ///< Constant mismatch
-    tinytc_status_ir_insufficient_alignment = 0x12d,       ///< Insufficient alignment
-    tinytc_status_ir_must_have_yield = 0x12e,              ///< Must have yield instruction
+        0x128,                                     ///< Instruction does not support coopmatrix type
+    tinytc_status_ir_forbidden_cast = 0x129,       ///< Forbidden cast
+    tinytc_status_ir_invalid_beta = 0x12a,         ///< Invalid beta value
+    tinytc_status_ir_init_return_mismatch = 0x12b, ///< Mismatch of init values and returned values
+    tinytc_status_ir_invalid_matrix_use = 0x12c,   ///< Invalid matrix use
+    tinytc_status_ir_unsupported_coopmatrix_shape = 0x12d, ///< Unsupported coopmatrix shape
+    tinytc_status_ir_incompatible_scalar_types = 0x12e,    ///< Incompatible scalar types
+    tinytc_status_ir_constant_mismatch = 0x12f,            ///< Constant mismatch
+    tinytc_status_ir_insufficient_alignment = 0x130,       ///< Insufficient alignment
+    tinytc_status_ir_must_have_yield = 0x131,              ///< Must have yield instruction
     tinytc_status_ir_yield_in_else_branch_missing =
-        0x12f,                                 ///< Must have yield instruction in else branch
-    tinytc_status_ir_from_to_mismatch = 0x130, ///< size(from) != size(to) in foreach
+        0x132,                                 ///< Must have yield instruction in else branch
+    tinytc_status_ir_from_to_mismatch = 0x133, ///< size(from) != size(to) in foreach
     tinytc_status_ir_operand_type_must_match_return_type =
-        0x131,                               /// Operand type must match return type
-    tinytc_status_ir_invalid_stride = 0x132, ///< Invalid stride
+        0x134,                                          /// Operand type must match return type
+    tinytc_status_ir_invalid_stride = 0x135,            ///< Invalid stride
+    tinytc_status_ir_init_return_type_mismatch = 0x136, ///< Init return type mismatch
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

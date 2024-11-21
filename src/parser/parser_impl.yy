@@ -53,14 +53,6 @@
 
     namespace tinytc {
 
-    void check_type(tinytc_value_t val, tinytc_data_type_t ty, location &loc1, location &loc2) {
-        if (val->ty() != ty) {
-            auto loc = loc1;
-            loc.end = loc2.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
-    }
-
     void report_error(compiler_context const& cctx, compilation_error const& e) {
         if (e.extra_info().size() > 0) {
             auto what = (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
@@ -581,24 +573,13 @@ ger_inst:
 ;
 
 for_inst:
-    FOR LOCAL_IDENTIFIER[loop_var] for_loop_var_type EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst>{
-        check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
-        check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
-        if ($optional_step) {
-            check_type($optional_step, $for_loop_var_type, @optional_step, @for_loop_var_type);
-        }
+    FOR LOCAL_IDENTIFIER[loop_var] for_loop_var_type EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst> {
         try {
             auto &[lcv_id, lcv_init, lcv_type] = $lcv;
-            if (lcv_init.size() != lcv_type.size()) {
-                throw parser::syntax_error(@lcv, "Length of init value list must match scalar type list");
-            }
-            for (std::size_t i = 0; i < lcv_init.size(); ++i) {
-                check_type(lcv_init[i], lcv_type[i], @lcv, @lcv);
-            }
             location loc = @FOR;
-            loc.end = @for_loop_var_type.end;
-            auto inode = std::make_unique<for_inst>($from, $to, $optional_step, lcv_init,
-                                                    $for_loop_var_type, loc);
+            loc.end = @lcv.end;
+            auto inode = std::make_unique<for_inst>($for_loop_var_type, $from, $to, $optional_step,
+                                                    lcv_init, lcv_type, loc);
             ctx.push_scope();
             auto &loop_var = inode->loop_var();
             ctx.val($loop_var, loop_var, @loop_var);
@@ -654,7 +635,7 @@ foreach_inst:
             location loc = @FOREACH;
             loc.end = @for_loop_var_type.end;
             auto inode =
-                std::make_unique<foreach_inst>($from, $to, $for_loop_var_type, loc);
+                std::make_unique<foreach_inst>($for_loop_var_type, $from, $to, loc);
             ctx.push_scope();
             auto loop_vars = inode->loop_vars().begin();
             for (std::int64_t i = 0; i < inode->dim(); ++i) {
@@ -731,16 +712,8 @@ sum_inst:
 ;
 
 yield_inst:
-    YIELD optional_value_list[vals] COLON optional_return_type_list[tys] {
-        if ($vals.size() != $tys.size()) {
-            location loc = @vals;
-            loc.end = @tys.end;
-            throw syntax_error(loc, "Identifier and scalar type list must have the same length");
-        }
-        for (std::size_t i = 0; i < $vals.size(); ++i) {
-            check_type($vals[i], $tys[i], @vals, @tys);
-        }
-        $$ = inst{std::make_unique<yield_inst>(std::move($vals)).release()};
+    YIELD LPAREN optional_value_list[vals] RPAREN {
+        $$ = inst{std::make_unique<yield_inst>(std::move($vals), @yield_inst).release()};
     }
 ;
 
@@ -991,7 +964,6 @@ expand_shape:
 
 integer_constant_or_identifier:
     var {
-        check_type($var, get_scalar(ctx.cctx(), scalar_type::index), @var, @var);
         $$ = $var;
     }
   | INTEGER_CONSTANT {
@@ -1058,7 +1030,6 @@ group_size_inst:
 
 if_inst:
     IF var[condition] optional_returned_values <unique_ptr_to_if_inst>{
-        check_type($condition, get_boolean(ctx.cctx()), @condition, @condition);
         try {
             auto loc = @IF;
             loc.end = @optional_returned_values.end;
@@ -1149,12 +1120,7 @@ subgroup_size_inst:
 ;
 
 subview_inst:
-    SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type {
-        if ($var->ty() != $memref_type) {
-            auto loc = @var;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type[ty] {
         try {
             auto static_offsets = std::vector<std::int64_t>{};
             auto static_sizes = std::vector<std::int64_t>{};
@@ -1182,7 +1148,7 @@ subview_inst:
             }
             $$ = inst {
                 std::make_unique<subview_inst>(std::move($var), std::move(static_offsets), std::move(static_sizes),
-                                               std::move(offsets), std::move(sizes), @subview_inst)
+                                               std::move(offsets), std::move(sizes), std::move($ty), @subview_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1221,10 +1187,10 @@ slice_size:
 
 work_group_inst:
     WORK_GROUP WORK_GROUP_OPERATION[operation] var[a] COLON data_type[ty] {
-        check_type($a, $ty, @a, @ty);
         try {
             $$ = inst {
-                std::make_unique<work_group_inst>($operation, std::move($a), @work_group_inst)
+                std::make_unique<work_group_inst>($operation, std::move($a), std::move($ty),
+                                                  @work_group_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

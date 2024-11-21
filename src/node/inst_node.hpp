@@ -657,9 +657,9 @@ class for_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::for_loop; }
     enum op_number { op_from = 0, op_to = 1, op_step = 2 };
-    for_inst(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-             array_view<tinytc_value_t> init_values, tinytc_data_type_t loop_var_type,
-             location const &loc = {});
+    for_inst(tinytc_data_type_t loop_var_type, tinytc_value_t from, tinytc_value_t to,
+             tinytc_value_t step, array_view<tinytc_value_t> init_values,
+             array_view<tinytc_data_type_t> return_types, location const &loc = {});
 
     inline auto from() -> tinytc_value & { return op(op_from); }
     inline auto from() const -> tinytc_value const & { return op(op_from); }
@@ -688,8 +688,8 @@ class for_inst : public loop_inst {
 class foreach_inst : public loop_inst {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::foreach_loop; }
-    foreach_inst(array_view<tinytc_value_t> from, array_view<tinytc_value_t> to,
-                 tinytc_data_type_t loop_var_type, location const &lc = {});
+    foreach_inst(tinytc_data_type_t loop_var_type, array_view<tinytc_value_t> from,
+                 array_view<tinytc_value_t> to, location const &lc = {});
 
     inline auto dim() const -> std::int64_t { return num_operands() / 2; }
     inline auto loop_vars() { return body().params(); }
@@ -792,7 +792,7 @@ class subview_inst : public standard_inst<dynamic, 1> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
     subview_inst(tinytc_value_t op, array_view<std::int64_t> static_offsets,
                  array_view<std::int64_t> static_sizes, array_view<tinytc_value_t> offsets,
-                 array_view<tinytc_value_t> sizes, location const &lc = {});
+                 array_view<tinytc_value_t> sizes, tinytc_data_type_t ty, location const &lc = {});
 
     inline auto static_offsets() const -> array_view<std::int64_t> { return static_offsets_; }
     inline auto static_sizes() const -> array_view<std::int64_t> { return static_sizes_; }
@@ -847,7 +847,7 @@ class sum_inst : public blas_a2_inst {
 class work_group_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::work_group; }
-    work_group_inst(work_group_operation operation, tinytc_value_t operand,
+    work_group_inst(work_group_operation operation, tinytc_value_t operand, tinytc_data_type_t ty,
                     location const &lc = {});
 
     inline auto operation() const -> work_group_operation { return operation_; }

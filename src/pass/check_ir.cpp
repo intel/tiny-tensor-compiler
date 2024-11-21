@@ -21,11 +21,11 @@ void check_ir_pass::check_yield(region_node const &reg, inst_node const &in,
         throw compilation_error(reg.loc(), yield_missing_status);
     }
     if (yield->num_operands() != in.num_results()) {
-        throw compilation_error(reg.loc(), status::ir_yield_mismatch);
+        throw compilation_error(yield->loc(), status::ir_yield_mismatch);
     }
     for (std::int64_t i = 0; i < in.num_results(); ++i) {
         if (yield->op(i).ty() != in.result(i).ty()) {
-            throw compilation_error(reg.loc(), status::ir_yield_mismatch);
+            throw compilation_error(yield->loc(), {&yield->op(i)}, status::ir_yield_mismatch);
         }
     }
 }

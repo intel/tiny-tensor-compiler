@@ -150,6 +150,12 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Expected boolean type";
     case tinytc_status_ir_expected_scalar:
         return "Expected scalar type";
+    case tinytc_status_ir_expected_int:
+        return "Expected integer type";
+    case tinytc_status_ir_expected_float:
+        return "Expected floating point type";
+    case tinytc_status_ir_expected_complex:
+        return "Expected complex type";
     case tinytc_status_ir_expected_index:
         return "Expected index type";
     case tinytc_status_ir_expected_coopmatrix:
@@ -239,6 +245,9 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Type of operand must match return type";
     case tinytc_status_ir_invalid_stride:
         return "Invalid stride";
+    case tinytc_status_ir_init_return_type_mismatch:
+        return "Type of initializer does not match return type or the number of return types is "
+               "not equal the number of initializers";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

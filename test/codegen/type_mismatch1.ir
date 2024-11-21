@@ -4,7 +4,7 @@
 ; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
 func @kernel(%K0: memref<f32x32>, %x: index, %y: index) {
   %z = constant 0 : index
-  %0 = subview %K0[0:%x] : memref<f32x32>
+  %0 = subview %K0[0:%x] : memref<f32x?>
   %1 = subview %0[0:%y] : memref<f32x?>
   %2 = load %1[%z] : f64
   %3 = load %1[%z] : f64

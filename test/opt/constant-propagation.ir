@@ -41,7 +41,7 @@ func @known_loop_iter_args() {
     %c5 = constant 5 : index
     %0 = arith.add %c1, %c5 : index
     %2 = for %i=%c1,%c5 init(%1=%0) -> (index) {
-        yield %1 : index
+        yield (%1)
     }
 ; CHECK-LABEL: func @known_loop_iter_args({{.*}}
 ; CHECK-NEXT:  %c1 = constant 1 : index
@@ -49,7 +49,7 @@ func @known_loop_iter_args() {
 ; CHECK-NEXT:  %0 = constant 6 : index
 ; CHECK-NEXT:  %1 = arith.add %c1, %c5 : index
 ; CHECK-NEXT:  %3 = for %i:index=%c1,%c5 init(%2=%0) -> (index) {
-; CHECK-NEXT:    yield %2 : index
+; CHECK-NEXT:    yield (%2)
 ; CHECK-NEXT:  }
 }
 

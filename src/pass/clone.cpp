@@ -104,14 +104,18 @@ auto inst_cloner::operator()(ger_inst &in) -> std::unique_ptr<tinytc_inst> {
                                       subs(&in.beta()), subs(&in.C()), in.atomic(), in.loc());
 }
 auto inst_cloner::operator()(for_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<for_inst>(
-        subs(&in.from()), subs(&in.to()), in.has_step() ? subs(&in.step()) : nullptr,
-        subs_value_range(in.iter_init()), in.body().param(0).ty(), in.loc());
+    auto return_types = std::vector<tinytc_data_type_t>(in.num_results());
+    for (std::int64_t i = 0; i < in.num_results(); ++i) {
+        return_types[i] = in.result(0).ty();
+    }
+    return std::make_unique<for_inst>(in.body().param(0).ty(), subs(&in.from()), subs(&in.to()),
+                                      in.has_step() ? subs(&in.step()) : nullptr,
+                                      subs_value_range(in.iter_init()), return_types, in.loc());
 }
 
 auto inst_cloner::operator()(foreach_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<foreach_inst>(subs_value_range(in.from()), subs_value_range(in.to()),
-                                          in.body().param(0).ty(), in.loc());
+    return std::make_unique<foreach_inst>(in.body().param(0).ty(), subs_value_range(in.from()),
+                                          subs_value_range(in.to()), in.loc());
 }
 
 auto inst_cloner::operator()(hadamard_inst &in) -> std::unique_ptr<tinytc_inst> {
@@ -152,9 +156,9 @@ auto inst_cloner::operator()(subgroup_size_inst &in) -> std::unique_ptr<tinytc_i
 }
 
 auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subview_inst>(subs(&in.operand()), in.static_offsets(),
-                                          in.static_sizes(), subs_value_range(in.offsets()),
-                                          subs_value_range(in.sizes()), in.loc());
+    return std::make_unique<subview_inst>(
+        subs(&in.operand()), in.static_offsets(), in.static_sizes(), subs_value_range(in.offsets()),
+        subs_value_range(in.sizes()), in.result(0).ty(), in.loc());
 }
 
 auto inst_cloner::operator()(store_inst &in) -> std::unique_ptr<tinytc_inst> {
@@ -168,7 +172,8 @@ auto inst_cloner::operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst> {
 }
 
 auto inst_cloner::operator()(work_group_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<work_group_inst>(in.operation(), subs(&in.operand()), in.loc());
+    return std::make_unique<work_group_inst>(in.operation(), subs(&in.operand()), in.result(0).ty(),
+                                             in.loc());
 }
 
 auto inst_cloner::operator()(yield_inst &in) -> std::unique_ptr<tinytc_inst> {

@@ -98,11 +98,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto calpha = bb.add(make_constant_one(element_ty, my_loc()));
         auto cbeta = bb.add(update ? make_constant_one(element_ty, my_loc())
                                    : make_constant_zero(element_ty, my_loc()));
-        auto a = bb.add(make_load(params[0], {gid}, my_loc()));
-        auto b = bb.add(make_load(params[1], {gid}, my_loc()));
-        auto c = bb.add(make_load(params[2], {gid}, my_loc()));
+        auto a = bb.add(make_load(params[0], {gid}, element_ty, my_loc()));
+        auto b = bb.add(make_load(params[1], {gid}, element_ty, my_loc()));
+        auto c = bb.add(make_load(params[2], {gid}, element_ty, my_loc()));
         bb.for_loop(
-            from, to, index_ty,
+            index_ty, from, to,
             [&](region_builder &bb, value const &) {
                 bb.add(make_gemm(tA, tB, atomic, calpha, a, b, cbeta, c, my_loc()));
             },

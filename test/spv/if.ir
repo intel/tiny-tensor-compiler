@@ -35,9 +35,9 @@ func @if0(%0: i32) {
 func @if1() {
     %c1 = constant true : bool
     if %c1 -> (){
-        yield :
+        yield ()
     } else {
-        yield :
+        yield ()
     }
 ; Just check that it does not crash
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
@@ -47,15 +47,15 @@ func @if2(%0: i32) {
     %c1 = constant true : bool
     %x = if %c1 -> (i32) {
         %1 = if %c1 -> (i32) {
-            yield %0 : i32
+            yield (%0)
         } else {
             %c0 = constant 0 : i32
-            yield %c0 : i32
+            yield (%c0)
         }
-        yield %1 : i32
+        yield (%1)
     } else {
         %1 = arith.not %0 : i32
-        yield %1 : i32
+        yield (%1)
     }
     %y = arith.not %x : i32
 ; CHECK:                         %[[#]] = OpFunction {{.*}}
@@ -85,10 +85,10 @@ func @if3() subgroup_size(16) {
     %c1 = constant true : bool
     %y, %x = if %c1 -> (bool,coopmatrix<f32x16x4,matrix_a>) {
         %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
-        yield %c1, %0 : bool, coopmatrix<f32x16x4,matrix_a>
+        yield (%c1, %0)
     } else {
         %1 = constant 0.0 : coopmatrix<f32x16x4,matrix_a>
-        yield %c1, %1 : bool, coopmatrix<f32x16x4,matrix_a>
+        yield (%c1, %1)
     }
     %z = arith.neg %x : coopmatrix<f32x16x4,matrix_a>
 ; CHECK:                   %[[#]] = OpFunction {{.*}}

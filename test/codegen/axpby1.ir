@@ -22,12 +22,12 @@ func @axpby3(%alpha: f32, %A: memref<f32x48x48x4x5>, %B: memref<f32x48x48x4x5>) 
     %lb = constant 0 : index
     %ub = constant 5 : index
     for %i=%lb,%ub {
-        %A0 = subview %A[0:48,0:48,0:4,%i] : memref<f32x48x48x4x5>
-        %B0 = subview %B[0:48,0:48,0:4,%i] : memref<f32x48x48x4x5>
+        %A0 = subview %A[0:48,0:48,0:4,%i] : memref<f32x48x48x4>
+        %B0 = subview %B[0:48,0:48,0:4,%i] : memref<f32x48x48x4>
         %ub1 = constant 4 : index
         for %j=%lb,%ub1 {
-            %A1 = subview %A0[0:48,0:48,%j] : memref<f32x48x48x4>
-            %B1 = subview %B0[0:48,0:48,%j] : memref<f32x48x48x4>
+            %A1 = subview %A0[0:48,0:48,%j] : memref<f32x48x48>
+            %B1 = subview %B0[0:48,0:48,%j] : memref<f32x48x48>
             axpby.t %alpha, %A1, %z, %B1
         }
     }

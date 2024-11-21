@@ -119,10 +119,14 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto const static_gemm = [&](region_builder &bb) {
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{M_block_size, K};
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{M_block_size, N};
+                    auto at =
+                        get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
+                    auto ct =
+                        get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
                     auto a = bb.add(
-                        make_subview(A, static_offsets, A_static_sizes, offsets, {}, my_loc()));
+                        make_subview(A, static_offsets, A_static_sizes, offsets, {}, at, my_loc()));
                     auto c = bb.add(
-                        make_subview(C, static_offsets, C_static_sizes, offsets, {}, my_loc()));
+                        make_subview(C, static_offsets, C_static_sizes, offsets, {}, ct, my_loc()));
                     bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                      my_loc()));
                 };
@@ -130,10 +134,14 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{dynamic, K};
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{dynamic, N};
                     auto const sizes = array_view<value>(dyn_block_size);
-                    auto a = bb.add(
-                        make_subview(A, static_offsets, A_static_sizes, offsets, sizes, my_loc()));
-                    auto c = bb.add(
-                        make_subview(C, static_offsets, C_static_sizes, offsets, sizes, my_loc()));
+                    auto at =
+                        get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
+                    auto ct =
+                        get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
+                    auto a = bb.add(make_subview(A, static_offsets, A_static_sizes, offsets, sizes,
+                                                 at, my_loc()));
+                    auto c = bb.add(make_subview(C, static_offsets, C_static_sizes, offsets, sizes,
+                                                 ct, my_loc()));
                     bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
                                      my_loc()));
                 };

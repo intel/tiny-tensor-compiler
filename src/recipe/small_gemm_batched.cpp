@@ -111,12 +111,18 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto bb = region_builder{fn_body};
 
                 auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                auto at =
+                    get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
+                auto bt =
+                    get_memref(ty_, B_static_sizes, {1, ldB}, address_space::global, my_loc());
+                auto ct =
+                    get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
                 auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
-                                             array_view<value>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, at, my_loc()));
                 auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
-                                             array_view<value>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, bt, my_loc()));
                 auto c = bb.add(make_subview(params[4], static_offsets, C_static_sizes,
-                                             array_view<value>{gid}, {}, my_loc()));
+                                             array_view<value>{gid}, {}, ct, my_loc()));
                 auto beta = is_beta_nonzero ? params[3] : bb.add(make_constant_zero(ty_, my_loc()));
                 bb.add(make_gemm(tA_, tB_, false, params[0], std::move(a), std::move(b), beta,
                                  std::move(c), my_loc()));

@@ -456,9 +456,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
     }
     *os_ << "]";
     *os_ << " : ";
-    visit(*this, *s.operand().ty());
-    *os_ << " ; -> ";
-    visit(*this, *s.result()->ty());
+    visit(*this, *s.result(0).ty());
 }
 
 void dump_ir_pass::operator()(store_inst const &e) {
@@ -488,19 +486,15 @@ void dump_ir_pass::operator()(work_group_inst const &in) {
     *os_ << " = work_group." << to_string(in.operation()) << " ";
     dump_val(in.operand());
     *os_ << " : ";
-    visit(*this, *in.operand().ty());
+    visit(*this, *in.result(0).ty());
 }
 
 void dump_ir_pass::operator()(yield_inst const &y) {
-    *os_ << "yield ";
+    *os_ << "yield (";
     if (y.num_operands() > 0) {
         do_with_infix(y.op_begin(), y.op_end(), [this](auto const &i) { dump_val(i); }, ", ");
-        *os_ << " : ";
-        do_with_infix(
-            y.op_begin(), y.op_end(), [this](auto const &i) { visit(*this, *i.ty()); }, ", ");
-    } else {
-        *os_ << ":";
     }
+    *os_ << ")";
 }
 
 void dump_ir_pass::dump_region(region_node const &reg) {

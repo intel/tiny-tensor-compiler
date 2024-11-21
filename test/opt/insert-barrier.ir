@@ -70,7 +70,7 @@ func @respect_manual_barrier(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f
 
 func @war_alias(%a: f32, %b: f32, %A: memref<f32x8x8>, %C: memref<f32x8x12>) {
     %B = alloca : memref<f32x8x12,local>
-    %0 = subview %B[0:8,0:8] : memref<f32x8x12,local>
+    %0 = subview %B[0:8,0:8] : memref<f32x8x8,local>
     axpby.n %a, %B, %b, %C
     axpby.n %a, %A, %b, %0
 ; CHECK-LABEL: func @war_alias({{.*}}

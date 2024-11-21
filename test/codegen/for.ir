@@ -23,7 +23,7 @@ func @for2(%fib: memref<i64>) {
   %f1 = constant 1 : i64
   %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
     %fn = arith.add %fn_2, %fn_1 : i64
-    yield %fn_1, %fn : i64, i64
+    yield (%fn_1, %fn)
   }
   store %fn, %fib[]
 ; CHECK-LABEL: void for2({{.*}}

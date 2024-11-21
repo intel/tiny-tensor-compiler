@@ -46,7 +46,7 @@ func @for2() {
   %f1 = constant 1 : i64
   %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
     %fn = arith.add %fn_2, %fn_1 : i64
-    yield %fn_1, %fn : i64, i64
+    yield (%fn_1, %fn)
   }
   %neg_fn = arith.neg %fn : i64
 ; CHECK:                      %[[#]] = OpFunction {{.*}}
@@ -77,7 +77,7 @@ func @for3() subgroup_size(16) {
   %m_init = constant 1 : coopmatrix<i16x16x4,matrix_acc>
   %m = for %n:i16=%from,%to init(%m_iter=%m_init) -> (coopmatrix<i16x16x4,matrix_acc>) {
     %m_update = arith.add %m_iter, %m_init : coopmatrix<i16x16x4,matrix_acc>
-    yield %m_update : coopmatrix<i16x16x4,matrix_acc>
+    yield (%m_update)
   }
   %neg_m = arith.neg %m : coopmatrix<i16x16x4,matrix_acc>
 ; CHECK:                      %[[#]] = OpFunction {{.*}}

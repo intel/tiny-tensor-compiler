@@ -103,11 +103,16 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
             return {b.nrows(), b.ncols(), 0};
         };
         auto const offsets3 = array_view<value>(gid);
-        auto dq = bb.add(make_subview(Q, static_offsets3, static_sizes3(dQ_[0]), offsets3));
+        auto dqt = get_memref(element_ty, static_sizes3(dQ_[0]));
+        auto dq =
+            bb.add(make_subview(Q, static_offsets3, static_sizes3(dQ_[0]), offsets3, {}, dqt));
         for (std::size_t d = 0; d < dim; ++d) {
-            A(d) = bb.add(make_subview(A(d), static_offsets3, static_sizes3(A_[d]), offsets3));
+            auto At = get_memref(element_ty, static_sizes3(A_[d]));
+            A(d) =
+                bb.add(make_subview(A(d), static_offsets3, static_sizes3(A_[d]), offsets3, {}, At));
         }
-        auto i = bb.add(make_subview(I, static_offsets3, static_sizes3(I_opt_), offsets3));
+        auto it = get_memref(element_ty, static_sizes3(I_opt_));
+        auto i = bb.add(make_subview(I, static_offsets3, static_sizes3(I_opt_), offsets3, {}, it));
         bb.add(make_axpby(transpose::N, false, c1, dq, c1, i));
 
         int denom = 1;
@@ -120,16 +125,21 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
             auto cfactor = bb.add(make_arith(arithmetic::div, cnum, cdenom, cnum.get_type()));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.add(make_alloca(dQ_[n].local_type(element_ty)));
-            auto dq_nextv = bb.add(make_subview(dq_next, static_offsets2, {bn, P_}));
+            auto dq_nextvt = get_memref(element_ty, {bn, P_}, {}, address_space::local);
+            auto dq_nextv =
+                bb.add(make_subview(dq_next, static_offsets2, {bn, P_}, {}, {}, dq_nextvt));
             auto tmp = bb.add(
                 make_alloca(get_memref(element_ty, {bn, P_}, {1, bn}, address_space::local)));
             for (std::size_t d = 0; d < dim; ++d) {
-                auto Kv = bb.add(make_subview(K(d), static_offsets2, {bn, Bd(N_ - n + 1)}));
+                auto Kvt = get_memref(element_ty, {bn, Bd(N_ - n + 1)});
+                auto Kv =
+                    bb.add(make_subview(K(d), static_offsets2, {bn, Bd(N_ - n + 1)}, {}, {}, Kvt));
                 bb.add(make_gemm(transpose::N, transpose::N, false, c1, Kv, dq, c0, tmp));
                 bb.add(make_gemm(transpose::N, transpose::N, false, c1, tmp, A(d), d > 0 ? c1 : c0,
                                  dq_nextv));
             }
-            auto iv = bb.add(make_subview(i, static_offsets2, {Bd(N_ - n), P_}));
+            auto ivt = get_memref(element_ty, {Bd(N_ - n), P_});
+            auto iv = bb.add(make_subview(i, static_offsets2, {Bd(N_ - n), P_}, {}, {}, ivt));
             bb.add(make_axpby(transpose::N, false, cfactor, dq_next, c1, iv));
             dq = dq_next;
         }

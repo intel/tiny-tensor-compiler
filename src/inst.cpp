@@ -581,7 +581,7 @@ tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t stat
                            const int64_t *static_offset_list, const int64_t *static_size_list,
                            uint32_t offset_list_size, const tinytc_value_t *offset_list,
                            uint32_t size_list_size, const tinytc_value_t *size_list,
-                           const tinytc_location_t *loc) {
+                           tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr ||
         (static_list_size > 0 && (static_offset_list == nullptr || static_size_list == nullptr)) ||
         (offset_list_size > 0 && offset_list == nullptr) ||
@@ -589,12 +589,12 @@ tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t stat
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<subview_inst>(a, array_view{static_offset_list, static_list_size},
-                                           array_view{static_size_list, static_list_size},
-                                           array_view{offset_list, offset_list_size},
-                                           array_view{size_list, size_list_size}, get_optional(loc))
-                .release();
+        *instr = std::make_unique<subview_inst>(a, array_view{static_offset_list, static_list_size},
+                                                array_view{static_size_list, static_list_size},
+                                                array_view{offset_list, offset_list_size},
+                                                array_view{size_list, size_list_size}, ty,
+                                                get_optional(loc))
+                     .release();
     });
 }
 
@@ -627,37 +627,38 @@ tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t 
     });
 }
 
-tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from, tinytc_value_t to,
-                                       tinytc_value_t step, uint32_t init_list_size,
+tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_data_type_t loop_var_type,
+                                       tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+                                       uint32_t init_return_list_size,
                                        const tinytc_value_t *initial_value_list,
-                                       tinytc_data_type_t loop_var_type,
+                                       const tinytc_data_type_t *return_type_list,
                                        const tinytc_location_t *loc) {
     if (instr == nullptr || loop_var_type == nullptr || from == nullptr || to == nullptr ||
-        (init_list_size != 0 && initial_value_list == nullptr)) {
+        (init_return_list_size != 0 &&
+         (initial_value_list == nullptr || return_type_list == nullptr))) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<for_inst>(from, to, step,
-                                            array_view{initial_value_list, init_list_size},
-                                            loop_var_type, get_optional(loc))
+        *instr = std::make_unique<for_inst>(loop_var_type, from, to, step,
+                                            array_view{initial_value_list, init_return_list_size},
+                                            array_view{return_type_list, init_return_list_size},
+                                            get_optional(loc))
                      .release();
     });
 }
 
-tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
-                                           const tinytc_value_t *from_list,
+tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_data_type_t loop_var_type,
+                                           uint32_t dim, const tinytc_value_t *from_list,
                                            const tinytc_value_t *to_list,
-                                           tinytc_data_type_t loop_var_type,
                                            const tinytc_location_t *loc) {
     if (instr == nullptr || loop_var_type == nullptr || from_list == nullptr ||
         to_list == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            std::make_unique<foreach_inst>(array_view{from_list, dim}, array_view{to_list, dim},
-                                           loop_var_type, get_optional(loc))
-                .release();
+        *instr = std::make_unique<foreach_inst>(loop_var_type, array_view{from_list, dim},
+                                                array_view{to_list, dim}, get_optional(loc))
+                     .release();
     });
 }
 
@@ -679,14 +680,14 @@ tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc_value_t condi
 
 tinytc_status_t tinytc_work_group_inst_create(tinytc_inst_t *instr,
                                               tinytc_work_group_operation_t operation,
-                                              tinytc_value_t operand,
+                                              tinytc_value_t operand, tinytc_data_type_t ty,
                                               const tinytc_location_t *loc) {
     if (instr == nullptr || operand == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
         *instr = std::make_unique<work_group_inst>(enum_cast<work_group_operation>(operation),
-                                                   operand, get_optional(loc))
+                                                   operand, ty, get_optional(loc))
                      .release();
     });
 }

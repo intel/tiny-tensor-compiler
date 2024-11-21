@@ -3,14 +3,14 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @kernel(%K0: memref<f32x?x?>, %offset: index, %size: index) {
-  %0 = subview %K0[4:%size, %offset] : memref<f32x?x?>
+  %0 = subview %K0[4:%size, %offset] : memref<f32x?>
 ; CHECK: void kernel({{.*}}
 ; CHECK-NEXT: global float* x = K0 + 4ll * 1 + offset * K0_stride1;
 ; CHECK-NEXT: long x_shape0 = size;
 }
 
 func @kernel2(%K0: memref<f32x?x?>, %offset: index, %size: index) {
-  %0 = subview %K0[%offset, 4:%size] : memref<f32x?x?>
+  %0 = subview %K0[%offset, 4:%size] : memref<f32x?,strided<?>>
 ; CHECK: void kernel2({{.*}}
 ; CHECK-NEXT: global float* x = K0 + offset * 1 + 4ll * K0_stride1;
 ; CHECK-NEXT: long x_shape0 = size;

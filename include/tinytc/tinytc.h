@@ -766,7 +766,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *in
 /**
  * @brief Create subview instruction
  *
- * @code %value = subview %a[%offset1:%size1,...,%offsetN:%sizeN] : type(%a) @endcode
+ * @code %value = subview %a[%offset1:%size1,...,%offsetN:%sizeN] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
@@ -780,6 +780,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *in
  * offset_list_size is 0
  * @param size_list_size [in] number of dynamic sizes
  * @param size_list [in][range(0, size_list_size)] size array; may be nullptr if size_list_size is 0
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -788,7 +789,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
     tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
     const int64_t *static_offset_list, const int64_t *static_size_list, uint32_t offset_list_size,
     const tinytc_value_t *offset_list, uint32_t size_list_size, const tinytc_value_t *size_list,
-    const tinytc_location_t *loc);
+    tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create store instruction
@@ -848,23 +849,23 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param loop_var_type [in] type of loop variable
  * @param from [in] loop begion
  * @param to [in] loop bound
  * @param step [in][optional] loop step; can be nullptr
- * @param init_list_size [in] length of init_value_list and return_type_list
- * @param init_value_list [in][range(0, init_list_size)] array of initial values; can be
- * nullptr if init_value_list is 0
- * @param loop_var_type [in] type of loop variable
+ * @param init_return_list_size [in] length of init_value_list and return_type_list
+ * @param initial_value_list [in][range(0, init_return_list_size)] array of initial values; can be
+ * nullptr if init_return_list_size is 0
+ * @param return_type_list [in][range(0, init_return_list_size)] array of return types; can be
+ * nullptr if init_return_list_size is 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
-                                                     tinytc_value_t to, tinytc_value_t step,
-                                                     uint32_t init_list_size,
-                                                     const tinytc_value_t *init_value_list,
-                                                     tinytc_data_type_t loop_var_type,
-                                                     const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(
+    tinytc_inst_t *instr, tinytc_data_type_t loop_var_type, tinytc_value_t from, tinytc_value_t to,
+    tinytc_value_t step, uint32_t init_return_list_size, const tinytc_value_t *initial_value_list,
+    const tinytc_data_type_t *return_type_list, const tinytc_location_t *loc);
 
 /**
  * @brief Create foreach loop
@@ -876,19 +877,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param loop_var_type [in] type of loop variable
  * @param dim [in] length of from and to array; must be > 0
  * @param from_list [in][range(1, dim)] loop begion
  * @param to_list [in][range(1, dim)] loop bound
- * @param loop_var_type [in] type of loop variable
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
-                                                         const tinytc_value_t *from_list,
-                                                         const tinytc_value_t *to_list,
-                                                         tinytc_data_type_t loop_var_type,
-                                                         const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(
+    tinytc_inst_t *instr, tinytc_data_type_t loop_var_type, uint32_t dim,
+    const tinytc_value_t *from_list, const tinytc_value_t *to_list, const tinytc_location_t *loc);
 
 /**
  * @brief Create if condition
@@ -915,12 +914,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
  * @brief Create work group instruction
  *
  * @code
- * %value = work_group work_group_op %operand : type(%operand)
+ * %value = work_group work_group_op %operand : ty
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param operation [in] Work group operation
  * @param operand [in] operand
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -928,6 +928,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
 TINYTC_EXPORT tinytc_status_t tinytc_work_group_inst_create(tinytc_inst_t *instr,
                                                             tinytc_work_group_operation_t operation,
                                                             tinytc_value_t operand,
+                                                            tinytc_data_type_t ty,
                                                             const tinytc_location_t *loc);
 
 /**

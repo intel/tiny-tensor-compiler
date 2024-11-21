@@ -92,15 +92,28 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
         auto tmp = bb.add(
             make_alloca(get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local)));
-        auto a0 = bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3));
-        auto a1 = bb.add(make_subview(A(1), static_offsets3, static_sizes3(A_[1]), offsets3));
-        auto a2 = bb.add(make_subview(A(2), static_offsets3, static_sizes3(A_[2]), offsets3));
-        auto k0 = bb.add(make_subview(K(0), static_offsets2, sizeK2));
-        auto k1 = bb.add(make_subview(K(1), static_offsets2, sizeK2));
-        auto k2 = bb.add(make_subview(K(2), static_offsets2, sizeK2));
-        auto qv = bb.add(make_subview(Q, static_offsets3, {B3_aligned_, P_, 0}, offsets3));
-        auto iv = bb.add(make_subview(I, static_offsets3, {B2_aligned_, P_, 0}, offsets3));
-        auto tmpv = bb.add(make_subview(tmp, static_offsets2, {B2_, P_}));
+
+        auto a0t = get_memref(element_ty, static_sizes3(A_[0]));
+        auto a1t = get_memref(element_ty, static_sizes3(A_[1]));
+        auto a2t = get_memref(element_ty, static_sizes3(A_[2]));
+        auto k0t = get_memref(element_ty, sizeK2);
+        auto k1t = get_memref(element_ty, sizeK2);
+        auto k2t = get_memref(element_ty, sizeK2);
+        auto qvt = get_memref(element_ty, {B3_aligned_, P_});
+        auto ivt = get_memref(element_ty, {B2_aligned_, P_});
+        auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
+        auto a0 =
+            bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3, {}, a0t));
+        auto a1 =
+            bb.add(make_subview(A(1), static_offsets3, static_sizes3(A_[1]), offsets3, {}, a1t));
+        auto a2 =
+            bb.add(make_subview(A(2), static_offsets3, static_sizes3(A_[2]), offsets3, {}, a2t));
+        auto k0 = bb.add(make_subview(K(0), static_offsets2, sizeK2, {}, {}, k0t));
+        auto k1 = bb.add(make_subview(K(1), static_offsets2, sizeK2, {}, {}, k1t));
+        auto k2 = bb.add(make_subview(K(2), static_offsets2, sizeK2, {}, {}, k2t));
+        auto qv = bb.add(make_subview(Q, static_offsets3, {B3_aligned_, P_, 0}, offsets3, {}, qvt));
+        auto iv = bb.add(make_subview(I, static_offsets3, {B2_aligned_, P_, 0}, offsets3, {}, ivt));
+        auto tmpv = bb.add(make_subview(tmp, static_offsets2, {B2_, P_}, {}, {}, tmpvt));
         auto const c0 = bb.add(make_constant_zero(element_ty));
         auto const c1 = bb.add(make_constant_one(element_ty));
         bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a0, c0, tmp));

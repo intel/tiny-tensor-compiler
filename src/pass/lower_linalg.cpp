@@ -56,7 +56,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                                value c_acc) -> value {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
         auto return_values = bb.for_loop(
-            K0, K1, c_step, {c_acc}, index_ty, [&](region_builder &bb, array_view<value> p) {
+            index_ty, K0, K1, c_step, {c_acc}, {c_acc->ty()},
+            [&](region_builder &bb, array_view<value> p) {
                 const auto k = p[0];
 
                 value pos_a[2] = {m_block, k};
@@ -163,9 +164,9 @@ class linalg_generator {
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
 
     template <typename F>
-    void add_foreach(array_view<tinytc_value_t> from, array_view<tinytc_value_t> to,
-                     data_type loop_var_ty, F &&f, location const &loc = {}) {
-        auto fi = std::make_unique<foreach_inst>(std::move(from), std::move(to), loop_var_ty, loc);
+    void add_foreach(data_type loop_var_ty, array_view<tinytc_value_t> from,
+                     array_view<tinytc_value_t> to, F &&f, location const &loc = {}) {
+        auto fi = std::make_unique<foreach_inst>(loop_var_ty, std::move(from), std::move(to), loc);
         auto bb = region_builder{&fi->body()};
         f(bb, fi->loop_vars());
         add(inst{fi.release()});
@@ -213,7 +214,7 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto c0 = add(make_constant(0, index_ty, in.loc()));
         auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
         add_foreach(
-            {c0.get()}, {c_shape0.get()}, index_ty,
+            index_ty, {c0.get()}, {c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
                 auto a =
                     bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
@@ -226,7 +227,7 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
         auto c_shape1 = add(make_size(&in.B(), 1, index_ty, in.loc()));
         add_foreach(
-            {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
+            index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
             [&](region_builder &bb, auto loop_vars) {
                 auto a_idx = std::array<value, 2u>{&loop_vars[0], &loop_vars[1]};
                 if (in.tA() == transpose::T) {
@@ -246,7 +247,7 @@ void linalg_generator::operator()(ger_inst &in) {
     auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
     auto c_shape1 = add(make_size(&in.C(), 1, index_ty, in.loc()));
     add_foreach(
-        {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
+        index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
@@ -337,13 +338,14 @@ void linalg_generator::operator()(gemv_inst &in) {
     auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
     add_foreach(
-        {c0.get()}, {c_shape0.get()}, index_ty,
+        index_ty, {c0.get()}, {c_shape0.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
             auto K =
                 bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
             auto c_acc = bb.for_loop(
-                c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> p) {
+                index_ty, c0, K, {}, {c_init}, {ct->element_data_ty()},
+                [&](region_builder &bb, array_view<value> p) {
                     auto a_idx = std::array<value, 2u>{&loop_vars[0], p[0]};
                     if (in.tA() == transpose::T) {
                         std::swap(a_idx[0], a_idx[1]);
@@ -367,7 +369,7 @@ void linalg_generator::operator()(hadamard_inst &in) {
     auto c0 = add(make_constant(0, index_ty, in.loc()));
     auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
     add_foreach(
-        {c0.get()}, {c_shape0.get()}, index_ty,
+        index_ty, {c0.get()}, {c_shape0.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
@@ -410,13 +412,14 @@ void linalg_generator::operator()(sum_inst &in) {
         auto c_init = bb.add(make_constant_zero(bt->element_data_ty(), in.loc()));
 
         auto acc = bb.for_loop(
-            from_index, c_trip_count, c_step, {c_init}, index_ty,
+            index_ty, from_index, c_trip_count, c_step, {c_init}, {bt->element_data_ty()},
             [&](region_builder &bb, array_view<value> args) {
                 auto a = bb.add(make_load(&in.A(), {args[0]}, at->element_data_ty(), in.loc()));
                 auto sum = mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
                 bb.add(make_yield({sum}, in.loc()));
             });
-        auto sum = bb.add(make_work_group(work_group_operation::reduce_add, acc[0], in.loc()));
+        auto sum = bb.add(
+            make_work_group(work_group_operation::reduce_add, acc[0], acc[0]->ty(), in.loc()));
         bb.if_condition(
             is_from_0,
             [&](region_builder &bb) {
@@ -428,13 +431,14 @@ void linalg_generator::operator()(sum_inst &in) {
         auto c0 = add(make_constant(0, index_ty, in.loc()));
         auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
         add_foreach(
-            {c0.get()}, {c_shape0.get()}, index_ty,
+            index_ty, {c0.get()}, {c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
                 auto K =
                     bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
                 auto c_init = bb.add(make_constant_zero(bt->element_data_ty()));
                 auto acc = bb.for_loop(
-                    c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> args) {
+                    index_ty, c0, K, {}, {c_init}, {bt->element_data_ty()},
+                    [&](region_builder &bb, array_view<value> args) {
                         auto index_list = std::array<value, 2u>{&loop_vars[0], args[0]};
                         if (in.tA() == transpose::T) {
                             std::swap(index_list[0], index_list[1]);

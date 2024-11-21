@@ -32,9 +32,9 @@ func @if2(%0: i32) {
     %c16 = constant 16 : i32
     %1 = cmp.lt %0, %c16 : bool
     if %1 -> () {
-        yield :
+        yield ()
     } else {
-        yield :
+        yield ()
     }
 ; CHECK:      if (x1) {
 ; CHECK-NEXT: } else {
@@ -45,9 +45,9 @@ func @if3(%0: i32) {
     %c16 = constant 16 : i32
     %1 = cmp.lt %0, %c16 : bool
     %x = if %1 -> (i32) {
-        yield %0 : i32
+        yield (%0)
     } else {
-        yield %c16 : i32
+        yield (%c16)
     }
 ; CHECK:      int x2;
 ; CHECK-NEXT: if (x1) {
@@ -64,16 +64,16 @@ func @if4(%0: i32) {
         if %1 {
         }
         %one = constant 1.0 : f32
-        yield %0, %one : i32, f32
+        yield (%0, %one)
     } else {
         %z = if %1 -> (f32) {
             %one = constant 1.0 : f32
-            yield %one : f32
+            yield (%one)
         } else {
             %zero = constant 0.0 : f32
-            yield %zero : f32
+            yield (%zero)
         }
-        yield %c16, %z : i32, f32
+        yield (%c16, %z)
     }
 ; CHECK:      int x2;
 ; CHECK-NEXT: float y;
