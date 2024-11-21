@@ -108,6 +108,31 @@ void check_index_ty(location const &loc, tinytc_value const &v) {
     }
 }
 
+void check_memref_shape(memref_data_type *rt, std::int64_t ri, memref_data_type *ot,
+                        std::int64_t oi, location const &loc) {
+    if (rt->shape(ri) != ot->shape(oi)) {
+        auto extra_info = std::ostringstream{} << "Size of mode " << ri
+                                               << " does not match operand mode " << oi << " ["
+                                               << rt->shape(oi) << "!=" << ot->shape(oi) << "]";
+        throw compilation_error(loc, status::ir_invalid_shape, std::move(extra_info).str());
+    }
+}
+void check_memref_stride(memref_data_type *rt, std::int64_t ri, memref_data_type *ot,
+                         std::int64_t oi, location const &loc) {
+    if (!is_dynamic_value(rt->stride(ri)) && rt->stride(ri) != ot->stride(oi)) {
+        auto extra_info = std::ostringstream{} << "Stride of mode " << ri
+                                               << " does not match operand stride " << oi << " ["
+                                               << rt->stride(oi) << "!=" << ot->stride(oi) << "]";
+        throw compilation_error(loc, status::ir_invalid_stride, std::move(extra_info).str());
+    }
+}
+
+void check_memref_mode(memref_data_type *rt, std::int64_t ri, memref_data_type *ot, std::int64_t oi,
+                       location const &loc) {
+    check_memref_shape(rt, ri, ot, oi, loc);
+    check_memref_stride(rt, ri, ot, oi, loc);
+}
+
 blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t beta,
                            tinytc_value_t B, bool atomic, location const &lc)
     : standard_inst{tid}, atomic_(atomic) {
@@ -584,7 +609,8 @@ cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag,
 
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
                          array_view<std::int64_t> static_expand_shape0,
-                         array_view<tinytc_value_t> expand_shape0, location const &lc)
+                         array_view<tinytc_value_t> expand_shape0, tinytc_data_type_t ty,
+                         location const &lc)
     : standard_inst{IK::expand, static_cast<std::int64_t>(1 + expand_shape0.size())},
       expanded_mode_(expanded_mode), static_expand_shape_(std::move(static_expand_shape0)) {
     op(0, op0);
@@ -593,10 +619,22 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
     }
     loc(lc);
 
+    auto rt = dyn_cast<memref_data_type>(ty);
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+
     auto m = get_memref_type(loc(), operand());
+    if (rt->element_data_ty() != m->element_data_ty()) {
+        throw compilation_error(loc(), {&operand()}, status::ir_scalar_mismatch);
+    }
+    if (rt->addrspace() != m->addrspace()) {
+        throw compilation_error(loc(), {&operand()}, status::ir_address_space_mismatch);
+    }
+
     bool const range_ok = 0 <= expanded_mode_ && expanded_mode_ < m->dim();
     if (!range_ok) {
-        throw compilation_error(loc(), status::ir_out_of_bounds);
+        throw compilation_error(loc(), {&operand()}, status::ir_out_of_bounds);
     }
 
     if (static_expand_shape_.size() < 2) {
@@ -607,30 +645,32 @@ expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
         throw compilation_error(loc(), status::ir_expand_shape_mismatch);
     }
 
-    auto shape = std::vector<std::int64_t>{};
-    auto stride = std::vector<std::int64_t>{};
-    shape.reserve(m->dim() + static_expand_shape_.size() - 1);
-    stride.reserve(m->dim() + static_expand_shape_.size() - 1);
     for (std::int64_t i = 0; i < expanded_mode_; ++i) {
-        shape.push_back(m->shape(i));
-        stride.push_back(m->stride(i));
+        check_memref_mode(rt, i, m, i, loc());
     }
-
-    stride.push_back(m->stride(expanded_mode_));
-    shape.push_back(static_expand_shape_[0]);
-    for (std::size_t j = 1; j < static_expand_shape_.size(); ++j) {
-        stride.push_back(is_dynamic_value(stride.back()) || is_dynamic_value(shape.back())
-                             ? dynamic
-                             : stride.back() * shape.back());
-        shape.push_back(static_expand_shape_[j]);
+    auto stride = m->stride(expanded_mode_);
+    for (std::size_t i = 0; i < static_expand_shape_.size(); ++i) {
+        const auto mode = expanded_mode_ + i;
+        if (rt->shape(mode) != static_expand_shape()[i]) {
+            auto extra_info = std::ostringstream{}
+                              << "Size of mode " << mode << " does not match static expand shape ("
+                              << rt->shape(mode) << "!=" << static_expand_shape()[i] << ")";
+            throw compilation_error(loc(), status::ir_invalid_shape, std::move(extra_info).str());
+        }
+        if (!is_dynamic_value(rt->stride(mode)) && rt->stride(mode) != stride) {
+            auto extra_info = std::ostringstream{} << "Stride of mode " << mode << " is invalid ("
+                                                   << rt->stride(mode) << "!=" << stride << ")";
+            throw compilation_error(loc(), status::ir_invalid_stride, std::move(extra_info).str());
+        }
+        stride = is_dynamic_value(stride) || is_dynamic_value(rt->shape(mode))
+                     ? dynamic
+                     : stride * rt->shape(mode);
     }
     for (std::int64_t i = expanded_mode_ + 1; i < m->dim(); ++i) {
-        shape.push_back(m->shape(i));
-        stride.push_back(m->stride(i));
+        check_memref_mode(rt, i + static_expand_shape_.size() - 1, m, i, loc());
     }
 
-    auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
-    result(0) = value_node{result_ty, this, lc};
+    result(0) = value_node{ty, this, lc};
 }
 
 for_inst::for_inst(tinytc_value_t from0, tinytc_value_t to0, tinytc_value_t step0,
@@ -711,40 +751,55 @@ foreach_inst::foreach_inst(array_view<tinytc_value_t> from, array_view<tinytc_va
     }
 }
 
-fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, location const &lc)
+fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, tinytc_data_type_t ty,
+                     location const &lc)
     : standard_inst{IK::fuse}, from_(from), to_(to) {
     op(0, op0);
     loc(lc);
+
+    auto rt = dyn_cast<memref_data_type>(ty);
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_memref);
+    }
+
     auto m = get_memref_type(loc(), operand());
+    if (rt->element_data_ty() != m->element_data_ty()) {
+        throw compilation_error(loc(), {&operand()}, status::ir_scalar_mismatch);
+    }
+    if (rt->addrspace() != m->addrspace()) {
+        throw compilation_error(loc(), {&operand()}, status::ir_address_space_mismatch);
+    }
+
     bool const range_ok = 0 <= from_ && from_ < to_ && to_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
-    auto shape = std::vector<std::int64_t>{};
-    auto stride = std::vector<std::int64_t>{};
-    shape.reserve(m->dim());
-    stride.reserve(m->dim());
-    std::int64_t i = 0;
-    for (; i < from_; ++i) {
-        shape.push_back(m->shape(i));
-        stride.push_back(m->stride(i));
+
+    for (std::int64_t i = 0; i < from_; ++i) {
+        check_memref_mode(rt, i, m, i, loc());
     }
+
     std::int64_t prod = 1;
-    for (; i <= to_; ++i) {
+    for (std::int64_t i = from_; i <= to_; ++i) {
         if (is_dynamic_value(m->shape(i))) {
             prod = dynamic;
             break;
         }
         prod *= m->shape(i);
     }
-    shape.push_back(prod);
-    stride.push_back(m->stride(from_));
-    for (i = to_ + 1; i < m->dim(); ++i) {
-        shape.push_back(m->shape(i));
-        stride.push_back(m->stride(i));
+    if (rt->shape(from_) != prod) {
+        auto extra_info = std::ostringstream{} << "Size of mode " << from_
+                                               << " does not match shape product ("
+                                               << rt->shape(from_) << "!=" << prod << ")";
+        throw compilation_error(loc(), status::ir_invalid_shape, std::move(extra_info).str());
     }
-    auto result_ty = memref_data_type::get(m->element_data_ty(), shape, stride, m->addrspace());
-    result(0) = value_node{result_ty, this, lc};
+    check_memref_stride(rt, from_, m, from_, loc());
+
+    for (std::int64_t i = to_ + 1; i < m->dim(); ++i) {
+        check_memref_mode(rt, i - to_ + from_, m, i, loc());
+    }
+
+    result(0) = value_node{ty, this, lc};
 }
 
 load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0, location const &lc)

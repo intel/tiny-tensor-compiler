@@ -493,14 +493,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  * @param expand_shape_size [in][optional] dimension of expand shape; must match number of entries
  * equal to TINYTC_DYNAMIC in static_expand_shape array; can be 0
  * @param expand_shape [in][optional][range(0, expand_shape_size)] expand shape array
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t a, int64_t expanded_mode,
-    uint32_t static_expand_shape_size, const int64_t *static_expand_shape,
-    uint32_t expand_shape_size, const tinytc_value_t *expand_shape, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t
+tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t expanded_mode,
+                          uint32_t static_expand_shape_size, const int64_t *static_expand_shape,
+                          uint32_t expand_shape_size, const tinytc_value_t *expand_shape,
+                          tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create fuse instruction
@@ -511,12 +513,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(
  * @param a [in] operand
  * @param from [in] first mode to fuse
  * @param to [in] last mode to fuse
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       int64_t from, int64_t to,
+                                                      tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
 
 /**

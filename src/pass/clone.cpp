@@ -64,12 +64,13 @@ auto inst_cloner::operator()(cooperative_matrix_store_inst &in) -> std::unique_p
                                                            subs(&in.pos1()), in.loc());
 }
 auto inst_cloner::operator()(expand_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<expand_inst>(subs(&in.operand()), in.expanded_mode(),
-                                         in.static_expand_shape(),
-                                         subs_value_range(in.expand_shape()), in.loc());
+    return std::make_unique<expand_inst>(
+        subs(&in.operand()), in.expanded_mode(), in.static_expand_shape(),
+        subs_value_range(in.expand_shape()), in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(fuse_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<fuse_inst>(subs(&in.operand()), in.from(), in.to(), in.loc());
+    return std::make_unique<fuse_inst>(subs(&in.operand()), in.from(), in.to(), in.result(0).ty(),
+                                       in.loc());
 }
 
 auto inst_cloner::operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_inst> {

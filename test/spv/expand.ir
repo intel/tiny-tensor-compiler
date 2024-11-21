@@ -13,7 +13,7 @@
 
 func @f1(%0: memref<f32x32x?x7>, %1: index) {
   %c0 = constant 0 : index
-  %2 = expand %0[1->4x%1x5] : memref<f32x32x?x7>
+  %2 = expand %0[1->4x%1x5] : memref<f32x32x4x?x5x7>
   %3 = size %2[0] : memref<f32x32x4x?x5x7>
   %4 = size %2[1] : memref<f32x32x4x?x5x7>
   %5 = size %2[2] : memref<f32x32x4x?x5x7>

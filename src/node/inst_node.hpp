@@ -542,7 +542,8 @@ class expand_inst : public standard_inst<dynamic, 1> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::expand; }
     expand_inst(tinytc_value_t op, std::int64_t expanded_mode,
                 array_view<std::int64_t> static_expand_shape,
-                array_view<tinytc_value_t> expand_shape, location const &lc = {});
+                array_view<tinytc_value_t> expand_shape, tinytc_data_type_t ty,
+                location const &lc = {});
 
     inline std::int64_t expanded_mode() const { return expanded_mode_; }
     inline auto static_expand_shape() const -> array_view<std::int64_t> {
@@ -563,7 +564,8 @@ class expand_inst : public standard_inst<dynamic, 1> {
 class fuse_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::fuse; }
-    fuse_inst(tinytc_value_t op, std::int64_t from, std::int64_t to, location const &lc = {});
+    fuse_inst(tinytc_value_t op, std::int64_t from, std::int64_t to, tinytc_data_type_t ty,
+              location const &lc = {});
 
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }

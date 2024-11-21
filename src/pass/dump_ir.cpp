@@ -260,7 +260,7 @@ void dump_ir_pass::operator()(expand_inst const &e) {
         }
     }
     *os_ << "] : ";
-    visit(*this, *e.operand().ty());
+    visit(*this, *e.result(0).ty());
 }
 
 void dump_ir_pass::operator()(fuse_inst const &f) {
@@ -269,7 +269,7 @@ void dump_ir_pass::operator()(fuse_inst const &f) {
     dump_val(f.operand());
     *os_ << "[" << f.from() << "," << f.to() << "]";
     *os_ << " : ";
-    visit(*this, *f.operand().ty());
+    visit(*this, *f.result(0).ty());
 }
 
 void dump_ir_pass::operator()(load_inst const &e) {

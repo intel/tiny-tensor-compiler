@@ -407,7 +407,7 @@ tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a
                                           int64_t expanded_mode, uint32_t static_expand_shape_size,
                                           const int64_t *static_expand_shape,
                                           uint32_t expand_shape_size,
-                                          const tinytc_value_t *expand_shape,
+                                          const tinytc_value_t *expand_shape, tinytc_data_type_t ty,
                                           const tinytc_location_t *loc) {
     if (instr == nullptr || static_expand_shape == nullptr ||
         (expand_shape_size > 0 && expand_shape == nullptr)) {
@@ -416,18 +416,20 @@ tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a
     return exception_to_status_code([&] {
         *instr = std::make_unique<expand_inst>(
                      a, expanded_mode, array_view{static_expand_shape, static_expand_shape_size},
-                     array_view{expand_shape, expand_shape_size}, get_optional(loc))
+                     array_view{expand_shape, expand_shape_size}, ty, get_optional(loc))
                      .release();
     });
 }
 
 tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t from,
-                                        int64_t to, const tinytc_location_t *loc) {
+                                        int64_t to, tinytc_data_type_t ty,
+                                        const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code(
-        [&] { *instr = std::make_unique<fuse_inst>(a, from, to, get_optional(loc)).release(); });
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<fuse_inst>(a, from, to, ty, get_optional(loc)).release();
+    });
 }
 
 tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,

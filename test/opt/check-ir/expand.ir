@@ -8,67 +8,44 @@
 ; CHECK: func @t1({{.*}}
 
 func @t1(%0: memref<f32x32x16x8>) {
-  %z = constant 0 : index
-  %1 = expand %0[1->2x8] : memref<f32x32x16x8>
-  %2 = load %1[%z,%z,%z,%z] : memref<f32x32x2x8x8>
+  %1 = expand %0[1->2x8] : memref<f32x32x2x8x8>
 }
 func @t2(%0: memref<f32x32x16x8>) {
-  %z = constant 0 : index
-  %1 = expand %0[1->2x2x2x2] : memref<f32x32x16x8>
-  %2 = load %1[%z,%z,%z,%z,%z,%z] : memref<f32x32x2x2x2x2x8>
+  %1 = expand %0[1->2x2x2x2] : memref<f32x32x2x2x2x2x8>
 }
 func @t3(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[1->%1 x 2] : memref<f32x32x?>
-  %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
+  %2 = expand %0[1->%1 x 2] : memref<f32x32x?x2>
 }
 func @t4(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[1->2 x %1] : memref<f32x32x?>
-  %3 = load %2[%z,%z,%z] : memref<f32x32x2x?>
+  %2 = expand %0[1->2 x %1] : memref<f32x32x2x?>
 }
 func @t5(%0: memref<f32x32x16>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[1->%1 x 2] : memref<f32x32x16>
-  %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
+  %2 = expand %0[1->%1 x 2] : memref<f32x32x?x2>
 }
 func @t6(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[1->%1 x 2] : memref<f32x32x?>
-  %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
+  %2 = expand %0[1->%1 x 2] : memref<f32x32x?x2>
 }
 func @t7(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 : index
-  %3 = expand %0[1->%1 x %2 x 2] : memref<f32x32x16>
-  %4 = load %3[%z,%z,%z,%z] : memref<f32x32x?x?x2>
+  %3 = expand %0[1->%1 x %2 x 2] : memref<f32x32x?x?x2>
 }
 func @t8(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 : index
-  %3 = expand %0[1->%2 x 2 x %1] : memref<f32x32x16>
-  %4 = load %3[%z,%z,%z,%z] : memref<f32x32x?x2x?>
+  %3 = expand %0[1->%2 x 2 x %1] : memref<f32x32x?x2x?>
 }
 func @t9(%0: memref<f32x32x?>, %1: index, %2: index) {
-  %z = constant 0 : index
-  %3 = expand %0[1->%1 x %2] : memref<f32x32x?>
-  %4 = load %3[%z,%z,%z] : memref<f32x32x?x?>
+  %3 = expand %0[1->%1 x %2] : memref<f32x32x?x?>
 }
 func @t10(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 : index
-  %3 = expand %0[1->%1 x %2] : memref<f32x32x16>
-  %4 = load %3[%z,%z,%z] : memref<f32x32x?x?>
+  %3 = expand %0[1->%1 x %2] : memref<f32x32x?x?>
 }
 func @t11(%0: memref<f32x32x7,strided<2,64>>) {
-  %z = constant 0 : index
-  %1 = expand %0[0->4 x 8] : memref<f32x32x7,strided<2,64>>
-  %2 = load %1[%z,%z,%z] : memref<f32x4x8x7,strided<2,8,64>>
+  %1 = expand %0[0->4 x 8] : memref<f32x4x8x7,strided<2,8,64>>
 }
-func @t12(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[0->%1 x 4] : memref<f32x?x7,strided<2,?>>
-  %3 = load %2[%z,%z,%z] : memref<f32x?x4x7,strided<2,?,?>>
+func @t12(%0: memref<f32x32x7,strided<2,64>>) {
+  %1 = expand %0[0->4 x 8] : memref<f32x4x8x7,strided<?,?,?>>
 }
 func @t13(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
-  %z = constant 0 : index
-  %2 = expand %0[0->4 x %1] : memref<f32x?x7,strided<2,?>>
-  %3 = load %2[%z,%z,%z] : memref<f32x4x?x7,strided<2,8,?>>
+  %2 = expand %0[0->%1 x 4] : memref<f32x?x4x7,strided<2,?,?>>
+}
+func @t14(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
+  %2 = expand %0[0->4 x %1] : memref<f32x4x?x7,strided<2,8,?>>
 }

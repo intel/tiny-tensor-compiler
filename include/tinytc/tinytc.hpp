@@ -1168,13 +1168,14 @@ inline inst make_axpby(transpose tA, bool atomic, value alpha, value A, value be
  * @param expanded_mode Expanded mode
  * @param static_expand_shape Static expand shape
  * @param expand_shape Dynamic expand shape
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
 inline inst make_expand(value a, std::int64_t expanded_mode,
                         array_view<std::int64_t> static_expand_shape,
-                        array_view<value> expand_shape, location const &loc = {}) {
+                        array_view<value> expand_shape, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     auto static_len = static_expand_shape.size();
     if (static_len > std::numeric_limits<std::uint32_t>::max()) {
@@ -1186,7 +1187,7 @@ inline inst make_expand(value a, std::int64_t expanded_mode,
     }
     const tinytc_value_t *es = reinterpret_cast<const tinytc_value_t *>(expand_shape.data());
     CHECK_STATUS_LOC(tinytc_expand_inst_create(&instr, a, expanded_mode, static_len,
-                                               static_expand_shape.data(), len, es, &loc),
+                                               static_expand_shape.data(), len, es, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -1197,13 +1198,15 @@ inline inst make_expand(value a, std::int64_t expanded_mode,
  * @param a Operand
  * @param from First mode to fuse
  * @param to Last mode to fuse
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_fuse(value a, std::int64_t from, std::int64_t to, location const &loc = {}) {
+inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
+                      location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_fuse_inst_create(&instr, a, from, to, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_fuse_inst_create(&instr, a, from, to, ty, &loc), loc);
     return inst(instr);
 }
 

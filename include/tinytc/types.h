@@ -77,26 +77,28 @@ typedef enum {
     tinytc_status_ir_spmd_called_from_collective = 0x11d,   ///< SPMD instruction from collective
     tinytc_status_ir_expected_local_address_space = 0x11e,  ///< Expected local address space
     tinytc_status_ir_expected_global_address_space = 0x11f, ///< Expected global address space
-    tinytc_status_ir_invalid_offset = 0x120,                ///< Invalid offset
-    tinytc_status_ir_int_unsupported = 0x121,     ///< Instruction does not support int type
-    tinytc_status_ir_boolean_unsupported = 0x122, ///< Instruction does not support boolean type
-    tinytc_status_ir_complex_unsupported = 0x123, ///< Instruction does not support complex type
+    tinytc_status_ir_address_space_mismatch = 0x120,        ///< Address space must match
+    tinytc_status_ir_invalid_offset = 0x121,                ///< Invalid offset
+    tinytc_status_ir_int_unsupported = 0x122,     ///< Instruction does not support int type
+    tinytc_status_ir_boolean_unsupported = 0x123, ///< Instruction does not support boolean type
+    tinytc_status_ir_complex_unsupported = 0x124, ///< Instruction does not support complex type
     tinytc_status_ir_coopmatrix_unsupported =
-        0x124,                                     ///< Instruction does not support coopmatrix type
-    tinytc_status_ir_forbidden_cast = 0x125,       ///< Forbidden cast
-    tinytc_status_ir_invalid_beta = 0x126,         ///< Invalid beta value
-    tinytc_status_ir_init_return_mismatch = 0x127, ///< Mismatch of init values and returned values
-    tinytc_status_ir_invalid_matrix_use = 0x128,   ///< Invalid matrix use
-    tinytc_status_ir_unsupported_coopmatrix_shape = 0x129, ///< Unsupported coopmatrix shape
-    tinytc_status_ir_incompatible_scalar_types = 0x12a,    ///< Incompatible scalar types
-    tinytc_status_ir_constant_mismatch = 0x12b,            ///< Constant mismatch
-    tinytc_status_ir_insufficient_alignment = 0x12c,       ///< Insufficient alignment
-    tinytc_status_ir_must_have_yield = 0x12d,              ///< Must have yield instruction
+        0x125,                                     ///< Instruction does not support coopmatrix type
+    tinytc_status_ir_forbidden_cast = 0x126,       ///< Forbidden cast
+    tinytc_status_ir_invalid_beta = 0x127,         ///< Invalid beta value
+    tinytc_status_ir_init_return_mismatch = 0x128, ///< Mismatch of init values and returned values
+    tinytc_status_ir_invalid_matrix_use = 0x129,   ///< Invalid matrix use
+    tinytc_status_ir_unsupported_coopmatrix_shape = 0x12a, ///< Unsupported coopmatrix shape
+    tinytc_status_ir_incompatible_scalar_types = 0x12b,    ///< Incompatible scalar types
+    tinytc_status_ir_constant_mismatch = 0x12c,            ///< Constant mismatch
+    tinytc_status_ir_insufficient_alignment = 0x12d,       ///< Insufficient alignment
+    tinytc_status_ir_must_have_yield = 0x12e,              ///< Must have yield instruction
     tinytc_status_ir_yield_in_else_branch_missing =
-        0x12e,                                 ///< Must have yield instruction in else branch
-    tinytc_status_ir_from_to_mismatch = 0x12f, ///< size(from) != size(to) in foreach
+        0x12f,                                 ///< Must have yield instruction in else branch
+    tinytc_status_ir_from_to_mismatch = 0x130, ///< size(from) != size(to) in foreach
     tinytc_status_ir_operand_type_must_match_return_type =
-        0x130, /// Operand type must match return type
+        0x131,                               /// Operand type must match return type
+    tinytc_status_ir_invalid_stride = 0x132, ///< Invalid stride
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

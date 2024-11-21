@@ -137,7 +137,7 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_out_of_bounds:
         return "Argument is out of bounds";
     case tinytc_status_ir_invalid_shape:
-        return "Mode size must be non-negative";
+        return "Invalid shape";
     case tinytc_status_ir_incompatible_shapes:
         return "Incompatible tensor shapes";
     case tinytc_status_ir_shape_stride_mismatch:
@@ -200,6 +200,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "A memref with local address space is expected";
     case tinytc_status_ir_expected_global_address_space:
         return "A memref with global address space is expected";
+    case tinytc_status_ir_address_space_mismatch:
+        return "Address space must match";
     case tinytc_status_ir_invalid_offset:
         return "Offset must be non-negative or dynamic";
     case tinytc_status_ir_int_unsupported:
@@ -235,6 +237,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "length(from) must equal length(to) and length must be greater than 0";
     case tinytc_status_ir_operand_type_must_match_return_type:
         return "Type of operand must match return type";
+    case tinytc_status_ir_invalid_stride:
+        return "Invalid stride";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

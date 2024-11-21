@@ -959,12 +959,7 @@ cooperative_matrix_store_inst:
 ;
 
 expand_inst:
-    EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] ARROW expand_shape RSQBR COLON memref_type {
-        if ($var->ty() != $memref_type) {
-            auto loc = @var;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] ARROW expand_shape RSQBR COLON memref_type[ty] {
         try {
             auto static_shape = std::vector<std::int64_t>{};
             static_shape.reserve($expand_shape.size());
@@ -981,7 +976,7 @@ expand_inst:
             }
             $$ = inst {
                 std::make_unique<expand_inst>(std::move($var), $expanded_mode, std::move(static_shape),
-                                              std::move(dynamic_shape), @expand_inst)
+                                              std::move(dynamic_shape), $ty, @expand_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1011,15 +1006,10 @@ integer_constant_or_identifier:
 ;
 
 fuse_inst:
-    FUSE var LSQBR INTEGER_CONSTANT[from] COMMA INTEGER_CONSTANT[to] RSQBR COLON memref_type {
-        if ($var->ty() != $memref_type) {
-            auto loc = @var;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    FUSE var LSQBR INTEGER_CONSTANT[from] COMMA INTEGER_CONSTANT[to] RSQBR COLON memref_type[ty] {
         try {
             $$ = inst {
-                std::make_unique<fuse_inst>(std::move($var), $from, $to, @fuse_inst).release()
+                std::make_unique<fuse_inst>(std::move($var), $from, $to, $ty, @fuse_inst).release()
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);

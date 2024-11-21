@@ -1110,6 +1110,7 @@ Restrictions
 
 The memref type of the result must conform with the following rules:
 
+#. Element type and address space must match the operand's memref type.
 #. **Shape:** The mode size is replaced with the expand shape.
    The product of the expand shape must equal the size of the expanded mode.
 
@@ -1256,6 +1257,7 @@ Restrictions
 
 The memref type of the result must conform with the following rules:
 
+#. Element type and address space must match the operand's memref type.
 #. **Shape:** The mode size of the fused modes is the product of the mode sizes. If one mode is dynamic the fused mode size is dynamic.
 
    .. code::
