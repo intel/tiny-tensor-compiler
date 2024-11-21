@@ -161,9 +161,9 @@ Scalar types
 .. code:: abnf
 
     scalar-type                 = integer-type / floating-type / complex-type
-    integer-type                = "i" ("8" / "16" / "32" / "64") / "index"
-    floating-type               = "f" ("32" / "64")
-    complex-type                = "c" ("32" / "64")
+    integer-type                = "i8" / "i16" / "i32" / "i64" / "index"
+    floating-type               = "f32" / "f64"
+    complex-type                = "c32" / "c64"
 
 Scalar types are either signless integer ("i"), floating point ("f"),
 or complex floating point ("c").
@@ -178,6 +178,8 @@ A scalar type :math:`\alpha` is called *compatible to* a scalar type :math:`\bet
 If an arithmetic operation involves mixed types :math:`\alpha` and :math:`\beta` and
 :math:`\alpha \preceq \beta`, then :math:`\alpha` is casted to :math:`\beta` and the arithmetic operation
 is done with type :math:`\beta`.
+The function :math:`\text{compatible_type}(a, b)` returns the highest ranking type,
+e.g. :math:`\text{compatible_type}(\text{i32},\text{f32}) = \text{f32}`.
 
 
 Memref type
@@ -221,6 +223,24 @@ that is shared by all work groups.
 The local memory space is shared by all work-items of the work-group but inaccessible to another work-group.
 The default address space is "global", memrefs with "local" address space are returned by
 the alloca instruction.
+
+Definitions
+...........
+
+Let V be a value of memref type.
+The :math:`\text{order}(V)` operation returns the memref's order.
+The :math:`\text{shape}(V)` returns the tensor shape as tuple.
+:math:`\text{rows}(V)` and :math:`\text{columns}(V)` return the size of the first
+and second mode, respectively.
+The :math:`\text{element_type}(V)` operation gives the underlying scalar type.
+
+For example, let B be a value of memref<f32x8x16x4> type, then
+
+* :math:`\text{order}(B) = 3`
+* :math:`\text{shape}(B) = (8,16,4)`
+* :math:`\text{rows}(B) = 8`
+* :math:`\text{columns}(B) = 16`
+* :math:`\text{element_type}(B) = \text{f32}`
 
 
 Memory layout
@@ -299,8 +319,27 @@ The supported matrix shapes may depend on data type, matrix use, and target hard
 
 An argument to any instruction that has coopmatrix type **must** be dynamically uniform.
 
+Definitions
+...........
+
+Let V be a value of coopmatrix type.
+The :math:`\text{rows}(V)` and :math:`\text{columns}(V)` functions return the size of the first
+and second mode, respectively, and :math:`\text{shape}(V)` returns rows and cols as tuple.
+The :math:`\text{component_type}(V)` operation gives the underlying scalar type
+and :math:`\text{use}(V)` returns the use.
+
+For example, let B be a value of coopmatrix<f32x8x16,matrix_acc> type, then
+
+* :math:`\text{shape}(B) = (8,16)`
+* :math:`\text{rows}(B) = 8`
+* :math:`\text{columns}(B) = 16`
+* :math:`\text{component_type}(B) = \text{f32}`
+* :math:`\text{use}(B) = \text{matrix_acc}`
+
 Instructions
 ============
+
+Instructions may return zero, one, or multiple values, and follow the following format:
 
 .. code:: abnf
 
@@ -309,6 +348,14 @@ Instructions
     local-identifier-list               = local-identifier *("," local-identifier)
     instruction                         = value-instruction-assignment
                                           / multi-value-instruction-assignment
+
+That is, on the left-hand side we have list of values that are produced by the instruction followed by an equals sign,
+or an empty string, if the instruction does not produce values.
+On the right-hand side, after the equals sign or empty string, the name of the instruction is written, e.g. "arith", optionally followed by instruction modifiers, e.g. "arith.add".
+Then, a list of operands follows that is usually comma-seperated but might also be printed in a custom format
+(e.g. for "load", "store", "subview", etc.).
+If the instruction produces values, then the types of the returned values must be annotated after a colon.
+
 
 
 Collective instructions
@@ -319,23 +366,18 @@ Alloca
 
 .. code:: abnf
 
-    value-instruction   = "alloca" "->" memref-type
+    value-instruction   = "alloca" ":" memref-type
 
 Overview
 ~~~~~~~~
 
 The alloca instruction allocates temporary memory that is freed automatically at the end of the block that contains the alloca.
 
-Returns
-~~~~~~~
-
-A memref of the memref-type.
-
 Restrictions
 ~~~~~~~~~~~~
 
-- The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
-- The address space must be "local".
+* The memref's size must known at compile-time, i.e. the tensor shape must not contain any dynamic modes.
+* The address space must be "local".
 
 Axpby
 .....
@@ -343,9 +385,8 @@ Axpby
 .. code:: abnf
 
     transpose       =  ".t" / ".n"
-    instruction     =/ "axpby" transpose [".atomic"]
-                               local-identifier "," local-identifier "," local-identifier "," local-identifier
-                               ":" scalar-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "axpby" transpose [".atomic"] local-identifier "," local-identifier ","
+                               local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -356,34 +397,36 @@ Axpby implements
 
     B := \alpha \text{op}(A) + \beta B
 
-for vectors and matrices.
-If the atomic flag is set, B is updated atomically.
-
-Arguments
-~~~~~~~~~
-
-The first argument gives :math:`\alpha`, and the third argument gives :math:`\beta`.
-The second and the fourth argument must have memref type and give A and B, respectively.
-
-The transpose modifier defines :math:`\text{op}` as following:
+for vectors and matrices, where :math:`\text{op}(X)` is defined as
 
 .. math::
 
-    \text{op}_i(X) := \left\{
-                      \begin{array}{rcl}
-                        X^T & \text{ if } & \text{modifier}_i= t \wedge \text{order}(X) = 2,\\
+    \text{op}(X) := \left\{
+                    \begin{array}{rcl}
+                        X^T & \text{ if } & \text{transpose} = \text{".t"} \wedge \text{order}(X) = 2,\\
                         X   & \text{ else. }
-                      \end{array}
-                      \right.
+                    \end{array}
+                    \right.
 
-(Note that ".t" has no effect on vectors.)
+If the atomic flag is set, B is updated atomically.
 
-The shape of :math:`\text{op}(A)` and B must be identical and the order of A and B needs to be 1 (vector)
-or 2 (matrix).
+Operands
+~~~~~~~~
+
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type A
+3       scalar-type :math:`\beta`  
+4       memref-type B
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{shape}(B) = \text{shape}(\text{op}(A))`
+* :math:`\text{order}(B) = 1 \lor \text{order}(B) = 2`
 * :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -393,9 +436,8 @@ Foreach
 
 .. code:: abnf
 
-    instruction     =/ "foreach" "(" local-identifier-list ")" "="
-                       "(" local-identifier-list ")" "," "(" local-identifier-list ")"
-                       [":" integer-type] region
+    instruction     =/ "foreach" "(" local-identifier-list ")" [":" integer-type] "="
+                       "(" local-identifier-list ")" "," "(" local-identifier-list ")" region
 
 Overview
 ~~~~~~~~
@@ -421,8 +463,8 @@ The loop range is defined as the cartesian product of the half-open intervals
     (\text{var}_1, \dots, \text{var}_N) \in [\text{from}_1; \text{to}_1) \times \dots \times
     [\text{from}_N; \text{to}_N)
 
-The integer type of the loop variable and the loop bounds is given after the colon and
-the default integer type is ``index``.
+The integer type of the loop variable and the loop bounds can be optionally set after the colon.
+The default integer type is ``index``.
 
 The mapping of trip count to work-item is implementation-defined.
 
@@ -431,9 +473,8 @@ GEMM
 
 .. code:: abnf
 
-    instruction     =/ "gemm" transpose transpose [".atomic"]
-                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
-                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "gemm" transpose transpose [".atomic"] local-identifier "," local-identifier ","
+                              local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -444,34 +485,41 @@ GEMM implements the well-known GEMM BLAS-3 operation.
 
     C := \alpha \text{op}_1(A) \text{op}_2(B) + \beta C
 
-If the atomic flag is set, C is updated atomically.
-
-Arguments
-~~~~~~~~~
-
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-A, B, and C, respectively.
-
-The first transpose modifier defines :math:`\text{op}_1` and the second transpose modifier
-defines :math:`\text{op}_2` as following:
+The functions :math:`\text{op}_1` and :math:`\text{op}_2` are defined as
 
 .. math::
 
     \text{op}_i(X) := \left\{
                       \begin{array}{rcl}
-                        X^T & \text{ if } & \text{modifier}_i = t,\\
-                        X   & \text{ if } & \text{modifier}_i = n.
+                        X^T & \text{ if } & \text{transpose}_i = \text{".t"},\\
+                        X   & \text{ if } & \text{transpose}_i = \text{".n"}.
                       \end{array}
                       \right.
 
+where transpose\ :sub:`1` and transpose\ :sub:`2` refer to the first and second transpose modifier, respectively.
 
-If :math:`\text{op}_1(A)` has the shape MxK and
-:math:`\text{op}_2(B)` has the shape KxN then C must have the shape MxN.
+If the atomic flag is set, C is updated atomically.
+
+Operands
+~~~~~~~~
+
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type A
+3       memref-type B
+4       scalar-type :math:`\beta`
+5       memref-type C
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{order}(A) = \text{order}(B) = \text{order}(C) = 2`
+* :math:`\text{colums}(\text{op}_1(A)) = \text{rows}(\text{op}_2(B))`
+* :math:`\text{rows}(C) = \text{rows}(\text{op}_1(A))`
+* :math:`\text{columns}(C) = \text{columns}(\text{op}_2(B))`
 * :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(B))`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -481,9 +529,8 @@ GEMV
 
 .. code:: abnf
 
-    instruction     =/ "gemv" transpose [".atomic"]
-                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
-                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "gemv" transpose [".atomic"] local-identifier "," local-identifier ","
+                              local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -494,22 +541,30 @@ GEMV implements the well-known GEMM BLAS-2 operation.
 
     c := \alpha \text{op}_1(A) b + \beta c
 
+where :math:`\text{op}_1` is defined as in GEMM.
+
 If the atomic flag is set, c is updated atomically.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-A, b, and c, respectively.
-
-The transpose modifier for A as in GEMM.
-
-:math:`\text{op}_1(A)` has the shape MxK and :math:`B` has the shape K then c must have the shape M.
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type A
+3       memref-type b
+4       scalar-type :math:`\beta`
+5       memref-type c
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{order}(A) = 2`
+* :math:`\text{order}(b) = \text{order}(c) = 1`
+* :math:`\text{colums}(\text{op}_1(A)) = \text{rows}(b)`
+* :math:`\text{rows}(c) = \text{rows}(\text{op}_1(A))`
 * :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(b))`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -519,9 +574,8 @@ GER
 
 .. code:: abnf
 
-    instruction     =/ "ger" [".atomic"]
-                       local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
-                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "ger" [".atomic"] local-identifier "," local-identifier ","
+                             local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -534,18 +588,26 @@ Computes the general rank-1 update:
 
 If the atomic flag is set, C is updated atomically.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-a, b, and C, respectively.
-
-a and b must be vectors. If the size of a is M and the size of b is N the shape of C must be :math:`M\times N`.
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type a
+3       memref-type b
+4       scalar-type :math:`\beta`
+5       memref-type C
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{order}(a) = \text{order}(b) = 1`
+* :math:`\text{order}(C) = 2`
+* :math:`\text{rows}(C) = \text{rows}(a)`
+* :math:`\text{columns}(C) = \text{rows}(b)`
 * :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -556,9 +618,8 @@ Hadamard product
 
 .. code:: abnf
 
-    instruction     =/ "hadamard_product" [".atomic"]
-                       local-identifier "," local-identifier "," local-identifier "," local-identifier "," local-identifier
-                       ":" scalar-type "," memref-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "hadamard_product" [".atomic"] local-identifier "," local-identifier ","
+                                          local-identifier "," local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
@@ -572,18 +633,24 @@ That is, in index notation we have
 
 If the atomic flag is set, c is updated atomically.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first argument gives :math:`\alpha` and the fourth argument gives :math:`\beta`.
-The second, the third, and the fifth argument must have memref type and give
-a, b, and c, respectively.
-
-a, b, and c must be vectors and have equal shape.
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type a
+3       memref-type b
+4       scalar-type :math:`\beta`
+5       memref-type c
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{order}(a) = \text{order}(b) = \text{order}(c) = 1`
+* :math:`\text{shape}(a) = \text{shape}(b) = \text{shape}(c)`
 * :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(c)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -605,43 +672,47 @@ Sum
 
 .. code:: abnf
 
-    instruction     =/ "sum" transpose [".atomic"]
-                       "," local-identifier "," local-identifier "," local-identifier "," local-identifier
-                       ":" scalar-type "," memref-type "," scalar-type "," memref-type
+    instruction     =/ "sum" transpose [".atomic"] local-identifier "," local-identifier ","
+                             local-identifier "," local-identifier
 
 Overview
 ~~~~~~~~
 
 Computes the matrix-vector product or the dot product of A with a vector of ones.
-That is, for matrices we have
+That is, if the result is a vector we have
 
 .. math::
 
-    B := \alpha \text{op}(A) \vec{1} + \beta B
+    b := \alpha \text{op}(A) \vec{1} + \beta b,
 
-and for vectors we have
+where :math:`\text{op}(A)` is defined as in the axpby instruction,
+and if the result is a scalar we have
 
 .. math::
 
-    b := \alpha \left<a,\vec{1}\right> + \beta b
+    b := \alpha \left<A,\vec{1}\right> + \beta b
 
-If the atomic flag is set, B is updated atomically.
+If the atomic flag is set, b is updated atomically.
 
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first argument gives :math:`\alpha` and the third argument gives :math:`\beta`.
-The second and the fourth argument must have memref type and give A and B, respectively.
-If A is a matrix then B must be a vector.
-The first mode size of :math:`\text{op}(A)` must match the size of B.
-If A is a vector, then B must be a scalar memref.
-
-The transpose op is defined as in the axpby instruction.
+======= =========== ============== 
+Op.-No. Type        Description
+======= =========== ==============
+1       scalar-type :math:`\alpha` 
+2       memref-type A
+3       scalar-type :math:`\beta`
+4       memref-type b
+======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{order}(b) = 1 \lor \text{order}(b) = 0`
+* :math:`\text{order}(A) = \text{order}(b)+1`
+* :math:`\text{rows}(b) = \text{rows}(\text{op}(A)) \text{ if } \text{order}(b) = 1`
 * :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
@@ -706,7 +777,7 @@ Overview
 ~~~~~~~~
 
 Unary arithmetic operation on scalars and cooperative matrices.
-For integer and floating point input, the returned value has the same type as the operand.
+For integer and floating point input, the operand must have the same type as the returned value.
 For complex input, the returned value has the component floating point type
 for ".abs", ".im", and ".re", and the returned value has the same type as the operand
 for ".neg" and ".conj".
@@ -757,13 +828,13 @@ Cast
 
 .. code:: abnf
 
-    value-instruction       =/ "cast" local-identifier ":" scalar-type "->" scalar-type
-    value-instruction       =/ "cast" local-identifier ":" coopmatrix-type "->" coopmatrix-type
+    value-instruction       =/ "cast" local-identifier ":" scalar-type
+    value-instruction       =/ "cast" local-identifier ":" coopmatrix-type
 
 Overview
 ~~~~~~~~
 
-Cast scalar values or cooperative matrices.
+Cast scalar values or cooperative matrices to type indicated after the colon.
 The shape and the use the coopmatrix types must match.
 
 Casts from complex types to non-complex types are forbidden.
@@ -790,7 +861,7 @@ Comparison
 .. code:: abnf
 
     value-instruction       =/ "cmp" (".eq" / ".ne" / ".gt" / ".ge" / ".lt" / ".le")
-                               local-identifier "," local-identifier ":" scalar-type
+                               local-identifier "," local-identifier ":" "bool"
 
 Overview
 ~~~~~~~~
@@ -817,7 +888,7 @@ Constant
 
 .. code:: abnf
 
-    value-instruction       =/ "constant" constant "->" (boolean-type / scalar-type / coopmatrix-type)
+    value-instruction       =/ "constant" constant ":" (boolean-type / scalar-type / coopmatrix-type)
 
 Overview
 ~~~~~~~~
@@ -835,7 +906,7 @@ Cooperative matrix load
 
     value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
                                    local-identifier "[" local-identifier "," local-identifier "]"
-                                   ":" memref-type "->" coopmatrix-type
+                                   ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
 
 Overview
@@ -869,24 +940,31 @@ Flag            Description
 .both_checked.t .rows_checked.t + .cols_checked.t
 =============== =======================================================================================================
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first operand must have memref type of dimension 2 with the same component type
-as the coopmatrix type.
-The indices must be of ``index`` type.
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       memref-type     M
+2       index           x
+3       index           y
+======= =============== ===========
 
-All arguments **must** be dynamically uniform.
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{order}(M) = 2`
+* :math:`\text{component_type}(A) = \text{element_type}(M)`
+* All arguments **must** be dynamically uniform.
 
 Cooperative matrix mul add
 ..........................
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_mul_add"
-                                   local-identifier "," local-identifier "," local-identifier
-                                   ":" coopmatrix-type "," coopmatrix-type "," coopmatrix-type
-                                   "->" coopmatrix-type
+    value-instruction           =/ "cooperative_matrix_mul_add" local-identifier ","
+                                   local-identifier "," local-identifier ":" coopmatrix-type
 
 Overview
 ~~~~~~~~
@@ -899,15 +977,24 @@ Matrix mul add returns the value of
 
 where A, B, and C are matrices given by the three operands.
 
-The operands must have cooperative matrix type, where the first operand has shape :math:`M\times K`
-with use "matrix_a", the second operand has shape :math:`K\times N` with use "matrix_b",
-and the third operand and the result have shape :math:`M\times N` with use "matrix_acc".
+Operands
+~~~~~~~~
 
-The component types of the operands and the result do not need to match.
+======= =============== ========== ===========
+Op.-No. Type            Use        Description
+======= =============== ========== ===========
+1       coopmatrix-type matrix_a   A
+2       coopmatrix-type matrix_b   B
+3       coopmatrix-type matrix_acc C
+======= =============== ========== ===========
 
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\text{columns}(A) = \text{rows}(B)`
+* :math:`\text{rows}(C) = \text{rows}(A) \land \text{columns}(C) = \text{columns}(B)`
+* :math:`\text{shape}(D) = \text{shape}(C)`
+* :math:`\text{use}(D) = \text{matrix_acc}`
 * :math:`\text{compatible_type}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
 * Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
 
@@ -916,24 +1003,39 @@ Cooperative matrix scale
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_scale"
-                                   local-identifier "," local-identifier
-                                   ":" scalar-type "," coopmatrix-type
+    value-instruction           =/ "cooperative_matrix_scale" local-identifier "," local-identifier
+                                   ":" coopmatrix-type
 
 Overview
 ~~~~~~~~
 
-Scale a matrix by a scalar.
-The scalar type of the scalar and the component type of the matrix must match.
+Scale a coopmatrix by a scalar. 
+The scalar type of the scalar and the component type of the coopmatrix must match,
+and the returned must have the same coopmatrix type as the matrix operand.
+
+Operands
+~~~~~~~~
+
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       scalar-type     scalar
+2       coopmatrix-type matrix
+======= =============== ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{type}(scalar) = \text{component_type}(matrix)`
+* :math:`\text{type}(result) = \text{type}(matrix)`
 
 Cooperative matrix store
 ........................
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag]
-                       local-identifier "," local-identifier "[" local-identifier "," local-identifier "]"
-                       ":" coopmatrix-type "," memref-type
+    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag] local-identifier ","
+                       local-identifier "[" local-identifier "," local-identifier "]"
 
 Overview
 ~~~~~~~~
@@ -963,13 +1065,23 @@ When the atomic_add flag is set, the coopmatrix is added to the memref atomicall
 When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
 for the the real and imaginary separately.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first operand must have cooperative matrix type with the same component type as the memref type.
-The indices must be of ``index`` type.
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       coopmatrix-type A
+2       memref-type     M
+3       index           x
+4       index           y
+======= =============== ===========
 
-All arguments **must** be dynamically uniform.
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{component_type}(A) = \text{element_type}(B)`
+* All arguments **must** be dynamically uniform.
 
 Expand
 ......
@@ -985,65 +1097,69 @@ Overview
 
 The expand instruction returns a view on a tensor with a mode viewed as higher-order mode.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
 The first argument must point to a value of memref type.
 The first integer constant before "->" gives the mode that shall be expanded.
 The expand shape coming after "->" gives the new shape of the mode.
-Dynamic values in the expand shape must have index type.
+Dynamic values in the expand shape must have `index` type.
 
-The output type is a memref type according to the following rules:
+Restrictions
+~~~~~~~~~~~~
+
+The memref type of the result must conform with the following rules:
 
 #. **Shape:** The mode size is replaced with the expand shape.
    The product of the expand shape must equal the size of the expanded mode.
 
    .. code::
 
-       expand %0[1 -> 2x8]      : memref<f32x32x16x8> ; -> memref<f32x32x2x8x8>
-       expand %0[1 -> 2x2x2x2]  : memref<f32x32x16x8> ; -> memref<f32x32x2x2x2x2x8>
+       expand %0[1 -> 2x8]      : memref<f32x32x2x8x8>     ; %0: memref<f32x32x16x8>
+       expand %0[1 -> 2x2x2x2]  : memref<f32x32x2x2x2x2x8> ; %0: memref<f32x32x16x8>
 
 #. **Identifiers:** Local identifiers in the expand shape are dynamic in the resulting memref type.
    The product of the dynamic expand shape must equal the size of the expanded mode.
 
    .. code::
 
-       expand %0[1 -> %1 x 2]      : memref<f32x32x?>  ; -> memref<f32x32x?x2>
-       expand %0[1 -> 2 x %1]      : memref<f32x32x?>  ; -> memref<f32x32x2x?>
-       expand %0[1 -> %1 x 2]      : memref<f32x32x16> ; -> memref<f32x32x?x2>
-       expand %0[1 -> %1 x 2]      : memref<f32x32x?>  ; -> memref<f32x32x?x2>
-       expand %0[1 -> %1 x %2 x 2] : memref<f32x32x16> ; -> memref<f32x32x?x?x2>
-       expand %0[1 -> %2 x 2 x %1] : memref<f32x32x16> ; -> memref<f32x32x?x2x?>
-       expand %0[1 -> %1 x %2]     : memref<f32x32x?>  ; -> memref<f32x32x?x?>
-       expand %0[1 -> %1 x %2]     : memref<f32x32x16> ; -> memref<f32x32x?x?>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x?x2>   ; %0: memref<f32x32x?>
+       expand %0[1 -> 2 x %1]      : memref<f32x32x2x?>   ; %0: memref<f32x32x?>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x?x2>   ; %0: memref<f32x32x16>
+       expand %0[1 -> %1 x 2]      : memref<f32x32x?x2>   ; %0: memref<f32x32x?>
+       expand %0[1 -> %1 x %2 x 2] : memref<f32x32x?x?x2> ; %0: memref<f32x32x16>
+       expand %0[1 -> %2 x 2 x %1] : memref<f32x32x?x2x?> ; %0: memref<f32x32x16>
+       expand %0[1 -> %1 x %2]     : memref<f32x32x?x?>   ; %0: memref<f32x32x?>
+       expand %0[1 -> %1 x %2]     : memref<f32x32x?x?>   ; %0: memref<f32x32x16>
 
    *Note:* In the third example above, %1 must be equal to 8.
    The output mode corresponding to %1 is still dynamic.
 
 #. **Stride:** A new stride entry is entered that follows the canonical stride computation.
+   It is also permissible to put '?' for a stride instead of the constant value.
 
    .. code::
 
-       expand %0[0->4 x 8] : memref<f32x32x7,strided<2,64>> ; -> memref<f32x4x8x7,strided<2,8,64>>
-       expand %0[0->%1 x 4] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x?x4x7,strided<2,?,?>>
-       expand %0[0->4 x %1] : memref<f32x?x7,strided<2,?>>   ; -> memref<f32x4x?x7,strided<2,8,?>>
+       expand %0[0->4 x 8]  : memref<f32x4x8x7,strided<2,8,64>> ; %0: memref<f32x32x7,strided<2,64>>
+       expand %0[0->4 x 8]  : memref<f32x4x8x7,strided<2,?,?>>  ; %0: memref<f32x32x7,strided<2,64>>
+       expand %0[0->%1 x 4] : memref<f32x?x4x7,strided<2,?,?>>  ; %0: memref<f32x?x7,strided<2,?>>
+       expand %0[0->4 x %1] : memref<f32x4x?x7,strided<2,8,?>>  ; %0: memref<f32x?x7,strided<2,?>>
+       expand %0[0->4 x %1] : memref<f32x4x?x7,strided<2,?,?>>  ; %0: memref<f32x?x7,strided<2,?>>
 
-Restrictions
-~~~~~~~~~~~~
+Further restrictions:
 
-The product of the expand shape must be the same as the mode size.
-If the product of the expand shape is only known at runtime, then it is undefined behaviour
-if the dynamic product does not match the mode size.
+* The product of the expand shape must be the same as the mode size.
+* If the product of the expand shape is only known at runtime, then it is undefined behaviour
+  if the dynamic product does not match the mode size.
 
 For
 ...
 
 .. code:: abnf
 
-    multi-value-instruction = "for" local-identifier "="
+    multi-value-instruction = "for" local-identifier [":" integer-type] "="
                                     local-identifier "," local-identifier ["," local-identifier]
-                              ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ]
-                              [":" integer-type] region
+                              ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
@@ -1087,7 +1203,7 @@ Example:
        %to = constant 6 -> i32
        %f0 = constant 0 -> i64
        %f1 = constant 1 -> i64
-       %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) : i32 {
+       %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
            %fn = arith.add %fn_2, %fn_1 : i64
            yield %fn_1, %fn : i64, i64
        }
@@ -1098,67 +1214,69 @@ Fuse
 
 .. code:: abnf
 
-    value-instruction       =& "fuse" local-identifier "[" integer-constant "," integer-constant "]" ":" memref-type
+    value-instruction       =/ "fuse" local-identifier "[" integer-constant "," integer-constant "]"
+                                      ":" memref-type
 
 Overview
 ~~~~~~~~
 
 The fuse instruction returns a view on a tensor with two or more adjacent modes viewed as a single mode.
 
-Arguments
-~~~~~~~~~
+Fused modes are specified as the interval [from, to], where counting starts from 0.
+From and to must refer to existing modes, that is, we require :math:`0 \leq \text{from} < \text{to} < \text{order}(\text{tensor})`.
+Moreover, the stride vector S and the shape vector s must satisify the following compatibility condition:
 
-The first argument must point to a value of memref type.
-The fused modes are specified as the interval [from, to], where from is given
-by the first integer and to is given by the second integer.
-Counting starts from 0 so we have
+:math:`\forall k \in [\text{from},\text{to}): S_{k}s_{k} = S_{k+1}`
 
-.. math::
-    
-    0 \leq from < to < order(memref)
+If S(i:j) and s(i:j) are known at compile time, the fuse instruction is illegal if the compatibility
+condition is not satisfied.
+If a single entry in S(i:j) or s(i:j) is dynamic, then fusing modes that violate the compatbility condition
+is undefined beheaviour, e.g.
 
-The local identifier must have the memref type specified last.
-The output type is a memref type according to the following rules:
+.. code::
+
+       ; Illegal, modes cannot be fused
+       fuse %0[0,1] : memref<f32x128>              ; %0: memref<f32x8x16,strided<1,10>>
+       ; Undefined behaviour if dynamic stride != 8 
+       fuse %0[0,1] : memref<f32x128,strided<1,?>> ; %0: memref<f32x8x16,strided<1,?>>
+
+Operands
+~~~~~~~~
+
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       memref-type      tensor
+2       integer-constant from
+3       integer-constant to
+======= ================ ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+The memref type of the result must conform with the following rules:
 
 #. **Shape:** The mode size of the fused modes is the product of the mode sizes. If one mode is dynamic the fused mode size is dynamic.
 
    .. code::
 
-       fuse %0[1,3] : memref<f32x32x16x8x4x42>                     ; -> memref<f32x32x512x42>
-       fuse %0[1,3] : memref<f32x32x16x?x4x42,strided<1,16,?,?,?>> ; -> memref<f32x32x?x42,strided<1,32,?>>
-
-#. **Stride:** Strides remain unchanged.
+       fuse %0[1,3] : memref<f32x32x512x42>               ; %0: memref<f32x32x16x8x4x42>
+       fuse %0[1,3] : memref<f32x32x?x42,strided<1,32,?>> ; %0: memref<f32x32x16x?x4x42,strided<1,16,?,?,?>>
+                                                         
+#. **Stride:** Strides remain unchanged or are replaced by '?'.
 
    .. code::
 
-       fuse %0[1,2] : memref<f32x32x16x2x2,strided<1,48,768,1536>> ; -> memref<f32x32x32x2,strided<1,48,1536>>
-       fuse %0[0,1] : memref<f32x8x?x32,strided<1,?,?>>            ; -> memref<f32x?x32,strided<1,?>>
-
-Restrictions
-~~~~~~~~~~~~
-
-Let i be the first mode and j the last mode.
-The stride vector S and the shape vector s must satisify the following compatibility condition:
-
-:math:`\forall k \in [i,j): S_{k}s_{k} = S_{k+1}`
-
-If S(i:j) and s(i:j) are known at compile time, the fuse instruction is illegal if the compatibility
-condition is not satisfied.
-If a single entry in S(i:j) or s(i:j) is dynamic, then fusing modes that violate the compatbility condition
-is undefined beheaviour.
-
-.. code::
-
-       fuse %0[0,1] : memref<f32x8x16,strided<1,10>> ; Illegal, modes cannot be fused
-       fuse %0[0,1] : memref<f32x8x16,strided<1,?>>  ; Undefined behaviour if dynamic stride != 8
-
+       fuse %0[1,2] : memref<f32x32x32x2,strided<1,48,1536>> ; %0: memref<f32x32x16x2x2,strided<1,48,768,1536>>
+       fuse %0[1,2] : memref<f32x32x32x2,strided<1,?,?>>     ; %0: memref<f32x32x16x2x2,strided<1,48,768,1536>>
+       fuse %0[0,1] : memref<f32x?x32,strided<1,?>>          ; %0: memref<f32x8x?x32,strided<1,?,?>>
 
 Group id
 ........
 
 .. code:: abnf
 
-    value-instruction       =/ "group_id"
+    value-instruction       =/ "group_id" ":" "index"
 
 Overview
 ~~~~~~~~
@@ -1170,7 +1288,7 @@ Group size
 
 .. code:: abnf
 
-    value-instruction       =/ "group_size"
+    value-instruction       =/ "group_size" ":" "index"
 
 Overview
 ~~~~~~~~
@@ -1191,7 +1309,7 @@ Overview
 An if statement.
 Both regions are *mixed regions*.
 
-The condition must have boolean type.
+The condition (first operand) must have boolean type.
 
 Returns
 ~~~~~~~
@@ -1219,8 +1337,8 @@ Load
 .. code:: abnf
 
     value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
-                                   ":" memref-or-group-type
-    memref-or-group-type        =  memref-type / group-type
+                                   ":" scalar-or-memref-type
+    scalar-or-memref-type       =  scalar-type / memref-type
 
 Overview
 ~~~~~~~~
@@ -1229,11 +1347,15 @@ Load the element given by the index list from a memref or group.
 The number of indices must match the order of the memref
 and a single index must be given for a group.
 
-Arguments
+Operands
 ~~~~~~~~~
 
-The first operand must have memref or group type.
-The indices must be of ``index`` type.
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+2...    index                    index list
+======= ======================== ===========
 
 Returns
 ~~~~~~~
@@ -1241,17 +1363,17 @@ Returns
 A value of the memref's element type or the group's memref type.
 Examples:
 
-#. ``load %0[] : memref<f32>`` returns a ``f32`` value.
-#. ``load %0[5, %1] : memref<f32x10x?>`` returns a ``f32`` value.
-#. ``load %0[%1] : group<memref<f32x42>>`` returns a ``memref<f32x42>`` value.
-#. ``load %0[%1] : group<memref<f32x42>, offset: ?>`` returns a ``memref<f32x42>`` value.
+#. ``load %0[] : f32 ; %0: memref<f32>``
+#. ``load %0[5, %1] : f32 ; %0: memref<f32x10x?>``
+#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>>``
+#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>, offset: ?>``
 
 Number of subgroups
 ...................
 
 .. code:: abnf
 
-    value-instruction       =/ "num_subgroups"
+    value-instruction       =/ "num_subgroups" ":" "i32"
 
 Overview
 ~~~~~~~~
@@ -1263,34 +1385,31 @@ Size
 
 .. code:: abnf
 
-    value-instruction       =/ "size" local-identifier "[" integer-constant "]" ":" memref-type
+    value-instruction       =/ "size" local-identifier "[" integer-constant "]" ":" "index"
 
 Overview
 ~~~~~~~~
 
 The size instruction returns the i-th entry of the tensor's shape, where "i" is given by the integer
 constant in square brackets.
+"i" must be in bounds, i.e. :math:`0 \leq i < \text{order}(tensor)`.
 
-Arguments
+Operands
 ~~~~~~~~~
 
-The first argument must point to a value of memref type.
-The integer constant i gives the mode for which the size shall be returned.
-It is required that
-
-.. math::
-    
-    0 \leq i < order(memref)
-
-The local identifier must have the memref type specified last.
-The instruction returns an integer of index type.
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       memref-type      tensor
+2       integer-constant mode index
+======= ================ ===========
 
 Subgroup size
 .............
 
 .. code:: abnf
 
-    value-instruction       =/ "subgroup_size"
+    value-instruction       =/ "subgroup_size" ":" "i32"
 
 Overview
 ~~~~~~~~
@@ -1312,11 +1431,8 @@ Overview
 
 The subview instruction returns a view on a tensor.
 
-Arguments
-~~~~~~~~~
-
 The first argument must point to a value of memref type.
-The number of indices in square brackets must match the order of the memref.
+The number of indices in square brackets must match the order of the memref type.
 The indices are either given as single index or as a slice, where
 slices are given in offset plus size notation ("%offset : %size").
 E.g. the slice "%0 : %1" extracts a block of %1 elements beginning from %0, which is equivalent
@@ -1336,39 +1452,40 @@ A single index is syntactic sugar for offset plus size 0, e.g. %0 is syntactic s
 to the memref would be out-of-bounds. However, a one-sized rank, e.g. memref<f32x8x1>, might be desirable.)
 A dynamic size of zero is undefined behaviour.
 
-
-
 There is no run-time check whether the indices are within bounds.
 Offset and size must be of index type.
 Offset must be non-negative and size must be positive.
 
-The local identifier must have the memref type specified last.
-The output type is a memref type according to the following rules:
+Restrictions
+~~~~~~~~~~~~
 
-#. **Invariant-stride:** The stride is not changed.
+The memref type of the result must conform with the following rules:
+
+#. **Invariant-stride:** The stride is not changed or replaced with '?'.
 
    .. code::
 
-       subview %0[4:8,8:4]  : memref<f32x32x16> ; Returns memref<f32x8x4,strided<1,32>>
+       subview %0[4:8,8:4]  : memref<f32x8x4,strided<1,32>> ; %0: memref<f32x32x16>
+       subview %0[4:8,8:4]  : memref<f32x8x4,strided<1,?>>  ; %0: memref<f32x32x16>
 
 
 #. **Rank-reduction:** A mode accessed by offset only or a mode with size statically known to be 0 is removed from the output tensor.
 
    .. code::
 
-       subview %0[2:4, %1]   : memref<f32x16x8> ; Returns memref<f32x4>
-       subview %0[2:4, %1:0] : memref<f32x16x8> ; Returns memref<f32x4>
-       subview %0[2:4, %1:1] : memref<f64x16x8> ; Returns memref<f64x4x1,strided<1,16>>
+       subview %0[2:4, %1]   : memref<f32x4>                 ; %0: memref<f32x16x8>
+       subview %0[2:4, %1:0] : memref<f32x4>                 ; %0: memref<f32x16x8>
+       subview %0[2:4, %1:1] : memref<f64x4x1,strided<1,16>> ; %0: memref<f64x16x8>
 
 #. **Output-mode size:** The size of the output mode is determined by the size field of a slice
    and may be dynamic.
 
    .. code::
 
-       subview %0[%1:4]            : memref<f32x16> ; Returns memref<f32x4>
-       subview %0[%2:%2]           : memref<f32x16> ; Returns memref<f32x?>
-       subview %0[2:4, %2:%2, 6:7] : memref<f32x16x42x13> ; Returns memref<f32x4x?x7,strided<1,16,672>
-       subview %0[2:4, %2:%2, 6:7] : memref<f32x16x42x13,strided<1,?,?>> ; Returns memref<f32x4x?x7,strided<1,?,?>
+       subview %0[%1:4]            : memref<f32x4>                      ; %0: memref<f32x16>
+       subview %0[%2:%2]           : memref<f32x?>                      ; %0: memref<f32x16>
+       subview %0[2:4, %2:%2, 6:7] : memref<f32x4x?x7,strided<1,16,672> ; %0: memref<f32x16x42x13>
+       subview %0[2:4, %2:%2, 6:7] : memref<f32x4x?x7,strided<1,?,?>    ; %0: memref<f32x16x42x13,strided<1,?,?>>
 
 Store
 .....
@@ -1377,13 +1494,12 @@ Store
 
     instruction     =/ "store" [store-flag]
                        local-identifier "," local-identifier "[" [local-identifier-list] "]"
-                       ":" memref-type
     store-flag      = ".atomic" / ".atomic_add"
 
 Overview
 ~~~~~~~~
 
-Store a scalar value in a memref at the position given by the index list.
+Store a scalar value (first operand) in a memref (second operand) at the position given by the index list.
 The number of indices must match the order of the memref.
 
 The store is atomic when the atomic flag is set with relaxed memory ordering.
@@ -1397,11 +1513,21 @@ for the the real and imaginary separately.
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The first operand must have the same scalar type as the memref type.
-The indices must be of ``index`` type.
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       scalar-type      value
+2       memref-type      tensor
+3...    index            index list
+======= ================ ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{type}(value) = \text{element_type}(tensor)`
 
 Work group collectives
 ......................
@@ -1422,6 +1548,15 @@ Work group op Description
 .reduce_add   Compute work group sum of value
 ============= ================================================================
 
+Operands
+~~~~~~~~
+
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       scalar-type      value
+======= ================ ===========
+
 Restrictions
 ~~~~~~~~~~~~
 
@@ -1439,10 +1574,14 @@ Overview
 
 Yield returns values from an if or for instruction.
 
-Arguments
-~~~~~~~~~
+Operands
+~~~~~~~~
 
-The length of the local identifier list must equal the length of the return type list.
+======= ============================================ ===========
+Op.-No. Type                                         Description
+======= ============================================ ===========
+1...    boolean-type / scalar-type / coopmatrix-type value
+======= ============================================ ===========
 
 Additional instructions
 .......................
@@ -1459,7 +1598,7 @@ Subgroup id
 
 .. code:: abnf
 
-    value-instruction       =/ "subgroup_id"
+    value-instruction       =/ "subgroup_id" ":" "i32"
 
 Overview
 ~~~~~~~~
@@ -1471,7 +1610,7 @@ Subgroup local id
 
 .. code:: abnf
 
-    value-instruction       =/ "subgroup_local_id"
+    value-instruction       =/ "subgroup_local_id" ":" "i32"
 
 Overview
 ~~~~~~~~
@@ -1500,14 +1639,12 @@ where B and C are constant matrices and A and D are matrix batches.
                          %B: memref<f32x8x8>,
                          %C: memref<f32x8x16>,
                          %D: memref<f32x16x16x?>) {
-      %0 = group_id
-      %1 = load %A[%0]        : group<memref<f32x16x8>> ; Returns memref<f32x16x8>
-      %2 = subview %D[:,:,%0] : memref<f32x16x16x?>     ; Returns memref<f32x16x16>
-      %tmp0 = alloca -> memref<f32x16x8>
+      %0 = group_id : index
+      %1 = load %A[%0]        : memref<f32x16x8>
+      %2 = subview %D[:,:,%0] : memref<f32x16x16>
+      %tmp0 = alloca : memref<f32x16x8>
       %zero = constant 0.0 : f32
       %one = constant 1.0 : f32
       gemm.n.t %one, %1, %B, %zero, %tmp0
-         : f32, memref<f32x16x8>, memref<f32x8x8>, f32, memref<f32x16x8>
       gemm.n.n %alpha, %tmp0, %C, %one, %2
-         : f32, memref<f32x16x8>, memref<f32x8x16>, f32, memref<f32x16x16>
     }
