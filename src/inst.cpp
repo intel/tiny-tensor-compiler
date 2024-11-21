@@ -434,12 +434,12 @@ tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
 
 tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                         uint32_t index_list_size, const tinytc_value_t *index_list,
-                                        const tinytc_location_t *loc) {
+                                        tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<load_inst>(a, array_view{index_list, index_list_size},
+        *instr = std::make_unique<load_inst>(a, array_view{index_list, index_list_size}, ty,
                                              get_optional(loc))
                      .release();
     });
@@ -538,12 +538,12 @@ tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, const tinytc_l
 }
 
 tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t mode,
-                                        const tinytc_location_t *loc) {
+                                        tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
-        [&] { *instr = std::make_unique<size_inst>(a, mode, get_optional(loc)).release(); });
+        [&] { *instr = std::make_unique<size_inst>(a, mode, ty, get_optional(loc)).release(); });
 }
 
 tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr, tinytc_compiler_context_t ctx,

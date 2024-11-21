@@ -14,7 +14,7 @@
 
 func @l1(%0: memref<f32x?x?>) {
     %2 = constant 0 : index
-    %3 = load %0[%2,%2] : memref<f32x?x?>
+    %3 = load %0[%2,%2] : f32
 ; CHECK:                 %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#L1_MR:]] = OpFunctionParameter %[[#PTR_F32]]
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
@@ -30,8 +30,8 @@ func @l1(%0: memref<f32x?x?>) {
 
 func @l2(%0: group<memref<f32x?,strided<?>>, offset: ?>) {
     %1 = constant 0 : index
-    %2 = load %0[%1] : group<memref<f32x?,strided<?>>, offset: ?>
-    %3 = load %2[%1] : memref<f32x?,strided<?>>
+    %2 = load %0[%1] : memref<f32x?,strided<?>>
+    %3 = load %2[%1] : f32
 ; CHECK:                       %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:         %[[#L2_GROUP:]] = OpFunctionParameter %[[#PTR_PTR_F32]]
 ; CHECK-NEXT:     %[[#L2_PTR_SHAPE:]] = OpFunctionParameter %[[#PTR_I64]]

@@ -3,15 +3,15 @@
 
 ; RUN: %tinytc-opt -pconstant-propagation < %s | filecheck %s
 func @known_size(%a: memref<f32x64x32>, %b: index) {
-    %0 = size %a[0] : memref<f32x64x32>
-    %1 = size %a[1] : memref<f32x64x32>
+    %0 = size %a[0] : index
+    %1 = size %a[1] : index
     %2 = arith.add %0, %1 : index
     %3 = arith.add %2, %b : index
 ; CHECK-LABEL: func @known_size({{.*}}
 ; CHECK:       %0 = constant 64 : index
-; CHECK-NEXT:  %1 = size %a[0] : memref<f32x64x32>
+; CHECK-NEXT:  %1 = size %a[0] : index
 ; CHECK-NEXT:  %2 = constant 32 : index
-; CHECK-NEXT:  %3 = size %a[1] : memref<f32x64x32>
+; CHECK-NEXT:  %3 = size %a[1] : index
 ; CHECK-NEXT:  %4 = constant 96 : index
 ; CHECK-NEXT:  %5 = arith.add %0, %2 : index
 ; CHECK-NEXT:  %6 = arith.add %4, %b : index

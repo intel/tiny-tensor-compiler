@@ -5,13 +5,13 @@
 func @t1(%0: memref<f32x32x16x8x4x42>) {
   %z = constant 0 : index
   %1 = fuse %0[1,3] : memref<f32x32x512x42>
-  %2 = load %1[%z,%z,%z] : memref<f32x32x512x42>
+  %2 = load %1[%z,%z,%z] : f32
 ; CHECK: float x2 = *(x1 + z * 1 + z * 32 + z * 16384);
 }
 func @t2(%0: memref<f32x32x16x?x4x42>) {
   %z = constant 0 : index
   %1 = fuse %0[1,3] : memref<f32x32x?x42,strided<1,32,?>>
-  %2 = load %1[%z,%z,%z] : memref<f32x32x?x42,strided<1,32,?>>
+  %2 = load %1[%z,%z,%z] : f32
 ; CHECK:      long x_shape1 = 16 * x_shape2 * 4;
 ; CHECK-NEXT: long x_stride2 = x_stride4;
 ; CHECK-NEXT: float x2 = *(x1 + z * 1 + z * 32 + z * x_stride2);
@@ -19,13 +19,13 @@ func @t2(%0: memref<f32x32x16x?x4x42>) {
 func @t3(%0: memref<f32x32x16x2x2,strided<1,48,768,1536>>) {
   %z = constant 0 : index
   %1 = fuse %0[1,2] : memref<f32x32x32x2,strided<1,48,1536>>
-  %2 = load %1[%z,%z,%z] : memref<f32x32x32x2,strided<1,48,1536>>
+  %2 = load %1[%z,%z,%z] : f32
 ; CHECK: float x2 = *(x1 + z * 1 + z * 48 + z * 1536);
 }
 func @t4(%0: memref<f32x8x?x32,strided<1,?,?>>) {
   %z = constant 0 : index
   %1 = fuse %0[0,1] : memref<f32x?x32,strided<1,?>>
-  %2 = load %1[%z,%z] : memref<f32x?x32,strided<1,?>>
+  %2 = load %1[%z,%z] : f32
 ; CHECK:      long x_shape0 = 8 * x_shape1;
 ; CHECK-NEXT: long x_stride11 = x_stride2;
 ; CHECK-NEXT: float x2 = *(x1 + z * 1 + z * x_stride11);

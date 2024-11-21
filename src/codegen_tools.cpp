@@ -645,7 +645,11 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
         }
         bb.add(make_store(*flag, alpha_ab, C, index_list, loc));
     } else {
-        auto c = bb.add(make_load(C, index_list, loc));
+        memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
+        if (ct == nullptr) {
+            throw compilation_error(loc, {C.get()}, status::ir_expected_scalar);
+        }
+        auto c = bb.add(make_load(C, index_list, ct->element_data_ty(), loc));
         auto beta_c = mixed_precision_arithmetic(bb, arithmetic::mul, beta, c, loc);
         auto alpha_ab_plus_beta_c =
             mixed_precision_arithmetic(bb, arithmetic::add, alpha_ab, beta_c, loc);

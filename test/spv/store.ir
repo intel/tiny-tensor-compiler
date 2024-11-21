@@ -32,9 +32,9 @@
 func @si8(%0: memref<i8x4x4>, %1: memref<i8>) {
     %2 = constant 0 : index
     %3 = constant -42 : i8
-    store %3, %0[%2,%2] : memref<i8x4x4>
-    store.atomic %3, %1[] : memref<i8>
-    store.atomic_add %3, %1[] : memref<i8>
+    store %3, %0[%2,%2]
+    store.atomic %3, %1[]
+    store.atomic_add %3, %1[]
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:     %[[#SI8_MR1:]] = OpFunctionParameter %[[#PTR_I8]]
 ; CHECK-NEXT:     %[[#SI8_MR2:]] = OpFunctionParameter %[[#PTR_I8]]
@@ -50,8 +50,8 @@ func @si8(%0: memref<i8x4x4>, %1: memref<i8>) {
 
 func @sf32(%0: memref<f32>) {
     %1 = constant 42.0 : f32
-    store.atomic %1, %0[] : memref<f32>
-    store.atomic_add %1, %0[] : memref<f32>
+    store.atomic %1, %0[]
+    store.atomic_add %1, %0[]
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:     %[[#SF32_MR:]] = OpFunctionParameter %[[#PTR_F32]]
 ; CHECK:                           OpAtomicStore %[[#SF32_MR]] %[[#I32_C2]] %[[#I32_C0]] %[[#F32_C42]]
@@ -60,8 +60,8 @@ func @sf32(%0: memref<f32>) {
 
 func @sc64(%0: memref<c64>) {
     %1 = constant [42.0, 1.0] : c64
-    store.atomic %1, %0[] : memref<c64>
-    store.atomic_add %1, %0[] : memref<c64>
+    store.atomic %1, %0[]
+    store.atomic_add %1, %0[]
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:     %[[#SC64_MR:]] = OpFunctionParameter %[[#PTR_C64]]
 ; CHECK:              %[[#SC64_RE_PTR1:]] = OpInBoundsAccessChain %[[#PTR_F64]] %[[#SC64_MR]] %[[#I32_C0]]

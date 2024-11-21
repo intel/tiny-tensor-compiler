@@ -13,9 +13,9 @@
 func @sv1(%K0: memref<f32x?x?>, %offset: index, %size: index) {
   %0 = subview %K0[4:%size, %offset] : memref<f32x?x?>
   %1 = subview %K0[%offset, 4:%size] : memref<f32x?x?>
-  %2 = size %0[0] : memref<f32x?>
+  %2 = size %0[0] : index
   %3 = arith.not %2 : index
-  %4 = size %1[0] : memref<f32x?,strided<?>>
+  %4 = size %1[0] : index
   %5 = arith.not %4 : index
 ; CHECK:                %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#F32_PTR]]

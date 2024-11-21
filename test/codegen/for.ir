@@ -25,7 +25,7 @@ func @for2(%fib: memref<i64>) {
     %fn = arith.add %fn_2, %fn_1 : i64
     yield %fn_1, %fn : i64, i64
   }
-  store %fn, %fib[] : memref<i64>
+  store %fn, %fib[]
 ; CHECK-LABEL: void for2({{.*}}
 ; CHECK:      long f0 = 0ll;
 ; CHECK-NEXT: long f1 = 1ll;

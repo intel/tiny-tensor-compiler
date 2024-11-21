@@ -78,7 +78,7 @@ auto inst_cloner::operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_i
 }
 auto inst_cloner::operator()(load_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<load_inst>(subs(&in.operand()), subs_value_range(in.index_list()),
-                                       in.loc());
+                                       in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(group_id_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<group_id_inst>(in.context(), in.loc());
@@ -136,7 +136,7 @@ auto inst_cloner::operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst> 
 }
 
 auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.loc());
+    return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.result(0).ty(), in.loc());
 }
 
 auto inst_cloner::operator()(subgroup_id_inst &in) -> std::unique_ptr<tinytc_inst> {

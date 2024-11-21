@@ -189,6 +189,7 @@ void linalg_generator::operator()(axpby_inst &in) {
     auto bool_ty = get_boolean(ctx);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
+    auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
     if (bt->dim() == 0) {
         auto parallel = make_parallel(in.loc());
@@ -203,26 +204,27 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto cond1 = bb.add(make_cmp(cmp_condition::eq, sg_lid, c0, bool_ty, in.loc()));
         auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1, cond0->ty()));
         bb.if_condition(cond, [&](region_builder &bb) {
-            auto a = bb.add(make_load(&in.A(), {}, in.loc()));
+            auto a = bb.add(make_load(&in.A(), {}, at->element_data_ty(), in.loc()));
             blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
         });
 
         add(std::move(parallel));
     } else if (bt->dim() == 1) {
         auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
         add_foreach(
             {c0.get()}, {c_shape0.get()}, index_ty,
             [&](region_builder &bb, auto loop_vars) {
-                auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
+                auto a =
+                    bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
                 blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {&loop_vars[0]},
                             in.loc());
             },
             in.loc());
     } else if (bt->dim() == 2) {
         auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
-        auto c_shape1 = add(make_size(&in.B(), 1, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
+        auto c_shape1 = add(make_size(&in.B(), 1, index_ty, in.loc()));
         add_foreach(
             {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
             [&](region_builder &bb, auto loop_vars) {
@@ -230,7 +232,7 @@ void linalg_generator::operator()(axpby_inst &in) {
                 if (in.tA() == transpose::T) {
                     std::swap(a_idx[0], a_idx[1]);
                 }
-                auto a = bb.add(make_load(&in.A(), a_idx, in.loc()));
+                auto a = bb.add(make_load(&in.A(), a_idx, at->element_data_ty(), in.loc()));
                 blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(),
                             {&loop_vars[0], &loop_vars[1]}, in.loc());
             },
@@ -241,13 +243,15 @@ void linalg_generator::operator()(axpby_inst &in) {
 void linalg_generator::operator()(ger_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
-    auto c_shape1 = add(make_size(&in.C(), 1, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape1 = add(make_size(&in.C(), 1, index_ty, in.loc()));
     add_foreach(
         {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()}, index_ty,
         [&](region_builder &bb, auto loop_vars) {
-            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
-            auto b = bb.add(make_load(&in.B(), {&loop_vars[1]}, in.loc()));
+            auto at = get_memref_type(in.A());
+            auto bt = get_memref_type(in.B());
+            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), {&loop_vars[1]}, bt->element_data_ty(), in.loc()));
             auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
                         {&loop_vars[0], &loop_vars[1]}, in.loc());
@@ -266,6 +270,7 @@ void linalg_generator::operator()(gemm_inst &in) {
 
     auto ctx = compiler_context{in.alpha().context(), true};
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
+    auto index_ty = get_scalar(ctx, scalar_type::index);
 
     auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
     auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
@@ -276,10 +281,10 @@ void linalg_generator::operator()(gemm_inst &in) {
         size(ct->element_ty()), core_cfg_.subgroup_size, core_cfg_.register_space,
         is_complex_type(ct->element_ty()) ? 2 : 1);
 
-    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, in.loc()));
-    auto c_shape1 = instant_constant_fold_add(bb, make_size(&in.C(), 1, in.loc()));
+    auto c_shape0 = instant_constant_fold_add(bb, make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape1 = instant_constant_fold_add(bb, make_size(&in.C(), 1, index_ty, in.loc()));
     auto K = instant_constant_fold_add(
-        bb, make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+        bb, make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
 
     auto const_shape0 = get_int_constant(c_shape0);
     auto const_shape1 = get_int_constant(c_shape1);
@@ -329,21 +334,24 @@ void linalg_generator::operator()(gemm_inst &in) {
 void linalg_generator::operator()(gemv_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
     add_foreach(
         {c0.get()}, {c_shape0.get()}, index_ty,
         [&](region_builder &bb, auto loop_vars) {
             auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
-            auto K = bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+            auto K =
+                bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
             auto c_acc = bb.for_loop(
                 c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> p) {
                     auto a_idx = std::array<value, 2u>{&loop_vars[0], p[0]};
                     if (in.tA() == transpose::T) {
                         std::swap(a_idx[0], a_idx[1]);
                     }
-                    auto a = bb.add(make_load(&in.A(), a_idx, in.loc()));
-                    auto b = bb.add(make_load(&in.B(), {p[0]}, in.loc()));
+                    auto at = get_memref_type(in.A());
+                    auto bt = get_memref_type(in.B());
+                    auto a = bb.add(make_load(&in.A(), a_idx, at->element_data_ty(), in.loc()));
+                    auto b = bb.add(make_load(&in.B(), {p[0]}, bt->element_data_ty(), in.loc()));
                     auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
                     auto ab_c = mixed_precision_arithmetic(bb, arithmetic::add, p[1], ab, in.loc());
                     bb.add(make_yield({ab_c}, in.loc()));
@@ -357,12 +365,14 @@ void linalg_generator::operator()(gemv_inst &in) {
 void linalg_generator::operator()(hadamard_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, in.loc()));
+    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
     add_foreach(
         {c0.get()}, {c_shape0.get()}, index_ty,
         [&](region_builder &bb, auto loop_vars) {
-            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, in.loc()));
-            auto b = bb.add(make_load(&in.B(), {&loop_vars[0]}, in.loc()));
+            auto at = get_memref_type(in.A());
+            auto bt = get_memref_type(in.B());
+            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), {&loop_vars[0]}, bt->element_data_ty(), in.loc()));
             auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {&loop_vars[0]},
                         in.loc());
@@ -380,6 +390,7 @@ void linalg_generator::operator()(sum_inst &in) {
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
+    auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
     if (bt->dim() == 0) {
         auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
@@ -392,18 +403,19 @@ void linalg_generator::operator()(sum_inst &in) {
         auto c_zero = bb.add(make_constant_zero(i32_ty, in.loc()));
         auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, bool_ty, in.loc()));
 
-        auto c_trip_count = instant_constant_fold_add(bb, make_size(&in.A(), 0, in.loc()));
+        auto c_trip_count =
+            instant_constant_fold_add(bb, make_size(&in.A(), 0, index_ty, in.loc()));
         auto c_step = bb.add(make_constant(
             core_cfg_.subgroup_size * tiling_.m_tiles() * tiling_.n_tiles(), index_ty, in.loc()));
         auto c_init = bb.add(make_constant_zero(bt->element_data_ty(), in.loc()));
 
-        auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, index_ty,
-                               [&](region_builder &bb, array_view<value> args) {
-                                   auto a = bb.add(make_load(&in.A(), {args[0]}, in.loc()));
-                                   auto sum = mixed_precision_arithmetic(bb, arithmetic::add,
-                                                                         args[1], a, in.loc());
-                                   bb.add(make_yield({sum}, in.loc()));
-                               });
+        auto acc = bb.for_loop(
+            from_index, c_trip_count, c_step, {c_init}, index_ty,
+            [&](region_builder &bb, array_view<value> args) {
+                auto a = bb.add(make_load(&in.A(), {args[0]}, at->element_data_ty(), in.loc()));
+                auto sum = mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
+                bb.add(make_yield({sum}, in.loc()));
+            });
         auto sum = bb.add(make_work_group(work_group_operation::reduce_add, acc[0], in.loc()));
         bb.if_condition(
             is_from_0,
@@ -414,11 +426,12 @@ void linalg_generator::operator()(sum_inst &in) {
     } else if (bt->dim() == 1) {
         auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
         auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, in.loc()));
+        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
         add_foreach(
             {c0.get()}, {c_shape0.get()}, index_ty,
             [&](region_builder &bb, auto loop_vars) {
-                auto K = bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, in.loc()));
+                auto K =
+                    bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
                 auto c_init = bb.add(make_constant_zero(bt->element_data_ty()));
                 auto acc = bb.for_loop(
                     c0, K, {}, {c_init}, index_ty, [&](region_builder &bb, array_view<value> args) {
@@ -426,7 +439,8 @@ void linalg_generator::operator()(sum_inst &in) {
                         if (in.tA() == transpose::T) {
                             std::swap(index_list[0], index_list[1]);
                         }
-                        auto a = bb.add(make_load(&in.A(), index_list, in.loc()));
+                        auto a =
+                            bb.add(make_load(&in.A(), index_list, at->element_data_ty(), in.loc()));
                         auto sum =
                             mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
                         bb.add(make_yield({sum}, in.loc()));

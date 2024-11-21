@@ -29,10 +29,10 @@ func @alloca() {
     %0 = alloca : memref<i8x5,local>
     %1 = alloca : memref<f32x16x4,local>
     %2 = alloca : memref<i16,local>
-    %3 = load %0[%c0] : memref<i8x5,local>
-    %4 = load %1[%c0,%c0] : memref<f32x16x4,local>
-    %5 = load %2[] : memref<i16,local>
-    %6 = size %1[1] : memref<f32x16x4,local>
+    %3 = load %0[%c0] : i8
+    %4 = load %1[%c0,%c0] : f32
+    %5 = load %2[] : i16
+    %6 = size %1[1] : index
     %7 = arith.not %6 : index
 ; CHECK:                    %[[#]] = OpFunction {{.*}}
 ; CHECK:       %[[#STACK_PTR_I8:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C0]]

@@ -14,17 +14,17 @@
 func @f1(%0: memref<f32x32x?x7>, %1: index) {
   %c0 = constant 0 : index
   %2 = expand %0[1->4x%1x5] : memref<f32x32x4x?x5x7>
-  %3 = size %2[0] : memref<f32x32x4x?x5x7>
-  %4 = size %2[1] : memref<f32x32x4x?x5x7>
-  %5 = size %2[2] : memref<f32x32x4x?x5x7>
-  %6 = size %2[3] : memref<f32x32x4x?x5x7>
-  %7 = size %2[4] : memref<f32x32x4x?x5x7>
+  %3 = size %2[0] : index
+  %4 = size %2[1] : index
+  %5 = size %2[2] : index
+  %6 = size %2[3] : index
+  %7 = size %2[4] : index
   %8 = arith.not %3 : index
   %9 = arith.not %4 : index
   %10 = arith.not %5 : index
   %11 = arith.not %6 : index
   %12 = arith.not %7 : index
-  %13 = load %2[%c0,%c0,%c0,%c0,%c0] : memref<f32x32x4x?x5x7>
+  %13 = load %2[%c0,%c0,%c0,%c0,%c0] : f32
 ; CHECK:                %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#P_MR:]] = OpFunctionParameter %[[#]]
 ; CHECK-NEXT:  %[[#P_SHAPE1:]] = OpFunctionParameter %[[#I64]]

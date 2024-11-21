@@ -8,10 +8,10 @@
 ; CHECK: %[[#I64_C32:]] = OpConstant %[[#I64]] 32
 
 func @size(%0: memref<i32x?x?x8x32>) {
-    %1 = size %0[0] : memref<i32x?x?x8x32>
-    %2 = size %0[1] : memref<i32x?x?x8x32>
-    %3 = size %0[2] : memref<i32x?x?x8x32>
-    %4 = size %0[3] : memref<i32x?x?x8x32>
+    %1 = size %0[0] : index
+    %2 = size %0[1] : index
+    %3 = size %0[2] : index
+    %4 = size %0[3] : index
     %5 = arith.add %1, %2 : index
     %6 = arith.add %3, %4 : index
 ; CHECK:              %[[#]] = OpFunction {{.*}}

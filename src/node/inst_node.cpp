@@ -802,7 +802,8 @@ fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, tin
     result(0) = value_node{ty, this, lc};
 }
 
-load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0, location const &lc)
+load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
+                     tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())} {
     op(0, op0);
     for (std::size_t i = 0; i < index_list0.size(); ++i) {
@@ -813,17 +814,24 @@ load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
 
     visit(overloaded{
               [&](group_data_type &g) {
+                  if (g.ty() != ty) {
+                      throw compilation_error(loc(), {&operand()},
+                                              status::ir_operand_type_must_match_return_type);
+                  }
                   if (static_cast<std::int64_t>(index_list().size()) != 1) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  result(0) = value_node{g.ty(), this, lc};
+                  result(0) = value_node{ty, this, lc};
               },
               [&](memref_data_type &m) {
+                  if (m.element_data_ty() != ty) {
+                      throw compilation_error(loc(), {&operand()},
+                                              status::ir_operand_type_must_match_return_type);
+                  }
                   if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
-                  auto result_ty = scalar_data_type::get(m.context(), m.element_ty());
-                  result(0) = value_node{result_ty, this, lc};
+                  result(0) = value_node{ty, this, lc};
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *operand().ty());
@@ -968,7 +976,7 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     then().loc(lc);
     otherwise().loc(lc);
     if (!isa<boolean_data_type>(*condition->ty())) {
-        throw compilation_error(loc(), status::ir_expected_boolean);
+        throw compilation_error(loc(), {condition}, status::ir_expected_boolean);
     }
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         if (!isa<boolean_data_type>(*return_types[i]) && !isa<scalar_data_type>(*return_types[i]) &&
@@ -985,18 +993,24 @@ parallel_inst::parallel_inst(location const &lc) : standard_inst{IK::parallel} {
     child_region(0).kind(region_kind::spmd);
 }
 
-size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, location const &lc)
+size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t ty,
+                     location const &lc)
     : standard_inst{IK::size}, mode_(mode) {
     op(0, op0);
     loc(lc);
+
+    auto rt = dyn_cast<scalar_data_type>(ty);
+    if (!rt || rt->ty() != scalar_type::index) {
+        throw compilation_error(loc(), status::ir_expected_index);
+    }
+
     auto m = get_memref_type(loc(), operand());
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
 
-    auto result_ty = scalar_data_type::get(op(0).context(), scalar_type::index);
-    result(0) = value_node{result_ty, this, lc};
+    result(0) = value_node{ty, this, lc};
 }
 
 subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_offsets0,
@@ -1067,11 +1081,11 @@ store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
     auto o = get_memref_type(loc(), operand());
 
     if (v->ty() != o->element_ty()) {
-        throw compilation_error(loc(), status::ir_scalar_mismatch);
+        throw compilation_error(loc(), {&val(), &operand()}, status::ir_scalar_mismatch);
     }
 
     if (o->dim() != static_cast<std::int64_t>(index_list0.size())) {
-        throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+        throw compilation_error(loc(), {&operand()}, status::ir_invalid_number_of_indices);
     }
 }
 

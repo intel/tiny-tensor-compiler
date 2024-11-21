@@ -227,7 +227,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tin
 /**
  * @brief Create arithmetic instruction (unary)
  *
- * @code %value = arith.<op> %a : type(%a) @endcode
+ * @code %value = arith.<op> %a : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param op [in] unary arithmetic operation type
@@ -246,7 +246,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *inst
 /**
  * @brief Create cast instruction
  *
- * @code %value = cast %a, %b : type(%a) -> %to_ty @endcode
+ * @code %value = cast %a, %b : %to_ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
@@ -262,7 +262,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cast_inst_create(tinytc_inst_t *instr, tiny
 /**
  * @brief Create binary op instruction
  *
- * @code %value = cmp.<cond> %a, %b : type(%a) ; type(%a) == type(%b) @endcode
+ * @code %value = cmp.<cond> %a, %b : ty ; type(%a) == type(%b) @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param cond [in] compare type
@@ -366,7 +366,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
 /**
  * @brief Create cooperative matrix load instruction
  *
- * @code %value = cooperative_matrix_load.transpose.checked %op[%p0, %p1] : type(%op) -> to_ty
+ * @code %value = cooperative_matrix_load.transpose.checked %op[%p0, %p1] : to_ty
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -388,7 +388,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
 /**
  * @brief Create cooperative matrix mul add instruction
  *
- * @code cooperative_matrix_mul_add %a, %b, %c : type(%a), type(%b), type(%c) -> to_ty @endcode
+ * @code cooperative_matrix_mul_add %a, %b, %c : to_ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] %a
@@ -406,7 +406,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(
 /**
  * @brief Create cooperative matrix scale instruction
  *
- * @code cooperative_matrix_scale %a, %b : type(%a), type(%b) @endcode
+ * @code cooperative_matrix_scale %a, %b : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] %a
@@ -423,7 +423,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
 /**
  * @brief Create cooperative matrix store instruction
  *
- * @code cooperative_matrix_store.checked.store_flag %val, %op[%p0, %p1] : type(%val), type(%op)
+ * @code cooperative_matrix_store.checked.store_flag %val, %op[%p0, %p1]
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -445,7 +445,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
 /**
  * @brief Create alloca instruction
  *
- * @code %value = alloca -> %ty @endcode
+ * @code %value = alloca : %ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param ty [in] type that is allocated
@@ -460,7 +460,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, ti
  * @brief Create axpby instruction
  *
  * @code
- * axpby.<tA>.<atomic> %alpha, %A, %beta, %B : type(%alpha), type(%A), type(%beta), type(%B)
+ * axpby.<tA>.<atomic> %alpha, %A, %beta, %B
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -483,7 +483,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
 /**
  * @brief Create expand instruction
  *
- * @code %value = expand %a[%mode -> %expand_shape] : type(%a) @endcode
+ * @code %value = expand %a[%mode -> %expand_shape] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
@@ -507,7 +507,7 @@ tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t expand
 /**
  * @brief Create fuse instruction
  *
- * @code %value = fuse %a[%from, %to] : type(%a) @endcode
+ * @code %value = fuse %a[%from, %to] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
@@ -526,13 +526,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
 /**
  * @brief Create load instruction
  *
- * @code %value = load %a[%index_list] : type(%a) @endcode
+ * @code %value = load %a[%index_list] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
  * @param index_list_size [in] number of indices
  * @param index_list [in][range(0, index_list_size)] indices array; may be nullptr if
  * index_list_size is 0
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -540,6 +541,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
 TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       uint32_t index_list_size,
                                                       const tinytc_value_t *index_list,
+                                                      tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
 /**
  * @brief Create group_id instruction
@@ -576,7 +578,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr
  *
  * @code
  * gemm.<tA>.<tB>.<atomic> %alpha, %A, %B, %beta, %C
- *     : type(%alpha), type(%A), type(%B), type(%beta), type(%C)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -604,7 +605,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tiny
  *
  * @code
  * gemv.<tA>.<atomic> %alpha, %A, %B, %beta, %C
- *     : type(%alpha), type(%A), type(%B), type(%beta), type(%C)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -630,7 +630,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tiny
  *
  * @code
  * ger.<atomic> %alpha, %A, %B, %beta, %C
- *     : type(%alpha), type(%A), type(%B), type(%beta), type(%C)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -655,7 +654,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinyt
  *
  * @code
  * hadamard.<atomic> %alpha, %A, %B, %beta, %C
- *     : type(%alpha), type(%A), type(%B), type(%beta), type(%C)
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -706,17 +704,19 @@ TINYTC_EXPORT tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr,
 /**
  * @brief Create size instruction
  *
- * @code %value = size %a[%mode] : type(%a) @endcode
+ * @code %value = size %a[%mode] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param a [in] operand
  * @param mode [in] mode for that the size is queried
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                      int64_t mode, const tinytc_location_t *loc);
+                                                      int64_t mode, tinytc_data_type_t ty,
+                                                      const tinytc_location_t *loc);
 
 /**
  * @brief Create subgroup_id instruction
@@ -816,7 +816,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr,
  * @brief Create sum instruction
  *
  * @code
- * sum.<tA>.<atomic> %alpha, %A, %beta, %B : type(%alpha), type(%A), type(%beta), type(%B)
+ * sum.<tA>.<atomic> %alpha, %A, %beta, %B
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
@@ -840,8 +840,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @brief Create for loop
  *
  * @code
- * for %loop_var = %from, %to, %step
- *     init(initial_value_list) -> (types(initial_value_list)) : loop_var_type { }
+ * for %loop_var : loop_var_type = %from, %to, %step
+ *     init(initial_value_list) -> (types(initial_value_list)) { }
  * ; loop_var_type == type(%from)
  * ; loop_var_type == type(%to)
  * ; loop_var_type == type(%step)
@@ -870,7 +870,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinyt
  * @brief Create foreach loop
  *
  * @code
- * foreach (loop_var_list) = (from_list), (to_list) : loop_var_type { }
+ * foreach (loop_var_list) : loop_var_type = (from_list), (to_list) { }
  * ; loop_var_type == type(%f) forall %f in from_list
  * ; loop_var_type == type(%t) forall %t in to_list
  * @endcode

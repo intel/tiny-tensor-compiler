@@ -3,6 +3,6 @@
 
 ; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
 func @kernel(%K0: memref<f32>) {
-  %0 = load %K0[] : memref<f64>
-; CHECK: 6.13-31: Type of SSA value does not match operand type
+  %0 = load %K0[] : f64
+; CHECK: 6.8-23: Type of operand must match return type
 }

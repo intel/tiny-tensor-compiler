@@ -1215,18 +1215,20 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
  *
  * @param a Operand
  * @param index_list Vector of indices
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_load(value a, array_view<value> index_list, location const &loc = {}) {
+inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t ty,
+                      location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
         throw std::out_of_range("index list too long");
     }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, ty, &loc), loc);
     return inst(instr);
 }
 
@@ -1378,13 +1380,14 @@ inline inst make_parallel(location const &loc = {}) {
  *
  * @param a Operand
  * @param mode Mode
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_size(value a, std::int64_t mode, location const &loc = {}) {
+inline inst make_size(value a, std::int64_t mode, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a, mode, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a, mode, ty, &loc), loc);
     return inst(instr);
 }
 

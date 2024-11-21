@@ -280,7 +280,7 @@ void dump_ir_pass::operator()(load_inst const &e) {
     do_with_infix(e.index_list().begin(), e.index_list().end(),
                   [this](auto const &i) { dump_val(i); });
     *os_ << "] : ";
-    visit(*this, *e.operand().ty());
+    visit(*this, *e.result(0).ty());
 }
 
 void dump_ir_pass::operator()(group_id_inst const &g) {
@@ -409,7 +409,7 @@ void dump_ir_pass::operator()(size_inst const &s) {
     dump_val(s.operand());
     *os_ << "[" << s.mode() << "]";
     *os_ << " : ";
-    visit(*this, *s.operand().ty());
+    visit(*this, *s.result(0).ty());
 }
 
 void dump_ir_pass::operator()(subgroup_id_inst const &sg) {

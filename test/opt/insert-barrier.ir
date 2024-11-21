@@ -163,20 +163,20 @@ func @no_barrier_spmd(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>
         %0 = subgroup_id
         %1 = cmp.eq %0, %c0 : bool
         if %1 {
-            %2 = load %A[%c3,%c4] : memref<f32x8x8>
-            store %2, %A[%c3,%c4] : memref<f32x8x8>
+            %2 = load %A[%c3,%c4] : f32
+            store %2, %A[%c3,%c4]
         }
     }
-    %3 = load %A[%c3,%c4] : memref<f32x8x8>
+    %3 = load %A[%c3,%c4] : f32
 ; CHECK-LABEL: func @no_barrier_spmd({{.*}}
 ; CHECK:       parallel {
 ; CHECK-NEXT:    %0 = subgroup_id
 ; CHECK-NEXT:    %1 = cmp.eq %0, %c0 : bool
 ; CHECK-NEXT:    if %1 {
-; CHECK-NEXT:      %2 = load %A[%c3,%c4] : memref<f32x8x8>
+; CHECK-NEXT:      %2 = load %A[%c3,%c4] : f32
 ; CHECK-NEXT:      store %2, %A[%c3,%c4] : memref<f32x8x8>
 ; CHECK-NEXT:    }
 ; CHECK-NEXT:  }
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  %3 = load %A[%c3,%c4] : memref<f32x8x8>
+; CHECK-NEXT:  %3 = load %A[%c3,%c4] : f32
 }

@@ -188,7 +188,6 @@
 %nterm <std::int64_t> constant_or_dynamic
 %nterm <tinytc_data_type_t> group_type
 %nterm <std::int64_t> group_offset
-%nterm <tinytc_data_type_t> memref_or_group_type
 %nterm <tinytc_value_t> var
 %nterm <inst> instruction
 %nterm <inst> axpby_inst
@@ -433,11 +432,6 @@ group_type:
 group_offset:
     %empty { $$ = std::int64_t(0); }
   | COMMA OFFSET COLON constant_or_dynamic { $$ = $constant_or_dynamic; }
-;
-
-memref_or_group_type:
-    memref_type
-  | group_type
 ;
 
 var:
@@ -1019,16 +1013,11 @@ fuse_inst:
 ;
 
 load_inst:
-    LOAD var LSQBR optional_value_list RSQBR COLON memref_or_group_type {
-        if ($var->ty() != $memref_or_group_type) {
-            auto loc = @var;
-            loc.end = @memref_or_group_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    LOAD var LSQBR optional_value_list RSQBR COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<load_inst>(std::move($var), std::move($optional_value_list),
-                                            @load_inst)
+                                            std::move($data_type), @load_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1039,12 +1028,7 @@ load_inst:
 ;
 
 store_inst:
-    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR COLON memref_type {
-        if ($b->ty() != $memref_type) {
-            auto loc = @b;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
         try {
             $$ = inst {
                 std::make_unique<store_inst>($store_flag, std::move($a), std::move($b),
@@ -1138,14 +1122,11 @@ parallel_inst:
 ;
 
 size_inst:
-    SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON memref_type {
-        if ($var->ty() != $memref_type) {
-            auto loc = @var;
-            loc.end = @memref_type.end;
-            throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
-        }
+    SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON scalar_type {
         try {
-            $$ = inst { std::make_unique<size_inst>(std::move($var), $mode, @size_inst).release() };
+            $$ = inst {
+                std::make_unique<size_inst>(std::move($var), $mode, $scalar_type, @size_inst).release()
+            };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;

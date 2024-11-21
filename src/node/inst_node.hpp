@@ -579,7 +579,8 @@ class fuse_inst : public standard_inst<1, 1> {
 class load_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::load; }
-    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, location const &lc = {});
+    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, tinytc_data_type_t ty,
+              location const &lc = {});
 
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }
@@ -746,7 +747,7 @@ class parallel_inst : public standard_inst<0, 0, 1> {
 class size_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::size; }
-    size_inst(tinytc_value_t op, std::int64_t mode, location const &lc = {});
+    size_inst(tinytc_value_t op, std::int64_t mode, tinytc_data_type_t ty, location const &lc = {});
 
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }
