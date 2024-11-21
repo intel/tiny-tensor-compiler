@@ -131,9 +131,9 @@ func @region1() {
     %0 = alloca : memref<f32x8x8,local>
     %lb = constant 0 : index
     %ub = constant 4 : index
-    for %i=%lb,%ub : index {
+    for %i:index=%lb,%ub {
         %1 = alloca : memref<f32x8x8,local>
-        for %k=%lb,%ub : index {
+        for %k:index=%lb,%ub {
             %2 = alloca : memref<f32x8x8,local>
             gemm.n.n %one, %0, %1, %zero, %2
             axpby.n %one, %1, %zero, %0
@@ -141,9 +141,9 @@ func @region1() {
         axpby.n %one, %0, %zero, %1
     }
 ; CHECK-LABEL: func @region1({{.*}}
-; CHECK:       for %i=%lb,%ub : index {
+; CHECK:       for %i:index=%lb,%ub {
 ; CHECK-NEXT:    %1 = alloca : memref<f32x8x8,local>
-; CHECK-NEXT:    for %k=%lb,%ub : index {
+; CHECK-NEXT:    for %k:index=%lb,%ub {
 ; CHECK-NEXT:      %2 = alloca : memref<f32x8x8,local>
 ; CHECK-NEXT:      barrier.local
 ; CHECK-NEXT:      gemm.n.n %one, %0, %1, %zero, %2

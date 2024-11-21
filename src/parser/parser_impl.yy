@@ -587,7 +587,7 @@ ger_inst:
 ;
 
 for_inst:
-    FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] for_loop_var_type <inst>{
+    FOR LOCAL_IDENTIFIER[loop_var] for_loop_var_type EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst>{
         check_type($from, $for_loop_var_type, @from, @for_loop_var_type);
         check_type($to, $for_loop_var_type, @to, @for_loop_var_type);
         if ($optional_step) {
@@ -654,8 +654,8 @@ init_value:
 ;
 
 foreach_inst:
-    FOREACH LPAREN identifier_list[loop_var] RPAREN EQUALS
-            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN for_loop_var_type <inst>{
+    FOREACH LPAREN identifier_list[loop_var] RPAREN for_loop_var_type EQUALS
+            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN <inst>{
         try {
             location loc = @FOREACH;
             loc.end = @for_loop_var_type.end;

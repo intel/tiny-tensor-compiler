@@ -323,6 +323,8 @@ void dump_ir_pass::operator()(for_inst const &in) {
     }
     *os_ << "for ";
     dump_val(in.loop_var());
+    *os_ << ":";
+    visit(*this, *in.loop_var().ty());
     *os_ << "=";
     dump_val(in.from());
     *os_ << ",";
@@ -346,8 +348,6 @@ void dump_ir_pass::operator()(for_inst const &in) {
                       [this](auto const &i) { visit(*this, *i.ty()); });
         *os_ << ")";
     }
-    *os_ << " : ";
-    visit(*this, *in.loop_var().ty());
     *os_ << " ";
     dump_region(in.body());
 }
@@ -356,12 +356,12 @@ void dump_ir_pass::operator()(foreach_inst const &in) {
     *os_ << "foreach (";
     do_with_infix(in.loop_vars().begin(), in.loop_vars().end(),
                   [this](auto const &i) { dump_val(i); });
-    *os_ << ")=(";
+    *os_ << "):";
+    visit(*this, *in.loop_vars().begin()->ty());
+    *os_ << "=(";
     do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
     *os_ << "),(";
     do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
-    *os_ << ") : ";
-    visit(*this, *in.loop_vars().begin()->ty());
     *os_ << " ";
     dump_region(in.body());
 }

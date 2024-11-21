@@ -9,7 +9,7 @@ func @for1() {
   }
   %lb1 = constant -2 : i16
   %ub1 = constant 2 : i16
-  for %1 = %lb1,%ub1 : i16 {
+  for %1:i16 = %lb1,%ub1 {
   }
 ; CHECK-LABEL: void for1({{.*}}
 ; CHECK: for (long x = lb0; x < ub0; ++x)
@@ -21,7 +21,7 @@ func @for2(%fib: memref<i64>) {
   %to = constant 6 : i32
   %f0 = constant 0 : i64
   %f1 = constant 1 : i64
-  %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) : i32 {
+  %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
     %fn = arith.add %fn_2, %fn_1 : i64
     yield %fn_1, %fn : i64, i64
   }
