@@ -30,8 +30,8 @@
 ; CHECK: %[[#I32_C1:]] = OpConstant %[[#I32]] 1
 
 func @si8(%0: memref<i8x4x4>, %1: memref<i8>) {
-    %2 = constant 0 -> index
-    %3 = constant -42 -> i8
+    %2 = constant 0 : index
+    %3 = constant -42 : i8
     store %3, %0[%2,%2] : memref<i8x4x4>
     store.atomic %3, %1[] : memref<i8>
     store.atomic_add %3, %1[] : memref<i8>
@@ -49,7 +49,7 @@ func @si8(%0: memref<i8x4x4>, %1: memref<i8>) {
 }
 
 func @sf32(%0: memref<f32>) {
-    %1 = constant 42.0 -> f32
+    %1 = constant 42.0 : f32
     store.atomic %1, %0[] : memref<f32>
     store.atomic_add %1, %0[] : memref<f32>
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
@@ -59,7 +59,7 @@ func @sf32(%0: memref<f32>) {
 }
 
 func @sc64(%0: memref<c64>) {
-    %1 = constant [42.0, 1.0] -> c64
+    %1 = constant [42.0, 1.0] : c64
     store.atomic %1, %0[] : memref<c64>
     store.atomic_add %1, %0[] : memref<c64>
 ; CHECK:                  %[[#]] = OpFunction {{.*}}

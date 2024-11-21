@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @coopmatrix_a_load_n(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x16x8,matrix_a>
+    %0 = cooperative_matrix_load.n %A[%x,%y] : coopmatrix<f32x16x8,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_n({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -18,7 +18,7 @@ func @coopmatrix_a_load_n(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_
 }
 
 func @coopmatrix_a_load_n_rows_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x32x2,matrix_a>
+    %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : coopmatrix<f32x32x2,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_n_rows_checked({{.*}}
 ; CHECK:      float x1[4];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -33,7 +33,7 @@ func @coopmatrix_a_load_n_rows_checked(%A: memref<f32x64x48>, %x: index, %y: ind
 }
 
 func @coopmatrix_a_load_n_cols_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x32x2,matrix_a>
+    %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : coopmatrix<f32x32x2,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_n_cols_checked({{.*}}
 ; CHECK:      float x1[4];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -46,7 +46,7 @@ func @coopmatrix_a_load_n_cols_checked(%A: memref<f32x64x48>, %x: index, %y: ind
 }
 
 func @coopmatrix_a_load_n_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.both_checked %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x32x8,matrix_a>
+    %0 = cooperative_matrix_load.n.both_checked %A[%x,%y] : coopmatrix<f32x32x8,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_n_checked({{.*}}
 ; CHECK:      float x1[16];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -73,7 +73,7 @@ func @coopmatrix_a_load_n_checked(%A: memref<f32x64x48>, %x: index, %y: index) s
 }
 
 func @coopmatrix_a_load_t(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x16x8,matrix_a>
+    %0 = cooperative_matrix_load.t %A[%x,%y] : coopmatrix<f32x16x8,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_t({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -88,7 +88,7 @@ func @coopmatrix_a_load_t(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_
 }
 
 func @coopmatrix_a_load_t_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t.both_checked %A[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x16x8,matrix_a>
+    %0 = cooperative_matrix_load.t.both_checked %A[%x,%y] : coopmatrix<f32x16x8,matrix_a>
 ; CHECK-LABEL: void coopmatrix_a_load_t_checked({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = A + x * 1 + y * 64;
@@ -106,7 +106,7 @@ func @coopmatrix_a_load_t_checked(%A: memref<f32x64x48>, %x: index, %y: index) s
 }
 
 func @coopmatrix_b_load_n(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n %B[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x8x16,matrix_b>
+    %0 = cooperative_matrix_load.n %B[%x,%y] : coopmatrix<f32x8x16,matrix_b>
 ; CHECK-LABEL: void coopmatrix_b_load_n({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = B + x * 1 + y * 64;
@@ -121,7 +121,7 @@ func @coopmatrix_b_load_n(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_
 }
 
 func @coopmatrix_b_load_n_checked(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.both_checked %B[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x8x32,matrix_b>
+    %0 = cooperative_matrix_load.n.both_checked %B[%x,%y] : coopmatrix<f32x8x32,matrix_b>
 ; CHECK-LABEL: void coopmatrix_b_load_n_checked({{.*}}
 ; CHECK:      float x1[16];
 ; CHECK-NEXT: global float* x2 = B + x * 1 + y * 64;
@@ -148,7 +148,7 @@ func @coopmatrix_b_load_n_checked(%B: memref<f32x64x48>, %x: index, %y: index) s
 }
 
 func @coopmatrix_b_load_t(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t %B[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x8x16,matrix_b>
+    %0 = cooperative_matrix_load.t %B[%x,%y] : coopmatrix<f32x8x16,matrix_b>
 ; CHECK-LABEL: void coopmatrix_b_load_t({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = B + x * 1 + y * 64;
@@ -163,7 +163,7 @@ func @coopmatrix_b_load_t(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_
 }
 
 func @coopmatrix_b_load_t_checked(%B: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t.both_checked %B[%x,%y] : memref<f32x64x48> -> coopmatrix<f32x8x16,matrix_b>
+    %0 = cooperative_matrix_load.t.both_checked %B[%x,%y] : coopmatrix<f32x8x16,matrix_b>
 ; CHECK-LABEL: void coopmatrix_b_load_t_checked({{.*}}
 ; CHECK:      float x1[8];
 ; CHECK-NEXT: global float* x2 = B + x * 1 + y * 64;

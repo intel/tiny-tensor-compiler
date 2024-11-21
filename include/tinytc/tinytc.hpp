@@ -1090,13 +1090,15 @@ inline inst make_cooperative_matrix_mul_add(value a, value b, value c, data_type
  *
  * @param a %a
  * @param b %b
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_cooperative_matrix_scale(value a, value b, location const &loc = {}) {
+inline inst make_cooperative_matrix_scale(value a, value b, data_type ty,
+                                          location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_scale_inst_create(&instr, a, b, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_scale_inst_create(&instr, a, b, ty, &loc), loc);
     return inst(instr);
 }
 

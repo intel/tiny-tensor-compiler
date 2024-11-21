@@ -51,7 +51,7 @@ func @tcomplex(%a: c32) {
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
-    %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
+    %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = arith.neg %0 : coopmatrix<f32x16x4,matrix_a>
 ; CHECK:      %[[#]] = OpFNegate %[[#F32]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]

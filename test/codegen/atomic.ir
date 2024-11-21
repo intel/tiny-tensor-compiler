@@ -3,8 +3,8 @@
 
 ; RUN: %tinytc-oc < %s | filecheck %s
 func @atomic_store(%A: memref<f64x2>) {
-    %f0 = constant 0.0 -> f64
-    %i0 = constant 0 -> index
+    %f0 = constant 0.0 : f64
+    %i0 = constant 0 : index
     store.atomic %f0, %A[%i0] : memref<f64x2>
     store.atomic_add %f0, %A[%i0] : memref<f64x2>
 ; CHECK-LABEL: void atomic_store({{.*}}
@@ -13,8 +13,8 @@ func @atomic_store(%A: memref<f64x2>) {
 }
 
 func @atomic_store_c64(%A: memref<c64x2>) {
-    %f0 = constant [0.0, 0.0] -> c64
-    %i0 = constant 0 -> index
+    %f0 = constant [0.0, 0.0] : c64
+    %i0 = constant 0 : index
     store.atomic %f0, %A[%i0] : memref<c64x2>
     store.atomic_add %f0, %A[%i0] : memref<c64x2>
 ; CHECK-LABEL: void atomic_store_c64({{.*}}

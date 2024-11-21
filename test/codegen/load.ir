@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @kernel1(%a: memref<f32>, %b: memref<f32x10x?>, %c: group<memref<f32x42>>) {
-    %c5 = constant 5 -> index
+    %c5 = constant 5 : index
     %0 = load %a[] : memref<f32>
     %1 = group_id
     %2 = load %b[%c5, %1] : memref<f32x10x?>

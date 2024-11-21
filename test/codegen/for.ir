@@ -3,12 +3,12 @@
 
 ; RUN: %tinytc-oc < %s | filecheck %s
 func @for1() {
-  %lb0 = constant 0 -> index
-  %ub0 = constant 10 -> index
+  %lb0 = constant 0 : index
+  %ub0 = constant 10 : index
   for %0 = %lb0,%ub0 {
   }
-  %lb1 = constant -2 -> i16
-  %ub1 = constant 2 -> i16
+  %lb1 = constant -2 : i16
+  %ub1 = constant 2 : i16
   for %1 = %lb1,%ub1 : i16 {
   }
 ; CHECK-LABEL: void for1({{.*}}
@@ -17,10 +17,10 @@ func @for1() {
 }
 
 func @for2(%fib: memref<i64>) {
-  %from = constant 2 -> i32
-  %to = constant 6 -> i32
-  %f0 = constant 0 -> i64
-  %f1 = constant 1 -> i64
+  %from = constant 2 : i32
+  %to = constant 6 : i32
+  %f0 = constant 0 : i64
+  %f1 = constant 1 : i64
   %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) : i32 {
     %fn = arith.add %fn_2, %fn_1 : i64
     yield %fn_1, %fn : i64, i64

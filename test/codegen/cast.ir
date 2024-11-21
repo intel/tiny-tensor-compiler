@@ -3,43 +3,43 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @cast_ii() {
-  %0 = constant 2 -> index
+  %0 = constant 2 : index
   %1 = cast %0 : i32
 ; CHECK-LABEL: void cast_ii() {
 ; CHECK: int x1 = (int) x;
 }
 func @cast_ff() {
-  %0 = constant 2.0 -> f32
+  %0 = constant 2.0 : f32
   %1 = cast %0 : f64
 ; CHECK-LABEL: void cast_ff() {
 ; CHECK: double x1 = (double) x;
 }
 func @cast_cc() {
-  %0 = constant [2.0, 0.0] -> c32
+  %0 = constant [2.0, 0.0] : c32
   %1 = cast %0 : c64
 ; CHECK-LABEL: void cast_cc() {
 ; CHECK: double2 x1 = convert_double2(x);
 }
 func @cast_if() {
-  %0 = constant 2 -> i32
+  %0 = constant 2 : i32
   %1 = cast %0 : f32
 ; CHECK-LABEL: void cast_if() {
 ; CHECK: float x1 = (float) x;
 }
 func @cast_fi() {
-  %0 = constant 2.0 -> f32
+  %0 = constant 2.0 : f32
   %1 = cast %0 : i16
 ; CHECK-LABEL: void cast_fi() {
 ; CHECK: short x1 = (short) x;
 }
 func @cast_ic() {
-  %0 = constant 2 -> i8
+  %0 = constant 2 : i8
   %1 = cast %0 : c32
 ; CHECK-LABEL: void cast_ic() {
 ; CHECK: float2 x1 = (float2) (x, 0);
 }
 func @cast_fc() {
-  %0 = constant 2.0 -> f64
+  %0 = constant 2.0 : f64
   %1 = cast %0 : c32
 ; CHECK-LABEL: void cast_fc() {
 ; CHECK: float2 x1 = (float2) (x, 0);

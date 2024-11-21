@@ -411,12 +411,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(
  * @param instr [out] pointer to the inst object created
  * @param a [in] %a
  * @param b [in] %b
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t a, tinytc_value_t b, const tinytc_location_t *loc);
+    tinytc_inst_t *instr, tinytc_value_t a, tinytc_value_t b, tinytc_data_type_t ty,
+    const tinytc_location_t *loc);
 
 /**
  * @brief Create cooperative matrix store instruction

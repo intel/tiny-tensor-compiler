@@ -502,7 +502,8 @@ class cooperative_matrix_scale_inst : public standard_inst<2, 1, 0> {
         return i.type_id() == IK::cooperative_matrix_scale;
     }
     enum op_number { op_a = 0, op_b = 1 };
-    cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0, location const &lc = {});
+    cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0, tinytc_data_type_t ty,
+                                  location const &lc = {});
 
     inline auto a() -> tinytc_value & { return op(op_a); }
     inline auto a() const -> tinytc_value const & { return op(op_a); }

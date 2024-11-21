@@ -3,8 +3,8 @@
 
 ; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
 func @illegal_nesting() {
-    %lb = constant 1 -> index
-    %ub = constant 16 -> index
+    %lb = constant 1 : index
+    %ub = constant 16 : index
     foreach (%i)=(%lb),(%ub) {
         foreach (%j)=(%lb),(%ub) {
         }

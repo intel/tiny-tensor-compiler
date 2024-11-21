@@ -4,22 +4,22 @@
 ; RUN: %tinytc-opt -pdump-def-use < %s | filecheck %s
 
 func @foobar() {
-    %one = constant 1 -> index
-    %lb = constant 0 -> index
-    %ub = constant 5 -> index
+    %one = constant 1 : index
+    %lb = constant 0 : index
+    %ub = constant 5 : index
     for %i=%lb,%ub : index {
         %0 = arith.add %i, %one : index
         %1 = arith.rem %0, %one : index
     }
 ; CHECK:      Def-use in foobar
-; CHECK-NEXT: > %one = constant 1 -> index
+; CHECK-NEXT: > %one = constant 1 : index
 ; CHECK-NEXT:   def %one
 ; CHECK-NEXT:     > %1 = arith.rem %0, %one : index
 ; CHECK-NEXT:     > %0 = arith.add %i, %one : index
-; CHECK-NEXT: > %lb = constant 0 -> index
+; CHECK-NEXT: > %lb = constant 0 : index
 ; CHECK-NEXT:   def %lb
 ; CHECK-NEXT:     > for %i=%lb,%ub : index {...}
-; CHECK-NEXT: > %ub = constant 5 -> index
+; CHECK-NEXT: > %ub = constant 5 : index
 ; CHECK-NEXT:   def %ub
 ; CHECK-NEXT:     > for %i=%lb,%ub : index {...}
 ; CHECK-NEXT: > for %i=%lb,%ub : index {...}

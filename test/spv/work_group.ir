@@ -11,9 +11,9 @@
 ; CHECK: %[[#SCOPE:]] = OpConstant %[[#]] 2
 
 func @twg() {
-  %0 = constant 1 -> i16
-  %1 = constant 1.0 -> f32
-  %2 = constant [1.0, 0.0] -> c64
+  %0 = constant 1 : i16
+  %1 = constant 1.0 : f32
+  %2 = constant [1.0, 0.0] : c64
   %3 = work_group.reduce_add %0 : i16
   %4 = work_group.reduce_add %1 : f32
   %5 = work_group.reduce_add %2 : c64

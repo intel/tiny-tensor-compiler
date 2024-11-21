@@ -3,18 +3,18 @@
 
 ; RUN: %tinytc-opt -pdead-code-elimination < %s | filecheck %s
 func @dead_if(%a: memref<f64>) {
-    %c0 = constant false -> bool
+    %c0 = constant false : bool
     if %c0 {
-        %c42 = constant 42.0 -> f64
+        %c42 = constant 42.0 : f64
         store %c42, %a[] : memref<f64>
     }
-    %c1 = constant true -> bool
+    %c1 = constant true : bool
     if %c1 {
-        %c43 = constant 43.0 -> f64
+        %c43 = constant 43.0 : f64
         store %c43, %a[] : memref<f64>
     }
 ; CHECK-LABEL: func @dead_if({{.*}}
-; CHECK-NEXT: %c1 = constant true -> bool
+; CHECK-NEXT: %c1 = constant true : bool
 ; CHECK-NEXT: if %c1 {
 ; CHECK-NEXT:   %c43{{.*}}
 ; CHECK-NEXT:   store{{.*}}
@@ -22,42 +22,42 @@ func @dead_if(%a: memref<f64>) {
 }
 
 func @dead_if_with_yield(%a: memref<f64>) {
-    %c0 = constant false -> bool
+    %c0 = constant false : bool
     %0 = if %c0 -> (f64) {
-        %c42 = constant 42.0 -> f64
+        %c42 = constant 42.0 : f64
         yield %c42 : f64
     } else {
-        %c43 = constant 43.0 -> f64
+        %c43 = constant 43.0 : f64
         yield %c43 : f64
     }
     store %0, %a[] : memref<f64>
 ; Cannot eliminate if that returns results currently
 ; CHECK-LABEL: func @dead_if_with_yield({{.*}}
 ; CHECK:       %0 = if %c0 -> (f64) {
-; CHECK-NEXT:    %c42 = constant 0x1.5p+5 -> f64
+; CHECK-NEXT:    %c42 = constant 0x1.5p+5 : f64
 ; CHECK-NEXT:    yield %c42 : f64
 ; CHECK-NEXT:  } else {
-; CHECK-NEXT:    %c43 = constant 0x1.58p+5 -> f64
+; CHECK-NEXT:    %c43 = constant 0x1.58p+5 : f64
 ; CHECK-NEXT:    yield %c43 : f64
 ; CHECK-NEXT:  }
 ; CHECK-NEXT:  store %0, %a[] : memref<f64>
 }
 
 func @dead_loop(%a: memref<f64>) {
-    %c2 = constant 2 -> index
+    %c2 = constant 2 : index
     for %0=%c2,%c2 {
-        %c42 = constant 42.0 -> f64
+        %c42 = constant 42.0 : f64
         store %c42, %a[] : memref<f64>
     }
-    %c5 = constant 5 -> index
-    %c6 = constant 6 -> index
+    %c5 = constant 5 : index
+    %c6 = constant 6 : index
     for %0=%c5,%c6 {
-        %c43 = constant 43.0 -> f64
+        %c43 = constant 43.0 : f64
         store %c43, %a[] : memref<f64>
     }
 ; CHECK-LABEL: func @dead_loop({{.*}}
-; CHECK-NEXT: %c5 = constant 5 -> index
-; CHECK-NEXT: %c6 = constant 6 -> index
+; CHECK-NEXT: %c5 = constant 5 : index
+; CHECK-NEXT: %c6 = constant 6 : index
 ; CHECK-NEXT: for %0=%c5,%c6 : index {
 ; CHECK-NEXT:   %c43{{.*}}
 ; CHECK-NEXT:   store{{.*}}
@@ -67,7 +67,7 @@ func @dead_loop(%a: memref<f64>) {
 func @unused_alloca(%a: memref<f64x4>) {
     %0 = alloca : memref<f64x8,local>
     %1 = alloca : memref<f64x4,local>
-    %one = constant 1.0 -> f64
+    %one = constant 1.0 : f64
     axpby.n %one, %1, %one, %a
 ; CHECK-LABEL: func @unused_alloca({{.*}}
 ; CHECK-NEXT: %0 = alloca : memref<f64x4,local>

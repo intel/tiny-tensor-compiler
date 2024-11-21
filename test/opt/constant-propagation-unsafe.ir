@@ -4,7 +4,7 @@
 ; RUN: %tinytc-opt -pconstant-propagation -funsafe-fp-math < %s | filecheck %s
 
 func @identity_fadd(%a: f32) {
-    %c0 = constant 0.0 -> f32
+    %c0 = constant 0.0 : f32
     %0 = arith.add %a, %c0 : f32
     %1 = arith.add %c0, %a : f32
     %2 = arith.add %0, %1 : f32
@@ -13,7 +13,7 @@ func @identity_fadd(%a: f32) {
 }
 
 func @identity_fsub(%a: f32) {
-    %c0 = constant 0.0 -> f32
+    %c0 = constant 0.0 : f32
     %0 = arith.sub %a, %c0 : f32
     %1 = arith.sub %c0, %a : f32
     %2 = arith.add %0, %1 : f32
@@ -22,18 +22,18 @@ func @identity_fsub(%a: f32) {
 }
 
 func @identity_fmul0(%a: f32) {
-    %c0 = constant 0.0 -> f32
+    %c0 = constant 0.0 : f32
     %0 = arith.mul %a, %c0 : f32
     %1 = arith.mul %c0, %a : f32
 ; CHECK-LABEL: func @identity_fmul0({{.*}}
-; CHECK:       %0 = constant 0x0p+0 -> f32
+; CHECK:       %0 = constant 0x0p+0 : f32
 ; CHECK-NEXT:  %1 = arith.mul %a, %c0 : f32
-; CHECK-NEXT:  %2 = constant 0x0p+0 -> f32
+; CHECK-NEXT:  %2 = constant 0x0p+0 : f32
 ; CHECK-NEXT:  %3 = arith.mul %c0, %a : f32
 }
 
 func @identity_fmul1(%a: f32) {
-    %c1 = constant 1.0 -> f32
+    %c1 = constant 1.0 : f32
     %0 = arith.mul %a, %c1 : f32
     %1 = arith.mul %c1, %a : f32
     %2 = arith.mul %0, %1 : f32
@@ -42,7 +42,7 @@ func @identity_fmul1(%a: f32) {
 }
 
 func @identity_fdiv(%a: f32) {
-    %c1 = constant 1.0 -> f32
+    %c1 = constant 1.0 : f32
     %0 = arith.div %a, %c1 : f32
     %1 = arith.div %c1, %a : f32
     %2 = arith.mul %0, %1 : f32
@@ -51,7 +51,7 @@ func @identity_fdiv(%a: f32) {
 }
 
 func @identity_cmul1(%a: c32) {
-    %c1 = constant [1.0, 0.0] -> c32
+    %c1 = constant [1.0, 0.0] : c32
     %0 = arith.mul %a, %c1 : c32
     %1 = arith.mul %c1, %a : c32
     %2 = arith.mul %0, %1 : c32

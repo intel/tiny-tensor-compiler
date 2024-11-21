@@ -352,13 +352,14 @@ tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(tinytc_inst_t *ins
 }
 
 tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                            tinytc_value_t b,
+                                                            tinytc_value_t b, tinytc_data_type_t ty,
                                                             const tinytc_location_t *loc) {
     if (instr == nullptr || a == nullptr || b == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cooperative_matrix_scale_inst>(a, b, get_optional(loc)).release();
+        *instr =
+            std::make_unique<cooperative_matrix_scale_inst>(a, b, ty, get_optional(loc)).release();
     });
 }
 

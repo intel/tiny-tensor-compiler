@@ -10,10 +10,10 @@ func @f32_blas() {
 ; CHECK: func @f32_blas() subgroup_size(32) work_group_size(128,2) {
     %0 = alloca : memref<f32x128x37,local>
     %1 = alloca : memref<f32x128x37,local>
-    %one = constant 1.0 -> f32
-    %zero = constant 0.0 -> f32
-    %lb = constant 0 -> index
-    %ub = constant 4 -> index
+    %one = constant 1.0 : f32
+    %zero = constant 0.0 : f32
+    %lb = constant 0 : index
+    %ub = constant 4 : index
     for %i=%lb,%ub {
         axpby.n %one, %0, %zero, %1
     }
@@ -24,10 +24,10 @@ func @f64_blas() {
     %0 = alloca : memref<f64x128x128,local>
     %1 = alloca : memref<f64x128x128,local>
     %2 = alloca : memref<f64x128x128,local>
-    %one = constant 1.0 -> f64
-    %zero = constant 0.0 -> f64
-    %lb = constant 0 -> index
-    %ub = constant 4 -> index
+    %one = constant 1.0 : f64
+    %zero = constant 0.0 : f64
+    %lb = constant 0 : index
+    %ub = constant 4 : index
     for %i=%lb,%ub {
         gemm.n.n %one, %0, %1, %zero, %2
     }

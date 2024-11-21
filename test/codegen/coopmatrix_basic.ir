@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @coopmatrix_constant() {
-    %0 = constant 1.0 -> coopmatrix<f64x16x5, matrix_a>
+    %0 = constant 1.0 : coopmatrix<f64x16x5, matrix_a>
 ; CHECK-LABEL: void coopmatrix_constant({{.*}}
 ; CHECK:      double x[5];
 ; CHECK-NEXT: x[0] = 0x1p+0;
@@ -14,8 +14,8 @@ func @coopmatrix_constant() {
 }
 
 func @coopmatrix_add() {
-    %0 = constant 1.0 -> coopmatrix<f64x16x4, matrix_a>
-    %1 = constant 1.0 -> coopmatrix<f64x16x4, matrix_a>
+    %0 = constant 1.0 : coopmatrix<f64x16x4, matrix_a>
+    %1 = constant 1.0 : coopmatrix<f64x16x4, matrix_a>
     %2 = arith.add %0, %1 : coopmatrix<f64x16x4, matrix_a>
 ; CHECK-LABEL: void coopmatrix_add({{.*}}
 ; CHECK:      double x2[4];
@@ -26,7 +26,7 @@ func @coopmatrix_add() {
 }
 
 func @coopmatrix_neg() subgroup_size(16) {
-    %0 = constant 1.0 -> coopmatrix<f64x32x4, matrix_a>
+    %0 = constant 1.0 : coopmatrix<f64x32x4, matrix_a>
     %1 = arith.neg %0 : coopmatrix<f64x32x4, matrix_a>
 ; CHECK-LABEL: void coopmatrix_neg({{.*}}
 ; CHECK:      double x1[8];
@@ -41,7 +41,7 @@ func @coopmatrix_neg() subgroup_size(16) {
 }
 
 func @coopmatrix_cast() subgroup_size(16) {
-    %0 = constant 1 -> coopmatrix<i8x16x8, matrix_a>
+    %0 = constant 1 : coopmatrix<i8x16x8, matrix_a>
     %1 = cast %0 : coopmatrix<c32x16x8, matrix_a>
 ; CHECK-LABEL: void coopmatrix_cast({{.*}}
 ; CHECK:      float2 x1[8];

@@ -26,12 +26,10 @@
 ; CHECK:     %[[#I64_C3:]] = OpConstant %[[#I64]] 3
 
 func @coopmatrix_mul_add_ff() subgroup_size(16) {
-    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    %b = constant 2.0 -> coopmatrix<f32x2x2,matrix_b>
-    %c = constant 3.0 -> coopmatrix<f32x16x2,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<f32x2x2,matrix_b>,
-              coopmatrix<f32x16x2,matrix_acc> -> coopmatrix<f32x16x2,matrix_acc>
+    %a = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    %b = constant 2.0 : coopmatrix<f32x2x2,matrix_b>
+    %c = constant 3.0 : coopmatrix<f32x16x2,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<f32x16x2,matrix_acc>
 ; CHECK-LABEL:       %[[#]] = OpFunction {{.*}}
 ; CHECK:       %[[#FF_B0:]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C0]]
 ; CHECK-NEXT:  %[[#FF_C0:]] = OpExtInst %[[#F32]] %[[#]] fma %[[#F32_C1]] %[[#FF_B0]] %[[#F32_C3]]
@@ -44,12 +42,10 @@ func @coopmatrix_mul_add_ff() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_cf() subgroup_size(16) {
-    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
-    %b = constant 2.0 -> coopmatrix<f32x2x4,matrix_b>
-    %c = constant [3.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
-              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+    %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
+    %b = constant 2.0 : coopmatrix<f32x2x4,matrix_b>
+    %c = constant [3.0, 0.0] : coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL:              %[[#]] = OpFunction {{.*}}
 ; CHECK:             %[[#CF_B0:]]  = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#F32_C2]] %[[#I32_C0]]
 ; CHECK-NEXT:     %[[#CF_DUMMY:]]  = OpUndef %[[#C32]] 
@@ -59,12 +55,10 @@ func @coopmatrix_mul_add_cf() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_cc() subgroup_size(16) {
-    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
-    %b = constant [2.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
-    %c = constant [3.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
-              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+    %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
+    %b = constant [2.0, 0.0] : coopmatrix<c32x2x4,matrix_b>
+    %c = constant [3.0, 0.0] : coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:                %[[#CC_B0:]] = OpGroupBroadcast %[[#C32]] %[[#I32_C3]] %[[#C32_C2_0]] %[[#I32_C0]]
 ; CHECK-NEXT:        %[[#CC_B0_RE:]] = OpCompositeExtract %[[#F32]] %[[#CC_B0]] 0
@@ -83,12 +77,10 @@ func @coopmatrix_mul_add_cc() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_ii_mixed() subgroup_size(16) {
-    %a = constant 1 -> coopmatrix<i16x16x2,matrix_a>
-    %b = constant 2 -> coopmatrix<i32x2x4,matrix_b>
-    %c = constant 3 -> coopmatrix<i64x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<i16x16x2,matrix_a>, coopmatrix<i32x2x4,matrix_b>,
-              coopmatrix<i64x16x4,matrix_acc> -> coopmatrix<i32x16x4,matrix_acc>
+    %a = constant 1 : coopmatrix<i16x16x2,matrix_a>
+    %b = constant 2 : coopmatrix<i32x2x4,matrix_b>
+    %c = constant 3 : coopmatrix<i64x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<i32x16x4,matrix_acc>
 ; CHECK-LABEL:           %[[#]] = OpFunction {{.*}}
 ; CHECK:           %[[#II_BC:]] = OpGroupBroadcast %[[#I32]] %[[#I32_C3]] %[[#I32_C2]] %[[#I32_C0]]
 ; CHECK-NEXT:   %[[#II_A_I32:]] = OpSConvert %[[#I32]] %[[#I16_C1]]

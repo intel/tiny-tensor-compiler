@@ -621,7 +621,7 @@ auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
             a = bb.add(make_cast(a, compatible_ty, loc));
         }
     }
-    return bb.add(make_cooperative_matrix_scale(a, b, loc));
+    return bb.add(make_cooperative_matrix_scale(a, b, bt, loc));
 }
 
 auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {

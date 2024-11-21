@@ -847,7 +847,7 @@ compare_inst:
 ;
 
 constant_inst:
-    CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR ARROW data_type {
+    CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>(std::complex<double>{$re, $im}, $data_type, @constant_inst)
@@ -858,7 +858,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT FLOATING_CONSTANT ARROW data_type {
+  | CONSTANT FLOATING_CONSTANT COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($FLOATING_CONSTANT, $data_type, @constant_inst).release()
@@ -868,7 +868,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT INTEGER_CONSTANT ARROW data_type {
+  | CONSTANT INTEGER_CONSTANT COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($INTEGER_CONSTANT, $data_type, @constant_inst).release()
@@ -878,7 +878,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT BOOLEAN_CONSTANT ARROW data_type {
+  | CONSTANT BOOLEAN_CONSTANT COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($BOOLEAN_CONSTANT, $data_type, @constant_inst).release()
@@ -891,8 +891,7 @@ constant_inst:
 ;
 
 cooperative_matrix_load_inst:
-    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[op_ty] ARROW data_type[result_ty]  {
-        check_type($op, $op_ty, @op, @op_ty);
+    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_load_inst>(
@@ -913,10 +912,7 @@ checked:
 ;
 
 cooperative_matrix_mul_add_inst:
-    COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[a_ty] COMMA data_type[b_ty] COMMA data_type[c_ty] ARROW data_type[to_ty] {
-        check_type($a, $a_ty, @a, @a_ty);
-        check_type($b, $b_ty, @b, @b_ty);
-        check_type($c, $c_ty, @c, @c_ty);
+    COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[to_ty] {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_mul_add_inst>(std::move($a), std::move($b),
@@ -932,13 +928,11 @@ cooperative_matrix_mul_add_inst:
 ;
 
 cooperative_matrix_scale_inst:
-    COOPERATIVE_MATRIX_SCALE var[a] COMMA var[b] COLON data_type[a_ty] COMMA data_type[b_ty] {
-        check_type($a, $a_ty, @a, @a_ty);
-        check_type($b, $b_ty, @b, @b_ty);
+    COOPERATIVE_MATRIX_SCALE var[a] COMMA var[b] COLON data_type[ty] {
         try {
             $$ = inst {
-                std::make_unique<cooperative_matrix_scale_inst>(std::move($a), std::move($b),
-                                                                @cooperative_matrix_scale_inst)
+                std::make_unique<cooperative_matrix_scale_inst>(
+                    std::move($a), std::move($b), std::move($ty), @cooperative_matrix_scale_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -949,9 +943,7 @@ cooperative_matrix_scale_inst:
 ;
 
 cooperative_matrix_store_inst:
-    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[val_ty] COMMA data_type[op_ty]  {
-        check_type($val, $val_ty, @val, @val_ty);
-        check_type($op, $op_ty, @op, @op_ty);
+    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_store_inst>(

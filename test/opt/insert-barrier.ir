@@ -80,7 +80,7 @@ func @war_alias(%a: f32, %b: f32, %A: memref<f32x8x8>, %C: memref<f32x8x12>) {
 }
 
 func @if(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
-    %c42 = constant 42.0 -> f32
+    %c42 = constant 42.0 : f32
     %0 = cmp.gt %a, %c42 : bool
     if %0 {
         axpby.n %a, %A, %b, %B
@@ -102,7 +102,7 @@ func @if(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<
 }
 
 func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
-    %c42 = constant 42.0 -> f32
+    %c42 = constant 42.0 : f32
     %0 = cmp.gt %a, %c42 : bool
     axpby.n %a, %B, %b, %A
     if %0 {
@@ -126,11 +126,11 @@ func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref
 }
 
 func @region1() {
-    %one = constant 1.0 -> f32
-    %zero = constant 0.0 -> f32
+    %one = constant 1.0 : f32
+    %zero = constant 0.0 : f32
     %0 = alloca : memref<f32x8x8,local>
-    %lb = constant 0 -> index
-    %ub = constant 4 -> index
+    %lb = constant 0 : index
+    %ub = constant 4 : index
     for %i=%lb,%ub : index {
         %1 = alloca : memref<f32x8x8,local>
         for %k=%lb,%ub : index {
@@ -156,9 +156,9 @@ func @region1() {
 }
 
 func @no_barrier_spmd(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>) {
-    %c0 = constant 0 -> i32
-    %c3 = constant 3 -> index
-    %c4 = constant 4 -> index
+    %c0 = constant 0 : i32
+    %c3 = constant 3 : index
+    %c4 = constant 4 : index
     parallel {
         %0 = subgroup_id
         %1 = cmp.eq %0, %c0 : bool

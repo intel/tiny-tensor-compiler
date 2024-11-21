@@ -3,12 +3,10 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @coopmatrix_mul_add_ff() subgroup_size(16) {
-    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    %b = constant 1.0 -> coopmatrix<f32x2x4,matrix_b>
-    %c = constant 1.0 -> coopmatrix<f32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
-              coopmatrix<f32x16x4,matrix_acc> -> coopmatrix<f32x16x4,matrix_acc>
+    %a = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    %b = constant 1.0 : coopmatrix<f32x2x4,matrix_b>
+    %c = constant 1.0 : coopmatrix<f32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<f32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_ff({{.*}}
 ; CHECK:      float c_next[4];
 ; CHECK-NEXT: c_next[0] = fma(a[0], sub_group_broadcast(b[0], 0), c[0]);
@@ -22,12 +20,10 @@ func @coopmatrix_mul_add_ff() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_cf() subgroup_size(16) {
-    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
-    %b = constant 1.0 -> coopmatrix<f32x2x4,matrix_b>
-    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<f32x2x4,matrix_b>,
-              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+    %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
+    %b = constant 1.0 : coopmatrix<f32x2x4,matrix_b>
+    %c = constant [1.0, 0.0] : coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_cf({{.*}}
 ; CHECK:      float2 c_next[4];
 ; CHECK-NEXT: c_next[0] = c[0] + a[0] * sub_group_broadcast(b[0], 0);
@@ -41,12 +37,10 @@ func @coopmatrix_mul_add_cf() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_fc() subgroup_size(16) {
-    %a = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    %b = constant [1.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
-    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<f32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
-              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+    %a = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    %b = constant [1.0, 0.0] : coopmatrix<c32x2x4,matrix_b>
+    %c = constant [1.0, 0.0] : coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_fc({{.*}}
 ; CHECK:      float2 c_next[4];
 ; CHECK-NEXT: c_next[0].x = c[0].x + a[0] * sub_group_broadcast(b[0].x, 0);
@@ -68,12 +62,10 @@ func @coopmatrix_mul_add_fc() subgroup_size(16) {
 }
 
 func @coopmatrix_mul_add_cc() subgroup_size(16) {
-    %a = constant [1.0, 0.0] -> coopmatrix<c32x16x2,matrix_a>
-    %b = constant [1.0, 0.0] -> coopmatrix<c32x2x4,matrix_b>
-    %c = constant [1.0, 0.0] -> coopmatrix<c32x16x4,matrix_acc>
-    %c_next = cooperative_matrix_mul_add %a, %b, %c
-            : coopmatrix<c32x16x2,matrix_a>, coopmatrix<c32x2x4,matrix_b>,
-              coopmatrix<c32x16x4,matrix_acc> -> coopmatrix<c32x16x4,matrix_acc>
+    %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
+    %b = constant [1.0, 0.0] : coopmatrix<c32x2x4,matrix_b>
+    %c = constant [1.0, 0.0] : coopmatrix<c32x16x4,matrix_acc>
+    %c_next = cooperative_matrix_mul_add %a, %b, %c : coopmatrix<c32x16x4,matrix_acc>
 ; CHECK-LABEL: void coopmatrix_mul_add_cc({{.*}}
 ; CHECK:      float2 c_next[4];
 ; CHECK-NEXT: float2 x[4];

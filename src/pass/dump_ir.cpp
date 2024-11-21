@@ -180,7 +180,7 @@ void dump_ir_pass::operator()(constant_inst const &c) {
                    },
                },
                c.value());
-    *os_ << " -> ";
+    *os_ << " : ";
     visit(*this, *c.result()->ty());
 }
 
@@ -198,8 +198,6 @@ void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     *os_ << ",";
     dump_val(c.pos1());
     *os_ << "] : ";
-    visit(*this, *c.operand().ty());
-    *os_ << " -> ";
     visit(*this, *c.result(0).ty());
 }
 
@@ -212,12 +210,6 @@ void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
     *os_ << ", ";
     dump_val(c.c());
     *os_ << " : ";
-    visit(*this, *c.a().ty());
-    *os_ << ", ";
-    visit(*this, *c.b().ty());
-    *os_ << ", ";
-    visit(*this, *c.c().ty());
-    *os_ << " -> ";
     visit(*this, *c.result(0).ty());
 }
 
@@ -228,9 +220,7 @@ void dump_ir_pass::operator()(cooperative_matrix_scale_inst const &c) {
     *os_ << ", ";
     dump_val(c.b());
     *os_ << " : ";
-    visit(*this, *c.a().ty());
-    *os_ << ", ";
-    visit(*this, *c.b().ty());
+    visit(*this, *c.result(0).ty());
 }
 
 void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
@@ -249,10 +239,7 @@ void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
     dump_val(c.pos0());
     *os_ << ",";
     dump_val(c.pos1());
-    *os_ << "] : ";
-    visit(*this, *c.val().ty());
-    *os_ << ", ";
-    visit(*this, *c.operand().ty());
+    *os_ << "]";
 }
 
 void dump_ir_pass::operator()(expand_inst const &e) {

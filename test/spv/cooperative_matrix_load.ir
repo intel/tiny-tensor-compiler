@@ -16,7 +16,7 @@
 
 
 func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n %A[%x,%y] : memref<i32x64x48> -> coopmatrix<i32x16x3,matrix_a>
+    %0 = cooperative_matrix_load.n %A[%x,%y] : coopmatrix<i32x16x3,matrix_a>
 ; CHECK:                        %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:             %[[#T1_MR:]] = OpFunctionParameter %[[#I32_PTR]]
 ; CHECK-NEXT:              %[[#T1_X:]] = OpFunctionParameter %[[#I64]]
@@ -36,7 +36,7 @@ func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_
 }
 
 func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : memref<i32x64x48> -> coopmatrix<i32x32x2,matrix_a>
+    %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : coopmatrix<i32x32x2,matrix_a>
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:             %[[#]] = OpFunctionParameter %[[#I32_PTR]]
 ; CHECK-NEXT:        %[[#T2_X:]] = OpFunctionParameter %[[#I64]]
@@ -70,7 +70,7 @@ func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 }
 
 func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : memref<i32x64x48> -> coopmatrix<i32x16x2,matrix_a>
+    %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
 ; CHECK:                 %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I32_PTR]]
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
@@ -90,7 +90,7 @@ func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 }
 
 func @coopmatrix_a_load_t(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t %A[%x,%y] : memref<i32x64x48> -> coopmatrix<i32x16x2,matrix_a>
+    %0 = cooperative_matrix_load.t %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
 ; CHECK:           %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#T4_M:]] = OpSConvert %[[#I64]] %[[#]]
 ; CHECK: %[[#T4_OFFSET:]] = OpIMul %[[#I64]] %[[#T4_M]] %[[#I64_C64]]

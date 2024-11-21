@@ -4,7 +4,7 @@
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @kernel1(%in: group<memref<f32x8x?x9>>) {
 ; CHECK: void kernel1(global float*global* in, global long* in_shape1, global long* in_stride2)
-  %c5 = constant 5 -> index
+  %c5 = constant 5 : index
   %0 = load %in[%c5] : group<memref<f32x8x?x9>>
   ; CHECK-NEXT: long c5 = 5ll;
   ; CHECK-NEXT: global float* x = *(in + c5) + 0;
@@ -14,7 +14,7 @@ func @kernel1(%in: group<memref<f32x8x?x9>>) {
 
 func @kernel2(%in: group<memref<f32x?>, offset: ?>) {
 ; CHECK: void kernel2(global float*global* in, global long* in_shape0, long in_offset)
-  %c5 = constant 5 -> index
+  %c5 = constant 5 : index
   %0 = load %in[%c5] : group<memref<f32x?>, offset: ?>
   ; CHECK-NEXT: long c5 = 5ll;
   ; CHECK-NEXT: global float* x = *(in + c5) + in_offset;

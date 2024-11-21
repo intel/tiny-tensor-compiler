@@ -12,7 +12,7 @@
 ; CHECK: %[[#CST0:]] = OpConstant %[[#F32]] 0x0p+0
 
 func @if0(%0: i32) {
-    %c42 = constant 42 -> i32
+    %c42 = constant 42 : i32
     %1 = cmp.lt %0, %c42 : bool
     if %1 {
         %2 = arith.neg %0 : i32
@@ -33,7 +33,7 @@ func @if0(%0: i32) {
 }
 
 func @if1() {
-    %c1 = constant true -> bool
+    %c1 = constant true : bool
     if %c1 -> (){
         yield :
     } else {
@@ -44,12 +44,12 @@ func @if1() {
 }
 
 func @if2(%0: i32) {
-    %c1 = constant true -> bool
+    %c1 = constant true : bool
     %x = if %c1 -> (i32) {
         %1 = if %c1 -> (i32) {
             yield %0 : i32
         } else {
-            %c0 = constant 0 -> i32
+            %c0 = constant 0 : i32
             yield %c0 : i32
         }
         yield %1 : i32
@@ -82,12 +82,12 @@ func @if2(%0: i32) {
 }
 
 func @if3() subgroup_size(16) {
-    %c1 = constant true -> bool
+    %c1 = constant true : bool
     %y, %x = if %c1 -> (bool,coopmatrix<f32x16x4,matrix_a>) {
-        %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
+        %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
         yield %c1, %0 : bool, coopmatrix<f32x16x4,matrix_a>
     } else {
-        %1 = constant 0.0 -> coopmatrix<f32x16x4,matrix_a>
+        %1 = constant 0.0 : coopmatrix<f32x16x4,matrix_a>
         yield %c1, %1 : bool, coopmatrix<f32x16x4,matrix_a>
     }
     %z = arith.neg %x : coopmatrix<f32x16x4,matrix_a>

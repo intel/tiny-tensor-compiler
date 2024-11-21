@@ -3,8 +3,8 @@
 
 ; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
 func @illegal_nesting(%c: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>) {
-    %lb = constant 1 -> index
-    %ub = constant 16 -> index
+    %lb = constant 1 : index
+    %ub = constant 16 : index
     foreach (%i)=(%lb),(%ub) {
         gemm.n.n %c, %A, %B, %c, %C
     }

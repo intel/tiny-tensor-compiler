@@ -11,7 +11,7 @@ func @basic() {
 func @use1(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 ; CHECK-LABEL: func @use1{{.*}}
     %B = alloca : memref<f32x32x8,local>
-    %one = constant 1.0 -> f32
+    %one = constant 1.0 : f32
     gemm.n.n %one, %A, %B, %one, %C
 ; CHECK:      gemm.n.n{{.*}}
 ; CHECK-NEXT: lifetime_stop %B
@@ -19,7 +19,7 @@ func @use1(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 
 func @use2(%A: memref<f32x32x32>, %C: memref<f32x32x8>) {
 ; CHECK-LABEL: func @use2{{.*}}
-    %one = constant 1.0 -> f32
+    %one = constant 1.0 : f32
     %B = alloca : memref<f32x32x8,local>
     gemm.n.n %one, %A, %B, %one, %C
     %B2 = alloca : memref<f32x32x8,local>
@@ -44,10 +44,10 @@ func @use_alias(%a: f32, %A: memref<f32x8x8>, %C: memref<f32x8x8>) {
 
 func @region1() {
 ; CHECK-LABEL: func @region1{{.*}}
-    %one = constant 1.0 -> f32
+    %one = constant 1.0 : f32
     %0 = alloca : memref<f32x8x8,local>
-    %lb = constant 0 -> index
-    %ub = constant 4 -> index
+    %lb = constant 0 : index
+    %ub = constant 4 : index
     for %i=%lb,%ub : index {
         %1 = alloca : memref<f32x8x8,local>
         for %k=%lb,%ub : index {

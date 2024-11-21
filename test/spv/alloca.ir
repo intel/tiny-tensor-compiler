@@ -25,7 +25,7 @@
 ; CHECK:         %[[#I16_PTR]] = OpTypePointer Workgroup %[[I16]]
 
 func @alloca() {
-    %c0 = constant 0 -> index
+    %c0 = constant 0 : index
     %0 = alloca : memref<i8x5,local>
     %1 = alloca : memref<f32x16x4,local>
     %2 = alloca : memref<i16,local>

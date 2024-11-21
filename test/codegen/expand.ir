@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @t1(%0: memref<f32x32x16x8>) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %1 = expand %0[1->2x8] : memref<f32x32x16x8>
   %2 = load %1[%z,%z,%z,%z] : memref<f32x32x2x8x8>
 ; CHECK-LABEL: void t1(
@@ -11,7 +11,7 @@ func @t1(%0: memref<f32x32x16x8>) {
 ; CHECK-NEXT: float x2 = *(x1 + z * 1 + z * 32 + z * 64 + z * 512);
 }
 func @t2(%0: memref<f32x32x16x8>) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %1 = expand %0[1->2x2x2x2] : memref<f32x32x16x8>
   %2 = load %1[%z,%z,%z,%z,%z,%z] : memref<f32x32x2x2x2x2x8>
 ; CHECK-LABEL: void t2(
@@ -19,7 +19,7 @@ func @t2(%0: memref<f32x32x16x8>) {
 ; CHECK-NEXT:  float x2 = *(x1 + z * 1 + z * 32 + z * 64 + z * 128 + z * 256 + z * 512);
 }
 func @t3(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[1->%1 x 2] : memref<f32x32x?>
   %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
 ; CHECK-LABEL: void t3(
@@ -29,7 +29,7 @@ func @t3(%0: memref<f32x32x?>, %1: index) {
 ; CHECK-NEXT:  float x3 = *(x2 + z * 1 + z * 32 + z * x_stride2);
 }
 func @t4(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[1->2 x %1] : memref<f32x32x?>
   %3 = load %2[%z,%z,%z] : memref<f32x32x2x?>
 ; CHECK-LABEL: void t4(
@@ -38,7 +38,7 @@ func @t4(%0: memref<f32x32x?>, %1: index) {
 ; CHECK-NEXT:  float x3 = *(x2 + z * 1 + z * 32 + z * 64);
 }
 func @t5(%0: memref<f32x32x16>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[1->%1 x 2] : memref<f32x32x16>
   %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
 ; CHECK-LABEL: void t5(
@@ -48,7 +48,7 @@ func @t5(%0: memref<f32x32x16>, %1: index) {
 ; CHECK-NEXT:  float x3 = *(x2 + z * 1 + z * 32 + z * x_stride2);
 }
 func @t6(%0: memref<f32x32x?>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[1->%1 x 2] : memref<f32x32x?>
   %3 = load %2[%z,%z,%z] : memref<f32x32x?x2>
 ; CHECK-LABEL: void t6(
@@ -58,7 +58,7 @@ func @t6(%0: memref<f32x32x?>, %1: index) {
 ; CHECK-NEXT:  float x3 = *(x2 + z * 1 + z * 32 + z * x_stride2);
 }
 func @t7(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %3 = expand %0[1->%1 x %2 x 2] : memref<f32x32x16>
   %4 = load %3[%z,%z,%z,%z] : memref<f32x32x?x?x2>
 ; CHECK-LABEL: void t7(
@@ -70,7 +70,7 @@ func @t7(%0: memref<f32x32x16>, %1: index, %2: index) {
 ; CHECK-NEXT:  float x4 = *(x3 + z * 1 + z * 32 + z * x_stride2 + z * x_stride3);
 }
 func @t8(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %3 = expand %0[1->%2 x 2 x %1] : memref<f32x32x16>
   %4 = load %3[%z,%z,%z,%z] : memref<f32x32x?x2x?>
 ; CHECK-LABEL: void t8(
@@ -82,7 +82,7 @@ func @t8(%0: memref<f32x32x16>, %1: index, %2: index) {
 ; CHECK-NEXT:  float x4 = *(x3 + z * 1 + z * 32 + z * x_stride2 + z * x_stride3);
 }
 func @t9(%0: memref<f32x32x?>, %1: index, %2: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %3 = expand %0[1->%1 x %2] : memref<f32x32x?>
   %4 = load %3[%z,%z,%z] : memref<f32x32x?x?>
 ; CHECK-LABEL: void t9(
@@ -93,7 +93,7 @@ func @t9(%0: memref<f32x32x?>, %1: index, %2: index) {
 ; CHECK-NEXT:  float x4 = *(x3 + z * 1 + z * 32 + z * x_stride2);
 }
 func @t10(%0: memref<f32x32x16>, %1: index, %2: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %3 = expand %0[1->%1 x %2] : memref<f32x32x16>
   %4 = load %3[%z,%z,%z] : memref<f32x32x?x?>
 ; CHECK-LABEL: void t10(
@@ -104,7 +104,7 @@ func @t10(%0: memref<f32x32x16>, %1: index, %2: index) {
 ; CHECK-NEXT:  float x4 = *(x3 + z * 1 + z * 32 + z * x_stride2);
 }
 func @t11(%0: memref<f32x32x7,strided<2,64>>) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %1 = expand %0[0->4 x 8] : memref<f32x32x7,strided<2,64>>
   %2 = load %1[%z,%z,%z] : memref<f32x4x8x7,strided<2,8,64>>
 ; CHECK-LABEL: void t11(
@@ -112,7 +112,7 @@ func @t11(%0: memref<f32x32x7,strided<2,64>>) {
 ; CHECK-NEXT:  float x2 = *(x1 + z * 2 + z * 8 + z * 64);
 }
 func @t12(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[0->%1 x 4] : memref<f32x?x7,strided<2,?>>
   %3 = load %2[%z,%z,%z] : memref<f32x?x4x7,strided<2,?,?>>
 ; CHECK-LABEL: void t12(
@@ -123,7 +123,7 @@ func @t12(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
 ; CHECK-NEXT:  float x3 = *(x2 + z * 2 + z * x_stride11 + z * x_stride2);
 }
 func @t13(%0: memref<f32x?x7,strided<2,?>>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = expand %0[0->4 x %1] : memref<f32x?x7,strided<2,?>>
   %3 = load %2[%z,%z,%z] : memref<f32x4x?x7,strided<2,8,?>>
 ; CHECK-LABEL: void t13(

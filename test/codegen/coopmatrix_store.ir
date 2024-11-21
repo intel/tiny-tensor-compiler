@@ -3,8 +3,8 @@
 
 ; RUN: %tinytc-oc -O0 < %s | filecheck %s
 func @coopmatrix_a_store_n(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_n({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: *(x1 + 1 * (get_sub_group_local_id() + 0) + 0 * 64) = c0[0];
@@ -12,8 +12,8 @@ func @coopmatrix_a_store_n(%A: memref<f32x64x48>, %x: index, %y: index) subgroup
 }
 
 func @coopmatrix_a_store_n_rows_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store.rows_checked %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.rows_checked %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_n_rows_checked({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: long x2 = 64 - x;
@@ -25,8 +25,8 @@ func @coopmatrix_a_store_n_rows_checked(%A: memref<f32x64x48>, %x: index, %y: in
 }
 
 func @coopmatrix_a_store_n_cols_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store.cols_checked %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.cols_checked %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_n_cols_checked({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: long x2 = 64 - x;
@@ -40,8 +40,8 @@ func @coopmatrix_a_store_n_cols_checked(%A: memref<f32x64x48>, %x: index, %y: in
 }
 
 func @coopmatrix_a_store_n_checked(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store.both_checked %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.both_checked %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_n_checked({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: long x2 = 64 - x;
@@ -57,8 +57,8 @@ func @coopmatrix_a_store_n_checked(%A: memref<f32x64x48>, %x: index, %y: index) 
 }
 
 func @coopmatrix_a_store_atomic_add(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store.atomic_add %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.atomic_add %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_atomic_add({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: atomic_fetch_add_explicit((global volatile atomic_float*) (x1 + 1 * (get_sub_group_local_id() + 0) + 0 * 64), c0[0], memory_order_relaxed, memory_scope_work_group);
@@ -66,8 +66,8 @@ func @coopmatrix_a_store_atomic_add(%A: memref<f32x64x48>, %x: index, %y: index)
 }
 
 func @coopmatrix_a_store_checked_atomic_add(%A: memref<f32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %c0 = constant 1.0 -> coopmatrix<f32x16x2,matrix_a>
-    cooperative_matrix_store.both_checked.atomic_add %c0, %A[%x,%y] : coopmatrix<f32x16x2,matrix_a>, memref<f32x64x48> 
+    %c0 = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
+    cooperative_matrix_store.both_checked.atomic_add %c0, %A[%x,%y]
 ; CHECK-LABEL: void coopmatrix_a_store_checked_atomic_add({{.*}}
 ; CHECK:      global float* x1 = A + x * 1 + y * 64;
 ; CHECK-NEXT: long x2 = 64 - x;

@@ -90,8 +90,8 @@ func @tcomplex(%a: c32, %b: c32) {
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
-    %0 = constant 1.0 -> coopmatrix<f32x16x4,matrix_a>
-    %1 = constant 2.0 -> coopmatrix<f32x16x4,matrix_a>
+    %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
+    %1 = constant 2.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = arith.add %0, %1 : coopmatrix<f32x16x4,matrix_a>
     %3 = arith.sub %0, %1 : coopmatrix<f32x16x4,matrix_a>
     %4 = arith.mul %0, %1 : coopmatrix<f32x16x4,matrix_a>

@@ -8,42 +8,42 @@
 ; CHECK: func @t1({{.*}}
 
 func @t1(%0: memref<f32x32x16>) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %1 = subview %0[4:8,8:4] : memref<f32x32x16>
   %2 = load %1[%z,%z] : memref<f32x8x4,strided<1,32>>
 }
 func @t2(%0: memref<f32x16x8>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[2:4,%1] : memref<f32x16x8>
   %3 = load %2[%z] : memref<f32x4>
 }
 func @t3(%0: memref<f64x16x8>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[2:4,%1:0] : memref<f64x16x8>
   %3 = load %2[%z] : memref<f64x4>
 }
 func @t4(%0: memref<f64x16x8>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[2:4,%1:1] : memref<f64x16x8>
   %3 = load %2[%z,%z] : memref<f64x4x1,strided<1,16>>
 }
 func @t5(%0: memref<f32x16>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[%1:4] : memref<f32x16>
   %3 = load %2[%z] : memref<f32x4>
 }
 func @t6(%0: memref<f32x16>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[%1:%1] : memref<f32x16>
   %3 = load %2[%z] : memref<f32x?>
 }
 func @t7(%0: memref<f32x16x42x13>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[2:4, %1:%1, 6:7] : memref<f32x16x42x13>
   %3 = load %2[%z,%z,%z] : memref<f32x4x?x7,strided<1,16,672>>
 }
 func @t8(%0: memref<f32x16x42x13,strided<1,?,?>>, %1: index) {
-  %z = constant 0 -> index
+  %z = constant 0 : index
   %2 = subview %0[2:4, %1:%1, 6:7] : memref<f32x16x42x13,strided<1,?,?>>
   %3 = load %2[%z,%z,%z] : memref<f32x4x?x7,strided<1,?,?>>
 }
