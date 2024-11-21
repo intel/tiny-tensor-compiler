@@ -80,14 +80,6 @@ void dump_ir_pass::dump_blas_a2(blas_a2_inst const &g) {
     dump_val(g.beta());
     *os_ << ", ";
     dump_val(g.B());
-    *os_ << " : ";
-    visit(*this, *g.alpha().ty());
-    *os_ << ", ";
-    visit(*this, *g.A().ty());
-    *os_ << ", ";
-    visit(*this, *g.beta().ty());
-    *os_ << ", ";
-    visit(*this, *g.B().ty());
 }
 
 void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
@@ -104,21 +96,11 @@ void dump_ir_pass::dump_blas_a3(blas_a3_inst const &g) {
     dump_val(g.beta());
     *os_ << ", ";
     dump_val(g.C());
-    *os_ << " : ";
-    visit(*this, *g.alpha().ty());
-    *os_ << ", ";
-    visit(*this, *g.A().ty());
-    *os_ << ", ";
-    visit(*this, *g.B().ty());
-    *os_ << ", ";
-    visit(*this, *g.beta().ty());
-    *os_ << ", ";
-    visit(*this, *g.C().ty());
 }
 
 void dump_ir_pass::operator()(alloca_inst const &a) {
     dump_val(a.result(0));
-    *os_ << " = alloca -> ";
+    *os_ << " = alloca : ";
     visit(*this, *a.result()->ty());
 }
 
@@ -135,7 +117,7 @@ void dump_ir_pass::operator()(arith_inst const &a) {
     *os_ << ", ";
     dump_val(a.b());
     *os_ << " : ";
-    visit(*this, *a.a().ty());
+    visit(*this, *a.result(0).ty());
 }
 
 void dump_ir_pass::operator()(arith_unary_inst const &a) {

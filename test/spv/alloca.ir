@@ -26,9 +26,9 @@
 
 func @alloca() {
     %c0 = constant 0 -> index
-    %0 = alloca -> memref<i8x5,local>
-    %1 = alloca -> memref<f32x16x4,local>
-    %2 = alloca -> memref<i16,local>
+    %0 = alloca : memref<i8x5,local>
+    %1 = alloca : memref<f32x16x4,local>
+    %2 = alloca : memref<i16,local>
     %3 = load %0[%c0] : memref<i8x5,local>
     %4 = load %1[%c0,%c0] : memref<f32x16x4,local>
     %5 = load %2[] : memref<i16,local>

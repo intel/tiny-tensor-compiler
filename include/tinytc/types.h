@@ -91,6 +91,8 @@ typedef enum {
     tinytc_status_ir_yield_in_else_branch_missing =
         0x130,                                 ///< Must have yield instruction in else branch
     tinytc_status_ir_from_to_mismatch = 0x131, ///< size(from) != size(to) in foreach
+    tinytc_status_ir_operand_type_must_match_return_type =
+        0x132, /// Operand type must match return type
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

@@ -171,6 +171,17 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_set_name_n(tinytc_value_t vl, uint32_
  */
 TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name);
 
+/**
+ * @brief Get type of value
+ *
+ * @param vl [in] value object
+ * @param ty [out] pointer to data type
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl,
+                                                    tinytc_data_type_t *ty);
+
 ////////////////////////////
 /////// Instructions ///////
 ////////////////////////////
@@ -197,18 +208,20 @@ TINYTC_EXPORT char const *tinytc_work_group_operation_to_string(tinytc_work_grou
 /**
  * @brief Create arithmetic instruction (binary)
  *
- * @code %value = arith.<op> %a, %b : type(%a) ; type(%a) == type(%b) @endcode
+ * @code %value = arith.<op> %a, %b : ty ; ty == type(%a) and ty == type(%b) @endcode
  *
  * @param instr [out] pointer to the inst object created
  * @param op [in] arithmetic operation type
  * @param a [in] left-hand operand
  * @param b [in] right-hand operand
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_t op,
                                                        tinytc_value_t a, tinytc_value_t b,
+                                                       tinytc_data_type_t ty,
                                                        const tinytc_location_t *loc);
 
 /**

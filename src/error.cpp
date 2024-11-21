@@ -211,6 +211,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Else-branch must have yield instruction if then-branch has yield instruction";
     case tinytc_status_ir_from_to_mismatch:
         return "length(from) must equal length(to) and length must be greater than 0";
+    case tinytc_status_ir_operand_type_must_match_return_type:
+        return "Type of operand must match return type";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

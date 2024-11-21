@@ -164,6 +164,10 @@ Compiler
 
   * :ref:`compile_to_spirv`
 
+  * :ref:`compile_to_spirv_and_assemble`
+
+  * :ref:`spirv_assemble`
+
 Compiler Functions
 ------------------
 
@@ -186,6 +190,16 @@ compile_to_spirv
 ................
 
 .. doxygenfunction:: tinytc::compile_to_spirv
+
+compile_to_spirv_and_assemble
+.............................
+
+.. doxygenfunction:: tinytc::compile_to_spirv_and_assemble
+
+spirv_assemble
+..............
+
+.. doxygenfunction:: tinytc::spirv_assemble
 
 Compiler Context
 ================

@@ -186,13 +186,20 @@ axpby_inst::axpby_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, t
 }
 
 arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b0,
-                       location const &lc)
+                       tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::arith}, operation_(operation) {
     op(op_a, a0);
     op(op_b, b0);
     loc(lc);
 
-    if (isa<boolean_data_type>(*a().ty())) {
+    if (a().ty() != ty) {
+        throw compilation_error(a().loc(), status::ir_operand_type_must_match_return_type);
+    }
+    if (b().ty() != ty) {
+        throw compilation_error(b().loc(), status::ir_operand_type_must_match_return_type);
+    }
+
+    if (isa<boolean_data_type>(*ty)) {
         auto const inst_supports_bool = [&] {
             switch (operation) {
             case arithmetic::and_:
@@ -206,10 +213,7 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         if (!inst_supports_bool) {
             throw compilation_error(loc(), status::ir_boolean_unsupported);
         }
-    } else if (isa<coopmatrix_data_type>(*a().ty())) {
-        if (!isa<coopmatrix_data_type>(*b().ty())) {
-            throw compilation_error(loc(), status::ir_expected_coopmatrix);
-        }
+    } else if (isa<coopmatrix_data_type>(*ty)) {
         bool inst_supports_coopmatrix = false;
         switch (operation) {
         case arithmetic::add:
@@ -225,12 +229,8 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
             throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
         }
     } else {
-        auto a_ty = get_scalar_type(loc(), a())->ty();
-        auto b_ty = get_scalar_type(loc(), b())->ty();
+        auto sty = get_scalar_type(loc(), ty)->ty();
 
-        if (a_ty != b_ty) {
-            throw compilation_error(loc(), status::ir_scalar_mismatch);
-        }
         bool inst_supports_fp = true;
         bool inst_supports_complex = true;
         switch (operation) {
@@ -254,15 +254,15 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
             inst_supports_complex = false;
             break;
         }
-        if (!inst_supports_fp && is_floating_type(a_ty)) {
+        if (!inst_supports_fp && is_floating_type(sty)) {
             throw compilation_error(loc(), status::ir_fp_unsupported);
         }
-        if (!inst_supports_complex && is_complex_type(a_ty)) {
+        if (!inst_supports_complex && is_complex_type(sty)) {
             throw compilation_error(loc(), status::ir_complex_unsupported);
         }
     }
 
-    result(0) = value_node{a().ty(), this, lc};
+    result(0) = value_node{ty, this, lc};
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0,

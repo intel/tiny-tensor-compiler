@@ -4,17 +4,17 @@
 ; RUN: %tinytc-oc < %s
 func @axpby0(%alpha: f32, %A: memref<f32>, %B: memref<f32>) {
     %z = constant 0.0 -> f32
-    axpby.n %alpha, %A, %z, %B : f32, memref<f32>, f32, memref<f32>
+    axpby.n %alpha, %A, %z, %B
 }
 
 func @axpby1(%alpha: f32, %A: memref<f32x48,strided<2>>, %B: memref<f64x48>) {
     %z = constant 0.0 -> f32
-    axpby.n %alpha, %A, %z, %B : f32, memref<f32x48,strided<2>>, f32, memref<f64x48>
+    axpby.n %alpha, %A, %z, %B
 }
 
 func @axpby2(%alpha: f32, %A: memref<f32x48x43>, %B: memref<f32x48x43>) {
     %z = constant 0.0 -> f32
-    axpby.n %alpha, %A, %z, %B : f32, memref<f32x48x43>, f32, memref<f32x48x43>
+    axpby.n %alpha, %A, %z, %B
 }
 
 func @axpby3(%alpha: f32, %A: memref<f32x48x48x4x5>, %B: memref<f32x48x48x4x5>) {
@@ -28,7 +28,7 @@ func @axpby3(%alpha: f32, %A: memref<f32x48x48x4x5>, %B: memref<f32x48x48x4x5>) 
         for %j=%lb,%ub1 {
             %A1 = subview %A0[0:48,0:48,%j] : memref<f32x48x48x4>
             %B1 = subview %B0[0:48,0:48,%j] : memref<f32x48x48x4>
-            axpby.t %alpha, %A1, %z, %B1 : f32, memref<f32x48x48>, f32, memref<f32x48x48>
+            axpby.t %alpha, %A1, %z, %B1
         }
     }
 }

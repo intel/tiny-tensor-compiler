@@ -90,7 +90,7 @@ lex:
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
         "work_group_size"   { adv_loc(); return parser::make_WORK_GROUP_SIZE(loc_); }
         "subgroup_size"     { adv_loc(); return parser::make_SUBGROUP_SIZE(loc_); }
-        "->"                { adv_loc(); return parser::make_RETURNS(loc_); }
+        "->"                { adv_loc(); return parser::make_ARROW(loc_); }
         "?"                 { adv_loc(); return parser::make_DYNAMIC(loc_); }
         ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }

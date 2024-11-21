@@ -143,14 +143,15 @@ char const *tinytc_work_group_operation_to_string(tinytc_work_group_operation_t 
 }
 
 tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_t op,
-                                         tinytc_value_t a, tinytc_value_t b,
+                                         tinytc_value_t a, tinytc_value_t b, tinytc_data_type_t ty,
                                          const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<arith_inst>(enum_cast<arithmetic>(op), a, b, get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<arith_inst>(enum_cast<arithmetic>(op), a, b, ty, get_optional(loc))
+                .release();
     });
 }
 

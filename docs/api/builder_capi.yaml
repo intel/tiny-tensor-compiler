@@ -120,5 +120,6 @@ Builder C-API:
   Value:
     function:
       - tinytc_value_get_name
+      - tinytc_value_get_type
       - tinytc_value_set_name
       - tinytc_value_set_name_n

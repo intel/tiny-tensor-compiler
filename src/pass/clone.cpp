@@ -25,7 +25,8 @@ auto inst_cloner::operator()(axpby_inst &in) -> std::unique_ptr<tinytc_inst> {
                                         subs(&in.B()), in.atomic(), in.loc());
 }
 auto inst_cloner::operator()(arith_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<arith_inst>(in.operation(), subs(&in.a()), subs(&in.b()), in.loc());
+    return std::make_unique<arith_inst>(in.operation(), subs(&in.a()), subs(&in.b()),
+                                        in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(arith_unary_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<arith_unary_inst>(in.operation(), subs(&in.a()), in.loc());

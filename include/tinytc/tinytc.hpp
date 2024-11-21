@@ -664,6 +664,17 @@ class value : public handle<tinytc_value_t> {
     inline void set_name(std::string_view name) {
         CHECK_STATUS(tinytc_value_set_name_n(obj_, name.size(), name.data()));
     }
+
+    /**
+     * @brief Get type
+     *
+     * @return Data type
+     */
+    inline auto get_type() -> data_type {
+        tinytc_data_type_t ty;
+        CHECK_STATUS(tinytc_value_get_type(obj_, &ty));
+        return ty;
+    }
 };
 static_assert(std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t));
 
@@ -863,14 +874,16 @@ static_assert(std::is_standard_layout_v<region> && sizeof(region) == sizeof(tiny
  * @param op Arithmetic operation type
  * @param a First operand
  * @param b Second operand
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_arith(arithmetic op, value a, value b, location const &loc = {}) {
+inline inst make_arith(arithmetic op, value a, value b, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
-        tinytc_arith_inst_create(&instr, static_cast<tinytc_arithmetic_t>(op), a, b, &loc), loc);
+        tinytc_arith_inst_create(&instr, static_cast<tinytc_arithmetic_t>(op), a, b, ty, &loc),
+        loc);
     return inst(instr);
 }
 

@@ -90,7 +90,7 @@
     FUNC            "func"
     WORK_GROUP_SIZE "work_group_size"
     SUBGROUP_SIZE   "subgroup_size"
-    RETURNS         "->"
+    ARROW           "->"
     DYNAMIC         "?"
     NOTRANS         ".n"
     TRANS           ".t"
@@ -466,13 +466,7 @@ instruction:
 ;
 
 axpby_inst:
-    AXPBY transpose[ta] atomic
-          var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b]
-          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($b, $mb, @b, @mb);
+    AXPBY transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 std::make_unique<axpby_inst>($ta, std::move($alpha), std::move($a),
@@ -529,15 +523,7 @@ optional_local_attr:
 ;
 
 gemm_inst:
-    GEMM transpose[ta] transpose[tb] atomic
-         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
-         COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
-         COMMA memref_type[mc] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($b, $mb, @b, @mb);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($c, $mc, @c, @mc);
+    GEMM transpose[ta] transpose[tb] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 std::make_unique<gemm_inst>($ta, $tb, std::move($alpha), std::move($a),
@@ -553,15 +539,7 @@ gemm_inst:
 ;
 
 gemv_inst:
-    GEMV transpose[ta] atomic
-         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
-         COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
-         COMMA memref_type[mc] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($b, $mb, @b, @mb);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($c, $mc, @c, @mc);
+    GEMV transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 std::make_unique<gemv_inst>($ta, std::move($alpha), std::move($a), std::move($b),
@@ -581,15 +559,7 @@ transpose:
 ;
 
 ger_inst:
-    GER atomic
-         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
-         COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
-         COMMA memref_type[mc] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($b, $mb, @b, @mb);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($c, $mc, @c, @mc);
+    GER atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 std::make_unique<ger_inst>(std::move($alpha), std::move($a), std::move($b),
@@ -648,7 +618,7 @@ optional_step:
 
 optional_loop_carried_values:
     %empty { $$ = {}; }
-  | INIT LPAREN init_value_list RPAREN RETURNS LPAREN return_type_list RPAREN {
+  | INIT LPAREN init_value_list RPAREN ARROW LPAREN return_type_list RPAREN {
         $$ = std::make_tuple(std::move($init_value_list.first), std::move($init_value_list.second),
                              std::move($return_type_list));
     }
@@ -723,15 +693,7 @@ identifier_list:
 
 
 hadamard_inst:
-    HADAMARD atomic
-         var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c]
-         COLON scalar_type[falpha] COMMA memref_type[ma] COMMA memref_type[mb] COMMA scalar_type[fbeta]
-         COMMA memref_type[mc] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($b, $mb, @b, @mb);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($c, $mc, @c, @mc);
+    HADAMARD atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 std::make_unique<hadamard_inst>(std::move($alpha), std::move($a), std::move($b),
@@ -747,13 +709,7 @@ hadamard_inst:
 ;
 
 sum_inst:
-    SUM transpose[ta] atomic
-          var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b]
-          COLON scalar_type[falpha] COMMA memref_type[ma] COMMA scalar_type[fbeta] COMMA memref_type[mb] {
-        check_type($alpha, $falpha, @alpha, @falpha);
-        check_type($a, $ma, @a, @ma);
-        check_type($beta, $fbeta, @beta, @fbeta);
-        check_type($b, $mb, @b, @mb);
+    SUM transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 std::make_unique<sum_inst>($ta, std::move($alpha), std::move($a), std::move($beta),
@@ -808,7 +764,7 @@ valued_inst:
 ;
 
 alloca_inst:
-    ALLOCA RETURNS memref_type {
+    ALLOCA COLON memref_type {
         try {
             $$ = inst {
                 std::make_unique<alloca_inst>(std::move($memref_type), @alloca_inst).release()
@@ -826,7 +782,8 @@ arith_inst:
         check_type($b, $ty, @b, @ty);
         try {
             $$ = inst {
-                std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), @arith_inst)
+                std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), std::move($ty),
+                                             @arith_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -854,7 +811,7 @@ arith_unary_inst:
 
 
 cast_inst:
-    CAST var[a] COLON data_type[from] RETURNS data_type[to] {
+    CAST var[a] COLON data_type[from] ARROW data_type[to] {
         check_type($a, $from, @a, @from);
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
@@ -883,7 +840,7 @@ compare_inst:
 ;
 
 constant_inst:
-    CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR RETURNS data_type {
+    CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR ARROW data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>(std::complex<double>{$re, $im}, $data_type, @constant_inst)
@@ -894,7 +851,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT FLOATING_CONSTANT RETURNS data_type {
+  | CONSTANT FLOATING_CONSTANT ARROW data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($FLOATING_CONSTANT, $data_type, @constant_inst).release()
@@ -904,7 +861,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT INTEGER_CONSTANT RETURNS data_type {
+  | CONSTANT INTEGER_CONSTANT ARROW data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($INTEGER_CONSTANT, $data_type, @constant_inst).release()
@@ -914,7 +871,7 @@ constant_inst:
             YYERROR;
         }
     }
-  | CONSTANT BOOLEAN_CONSTANT RETURNS data_type {
+  | CONSTANT BOOLEAN_CONSTANT ARROW data_type {
         try {
             $$ = inst {
                 std::make_unique<constant_inst>($BOOLEAN_CONSTANT, $data_type, @constant_inst).release()
@@ -927,7 +884,7 @@ constant_inst:
 ;
 
 cooperative_matrix_load_inst:
-    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[op_ty] RETURNS data_type[result_ty]  {
+    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[op_ty] ARROW data_type[result_ty]  {
         check_type($op, $op_ty, @op, @op_ty);
         try {
             $$ = inst {
@@ -949,7 +906,7 @@ checked:
 ;
 
 cooperative_matrix_mul_add_inst:
-    COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[a_ty] COMMA data_type[b_ty] COMMA data_type[c_ty] RETURNS data_type[to_ty] {
+    COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[a_ty] COMMA data_type[b_ty] COMMA data_type[c_ty] ARROW data_type[to_ty] {
         check_type($a, $a_ty, @a, @a_ty);
         check_type($b, $b_ty, @b, @b_ty);
         check_type($c, $c_ty, @c, @c_ty);
@@ -1003,7 +960,7 @@ cooperative_matrix_store_inst:
 ;
 
 expand_inst:
-    EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] RETURNS expand_shape RSQBR COLON memref_type {
+    EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] ARROW expand_shape RSQBR COLON memref_type {
         if ($var->ty() != $memref_type) {
             auto loc = @var;
             loc.end = @memref_type.end;
@@ -1156,7 +1113,7 @@ else_region:
 
 optional_returned_values:
     %empty { $$ = {}; }
-  | RETURNS LPAREN optional_return_type_list[tys] RPAREN { $$ = std::move($tys); }
+  | ARROW LPAREN optional_return_type_list[tys] RPAREN { $$ = std::move($tys); }
 ;
 
 optional_return_type_list:

@@ -279,6 +279,10 @@ Compiler
 
   * :ref:`tinytc_prog_compile_to_spirv`
 
+  * :ref:`tinytc_prog_compile_to_spirv_and_assemble`
+
+  * :ref:`tinytc_spirv_assemble`
+
 Compiler Enumerations
 ---------------------
 
@@ -314,6 +318,16 @@ tinytc_prog_compile_to_spirv
 ............................
 
 .. doxygenfunction:: tinytc_prog_compile_to_spirv
+
+tinytc_prog_compile_to_spirv_and_assemble
+.........................................
+
+.. doxygenfunction:: tinytc_prog_compile_to_spirv_and_assemble
+
+tinytc_spirv_assemble
+.....................
+
+.. doxygenfunction:: tinytc_spirv_assemble
 
 Compiler Context
 ================
@@ -633,12 +647,33 @@ SPIR-V module
 
 * Functions
 
+  * :ref:`tinytc_spv_mod_dump`
+
+  * :ref:`tinytc_spv_mod_print_to_file`
+
+  * :ref:`tinytc_spv_mod_print_to_string`
+
   * :ref:`tinytc_spv_mod_release`
 
   * :ref:`tinytc_spv_mod_retain`
 
 SPIR-V module Functions
 -----------------------
+
+tinytc_spv_mod_dump
+...................
+
+.. doxygenfunction:: tinytc_spv_mod_dump
+
+tinytc_spv_mod_print_to_file
+............................
+
+.. doxygenfunction:: tinytc_spv_mod_print_to_file
+
+tinytc_spv_mod_print_to_string
+..............................
+
+.. doxygenfunction:: tinytc_spv_mod_print_to_string
 
 tinytc_spv_mod_release
 ......................

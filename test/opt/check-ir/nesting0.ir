@@ -6,7 +6,7 @@ func @illegal_nesting(%c: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: mem
     %lb = constant 1 -> index
     %ub = constant 16 -> index
     foreach (%i)=(%lb),(%ub) {
-        gemm.n.n %c, %A, %B, %c, %C : f32, memref<f32x4x4>, memref<f32x4x4>, f32, memref<f32x4x4>
+        gemm.n.n %c, %A, %B, %c, %C
     }
-; CHECK: 9.9-97: Collective instruction must not be called from SPMD region
+; CHECK: 9.9-35: Collective instruction must not be called from SPMD region
 }

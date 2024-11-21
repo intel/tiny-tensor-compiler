@@ -93,8 +93,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
     auto c_zero = bb.add(make_constant_zero(index_ty, loc));
     auto c_k_block_size = bb.add(make_constant(k_block_size, index_ty, loc));
-    auto tmp = instant_constant_fold_add(bb, make_arith(arithmetic::div, K, c_k_block_size, loc));
-    auto K0 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, tmp, c_k_block_size, loc));
+    auto tmp = instant_constant_fold_add(
+        bb, make_arith(arithmetic::div, K, c_k_block_size, index_ty, loc));
+    auto K0 = instant_constant_fold_add(
+        bb, make_arith(arithmetic::mul, tmp, c_k_block_size, index_ty, loc));
     c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc);
     auto needs_remainder = instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, loc));
     auto r = get_bool_constant(needs_remainder);
@@ -124,7 +126,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         auto c_load = bb.add(make_cooperative_matrix_load(transpose::N, check_c, C, m_block,
                                                           n_block, coopmatrix_c_ty));
         auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load, loc);
-        auto alpha_ab_plus_beta_c = bb.add(make_arith(arithmetic::add, alpha_ab, beta_c, loc));
+        auto alpha_ab_plus_beta_c =
+            bb.add(make_arith(arithmetic::add, alpha_ab, beta_c, alpha_ab->ty(), loc));
         bb.add(make_cooperative_matrix_store(check_c, store_flag::regular, alpha_ab_plus_beta_c, C,
                                              m_block, n_block, loc));
     }
@@ -195,7 +198,7 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto c0 = bb.add(make_constant(0, i32_ty));
         auto cond0 = bb.add(make_cmp(cmp_condition::eq, sg_id, c0));
         auto cond1 = bb.add(make_cmp(cmp_condition::eq, sg_lid, c0));
-        auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1));
+        auto cond = bb.add(make_arith(arithmetic::and_, cond0, cond1, cond0->ty()));
         bb.if_condition(cond, [&](region_builder &bb) {
             auto a = bb.add(make_load(&in.A(), {}, in.loc()));
             blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
@@ -263,8 +266,8 @@ void linalg_generator::operator()(gemm_inst &in) {
 
     auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
     auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
-    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, in.loc()));
-    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, in.loc()));
+    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, i32_ty, in.loc()));
+    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, i32_ty, in.loc()));
 
     auto [max_rows, max_cols] = max_register_block_gemm(
         size(ct->element_ty()), core_cfg_.subgroup_size, core_cfg_.register_space,
@@ -378,8 +381,8 @@ void linalg_generator::operator()(sum_inst &in) {
         auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
         auto sgid = bb.add(make_subgroup_id(ctx, in.loc()));
         auto m = bb.add(make_subgroup_local_id(ctx, in.loc()));
-        auto from0 = bb.add(make_arith(arithmetic::mul, sgid, c_sgs, in.loc()));
-        auto from1 = bb.add(make_arith(arithmetic::add, from0, m, in.loc()));
+        auto from0 = bb.add(make_arith(arithmetic::mul, sgid, c_sgs, i32_ty, in.loc()));
+        auto from1 = bb.add(make_arith(arithmetic::add, from0, m, i32_ty, in.loc()));
         auto from_index = bb.add(make_cast(from1, index_ty, in.loc()));
 
         auto c_zero = bb.add(make_constant_zero(i32_ty, in.loc()));

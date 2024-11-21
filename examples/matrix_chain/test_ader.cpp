@@ -114,10 +114,10 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         auto cnum = c1;
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         for (std::int64_t n = 1; n <= N_; ++n) {
-            cnum = bb.add(make_arith(arithmetic::mul, cnum, dt));
+            cnum = bb.add(make_arith(arithmetic::mul, cnum, dt, dt.get_type()));
             denom *= n + 1;
             auto cdenom = bb.add(make_constant(static_cast<double>(denom), element_ty));
-            auto cfactor = bb.add(make_arith(arithmetic::div, cnum, cdenom));
+            auto cfactor = bb.add(make_arith(arithmetic::div, cnum, cdenom, cnum.get_type()));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.add(make_alloca(dQ_[n].local_type(element_ty)));
             auto dq_nextv = bb.add(make_subview(dq_next, static_offsets2, {bn, P_}));

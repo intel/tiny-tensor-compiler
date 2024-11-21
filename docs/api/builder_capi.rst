@@ -780,6 +780,8 @@ Value
 
   * :ref:`tinytc_value_get_name`
 
+  * :ref:`tinytc_value_get_type`
+
   * :ref:`tinytc_value_set_name`
 
   * :ref:`tinytc_value_set_name_n`
@@ -791,6 +793,11 @@ tinytc_value_get_name
 .....................
 
 .. doxygenfunction:: tinytc_value_get_name
+
+tinytc_value_get_type
+.....................
+
+.. doxygenfunction:: tinytc_value_get_type
 
 tinytc_value_set_name
 .....................

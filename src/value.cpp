@@ -30,6 +30,13 @@ tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name
     if (vl == nullptr || name == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { return vl->name(); });
+    return exception_to_status_code([&] { *name = vl->name(); });
+}
+
+tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl, tinytc_data_type_t *ty) {
+    if (vl == nullptr || ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *ty = vl->ty(); });
 }
 }

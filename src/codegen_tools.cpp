@@ -489,32 +489,35 @@ void write_matrix_block(block_builder &bb, block_accessor const &block,
 
 void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                           value sg_id, sgs_loop_body_builder_new const &body) {
-    auto index_ty = scalar_data_type::get(sg_id->context(), scalar_type::index);
-    auto c_sgs = bb.add(make_constant(sgs, index_ty));
-    auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, index_ty));
-    auto c0 = bb.add(make_constant(0, index_ty));
-    auto c_tiles_1 = bb.add(make_constant(num_tiles - 1, index_ty));
+    auto ity = loop_trip_count->ty();
+    auto c_sgs = bb.add(make_constant(sgs, ity));
+    auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, ity));
+    auto c0 = bb.add(make_constant(0, ity));
+    auto c_tiles_1 = bb.add(make_constant(num_tiles - 1, ity));
 
     auto blocks =
-        instant_constant_fold_add(bb, make_arith(arithmetic::div, loop_trip_count, c_sgs));
-    auto rem = instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, c_sgs));
+        instant_constant_fold_add(bb, make_arith(arithmetic::div, loop_trip_count, c_sgs, ity));
+    auto rem =
+        instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, c_sgs, ity));
 
-    auto sg_id_index = instant_constant_fold_add(bb, make_cast(sg_id, index_ty));
+    auto sg_id_cast = instant_constant_fold_add(bb, make_cast(sg_id, ity));
     auto is_blocks_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, blocks, c0));
     bb.if_condition(is_blocks_gt_0, [&](region_builder &bb) {
         auto block_start =
-            instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, sg_id_index));
-        auto block_end = instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, blocks));
-        bb.for_loop(std::move(block_start), std::move(block_end), c_sgs_tiles, index_ty,
+            instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, sg_id_cast, ity));
+        auto block_end =
+            instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, blocks, ity));
+        bb.for_loop(std::move(block_start), std::move(block_end), c_sgs_tiles, ity,
                     [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
     });
 
     auto condition0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0));
     bb.if_condition(condition0, [&](region_builder &bb) {
         auto condition1 =
-            instant_constant_fold_add(bb, make_cmp(cmp_condition::eq, sg_id_index, c_tiles_1));
+            instant_constant_fold_add(bb, make_cmp(cmp_condition::eq, sg_id_cast, c_tiles_1));
         bb.if_condition(condition1, [&](region_builder &bb) {
-            auto block = instant_constant_fold_add(bb, make_arith(arithmetic::mul, blocks, c_sgs));
+            auto block =
+                instant_constant_fold_add(bb, make_arith(arithmetic::mul, blocks, c_sgs, ity));
             body(bb, block, true, rem);
         });
     });
@@ -523,49 +526,55 @@ void tile_loop_by_sgs_new(region_builder &bb, value loop_trip_count, int sgs, in
 void tile_loop_uniformly_new(region_builder &bb, value loop_trip_count, int block_size,
                              int num_tiles, value sg_id,
                              uniform_loop_body_builder_new const &body) {
-    auto index_ty = scalar_data_type::get(loop_trip_count->context(), scalar_type::index);
-    auto c0 = bb.add(make_constant(0, index_ty));
-    auto c1 = bb.add(make_constant(1, index_ty));
-    auto c_tiles = bb.add(make_constant(num_tiles, index_ty));
+    auto ity = loop_trip_count->ty();
+    auto c0 = bb.add(make_constant(0, ity));
+    auto c1 = bb.add(make_constant(1, ity));
+    auto c_tiles = bb.add(make_constant(num_tiles, ity));
 
     // Here we compute
     // blocks = ceil(loop_trip_count / block_size) = 1 + (loop_trip_count - 1) / block_size
     // blocks = ceil(blocks / num_tiles) * num_tiles = (1 + (blocks - 1) / num_tiles) *
     // num_tiles
-    auto c_block_size = bb.add(make_constant(block_size, index_ty));
-    auto blocks0 = instant_constant_fold_add(bb, make_arith(arithmetic::sub, loop_trip_count, c1));
+    auto c_block_size = bb.add(make_constant(block_size, ity));
+    auto blocks0 =
+        instant_constant_fold_add(bb, make_arith(arithmetic::sub, loop_trip_count, c1, ity));
     auto blocks1 =
-        instant_constant_fold_add(bb, make_arith(arithmetic::div, blocks0, c_block_size));
-    auto blocks2 = instant_constant_fold_add(bb, make_arith(arithmetic::div, blocks1, c_tiles));
-    auto blocks3 = instant_constant_fold_add(bb, make_arith(arithmetic::add, c1, blocks2));
-    auto blocks = instant_constant_fold_add(bb, make_arith(arithmetic::mul, blocks3, c_tiles));
+        instant_constant_fold_add(bb, make_arith(arithmetic::div, blocks0, c_block_size, ity));
+    auto blocks2 =
+        instant_constant_fold_add(bb, make_arith(arithmetic::div, blocks1, c_tiles, ity));
+    auto blocks3 = instant_constant_fold_add(bb, make_arith(arithmetic::add, c1, blocks2, ity));
+    auto blocks = instant_constant_fold_add(bb, make_arith(arithmetic::mul, blocks3, c_tiles, ity));
 
-    auto bs = instant_constant_fold_add(bb, make_arith(arithmetic::div, loop_trip_count, blocks));
-    auto bs_1 = instant_constant_fold_add(bb, make_arith(arithmetic::add, bs, c1));
-    auto rem = instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, blocks));
+    auto bs =
+        instant_constant_fold_add(bb, make_arith(arithmetic::div, loop_trip_count, blocks, ity));
+    auto bs_1 = instant_constant_fold_add(bb, make_arith(arithmetic::add, bs, c1, ity));
+    auto rem =
+        instant_constant_fold_add(bb, make_arith(arithmetic::rem, loop_trip_count, blocks, ity));
 
-    auto sg_id_index = instant_constant_fold_add(bb, make_cast(sg_id, index_ty));
+    auto sg_id_cast = instant_constant_fold_add(bb, make_cast(sg_id, ity));
     // The following if makes it easy to eliminate the remainder handler in optimization if rem
     // == 0 is known at compile time. Without the if, we would need to prove that block_start_1
     // is non-negative to eliminate the for-loop.
     auto is_rem_gt_0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0));
     bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
         auto block_start_1 =
-            instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, sg_id_index));
-        auto block_end_1 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem));
-        auto step_1 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, c_tiles));
-        bb.for_loop(std::move(block_start_1), std::move(block_end_1), std::move(step_1), index_ty,
+            instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, sg_id_cast, ity));
+        auto block_end_1 =
+            instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
+        auto step_1 =
+            instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, c_tiles, ity));
+        bb.for_loop(std::move(block_start_1), std::move(block_end_1), std::move(step_1), ity,
                     [&](region_builder &bb, value block) { body(bb, block, bs_1); });
     });
 
-    auto tmp0 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, rem, c_tiles));
-    auto tmp1 = instant_constant_fold_add(bb, make_arith(arithmetic::add, sg_id_index, tmp0));
-    auto sg_id_1 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, tmp1, c_tiles));
-    auto tmp2 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, sg_id_1));
-    auto tmp3 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem));
-    auto block_start = instant_constant_fold_add(bb, make_arith(arithmetic::add, tmp3, tmp2));
-    auto step = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, c_tiles));
-    bb.for_loop(std::move(block_start), loop_trip_count, std::move(step), index_ty,
+    auto tmp0 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, rem, c_tiles, ity));
+    auto tmp1 = instant_constant_fold_add(bb, make_arith(arithmetic::add, sg_id_cast, tmp0, ity));
+    auto sg_id_1 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, tmp1, c_tiles, ity));
+    auto tmp2 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, sg_id_1, ity));
+    auto tmp3 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
+    auto block_start = instant_constant_fold_add(bb, make_arith(arithmetic::add, tmp3, tmp2, ity));
+    auto step = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, c_tiles, ity));
+    bb.for_loop(std::move(block_start), loop_trip_count, std::move(step), ity,
                 [&](region_builder &bb, value block) { body(bb, block, bs); });
 }
 
@@ -587,7 +596,7 @@ auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value 
             b = bb.add(make_cast(b, compatible_ty, loc));
         }
     }
-    return bb.add(make_arith(operation, a, b, loc));
+    return bb.add(make_arith(operation, a, b, a->ty(), loc));
 }
 auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
                                       location const &loc) -> value {
