@@ -115,10 +115,12 @@ blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
     auto betat = get_scalar_type(loc(), op(op_beta));
 
     if (compatible_type(alphat->ty(), At->element_ty()) != At->element_ty()) {
-        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+        throw compilation_error(loc(), {&op(op_alpha), &op(op_A)},
+                                status::ir_incompatible_scalar_types);
     }
     if (compatible_type(betat->ty(), Bt->element_ty()) != Bt->element_ty()) {
-        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+        throw compilation_error(loc(), {&op(op_beta), &op(op_B)},
+                                status::ir_incompatible_scalar_types);
     }
 }
 
@@ -140,10 +142,12 @@ blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
 
     const auto AB_ty = compatible_type(At->element_ty(), Bt->element_ty());
     if (compatible_type(alphat->ty(), AB_ty) != AB_ty) {
-        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+        throw compilation_error(loc(), {&op(op_alpha), &op(op_A), &op(op_B)},
+                                status::ir_incompatible_scalar_types);
     }
     if (compatible_type(betat->ty(), Ct->element_ty()) != Ct->element_ty()) {
-        throw compilation_error(loc(), status::ir_incompatible_scalar_types);
+        throw compilation_error(loc(), {&op(op_beta), &op(op_C)},
+                                status::ir_incompatible_scalar_types);
     }
 }
 
@@ -169,6 +173,10 @@ axpby_inst::axpby_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, t
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
 
+    if (b->dim() < 0 || b->dim() > 2) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_0_1_or_2);
+    }
+
     bool shape_equal = false;
     if (tA_ == transpose::T && a->dim() == 2 && b->dim() == 2) {
         shape_equal = a->shape()[1] == b->shape()[0] && a->shape()[0] == b->shape()[1];
@@ -177,11 +185,7 @@ axpby_inst::axpby_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, t
     }
 
     if (!shape_equal) {
-        throw compilation_error(loc(), status::ir_incompatible_shapes);
-    }
-
-    if (b->dim() > 2) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix);
+        throw compilation_error(loc(), {&A(), &B()}, status::ir_incompatible_shapes);
     }
 }
 
@@ -193,10 +197,10 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
     loc(lc);
 
     if (a().ty() != ty) {
-        throw compilation_error(a().loc(), status::ir_operand_type_must_match_return_type);
+        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
     }
     if (b().ty() != ty) {
-        throw compilation_error(b().loc(), status::ir_operand_type_must_match_return_type);
+        throw compilation_error(loc(), {&b()}, status::ir_operand_type_must_match_return_type);
     }
 
     if (isa<boolean_data_type>(*ty)) {
@@ -266,67 +270,71 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
 }
 
 arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0,
-                                   location const &lc)
+                                   tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::arith_unary}, operation_(operation) {
     op(op_a, a0);
     loc(lc);
 
-    tinytc_data_type_t to_ty = [&]() -> tinytc_data_type_t {
-        if (isa<boolean_data_type>(*a().ty())) {
-            if (operation_ != arithmetic_unary::not_) {
-                throw compilation_error(loc(), status::ir_boolean_unsupported);
-            }
-            return a().ty();
-        } else if (isa<coopmatrix_data_type>(*a().ty())) {
-            if (operation_ != arithmetic_unary::neg) {
-                throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
-            }
-            return a().ty();
-        } else {
-            auto a_ty = get_scalar_type(loc(), a());
-            tinytc_data_type_t to_ty = a_ty;
+    result(0) = value_node{ty, this, lc};
 
-            bool inst_supports_int = true;
-            bool inst_supports_fp = true;
-            bool inst_supports_complex = true;
-            switch (operation_) {
-            case arithmetic_unary::abs:
-            case arithmetic_unary::neg:
-                break;
-            case arithmetic_unary::not_:
-                inst_supports_fp = false;
-                inst_supports_complex = false;
-                break;
-            case arithmetic_unary::conj:
-            case arithmetic_unary::im:
-            case arithmetic_unary::re:
-                inst_supports_int = false;
-                inst_supports_fp = false;
-                break;
-            }
-            if (!inst_supports_int && is_integer_type(a_ty->ty())) {
-                throw compilation_error(loc(), status::ir_int_unsupported);
-            }
-            if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
-                throw compilation_error(loc(), status::ir_fp_unsupported);
-            }
-            if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
-                throw compilation_error(loc(), status::ir_complex_unsupported);
-            }
-            switch (operation_) {
-            case arithmetic_unary::abs:
-            case arithmetic_unary::im:
-            case arithmetic_unary::re:
-                to_ty = scalar_data_type::get(a_ty->context(), element_type(a_ty->ty()));
-                break;
-            default:
-                break;
-            }
-            return to_ty;
+    // Check if inst is supported for combination of a type and result type
+    switch (operation_) {
+    case arithmetic_unary::abs:
+    case arithmetic_unary::im:
+    case arithmetic_unary::re: {
+        auto a_ty = get_scalar_type(a().loc(), a());
+        auto r_ty = get_scalar_type(loc(), result(0));
+        if (r_ty->ty() != element_type(a_ty->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_incompatible_scalar_types);
         }
-    }();
+        break;
+    }
+    default:
+        if (a().ty() != ty) {
+            throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
+        }
+        break;
+    }
 
-    result(0) = value_node{to_ty, this, lc};
+    if (isa<boolean_data_type>(*ty)) {
+        if (operation_ != arithmetic_unary::not_) {
+            throw compilation_error(loc(), status::ir_boolean_unsupported);
+        }
+    } else if (isa<coopmatrix_data_type>(*ty)) {
+        if (operation_ != arithmetic_unary::neg) {
+            throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
+        }
+    } else {
+        auto a_ty = get_scalar_type(loc(), a());
+
+        bool inst_supports_int = true;
+        bool inst_supports_fp = true;
+        bool inst_supports_complex = true;
+        switch (operation_) {
+        case arithmetic_unary::abs:
+        case arithmetic_unary::neg:
+            break;
+        case arithmetic_unary::not_:
+            inst_supports_fp = false;
+            inst_supports_complex = false;
+            break;
+        case arithmetic_unary::conj:
+        case arithmetic_unary::im:
+        case arithmetic_unary::re:
+            inst_supports_int = false;
+            inst_supports_fp = false;
+            break;
+        }
+        if (!inst_supports_int && is_integer_type(a_ty->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
+        }
+        if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
+        }
+        if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+        }
+    }
 }
 
 cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const &lc)
@@ -456,7 +464,7 @@ cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
     if (ot->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_matrix);
+        throw compilation_error(loc(), status::ir_expected_memref_order_2);
     }
 
     check_index_ty(lc, pos0().ty());
@@ -556,7 +564,7 @@ cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag,
         throw compilation_error(loc(), status::ir_scalar_mismatch);
     }
     if (ot->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_matrix);
+        throw compilation_error(loc(), status::ir_expected_memref_order_2);
     }
 
     check_index_ty(lc, pos0().ty());
@@ -765,9 +773,14 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_v
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
 
-    if (a->dim() != 2 || b->dim() != 2 || c->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_matrix,
-                                "gemm only supported for memref of order 2 (matrices)");
+    if (a->dim() != 2) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_2);
+    }
+    if (b->dim() != 2) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_2);
+    }
+    if (c->dim() != 2) {
+        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_2);
     }
 
     auto ak = tA_ == transpose::T ? 0 : 1;
@@ -781,7 +794,8 @@ gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_v
         oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
         oss << "B=" << b->shape(0) << "x" << b->shape(1) << ", ";
         oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                oss.str());
     }
 }
 
@@ -794,9 +808,14 @@ gemv_inst::gemv_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tin
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
 
-    if (a->dim() != 2 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "gemv only supports matrix-vector products");
+    if (a->dim() != 2) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_2);
+    }
+    if (b->dim() != 1) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_1);
+    }
+    if (c->dim() != 1) {
+        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_1);
     }
 
     auto ak = tA_ == transpose::T ? 0 : 1;
@@ -808,7 +827,8 @@ gemv_inst::gemv_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tin
         oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                oss.str());
     }
 }
 
@@ -820,9 +840,14 @@ ger_inst::ger_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
 
-    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 2) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "ger requires two vectors as input and one matrix as output");
+    if (a->dim() != 1) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_1);
+    }
+    if (b->dim() != 1) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_1);
+    }
+    if (c->dim() != 2) {
+        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_2);
     }
 
     auto M = c->shape(0);
@@ -833,7 +858,8 @@ ger_inst::ger_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t B0,
         oss << "a=" << a->shape(0) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "C=" << c->shape(0) << "x" << c->shape(1);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                oss.str());
     }
 }
 
@@ -846,9 +872,14 @@ hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_va
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
 
-    if (a->dim() != 1 || b->dim() != 1 || c->dim() != 1) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix,
-                                "hadamard requires two vectors as input and one vector as output");
+    if (a->dim() != 1) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_1);
+    }
+    if (b->dim() != 1) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_1);
+    }
+    if (c->dim() != 1) {
+        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_1);
     }
 
     auto M = c->shape(0);
@@ -858,7 +889,8 @@ hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_va
         oss << "a=" << a->shape(0) << ", ";
         oss << "b=" << b->shape(0) << ", ";
         oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), status::ir_incompatible_shapes, oss.str());
+        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                oss.str());
     }
 }
 
@@ -985,14 +1017,19 @@ sum_inst::sum_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinyt
     auto a = get_memref_type(loc(), A());
     auto b = get_memref_type(loc(), B());
 
-    bool const size_ok = (a->dim() == 2 && b->dim() == 1) || (a->dim() == 1 && b->dim() == 0);
-    if (!size_ok) {
-        throw compilation_error(loc(), status::ir_expected_vector_or_matrix);
+    if (b->dim() == 1 && a->dim() != 2) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_2);
+    }
+    if (b->dim() == 0 && a->dim() != 1) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_1);
+    }
+    if (b->dim() != 0 && b->dim() != 1) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_0_or_1);
     }
 
     if (a->dim() == 2) {
         if (a->shape(tA_ == transpose::T ? 1 : 0) != b->shape(0)) {
-            throw compilation_error(loc(), status::ir_incompatible_shapes);
+            throw compilation_error(loc(), {&A(), &B()}, status::ir_incompatible_shapes);
         }
     }
 }

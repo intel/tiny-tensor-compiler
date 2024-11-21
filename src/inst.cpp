@@ -156,12 +156,13 @@ tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tinytc_arithmetic
 }
 
 tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr, tinytc_arithmetic_unary_t op,
-                                               tinytc_value_t a, const tinytc_location_t *loc) {
+                                               tinytc_value_t a, tinytc_data_type_t ty,
+                                               const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<arith_unary_inst>(enum_cast<arithmetic_unary>(op), a,
+        *instr = std::make_unique<arith_unary_inst>(enum_cast<arithmetic_unary>(op), a, ty,
                                                     get_optional(loc))
                      .release();
     });

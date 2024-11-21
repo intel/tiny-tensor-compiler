@@ -90,10 +90,10 @@ func @t6(%a: c32, %b: c32) {
   %2 = arith.mul %a, %b : c32
   %3 = arith.div %a, %b : c32
   %4 = arith.neg %a : c32
-  %5 = arith.abs %a : c32
+  %5 = arith.abs %a : f32
   %6 = arith.conj %a : c32
-  %7 = arith.im %a : c32
-  %8 = arith.re %a : c32
+  %7 = arith.im %a : f32
+  %8 = arith.re %a : f32
 ; CHECK:      float2 x = a + b;
 ; CHECK-NEXT: float2 x1 = a - b;
 ; CHECK-NEXT: float2 x2 = a * b.x + (float2) (-a.y, a.x) * b.y;

@@ -9,6 +9,7 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <array>
 #include <cstddef>
 #include <exception>
 #include <new>
@@ -24,12 +25,19 @@ auto report_error_with_context(char const *code, std::size_t code_len, std::stri
 //! Compilation error
 class compilation_error : public std::exception {
   public:
+    constexpr static std::size_t error_max_ref = 4;
+
     //! ctor; taking location, status code, and expanatory string
     compilation_error(location const &loc, status code, std::string extra_info = {});
+    compilation_error(location const &loc, array_view<tinytc_value_t> ref_values, status code,
+                      std::string extra_info = {});
     //! Get status code
     inline auto code() const noexcept { return code_; }
     //! Get location
     inline auto loc() const noexcept -> location const & { return loc_; }
+    inline auto ref_values() const noexcept -> array_view<const_tinytc_value_t> {
+        return array_view<const_tinytc_value_t>(ref_values_.data(), num_ref_values_);
+    }
     //! Get explanatory string
     inline char const *what() const noexcept override { return error_string(code_); }
     //! Get additional information
@@ -37,6 +45,8 @@ class compilation_error : public std::exception {
 
   private:
     location loc_;
+    std::array<const_tinytc_value_t, error_max_ref> ref_values_;
+    std::size_t num_ref_values_;
     status code_;
     std::string extra_info_;
 };
@@ -66,7 +76,7 @@ auto exception_to_status_code(F &&f,
                 auto what =
                     (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
             } else {
-                context->report_error(e.loc(), e.what());
+                context->report_error(e.loc(), e.ref_values(), e.what());
             }
         }
         return static_cast<tinytc_status_t>(e.code());

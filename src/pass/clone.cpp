@@ -29,7 +29,8 @@ auto inst_cloner::operator()(arith_inst &in) -> std::unique_ptr<tinytc_inst> {
                                         in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(arith_unary_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<arith_unary_inst>(in.operation(), subs(&in.a()), in.loc());
+    return std::make_unique<arith_unary_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
+                                              in.loc());
 }
 auto inst_cloner::operator()(barrier_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<barrier_inst>(in.fence_flags(), in.loc());

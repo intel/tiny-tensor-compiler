@@ -317,7 +317,7 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(axpby_inst const &ins
             });
         return {bb.get_product()};
     }
-    throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
+    return {};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(barrier_inst const &b) {
@@ -1516,8 +1516,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(sum_inst const &inst)
                     inner_loop(bb);
                 }
             });
-    } else {
-        throw compilation_error(inst.loc(), status::ir_expected_vector_or_matrix);
     }
     return {bb.get_product()};
 }

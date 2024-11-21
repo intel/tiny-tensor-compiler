@@ -32,11 +32,11 @@ func @tfloat(%a: f32) {
 }
 
 func @tcomplex(%a: c32) {
-    %0 = arith.abs %a : c32
+    %0 = arith.abs %a : f32
     %1 = arith.neg %a : c32
     %2 = arith.conj %a : c32
-    %3 = arith.im %a : c32
-    %4 = arith.re %a : c32
+    %3 = arith.im %a : f32
+    %4 = arith.re %a : f32
 ; CHECK:      %[[#A2:]] = OpFMul %[[#C32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
 ; CHECK-NEXT: %[[#A2_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1

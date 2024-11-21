@@ -384,7 +384,8 @@ class arith_unary_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::arith_unary; }
     enum op_number { op_a = 0 };
-    arith_unary_inst(arithmetic_unary op, tinytc_value_t a, location const &lc = {});
+    arith_unary_inst(arithmetic_unary op, tinytc_value_t a, tinytc_data_type_t ty,
+                     location const &lc = {});
 
     inline arithmetic_unary operation() const { return operation_; }
     inline auto a() -> tinytc_value & { return op(op_a); }

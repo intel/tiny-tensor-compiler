@@ -5,6 +5,7 @@
 #define COMPILER_CONTEXT_20240924_HPP
 
 #include "reference_counted.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -50,6 +51,8 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     auto source_name(std::int32_t source_id) -> std::pair<char const *, std::size_t>;
     auto source_text(std::int32_t source_id) -> std::pair<char const *, std::size_t>;
     void report_error(tinytc_location const &l, char const *what);
+    void report_error(tinytc_location const &l,
+                      tinytc::array_view<const_tinytc_value_t> const &ref_values, char const *what);
 
     auto opt_flag(tinytc_optflag_t flag) const -> bool;
     inline void opt_flag(tinytc_optflag_t flag, std::int32_t state) { opt_flags_[flag] = state; }

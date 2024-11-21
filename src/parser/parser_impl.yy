@@ -26,6 +26,9 @@
 
         using int_or_val = std::variant<std::int64_t, tinytc_value_t>;
         using unique_ptr_to_if_inst = std::unique_ptr<if_inst>;
+
+        using identifier = std::variant<std::int64_t, std::string>;
+        using identifier_and_location = std::pair<identifier, location>;
     }
 }
 
@@ -44,6 +47,7 @@
     #include <cstdint>
     #include <cstdlib>
     #include <exception>
+    #include <sstream>
     #include <utility>
     #include <vector>
 
@@ -55,7 +59,16 @@
             loc.end = loc2.end;
             throw parser::syntax_error(loc, "Type of SSA value does not match operand type");
         }
-    };
+    }
+
+    void report_error(compiler_context const& cctx, compilation_error const& e) {
+        if (e.extra_info().size() > 0) {
+            auto what = (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
+            cctx.get()->report_error(e.loc(), e.ref_values(), what.c_str());
+        } else {
+            cctx.get()->report_error(e.loc(), e.ref_values(), e.what());
+        }
+    }
     } // namespace tinytc
 }
 
@@ -142,7 +155,7 @@
     WORK_GROUP      "work_group"
     YIELD           "yield"
 ;
-%token <std::variant<std::int64_t, std::string>> LOCAL_IDENTIFIER
+%token <identifier> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
 %token <bool> BOOLEAN_CONSTANT
 %token <std::int64_t> INTEGER_CONSTANT
@@ -159,8 +172,8 @@
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
 %nterm <func> func
-%nterm <std::pair<std::vector<std::variant<std::int64_t,std::string>>,std::vector<tinytc_data_type_t>>> parameters
-%nterm <std::pair<std::variant<std::int64_t,std::string>,tinytc_data_type_t>> parameter
+%nterm <std::pair<std::vector<identifier_and_location>,std::vector<tinytc_data_type_t>>> parameters
+%nterm <std::pair<identifier_and_location,tinytc_data_type_t>> parameter
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
@@ -190,9 +203,9 @@
 %nterm <inst> ger_inst
 %nterm <transpose> transpose
 %nterm <inst> for_inst
-%nterm <std::tuple<std::vector<std::variant<std::int64_t, std::string>>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
-%nterm <std::pair<std::vector<std::variant<std::int64_t, std::string>>, std::vector<tinytc_value_t>>> init_value_list
-%nterm <std::pair<std::variant<std::int64_t, std::string>, tinytc_value_t>> init_value
+%nterm <std::tuple<std::vector<identifier>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
+%nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
+%nterm <std::pair<identifier, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
@@ -204,7 +217,7 @@
 %nterm <inst> yield_inst
 %nterm <tinytc_data_type_t> for_loop_var_type
 %nterm <inst> var_definition
-%nterm <std::vector<std::variant<std::int64_t,std::string>>> identifier_list
+%nterm <std::vector<identifier>> identifier_list
 %nterm <inst> valued_inst
 %nterm <inst> alloca_inst
 %nterm <inst> arith_inst
@@ -269,13 +282,13 @@ func:
             ctx.push_scope();
             auto name_it = $parameters.first.begin();
             for (auto &p : func_node->params()) {
-                ctx.val(*name_it, p, @parameters);
+                ctx.val(name_it->first, p, name_it->second);
                 ++name_it;
             }
             ctx.push_region(&func_node->body());
             $$ = func{func_node.release()};
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }[prototype] region {
@@ -301,7 +314,7 @@ parameters:
 
 parameter:
     LOCAL_IDENTIFIER COLON data_type {
-        $$ = std::make_pair($LOCAL_IDENTIFIER, $data_type);
+        $$ = std::make_pair(std::make_pair($LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER), $data_type);
     }
 ;
 
@@ -354,7 +367,7 @@ coopmatrix_type:
         try {
             $$ = get_coopmatrix($scalar_type, $rows, $cols, $MATRIX_USE, @coopmatrix_type);
         } catch (compilation_error const& e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -365,7 +378,7 @@ memref_type:
         try {
             $$ = get_memref($scalar_type, $mode_list, {}, $optional_address_space, @memref_type);
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -379,7 +392,7 @@ memref_type:
             $$ = get_memref($scalar_type, $mode_list, $optional_stride_list,
                             $optional_address_space, @memref_type);
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -474,7 +487,7 @@ axpby_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -506,7 +519,7 @@ barrier_inst:
         try {
             $$ = inst { std::make_unique<barrier_inst>(fence_flags, @barrier_inst).release() };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -532,7 +545,7 @@ gemm_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -547,7 +560,7 @@ gemv_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -567,7 +580,7 @@ ger_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -601,7 +614,7 @@ for_inst:
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }[loop_header] region {
@@ -656,7 +669,7 @@ foreach_inst:
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }[loop_header] region {
@@ -702,7 +715,7 @@ hadamard_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -717,7 +730,7 @@ sum_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -770,7 +783,7 @@ alloca_inst:
                 std::make_unique<alloca_inst>(std::move($memref_type), @alloca_inst).release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -778,8 +791,6 @@ alloca_inst:
 
 arith_inst:
     ARITH ARITHMETIC var[a] COMMA var[b] COLON data_type[ty] {
-        check_type($a, $ty, @a, @ty);
-        check_type($b, $ty, @b, @ty);
         try {
             $$ = inst {
                 std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), std::move($ty),
@@ -787,7 +798,7 @@ arith_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -795,15 +806,14 @@ arith_inst:
 
 arith_unary_inst:
     ARITH ARITHMETIC_UNARY var[a] COLON data_type[ty] {
-        check_type($a, $ty, @a, @ty);
         try {
             $$ = inst {
-                std::make_unique<arith_unary_inst>($ARITHMETIC_UNARY, std::move($a),
+                std::make_unique<arith_unary_inst>($ARITHMETIC_UNARY, std::move($a), std::move($ty),
                                                    @arith_unary_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -816,7 +826,7 @@ cast_inst:
         try {
             $$ = inst { std::make_unique<cast_inst>(std::move($a), $to, @cast_inst).release() };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -833,7 +843,7 @@ compare_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -847,7 +857,7 @@ constant_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -857,7 +867,7 @@ constant_inst:
                 std::make_unique<constant_inst>($FLOATING_CONSTANT, $data_type, @constant_inst).release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -867,7 +877,7 @@ constant_inst:
                 std::make_unique<constant_inst>($INTEGER_CONSTANT, $data_type, @constant_inst).release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -877,7 +887,7 @@ constant_inst:
                 std::make_unique<constant_inst>($BOOLEAN_CONSTANT, $data_type, @constant_inst).release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -894,7 +904,7 @@ cooperative_matrix_load_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -918,7 +928,7 @@ cooperative_matrix_mul_add_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -935,7 +945,7 @@ cooperative_matrix_scale_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -953,7 +963,7 @@ cooperative_matrix_store_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -986,7 +996,7 @@ expand_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         } catch (std::exception const& e) {
             error(@expand_inst, e.what());
@@ -1023,7 +1033,7 @@ fuse_inst:
                 std::make_unique<fuse_inst>(std::move($var), $from, $to, @fuse_inst).release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -1043,7 +1053,7 @@ load_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -1063,7 +1073,7 @@ store_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -1094,7 +1104,7 @@ if_inst:
             ctx.push_region(&inode->then());
             $$ = std::move(inode);
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }[header] region {
@@ -1139,7 +1149,7 @@ parallel_inst:
             ctx.push_region(&inode->body());
             $$ = inst{inode.release()};
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }[header] region {
@@ -1158,7 +1168,7 @@ size_inst:
         try {
             $$ = inst { std::make_unique<size_inst>(std::move($var), $mode, @size_inst).release() };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }
@@ -1216,7 +1226,7 @@ subview_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         } catch (std::exception const& e) {
             error(@subview_inst, e.what());
@@ -1258,7 +1268,7 @@ work_group_inst:
                     .release()
             };
         } catch (compilation_error const &e) {
-            error(e.loc(), e.what());
+            report_error(ctx.cctx(), e);
             YYERROR;
         }
     }

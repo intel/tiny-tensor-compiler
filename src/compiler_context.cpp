@@ -4,17 +4,16 @@
 #include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
+#include "node/value_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
-#include <iostream>
+#include <sstream>
 
 namespace tinytc {
-void default_error_reporter(char const *what, const tinytc_location_t *, void *) {
-    std::cerr << what << std::endl;
-}
+void default_error_reporter(char const *, const tinytc_location_t *, void *) {}
 } // namespace tinytc
 
 using namespace tinytc;
@@ -43,10 +42,23 @@ auto tinytc_compiler_context::source_text(std::int32_t source_id)
     return {"", 0};
 }
 void tinytc_compiler_context::report_error(location const &l, char const *what) {
+    report_error(l, {}, what);
+}
+
+void tinytc_compiler_context::report_error(tinytc_location const &l,
+                                           array_view<const_tinytc_value_t> const &ref_values,
+                                           char const *what) {
     auto [name, name_size] = source_name(l.begin.source_id);
     auto [text, text_size] = source_text(l.begin.source_id);
     auto err = report_error_with_context(text, text_size, name, l, what);
     reporter_(err.c_str(), &l, user_data_);
+    for (auto &ref_value : ref_values) {
+        if (ref_value) {
+            auto err = report_error_with_context(text, text_size, name, ref_value->loc(),
+                                                 "value defined here");
+            reporter_(err.c_str(), &ref_value->loc(), user_data_);
+        }
+    }
 }
 
 auto tinytc_compiler_context::opt_flag(tinytc_optflag_t flag) const -> bool {

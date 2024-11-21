@@ -892,15 +892,16 @@ inline inst make_arith(arithmetic op, value a, value b, data_type ty, location c
  *
  * @param op Arithmetic operation type
  * @param a Operand
+ * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_arith(arithmetic_unary op, value a, location const &loc = {}) {
+inline inst make_arith(arithmetic_unary op, value a, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_arith_unary_inst_create(&instr, static_cast<tinytc_arithmetic_unary_t>(op), a, &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_arith_unary_inst_create(
+                         &instr, static_cast<tinytc_arithmetic_unary_t>(op), a, ty, &loc),
+                     loc);
     return inst(instr);
 }
 

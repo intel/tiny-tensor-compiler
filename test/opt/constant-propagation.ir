@@ -132,9 +132,9 @@ func @known_arith_complex() {
     %3 = arith.div %a, %b : c32
     %4 = arith.neg %a : c32
     %5 = arith.conj %a : c32
-    %6 = arith.abs %a : c32
-    %7 = arith.im %a : c32
-    %8 = arith.re %a : c32
+    %6 = arith.abs %a : f32
+    %7 = arith.im %a : f32
+    %8 = arith.re %a : f32
 ; CHECK-LABEL: func @known_arith_complex({{.*}}
 ; CHECK:       %0 = constant [0x1p+1,0x1.cp+2] -> c32
 ; CHECK-NEXT:  %1 = arith.add %a, %b : c32
@@ -149,9 +149,9 @@ func @known_arith_complex() {
 ; CHECK-NEXT:  %10 = constant [0x1.8p+1,-0x1p+1] -> c32
 ; CHECK-NEXT:  %11 = arith.conj %a : c32
 ; CHECK-NEXT:  %12 = constant 0x1.cd82b4p+1 -> f32
-; CHECK-NEXT:  %13 = arith.abs %a : c32
+; CHECK-NEXT:  %13 = arith.abs %a : f32
 ; CHECK-NEXT:  %14 = constant 0x1p+1 -> f32
-; CHECK-NEXT:  %15 = arith.im %a : c32
+; CHECK-NEXT:  %15 = arith.im %a : f32
 ; CHECK-NEXT:  %16 = constant 0x1.8p+1 -> f32
-; CHECK-NEXT:  %17 = arith.re %a : c32
+; CHECK-NEXT:  %17 = arith.re %a : f32
 }

@@ -4,7 +4,7 @@
 ; RUN: not %tinytc-oc < %s 2>&1 | filecheck %s
 func @t1(%a: f32, %b: f32) {
   %1 = arith.and %a, %b : f32
-; CHECK:       %1 = arith.and %a, %b : f32
-; CHECK-NEXT:       ~~~~~~~~~~~~~~~~~~~~~~
-; CHECK-NEXT:<stdin>:6.8-29: Floating point type unsupported by instruction
+; CHECK:        <stdin>:6.8-29: Floating point type unsupported by instruction
+; CHECK:        %1 = arith.and %a, %b : f32
+; CHECK-NEXT:        ~~~~~~~~~~~~~~~~~~~~~~
 }

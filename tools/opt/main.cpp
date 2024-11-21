@@ -87,6 +87,9 @@ int main(int argc, char **argv) {
     auto ctx = compiler_context{};
     try {
         ctx = make_compiler_context();
+        ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
+                                  void *) { std::cerr << what << std::endl; },
+                               nullptr);
         ctx.set_optimization_level(opt_level);
         cmd::set_optflags(ctx, flags);
         info.set_core_features(core_features);

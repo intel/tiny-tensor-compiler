@@ -125,7 +125,7 @@ void dump_ir_pass::operator()(arith_unary_inst const &a) {
     *os_ << " = arith." << to_string(a.operation()) << " ";
     dump_val(a.a());
     *os_ << " : ";
-    visit(*this, *a.a().ty());
+    visit(*this, *a.result(0).ty());
 }
 
 void dump_ir_pass::operator()(barrier_inst const &b) {

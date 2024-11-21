@@ -426,7 +426,7 @@ Restrictions
 ~~~~~~~~~~~~
 
 * :math:`\text{shape}(B) = \text{shape}(\text{op}(A))`
-* :math:`\text{order}(B) = 1 \lor \text{order}(B) = 2`
+* :math:`\text{order}(B) = 0 \lor \text{order}(B) = 1 \lor \text{order}(B) = 2`
 * :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.

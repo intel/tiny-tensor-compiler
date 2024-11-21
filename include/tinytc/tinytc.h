@@ -232,6 +232,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tin
  * @param instr [out] pointer to the inst object created
  * @param op [in] unary arithmetic operation type
  * @param a [in] operand
+ * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -239,6 +240,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_inst_create(tinytc_inst_t *instr, tin
 TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *instr,
                                                              tinytc_arithmetic_unary_t op,
                                                              tinytc_value_t a,
+                                                             tinytc_data_type_t ty,
                                                              const tinytc_location_t *loc);
 
 /**
