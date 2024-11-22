@@ -6,13 +6,11 @@ include(GNUInstallDirs)
 include(InstallLib)
 
 find_package(LevelZero REQUIRED)
-find_package(ocloc REQUIRED)
 
 set(SOURCES
     device_info.cpp
     error.cpp
     kernel.cpp
-    opencl_cc.cpp
     recipe_handler.cpp
 )
 set(PUBLIC_HEADERS
@@ -25,7 +23,6 @@ add_library(tinytc_ze ${SOURCES})
 add_library(tinytc::tinytc_ze ALIAS tinytc_ze)
 
 set_cxx_common_options(tinytc_ze)
-target_link_libraries(tinytc_ze PRIVATE ocloc::ocloc)
 target_link_libraries(tinytc_ze PUBLIC tinytc LevelZero::LevelZero)
 
 # include directories

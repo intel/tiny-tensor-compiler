@@ -26,7 +26,7 @@ template <> struct arg_handler_dispatcher<sycl::backend::opencl> {
 sycl_recipe_handler_impl::sycl_recipe_handler_impl(sycl::context const &context,
                                                    sycl::device const &device, recipe rec)
     : ::tinytc_recipe_handler(std::move(rec)),
-      module_(make_kernel_bundle(context, device, get_recipe().get_source())) {
+      module_(make_kernel_bundle(context, device, get_recipe().get_binary())) {
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);

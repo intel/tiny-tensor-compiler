@@ -77,7 +77,6 @@ set(SOURCES
     spv/pass/dump_asm.cpp
     spv/pass/capex.cpp
     spv/uniquifier.cpp
-    source.cpp
     tiling.cpp
     value.cpp
     support/walk.cpp

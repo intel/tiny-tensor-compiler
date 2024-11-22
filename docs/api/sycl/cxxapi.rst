@@ -44,8 +44,6 @@ Kernel
 
   * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t)`
 
-  * :ref:`make_kernel_bundle(sycl::context const &,sycl::device const &,source const &)`
-
 Kernel Functions
 ----------------
 
@@ -78,11 +76,6 @@ make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_f
 ...............................................................................................
 
 .. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t)
-
-make_kernel_bundle(sycl::context const &,sycl::device const &,source const &)
-.............................................................................
-
-.. doxygenfunction:: tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,source const &)
 
 Recipe
 ======

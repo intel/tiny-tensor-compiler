@@ -21,54 +21,6 @@ using tinytc::compiler_context;
 
 extern "C" {
 
-tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(cl_program *bundle, cl_context context,
-                                                           cl_device_id device,
-                                                           const_tinytc_source_t src) {
-    if (bundle == nullptr || src == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-
-    size_t length = 0;
-    char const *code = nullptr;
-    tinytc_core_feature_flags_t core_features = 0;
-    tinytc_compiler_context_t ctx = nullptr;
-    TINYTC_CHECK_STATUS(tinytc_source_get_code(src, &length, &code));
-    TINYTC_CHECK_STATUS(tinytc_source_get_core_features(src, &core_features));
-    TINYTC_CHECK_STATUS(tinytc_source_get_compiler_context(src, &ctx));
-    auto ctx_ = compiler_context{ctx}; // Clean-up ctx when ctx_ gets out of scope
-
-    cl_int err;
-    cl_program p = clCreateProgramWithSource(context, 1, &code, &length, &err);
-    TINYTC_CL_CHECK_STATUS(err);
-
-    auto options = std::ostringstream{};
-    for (auto const &opt : tinytc::default_compiler_options) {
-        options << opt << " ";
-    }
-    if (core_features & tinytc_core_feature_flag_large_register_file) {
-        options << tinytc::large_register_file_compiler_option_cl;
-    }
-    auto options_str = std::move(options).str();
-    if (err = clBuildProgram(p, 1, &device, options_str.c_str(), nullptr, nullptr);
-        err != CL_SUCCESS) {
-        if (ctx_.get()) {
-            std::string log;
-            std::size_t log_size;
-            clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, 0, nullptr, &log_size);
-            log.resize(log_size);
-            clGetProgramBuildInfo(p, device, CL_PROGRAM_BUILD_LOG, log_size, log.data(), nullptr);
-
-            tinytc_location_t loc = {};
-            tinytc_source_get_location(src, &loc);
-            tinytc_compiler_context_report_error(ctx_.get(), &loc, log.c_str());
-        }
-        clReleaseProgram(p);
-        TINYTC_CL_CHECK_STATUS(err);
-    }
-    *bundle = p;
-    return tinytc_status_success;
-}
-
 tinytc_status_t
 tinytc_cl_kernel_bundle_create_with_program(cl_program *bundle, cl_context context,
                                             cl_device_id device, tinytc_prog_t prg,
@@ -78,7 +30,7 @@ tinytc_cl_kernel_bundle_create_with_program(cl_program *bundle, cl_context conte
     }
 
     tinytc_core_info_t info = nullptr;
-    tinytc_source_t src = nullptr;
+    tinytc_binary_t bin = nullptr;
     tinytc_status_t status = tinytc_status_success;
 
     if (status = tinytc_cl_core_info_create(&info, device); status != tinytc_status_success) {
@@ -88,15 +40,16 @@ tinytc_cl_kernel_bundle_create_with_program(cl_program *bundle, cl_context conte
         status != tinytc_status_success) {
         goto err;
     }
-    if (status = tinytc_prog_compile_to_opencl(&src, prg, info); status != tinytc_status_success) {
+    if (status = tinytc_prog_compile_to_spirv_and_assemble(&bin, prg, info);
+        status != tinytc_status_success) {
         goto err;
     }
-    if (status = tinytc_cl_kernel_bundle_create_with_source(bundle, context, device, src);
+    if (status = tinytc_cl_kernel_bundle_create_with_binary(bundle, context, device, bin);
         status != tinytc_status_success) {
         goto err;
     }
 err:
-    tinytc_source_release(src);
+    tinytc_binary_release(bin);
     tinytc_core_info_release(info);
 
     return status;

@@ -42,19 +42,6 @@ TINYTC_EXPORT auto make_core_info(sycl::device const &dev) -> core_info;
 ////////////////////////////
 
 /**
- * @brief Make SYCL kernel bundle from tinytc source
- *
- * @param ctx Context
- * @param dev Device
- * @param src Source
- *
- * @return SYCL kernel bundle
- */
-TINYTC_EXPORT auto
-make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                   source const &src) -> sycl::kernel_bundle<sycl::bundle_state::executable>;
-
-/**
  * @brief Make SYCL kernel bundle from tinytc program
  *
  * @param ctx Context

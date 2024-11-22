@@ -29,7 +29,6 @@ Core C++-API:
     function:
       - tinytc::run_function_pass
       - tinytc::list_function_passes
-      - tinytc::compile_to_opencl
       - tinytc::compile_to_spirv
       - tinytc::compile_to_spirv_and_assemble
       - tinytc::spirv_assemble
@@ -77,6 +76,3 @@ Core C++-API:
   SPIR-V module:
     class:
       - tinytc::spv_mod
-  Source:
-    class:
-      - tinytc::source

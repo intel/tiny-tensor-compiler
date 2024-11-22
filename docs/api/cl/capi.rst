@@ -51,8 +51,6 @@ Kernel
 
   * :ref:`tinytc_cl_get_group_size`
 
-  * :ref:`tinytc_cl_kernel_bundle_create_with_source`
-
   * :ref:`tinytc_cl_kernel_bundle_create_with_program`
 
   * :ref:`tinytc_cl_kernel_bundle_create_with_binary`
@@ -69,11 +67,6 @@ tinytc_cl_get_group_size
 ........................
 
 .. doxygenfunction:: tinytc_cl_get_group_size
-
-tinytc_cl_kernel_bundle_create_with_source
-..........................................
-
-.. doxygenfunction:: tinytc_cl_kernel_bundle_create_with_source
 
 tinytc_cl_kernel_bundle_create_with_program
 ...........................................

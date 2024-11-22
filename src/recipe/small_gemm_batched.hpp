@@ -15,7 +15,7 @@ auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *
 
 struct small_gemm_batched_recipe : ::tinytc_recipe {
   public:
-    small_gemm_batched_recipe(prog prg, source src, scalar_type ty);
+    small_gemm_batched_recipe(prog prg, binary bin, scalar_type ty);
     auto num_kernels() const -> int override;
     auto kernel_name(int kernel_num) const -> char const * override;
 

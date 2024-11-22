@@ -1486,18 +1486,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_list_function_passes(uint32_t *names_size,
                                                           char const *const **names);
 
 /**
- * @brief Compile tensor language to OpenCL-C
- *
- * @param src [out] pointer to the source object created
- * @param prg [inout] tensor program; modified as compiler passes are run
- * @param info [in] core info object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                                            const_tinytc_core_info_t info);
-
-/**
  * @brief Compile tensor language to SPIR-V
  *
  * @param mod [out] pointer to the SPIR-V module created
@@ -1531,67 +1519,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_compile_to_spirv_and_assemble(
  */
 TINYTC_EXPORT tinytc_status_t tinytc_spirv_assemble(tinytc_binary_t *bin,
                                                     const_tinytc_spv_mod_t mod);
-
-/**
- * @brief Get source text
- *
- * @param src [in] source object
- * @param length [out] pointer to code length
- * @param code [out] code contains a pointer to the source text; the pointer is only valid as
- * long as the source object is alive
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_code(const_tinytc_source_t src, size_t *length,
-                                                     char const **code);
-
-/**
- * @brief Get context object from source object
- *
- * @param src [in] source object
- * @param ctx [out] pointer to context object; reference count is increased so the user needs to
- * call tinytc_compiler_context_release to clean up
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_compiler_context(const_tinytc_source_t src,
-                                                                 tinytc_compiler_context_t *ctx);
-
-/**
- * @brief Get source location
- *
- * @param src [in] source object
- * @param loc [out] pointer to location
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_location(const_tinytc_source_t src,
-                                                         tinytc_location_t *loc);
-
-/**
- * @brief Get core features
- *
- * @param src [in] source object
- * @param core_features [out] pointer to core features
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_core_features(
-    const_tinytc_source_t src, tinytc_core_feature_flags_t *core_features);
-
-/**
- * @brief Get required OpenCL extensions
- *
- * @param src [in] source object
- * @param extensions_size [out] pointer to number of extensions
- * @param extensions [out][range(0,extensions_size)] pointer to array of C-strings; array owned
- * by source object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_get_extensions(const_tinytc_source_t src,
-                                                           uint32_t *extensions_size,
-                                                           char const *const **extensions);
 
 /**
  * @brief Create binary
@@ -1647,26 +1574,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_raw(const_tinytc_binary_t bin,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
     const_tinytc_binary_t bin, tinytc_core_feature_flags_t *core_features);
-
-/**
- * @brief Release source object
- *
- * Decreases reference count by 1, free memory if reference count is 0.
- *
- * @param obj [inout] source object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_release(tinytc_source_t obj);
-
-/**
- * @brief Increase reference count of source object by 1
- *
- * @param obj [inout] source object
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_source_retain(tinytc_source_t obj);
 
 /**
  * @brief Release binary object
@@ -1890,16 +1797,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_prog(const_tinytc_recipe_t recip
                                                      tinytc_prog_t *prg);
 
 /**
- * @brief Get source object
+ * @brief Get binary
  *
  * @param recipe [in] recipe object
- * @param src [out] pointer to source object; reference count is increased so the user needs to
- * call tinytc_source_release to clean up
+ * @param bin [out] pointer to binary; reference count is increased so the user needs to
+ * call tinytc_binary_release to clean up
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_source(const_tinytc_recipe_t recipe,
-                                                       tinytc_source_t *src);
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_get_binary(const_tinytc_recipe_t recipe,
+                                                       tinytc_binary_t *bin);
 
 /**
  * @brief Release recipe object

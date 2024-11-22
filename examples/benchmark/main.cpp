@@ -56,7 +56,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride, bool update,
                                        std::array<std::int64_t, 2> C_stride,
-                                       std::int32_t repetitions, bool dump, queue q) -> source {
+                                       std::int32_t repetitions, bool dump, queue q) -> binary {
     auto ctx = make_compiler_context();
     ctx.set_error_reporter(
         [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
@@ -125,7 +125,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 
         auto info = make_core_info(q.get_device());
         info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        return compile_to_opencl(std::move(p), info);
+        return compile_to_spirv_and_assemble(std::move(p), info);
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
         std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << error_string(e.code())
@@ -133,7 +133,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
     }
-    return source{nullptr};
+    return binary{nullptr};
 }
 
 template <typename T> void test(queue q, args &a) {

@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc -gspirv -S -O0 < %s | filecheck %s
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
 ; CHECK: OpDecorate %[[#PTR_F32:]] Alignment 4
 ; CHECK: OpDecorate %[[#PTR_I16:]] Alignment 2

@@ -17,31 +17,14 @@
 
 using namespace tinytc;
 
-enum class generator { opencl, spirv };
-
 int main(int argc, char **argv) {
     char const *filename = nullptr;
     auto info = core_info{};
     tinytc_core_feature_flags_t core_features = 0;
     std::int32_t opt_level = 2;
     auto flags = cmd::optflag_states{};
-    auto gen = generator::opencl;
     bool emit_asm = false;
     bool help = false;
-
-    auto const convert_string_to_generator = [](char const *str, generator &val) {
-        switch (fnv1a(str, std::strlen(str))) {
-        case "opencl"_fnv1a:
-            val = generator::opencl;
-            break;
-        case "spirv"_fnv1a:
-            val = generator::spirv;
-            break;
-        default:
-            return cmd::parser_status::invalid_argument;
-        };
-        return cmd::parser_status::success;
-    };
 
     auto parser = cmd::arg_parser{};
     try {
@@ -59,8 +42,6 @@ int main(int argc, char **argv) {
                 }
                 return cmd::parser_status::success;
             });
-        parser.set_short_opt('g', &gen, "Code generation backend (opencl or spirv)")
-            .converter(convert_string_to_generator);
         parser.set_short_opt('S', &emit_asm, "Compile only; do not assemble");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
@@ -105,21 +86,14 @@ int main(int argc, char **argv) {
             p = parse_file(filename, ctx);
         }
 
-        switch (gen) {
-        case generator::opencl:
-            std::cout << compile_to_opencl(std::move(p), info).get_code();
-            break;
-        case generator::spirv:
-            if (emit_asm) {
-                auto mod = compile_to_spirv(std::move(p), info);
-                auto spvasm = mod.print_to_string();
-                std::cout << spvasm.get();
-            } else {
-                auto bin = compile_to_spirv_and_assemble(std::move(p), info);
-                auto raw_data = bin.get_raw();
-                std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
-            }
-            break;
+        if (emit_asm) {
+            auto mod = compile_to_spirv(std::move(p), info);
+            auto spvasm = mod.print_to_string();
+            std::cout << spvasm.get();
+        } else {
+            auto bin = compile_to_spirv_and_assemble(std::move(p), info);
+            auto raw_data = bin.get_raw();
+            std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
         }
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;

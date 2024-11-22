@@ -486,14 +486,6 @@ typedef struct tinytc_core_info *tinytc_core_info_t;
 //! @brief const core_info handle
 typedef const struct tinytc_core_info *const_tinytc_core_info_t;
 
-//! @struct tinytc_source;
-//! @brief Opaque struct for source text
-struct tinytc_source;
-//! @brief source handle
-typedef struct tinytc_source *tinytc_source_t;
-//! @brief const source handle
-typedef const struct tinytc_source *const_tinytc_source_t;
-
 //! @struct tintyc_compiler_context
 //! @brief Opaque struct for compiler context
 struct tinytc_compiler_context;

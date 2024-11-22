@@ -19,19 +19,19 @@ auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_va
 
 struct tinytc_recipe : tinytc::reference_counted {
   public:
-    inline tinytc_recipe(tinytc::prog prg, tinytc::source src)
-        : prg_(std::move(prg)), src_(std::move(src)) {}
+    inline tinytc_recipe(tinytc::prog prg, tinytc::binary bin)
+        : prg_(std::move(prg)), bin_(std::move(bin)) {}
     virtual ~tinytc_recipe() = default;
 
     inline auto get_program() const -> tinytc::prog const & { return prg_; }
-    inline auto get_source() const -> tinytc::source const & { return src_; }
+    inline auto get_binary() const -> tinytc::binary const & { return bin_; }
 
     virtual auto num_kernels() const -> int = 0;
     virtual auto kernel_name(int kernel_num) const -> char const * = 0;
 
   private:
     tinytc::prog prg_;
-    tinytc::source src_;
+    tinytc::binary bin_;
 };
 
 struct tinytc_recipe_handler : tinytc::reference_counted {

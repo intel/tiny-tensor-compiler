@@ -15,7 +15,6 @@ C++-API:
       - tinytc::make_kernel(cl_program,char const*)
       - tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)
       - tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t)
-      - tinytc::make_kernel_bundle(cl_context,cl_device_id,source const&)
   Recipe:
     function:
       - tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&)

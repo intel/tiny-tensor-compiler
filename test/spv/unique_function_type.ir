@@ -1,7 +1,7 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-oc -gspirv -S < %s | filecheck %s
+; RUN: %tinytc-oc -S < %s | filecheck %s
 func @f1() {}
 func @f2() {}
 func @f3(%a: i32, %b: f32) {}

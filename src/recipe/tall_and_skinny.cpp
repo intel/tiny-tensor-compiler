@@ -34,10 +34,10 @@ auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
     }
     throw status::invalid_arguments;
 }
-tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, source src, scalar_type ty, std::int64_t M,
+tall_and_skinny_recipe::tall_and_skinny_recipe(prog prg, binary bin, scalar_type ty, std::int64_t M,
                                                std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
                                                std::int32_t M_block_size)
-    : ::tinytc_recipe(std::move(prg), std::move(src)), ty_(ty), M_dyn_(is_dynamic_value(M)),
+    : ::tinytc_recipe(std::move(prg), std::move(bin)), ty_(ty), M_dyn_(is_dynamic_value(M)),
       ldA_dyn_(is_dynamic_value(ldA)), ldB_dyn_(is_dynamic_value(ldB)),
       ldC_dyn_(is_dynamic_value(ldC)), M_block_size_(M_block_size) {}
 auto tall_and_skinny_recipe::num_kernels() const -> int {
@@ -186,9 +186,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             p.add_function(kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm), true));
             p.add_function(
                 kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm_beta0), false));
-            tinytc_source_t src;
-            CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, p.get(), info));
-            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), source(src),
+            tinytc_binary_t bin;
+            CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, p.get(), info));
+            *recipe = std::make_unique<tall_and_skinny_recipe>(std::move(p), binary(bin),
                                                                enum_cast<scalar_type>(ty), M, ldA,
                                                                ldB, ldC, M_block_size)
                           .release();

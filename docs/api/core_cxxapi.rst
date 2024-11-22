@@ -160,8 +160,6 @@ Compiler
 
   * :ref:`list_function_passes`
 
-  * :ref:`compile_to_opencl`
-
   * :ref:`compile_to_spirv`
 
   * :ref:`compile_to_spirv_and_assemble`
@@ -180,11 +178,6 @@ list_function_passes
 ....................
 
 .. doxygenfunction:: tinytc::list_function_passes
-
-compile_to_opencl
-.................
-
-.. doxygenfunction:: tinytc::compile_to_opencl
 
 compile_to_spirv
 ................
@@ -464,19 +457,4 @@ spv_mod
 .......
 
 .. doxygenclass:: tinytc::spv_mod
-
-Source
-======
-
-* Classes
-
-  * :ref:`source`
-
-Source Classes
---------------
-
-source
-......
-
-.. doxygenclass:: tinytc::source
 

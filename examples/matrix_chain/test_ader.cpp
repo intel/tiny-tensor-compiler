@@ -159,7 +159,8 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
     if (dump) {
         p.dump();
     }
-    return make_kernel_bundle(q_.get_context(), q_.get_device(), compile_to_opencl(p, dev_info_));
+    return make_kernel_bundle(q_.get_context(), q_.get_device(),
+                              compile_to_spirv_and_assemble(p, dev_info_));
 }
 
 template <typename T>

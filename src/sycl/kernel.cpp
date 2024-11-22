@@ -60,10 +60,6 @@ template <> struct kernel_bundle_dispatcher<backend::opencl> {
     }
 };
 
-auto make_kernel_bundle(context const &ctx, device const &dev,
-                        source const &src) -> kernel_bundle<bundle_state::executable> {
-    return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, src);
-}
 auto make_kernel_bundle(context const &ctx, device const &dev, prog prg,
                         tinytc_core_feature_flags_t core_features)
     -> kernel_bundle<bundle_state::executable> {

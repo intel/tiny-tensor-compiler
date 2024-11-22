@@ -47,8 +47,6 @@ Kernel
 
 * Functions
 
-  * :ref:`compile_to_binary`
-
   * :ref:`get_group_count`
 
   * :ref:`get_group_size(ze_kernel_handle_t)`
@@ -59,15 +57,8 @@ Kernel
 
   * :ref:`make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)`
 
-  * :ref:`make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,source const&)`
-
 Kernel Functions
 ----------------
-
-compile_to_binary
-.................
-
-.. doxygenfunction:: tinytc::compile_to_binary
 
 get_group_count
 ...............
@@ -93,11 +84,6 @@ make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_featu
 ...........................................................................................
 
 .. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)
-
-make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,source const&)
-........................................................................
-
-.. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,source const&)
 
 Recipe
 ======

@@ -20,7 +20,7 @@ ze_recipe_handler::ze_recipe_handler(ze_context_handle_t context, ze_device_hand
                                      recipe rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_recipe().get_source());
+    module_ = make_kernel_bundle(context, device, get_recipe().get_binary());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);

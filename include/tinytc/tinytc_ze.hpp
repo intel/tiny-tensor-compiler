@@ -58,23 +58,6 @@ inline auto make_core_info(ze_device_handle_t device) -> core_info {
 ////////// Kernel //////////
 ////////////////////////////
 
-/**
- * @brief Compile source to binary
- *
- * @param src Source object
- * @param ip_version IP version (pass tinytc_intel_gpu_architecture_t here)
- * @param format Bundle format (SPIR-V or Native)
- *
- * @return Binary
- */
-inline auto compile_to_binary(source const &src, std::uint32_t ip_version,
-                              bundle_format format) -> binary {
-    tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_ze_source_compile_to_binary(&bin, src.get(), ip_version,
-                                                    static_cast<tinytc_bundle_format_t>(format)));
-    return binary{bin};
-}
-
 namespace internal {
 template <> struct unique_handle_traits<ze_kernel_handle_t> {
     static void destroy(ze_kernel_handle_t obj) { zeKernelDestroy(obj); }
@@ -83,22 +66,6 @@ template <> struct unique_handle_traits<ze_module_handle_t> {
     static void destroy(ze_module_handle_t obj) { zeModuleDestroy(obj); }
 };
 } // namespace internal
-
-/**
- * @brief Make a Level Zero module from a tinytc source
- *
- * @param context Context
- * @param device Device
- * @param src Source
- *
- * @return Level Zero module (unique handle)
- */
-inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t device,
-                               source const &src) -> unique_handle<ze_module_handle_t> {
-    ze_module_handle_t obj;
-    CHECK_STATUS(tinytc_ze_kernel_bundle_create_with_source(&obj, context, device, src.get()));
-    return unique_handle<ze_module_handle_t>{obj};
-}
 
 /**
  * @brief Make a Level Zero module from a tinytc program

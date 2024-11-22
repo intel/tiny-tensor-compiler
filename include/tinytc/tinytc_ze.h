@@ -58,35 +58,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_core_info_create(tinytc_core_info_t *inf
 ////////////////////////////
 
 /**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bin [out] pointer to the binary object created
- * @param src [in] source text
- * @param ip_version [in] IP version (pass tinytc_intel_gpu_architecture_t here)
- * @param format [in] binary format (SPIR-V or native)
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_ze_source_compile_to_binary(tinytc_binary_t *bin,
-                                                                 const_tinytc_source_t src,
-                                                                 uint32_t ip_version,
-                                                                 tinytc_bundle_format_t format);
-
-/**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bundle [out] pointer to the kernel bundle (ze_module_handle_t) object created
- * @param context [in] context handle
- * @param device [in] device handle
- * @param src [in] source text and extensions
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t
-tinytc_ze_kernel_bundle_create_with_source(ze_module_handle_t *bundle, ze_context_handle_t context,
-                                           ze_device_handle_t device, const_tinytc_source_t src);
-
-/**
  * @brief Compile tensor program
  *
  * @param bundle [out] pointer to the kernel bundle (ze_module_handle_t) object created

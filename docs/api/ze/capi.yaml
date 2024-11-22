@@ -15,8 +15,6 @@ C-API:
       - tinytc_ze_kernel_create
       - tinytc_ze_kernel_bundle_create_with_binary
       - tinytc_ze_kernel_bundle_create_with_program
-      - tinytc_ze_kernel_bundle_create_with_source
-      - tinytc_ze_source_compile_to_binary
   Recipe:
     function:
       - tinytc_ze_recipe_handler_create

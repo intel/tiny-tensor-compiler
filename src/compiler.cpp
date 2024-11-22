@@ -21,7 +21,6 @@
 #include "passes.hpp"
 #include "reference_counted.hpp"
 #include "required_extensions.hpp"
-#include "source.hpp"
 #include "spv/pass/assemble.hpp"
 #include "spv/pass/assign_ids.hpp"
 #include "tinytc/tinytc.h"
@@ -127,34 +126,6 @@ tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *co
     *names = pass_names;
 
     return tinytc_status_success;
-}
-
-tinytc_status_t tinytc_prog_compile_to_opencl(tinytc_source_t *src, tinytc_prog_t prg,
-                                              const_tinytc_core_info_t info) {
-    if (src == nullptr || prg == nullptr || info == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code(
-        [&] {
-            apply_default_optimization_pipeline(prg, info);
-
-            // opencl
-            auto ast = convert_to_opencl_pass{info}.run_on_program(*prg);
-            clir::make_names_unique(ast);
-
-            auto oss = std::ostringstream{};
-            auto ext = required_extensions(ast);
-            for (auto const &e : ext) {
-                oss << "#pragma OPENCL EXTENSION " << e << " : enable" << std::endl;
-            }
-
-            clir::generate_opencl(oss, std::move(ast));
-
-            *src = std::make_unique<::tinytc_source>(prg->share_context(), oss.str(), prg->loc(),
-                                                     std::move(ext), info->core_features())
-                       .release();
-        },
-        prg->context());
 }
 
 tinytc_status_t tinytc_prog_compile_to_spirv(tinytc_spv_mod_t *mod, tinytc_prog_t prg,

@@ -58,21 +58,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *inf
 ////////////////////////////
 
 /**
- * @brief Compile OpenCL-C source to device binary
- *
- * @param bundle [out] pointer to the kernel bundle (cl_program) object created
- * @param context [in] context handle
- * @param device [in] device handle
- * @param src [in] source text and extensions
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_cl_kernel_bundle_create_with_source(cl_program *bundle,
-                                                                         cl_context context,
-                                                                         cl_device_id device,
-                                                                         const_tinytc_source_t src);
-
-/**
  * @brief Compile tensor program
  *
  * @param bundle [out] pointer to the kernel bundle (cl_program) object created

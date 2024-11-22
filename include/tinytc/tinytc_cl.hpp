@@ -78,22 +78,6 @@ template <> struct shared_handle_traits<cl_kernel> {
 } // namespace internal
 
 /**
- * @brief Make an OpenCL program from a tinytc source
- *
- * @param context Context
- * @param device Device
- * @param src Source
- *
- * @return cl_program (shared handle)
- */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device,
-                               source const &src) -> shared_handle<cl_program> {
-    cl_program obj;
-    CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_source(&obj, context, device, src.get()));
-    return shared_handle<cl_program>{obj};
-}
-
-/**
  * @brief Make an OpenCL program from a tinytc program
  *
  * @param context Context

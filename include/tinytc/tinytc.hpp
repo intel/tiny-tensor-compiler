@@ -2159,68 +2159,6 @@ inline auto parse_string(std::string const &src, compiler_context const &ctx = {
 ////////////////////////////
 
 namespace internal {
-template <> struct shared_handle_traits<tinytc_source_t> {
-    static auto retain(tinytc_source_t handle) -> tinytc_status_t {
-        return tinytc_source_retain(handle);
-    }
-    static auto release(tinytc_source_t handle) -> tinytc_status_t {
-        return tinytc_source_release(handle);
-    }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_source_t
-class source : public shared_handle<tinytc_source_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Get code
-     *
-     * @return Pointer to C-string that is bound to the lifetime of the source object
-     */
-    inline auto get_code() const -> std::string_view {
-        char const *code = nullptr;
-        std::size_t length = 0;
-        CHECK_STATUS(tinytc_source_get_code(obj_, &length, &code));
-        return std::string_view(code, length);
-    }
-
-    /**
-     * @brief Get compiler context
-     *
-     * @return Compiler context
-     */
-    inline auto get_compiler_context() const -> compiler_context {
-        tinytc_compiler_context_t ctx;
-        CHECK_STATUS(tinytc_source_get_compiler_context(obj_, &ctx));
-        return compiler_context{ctx, true};
-    }
-
-    /**
-     * @brief Get location
-     *
-     * @return Location
-     */
-    inline auto get_location() const -> location {
-        location loc = {};
-        CHECK_STATUS(tinytc_source_get_location(obj_, &loc));
-        return loc;
-    }
-
-    /**
-     * @brief Get OpenCL extension
-     *
-     * @param extensions_size Number of extensions
-     * @param extensions Array of extensions
-     */
-    inline void get_extensions(std::uint32_t &extensions_size,
-                               char const *const *&extensions) const {
-        CHECK_STATUS(tinytc_source_get_extensions(obj_, &extensions_size, &extensions));
-    }
-};
-
-namespace internal {
 template <> struct shared_handle_traits<tinytc_binary_t> {
     static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
         return tinytc_binary_retain(handle);
@@ -2317,20 +2255,6 @@ inline void run_function_pass(char const *pass_name, prog prg, core_info info = 
  */
 inline void list_function_passes(std::uint32_t &names_size, char const *const *&names) {
     CHECK_STATUS(tinytc_list_function_passes(&names_size, &names));
-}
-
-/**
- * @brief Compile program to OpenCL-C
- *
- * @param prg Program
- * @param info Core info
- *
- * @return Source
- */
-inline auto compile_to_opencl(prog prg, core_info const &info) -> source {
-    tinytc_source_t src;
-    CHECK_STATUS(tinytc_prog_compile_to_opencl(&src, prg.get(), info.get()));
-    return source{src};
 }
 
 /**
@@ -2484,14 +2408,14 @@ class recipe : public shared_handle<tinytc_recipe_t> {
     }
 
     /**
-     * @brief Get source
+     * @brief Get binary
      *
-     * @return Source
+     * @return Binary
      */
-    auto get_source() const -> source {
-        tinytc_source_t src;
-        CHECK_STATUS(tinytc_recipe_get_source(obj_, &src));
-        return source{src};
+    auto get_binary() const -> binary {
+        tinytc_binary_t bin;
+        CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
+        return binary{bin};
     }
 };
 

@@ -46,8 +46,6 @@ Common
 
   * :ref:`tinytc_recipe_handler_t`
 
-  * :ref:`tinytc_source_t`
-
   * :ref:`tinytc_spv_mod_t`
 
   * :ref:`tinytc_compiler_context_t`
@@ -59,8 +57,6 @@ Common
   * :ref:`const_tinytc_recipe_t`
 
   * :ref:`const_tinytc_recipe_handler_t`
-
-  * :ref:`const_tinytc_source_t`
 
   * :ref:`const_tinytc_spv_mod_t`
 
@@ -155,11 +151,6 @@ tinytc_recipe_handler_t
 
 .. doxygentypedef:: tinytc_recipe_handler_t
 
-tinytc_source_t
-...............
-
-.. doxygentypedef:: tinytc_source_t
-
 tinytc_spv_mod_t
 ................
 
@@ -189,11 +180,6 @@ const_tinytc_recipe_handler_t
 .............................
 
 .. doxygentypedef:: const_tinytc_recipe_handler_t
-
-const_tinytc_source_t
-.....................
-
-.. doxygentypedef:: const_tinytc_source_t
 
 const_tinytc_spv_mod_t
 ......................
@@ -275,8 +261,6 @@ Compiler
 
   * :ref:`tinytc_list_function_passes`
 
-  * :ref:`tinytc_prog_compile_to_opencl`
-
   * :ref:`tinytc_prog_compile_to_spirv`
 
   * :ref:`tinytc_prog_compile_to_spirv_and_assemble`
@@ -308,11 +292,6 @@ tinytc_list_function_passes
 ...........................
 
 .. doxygenfunction:: tinytc_list_function_passes
-
-tinytc_prog_compile_to_opencl
-.............................
-
-.. doxygenfunction:: tinytc_prog_compile_to_opencl
 
 tinytc_prog_compile_to_spirv
 ............................
@@ -540,9 +519,9 @@ Recipe
 
 * Functions
 
-  * :ref:`tinytc_recipe_get_prog`
+  * :ref:`tinytc_recipe_get_binary`
 
-  * :ref:`tinytc_recipe_get_source`
+  * :ref:`tinytc_recipe_get_prog`
 
   * :ref:`tinytc_recipe_handler_get_recipe`
 
@@ -577,15 +556,15 @@ tinytc_mem_type_t
 Recipe Functions
 ----------------
 
+tinytc_recipe_get_binary
+........................
+
+.. doxygenfunction:: tinytc_recipe_get_binary
+
 tinytc_recipe_get_prog
 ......................
 
 .. doxygenfunction:: tinytc_recipe_get_prog
-
-tinytc_recipe_get_source
-........................
-
-.. doxygenfunction:: tinytc_recipe_get_source
 
 tinytc_recipe_handler_get_recipe
 ................................
@@ -684,61 +663,4 @@ tinytc_spv_mod_retain
 .....................
 
 .. doxygenfunction:: tinytc_spv_mod_retain
-
-Source
-======
-
-* Functions
-
-  * :ref:`tinytc_source_get_code`
-
-  * :ref:`tinytc_source_get_compiler_context`
-
-  * :ref:`tinytc_source_get_core_features`
-
-  * :ref:`tinytc_source_get_location`
-
-  * :ref:`tinytc_source_get_extensions`
-
-  * :ref:`tinytc_source_release`
-
-  * :ref:`tinytc_source_retain`
-
-Source Functions
-----------------
-
-tinytc_source_get_code
-......................
-
-.. doxygenfunction:: tinytc_source_get_code
-
-tinytc_source_get_compiler_context
-..................................
-
-.. doxygenfunction:: tinytc_source_get_compiler_context
-
-tinytc_source_get_core_features
-...............................
-
-.. doxygenfunction:: tinytc_source_get_core_features
-
-tinytc_source_get_location
-..........................
-
-.. doxygenfunction:: tinytc_source_get_location
-
-tinytc_source_get_extensions
-............................
-
-.. doxygenfunction:: tinytc_source_get_extensions
-
-tinytc_source_release
-.....................
-
-.. doxygenfunction:: tinytc_source_release
-
-tinytc_source_retain
-....................
-
-.. doxygenfunction:: tinytc_source_retain
 
