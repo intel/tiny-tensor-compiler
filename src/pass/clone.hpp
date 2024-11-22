@@ -20,6 +20,7 @@ class inst_cloner {
     auto operator()(arith_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(arith_unary_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(barrier_inst &in) -> std::unique_ptr<tinytc_inst>;
+    auto operator()(builtin_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cast_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(compare_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(constant_inst &in) -> std::unique_ptr<tinytc_inst>;
@@ -30,8 +31,6 @@ class inst_cloner {
     auto operator()(expand_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(fuse_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(load_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(group_id_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(group_size_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(gemm_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(gemv_inst &in) -> std::unique_ptr<tinytc_inst>;
@@ -40,12 +39,8 @@ class inst_cloner {
     auto operator()(foreach_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(hadamard_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(if_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(num_subgroups_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(size_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(subgroup_id_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(subgroup_local_id_inst &in) -> std::unique_ptr<tinytc_inst>;
-    auto operator()(subgroup_size_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(store_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst>;

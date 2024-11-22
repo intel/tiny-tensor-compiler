@@ -454,6 +454,28 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(arith_unary_inst cons
     throw compilation_error(a.loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
 }
 
+std::vector<clir::stmt> convert_to_opencl_pass::operator()(builtin_inst const &in) {
+    auto lhs = declare(*in.result());
+    auto rhs = [&]() -> clir::expr {
+        switch (in.builtin_type()) {
+        case builtin::group_id:
+            return clir::get_global_id(2);
+        case builtin::group_size:
+            return clir::get_global_size(2);
+        case builtin::num_subgroups:
+            return clir::get_num_sub_groups();
+        case builtin::subgroup_size:
+            return clir::get_sub_group_size();
+        case builtin::subgroup_id:
+            return clir::get_sub_group_id();
+        case builtin::subgroup_local_id:
+            return clir::get_sub_group_local_id();
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    };
+    return {declaration_assignment(visit(*this, *in.result(0).ty()), std::move(lhs), rhs())};
+}
+
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(cast_inst const &c) {
     auto const make = [](clir::expr a, scalar_type aty, scalar_type rty) -> clir::expr {
         if (is_complex_type(aty) && is_complex_type(rty)) {
@@ -1024,20 +1046,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(load_inst const &e) {
     return clinst;
 }
 
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(group_id_inst const &g) {
-    auto rhs = clir::get_global_id(2);
-    auto lhs = declare(*g.result());
-    return {
-        declaration_assignment(visit(*this, *g.result()->ty()), std::move(lhs), std::move(rhs))};
-}
-
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(group_size_inst const &g) {
-    auto rhs = clir::get_global_size(2);
-    auto lhs = declare(*g.result());
-    return {
-        declaration_assignment(visit(*this, *g.result()->ty()), std::move(lhs), std::move(rhs))};
-}
-
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(lifetime_stop_inst const &) {
     return {};
 }
@@ -1325,13 +1333,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(if_inst const &in) {
     return clinst;
 }
 
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(num_subgroups_inst const &sg) {
-    auto rhs = clir::get_num_sub_groups();
-    auto lhs = declare(*sg.result());
-    return {
-        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
-}
-
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(parallel_inst const &p) {
     return {run_on_region(p.body())};
 }
@@ -1342,27 +1343,6 @@ std::vector<clir::stmt> convert_to_opencl_pass::operator()(size_inst const &s) {
 
     return {clir::declaration_assignment(visit(*this, *s.result()->ty()), std::move(v),
                                          dv.shape(s.mode()))};
-}
-
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(subgroup_id_inst const &sg) {
-    auto rhs = clir::get_sub_group_id();
-    auto lhs = declare(*sg.result());
-    return {
-        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
-}
-
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(subgroup_local_id_inst const &sg) {
-    auto rhs = clir::get_sub_group_local_id();
-    auto lhs = declare(*sg.result());
-    return {
-        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
-}
-
-std::vector<clir::stmt> convert_to_opencl_pass::operator()(subgroup_size_inst const &sg) {
-    auto rhs = clir::get_sub_group_size();
-    auto lhs = declare(*sg.result());
-    return {
-        declaration_assignment(visit(*this, *sg.result()->ty()), std::move(lhs), std::move(rhs))};
 }
 
 std::vector<clir::stmt> convert_to_opencl_pass::operator()(subview_inst const &s) {

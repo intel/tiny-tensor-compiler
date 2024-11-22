@@ -108,7 +108,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             auto const body = [&](region_builder &bb, value alpha, value A, value B,
                                   bool is_beta_nonzero, value beta_arg, value C) {
                 auto c_M_block_size = bb.add(make_constant(M_block_size, index_ty, my_loc()));
-                auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                auto gid = bb.add(make_builtin(builtin::group_id, index_ty, my_loc()));
                 auto m = bb.add(
                     make_arith(arithmetic::mul, gid, c_M_block_size, gid.get_type(), my_loc()));
                 auto beta = is_beta_nonzero ? beta_arg : bb.add(make_constant_zero(ty_, my_loc()));

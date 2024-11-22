@@ -6,6 +6,7 @@ Builder C-API:
       - tinytc_address_space_t
       - tinytc_arithmetic_t
       - tinytc_arithmetic_unary_t
+      - tinytc_builtin_t
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
       - tinytc_matrix_use_t
@@ -19,6 +20,7 @@ Builder C-API:
       - tinytc_address_space_to_string
       - tinytc_arithmetic_to_string
       - tinytc_arithmetic_unary_to_string
+      - tinytc_builtin_to_string
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_matrix_use_to_string
@@ -65,6 +67,7 @@ Builder C-API:
       - tinytc_axpby_inst_create
       - tinytc_arith_inst_create
       - tinytc_arith_unary_inst_create
+      - tinytc_builtin_inst_create
       - tinytc_cast_inst_create
       - tinytc_cmp_inst_create
       - tinytc_constant_inst_create_boolean
@@ -84,18 +87,12 @@ Builder C-API:
       - tinytc_gemm_inst_create
       - tinytc_gemv_inst_create
       - tinytc_ger_inst_create
-      - tinytc_group_id_inst_create
-      - tinytc_group_size_inst_create
       - tinytc_hadamard_inst_create
       - tinytc_if_inst_create
       - tinytc_load_inst_create
-      - tinytc_num_subgroups_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
       - tinytc_store_inst_create
-      - tinytc_subgroup_id_inst_create
-      - tinytc_subgroup_local_id_inst_create
-      - tinytc_subgroup_size_inst_create
       - tinytc_subview_inst_create
       - tinytc_sum_inst_create
       - tinytc_work_group_inst_create

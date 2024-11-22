@@ -138,6 +138,12 @@ void dump_ir_pass::operator()(barrier_inst const &b) {
     }
 }
 
+void dump_ir_pass::operator()(builtin_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = builtin." << to_string(in.builtin_type()) << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
 void dump_ir_pass::operator()(cast_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cast ";
@@ -283,16 +289,6 @@ void dump_ir_pass::operator()(load_inst const &e) {
     visit(*this, *e.result(0).ty());
 }
 
-void dump_ir_pass::operator()(group_id_inst const &g) {
-    dump_val(g.result(0));
-    *os_ << " = group_id";
-}
-
-void dump_ir_pass::operator()(group_size_inst const &g) {
-    dump_val(g.result(0));
-    *os_ << " = group_size";
-}
-
 void dump_ir_pass::operator()(lifetime_stop_inst const &l) {
     *os_ << "lifetime_stop ";
     dump_val(l.object());
@@ -393,11 +389,6 @@ void dump_ir_pass::operator()(if_inst const &in) {
     }
 }
 
-void dump_ir_pass::operator()(num_subgroups_inst const &sg) {
-    dump_val(sg.result(0));
-    *os_ << " = num_subgroups";
-}
-
 void dump_ir_pass::operator()(parallel_inst const &p) {
     *os_ << "parallel ";
     dump_region(p.body());
@@ -410,21 +401,6 @@ void dump_ir_pass::operator()(size_inst const &s) {
     *os_ << "[" << s.mode() << "]";
     *os_ << " : ";
     visit(*this, *s.result(0).ty());
-}
-
-void dump_ir_pass::operator()(subgroup_id_inst const &sg) {
-    dump_val(sg.result(0));
-    *os_ << " = subgroup_id";
-}
-
-void dump_ir_pass::operator()(subgroup_local_id_inst const &sg) {
-    dump_val(sg.result(0));
-    *os_ << " = subgroup_local_id";
-}
-
-void dump_ir_pass::operator()(subgroup_size_inst const &sg) {
-    dump_val(sg.result(0));
-    *os_ << " = subgroup_size";
 }
 
 void dump_ir_pass::operator()(subview_inst const &s) {

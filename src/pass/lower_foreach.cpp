@@ -20,7 +20,8 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
     auto ity = from->ty();
     auto ctx = compiler_context{sg_id->context(), true};
     auto bool_ty = get_boolean(ctx);
-    auto sg_lid_i32 = bb.add(make_subgroup_local_id(ctx, loc));
+    auto i32_ty = get_scalar(ctx, scalar_type::i32);
+    auto sg_lid_i32 = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, loc));
     auto sg_lid = bb.add(make_cast(sg_lid_i32, ity, loc));
     auto size = bb.add(make_arith(arithmetic::sub, to, from, ity, loc));
     auto work_item_offset = bb.add(make_arith(arithmetic::add, from, sg_lid, ity, loc));
@@ -54,7 +55,8 @@ auto foreach_generator::operator()(foreach_inst &in) -> inst {
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
-    auto sg_id = bb.add(make_subgroup_id(compiler_context{in.context(), true}, in.loc()));
+    auto i32_ty = scalar_data_type::get(in.context(), scalar_type::i32);
+    auto sg_id = bb.add(make_builtin(builtin::subgroup_id, i32_ty, in.loc()));
 
     auto cloner = inst_cloner{};
     auto loop_vars = in.loop_vars().begin();

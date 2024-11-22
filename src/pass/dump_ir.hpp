@@ -35,6 +35,7 @@ class dump_ir_pass {
     void operator()(arith_inst const &a);
     void operator()(arith_unary_inst const &a);
     void operator()(barrier_inst const &b);
+    void operator()(builtin_inst const &in);
     void operator()(cast_inst const &c);
     void operator()(compare_inst const &c);
     void operator()(constant_inst const &c);
@@ -45,8 +46,6 @@ class dump_ir_pass {
     void operator()(expand_inst const &e);
     void operator()(fuse_inst const &f);
     void operator()(load_inst const &e);
-    void operator()(group_id_inst const &g);
-    void operator()(group_size_inst const &g);
     void operator()(lifetime_stop_inst const &l);
     void operator()(gemm_inst const &g);
     void operator()(gemv_inst const &g);
@@ -55,12 +54,8 @@ class dump_ir_pass {
     void operator()(foreach_inst const &p);
     void operator()(hadamard_inst const &g);
     void operator()(if_inst const &in);
-    void operator()(num_subgroups_inst const &sg);
     void operator()(parallel_inst const &p);
     void operator()(size_inst const &s);
-    void operator()(subgroup_id_inst const &sg);
-    void operator()(subgroup_local_id_inst const &sg);
-    void operator()(subgroup_size_inst const &sg);
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);
     void operator()(sum_inst const &s);

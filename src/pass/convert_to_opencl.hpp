@@ -71,6 +71,7 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(alloca_inst const &a);
     std::vector<clir::stmt> operator()(axpby_inst const &a);
     std::vector<clir::stmt> operator()(barrier_inst const &b);
+    std::vector<clir::stmt> operator()(builtin_inst const &b);
     std::vector<clir::stmt> operator()(arith_inst const &a);
     std::vector<clir::stmt> operator()(arith_unary_inst const &a);
     std::vector<clir::stmt> operator()(cast_inst const &c);
@@ -83,8 +84,6 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(expand_inst const &e);
     std::vector<clir::stmt> operator()(fuse_inst const &f);
     std::vector<clir::stmt> operator()(load_inst const &e);
-    std::vector<clir::stmt> operator()(group_id_inst const &g);
-    std::vector<clir::stmt> operator()(group_size_inst const &g);
     std::vector<clir::stmt> operator()(lifetime_stop_inst const &l);
     std::vector<clir::stmt> operator()(gemm_inst const &g);
     std::vector<clir::stmt> operator()(gemv_inst const &g);
@@ -93,12 +92,8 @@ class convert_to_opencl_pass {
     std::vector<clir::stmt> operator()(foreach_inst const &in);
     std::vector<clir::stmt> operator()(hadamard_inst const &g);
     std::vector<clir::stmt> operator()(if_inst const &in);
-    std::vector<clir::stmt> operator()(num_subgroups_inst const &sg);
     std::vector<clir::stmt> operator()(parallel_inst const &p);
     std::vector<clir::stmt> operator()(size_inst const &s);
-    std::vector<clir::stmt> operator()(subgroup_id_inst const &sg);
-    std::vector<clir::stmt> operator()(subgroup_local_id_inst const &sg);
-    std::vector<clir::stmt> operator()(subgroup_size_inst const &sg);
     std::vector<clir::stmt> operator()(subview_inst const &s);
     std::vector<clir::stmt> operator()(store_inst const &s);
     std::vector<clir::stmt> operator()(sum_inst const &s);

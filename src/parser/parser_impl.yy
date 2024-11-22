@@ -120,6 +120,7 @@
     GER             "ger"
     HADAMARD        "hadamard"
     ALLOCA          "alloca"
+    BUILTIN         "builtin"
     CAST            "cast"
     CMP             "cmp"
     CONSTANT        "constant"
@@ -132,15 +133,10 @@
     LOAD            "load"
     FOR             "for"
     FOREACH         "foreach"
-    GROUP_ID        "group_id"
-    GROUP_SIZE      "group_size"
     IF              "if"
     ELSE            "else"
-    NUM_SUBGROUPS   "num_subgroups"
     PARALLEL        "parallel"
     SIZE            "size"
-    SUBGROUP_ID     "subgroup_id"
-    SUBGROUP_LOCAL_ID "subgroup_local_id"
     SUBVIEW         "subview"
     STORE           "store"
     SUM             "sum"
@@ -156,6 +152,7 @@
 %token <scalar_type> FLOATING_TYPE
 %token <arithmetic> ARITHMETIC
 %token <arithmetic_unary> ARITHMETIC_UNARY
+%token <builtin> BUILTIN_TYPE
 %token <cmp_condition> CMP_CONDITION
 %token <work_group_operation> WORK_GROUP_OPERATION
 %token <matrix_use> MATRIX_USE
@@ -213,6 +210,7 @@
 %nterm <inst> alloca_inst
 %nterm <inst> arith_inst
 %nterm <inst> arith_unary_inst
+%nterm <inst> builtin_inst
 %nterm <inst> cast_inst
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
@@ -226,14 +224,8 @@
 %nterm <std::vector<int_or_val>> expand_shape
 %nterm <inst> fuse_inst
 %nterm <inst> load_inst
-%nterm <inst> group_id_inst
-%nterm <inst> group_size_inst
-%nterm <inst> num_subgroups_inst
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
-%nterm <inst> subgroup_id_inst
-%nterm <inst> subgroup_local_id_inst
-%nterm <inst> subgroup_size_inst
 %nterm <inst> store_inst
 %nterm <store_flag> store_flag
 %nterm <inst> subview_inst
@@ -721,6 +713,7 @@ valued_inst:
     alloca_inst             { $$ = std::move($1); }
   | arith_inst              { $$ = std::move($1); }               
   | arith_unary_inst        { $$ = std::move($1); }
+  | builtin_inst            { $$ = std::move($1); }
   | cast_inst               { $$ = std::move($1); }
   | compare_inst            { $$ = std::move($1); }
   | constant_inst           { $$ = std::move($1); }
@@ -730,15 +723,9 @@ valued_inst:
   | expand_inst             { $$ = std::move($1); }
   | for_inst                { $$ = std::move($1); }
   | fuse_inst               { $$ = std::move($1); }
-  | group_id_inst           { $$ = std::move($1); }
-  | group_size_inst         { $$ = std::move($1); }
   | if_inst                 { $$ = std::move($1); }
   | load_inst               { $$ = std::move($1); }
-  | num_subgroups_inst      { $$ = std::move($1); }
   | size_inst               { $$ = std::move($1); }
-  | subgroup_id_inst        { $$ = std::move($1); }
-  | subgroup_local_id_inst  { $$ = std::move($1); }
-  | subgroup_size_inst      { $$ = std::move($1); }
   | subview_inst            { $$ = std::move($1); }
   | work_group_inst         { $$ = std::move($1); }
 ;
@@ -786,6 +773,11 @@ arith_unary_inst:
     }
 ;
 
+builtin_inst:
+    BUILTIN BUILTIN_TYPE COLON data_type[ty] {
+        $$ = inst{std::make_unique<builtin_inst>($BUILTIN_TYPE, $ty, @builtin_inst).release()};
+    }
+;
 
 cast_inst:
     CAST var[a] COLON data_type[to] {
@@ -1020,14 +1012,6 @@ store_flag:
   | ATOMIC_ADD { $$ = store_flag::atomic_add; }
 ;
 
-group_id_inst:
-    GROUP_ID { $$ = inst{std::make_unique<group_id_inst>(ctx.cctx().get(), @GROUP_ID).release()}; }
-;
-
-group_size_inst:
-    GROUP_SIZE { $$ = inst{std::make_unique<group_size_inst>(ctx.cctx().get(), @GROUP_SIZE).release()}; }
-;
-
 if_inst:
     IF var[condition] optional_returned_values <unique_ptr_to_if_inst>{
         try {
@@ -1072,10 +1056,6 @@ return_type_list:
     }
 ;
 
-num_subgroups_inst:
-    NUM_SUBGROUPS { $$ = inst{std::make_unique<num_subgroups_inst>(ctx.cctx().get(), @NUM_SUBGROUPS).release()}; }
-;
-
 parallel_inst:
     PARALLEL <inst>{
         try {
@@ -1103,20 +1083,6 @@ size_inst:
             YYERROR;
         }
     }
-;
-
-subgroup_id_inst:
-    SUBGROUP_ID { $$ = inst{std::make_unique<subgroup_id_inst>(ctx.cctx().get(), @SUBGROUP_ID).release()}; }
-;
-
-subgroup_local_id_inst:
-    SUBGROUP_LOCAL_ID {
-        $$ = inst{std::make_unique<subgroup_local_id_inst>(ctx.cctx().get(), @SUBGROUP_LOCAL_ID).release()};
-    }
-;
-
-subgroup_size_inst:
-    SUBGROUP_SIZE { $$ = inst{std::make_unique<subgroup_size_inst>(ctx.cctx().get(), @SUBGROUP_SIZE).release()}; }
 ;
 
 subview_inst:

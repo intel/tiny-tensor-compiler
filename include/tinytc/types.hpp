@@ -64,6 +64,7 @@ enum class status {
     ir_expected_int = tinytc_status_ir_expected_int,
     ir_expected_float = tinytc_status_ir_expected_float,
     ir_expected_complex = tinytc_status_ir_expected_complex,
+    ir_expected_i32 = tinytc_status_ir_expected_i32,
     ir_expected_index = tinytc_status_ir_expected_index,
     ir_expected_coopmatrix = tinytc_status_ir_expected_coopmatrix,
     ir_expected_coopmatrix_or_scalar = tinytc_status_ir_expected_coopmatrix_or_scalar,
@@ -272,6 +273,16 @@ enum class arithmetic_unary {
     conj = tinytc_arithmetic_unary_conj, ///< complex conjugate
     im = tinytc_arithmetic_unary_im,     ///< imaginary part
     re = tinytc_arithmetic_unary_re      ///< real part
+};
+
+//! Builtin values
+enum class builtin {
+    group_id = tinytc_builtin_group_id,                   ///< group id
+    group_size = tinytc_builtin_group_size,               ///< group size
+    num_subgroups = tinytc_builtin_num_subgroups,         ///< number of subgroups
+    subgroup_size = tinytc_builtin_subgroup_size,         ///< subgroup size
+    subgroup_id = tinytc_builtin_subgroup_id,             ///< subgroup id
+    subgroup_local_id = tinytc_builtin_subgroup_local_id, ///< subgroup local id
 };
 
 //! Compare operation

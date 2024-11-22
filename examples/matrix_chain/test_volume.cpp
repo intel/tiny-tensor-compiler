@@ -82,7 +82,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         I.set_name("I");
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.add(make_group_id(ctx));
+        auto gid = bb.add(make_builtin(builtin::group_id, get_scalar(ctx, scalar_type::index)));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {

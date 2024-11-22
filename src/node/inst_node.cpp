@@ -55,12 +55,8 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::expand:
     case tinytc::IK::fuse:
     case tinytc::IK::load:
-    case tinytc::IK::group_id:
-    case tinytc::IK::group_size:
     case tinytc::IK::if_:
-    case tinytc::IK::num_subgroups:
     case tinytc::IK::size:
-    case tinytc::IK::subgroup_size:
     case tinytc::IK::subview:
     case tinytc::IK::store:
     case tinytc::IK::work_group:
@@ -69,9 +65,8 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::for_loop:
     case tinytc::IK::last_loop:
         return tinytc::inst_execution_kind::mixed;
-    case tinytc::IK::subgroup_id:
-    case tinytc::IK::subgroup_local_id:
-        return tinytc::inst_execution_kind::spmd;
+    case tinytc::IK::builtin:
+        return tinytc::dyn_cast<const tinytc::builtin_inst>(this)->kind();
     };
     throw tinytc::internal_compiler_error();
 }
@@ -385,6 +380,49 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
             throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
         }
     }
+}
+
+builtin_inst::builtin_inst(builtin btype, tinytc_data_type_t ty, location const &lc)
+    : standard_inst{IK::builtin}, btype_{btype} {
+    loc(lc);
+
+    auto rt = dyn_cast<scalar_data_type>(ty);
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+
+    switch (builtin_type()) {
+    case builtin::group_id:
+    case builtin::group_size:
+        if (rt->ty() != scalar_type::index) {
+            throw compilation_error(loc(), status::ir_expected_index);
+        }
+        break;
+    case builtin::num_subgroups:
+    case builtin::subgroup_size:
+    case builtin::subgroup_id:
+    case builtin::subgroup_local_id:
+        if (rt->ty() != scalar_type::i32) {
+            throw compilation_error(loc(), status::ir_expected_i32);
+        }
+        break;
+    }
+
+    result(0) = value_node{ty, this, lc};
+}
+
+auto builtin_inst::kind() const -> tinytc::inst_execution_kind {
+    switch (builtin_type()) {
+    case builtin::group_id:
+    case builtin::group_size:
+    case builtin::num_subgroups:
+    case builtin::subgroup_size:
+        return tinytc::inst_execution_kind::mixed;
+    case builtin::subgroup_id:
+    case builtin::subgroup_local_id:
+        return tinytc::inst_execution_kind::spmd;
+    }
+    return tinytc::inst_execution_kind::spmd;
 }
 
 cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const &lc)

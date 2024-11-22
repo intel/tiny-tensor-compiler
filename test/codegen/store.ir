@@ -4,7 +4,7 @@
 ; RUN: %tinytc-oc < %s | filecheck %s
 func @kernel(%a: memref<f32>, %b: memref<f32x10x?>, %c: f32) {
     %c5 = constant 5 : index
-    %1 = group_id
+    %1 = builtin.group_id : index
     store %c, %a[]
     store %c, %b[%c5, %1]
     ; CHECK:      *a = c;

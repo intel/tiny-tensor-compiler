@@ -16,6 +16,8 @@ Common
 
   * :ref:`tinytc_arithmetic_unary_t`
 
+  * :ref:`tinytc_builtin_t`
+
   * :ref:`tinytc_checked_flag_t`
 
   * :ref:`tinytc_cmp_condition_t`
@@ -41,6 +43,8 @@ Common
   * :ref:`tinytc_arithmetic_to_string`
 
   * :ref:`tinytc_arithmetic_unary_to_string`
+
+  * :ref:`tinytc_builtin_to_string`
 
   * :ref:`tinytc_checked_flag_to_string`
 
@@ -112,6 +116,11 @@ tinytc_arithmetic_unary_t
 
 .. doxygenenum:: tinytc_arithmetic_unary_t
 
+tinytc_builtin_t
+................
+
+.. doxygenenum:: tinytc_builtin_t
+
 tinytc_checked_flag_t
 .....................
 
@@ -172,6 +181,11 @@ tinytc_arithmetic_unary_to_string
 .................................
 
 .. doxygenfunction:: tinytc_arithmetic_unary_to_string
+
+tinytc_builtin_to_string
+........................
+
+.. doxygenfunction:: tinytc_builtin_to_string
 
 tinytc_checked_flag_to_string
 .............................
@@ -398,6 +412,8 @@ Instruction
 
   * :ref:`tinytc_arith_unary_inst_create`
 
+  * :ref:`tinytc_builtin_inst_create`
+
   * :ref:`tinytc_cast_inst_create`
 
   * :ref:`tinytc_cmp_inst_create`
@@ -436,29 +452,17 @@ Instruction
 
   * :ref:`tinytc_ger_inst_create`
 
-  * :ref:`tinytc_group_id_inst_create`
-
-  * :ref:`tinytc_group_size_inst_create`
-
   * :ref:`tinytc_hadamard_inst_create`
 
   * :ref:`tinytc_if_inst_create`
 
   * :ref:`tinytc_load_inst_create`
 
-  * :ref:`tinytc_num_subgroups_inst_create`
-
   * :ref:`tinytc_parallel_inst_create`
 
   * :ref:`tinytc_size_inst_create`
 
   * :ref:`tinytc_store_inst_create`
-
-  * :ref:`tinytc_subgroup_id_inst_create`
-
-  * :ref:`tinytc_subgroup_local_id_inst_create`
-
-  * :ref:`tinytc_subgroup_size_inst_create`
 
   * :ref:`tinytc_subview_inst_create`
 
@@ -496,6 +500,11 @@ tinytc_arith_unary_inst_create
 ..............................
 
 .. doxygenfunction:: tinytc_arith_unary_inst_create
+
+tinytc_builtin_inst_create
+..........................
+
+.. doxygenfunction:: tinytc_builtin_inst_create
 
 tinytc_cast_inst_create
 .......................
@@ -592,16 +601,6 @@ tinytc_ger_inst_create
 
 .. doxygenfunction:: tinytc_ger_inst_create
 
-tinytc_group_id_inst_create
-...........................
-
-.. doxygenfunction:: tinytc_group_id_inst_create
-
-tinytc_group_size_inst_create
-.............................
-
-.. doxygenfunction:: tinytc_group_size_inst_create
-
 tinytc_hadamard_inst_create
 ...........................
 
@@ -617,11 +616,6 @@ tinytc_load_inst_create
 
 .. doxygenfunction:: tinytc_load_inst_create
 
-tinytc_num_subgroups_inst_create
-................................
-
-.. doxygenfunction:: tinytc_num_subgroups_inst_create
-
 tinytc_parallel_inst_create
 ...........................
 
@@ -636,21 +630,6 @@ tinytc_store_inst_create
 ........................
 
 .. doxygenfunction:: tinytc_store_inst_create
-
-tinytc_subgroup_id_inst_create
-..............................
-
-.. doxygenfunction:: tinytc_subgroup_id_inst_create
-
-tinytc_subgroup_local_id_inst_create
-....................................
-
-.. doxygenfunction:: tinytc_subgroup_local_id_inst_create
-
-tinytc_subgroup_size_inst_create
-................................
-
-.. doxygenfunction:: tinytc_subgroup_size_inst_create
 
 tinytc_subview_inst_create
 ..........................

@@ -3,6 +3,6 @@
 
 ; RUN: not %tinytc-opt -pcheck-ir < %s 2>&1 | filecheck %s
 func @illegal_nesting() {
-    %0 = subgroup_id
-; CHECK: 6.10-20: SPMD instruction must not be called from collective region
+    %0 = builtin.subgroup_id : i32
+; CHECK: 6.10-34: SPMD instruction must not be called from collective region
 }

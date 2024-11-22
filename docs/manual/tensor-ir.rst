@@ -823,6 +823,32 @@ Attribute Description
 .local    Ensure that local memory accesses become visible to the work-group.
 ========= ======================================================================================
 
+Builtin (mixed)
+...............
+
+.. code:: abnf
+
+    mixed-builtin-type      =  ".group_id"  /
+                               ".group_size"  /
+                               ".num_subgroups"  /
+                               ".subgroup_size"
+    value-instruction       =/ "builtin" mixed-builtin-type ":" integer-type
+
+Overview
+~~~~~~~~
+
+Returns a builtin value.
+The following table shows the builtins' description and the types that are returned.
+
+============== ===== ====================================================================
+Builtin        Type  Description
+============== ===== ====================================================================
+.group_id      index Returns the group id, an integer inbetween 0 and the group size - 1
+.group_size    index Returns the group size
+.num_subgroups i32   Returns the number of subgroups the work-group is divided in 
+.subgroup_size i32   Returns the subgroup size
+============== ===== ====================================================================
+
 Cast
 ....
 
@@ -1273,30 +1299,6 @@ The memref type of the result must conform with the following rules:
        fuse %0[1,2] : memref<f32x32x32x2,strided<1,?,?>>     ; %0: memref<f32x32x16x2x2,strided<1,48,768,1536>>
        fuse %0[0,1] : memref<f32x?x32,strided<1,?>>          ; %0: memref<f32x8x?x32,strided<1,?,?>>
 
-Group id
-........
-
-.. code:: abnf
-
-    value-instruction       =/ "group_id" ":" "index"
-
-Overview
-~~~~~~~~
-
-Returns the group id, an integer of type "index" inbetween 0 and the group size - 1.
-
-Group size
-..........
-
-.. code:: abnf
-
-    value-instruction       =/ "group_size" ":" "index"
-
-Overview
-~~~~~~~~
-
-Returns the group size, an integer of type "index".
-
 If
 ..
 
@@ -1371,18 +1373,6 @@ Examples:
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>, offset: ?>``
 
-Number of subgroups
-...................
-
-.. code:: abnf
-
-    value-instruction       =/ "num_subgroups" ":" "i32"
-
-Overview
-~~~~~~~~
-
-Returns the number of subgroups the work-group is divided in; i32 integer.
-
 Size
 ....
 
@@ -1406,19 +1396,6 @@ Op.-No. Type             Description
 1       memref-type      tensor
 2       integer-constant mode index
 ======= ================ ===========
-
-Subgroup size
-.............
-
-.. code:: abnf
-
-    value-instruction       =/ "subgroup_size" ":" "i32"
-
-Overview
-~~~~~~~~
-
-Returns the subgroup size; i32 integer.
-
 
 Subview
 .......
@@ -1597,29 +1574,27 @@ Additional instructions
 SPMD instructions
 -----------------
 
-Subgroup id
-...........
+Builtin (SPMD)
+..............
 
 .. code:: abnf
 
-    value-instruction       =/ "subgroup_id" ":" "i32"
+    spmd-builtin-type       =  ".subgroup_id"  /
+                               ".subgroup_local_id"
+    value-instruction       =/ "builtin" spmd-builtin-type ":" integer-type
 
 Overview
 ~~~~~~~~
 
-Returns the subgroup id; i32 integer from 0 to num_subgroups - 1.
+Returns a builtin value.
+The following table shows the builtins' description and the types that are returned.
 
-Subgroup local id
-.................
-
-.. code:: abnf
-
-    value-instruction       =/ "subgroup_local_id" ":" "i32"
-
-Overview
-~~~~~~~~
-
-Returns the work-item id within the subgroup; i32 integer from 0 to subgroup_size - 1.
+=================== ===== =================================================================================
+Builtin             Type  Description
+=================== ===== =================================================================================
+.subgroup_id        i32   Returns the subgroup id; integer from 0 to num_subgroups - 1.
+.subgroup_local_id  i32   Returns the work-item id within the subgroup; integer from 0 to subgroup_size - 1
+=================== ===== =================================================================================
 
 Sample code
 ===========

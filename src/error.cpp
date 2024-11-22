@@ -156,6 +156,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Expected floating point type";
     case tinytc_status_ir_expected_complex:
         return "Expected complex type";
+    case tinytc_status_ir_expected_i32:
+        return "Expected i32 type";
     case tinytc_status_ir_expected_index:
         return "Expected index type";
     case tinytc_status_ir_expected_coopmatrix:

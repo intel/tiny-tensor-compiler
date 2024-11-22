@@ -16,6 +16,8 @@ Common
 
   * :ref:`arithmetic_unary`
 
+  * :ref:`builtin`
+
   * :ref:`cmp_condition`
 
   * :ref:`matrix_use`
@@ -37,6 +39,8 @@ Common
   * :ref:`to_string(arithmetic)`
 
   * :ref:`to_string(arithmetic_unary)`
+
+  * :ref:`to_string(builtin)`
 
   * :ref:`to_string(checked_flag)`
 
@@ -85,6 +89,11 @@ arithmetic_unary
 ................
 
 .. doxygenenum:: tinytc::arithmetic_unary
+
+builtin
+.......
+
+.. doxygenenum:: tinytc::builtin
 
 cmp_condition
 .............
@@ -138,6 +147,11 @@ to_string(arithmetic_unary)
 ...........................
 
 .. doxygenfunction:: tinytc::to_string(arithmetic_unary)
+
+to_string(builtin)
+..................
+
+.. doxygenfunction:: tinytc::to_string(builtin)
 
 to_string(checked_flag)
 .......................
@@ -323,9 +337,11 @@ Instruction
 
   * :ref:`make_axpby`
 
-  * :ref:`make_arith(arithmetic,value,value,location const&)`
+  * :ref:`make_arith(arithmetic,value,value,data_type,location const&)`
 
-  * :ref:`make_arith(arithmetic_unary,value,location const&)`
+  * :ref:`make_arith(arithmetic_unary,value,data_type,location const&)`
+
+  * :ref:`make_builtin`
 
   * :ref:`make_cast`
 
@@ -367,29 +383,17 @@ Instruction
 
   * :ref:`make_ger`
 
-  * :ref:`make_group_id`
-
-  * :ref:`make_group_size`
-
   * :ref:`make_hadamard`
 
   * :ref:`make_if`
 
   * :ref:`make_load`
 
-  * :ref:`make_num_subgroups`
-
   * :ref:`make_parallel`
 
   * :ref:`make_size`
 
   * :ref:`make_store`
-
-  * :ref:`make_subgroup_id`
-
-  * :ref:`make_subgroup_local_id`
-
-  * :ref:`make_subgroup_size`
 
   * :ref:`make_subview`
 
@@ -416,15 +420,20 @@ make_axpby
 
 .. doxygenfunction:: tinytc::make_axpby
 
-make_arith(arithmetic,value,value,location const&)
-..................................................
+make_arith(arithmetic,value,value,data_type,location const&)
+............................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic,value,value,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic,value,value,data_type,location const&)
 
-make_arith(arithmetic_unary,value,location const&)
-..................................................
+make_arith(arithmetic_unary,value,data_type,location const&)
+............................................................
 
-.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value,location const&)
+.. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
+
+make_builtin
+............
+
+.. doxygenfunction:: tinytc::make_builtin
 
 make_cast
 .........
@@ -526,16 +535,6 @@ make_ger
 
 .. doxygenfunction:: tinytc::make_ger
 
-make_group_id
-.............
-
-.. doxygenfunction:: tinytc::make_group_id
-
-make_group_size
-...............
-
-.. doxygenfunction:: tinytc::make_group_size
-
 make_hadamard
 .............
 
@@ -551,11 +550,6 @@ make_load
 
 .. doxygenfunction:: tinytc::make_load
 
-make_num_subgroups
-..................
-
-.. doxygenfunction:: tinytc::make_num_subgroups
-
 make_parallel
 .............
 
@@ -570,21 +564,6 @@ make_store
 ..........
 
 .. doxygenfunction:: tinytc::make_store
-
-make_subgroup_id
-................
-
-.. doxygenfunction:: tinytc::make_subgroup_id
-
-make_subgroup_local_id
-......................
-
-.. doxygenfunction:: tinytc::make_subgroup_local_id
-
-make_subgroup_size
-..................
-
-.. doxygenfunction:: tinytc::make_subgroup_size
 
 make_subview
 ............

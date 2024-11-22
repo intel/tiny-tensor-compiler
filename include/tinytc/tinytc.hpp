@@ -716,6 +716,17 @@ inline char const *to_string(arithmetic_unary op) {
 }
 
 /**
+ * @brief Convert builtin type to string
+ *
+ * @param b Builtin type
+ *
+ * @return C-string
+ */
+inline char const *to_string(builtin b) {
+    return ::tinytc_builtin_to_string(static_cast<::tinytc_builtin_t>(b));
+}
+
+/**
  * @brief Convert checked flag string
  *
  * @param flag Flag
@@ -902,6 +913,22 @@ inline inst make_arith(arithmetic_unary op, value a, data_type ty, location cons
     CHECK_STATUS_LOC(tinytc_arith_unary_inst_create(
                          &instr, static_cast<tinytc_arithmetic_unary_t>(op), a, ty, &loc),
                      loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make builtin instruction
+ *
+ * @param btype Builtin type
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_builtin(builtin btype, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_builtin_inst_create(&instr, static_cast<tinytc_builtin_t>(btype), ty, &loc), loc);
     return inst(instr);
 }
 
@@ -1233,34 +1260,6 @@ inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t 
 }
 
 /**
- * @brief Make group id instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_group_id(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_group_id_inst_create(&instr, ctx.get(), &loc), loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make group size instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_group_size(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_group_size_inst_create(&instr, ctx.get(), &loc), loc);
-    return inst(instr);
-}
-
-/**
  * @brief Make GEMM instruction
  *
  * @param tA Operation applied on A
@@ -1349,20 +1348,6 @@ inline inst make_hadamard(bool atomic, value alpha, value A, value B, value beta
 }
 
 /**
- * @brief Make num_subgroups instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_num_subgroups(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_num_subgroups_inst_create(&instr, ctx.get(), &loc), loc);
-    return inst(instr);
-}
-
-/**
  * @brief Make parallel region
  *
  * @param loc Source code location
@@ -1388,48 +1373,6 @@ inline inst make_parallel(location const &loc = {}) {
 inline inst make_size(value a, std::int64_t mode, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a, mode, ty, &loc), loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make subgroup_id instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subgroup_id(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_id_inst_create(&instr, ctx.get(), &loc), loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make subgroup_local_id instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subgroup_local_id(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_local_id_inst_create(&instr, ctx.get(), &loc), loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make subgroup_size instruction
- *
- * @param ctx compiler context
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subgroup_size(compiler_context const &ctx, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_size_inst_create(&instr, ctx.get(), &loc), loc);
     return inst(instr);
 }
 

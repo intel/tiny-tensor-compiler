@@ -42,6 +42,7 @@ enum class IK {
     arith,
     arith_unary,
     barrier,
+    builtin,
     cast,
     compare,
     constant,
@@ -52,16 +53,10 @@ enum class IK {
     expand,
     fuse,
     load,
-    group_id,
-    group_size,
     lifetime_stop,
     if_,
-    num_subgroups,
     parallel,
     size,
-    subgroup_id,
-    subgroup_local_id,
-    subgroup_size,
     subview,
     store,
     work_group,
@@ -85,17 +80,15 @@ enum class IK {
     last_loop
 };
 using inst_nodes =
-    type_list<class alloca_inst, class axpby_inst, class barrier_inst, class arith_inst,
-              class arith_unary_inst, class cast_inst, class compare_inst, class constant_inst,
-              class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
-              class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst,
-              class expand_inst, class fuse_inst, class load_inst, class group_id_inst,
-              class group_size_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
+    type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
+              class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
+              class constant_inst, class cooperative_matrix_load_inst,
+              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
+              class cooperative_matrix_store_inst, class expand_inst, class fuse_inst,
+              class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
               class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
-              class if_inst, class num_subgroups_inst, class parallel_inst, class size_inst,
-              class subview_inst, class store_inst, class subgroup_id_inst,
-              class subgroup_local_id_inst, class subgroup_size_inst, class sum_inst,
-              class work_group_inst, class yield_inst>;
+              class if_inst, class parallel_inst, class size_inst, class subview_inst,
+              class store_inst, class sum_inst, class work_group_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -413,6 +406,19 @@ class barrier_inst : public standard_inst<0, 0> {
     std::int32_t fence_flags_;
 };
 
+class builtin_inst : public standard_inst<0, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::builtin; }
+    builtin_inst(builtin btype, tinytc_data_type_t ty, location const &lc = {});
+
+    inline auto builtin_type() const -> builtin { return btype_; }
+
+    auto kind() const -> tinytc::inst_execution_kind;
+
+  private:
+    builtin btype_;
+};
+
 class cast_inst : public standard_inst<1, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::cast; }
@@ -588,26 +594,6 @@ class load_inst : public standard_inst<dynamic, 1> {
     inline auto index_list() const { return operands() | std::views::drop(1); }
 };
 
-class group_id_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_id; }
-    inline group_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::group_id} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::index), this, lc};
-    }
-};
-
-class group_size_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::group_size; }
-    inline group_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::group_size} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::index), this, lc};
-    }
-};
-
 class lifetime_stop_inst : public standard_inst<1, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::lifetime_stop; }
@@ -725,16 +711,6 @@ class if_inst : public standard_inst<1, dynamic, 2> {
     inline bool is_otherwise_empty() const { return otherwise().insts().empty(); }
 };
 
-class num_subgroups_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::num_subgroups; }
-    inline num_subgroups_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::num_subgroups} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), this, lc};
-    }
-};
-
 class parallel_inst : public standard_inst<0, 0, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::parallel; }
@@ -755,36 +731,6 @@ class size_inst : public standard_inst<1, 1> {
 
   private:
     std::int64_t mode_;
-};
-
-class subgroup_id_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_id; }
-    inline subgroup_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::subgroup_id} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), this, lc};
-    }
-};
-
-class subgroup_local_id_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_local_id; }
-    inline subgroup_local_id_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::subgroup_local_id} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), this, lc};
-    }
-};
-
-class subgroup_size_inst : public standard_inst<0, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_size; }
-    inline subgroup_size_inst(tinytc_compiler_context_t ctx, location const &lc = {})
-        : standard_inst{IK::subgroup_size} {
-        loc(lc);
-        result(0) = value_node{scalar_data_type::get(ctx, scalar_type::i32), this, lc};
-    }
 };
 
 class subview_inst : public standard_inst<dynamic, 1> {

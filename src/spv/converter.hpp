@@ -70,6 +70,7 @@ class inst_converter {
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
     void operator()(barrier_inst const &in);
+    void operator()(builtin_inst const &in);
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
@@ -80,18 +81,12 @@ class inst_converter {
     void operator()(expand_inst const &in);
     void operator()(for_inst const &in);
     void operator()(fuse_inst const &in);
-    void operator()(group_id_inst const &in);
-    void operator()(group_size_inst const &in);
     void operator()(if_inst const &in);
     void operator()(lifetime_stop_inst const &in);
     void operator()(load_inst const &in);
-    void operator()(num_subgroups_inst const &in);
     void operator()(parallel_inst const &in);
     void operator()(size_inst const &in);
     void operator()(store_inst const &in);
-    void operator()(subgroup_id_inst const &in);
-    void operator()(subgroup_local_id_inst const &in);
-    void operator()(subgroup_size_inst const &in);
     void operator()(subview_inst const &in);
     void operator()(work_group_inst const &in);
     void operator()(yield_inst const &in);

@@ -83,6 +83,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     return exception_to_status_code(
         [&] {
             auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
+            auto const index_ty = get_scalar(ctx_, scalar_type::index);
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
 
@@ -110,7 +111,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
                 auto bb = region_builder{fn_body};
 
-                auto gid = bb.add(make_group_id(ctx_, my_loc()));
+                auto gid = bb.add(make_builtin(builtin::group_id, index_ty, my_loc()));
                 auto at =
                     get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
                 auto bt =

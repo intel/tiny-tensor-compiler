@@ -150,6 +150,7 @@ lex:
         "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }
         "arith"             { adv_loc(); return parser::make_ARITH(loc_); }
         "barrier"           { adv_loc(); return parser::make_BARRIER(loc_); }
+        "builtin"           { adv_loc(); return parser::make_BUILTIN(loc_); }
         "gemm"              { adv_loc(); return parser::make_GEMM(loc_); }
         "gemv"              { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"               { adv_loc(); return parser::make_GER(loc_); }
@@ -165,17 +166,12 @@ lex:
         "expand"            { adv_loc(); return parser::make_EXPAND(loc_); }
         "fuse"              { adv_loc(); return parser::make_FUSE(loc_); }
         "load"              { adv_loc(); return parser::make_LOAD(loc_); }
-        "group_id"          { adv_loc(); return parser::make_GROUP_ID(loc_); }
-        "group_size"        { adv_loc(); return parser::make_GROUP_SIZE(loc_); }
         "for"               { adv_loc(); return parser::make_FOR(loc_); }
         "foreach"           { adv_loc(); return parser::make_FOREACH(loc_); }
         "if"                { adv_loc(); return parser::make_IF(loc_); }
-        "num_subgroups"     { adv_loc(); return parser::make_NUM_SUBGROUPS(loc_); }
         "parallel"          { adv_loc(); return parser::make_PARALLEL(loc_); }
         "else"              { adv_loc(); return parser::make_ELSE(loc_); }
         "size"              { adv_loc(); return parser::make_SIZE(loc_); }
-        "subgroup_id"       { adv_loc(); return parser::make_SUBGROUP_ID(loc_); }
-        "subgroup_local_id" { adv_loc(); return parser::make_SUBGROUP_LOCAL_ID(loc_); }
         "subview"           { adv_loc(); return parser::make_SUBVIEW(loc_); }
         "store"             { adv_loc(); return parser::make_STORE(loc_); }
         "sum"               { adv_loc(); return parser::make_SUM(loc_); }
@@ -201,6 +197,14 @@ lex:
         ".conj"             { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
         ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
         ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
+
+        // builtin
+        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_); }
+        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size, loc_); }
+        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups, loc_); }
+        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size, loc_); }
+        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id, loc_); }
+        ".subgroup_local_id" { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
 
         // comparison condition
         ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }

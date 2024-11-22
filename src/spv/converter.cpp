@@ -787,6 +787,37 @@ void inst_converter::operator()(barrier_inst const &in) {
     mod_->add<OpControlBarrier>(scope, scope, memory_semantics);
 }
 
+void inst_converter::operator()(builtin_inst const &in) {
+    switch (in.builtin_type()) {
+    case builtin::group_id: {
+        auto gid = load_builtin(BuiltIn::GlobalInvocationId);
+        auto index_ty = unique_.spv_ty(scalar_type::index);
+        declare(in.result(0),
+                mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
+        break;
+    }
+    case builtin::group_size: {
+        auto gs = load_builtin(BuiltIn::GlobalSize);
+        auto index_ty = unique_.spv_ty(scalar_type::index);
+        declare(in.result(0),
+                mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
+        break;
+    }
+    case builtin::num_subgroups:
+        declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
+        break;
+    case builtin::subgroup_size:
+        declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
+        break;
+    case builtin::subgroup_id:
+        declare(in.result(0), load_builtin(BuiltIn::SubgroupId));
+        break;
+    case builtin::subgroup_local_id:
+        declare(in.result(0), load_builtin(BuiltIn::SubgroupLocalInvocationId));
+        break;
+    }
+}
+
 void inst_converter::operator()(cast_inst const &in) {
     auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
 
@@ -1478,19 +1509,6 @@ void inst_converter::operator()(fuse_inst const &in) {
     }
 }
 
-void inst_converter::operator()(group_id_inst const &in) {
-    auto gid = load_builtin(BuiltIn::GlobalInvocationId);
-    auto index_ty = unique_.spv_ty(scalar_type::index);
-    declare(in.result(0),
-            mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
-}
-void inst_converter::operator()(group_size_inst const &in) {
-    auto gs = load_builtin(BuiltIn::GlobalSize);
-    auto index_ty = unique_.spv_ty(scalar_type::index);
-    declare(in.result(0),
-            mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
-}
-
 void inst_converter::operator()(if_inst const &in) {
     const std::int64_t num_results = num_yielded_vals(in.result_begin(), in.result_end());
 
@@ -1598,10 +1616,6 @@ void inst_converter::operator()(load_inst const &in) {
     }
 }
 
-void inst_converter::operator()(num_subgroups_inst const &in) {
-    declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
-}
-
 void inst_converter::operator()(parallel_inst const &in) { run_on_region(in.body()); }
 
 void inst_converter::operator()(size_inst const &in) {
@@ -1640,16 +1654,6 @@ void inst_converter::operator()(store_inst const &in) {
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref);
     }
-}
-
-void inst_converter::operator()(subgroup_id_inst const &in) {
-    declare(in.result(0), load_builtin(BuiltIn::SubgroupId));
-}
-void inst_converter::operator()(subgroup_local_id_inst const &in) {
-    declare(in.result(0), load_builtin(BuiltIn::SubgroupLocalInvocationId));
-}
-void inst_converter::operator()(subgroup_size_inst const &in) {
-    declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
 }
 
 void inst_converter::operator()(subview_inst const &in) {

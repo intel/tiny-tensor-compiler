@@ -35,6 +35,9 @@ auto inst_cloner::operator()(arith_unary_inst &in) -> std::unique_ptr<tinytc_ins
 auto inst_cloner::operator()(barrier_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<barrier_inst>(in.fence_flags(), in.loc());
 }
+auto inst_cloner::operator()(builtin_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<builtin_inst>(in.builtin_type(), in.result(0).ty(), in.loc());
+}
 auto inst_cloner::operator()(cast_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cast_inst>(subs(&in.a()), in.result(0).ty(), in.loc());
 }
@@ -80,14 +83,6 @@ auto inst_cloner::operator()(load_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<load_inst>(subs(&in.operand()), subs_value_range(in.index_list()),
                                        in.result(0).ty(), in.loc());
 }
-auto inst_cloner::operator()(group_id_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<group_id_inst>(in.context(), in.loc());
-}
-
-auto inst_cloner::operator()(group_size_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<group_size_inst>(in.context(), in.loc());
-}
-
 auto inst_cloner::operator()(gemm_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<gemm_inst>(in.tA(), in.tB(), subs(&in.alpha()), subs(&in.A()),
                                        subs(&in.B()), subs(&in.beta()), subs(&in.C()), in.atomic(),
@@ -131,28 +126,12 @@ auto inst_cloner::operator()(if_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<if_inst>(subs(&in.condition()), return_types, in.loc());
 }
 
-auto inst_cloner::operator()(num_subgroups_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<num_subgroups_inst>(in.context(), in.loc());
-}
-
 auto inst_cloner::operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<parallel_inst>(in.loc());
 }
 
 auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.result(0).ty(), in.loc());
-}
-
-auto inst_cloner::operator()(subgroup_id_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subgroup_id_inst>(in.context(), in.loc());
-}
-
-auto inst_cloner::operator()(subgroup_local_id_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subgroup_local_id_inst>(in.context(), in.loc());
-}
-
-auto inst_cloner::operator()(subgroup_size_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subgroup_size_inst>(in.context(), in.loc());
 }
 
 auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {

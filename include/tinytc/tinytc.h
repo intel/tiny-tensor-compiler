@@ -192,6 +192,8 @@ TINYTC_EXPORT char const *tinytc_address_space_to_string(tinytc_address_space_t 
 TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
 //! Convert arithmetic operation type to string (unary)
 TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
+//! Convert builtin type to string
+TINYTC_EXPORT char const *tinytc_builtin_to_string(tinytc_builtin_t b);
 //! Convert checked flag to string
 TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
 //! Convert cmp condition to string
@@ -242,6 +244,23 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *inst
                                                              tinytc_value_t a,
                                                              tinytc_data_type_t ty,
                                                              const tinytc_location_t *loc);
+
+/**
+ * @brief Create builtin instruction
+ *
+ * @code %value = builtin.<btype> : %ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param btype [in] builtin type
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_builtin_inst_create(tinytc_inst_t *instr,
+                                                         tinytc_builtin_t btype,
+                                                         tinytc_data_type_t ty,
+                                                         const tinytc_location_t *loc);
 
 /**
  * @brief Create cast instruction
@@ -543,35 +562,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tiny
                                                       const tinytc_value_t *index_list,
                                                       tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
-/**
- * @brief Create group_id instruction
- *
- * @code %value = group_id @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_group_id_inst_create(tinytc_inst_t *instr,
-                                                          tinytc_compiler_context_t ctx,
-                                                          const tinytc_location_t *loc);
-
-/**
- * @brief Create group_size instruction
- *
- * @code %value = group_size @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_group_size_inst_create(tinytc_inst_t *instr,
-                                                            tinytc_compiler_context_t ctx,
-                                                            const tinytc_location_t *loc);
 
 /**
  * @brief Create GEMM instruction
@@ -672,21 +662,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
     tinytc_value_t B, tinytc_value_t beta, tinytc_value_t C, const tinytc_location_t *loc);
 
 /**
- * @brief Create num_subgroups instruction
- *
- * @code %value = num_subgroups @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_num_subgroups_inst_create(tinytc_inst_t *instr,
-                                                               tinytc_compiler_context_t ctx,
-                                                               const tinytc_location_t *loc);
-
-/**
  * @brief Create parallel region
  *
  * @code
@@ -717,51 +692,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr,
 TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       int64_t mode, tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
-
-/**
- * @brief Create subgroup_id instruction
- *
- * @code %value = subgroup_id @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_id_inst_create(tinytc_inst_t *instr,
-                                                             tinytc_compiler_context_t ctx,
-                                                             const tinytc_location_t *loc);
-
-/**
- * @brief Create subgroup_local_id instruction
- *
- * @code %value = subgroup_local_id @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_local_id_inst_create(tinytc_inst_t *instr,
-                                                                   tinytc_compiler_context_t ctx,
-                                                                   const tinytc_location_t *loc);
-
-/**
- * @brief Create subgroup_size instruction
- *
- * @code %value = subgroup_size @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param ctx [in] compiler context
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_size_inst_create(tinytc_inst_t *instr,
-                                                               tinytc_compiler_context_t ctx,
-                                                               const tinytc_location_t *loc);
 
 /**
  * @brief Create subview instruction

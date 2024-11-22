@@ -31,13 +31,13 @@
 ; CHECK: %[[#VAR6]] = OpVariable %[[#PTR_TO_I32]] Input
 
 func @tbuiltin() {
-    %0 = group_id
-    %1 = group_size
-    %2 = num_subgroups
-    %3 = subgroup_size
+    %0 = builtin.group_id : index
+    %1 = builtin.group_size : index
+    %2 = builtin.num_subgroups : i32
+    %3 = builtin.subgroup_size : i32
     parallel {
-        %4 = subgroup_id
-        %5 = subgroup_local_id
+        %4 = builtin.subgroup_id : i32
+        %5 = builtin.subgroup_local_id : i32
     }
 ; CHECK: %[[#VAR1_LOAD:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
 ; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD]] 2

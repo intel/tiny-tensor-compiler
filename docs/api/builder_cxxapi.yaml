@@ -6,6 +6,7 @@ Builder C++-API:
       - tinytc::address_space
       - tinytc::arithmetic
       - tinytc::arithmetic_unary
+      - tinytc::builtin
       - tinytc::cmp_condition
       - tinytc::matrix_use
       - tinytc::scalar_type
@@ -17,6 +18,7 @@ Builder C++-API:
       - tinytc::to_string(address_space)
       - tinytc::to_string(arithmetic)
       - tinytc::to_string(arithmetic_unary)
+      - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(matrix_use)
@@ -54,8 +56,9 @@ Builder C++-API:
     function:
       - tinytc::make_alloca
       - tinytc::make_axpby
-      - tinytc::make_arith(arithmetic,value,value,location const&)
-      - tinytc::make_arith(arithmetic_unary,value,location const&)
+      - tinytc::make_arith(arithmetic,value,value,data_type,location const&)
+      - tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
+      - tinytc::make_builtin
       - tinytc::make_cast
       - tinytc::make_cmp
       - tinytc::make_constant(bool,data_type,location const&)
@@ -76,18 +79,12 @@ Builder C++-API:
       - tinytc::make_gemm
       - tinytc::make_gemv
       - tinytc::make_ger
-      - tinytc::make_group_id
-      - tinytc::make_group_size
       - tinytc::make_hadamard
       - tinytc::make_if
       - tinytc::make_load
-      - tinytc::make_num_subgroups
       - tinytc::make_parallel
       - tinytc::make_size
       - tinytc::make_store
-      - tinytc::make_subgroup_id
-      - tinytc::make_subgroup_local_id
-      - tinytc::make_subgroup_size
       - tinytc::make_subview
       - tinytc::make_sum
       - tinytc::make_work_group
