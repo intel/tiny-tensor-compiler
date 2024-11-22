@@ -18,6 +18,11 @@ set_cxx_common_options(test-lib)
 #target_link_libraries(test-lexer PRIVATE test-lib)
 #doctest_discover_tests(test-lexer)
 
+add_executable(test-math math.cpp)
+target_link_libraries(test-math PRIVATE test-lib)
+doctest_discover_tests(test-math)
+set_cxx_common_options(test-math)
+
 add_executable(test-generator generator.cpp)
 target_link_libraries(test-generator PRIVATE test-lib)
 doctest_discover_tests(test-generator)

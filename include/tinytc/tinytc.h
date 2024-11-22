@@ -37,6 +37,28 @@ extern "C" {
 TINYTC_EXPORT char const *tinytc_error_string(tinytc_status_t status);
 
 ////////////////////////////
+////////// FP math /////////
+////////////////////////////
+
+/**
+ * @brief Convert f32 number to f16 number
+ *
+ * @param x f32 number
+ *
+ * @return f16 number
+ */
+TINYTC_EXPORT uint16_t tinytc_f32_to_f16(float x);
+
+/**
+ * @brief Convert f16 number (represented as ushort) to f32 number
+ *
+ * @param x f16 number
+ *
+ * @return f32 number
+ */
+TINYTC_EXPORT float tinytc_f16_to_f32(uint16_t x);
+
+////////////////////////////
 //////// Scalar type ///////
 ////////////////////////////
 

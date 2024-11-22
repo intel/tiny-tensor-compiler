@@ -267,12 +267,13 @@ typedef enum {
     tinytc_scalar_type_i32 = 2,   ///< Signed 32 bit integer
     tinytc_scalar_type_i64 = 3,   ///< Signed 64 bit integer
     tinytc_scalar_type_index = 4, ///< Integer type for indices
-    tinytc_scalar_type_f32 = 5,   ///< Single precision floating point (32 bit)
-    tinytc_scalar_type_f64 = 6,   ///< Double precision floating point (64 bit)
-    tinytc_scalar_type_c32 = 7,   ///< Single precision complex (2x32 bit)
-    tinytc_scalar_type_c64 = 8    ///< Double precision complex (2x64 bit)
+    tinytc_scalar_type_f16 = 5,   ///< Half precision floating point (16 bit)
+    tinytc_scalar_type_f32 = 6,   ///< Single precision floating point (32 bit)
+    tinytc_scalar_type_f64 = 7,   ///< Double precision floating point (64 bit)
+    tinytc_scalar_type_c32 = 8,   ///< Single precision complex (2x32 bit)
+    tinytc_scalar_type_c64 = 9    ///< Double precision complex (2x64 bit)
 } tinytc_scalar_type_t;
-#define TINYTC_NUMBER_OF_SCALAR_TYPES 9 // @todo Keep up to date with tinytc_scalar_type_t
+#define TINYTC_NUMBER_OF_SCALAR_TYPES 10 // @todo Keep up to date with tinytc_scalar_type_t
 
 //! Arithmetic operations
 typedef enum {

@@ -42,7 +42,7 @@ lex:
         global_identifier     = "@" (unnamed_identifier | named_identifier);
 
         integer_type          = "i" ("8" | "16" | "32" | "64") | "index";
-        floating_type         = ("f" | "c") ("32" | "64");
+        floating_type         = ("f" | "c") ("16" | "32" | "64");
 
         digit                 = [0-9];
         hexdigit              = [0-9a-fA-F];
@@ -301,6 +301,7 @@ scalar_type lexer::lex_floating_type(char const *s, char const *) {
         re2c:yyfill:enable = 0;
         re2c:define:YYCURSOR = s;
 
+        "f16"  { return scalar_type::f16; }
         "f32"  { return scalar_type::f32; }
         "f64"  { return scalar_type::f64; }
         "c32"  { return scalar_type::c32; }

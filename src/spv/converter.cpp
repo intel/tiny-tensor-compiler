@@ -245,6 +245,7 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
     case scalar_type::i64:
     case scalar_type::index:
         return make_int(op, ty, a, b);
+    case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
         return make_float(op, ty, a, b);
@@ -280,6 +281,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         case scalar_type::i64:
         case scalar_type::index:
             return mod_->add<OpSConvert>(spv_to_ty, a);
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             return mod_->add<OpConvertSToF>(spv_to_ty, a);
@@ -302,6 +304,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         case scalar_type::i64:
         case scalar_type::index:
             return mod_->add<OpConvertFToS>(spv_to_ty, a);
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             return mod_->add<OpFConvert>(spv_to_ty, a);
@@ -335,6 +338,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     case scalar_type::i64:
     case scalar_type::index:
         return cast_from_int(to_ty, spv_to_ty, a);
+    case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
         return cast_from_float(to_ty, spv_to_ty, a);
@@ -558,6 +562,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         case scalar_type::index:
             mod_->add<OpAtomicIAdd>(result_ty, pointer, scope, semantics, value);
             break;
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             mod_->add<OpAtomicFAddEXT>(result_ty, pointer, scope, semantics, value);
@@ -738,6 +743,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case scalar_type::i64:
         case scalar_type::index:
             return make_int(op, ty, a);
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             return make_float(op, ty, a);
@@ -903,6 +909,7 @@ void inst_converter::operator()(compare_inst const &in) {
         case scalar_type::i64:
         case scalar_type::index:
             return compare_int(cond, spv_to_ty, a, b);
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             return compare_float(cond, spv_to_ty, a, b);
@@ -997,6 +1004,8 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
             return mod_->add<OpBitcast>(spv_ty, value);
         };
         switch (ot->element_ty()) {
+        case scalar_type::f16:
+            return cast_load_cast(scalar_type::i16);
         case scalar_type::f32:
             return cast_load_cast(scalar_type::i32);
         case scalar_type::f64:
@@ -1733,6 +1742,7 @@ void inst_converter::operator()(work_group_inst const &in) {
             case scalar_type::i64:
             case scalar_type::index:
                 return mod_->add<OpGroupIAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
+            case scalar_type::f16:
             case scalar_type::f32:
             case scalar_type::f64:
             case scalar_type::c32:

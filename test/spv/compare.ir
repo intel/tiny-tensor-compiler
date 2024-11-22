@@ -36,6 +36,21 @@ func @tfloat(%a: f32, %b: f32) {
 ; CHECK-NEXT: %[[#]] = OpFOrdLessThanEqual %[[#BOOL]] %[[#]] %[[#]]
 }
 
+func @thalf(%a: f16, %b: f16) {
+    %0 = cmp.eq %a, %b : bool
+    %1 = cmp.ne %a, %b : bool
+    %2 = cmp.gt %a, %b : bool
+    %3 = cmp.ge %a, %b : bool
+    %4 = cmp.lt %a, %b : bool
+    %5 = cmp.le %a, %b : bool
+; CHECK:      %[[#]] = OpFOrdEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFUnordNotEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdGreaterThanEqual %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThan %[[#BOOL]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFOrdLessThanEqual %[[#BOOL]] %[[#]] %[[#]]
+}
+
 func @tcomplex(%a: c32, %b: c32) {
     %0 = cmp.eq %a, %b : bool
     %1 = cmp.ne %a, %b : bool

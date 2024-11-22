@@ -11,6 +11,7 @@
 ; CHECK: %[[#F64:]] = OpTypeFloat 64
 ; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
 ; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
+; CHECK: %[[#F16:]] = OpTypeFloat 16
 
 func @tint(%a: i64) {
     %0 = cast %a : i64
@@ -32,6 +33,16 @@ func @tfloat(%a: f32) {
 ; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#F32_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#F32_TO_F64]] %[[#C64_NULL]] 0
+}
+
+func @thalf(%a: f16) {
+    %1 = cast %a : i8
+    %2 = cast %a : f64
+    %3 = cast %a : c64
+; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
+; CHECK-NEXT: %[[#F16_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#F16_TO_F64]] %[[#C64_NULL]] 0
 }
 
 func @tcomplex(%a: c32) {

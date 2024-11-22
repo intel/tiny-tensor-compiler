@@ -7,6 +7,7 @@
 ; CHECK: %[[#BOOL:]] = OpTypeBool
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F16:]] = OpTypeFloat 16
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 
 func @tbool(%a: bool, %b: bool) {
@@ -55,6 +56,20 @@ func @tfloat(%a: f32, %b: f32) {
 ; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFRem %[[#F32]] %[[#]] %[[#]]
+}
+
+func @thalf(%a: f16, %b: f16) {
+    %0 = arith.add %a, %b : f16
+    %1 = arith.sub %a, %b : f16
+    %2 = arith.mul %a, %b : f16
+    %3 = arith.div %a, %b : f16
+    %4 = arith.rem %a, %b : f16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:      %[[#]] = OpFAdd %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFSub %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFMul %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFDiv %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpFRem %[[#F16]] %[[#]] %[[#]]
 }
 
 func @tcomplex(%a: c32, %b: c32) {

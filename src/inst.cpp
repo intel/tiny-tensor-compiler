@@ -283,6 +283,7 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_dat
             *instr =
                 std::make_unique<constant_inst>(std::int64_t{1}, ty, get_optional(loc)).release();
             break;
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             *instr = std::make_unique<constant_inst>(double{1}, ty, get_optional(loc)).release();
@@ -327,6 +328,7 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
             *instr =
                 std::make_unique<constant_inst>(std::int64_t{0}, ty, get_optional(loc)).release();
             break;
+        case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
             *instr = std::make_unique<constant_inst>(double{0}, ty, get_optional(loc)).release();
