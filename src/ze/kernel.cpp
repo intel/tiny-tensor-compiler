@@ -96,8 +96,11 @@ tinytc_ze_kernel_bundle_create_with_program(ze_module_handle_t *bundle, ze_conte
         return tinytc_status_invalid_arguments;
     }
 
+    const bool use_spirv_backend = getenv("TINYTC_SPIRV") != nullptr;
+
     tinytc_core_info_t info = nullptr;
     tinytc_source_t src = nullptr;
+    tinytc_binary_t bin = nullptr;
     tinytc_status_t status = tinytc_status_success;
 
     if (status = tinytc_ze_core_info_create(&info, device); status != tinytc_status_success) {
@@ -107,15 +110,31 @@ tinytc_ze_kernel_bundle_create_with_program(ze_module_handle_t *bundle, ze_conte
         status != tinytc_status_success) {
         goto err;
     }
-    if (status = tinytc_prog_compile_to_opencl(&src, prg, info); status != tinytc_status_success) {
-        goto err;
-    }
-    if (status = tinytc_ze_kernel_bundle_create_with_source(bundle, context, device, src);
-        status != tinytc_status_success) {
-        goto err;
+    if (!use_spirv_backend) {
+        if (status = tinytc_prog_compile_to_opencl(&src, prg, info);
+            status != tinytc_status_success) {
+            goto err;
+        }
+        if (status = tinytc_ze_kernel_bundle_create_with_source(bundle, context, device, src);
+            status != tinytc_status_success) {
+            goto err;
+        }
+    } else {
+        if (status = tinytc_prog_compile_to_spirv_and_assemble(&bin, prg, info);
+            status != tinytc_status_success) {
+            goto err;
+        }
+        if (status = tinytc_ze_kernel_bundle_create_with_binary(bundle, context, device, bin);
+            status != tinytc_status_success) {
+            goto err;
+        }
     }
 err:
-    tinytc_source_release(src);
+    if (!use_spirv_backend) {
+        tinytc_source_release(src);
+    } else {
+        tinytc_binary_release(bin);
+    }
     tinytc_core_info_release(info);
 
     return status;
