@@ -58,6 +58,9 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> C_stride,
                                        std::int32_t repetitions, bool dump, queue q) -> source {
     auto ctx = make_compiler_context();
+    ctx.set_error_reporter(
+        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
+        nullptr);
     char const *file_name = std::source_location::current().file_name();
     auto const source_id = ctx.add_source(file_name, "");
 
@@ -70,23 +73,25 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         ++l.end.column;
         return l;
     };
-    auto const make_type = [](data_type element_ty, transpose t, int64_t A, std::int64_t B,
-                              std::array<std::int64_t, 2u> const &stride, location const &loc) {
+    auto const make_memref = [](data_type element_ty, transpose t, int64_t A, std::int64_t B,
+                                std::array<std::int64_t, 2u> const &stride, location const &loc) {
         auto s = std::array<std::int64_t, 2u>{A, B};
         if (t == transpose::T) {
             std::swap(s[0], s[1]);
         }
-        auto mr = get_memref(element_ty, s, stride, address_space::global, loc);
-        return get_group(mr, 0, loc);
+        return get_memref(element_ty, s, stride, address_space::global, loc);
     };
 
     auto kernel = [&](compiler_context const &ctx) {
         auto index_ty = get_scalar(ctx, scalar_type::index);
         auto element_ty = get_scalar(ctx, ty);
-        auto A_ty = make_type(element_ty, tA, M, K, A_stride, my_loc());
-        auto B_ty = make_type(element_ty, tB, K, N, B_stride, my_loc());
-        auto C_ty = make_type(element_ty, transpose::N, M, N, C_stride, my_loc());
-        auto f = make_func("gemm", {A_ty, B_ty, C_ty}, my_loc());
+        auto A_ty = make_memref(element_ty, tA, M, K, A_stride, my_loc());
+        auto B_ty = make_memref(element_ty, tB, K, N, B_stride, my_loc());
+        auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride, my_loc());
+        auto f = make_func("gemm",
+                           {get_group(A_ty, 0, my_loc()), get_group(B_ty, 0, my_loc()),
+                            get_group(C_ty, 0, my_loc())},
+                           my_loc());
         auto fn_body = f.get_body();
         auto params = std::array<value, 3u>{};
         fn_body.get_parameters(params);
@@ -98,9 +103,9 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto calpha = bb.add(make_constant_one(element_ty, my_loc()));
         auto cbeta = bb.add(update ? make_constant_one(element_ty, my_loc())
                                    : make_constant_zero(element_ty, my_loc()));
-        auto a = bb.add(make_load(params[0], {gid}, element_ty, my_loc()));
-        auto b = bb.add(make_load(params[1], {gid}, element_ty, my_loc()));
-        auto c = bb.add(make_load(params[2], {gid}, element_ty, my_loc()));
+        auto a = bb.add(make_load(params[0], {gid}, A_ty, my_loc()));
+        auto b = bb.add(make_load(params[1], {gid}, B_ty, my_loc()));
+        auto c = bb.add(make_load(params[2], {gid}, C_ty, my_loc()));
         bb.for_loop(
             index_ty, from, to,
             [&](region_builder &bb, value const &) {
@@ -123,7 +128,8 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         return compile_to_opencl(std::move(p), info);
     } catch (builder_error const &e) {
         ctx.report_error(e.loc(), e.what());
-        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << std::endl;
+        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << error_string(e.code())
+                  << std::endl;
     } catch (status const &st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
     }

@@ -22,7 +22,7 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
       Q_ref_(B3_, P_, B3_aligned_, howmany_, q_), Q_opt_(B3_, P_, B3_aligned_, howmany_, q_),
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
-      K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)),
+      K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), ctx_(make_compiler_context()),
       opt_bundle_(make_optimized_kernel(dump)),
       opt_kernel_(make_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
@@ -39,11 +39,19 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
     g_.emplace_back(make_recipe_handler(
         q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
                                     B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
-                                    B2_aligned_, B2_aligned_ * P_)));
+                                    B2_aligned_, B2_aligned_ * P_, ctx_)));
     g_.emplace_back(make_recipe_handler(
         q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
                                     B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)));
+                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_, ctx_)));
+}
+
+template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_context {
+    auto ctx = ::tinytc::make_compiler_context();
+    ctx.set_error_reporter(
+        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
+        nullptr);
+    return ctx;
 }
 
 template <typename T>
@@ -85,6 +93,9 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto gid = bb.add(make_builtin(builtin::group_id, get_scalar(ctx, scalar_type::index)));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
+        auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {
+            return {b.nrows(), b.ncols()};
+        };
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
         };
@@ -93,14 +104,14 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto tmp = bb.add(
             make_alloca(get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local)));
 
-        auto a0t = get_memref(element_ty, static_sizes3(A_[0]));
-        auto a1t = get_memref(element_ty, static_sizes3(A_[1]));
-        auto a2t = get_memref(element_ty, static_sizes3(A_[2]));
+        auto a0t = get_memref(element_ty, static_sizes2(A_[0]));
+        auto a1t = get_memref(element_ty, static_sizes2(A_[1]));
+        auto a2t = get_memref(element_ty, static_sizes2(A_[2]));
         auto k0t = get_memref(element_ty, sizeK2);
         auto k1t = get_memref(element_ty, sizeK2);
         auto k2t = get_memref(element_ty, sizeK2);
         auto qvt = get_memref(element_ty, {B3_aligned_, P_});
-        auto ivt = get_memref(element_ty, {B2_aligned_, P_});
+        auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
         auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
         auto a0 =
             bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3, {}, a0t));
@@ -125,9 +136,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
 
         return f;
     };
-    auto ctx = make_compiler_context();
-    auto p = make_prog(ctx);
-    p.add_function(opt_kernel(ctx));
+    auto p = make_prog(ctx_);
+    p.add_function(opt_kernel(ctx_));
     if (dump) {
         p.dump();
     }

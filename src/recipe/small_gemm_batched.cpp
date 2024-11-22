@@ -112,12 +112,12 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto bb = region_builder{fn_body};
 
                 auto gid = bb.add(make_builtin(builtin::group_id, index_ty, my_loc()));
-                auto at =
-                    get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
-                auto bt =
-                    get_memref(ty_, B_static_sizes, {1, ldB}, address_space::global, my_loc());
-                auto ct =
-                    get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
+                auto at = get_memref(ty_, array_view(A_static_sizes.data(), 2), {1, ldA},
+                                     address_space::global, my_loc());
+                auto bt = get_memref(ty_, array_view(B_static_sizes.data(), 2), {1, ldB},
+                                     address_space::global, my_loc());
+                auto ct = get_memref(ty_, array_view(C_static_sizes.data(), 2), {1, ldC},
+                                     address_space::global, my_loc());
                 auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
                                              array_view<value>{gid}, {}, at, my_loc()));
                 auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,

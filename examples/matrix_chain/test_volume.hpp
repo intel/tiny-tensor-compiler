@@ -36,12 +36,14 @@ template <typename T> class test_volume : public test {
   private:
     constexpr static std::size_t dim = 3;
     auto make_optimized_kernel(bool dump) -> sycl::kernel_bundle<sycl::bundle_state::executable>;
+    auto make_compiler_context() -> tinytc::compiler_context;
 
     std::int64_t B3_, B2_, P_, howmany_, B3_aligned_, B2_aligned_;
     sycl::queue q_;
     tinytc::core_info dev_info_;
     matrix_batch<T> Q_ref_, Q_opt_, I_, tmp_;
     std::vector<matrix_batch<T>> A_, K_;
+    tinytc::compiler_context ctx_;
     sycl::kernel_bundle<sycl::bundle_state::executable> opt_bundle_;
     sycl::kernel opt_kernel_;
     std::vector<tinytc::sycl_recipe_handler> g_;
