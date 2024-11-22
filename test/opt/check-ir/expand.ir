@@ -3,8 +3,7 @@
 
 ; RUN: %tinytc-opt -pcheck-ir -O0 < %s | filecheck %s
 
-; No real checks needed, just check that it does not crash, that is,
-; the types put in load match those returned by expand
+; No real checks needed, just check that it does not crash
 ; CHECK: func @t1({{.*}}
 
 func @t1(%0: memref<f32x32x16x8>) {

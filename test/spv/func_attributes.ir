@@ -1,0 +1,22 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S < %s | filecheck %s
+
+; CHECK: OpEntryPoint Kernel %[[#ATTR1:]] "attr1"
+; CHECK: OpEntryPoint Kernel %[[#ATTR2:]] "attr2"
+; CHECK: OpEntryPoint Kernel %[[#ATTR3:]] "attr3"
+
+; CHECK: OpExecutionMode %[[#ATTR1]] LocalSize 128 4 1
+; CHECK: OpExecutionMode %[[#ATTR2]] LocalSize 128 4 1
+; CHECK: OpExecutionMode %[[#ATTR2]] SubgroupSize 16
+; CHECK: OpExecutionMode %[[#ATTR3]] SubgroupSize 32
+
+func @attr1() work_group_size(128, 4) {
+}
+
+func @attr2() work_group_size(128, 4) subgroup_size(16) {
+}
+
+func @attr3() subgroup_size(32) {
+}
