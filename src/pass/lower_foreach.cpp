@@ -25,7 +25,7 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
     auto sg_lid = bb.add(make_cast(sg_lid_i32, ity, loc));
     auto size = bb.add(make_arith(arithmetic::sub, to, from, ity, loc));
     auto work_item_offset = bb.add(make_arith(arithmetic::add, from, sg_lid, ity, loc));
-    tile_loop_by_sgs_new(
+    tile_loop_by_sgs(
         bb, size, sgs, num_tiles, sg_id,
         [&](region_builder &bb, value block, bool is_remainder, value trip_count) {
             auto loop_var0 = bb.add(make_arith(arithmetic::add, block, work_item_offset, ity, loc));
@@ -90,7 +90,7 @@ auto foreach_generator::operator()(foreach_inst &in) -> inst {
         auto sg_id0 = bb.add(make_arith(arithmetic::rem, sg_id, c_m_tiles, sg_id->ty(), in.loc()));
 
         auto size1 = bb.add(make_arith(arithmetic::sub, &to[1], &from[1], ity, in.loc()));
-        tile_loop_uniformly_new(
+        tile_loop_uniformly(
             bb, size1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_id1,
             [&](region_builder &bb, value block, value trip_count1) {
                 auto from1 = bb.add(make_arith(arithmetic::add, &from[1], block, ity, in.loc()));

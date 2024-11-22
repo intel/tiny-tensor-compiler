@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "device_info.hpp"
-#include "gemm_generator.hpp"
 #include "gemm_tools.hpp"
 #include "reference_counted.hpp"
 #include "scalar_type.hpp"
@@ -46,22 +45,6 @@ TEST_CASE("suggest work group size") {
     check(16123, 9, 32, 32, 1);
     check(461, 283, 32, 4, 8);
     check(dynamic, dynamic, 16, 4, 8);
-}
-
-TEST_CASE("routine names") {
-    auto cfg = gemm_configuration{gemm_scalar_type{scalar_type::f32, scalar_type::f64},
-                                  transpose::N,
-                                  transpose::T,
-                                  16,
-                                  32,
-                                  48,
-                                  {1, 20},
-                                  {1, 40},
-                                  {1, 50},
-                                  3.14,
-                                  std::nullopt};
-    CHECK(cfg.identifier("gemm") == "gemm_f32f32f32f64f64_An_Bt_M16_N32_K48_Astride1_20_Bstride1_"
-                                    "40_Cstride1_50_alpha40091eb851eb851f_betad");
 }
 
 TEST_CASE("max register block") {

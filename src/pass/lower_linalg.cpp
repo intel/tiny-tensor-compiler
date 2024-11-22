@@ -296,37 +296,37 @@ void linalg_generator::operator()(gemm_inst &in) {
     const auto block_size1 = max_cols;
 
     if (const_shape1) {
-        tile_loop_uniformly_new(
+        tile_loop_uniformly(
             bb, c_shape1, block_size1, tiling_.n_tiles(), sg_n,
             [&](region_builder &bb, value n_block, value trip_count) {
                 auto const_trip_count = get_int_constant(trip_count);
                 if (!const_trip_count) {
                     throw compilation_error(in.loc(), status::internal_compiler_error);
                 }
-                tile_loop_by_sgs_new(bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
-                                     [&](region_builder &bb, value m_block, bool m_check, value) {
-                                         gemm_microkernel(
-                                             bb, in.tA(), in.tB(), in.atomic(), &in.alpha(),
-                                             &in.A(), &in.B(), &in.beta(), &in.C(), K, m_block,
-                                             block_size0, m_check, n_block, *const_trip_count,
-                                             false, at->element_data_ty(), bt->element_data_ty(),
-                                             ct->element_data_ty(), in.loc());
-                                     });
+                tile_loop_by_sgs(bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
+                                 [&](region_builder &bb, value m_block, bool m_check, value) {
+                                     gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
+                                                      &in.alpha(), &in.A(), &in.B(), &in.beta(),
+                                                      &in.C(), K, m_block, block_size0, m_check,
+                                                      n_block, *const_trip_count, false,
+                                                      at->element_data_ty(), bt->element_data_ty(),
+                                                      ct->element_data_ty(), in.loc());
+                                 });
             });
     } else {
-        tile_loop_by_sgs_new(bb, c_shape1, block_size1, tiling_.n_tiles(), sg_n,
-                             [&](region_builder &bb, value n_block, bool n_check, value) {
-                                 tile_loop_by_sgs_new(
-                                     bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
-                                     [&](region_builder &bb, value m_block, bool m_check, value) {
-                                         gemm_microkernel(
-                                             bb, in.tA(), in.tB(), in.atomic(), &in.alpha(),
-                                             &in.A(), &in.B(), &in.beta(), &in.C(), K, m_block,
-                                             block_size0, m_check, n_block, block_size1, n_check,
-                                             at->element_data_ty(), bt->element_data_ty(),
-                                             ct->element_data_ty(), in.loc());
-                                     });
-                             });
+        tile_loop_by_sgs(bb, c_shape1, block_size1, tiling_.n_tiles(), sg_n,
+                         [&](region_builder &bb, value n_block, bool n_check, value) {
+                             tile_loop_by_sgs(
+                                 bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
+                                 [&](region_builder &bb, value m_block, bool m_check, value) {
+                                     gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
+                                                      &in.alpha(), &in.A(), &in.B(), &in.beta(),
+                                                      &in.C(), K, m_block, block_size0, m_check,
+                                                      n_block, block_size1, n_check,
+                                                      at->element_data_ty(), bt->element_data_ty(),
+                                                      ct->element_data_ty(), in.loc());
+                                 });
+                         });
     }
 
     add(std::move(parallel));

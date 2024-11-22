@@ -12,7 +12,6 @@ else ()
     set(type static)
 endif ()
 
-find_package(clir 0.5.1 REQUIRED ${type})
 find_package(re2c REQUIRED)
 find_package(BISON 3.8.2 REQUIRED)
 
@@ -31,7 +30,6 @@ set(SOURCES
     device_info.cpp
     error.cpp
     func.cpp
-    gemm_generator.cpp
     gemm_tools.cpp
     inst.cpp
     location.cpp
@@ -46,7 +44,6 @@ set(SOURCES
     pass/clone.cpp
     pass/constant_folding.cpp
     pass/constant_propagation.cpp
-    pass/convert_to_opencl.cpp
     pass/convert_to_spirv.cpp
     pass/dead_code_elimination.cpp
     pass/dump_cfg.cpp
@@ -64,7 +61,6 @@ set(SOURCES
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
     region.cpp
-    required_extensions.cpp
     scalar_type.cpp
     spv/capex_util.cpp
     spv/converter.cpp
@@ -99,13 +95,11 @@ add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused
 add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
 add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
 set_cxx_common_options(tinytc-objects)
-target_link_libraries(tinytc-objects PUBLIC clir::clir)
 target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
 
 add_library(tinytc $<TARGET_OBJECTS:tinytc-objects>)
 add_library(tinytc::tinytc ALIAS tinytc)
-target_link_libraries(tinytc PRIVATE clir::clir)
 set_cxx_common_options(tinytc)
 
 # Generate export header

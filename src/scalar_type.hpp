@@ -6,9 +6,6 @@
 
 #include "tinytc/types.hpp"
 
-#include <clir/builtin_type.hpp>
-#include <clir/data_type.hpp>
-
 #include <cstdint>
 
 namespace tinytc {
@@ -23,15 +20,6 @@ bool is_integer_type(scalar_type ty);
 scalar_type element_type(scalar_type ty);
 scalar_type compatible_type(scalar_type a_ty, scalar_type b_ty);
 std::int32_t alignment(scalar_type ty, component_count count = component_count::v1);
-clir::data_type to_clir_ty(scalar_type ty, clir::address_space as = clir::address_space::generic_t,
-                           clir::type_qualifier q = clir::type_qualifier::none);
-clir::data_type to_clir_ty(scalar_type ty, short size,
-                           clir::address_space as = clir::address_space::generic_t,
-                           clir::type_qualifier q = clir::type_qualifier::none);
-clir::data_type to_clir_atomic_ty(scalar_type ty,
-                                  clir::address_space as = clir::address_space::generic_t,
-                                  clir::type_qualifier q = clir::type_qualifier::none);
-clir::address_space to_clir_address_space(address_space as);
 
 } // namespace tinytc
 

@@ -6,7 +6,6 @@
 #include "node/program_node.hpp"
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
-#include "pass/convert_to_opencl.hpp"
 #include "pass/convert_to_spirv.hpp"
 #include "pass/dead_code_elimination.hpp"
 #include "pass/dump_cfg.hpp"
@@ -20,15 +19,11 @@
 #include "pass/work_group_size.hpp"
 #include "passes.hpp"
 #include "reference_counted.hpp"
-#include "required_extensions.hpp"
 #include "spv/pass/assemble.hpp"
 #include "spv/pass/assign_ids.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-
-#include <clir/visitor/codegen_opencl.hpp>
-#include <clir/visitor/unique_names.hpp>
 
 #include <cstdint>
 #include <cstring>
