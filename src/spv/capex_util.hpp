@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_CAPEX_UTIL_20241113_HPP
-#define GENERATED_CAPEX_UTIL_20241113_HPP
+#ifndef GENERATED_CAPEX_UTIL_20241125_HPP
+#define GENERATED_CAPEX_UTIL_20241125_HPP
 
 #include "enums.hpp"
 #include "tinytc/tinytc.hpp"
@@ -23,4 +23,4 @@ auto extensions(ExecutionMode op) -> array_view<char const *>;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_CAPEX_UTIL_20241113_HPP
+#endif // GENERATED_CAPEX_UTIL_20241125_HPP

@@ -48,6 +48,12 @@ Core C++-API:
       - tinytc::make_core_info_intel_from_name
     class:
       - tinytc::core_info
+  FP math:
+    class:
+      - tinytc::lp_float
+    typedef:
+      - tinytc::bfloat16
+      - tinytc::half
   Parser:
     function:
       - tinytc::parse_file

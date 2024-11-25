@@ -128,7 +128,9 @@ template <typename T> void test(queue q, args &a) {
             }
             auto tas = make_recipe_handler(q, r);
 
-            tall_and_skinny::set_args(tas, c.m, T{1}, A, c.m, B, c.k, beta, C, c.m);
+            tall_and_skinny::set_args(tas, c.m, T{1}, mem(A, mem_type::usm_pointer), c.m,
+                                      mem(B, mem_type::usm_pointer), c.k, beta,
+                                      mem(C, mem_type::usm_pointer), c.m);
             tas.submit(q).wait();
             if (a.verify) {
                 check(c.m, c.n);
@@ -203,6 +205,9 @@ int main(int argc, char **argv) {
     std::cout << "precision,m,n,k,update,time,bandwidth,gflops" << std::endl;
     try {
         switch (a.ty) {
+        case scalar_type::f16:
+            test<sycl::half>(std::move(q), a);
+            break;
         case scalar_type::f32:
             test<float>(std::move(q), a);
             break;

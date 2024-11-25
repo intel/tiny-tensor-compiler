@@ -31,8 +31,8 @@ set(SOURCES
     error.cpp
     func.cpp
     gemm_tools.cpp
-    inst.cpp
     half.cpp
+    inst.cpp
     location.cpp
     node/data_type_node.cpp
     node/inst_node.cpp

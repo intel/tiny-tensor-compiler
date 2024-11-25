@@ -61,6 +61,119 @@ inline void CHECK_STATUS_LOC(tinytc_status_t code, location const &loc) {
 }
 
 ////////////////////////////
+////////// FP math /////////
+////////////////////////////
+
+/**
+ * @brief Low precision float type
+ *
+ * For all operations, low precision floats are converted single precision, the operation is done in
+ * single precision, and then the result is stored in the low precision type
+ *
+ * @tparam T storage type
+ * @tparam (*Extend)(T) Float widening function
+ * @tparam (*Truncate)(float) Float narrowing function
+ */
+template <typename T, float (*Extend)(T), T (*Truncate)(float)> class lp_float {
+  public:
+    lp_float() = default;
+
+    constexpr lp_float(lp_float const &) = default;
+    constexpr lp_float(lp_float &&) = default;
+    constexpr lp_float &operator=(lp_float const &) = default;
+    constexpr lp_float &operator=(lp_float &&) = default;
+
+    //! Construct from float
+    lp_float(float const &rhs) : data_{Truncate(rhs)} {}
+    //! assign float
+    auto operator=(float const &rhs) -> lp_float & {
+        data_ = Truncate(rhs);
+        return *this;
+    }
+    //! implicit conversion to float
+    operator float() const { return Extend(data_); }
+
+    //! add
+    auto operator+(lp_float const &rhs) const -> lp_float {
+        return operator float() + static_cast<float>(rhs);
+    }
+    //! add to
+    auto operator+=(lp_float const &rhs) -> lp_float & { return *this = *this + rhs; }
+    //! subtract
+    auto operator-(lp_float const &rhs) const -> lp_float {
+        return operator float() - static_cast<float>(rhs);
+    }
+    //! subtract from
+    auto operator-=(lp_float const &rhs) -> lp_float & { return *this = *this - rhs; }
+    //! multiply
+    auto operator*(lp_float const &rhs) const -> lp_float {
+        return operator float() * static_cast<float>(rhs);
+    }
+    //! multiply with
+    auto operator*=(lp_float const &rhs) -> lp_float & { return *this = *this * rhs; }
+    //! divide
+    auto operator/(lp_float const &rhs) const -> lp_float {
+        return operator float() / static_cast<float>(rhs);
+    }
+    //! divide with
+    auto operator/=(lp_float const &rhs) -> lp_float & { return *this = *this / rhs; }
+    //! unary minus
+    auto operator-() -> lp_float { return -operator float(); }
+    //! pre-increase by 1
+    auto operator++() -> lp_float & { return *this = operator float() + 1.0f; }
+    //! post-increase by 1
+    auto operator++(int) -> lp_float {
+        lp_float tmp = *this;
+        operator++();
+        return tmp;
+    }
+    //! pre-decrease by 1
+    auto operator--() -> lp_float & { return *this = operator float() - 1.0f; }
+    //! post-decrease by 1
+    auto operator--(int) -> lp_float {
+        lp_float tmp = *this;
+        operator--();
+        return tmp;
+    }
+    //! equal
+    auto operator==(lp_float const &rhs) const -> bool {
+        return operator float() == static_cast<float>(rhs);
+    }
+    //! not equal
+    auto operator!=(lp_float const &rhs) const -> bool {
+        return operator float() == static_cast<float>(rhs);
+    }
+    //! greater than
+    auto operator>(lp_float const &rhs) const -> bool {
+        return operator float() > static_cast<float>(rhs);
+    }
+    //! greater than or equal
+    auto operator>=(lp_float const &rhs) const -> bool {
+        return operator float() >= static_cast<float>(rhs);
+    }
+    //! less than
+    auto operator<(lp_float const &rhs) const -> bool {
+        return operator float() < static_cast<float>(rhs);
+    }
+    //! less than or equal
+    auto operator<=(lp_float const &rhs) const -> bool {
+        return operator float() <= static_cast<float>(rhs);
+    }
+
+  private:
+    T data_;
+};
+
+/**
+ * @brief fp16 host emulation type
+ */
+using half = lp_float<std::uint16_t, tinytc_f16_as_ui16_to_f32, tinytc_f32_to_f16_as_ui16>;
+/**
+ * @brief bf16 host emulation type
+ */
+using bfloat16 = lp_float<std::uint16_t, tinytc_bf16_as_ui16_to_f32, tinytc_f32_to_bf16_as_ui16>;
+
+////////////////////////////
 //////// Scalar type ///////
 ////////////////////////////
 
@@ -95,6 +208,10 @@ template <> struct to_scalar_type<std::int32_t> {
 //! to_scalar_type specialization
 template <> struct to_scalar_type<std::int64_t> {
     static constexpr scalar_type value = scalar_type::i64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<half> {
+    static constexpr scalar_type value = scalar_type::f16; ///< value
 };
 //! to_scalar_type specialization
 template <> struct to_scalar_type<float> {
@@ -2582,5 +2699,14 @@ inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type 
 }
 
 } // namespace tinytc
+
+namespace std {
+template <> struct hash<tinytc::half> {
+    size_t operator()(tinytc::half const &val) const noexcept {
+        return hash<float>{}(static_cast<float>(val));
+    }
+};
+
+} // namespace std
 
 #endif // TINYTC_20240403_HPP

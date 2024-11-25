@@ -19,7 +19,9 @@ struct test_case {
 };
 
 inline auto convert_data_type(char const *str, scalar_type &val) -> cmd::parser_status {
-    if (std::strcmp(str, "f32") == 0) {
+    if (std::strcmp(str, "f16") == 0) {
+        val = scalar_type::f16;
+    } else if (std::strcmp(str, "f32") == 0) {
         val = scalar_type::f32;
     } else if (std::strcmp(str, "f64") == 0) {
         val = scalar_type::f64;

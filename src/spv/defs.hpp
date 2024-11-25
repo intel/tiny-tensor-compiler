@@ -4,11 +4,12 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_DEFS_20241113_HPP
-#define GENERATED_DEFS_20241113_HPP
+#ifndef GENERATED_DEFS_20241125_HPP
+#define GENERATED_DEFS_20241125_HPP
 
 #include "enums.hpp"
 #include "support/ilist_base.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <cstdint>
 #include <limits>
@@ -46,7 +47,7 @@ class spv_inst : public ilist_node<spv_inst> {
 using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;
 using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
 using LiteralContextDependentNumber =
-    std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
+    std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, half, float, double>;
 using LiteralString = std::string;
 using LiteralInteger = std::int32_t;
 using LiteralExtInstInteger = std::int32_t;
@@ -62,4 +63,4 @@ using PairIdRefLiteralInteger = std::pair<spv_inst *, std::int32_t>;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_DEFS_20241113_HPP
+#endif // GENERATED_DEFS_20241125_HPP

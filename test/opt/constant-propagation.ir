@@ -155,3 +155,27 @@ func @known_arith_complex() {
 ; CHECK-NEXT:  %16 = constant 0x1.8p+1 : f32
 ; CHECK-NEXT:  %17 = arith.re %a : f32
 }
+
+func @known_arith_f16() {
+    %a = constant 3.0 : f16
+    %b = constant -1.0 : f16
+    %0 = arith.add %a, %b : f16
+    %1 = arith.sub %a, %b : f16
+    %2 = arith.mul %a, %b : f16
+    %3 = arith.div %a, %b : f16
+    %4 = arith.neg %a : f16
+    %5 = arith.abs %b : f16
+; CHECK-LABEL: func @known_arith_f16({{.*}}
+; CHECK:       %0 = constant 0x1p+1 : f16
+; CHECK-NEXT:  %1 = arith.add %a, %b : f16
+; CHECK-NEXT:  %2 = constant 0x1p+2 : f16
+; CHECK-NEXT:  %3 = arith.sub %a, %b : f16
+; CHECK-NEXT:  %4 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %5 = arith.mul %a, %b : f16
+; CHECK-NEXT:  %6 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %7 = arith.div %a, %b : f16
+; CHECK-NEXT:  %8 = constant -0x1.8p+1 : f16
+; CHECK-NEXT:  %9 = arith.neg %a : f16
+; CHECK-NEXT:  %10 = constant 0x1p+0 : f16
+; CHECK-NEXT:  %11 = arith.abs %b : f16
+}

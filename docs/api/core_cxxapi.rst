@@ -288,6 +288,40 @@ core_info
 
 .. doxygenclass:: tinytc::core_info
 
+FP math
+=======
+
+* Classes
+
+  * :ref:`lp_float`
+
+* Typedefs
+
+  * :ref:`bfloat16`
+
+  * :ref:`half`
+
+FP math Classes
+---------------
+
+lp_float
+........
+
+.. doxygenclass:: tinytc::lp_float
+
+FP math Typedefs
+----------------
+
+bfloat16
+........
+
+.. doxygentypedef:: tinytc::bfloat16
+
+half
+....
+
+.. doxygentypedef:: tinytc::half
+
 Parser
 ======
 

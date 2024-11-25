@@ -412,6 +412,8 @@ auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
         },
         [&](double d) -> spv_inst * {
             switch (sty) {
+            case scalar_type::f16:
+                return unique_.constant(half{static_cast<float>(d)});
             case scalar_type::f32:
                 return unique_.constant(static_cast<float>(d));
             case scalar_type::f64:

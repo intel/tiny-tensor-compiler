@@ -216,10 +216,9 @@ template <typename T> void test(queue q, args &a) {
         }
 
         double min_exec_time_ns = 0.0;
-        constexpr auto element_ty = to_scalar_type_v<T>;
         try {
             auto src = gemm_kernel_with_inner_repetition(
-                element_ty, a.trans_a ? transpose::T : transpose::N,
+                a.ty, a.trans_a ? transpose::T : transpose::N,
                 a.trans_b ? transpose::T : transpose::N, a.atomic, c.m, c.n, c.k,
                 {1, a.trans_a ? c.k : c.m}, {1, a.trans_b ? c.n : c.k}, a.update, {1, c.m},
                 a.internal_repetitions, a.dump, q);
@@ -257,7 +256,7 @@ template <typename T> void test(queue q, args &a) {
                     std::min(512 * 32 * 1.6e9, a.internal_repetitions * 2 * c.m * c.n * c.k /
                                                    (sizeof(T) * (na + nb + nc) / 1.1e12)) /
                     1e9;
-                std::cout << to_string(element_ty) << "," << c.m << "," << c.n << "," << c.k << ","
+                std::cout << to_string(a.ty) << "," << c.m << "," << c.n << "," << c.k << ","
                           << howmany << "," << min_exec_time_ns / 1e9 << "," << gflops << ","
                           << roofline_gflops << "," << std::round(gflops / roofline_gflops * 100)
                           << "%," << a.internal_repetitions << std::endl;
@@ -325,6 +324,9 @@ int main(int argc, char **argv) {
               << std::endl;
     try {
         switch (a.ty) {
+        case scalar_type::f16:
+            test<sycl::half>(std::move(q), a);
+            break;
         case scalar_type::f32:
             test<float>(std::move(q), a);
             break;

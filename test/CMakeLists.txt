@@ -68,6 +68,7 @@ if(SPIRVTools_FOUND)
         spv/cooperative_matrix_mul_add.ir
         spv/cooperative_matrix_scale.ir
         spv/cooperative_matrix_store.ir
+        spv/constant.ir
         spv/expand.ir
         spv/for.ir
         spv/fuse.ir

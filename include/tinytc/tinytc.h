@@ -41,13 +41,31 @@ TINYTC_EXPORT char const *tinytc_error_string(tinytc_status_t status);
 ////////////////////////////
 
 /**
- * @brief Convert f32 number to f16 number
+ * @brief Convert f32 number to bf16 number (represented as ushort)
+ *
+ * @param x f32 number
+ *
+ * @return bf16 number
+ */
+TINYTC_EXPORT uint16_t tinytc_f32_to_bf16_as_ui16(float x);
+
+/**
+ * @brief Convert bf16 number (represented as ushort) to f32 number
+ *
+ * @param x bf16 number
+ *
+ * @return f32 number
+ */
+TINYTC_EXPORT float tinytc_bf16_as_ui16_to_f32(uint16_t x);
+
+/**
+ * @brief Convert f32 number to f16 number (represented as ushort)
  *
  * @param x f32 number
  *
  * @return f16 number
  */
-TINYTC_EXPORT uint16_t tinytc_f32_to_f16(float x);
+TINYTC_EXPORT uint16_t tinytc_f32_to_f16_as_ui16(float x);
 
 /**
  * @brief Convert f16 number (represented as ushort) to f32 number
@@ -56,7 +74,7 @@ TINYTC_EXPORT uint16_t tinytc_f32_to_f16(float x);
  *
  * @return f32 number
  */
-TINYTC_EXPORT float tinytc_f16_to_f32(uint16_t x);
+TINYTC_EXPORT float tinytc_f16_as_ui16_to_f32(uint16_t x);
 
 ////////////////////////////
 //////// Scalar type ///////

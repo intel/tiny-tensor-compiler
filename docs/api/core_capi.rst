@@ -481,6 +481,42 @@ tinytc_core_feature_flags_t
 
 .. doxygentypedef:: tinytc_core_feature_flags_t
 
+FP math
+=======
+
+* Functions
+
+  * :ref:`tinytc_f32_to_bf16_as_ui16`
+
+  * :ref:`tinytc_f32_to_f16_as_ui16`
+
+  * :ref:`tinytc_f16_as_ui16_to_f32`
+
+  * :ref:`tinytc_bf16_as_ui16_to_f32`
+
+FP math Functions
+-----------------
+
+tinytc_f32_to_bf16_as_ui16
+..........................
+
+.. doxygenfunction:: tinytc_f32_to_bf16_as_ui16
+
+tinytc_f32_to_f16_as_ui16
+.........................
+
+.. doxygenfunction:: tinytc_f32_to_f16_as_ui16
+
+tinytc_f16_as_ui16_to_f32
+.........................
+
+.. doxygenfunction:: tinytc_f16_as_ui16_to_f32
+
+tinytc_bf16_as_ui16_to_f32
+..........................
+
+.. doxygenfunction:: tinytc_bf16_as_ui16_to_f32
+
 Parser
 ======
 

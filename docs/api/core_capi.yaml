@@ -75,6 +75,12 @@ Core C-API:
       - tinytc_core_info_retain
     typedef:
       - tinytc_core_feature_flags_t
+  FP math:
+    function:
+      - tinytc_f32_to_bf16_as_ui16
+      - tinytc_f32_to_f16_as_ui16
+      - tinytc_f16_as_ui16_to_f32
+      - tinytc_bf16_as_ui16_to_f32
   Parser:
     function:
       - tinytc_parse_file

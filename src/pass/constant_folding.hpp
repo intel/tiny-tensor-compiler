@@ -48,6 +48,13 @@ requires(std::is_floating_point_v<F>)
 struct is_complex<std::complex<F>> : public std::true_type {};
 template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
 
+template <typename T> struct is_floating_point_or_lp_float : public std::false_type {};
+template <typename F>
+requires(std::is_floating_point_v<F> || std::is_same_v<F, half> || std::is_same_v<F, bfloat16>)
+struct is_floating_point_or_lp_float<F> : public std::true_type {};
+template <typename T>
+inline constexpr bool is_floating_point_or_lp_float_v = is_floating_point_or_lp_float<T>::value;
+
 struct compute_unary_op {
     arithmetic_unary operation;
     data_type ty;
@@ -86,7 +93,7 @@ struct compute_unary_op {
     }
 
     template <typename T>
-    requires(std::is_floating_point_v<T>)
+    requires(is_floating_point_or_lp_float_v<T>)
     auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
@@ -237,14 +244,14 @@ struct compute_binary_op {
             val = a / b;
             break;
         case arithmetic::rem:
-            if constexpr (!std::is_floating_point_v<T>) {
+            if constexpr (is_complex_v<T>) {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             } else {
                 val = std::fmod(a, b);
             }
             break;
         default:
-            if constexpr (!std::is_floating_point_v<T>) {
+            if constexpr (is_complex_v<T>) {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             }
             throw compilation_error(loc, status::ir_fp_unsupported);
@@ -378,7 +385,7 @@ struct compute_compare {
     location const &loc;
 
     template <typename T>
-    requires(std::is_integral_v<T> || std::is_floating_point_v<T>)
+    requires(std::is_integral_v<T> || is_floating_point_or_lp_float_v<T>)
     auto operator()(T a, T b) -> fold_result {
         bool val = false;
         switch (cond) {
@@ -463,6 +470,8 @@ auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_res
         return make_constant(value_cast<std::int64_t>(A), to_ty, loc);
     case scalar_type::index:
         return make_constant(value_cast<host_index_type>(A), to_ty, loc);
+    case scalar_type::f16:
+        return make_constant(value_cast<half>(A), to_ty, loc);
     case scalar_type::f32:
         return make_constant(value_cast<float>(A), to_ty, loc);
     case scalar_type::f64:

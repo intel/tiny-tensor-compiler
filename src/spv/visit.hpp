@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20241113_HPP
-#define GENERATED_VISIT_20241113_HPP
+#ifndef GENERATED_VISIT_20241125_HPP
+#define GENERATED_VISIT_20241125_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -4437,4 +4437,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20241113_HPP
+#endif // GENERATED_VISIT_20241125_HPP

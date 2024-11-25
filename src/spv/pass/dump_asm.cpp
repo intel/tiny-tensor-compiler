@@ -78,6 +78,11 @@ void dump_asm_pass::operator()(LiteralContextDependentNumber const &l) {
                               auto flags = os_->flags();
                               *os_ << " " << std::hexfloat << l;
                               os_->flags(flags);
+                          },
+                          [&](half const &l) {
+                              auto flags = os_->flags();
+                              *os_ << " " << std::hexfloat << l;
+                              os_->flags(flags);
                           }},
                l);
 }

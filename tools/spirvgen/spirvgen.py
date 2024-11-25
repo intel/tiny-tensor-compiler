@@ -28,7 +28,7 @@ spv_names_cpp = 'names.cpp'
 spv_names_cpp_includes = [spv_names, spv_enums]
 spv_defs = 'defs.hpp'
 spv_defs_includes = [
-    spv_enums, 'support/ilist_base.hpp', None, '<cstdint>', '<limits>',
+    spv_enums, 'support/ilist_base.hpp', 'tinytc/tinytc.hpp', None, '<cstdint>', '<limits>',
     '<variant>', '<string>', '<utility>'
 ]
 spv_ops = 'instructions.hpp'
@@ -228,7 +228,7 @@ class spv_inst : public ilist_node<spv_inst> {
 using DecorationAttr = std::variant<BuiltIn, std::int32_t, std::pair<std::string, LinkageType>>;
 using ExecutionModeAttr = std::variant<std::int32_t, std::array<std::int32_t, 3u>>;
 using LiteralContextDependentNumber
-    = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, float, double>;
+    = std::variant<std::int8_t, std::int16_t, std::int32_t, std::int64_t, half, float, double>;
 using LiteralString = std::string;
 using LiteralInteger = std::int32_t;
 using LiteralExtInstInteger = std::int32_t;
