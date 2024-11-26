@@ -6,6 +6,8 @@
 
 #include "node/function_node.hpp"
 
+#include <cstdint>
+
 namespace tinytc {
 
 class stack_high_water_mark {

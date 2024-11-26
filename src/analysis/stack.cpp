@@ -2,12 +2,16 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/stack.hpp"
+#include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/value_node.hpp"
 #include "support/casting.hpp"
 #include "support/walk.hpp"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <functional>
 
 namespace tinytc {
 

@@ -30,13 +30,13 @@ does not need the object anymore, or it increased the reference count by one.
 
     .. tab:: C++
 
-       C handles are wrapped in the :ref:`shared_handle` class.
+       C handles are wrapped in the :ref:`tinytc::shared_handle` class.
        The wrapper implements copy constructor, move constructor, copy operator, and move operator,
        correctly handling the reference count.
        Objects of *type* are created using the make\_\ *type* functions.
 
-       **Important:** The default constructor of a :ref:`shared_handle` or any of its derivatives
-       always gives an invalid object, wrapping a nullptr.
+       **Important:** The default constructor of a :ref:`tinytc::shared_handle` or any of its
+       derivatives always gives an invalid object, wrapping a nullptr.
        Always use the make\_\ *type* function unless you know what you are doing.
 
 Error
@@ -53,7 +53,7 @@ The C-API returns error codes, the C++-API throws exceptions.
 
     .. tab:: C++
 
-       Functions throw the :ref:`status` enum.
+       Functions throw the :ref:`tinytc::status` enum.
        The following minimum error handling code is recommended:
 
        .. code:: C++
@@ -66,8 +66,9 @@ The C-API returns error codes, the C++-API throws exceptions.
               std::cerr << e.what() << std::endl;
           }
 
-       **Hint:** The IR builder API throws the :ref:`builder_error` (deriving from std::exception)
-       instead of the status enum for better source code location tracking.
+       **Hint:** The IR builder API throws the :ref:`tinytc::builder_error`
+       (deriving from std::exception) instead of the status enum for better
+       source code location tracking.
 
 Parser
 ======
@@ -129,13 +130,13 @@ then the error log of the source context contains the following error message:
 Compiler
 ========
 
-Program objects (:ref:`tinytc_prog_t`, :ref:`prog`) are online-compiled
-using the :ref:`tinytc_prog_compile_to_opencl` (:ref:`compile_to_opencl`) function.
+Program objects (:ref:`tinytc_prog_t`, :ref:`tinytc::prog`) are online-compiled
+using the :ref:`tinytc_prog_compile_to_opencl` (:ref:`tinytc::compile_to_opencl`) function.
 The program object is hereby modified as compiler passes are necessary.
 A source object is returned that contains OpenCL-C source text.
 
 Some compiler passes specialize the code based on properties of the GPU device.
-Therefore, a :ref:`tinytc_core_info_t` (:ref:`core_info`) object is required.
+Therefore, a :ref:`tinytc_core_info_t` (:ref:`tinytc::core_info`) object is required.
 It is recommend to query the core info from the runtime using any of the tinytc\_\ *runtime*\ _core_info_create
 functions (make_core_info in C++), but one may also look up the core info from a table,
 as done in the example code below.
@@ -233,7 +234,7 @@ The JIT compiler compiles tensor programs into OpenCL-C code.
 The libray provides functions to create the runtime's kernel bundle object
 (cl_program, sycl::kernel_bundle, ze_module_handle_t) from a source object.
 The runtime's kernel objects are obtained using the native API or the Tiny Tensor Compiler API (if applicable).
-Setting the kernel arguments should following the :ref:`calling convention`.
+Setting the kernel arguments should following the :ref:`calling convention <calling convention>`.
 The Tiny Tensor Compiler should be used to translate the 2D work-group size of the tensor language
 to a 3D work-group size, and to translate the group size to the global size that is passed to the runtime.
 
@@ -362,7 +363,7 @@ For example:
    tinytc_recipe_<recipe_name>_set_args(..., A, tinytc_mem_type_usm_pointer, ...);
 
 In C++, one only needs to pass the memory object.
-The memory object is implicitly converted to the :ref:`mem` type that
+The memory object is implicitly converted to the :ref:`tinytc::mem` type that
 automatically determines whether a pointer or a cl_mem object is given.
 A pointer maps to tinytc_mem_type_usm_pointer and a cl_mem object maps
 to tinytc_mem_type_buffer.

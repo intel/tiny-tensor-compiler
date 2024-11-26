@@ -5,6 +5,7 @@
 
 #include <exception>
 #include <iostream>
+#include <optional>
 #include <vector>
 
 using namespace tinytc;

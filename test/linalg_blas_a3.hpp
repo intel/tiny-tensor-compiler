@@ -6,12 +6,16 @@
 
 #include "linalg_types.hpp"
 #include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstdint>
 #include <functional>
 #include <utility>
+
+namespace tinytc {
+enum class scalar_type;
+enum class transpose;
+} // namespace tinytc
 
 namespace tinytc::test {
 

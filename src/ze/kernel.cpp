@@ -2,20 +2,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "../support/util.hpp"
-#include "error.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <level_zero/ze_api.h>
 #include <string>
-#include <vector>
 
 using namespace tinytc;
 

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "linalg_blas_a3.hpp"
+#include "tinytc/types.hpp"
 
 #include <array>
 #include <stdexcept>

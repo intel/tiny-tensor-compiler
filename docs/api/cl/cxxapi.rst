@@ -1,6 +1,8 @@
 .. Copyright (C) 2024 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
+.. _OpenCL C++-API:
+
 =======
 C++-API
 =======
@@ -10,10 +12,12 @@ Common
 
 * Functions
 
-  * :ref:`CL_CHECK_STATUS`
+  * :ref:`tinytc::CL_CHECK_STATUS`
 
 Common Functions
 ----------------
+
+.. _tinytc::CL_CHECK_STATUS:
 
 CL_CHECK_STATUS
 ...............
@@ -25,17 +29,21 @@ Device Info
 
 * Functions
 
-  * :ref:`get_support_level(cl_device_id)`
+  * :ref:`tinytc::get_support_level(cl_device_id)`
 
-  * :ref:`make_core_info(cl_device_id)`
+  * :ref:`tinytc::make_core_info(cl_device_id)`
 
 Device Info Functions
 ---------------------
+
+.. _tinytc::get_support_level(cl_device_id):
 
 get_support_level(cl_device_id)
 ...............................
 
 .. doxygenfunction:: tinytc::get_support_level(cl_device_id)
+
+.. _tinytc::make_core_info(cl_device_id):
 
 make_core_info(cl_device_id)
 ............................
@@ -47,38 +55,48 @@ Kernel
 
 * Functions
 
-  * :ref:`get_global_size(std::int64_t,std::array\<std::size_t, 3u\> const &)`
+  * :ref:`tinytc::get_global_size(std::int64_t,std::array\<std::size_t, 3u\> const &)`
 
-  * :ref:`get_group_size(cl_kernel)`
+  * :ref:`tinytc::get_group_size(cl_kernel)`
 
-  * :ref:`make_kernel(cl_program,char const\\*)`
+  * :ref:`tinytc::make_kernel(cl_program,char const\*)`
 
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,binary const&)`
+  * :ref:`tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)`
 
-  * :ref:`make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t)`
+  * :ref:`tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t)`
 
 Kernel Functions
 ----------------
+
+.. _tinytc::get_global_size(std::int64_t,std::array\<std::size_t, 3u\> const &):
 
 get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
 .................................................................
 
 .. doxygenfunction:: tinytc::get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
 
+.. _tinytc::get_group_size(cl_kernel):
+
 get_group_size(cl_kernel)
 .........................
 
 .. doxygenfunction:: tinytc::get_group_size(cl_kernel)
+
+.. _tinytc::make_kernel(cl_program,char const\*):
 
 make_kernel(cl_program,char const\*)
 ....................................
 
 .. doxygenfunction:: tinytc::make_kernel(cl_program,char const*)
 
+.. _tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&):
+
 make_kernel_bundle(cl_context,cl_device_id,binary const&)
 .........................................................
 
 .. doxygenfunction:: tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)
+
+.. _tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t):
 
 make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t)
 ............................................................................
@@ -90,18 +108,20 @@ Recipe
 
 * Functions
 
-  * :ref:`make_recipe_handler(cl_context,cl_device_id,recipe const&)`
+  * :ref:`tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&)`
 
 * Classes
 
-  * :ref:`opencl_recipe_handler`
+  * :ref:`tinytc::opencl_recipe_handler`
 
 * Structures
 
-  * :ref:`auto_mem_type\<cl_mem\>`
+  * :ref:`tinytc::auto_mem_type\< cl_mem \>`
 
 Recipe Functions
 ----------------
+
+.. _tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&):
 
 make_recipe_handler(cl_context,cl_device_id,recipe const&)
 ..........................................................
@@ -111,6 +131,8 @@ make_recipe_handler(cl_context,cl_device_id,recipe const&)
 Recipe Classes
 --------------
 
+.. _tinytc::opencl_recipe_handler:
+
 opencl_recipe_handler
 .....................
 
@@ -118,6 +140,8 @@ opencl_recipe_handler
 
 Recipe Structures
 -----------------
+
+.. _tinytc::auto_mem_type\< cl_mem \>:
 
 auto_mem_type<cl_mem>
 .....................

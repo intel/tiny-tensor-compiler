@@ -7,6 +7,7 @@
 #include "support/util.hpp"
 #include "support/walk.hpp"
 
+#include <functional>
 #include <utility>
 #include <vector>
 

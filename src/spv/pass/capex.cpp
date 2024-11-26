@@ -2,14 +2,18 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/pass/capex.hpp"
-#include "error.hpp"
 #include "spv/capex_util.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
+#include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
 #include "support/casting.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/util.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstdint>
 

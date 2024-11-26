@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/pass/assign_ids.hpp"
+#include "spv/defs.hpp"
+#include "spv/instructions.hpp"
 #include "spv/module.hpp"
 #include "support/casting.hpp"
 #include "support/ilist.hpp"

@@ -2,11 +2,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context_cache.hpp"
-#include "compiler_context.hpp"
+#include "node/data_type_node.hpp"
 #include "support/util.hpp"
-#include "tinytc/types.hpp"
 
 namespace tinytc {
+
+enum class scalar_type;
 
 compiler_context_cache::compiler_context_cache(tinytc_compiler_context_t ctx) {
     bool_ty = std::unique_ptr<boolean_data_type>(new boolean_data_type(ctx));

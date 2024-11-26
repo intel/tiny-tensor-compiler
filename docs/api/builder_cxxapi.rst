@@ -1,6 +1,8 @@
 .. Copyright (C) 2024 Intel Corporation
    SPDX-License-Identifier: BSD-3-Clause
 
+.. _Builder C++-API:
+
 ===============
 Builder C++-API
 ===============
@@ -10,115 +12,135 @@ Common
 
 * Enumerations
 
-  * :ref:`address_space`
+  * :ref:`tinytc::address_space`
 
-  * :ref:`arithmetic`
+  * :ref:`tinytc::arithmetic`
 
-  * :ref:`arithmetic_unary`
+  * :ref:`tinytc::arithmetic_unary`
 
-  * :ref:`builtin`
+  * :ref:`tinytc::builtin`
 
-  * :ref:`cmp_condition`
+  * :ref:`tinytc::cmp_condition`
 
-  * :ref:`matrix_use`
+  * :ref:`tinytc::matrix_use`
 
-  * :ref:`scalar_type`
+  * :ref:`tinytc::scalar_type`
 
-  * :ref:`store_flag`
+  * :ref:`tinytc::store_flag`
 
-  * :ref:`transpose`
+  * :ref:`tinytc::transpose`
 
-  * :ref:`work_group_operation`
+  * :ref:`tinytc::work_group_operation`
 
 * Functions
 
-  * :ref:`is_dynamic_value`
+  * :ref:`tinytc::is_dynamic_value`
 
-  * :ref:`to_string(address_space)`
+  * :ref:`tinytc::to_string(address_space)`
 
-  * :ref:`to_string(arithmetic)`
+  * :ref:`tinytc::to_string(arithmetic)`
 
-  * :ref:`to_string(arithmetic_unary)`
+  * :ref:`tinytc::to_string(arithmetic_unary)`
 
-  * :ref:`to_string(builtin)`
+  * :ref:`tinytc::to_string(builtin)`
 
-  * :ref:`to_string(checked_flag)`
+  * :ref:`tinytc::to_string(checked_flag)`
 
-  * :ref:`to_string(cmp_condition)`
+  * :ref:`tinytc::to_string(cmp_condition)`
 
-  * :ref:`to_string(matrix_use)`
+  * :ref:`tinytc::to_string(matrix_use)`
 
-  * :ref:`to_string(scalar_type)`
+  * :ref:`tinytc::to_string(scalar_type)`
 
-  * :ref:`to_string(store_flag)`
+  * :ref:`tinytc::to_string(store_flag)`
 
-  * :ref:`to_string(transpose)`
+  * :ref:`tinytc::to_string(transpose)`
 
-  * :ref:`to_string(work_group_operation)`
+  * :ref:`tinytc::to_string(work_group_operation)`
 
-  * :ref:`size`
+  * :ref:`tinytc::size`
 
 * Classes
 
-  * :ref:`builder_error`
+  * :ref:`tinytc::builder_error`
 
 * Typedefs
 
-  * :ref:`position`
+  * :ref:`tinytc::position`
 
-  * :ref:`location`
+  * :ref:`tinytc::location`
 
 * Variables
 
-  * :ref:`dynamic`
+  * :ref:`tinytc::dynamic`
 
 Common Enumerations
 -------------------
+
+.. _tinytc::address_space:
 
 address_space
 .............
 
 .. doxygenenum:: tinytc::address_space
 
+.. _tinytc::arithmetic:
+
 arithmetic
 ..........
 
 .. doxygenenum:: tinytc::arithmetic
+
+.. _tinytc::arithmetic_unary:
 
 arithmetic_unary
 ................
 
 .. doxygenenum:: tinytc::arithmetic_unary
 
+.. _tinytc::builtin:
+
 builtin
 .......
 
 .. doxygenenum:: tinytc::builtin
+
+.. _tinytc::cmp_condition:
 
 cmp_condition
 .............
 
 .. doxygenenum:: tinytc::cmp_condition
 
+.. _tinytc::matrix_use:
+
 matrix_use
 ..........
 
 .. doxygenenum:: tinytc::matrix_use
+
+.. _tinytc::scalar_type:
 
 scalar_type
 ...........
 
 .. doxygenenum:: tinytc::scalar_type
 
+.. _tinytc::store_flag:
+
 store_flag
 ..........
 
 .. doxygenenum:: tinytc::store_flag
 
+.. _tinytc::transpose:
+
 transpose
 .........
 
 .. doxygenenum:: tinytc::transpose
+
+.. _tinytc::work_group_operation:
 
 work_group_operation
 ....................
@@ -128,65 +150,91 @@ work_group_operation
 Common Functions
 ----------------
 
+.. _tinytc::is_dynamic_value:
+
 is_dynamic_value
 ................
 
 .. doxygenfunction:: tinytc::is_dynamic_value
+
+.. _tinytc::to_string(address_space):
 
 to_string(address_space)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(address_space)
 
+.. _tinytc::to_string(arithmetic):
+
 to_string(arithmetic)
 .....................
 
 .. doxygenfunction:: tinytc::to_string(arithmetic)
+
+.. _tinytc::to_string(arithmetic_unary):
 
 to_string(arithmetic_unary)
 ...........................
 
 .. doxygenfunction:: tinytc::to_string(arithmetic_unary)
 
+.. _tinytc::to_string(builtin):
+
 to_string(builtin)
 ..................
 
 .. doxygenfunction:: tinytc::to_string(builtin)
+
+.. _tinytc::to_string(checked_flag):
 
 to_string(checked_flag)
 .......................
 
 .. doxygenfunction:: tinytc::to_string(checked_flag)
 
+.. _tinytc::to_string(cmp_condition):
+
 to_string(cmp_condition)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
+
+.. _tinytc::to_string(matrix_use):
 
 to_string(matrix_use)
 .....................
 
 .. doxygenfunction:: tinytc::to_string(matrix_use)
 
+.. _tinytc::to_string(scalar_type):
+
 to_string(scalar_type)
 ......................
 
 .. doxygenfunction:: tinytc::to_string(scalar_type)
+
+.. _tinytc::to_string(store_flag):
 
 to_string(store_flag)
 .....................
 
 .. doxygenfunction:: tinytc::to_string(store_flag)
 
+.. _tinytc::to_string(transpose):
+
 to_string(transpose)
 ....................
 
 .. doxygenfunction:: tinytc::to_string(transpose)
 
+.. _tinytc::to_string(work_group_operation):
+
 to_string(work_group_operation)
 ...............................
 
 .. doxygenfunction:: tinytc::to_string(work_group_operation)
+
+.. _tinytc::size:
 
 size
 ....
@@ -196,6 +244,8 @@ size
 Common Classes
 --------------
 
+.. _tinytc::builder_error:
+
 builder_error
 .............
 
@@ -204,10 +254,14 @@ builder_error
 Common Typedefs
 ---------------
 
+.. _tinytc::position:
+
 position
 ........
 
 .. doxygentypedef:: tinytc::position
+
+.. _tinytc::location:
 
 location
 ........
@@ -216,6 +270,8 @@ location
 
 Common Variables
 ----------------
+
+.. _tinytc::dynamic:
 
 dynamic
 .......
@@ -227,50 +283,60 @@ Data Type
 
 * Functions
 
-  * :ref:`get_boolean`
+  * :ref:`tinytc::get_boolean`
 
-  * :ref:`get_coopmatrix`
+  * :ref:`tinytc::get_coopmatrix`
 
-  * :ref:`get_group`
+  * :ref:`tinytc::get_group`
 
-  * :ref:`get_memref`
+  * :ref:`tinytc::get_memref`
 
-  * :ref:`get_scalar`
+  * :ref:`tinytc::get_scalar`
 
 * Structures
 
-  * :ref:`to_scalar_type`
+  * :ref:`tinytc::to_scalar_type`
 
 * Typedefs
 
-  * :ref:`data_type`
+  * :ref:`tinytc::data_type`
 
 * Variables
 
-  * :ref:`to_scalar_type_v`
+  * :ref:`tinytc::to_scalar_type_v`
 
 Data Type Functions
 -------------------
+
+.. _tinytc::get_boolean:
 
 get_boolean
 ...........
 
 .. doxygenfunction:: tinytc::get_boolean
 
+.. _tinytc::get_coopmatrix:
+
 get_coopmatrix
 ..............
 
 .. doxygenfunction:: tinytc::get_coopmatrix
+
+.. _tinytc::get_group:
 
 get_group
 .........
 
 .. doxygenfunction:: tinytc::get_group
 
+.. _tinytc::get_memref:
+
 get_memref
 ..........
 
 .. doxygenfunction:: tinytc::get_memref
+
+.. _tinytc::get_scalar:
 
 get_scalar
 ..........
@@ -280,6 +346,8 @@ get_scalar
 Data Type Structures
 --------------------
 
+.. _tinytc::to_scalar_type:
+
 to_scalar_type
 ..............
 
@@ -288,6 +356,8 @@ to_scalar_type
 Data Type Typedefs
 ------------------
 
+.. _tinytc::data_type:
+
 data_type
 .........
 
@@ -295,6 +365,8 @@ data_type
 
 Data Type Variables
 -------------------
+
+.. _tinytc::to_scalar_type_v:
 
 to_scalar_type_v
 ................
@@ -306,14 +378,16 @@ Function
 
 * Functions
 
-  * :ref:`make_func`
+  * :ref:`tinytc::make_func`
 
 * Classes
 
-  * :ref:`func`
+  * :ref:`tinytc::func`
 
 Function Functions
 ------------------
+
+.. _tinytc::make_func:
 
 make_func
 .........
@@ -322,6 +396,8 @@ make_func
 
 Function Classes
 ----------------
+
+.. _tinytc::func:
 
 func
 ....
@@ -333,252 +409,322 @@ Instruction
 
 * Functions
 
-  * :ref:`make_alloca`
+  * :ref:`tinytc::make_alloca`
 
-  * :ref:`make_axpby`
+  * :ref:`tinytc::make_axpby`
 
-  * :ref:`make_arith(arithmetic,value,value,data_type,location const&)`
+  * :ref:`tinytc::make_arith(arithmetic,value,value,data_type,location const&)`
 
-  * :ref:`make_arith(arithmetic_unary,value,data_type,location const&)`
+  * :ref:`tinytc::make_arith(arithmetic_unary,value,data_type,location const&)`
 
-  * :ref:`make_builtin`
+  * :ref:`tinytc::make_builtin`
 
-  * :ref:`make_cast`
+  * :ref:`tinytc::make_cast`
 
-  * :ref:`make_cmp`
+  * :ref:`tinytc::make_cmp`
 
-  * :ref:`make_constant(bool,data_type,location const&)`
+  * :ref:`tinytc::make_constant(bool,data_type,location const&)`
 
-  * :ref:`make_constant(std::complex\<double\>,data_type,location const&)`
+  * :ref:`tinytc::make_constant(std::complex\<double\>,data_type,location const&)`
 
-  * :ref:`make_constant(double,data_type,location const&)`
+  * :ref:`tinytc::make_constant(double,data_type,location const&)`
 
-  * :ref:`make_constant(std::int32_t,data_type,location const&)`
+  * :ref:`tinytc::make_constant(std::int32_t,data_type,location const&)`
 
-  * :ref:`make_constant(std::int64_t,data_type,location const&)`
+  * :ref:`tinytc::make_constant(std::int64_t,data_type,location const&)`
 
-  * :ref:`make_constant_one`
+  * :ref:`tinytc::make_constant_one`
 
-  * :ref:`make_constant_zero`
+  * :ref:`tinytc::make_constant_zero`
 
-  * :ref:`make_cooperative_matrix_load`
+  * :ref:`tinytc::make_cooperative_matrix_load`
 
-  * :ref:`make_cooperative_matrix_mul_add`
+  * :ref:`tinytc::make_cooperative_matrix_mul_add`
 
-  * :ref:`make_cooperative_matrix_scale`
+  * :ref:`tinytc::make_cooperative_matrix_scale`
 
-  * :ref:`make_cooperative_matrix_store`
+  * :ref:`tinytc::make_cooperative_matrix_store`
 
-  * :ref:`make_expand`
+  * :ref:`tinytc::make_expand`
 
-  * :ref:`make_for`
+  * :ref:`tinytc::make_for`
 
-  * :ref:`make_foreach`
+  * :ref:`tinytc::make_foreach`
 
-  * :ref:`make_fuse`
+  * :ref:`tinytc::make_fuse`
 
-  * :ref:`make_gemm`
+  * :ref:`tinytc::make_gemm`
 
-  * :ref:`make_gemv`
+  * :ref:`tinytc::make_gemv`
 
-  * :ref:`make_ger`
+  * :ref:`tinytc::make_ger`
 
-  * :ref:`make_hadamard`
+  * :ref:`tinytc::make_hadamard`
 
-  * :ref:`make_if`
+  * :ref:`tinytc::make_if`
 
-  * :ref:`make_load`
+  * :ref:`tinytc::make_load`
 
-  * :ref:`make_parallel`
+  * :ref:`tinytc::make_parallel`
 
-  * :ref:`make_size`
+  * :ref:`tinytc::make_size`
 
-  * :ref:`make_store`
+  * :ref:`tinytc::make_store`
 
-  * :ref:`make_subview`
+  * :ref:`tinytc::make_subview`
 
-  * :ref:`make_sum`
+  * :ref:`tinytc::make_sum`
 
-  * :ref:`make_work_group`
+  * :ref:`tinytc::make_work_group`
 
-  * :ref:`make_yield`
+  * :ref:`tinytc::make_yield`
 
 * Classes
 
-  * :ref:`inst`
+  * :ref:`tinytc::inst`
 
 Instruction Functions
 ---------------------
+
+.. _tinytc::make_alloca:
 
 make_alloca
 ...........
 
 .. doxygenfunction:: tinytc::make_alloca
 
+.. _tinytc::make_axpby:
+
 make_axpby
 ..........
 
 .. doxygenfunction:: tinytc::make_axpby
+
+.. _tinytc::make_arith(arithmetic,value,value,data_type,location const&):
 
 make_arith(arithmetic,value,value,data_type,location const&)
 ............................................................
 
 .. doxygenfunction:: tinytc::make_arith(arithmetic,value,value,data_type,location const&)
 
+.. _tinytc::make_arith(arithmetic_unary,value,data_type,location const&):
+
 make_arith(arithmetic_unary,value,data_type,location const&)
 ............................................................
 
 .. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
+
+.. _tinytc::make_builtin:
 
 make_builtin
 ............
 
 .. doxygenfunction:: tinytc::make_builtin
 
+.. _tinytc::make_cast:
+
 make_cast
 .........
 
 .. doxygenfunction:: tinytc::make_cast
+
+.. _tinytc::make_cmp:
 
 make_cmp
 ........
 
 .. doxygenfunction:: tinytc::make_cmp
 
+.. _tinytc::make_constant(bool,data_type,location const&):
+
 make_constant(bool,data_type,location const&)
 .............................................
 
 .. doxygenfunction:: tinytc::make_constant(bool,data_type,location const&)
+
+.. _tinytc::make_constant(std::complex\<double\>,data_type,location const&):
 
 make_constant(std::complex<double>,data_type,location const&)
 .............................................................
 
 .. doxygenfunction:: tinytc::make_constant(std::complex<double>,data_type,location const&)
 
+.. _tinytc::make_constant(double,data_type,location const&):
+
 make_constant(double,data_type,location const&)
 ...............................................
 
 .. doxygenfunction:: tinytc::make_constant(double,data_type,location const&)
+
+.. _tinytc::make_constant(std::int32_t,data_type,location const&):
 
 make_constant(std::int32_t,data_type,location const&)
 .....................................................
 
 .. doxygenfunction:: tinytc::make_constant(std::int32_t,data_type,location const&)
 
+.. _tinytc::make_constant(std::int64_t,data_type,location const&):
+
 make_constant(std::int64_t,data_type,location const&)
 .....................................................
 
 .. doxygenfunction:: tinytc::make_constant(std::int64_t,data_type,location const&)
+
+.. _tinytc::make_constant_one:
 
 make_constant_one
 .................
 
 .. doxygenfunction:: tinytc::make_constant_one
 
+.. _tinytc::make_constant_zero:
+
 make_constant_zero
 ..................
 
 .. doxygenfunction:: tinytc::make_constant_zero
+
+.. _tinytc::make_cooperative_matrix_load:
 
 make_cooperative_matrix_load
 ............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_load
 
+.. _tinytc::make_cooperative_matrix_mul_add:
+
 make_cooperative_matrix_mul_add
 ...............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_mul_add
+
+.. _tinytc::make_cooperative_matrix_scale:
 
 make_cooperative_matrix_scale
 .............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_scale
 
+.. _tinytc::make_cooperative_matrix_store:
+
 make_cooperative_matrix_store
 .............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_store
+
+.. _tinytc::make_expand:
 
 make_expand
 ...........
 
 .. doxygenfunction:: tinytc::make_expand
 
+.. _tinytc::make_for:
+
 make_for
 ........
 
 .. doxygenfunction:: tinytc::make_for
+
+.. _tinytc::make_foreach:
 
 make_foreach
 ............
 
 .. doxygenfunction:: tinytc::make_foreach
 
+.. _tinytc::make_fuse:
+
 make_fuse
 .........
 
 .. doxygenfunction:: tinytc::make_fuse
+
+.. _tinytc::make_gemm:
 
 make_gemm
 .........
 
 .. doxygenfunction:: tinytc::make_gemm
 
+.. _tinytc::make_gemv:
+
 make_gemv
 .........
 
 .. doxygenfunction:: tinytc::make_gemv
+
+.. _tinytc::make_ger:
 
 make_ger
 ........
 
 .. doxygenfunction:: tinytc::make_ger
 
+.. _tinytc::make_hadamard:
+
 make_hadamard
 .............
 
 .. doxygenfunction:: tinytc::make_hadamard
+
+.. _tinytc::make_if:
 
 make_if
 .......
 
 .. doxygenfunction:: tinytc::make_if
 
+.. _tinytc::make_load:
+
 make_load
 .........
 
 .. doxygenfunction:: tinytc::make_load
+
+.. _tinytc::make_parallel:
 
 make_parallel
 .............
 
 .. doxygenfunction:: tinytc::make_parallel
 
+.. _tinytc::make_size:
+
 make_size
 .........
 
 .. doxygenfunction:: tinytc::make_size
+
+.. _tinytc::make_store:
 
 make_store
 ..........
 
 .. doxygenfunction:: tinytc::make_store
 
+.. _tinytc::make_subview:
+
 make_subview
 ............
 
 .. doxygenfunction:: tinytc::make_subview
+
+.. _tinytc::make_sum:
 
 make_sum
 ........
 
 .. doxygenfunction:: tinytc::make_sum
 
+.. _tinytc::make_work_group:
+
 make_work_group
 ...............
 
 .. doxygenfunction:: tinytc::make_work_group
+
+.. _tinytc::make_yield:
 
 make_yield
 ..........
@@ -587,6 +733,8 @@ make_yield
 
 Instruction Classes
 -------------------
+
+.. _tinytc::inst:
 
 inst
 ....
@@ -598,14 +746,16 @@ Program
 
 * Functions
 
-  * :ref:`make_prog`
+  * :ref:`tinytc::make_prog`
 
 * Classes
 
-  * :ref:`prog`
+  * :ref:`tinytc::prog`
 
 Program Functions
 -----------------
+
+.. _tinytc::make_prog:
 
 make_prog
 .........
@@ -614,6 +764,8 @@ make_prog
 
 Program Classes
 ---------------
+
+.. _tinytc::prog:
 
 prog
 ....
@@ -625,17 +777,21 @@ Region
 
 * Classes
 
-  * :ref:`region`
+  * :ref:`tinytc::region`
 
-  * :ref:`region_builder`
+  * :ref:`tinytc::region_builder`
 
 Region Classes
 --------------
+
+.. _tinytc::region:
 
 region
 ......
 
 .. doxygenclass:: tinytc::region
+
+.. _tinytc::region_builder:
 
 region_builder
 ..............
@@ -647,10 +803,12 @@ Value
 
 * Classes
 
-  * :ref:`value`
+  * :ref:`tinytc::value`
 
 Value Classes
 -------------
+
+.. _tinytc::value:
 
 value
 .....

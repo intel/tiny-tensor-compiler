@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/inst_assembler.hpp"
-#include "spv/enums.hpp"
 
 #include <array>
 #include <utility>
 #include <variant>
 
 namespace tinytc::spv {
+
+enum class LinkageType;
 
 inst_assembler::inst_assembler(word_stream<std::int32_t> &stream) : stream_{&stream} {}
 

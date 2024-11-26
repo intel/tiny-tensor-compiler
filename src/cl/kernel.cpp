@@ -9,12 +9,9 @@
 
 #include <CL/cl.h>
 #include <CL/cl_platform.h>
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <sstream>
 #include <string>
-#include <utility>
 #include <vector>
 
 using tinytc::compiler_context;

@@ -1,7 +1,6 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "compiler_context.hpp"
 #include "error.hpp"
 #include "location.hpp"
 #include "node/data_type_node.hpp"
@@ -9,9 +8,14 @@
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstdint>
+
+namespace tinytc {
+enum class address_space;
+enum class matrix_use;
+enum class scalar_type;
+} // namespace tinytc
 
 using namespace tinytc;
 

@@ -5,13 +5,9 @@
 #define CONVERTER_20241111_HPP
 
 #include "device_info.hpp"
-#include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
-#include "node/value_node.hpp"
 #include "spv/defs.hpp"
-#include "spv/enums.hpp"
-#include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "support/casting.hpp"
 #include "tinytc/tinytc.hpp"
@@ -24,7 +20,14 @@
 #include <unordered_map>
 #include <vector>
 
+namespace tinytc {
+class coopmatrix_data_type;
+class memref_data_type;
+} // namespace tinytc
+
 namespace tinytc::spv {
+
+enum class BuiltIn;
 
 auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
 

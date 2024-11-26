@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/insert_lifetime_stop.hpp"
+#include "analysis/aa_results.hpp"
 #include "analysis/alias.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"

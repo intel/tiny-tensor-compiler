@@ -7,13 +7,13 @@
 #include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <utility>
 
 namespace tinytc {
+enum class scalar_type;
 auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool;
 } // namespace tinytc
 

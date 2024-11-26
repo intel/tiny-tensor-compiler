@@ -5,6 +5,7 @@
 #define EQUAL_20240208_HPP
 
 #include "node/data_type_node.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 

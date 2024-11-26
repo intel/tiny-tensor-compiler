@@ -2,13 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/pass/dump_asm.hpp"
-#include "spv/enums.hpp"
+#include "spv/instructions.hpp"
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
+#include "tinytc/tinytc.hpp"
 
 #include <array>
 #include <concepts>
@@ -20,6 +21,8 @@
 #include <vector>
 
 namespace tinytc::spv {
+
+enum class LinkageType;
 
 dump_asm_pass::dump_asm_pass(std::ostream &os) : os_(&os) {}
 

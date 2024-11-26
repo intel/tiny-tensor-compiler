@@ -1,16 +1,18 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "device_info.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/program_node.hpp"
+// IWYU pragma: begin_keep
+#include "pass/dump_cfg.hpp"
+#include "pass/dump_def_use.hpp"
+#include "pass/dump_ir.hpp"
+// IWYU pragma: end_keep
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
 #include "pass/convert_to_spirv.hpp"
 #include "pass/dead_code_elimination.hpp"
-#include "pass/dump_cfg.hpp"
-#include "pass/dump_def_use.hpp"
-#include "pass/dump_ir.hpp"
 #include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"
 #include "pass/lower_foreach.hpp"
@@ -18,19 +20,17 @@
 #include "pass/stack.hpp"
 #include "pass/work_group_size.hpp"
 #include "passes.hpp"
-#include "reference_counted.hpp"
 #include "spv/pass/assemble.hpp"
 #include "spv/pass/assign_ids.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
 #include <cstring>
-#include <iostream>
-#include <memory>
+#include <iostream> // IWYU pragma: keep
 #include <utility>
-#include <vector>
 
 using namespace tinytc;
 

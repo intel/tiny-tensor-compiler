@@ -10,6 +10,7 @@
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 
+#include <functional>
 #include <ostream>
 #include <string_view>
 #include <vector>

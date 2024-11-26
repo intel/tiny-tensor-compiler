@@ -425,7 +425,7 @@ typedef uint8_t tinytc_bool_t;
 
 //! @struct tinytc_data_type
 //! @brief Opaque struct for a data type
-struct tinytc_data_type;
+struct tinytc_data_type; // IWYU pragma: export
 //! @brief data_type handle
 typedef struct tinytc_data_type *tinytc_data_type_t;
 //! @brief const data_type handle
@@ -433,7 +433,7 @@ typedef const struct tinytc_data_type *const_tinytc_data_type_t;
 
 //! @struct tinytc_value
 //! @brief Opaque struct for a value
-struct tinytc_value;
+struct tinytc_value; // IWYU pragma: export
 //! @brief value handle
 typedef struct tinytc_value *tinytc_value_t;
 //! @brief const value handle
@@ -441,7 +441,7 @@ typedef const struct tinytc_value *const_tinytc_value_t;
 
 //! @struct tinytc_inst
 //! @brief Opaque struct for an instruction
-struct tinytc_inst;
+struct tinytc_inst; // IWYU pragma: export
 //! @brief inst handle
 typedef struct tinytc_inst *tinytc_inst_t;
 //! @brief const inst handle
@@ -449,7 +449,7 @@ typedef const struct tinytc_inst *const_tinytc_inst_t;
 
 //! @struct tinytc_region
 //! @brief Opaque struct for a region
-struct tinytc_region;
+struct tinytc_region; // IWYU pragma: export
 //! @brief region handle
 typedef struct tinytc_region *tinytc_region_t;
 //! @brief const region handle
@@ -457,7 +457,7 @@ typedef const struct tinytc_region *const_tinytc_region_t;
 
 //! @struct tinytc_func
 //! @brief Opaque struct for a function
-struct tinytc_func;
+struct tinytc_func; // IWYU pragma: export
 //! @brief func handle
 typedef struct tinytc_func *tinytc_func_t;
 //! @brief const func handle
@@ -465,7 +465,7 @@ typedef const struct tinytc_func *const_tinytc_func_t;
 
 //! @struct tinytc_prog
 //! @brief Opaque struct for a program
-struct tinytc_prog;
+struct tinytc_prog; // IWYU pragma: export
 //! @brief prog handle
 typedef struct tinytc_prog *tinytc_prog_t;
 //! @brief const prog handle
@@ -473,7 +473,7 @@ typedef const struct tinytc_prog *const_tinytc_prog_t;
 
 //! @struct tinytc_spv_mod
 //! @brief Opaque struct for a SPIR-V module
-struct tinytc_spv_mod;
+struct tinytc_spv_mod; // IWYU pragma: export
 //! @brief spv_mod handle
 typedef struct tinytc_spv_mod *tinytc_spv_mod_t;
 //! @brief const spv_mod handle
@@ -481,7 +481,7 @@ typedef const struct tinytc_spv_mod *const_tinytc_spv_mod_t;
 
 //! @struct tinytc_core_info;
 //! @brief Opaque struct for core information
-struct tinytc_core_info;
+struct tinytc_core_info; // IWYU pragma: export
 //! @brief core_info handle
 typedef struct tinytc_core_info *tinytc_core_info_t;
 //! @brief const core_info handle
@@ -489,7 +489,7 @@ typedef const struct tinytc_core_info *const_tinytc_core_info_t;
 
 //! @struct tintyc_compiler_context
 //! @brief Opaque struct for compiler context
-struct tinytc_compiler_context;
+struct tinytc_compiler_context; // IWYU pragma: export
 //! @brief compiler_context handle
 typedef struct tinytc_compiler_context *tinytc_compiler_context_t;
 //! @brief const compiler_context handle
@@ -497,7 +497,7 @@ typedef const struct tinytc_compiler_context *const_tinytc_compiler_context_t;
 
 //! @struct tinytc_binary;
 //! @brief Opaque struct for a binary
-struct tinytc_binary;
+struct tinytc_binary; // IWYU pragma: export
 //! @brief binary handle
 typedef struct tinytc_binary *tinytc_binary_t;
 //! @brief const binary handle
@@ -505,7 +505,7 @@ typedef const struct tinytc_binary *const_tinytc_binary_t;
 
 //! @struct tinytc_recipe;
 //! @brief Opaque struct for a recipe
-struct tinytc_recipe;
+struct tinytc_recipe; // IWYU pragma: export
 //! @brief recipe handle
 typedef struct tinytc_recipe *tinytc_recipe_t;
 //! @brief const recipe handle
@@ -513,7 +513,7 @@ typedef const struct tinytc_recipe *const_tinytc_recipe_t;
 
 //! @struct tinytc_recipe_handler;
 //! @brief Opaque struct for a recipe handler
-struct tinytc_recipe_handler;
+struct tinytc_recipe_handler; // IWYU pragma: export
 //! @brief recipe_handler handle
 typedef struct tinytc_recipe_handler *tinytc_recipe_handler_t;
 //! @brief const recipe_handler handle

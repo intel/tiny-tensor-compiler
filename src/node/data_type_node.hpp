@@ -4,7 +4,6 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
-#include "compiler_context.hpp"
 #include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"

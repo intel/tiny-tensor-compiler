@@ -16,20 +16,20 @@ from gen import generate_cpp, generate_header
 spv_enums = 'enums.hpp'
 spv_enums_includes = ['<cstdint>']
 spv_capex = 'capex_util.hpp'
-spv_capex_includes = [spv_enums, "tinytc/tinytc.hpp"]
+spv_capex_includes = ["tinytc/tinytc.hpp"]
 spv_capex_cpp = 'capex_util.cpp'
-spv_capex_cpp_includes = [spv_capex]
+spv_capex_cpp_includes = [spv_capex, spv_enums]
 spv_capex_required_enums = [
     'AddressingModel', 'ExecutionMode', 'ExecutionModel', 'MemoryModel'
 ]
 spv_names = 'names.hpp'
-spv_names_includes = [spv_enums]
+spv_names_includes = []
 spv_names_cpp = 'names.cpp'
 spv_names_cpp_includes = [spv_names, spv_enums]
 spv_defs = 'defs.hpp'
 spv_defs_includes = [
-    spv_enums, 'support/ilist_base.hpp', 'tinytc/tinytc.hpp', None, '<cstdint>', '<limits>',
-    '<variant>', '<string>', '<utility>'
+    spv_enums, 'support/ilist_base.hpp', 'tinytc/tinytc.hpp', None,
+    '<cstdint>', '<limits>', '<variant>', '<string>', '<utility>'
 ]
 spv_ops = 'instructions.hpp'
 spv_visitor = 'visit.hpp'
@@ -57,6 +57,9 @@ def get_class_name(instruction):
 
 
 def generate_capex(f, grammar):
+    print(f'enum class Capability;', file=f)
+    for i in spv_capex_required_enums:
+        print(f'enum class {i};', file=f)
     for name, ty in zip(['capabilities', 'extensions'],
                         ['Capability', 'char const*']):
         for opkind in grammar['operand_kinds']:
@@ -123,12 +126,14 @@ def generate_enums(f, grammar):
 
 
 def generate_names(f, grammar):
+    print('enum class Op;', file=f)
     print('auto to_string(Op op) -> char const*;', file=f)
 
     for opkind in grammar['operand_kinds']:
         category = opkind['category']
         if category != 'BitEnum' and category != 'ValueEnum':
             continue
+        print(f'enum class {opkind["kind"]};', file=f)
         print(f'auto to_string({opkind["kind"]} e) -> char const*;', file=f)
 
 
@@ -243,6 +248,10 @@ using PairLiteralIntegerIdRef
 using PairIdRefLiteralInteger = std::pair<spv_inst*, std::int32_t>;
 """,
           file=f)
+
+    for instruction in grammar['instructions']:
+        print(f'class {get_class_name(instruction)}; // IWYU pragma: export',
+              file=f)
 
 
 def generate_op_classes(f, grammar):

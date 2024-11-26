@@ -4,8 +4,8 @@
 #ifndef WORK_GROUP_SIZE_20240311_HPP
 #define WORK_GROUP_SIZE_20240311_HPP
 
-#include "device_info.hpp"
 #include "node/function_node.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 

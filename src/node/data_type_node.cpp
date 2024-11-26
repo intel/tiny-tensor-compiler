@@ -2,12 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "node/data_type_node.hpp"
+#include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "support/fnv1a.hpp"
-#include "support/fnv1a_array_view.hpp"
+#include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 #include "tinytc/types.hpp"
 
 #include <algorithm>

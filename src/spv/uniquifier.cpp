@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/uniquifier.hpp"
+#include "node/data_type_node.hpp"
 #include "scalar_type.hpp"
 #include "spv/instructions.hpp"
+#include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
 #include "support/visit.hpp"

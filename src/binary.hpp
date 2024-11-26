@@ -4,15 +4,17 @@
 #ifndef BINARY_20240308_HPP
 #define BINARY_20240308_HPP
 
-#include "compiler_context.hpp"
 #include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
+
+namespace tinytc {
+enum class bundle_format;
+}
 
 /**
  * @brief Container encapsulating a SPIR-V or native device binary

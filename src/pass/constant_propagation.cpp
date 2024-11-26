@@ -11,6 +11,8 @@
 #include "support/ilist_base.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <variant>
 

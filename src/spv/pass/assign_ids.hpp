@@ -5,7 +5,6 @@
 #define ASSIGN_IDS_20241111_HPP
 
 #include "spv/defs.hpp"
-#include "spv/instructions.hpp"
 #include "spv/visit.hpp"
 #include "tinytc/types.h"
 

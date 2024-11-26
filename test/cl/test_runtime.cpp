@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "test_runtime.hpp"
+#include "argument_handler.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"

@@ -13,8 +13,6 @@
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 
-#include <cassert>
-#include <memory>
 #include <utility>
 #include <variant>
 

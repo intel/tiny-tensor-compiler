@@ -7,6 +7,7 @@
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "tinytc/types.hpp"
 
 namespace tinytc {
 

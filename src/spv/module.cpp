@@ -3,15 +3,20 @@
 
 #include "tinytc/types.h"
 
+#include "error.hpp"
 #include "spv/defs.hpp"
 #include "spv/module.hpp"
 #include "spv/pass/dump_asm.hpp"
 #include "support/ilist_base.hpp"
+#include "tinytc/tinytc.h"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 
 namespace tinytc {
 void ilist_callbacks<spv::spv_inst>::node_added(spv::spv_inst *) {}

@@ -5,6 +5,7 @@
 // Do not edit manually
 
 #include "capex_util.hpp"
+#include "enums.hpp"
 
 namespace tinytc::spv {
 

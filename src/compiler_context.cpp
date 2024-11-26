@@ -10,7 +10,6 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
-#include <sstream>
 
 namespace tinytc {
 void default_error_reporter(char const *, const tinytc_location_t *, void *) {}

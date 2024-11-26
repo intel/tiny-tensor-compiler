@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
-C-API:
+C-API <OpenCL C-API>:
   Common:
     function:
       - tinytc_cl_convert_status

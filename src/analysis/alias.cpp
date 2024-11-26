@@ -11,6 +11,7 @@
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 
+#include <functional>
 #include <unordered_map>
 #include <utility>
 

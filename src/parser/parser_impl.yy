@@ -5,10 +5,8 @@
 %language "c++"
 
 %code requires {
-    #include "node/data_type_node.hpp"
     #include "node/function_node.hpp"
     #include "node/inst_node.hpp"
-    #include "node/value_node.hpp"
     #include "tinytc/tinytc.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
@@ -33,9 +31,11 @@
 }
 
 %code {
+    #include "compiler_context.hpp"
     #include "error.hpp"
     #include "node/program_node.hpp"
     #include "node/region_node.hpp"
+    #include "node/value_node.hpp"
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
     #include "support/ilist.hpp"
@@ -47,6 +47,7 @@
     #include <cstdint>
     #include <cstdlib>
     #include <exception>
+    #include <initializer_list>
     #include <sstream>
     #include <utility>
     #include <vector>

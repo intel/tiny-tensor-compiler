@@ -4,6 +4,7 @@
 #ifndef COMPILER_CONTEXT_20240924_HPP
 #define COMPILER_CONTEXT_20240924_HPP
 
+#include "compiler_context_cache.hpp"
 #include "reference_counted.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -19,9 +20,6 @@
 
 namespace tinytc {
 void default_error_reporter(char const *what, const tinytc_location_t *location, void *user_data);
-
-class compiler_context_cache;
-
 } // namespace tinytc
 
 struct tinytc_compiler_context : tinytc::reference_counted {

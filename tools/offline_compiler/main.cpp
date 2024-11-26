@@ -3,16 +3,13 @@
 
 #include "argparser.hpp"
 #include "argparser_common.hpp"
-#include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
-#include <cstring>
 #include <exception>
 #include <iostream>
-#include <string_view>
 #include <utility>
 
 using namespace tinytc;

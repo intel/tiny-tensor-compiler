@@ -10,6 +10,7 @@
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <vector>

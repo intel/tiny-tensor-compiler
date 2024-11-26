@@ -4,7 +4,6 @@
 #ifndef COMPILER_CONTEXT_CACHE_20240925_HPP
 #define COMPILER_CONTEXT_CACHE_20240925_HPP
 
-#include "node/data_type_node.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/types.h"
 

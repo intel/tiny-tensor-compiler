@@ -5,9 +5,10 @@
 #define CONSTANT_PROPAGATION_20240807_HPP
 
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 namespace tinytc {
+
+enum class optflag;
 
 class constant_propagation_pass {
   public:

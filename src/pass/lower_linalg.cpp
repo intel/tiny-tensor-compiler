@@ -19,10 +19,13 @@
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
 #include <cstdint>
+#include <functional>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <utility>

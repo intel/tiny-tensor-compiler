@@ -4,24 +4,26 @@
 #ifndef UNIQUIFIER_20241107_HPP
 #define UNIQUIFIER_20241107_HPP
 
-#include "node/data_type_node.hpp"
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
-#include "spv/module.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
+#include <variant>
+
+namespace tinytc {
+enum class address_space;
+enum class scalar_type;
+} // namespace tinytc
 
 namespace tinytc::spv {
-
-class OpTypeFunction;
 
 auto address_space_to_storage_class(address_space as) -> StorageClass;
 

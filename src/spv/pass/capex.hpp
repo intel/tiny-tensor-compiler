@@ -5,11 +5,11 @@
 #define CAPEX_20241113_HPP
 
 #include "spv/defs.hpp"
-#include "spv/instructions.hpp"
-#include "spv/uniquifier.hpp"
 #include "tinytc/types.h"
 
 namespace tinytc::spv {
+
+class uniquifier;
 
 class capex {
   public:

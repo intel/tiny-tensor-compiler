@@ -4,7 +4,6 @@
 #ifndef INSERT_LIFETIME_STOP_20240912_HPP
 #define INSERT_LIFETIME_STOP_20240912_HPP
 
-#include "analysis/aa_results.hpp"
 #include "node/function_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
@@ -12,6 +11,8 @@
 #include <unordered_set>
 
 namespace tinytc {
+
+class aa_results;
 
 class insert_lifetime_stop_pass {
   public:

@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "tall_and_skinny.hpp"
-#include "compiler_context.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
 #include "recipe.hpp"
-#include "reference_counted.hpp"
 #include "support/util.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <array>

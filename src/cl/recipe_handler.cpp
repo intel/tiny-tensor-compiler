@@ -3,7 +3,6 @@
 
 #include "recipe_handler.hpp"
 #include "../recipe.hpp"
-#include "../reference_counted.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.h"

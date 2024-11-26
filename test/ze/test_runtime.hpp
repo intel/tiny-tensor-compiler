@@ -6,11 +6,14 @@
 
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.hpp"
-#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>
 #include <level_zero/ze_api.h>
+
+namespace tinytc {
+enum class mem_type;
+}
 
 class level_zero_test_runtime {
   public:

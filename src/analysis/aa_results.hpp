@@ -4,7 +4,7 @@
 #ifndef AA_RESULTS_20240314_HPP
 #define AA_RESULTS_20240314_HPP
 
-#include "node/value_node.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <unordered_map>

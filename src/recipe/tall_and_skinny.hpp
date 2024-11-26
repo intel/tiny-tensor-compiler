@@ -5,12 +5,14 @@
 #define TALL_AND_SKINNY_20240422_HPP
 
 #include "../recipe.hpp"
-#include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
 
 #include <cstdint>
 
 namespace tinytc {
+
+class binary;
+class prog;
+enum class scalar_type;
 
 enum class tall_and_skinny_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const *;

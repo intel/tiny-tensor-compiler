@@ -5,10 +5,12 @@
 #define SMALL_GEMM_BATCHED_20240419_HPP
 
 #include "../recipe.hpp"
-#include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
 
 namespace tinytc {
+
+class binary;
+class prog;
+enum class scalar_type;
 
 enum class small_gemm_batched_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *;

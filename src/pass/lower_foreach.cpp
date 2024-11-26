@@ -4,13 +4,31 @@
 #include "pass/lower_foreach.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
+#include "error.hpp"
+#include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "node/value_node.hpp"
 #include "pass/clone.hpp"
+#include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+#include "tinytc/types.hpp"
+
+#include <array>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <ranges>
+#include <stdexcept>
+#include <utility>
+#include <vector>
 
 namespace tinytc {
 

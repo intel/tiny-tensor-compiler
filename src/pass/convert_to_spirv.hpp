@@ -4,9 +4,9 @@
 #ifndef CONVERT_TO_SPIRV_20241029_HPP
 #define CONVERT_TO_SPIRV_20241029_HPP
 
-#include "device_info.hpp"
 #include "node/program_node.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 

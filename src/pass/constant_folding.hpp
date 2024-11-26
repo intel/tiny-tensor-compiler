@@ -10,7 +10,7 @@
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
-#include "support/fp_util.hpp"
+#include "support/fp_util.hpp" // IWYU pragma: keep
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -18,7 +18,6 @@
 #include <cmath>
 #include <complex>
 #include <cstdint>
-#include <type_traits>
 #include <variant>
 
 namespace tinytc {

@@ -12,8 +12,8 @@
 #include "tinytc/types.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <list>
-#include <memory>
 
 namespace tinytc {
 

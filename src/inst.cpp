@@ -1,7 +1,6 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "compiler_context.hpp"
 #include "error.hpp"
 #include "location.hpp"
 #include "node/data_type_node.hpp"

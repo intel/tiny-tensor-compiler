@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/insert_barrier.hpp"
+#include "analysis/aa_results.hpp"
 #include "analysis/alias.hpp"
 #include "analysis/cfg.hpp"
 #include "error.hpp"
@@ -13,7 +14,6 @@
 #include "support/util.hpp"
 #include "support/visit.hpp"
 
-#include <algorithm>
 #include <cstdint>
 #include <memory>
 #include <queue>

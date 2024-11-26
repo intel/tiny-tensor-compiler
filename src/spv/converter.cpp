@@ -13,6 +13,7 @@
 #include "scalar_type.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
+#include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "spv/pass/capex.hpp"
 #include "spv/uniquifier.hpp"
@@ -27,6 +28,7 @@
 #include <algorithm>
 #include <array>
 #include <complex>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <ranges>

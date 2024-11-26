@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <memory>
 #include <sstream>
+#include <utility>
 
 auto tinytc_inst::context() const -> tinytc_compiler_context_t {
     if (num_results() > 0) {

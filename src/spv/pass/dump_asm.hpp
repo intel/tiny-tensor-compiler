@@ -5,7 +5,6 @@
 #define DUMP_ASM_20241029_HPP
 
 #include "spv/defs.hpp"
-#include "spv/instructions.hpp"
 #include "spv/names.hpp"
 #include "spv/visit.hpp"
 #include "tinytc/types.h"

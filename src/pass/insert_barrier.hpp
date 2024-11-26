@@ -4,10 +4,9 @@
 #ifndef INSERT_BARRIER_20230310_HPP
 #define INSERT_BARRIER_20230310_HPP
 
-#include "analysis/aa_results.hpp"
 #include "node/function_node.hpp"
 #include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
@@ -15,6 +14,8 @@
 #include <unordered_set>
 
 namespace tinytc {
+
+class aa_results;
 
 class insert_barrier_pass {
   public:

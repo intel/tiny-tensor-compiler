@@ -4,7 +4,6 @@
 #ifndef MODULE_20241029_HPP
 #define MODULE_20241029_HPP
 
-#include "compiler_context.hpp"
 #include "reference_counted.hpp"
 #include "spv/defs.hpp"
 #include "support/ilist.hpp"

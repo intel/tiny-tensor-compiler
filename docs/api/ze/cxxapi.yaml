@@ -1,6 +1,6 @@
 # Copyright (C) 2024 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
-C++-API:
+C++-API <Level Zero C++-API>:
   Common:
     function:
       - tinytc::ZE_CHECK_STATUS

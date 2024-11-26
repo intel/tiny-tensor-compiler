@@ -3,7 +3,6 @@
 
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
-#include "reference_counted.hpp"
 #include "scalar_type.hpp"
 #include "support/util.hpp"
 #include "tiling.hpp"
@@ -15,8 +14,6 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <optional>
-#include <string>
 #include <utility>
 
 using namespace tinytc;

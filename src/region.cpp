@@ -2,9 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "node/inst_node.hpp"
+#include "node/inst_node.hpp" // IWYU pragma: keep
 #include "node/region_node.hpp"
-#include "node/value_node.hpp"
 #include "support/ilist.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
