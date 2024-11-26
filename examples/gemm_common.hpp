@@ -7,8 +7,13 @@
 #include "argparser.hpp"
 #include "tinytc/types.hpp"
 
+#include <cmath>
+#include <complex>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
+#include <sycl/sycl.hpp>
+#include <type_traits>
 
 namespace tinytc::examples {
 
@@ -57,6 +62,20 @@ inline auto convert_test_case(char const *str, test_case &tc) -> cmd::parser_sta
 inline auto validate_test_case(test_case const &tc) -> bool {
     return tc.m > 0 && tc.n > 0 && tc.k > 0;
 };
+
+template <typename T> inline auto fabs(T x) {
+    if constexpr (std::is_same_v<T, sycl::half>) {
+        return sycl::fabs(x);
+    } else {
+        return std::abs(x);
+    }
+}
+
+template <typename T> inline auto compute_error(T x, T x_ref) {
+    auto err = examples::fabs(x - x_ref);
+    const auto scale = examples::fabs(x_ref);
+    return scale > std::numeric_limits<decltype(scale)>::epsilon() ? err / scale : err;
+}
 
 } // namespace tinytc::examples
 

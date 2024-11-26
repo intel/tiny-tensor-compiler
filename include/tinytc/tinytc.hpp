@@ -18,6 +18,13 @@
 #include <utility>
 #include <vector>
 
+// For bit_cast, memcpy for C++ < 2020
+#if __cplusplus >= 202002L
+#include <bit>
+#else
+#include <cstring>
+#endif
+
 namespace tinytc {
 
 ////////////////////////////
@@ -65,98 +72,290 @@ inline void CHECK_STATUS_LOC(tinytc_status_t code, location const &loc) {
 ////////////////////////////
 
 /**
+ * @brief IEEE754 floating point format parameters
+ *
+ * @tparam ExponentBits Number of exponent bits
+ * @tparam MantissaBits Number of mantissa bits
+ */
+template <uint32_t ExponentBits, uint32_t MantissaBits> struct ieee754_format {
+    constexpr static uint32_t exponent_bits = ExponentBits; ///< Number of exponent bits
+    constexpr static uint32_t mantissa_bits = MantissaBits; ///< Number of mantissa bits
+    //! Total number of bits
+    constexpr static uint32_t num_bits = 1 + exponent_bits + mantissa_bits;
+    //! Bias
+    constexpr static uint32_t bias = (1 << (exponent_bits - 1)) - 1;
+    //! Max exponent when encoded with bias added
+    constexpr static uint32_t max_biased_exponent = (1 << exponent_bits) - 1;
+    //! Bit mask for sign bit
+    constexpr static uint32_t sign_mask = 1 << (num_bits - 1);
+    //! Bit mask for exponent bits
+    constexpr static uint32_t exponent_mask = max_biased_exponent << mantissa_bits;
+    //! Bit mask for exponent mantissa bits
+    constexpr static uint32_t mantissa_mask = (1 << mantissa_bits) - 1;
+    //! Number of bytes
+    constexpr static uint32_t num_bytes = 1 + (num_bits - 1) / 8;
+    //! Unsigned integer type large enough to store bit pattern
+    using bits_type = std::conditional_t<
+        num_bytes == 1, std::uint8_t,
+        std::conditional_t<
+            num_bytes == 2, std::uint16_t,
+            std::conditional_t<num_bytes == 4, std::uint32_t,
+                               std::conditional_t<num_bytes == 8, std::uint64_t, void>>>>;
+};
+
+//! Floating point format for bf16 (bfloat16)
+using bf16_format = ieee754_format<8, 7>;
+//! Floating point format for f16 (half)
+using f16_format = ieee754_format<5, 10>;
+//! Floating point format for f32 (float)
+using f32_format = ieee754_format<8, 23>;
+
+/**
+ * @brief Truncate high precision floating point number and return low precision floating point
+ * number
+ *
+ * @tparam F16f low precision floating point format
+ * @tparam F32f high precision floating point format
+ * @param x bit pattern of high precision number
+ *
+ * @return bit pattern of low precision number
+ */
+template <typename F16f, typename F32f>
+constexpr auto ieee754_truncate(typename F32f::bits_type x) -> F16f::bits_type {
+    using UI = F32f::bits_type;
+    using UITrunc = F16f::bits_type;
+    constexpr UI num_shift_bits = F32f::mantissa_bits - F16f::mantissa_bits;
+    auto const round_nearest_even_and_truncate = [](UI mantissa32) {
+        constexpr UI midpoint = (1 << num_shift_bits) / 2;
+        const UI bias = ((mantissa32 >> num_shift_bits) & 0x1) + (midpoint - 1);
+        return (mantissa32 + bias) >> num_shift_bits;
+    };
+
+    const UITrunc sign = (x & F32f::sign_mask) >> (F32f::num_bits - F16f::num_bits);
+    const UI exponent32 = (x & F32f::exponent_mask) >> F32f::mantissa_bits;
+    const UI mantissa32 = x & F32f::mantissa_mask;
+
+    UITrunc exponent16 = 0;
+    UITrunc mantissa16 = 0;
+    if (exponent32 > F32f::bias + F16f::bias) {
+        exponent16 = F16f::max_biased_exponent;
+        // Map numbers except NaN to inf
+        if (exponent32 < F32f::max_biased_exponent) {
+            mantissa16 = 0;
+        } else {
+            // Need to ceil to make sure that NaN is not truncated to inf
+            mantissa16 = 1 + ((mantissa32 - 1) >> num_shift_bits);
+        }
+    } else if (F32f::bias == F16f::bias || exponent32 > F32f::bias - F16f::bias) {
+        // convert bias
+        // E_{32} = e + F32f::bias
+        // E_{16} = e + F16f::bias
+        //        = E_{32} - F32f::bias + F16f::bias
+        //        = E_{32} - (F32f::bias - F16f::bias)
+        exponent16 = exponent32 - (F32f::bias - F16f::bias);
+        mantissa16 = round_nearest_even_and_truncate(mantissa32);
+    } else if (exponent32 >= F32f::bias + 1 - F16f::bias - F16f::mantissa_bits) {
+        exponent16 = 0;
+        mantissa16 = round_nearest_even_and_truncate((mantissa32 | (1 << F32f::mantissa_bits)) >>
+                                                     ((F32f::bias + 1 - F16f::bias) - exponent32));
+    }
+
+    exponent16 <<= F16f::mantissa_bits;
+
+    // Need to add mantissa as it might overflow during rounding and then we need to increase the
+    // exponent by 1
+    return (sign | exponent16) + mantissa16;
+}
+
+/**
+ * @brief Extend low precision floating point number and return high precision floating point
+ * number
+ *
+ * @tparam F32f high precision floating point format
+ * @tparam F16f low precision floating point format
+ * @param x bit pattern of low precision number
+ *
+ * @return bit pattern of high precision number
+ */
+template <typename F32f, typename F16f>
+constexpr auto ieee754_extend(typename F16f::bits_type x) -> F32f::bits_type {
+    using UIExt = F32f::bits_type;
+    const UIExt sign = (x & F16f::sign_mask) << (F32f::num_bits - F16f::num_bits);
+    const UIExt exponent16 = (x & F16f::exponent_mask) >> F16f::mantissa_bits;
+    const UIExt mantissa16 = x & F16f::mantissa_mask;
+
+    UIExt exponent32 = exponent16;
+    UIExt mantissa32 = mantissa16;
+    if (F32f::exponent_bits != F16f::exponent_bits) {
+        if (exponent16 == F16f::max_biased_exponent) {
+            // Inf and NaN
+            exponent32 = F32f::max_biased_exponent;
+        } else if (exponent16 != 0) {
+            // convert bias
+            // E_{16} = e + F16f::bias
+            // E_{32} = e + F32f::bias
+            //        = E_{16} - F16f::bias + F32f::bias
+            //        = E_{16} + (F32f::bias - F16f::bias)
+            exponent32 += F32f::bias - F16f::bias;
+        }
+
+        // Subnormal f16 numbers must be represented as f32 normal numbers
+        if (exponent16 == 0 && mantissa16 != 0) {
+            UIExt shift_count = 0;
+            do {
+                mantissa32 <<= 1;
+                ++shift_count;
+            } while ((mantissa32 & (1 << F16f::mantissa_bits)) != (1 << F16f::mantissa_bits));
+            mantissa32 &= F16f::mantissa_mask;
+            exponent32 = F32f::bias + 1 - F16f::bias - shift_count;
+        }
+    }
+
+    // shift mantissa
+    mantissa32 <<= F32f::mantissa_bits - F16f::mantissa_bits;
+
+    // shift exponent
+    exponent32 <<= F32f::mantissa_bits;
+
+    return sign | exponent32 | mantissa32;
+}
+
+/**
  * @brief Low precision float type
  *
  * For all operations, low precision floats are converted single precision, the operation is done in
  * single precision, and then the result is stored in the low precision type
  *
  * @tparam T storage type
- * @tparam (*Extend)(T) Float widening function
- * @tparam (*Truncate)(float) Float narrowing function
+ * @tparam F16f low precision floating point format
  */
-template <typename T, float (*Extend)(T), T (*Truncate)(float)> class lp_float {
+template <typename T, typename F16f> class lp_float {
   public:
-    lp_float() = default;
+    using lp_format = F16f;
+
+    constexpr lp_float() = default;
 
     constexpr lp_float(lp_float const &) = default;
     constexpr lp_float(lp_float &&) = default;
     constexpr lp_float &operator=(lp_float const &) = default;
     constexpr lp_float &operator=(lp_float &&) = default;
 
-    //! Construct from float
-    lp_float(float const &rhs) : data_{Truncate(rhs)} {}
+#if __cplusplus >= 202002L
+#define TINYTC_LPFLOAT_CONSTEXPR constexpr
+    //! construct from float
+    constexpr lp_float(float const &val)
+        : data_{ieee754_truncate<F16f, f32_format>(std::bit_cast<f32_format::bits_type>(val))} {}
     //! assign float
-    auto operator=(float const &rhs) -> lp_float & {
-        data_ = Truncate(rhs);
-        return *this;
-    }
+    constexpr auto operator=(float const &rhs) -> lp_float & { return *this = lp_float{rhs}; }
     //! implicit conversion to float
-    operator float() const { return Extend(data_); }
+    constexpr operator float() const {
+        auto bits = ieee754_extend<f32_format, F16f>(data_);
+        return std::bit_cast<float>(bits);
+    }
+#else
+#define TINYTC_LPFLOAT_CONSTEXPR
+    //! construct from float
+    lp_float(float const &val) {
+        f32_format::bits_type bits;
+        memcpy(&bits, &val, sizeof(f32_format::bits_type));
+        data_ = ieee754_truncate<F16f, f32_format>(bits);
+    }
+    //! assign float
+    auto operator=(float const &rhs) -> lp_float & { return *this = lp_float{rhs}; }
+    //! implicit conversion to float
+    operator float() const {
+        auto bits = ieee754_extend<f32_format, F16f>(data_);
+        float number;
+        memcpy(&number, &bits, sizeof(f32_format::bits_type));
+        return number;
+    }
+#endif
+
+    //! Get bit representation
+    TINYTC_LPFLOAT_CONSTEXPR auto bits() const -> T { return data_; }
+    //! Construct lp_float from bit representation
+    constexpr static auto from_bits(T const &val) -> lp_float {
+        auto r = lp_float{};
+        r.data_ = val;
+        return r;
+    }
 
     //! add
-    auto operator+(lp_float const &rhs) const -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator+(lp_float const &rhs) const -> lp_float {
         return operator float() + static_cast<float>(rhs);
     }
     //! add to
-    auto operator+=(lp_float const &rhs) -> lp_float & { return *this = *this + rhs; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator+=(lp_float const &rhs) -> lp_float & {
+        return *this = *this + rhs;
+    }
     //! subtract
-    auto operator-(lp_float const &rhs) const -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator-(lp_float const &rhs) const -> lp_float {
         return operator float() - static_cast<float>(rhs);
     }
     //! subtract from
-    auto operator-=(lp_float const &rhs) -> lp_float & { return *this = *this - rhs; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator-=(lp_float const &rhs) -> lp_float & {
+        return *this = *this - rhs;
+    }
     //! multiply
-    auto operator*(lp_float const &rhs) const -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator*(lp_float const &rhs) const -> lp_float {
         return operator float() * static_cast<float>(rhs);
     }
     //! multiply with
-    auto operator*=(lp_float const &rhs) -> lp_float & { return *this = *this * rhs; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator*=(lp_float const &rhs) -> lp_float & {
+        return *this = *this * rhs;
+    }
     //! divide
-    auto operator/(lp_float const &rhs) const -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator/(lp_float const &rhs) const -> lp_float {
         return operator float() / static_cast<float>(rhs);
     }
     //! divide with
-    auto operator/=(lp_float const &rhs) -> lp_float & { return *this = *this / rhs; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator/=(lp_float const &rhs) -> lp_float & {
+        return *this = *this / rhs;
+    }
     //! unary minus
-    auto operator-() -> lp_float { return -operator float(); }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator-() -> lp_float { return -operator float(); }
     //! pre-increase by 1
-    auto operator++() -> lp_float & { return *this = operator float() + 1.0f; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator++() -> lp_float & {
+        return *this = operator float() + 1.0f;
+    }
     //! post-increase by 1
-    auto operator++(int) -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator++(int) -> lp_float {
         lp_float tmp = *this;
         operator++();
         return tmp;
     }
     //! pre-decrease by 1
-    auto operator--() -> lp_float & { return *this = operator float() - 1.0f; }
+    TINYTC_LPFLOAT_CONSTEXPR auto operator--() -> lp_float & {
+        return *this = operator float() - 1.0f;
+    }
     //! post-decrease by 1
-    auto operator--(int) -> lp_float {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator--(int) -> lp_float {
         lp_float tmp = *this;
         operator--();
         return tmp;
     }
     //! equal
-    auto operator==(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator==(lp_float const &rhs) const -> bool {
         return operator float() == static_cast<float>(rhs);
     }
     //! not equal
-    auto operator!=(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator!=(lp_float const &rhs) const -> bool {
         return operator float() == static_cast<float>(rhs);
     }
     //! greater than
-    auto operator>(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator>(lp_float const &rhs) const -> bool {
         return operator float() > static_cast<float>(rhs);
     }
     //! greater than or equal
-    auto operator>=(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator>=(lp_float const &rhs) const -> bool {
         return operator float() >= static_cast<float>(rhs);
     }
     //! less than
-    auto operator<(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator<(lp_float const &rhs) const -> bool {
         return operator float() < static_cast<float>(rhs);
     }
     //! less than or equal
-    auto operator<=(lp_float const &rhs) const -> bool {
+    TINYTC_LPFLOAT_CONSTEXPR auto operator<=(lp_float const &rhs) const -> bool {
         return operator float() <= static_cast<float>(rhs);
     }
 
@@ -165,13 +364,13 @@ template <typename T, float (*Extend)(T), T (*Truncate)(float)> class lp_float {
 };
 
 /**
- * @brief fp16 host emulation type
- */
-using half = lp_float<std::uint16_t, tinytc_f16_as_ui16_to_f32, tinytc_f32_to_f16_as_ui16>;
-/**
  * @brief bf16 host emulation type
  */
-using bfloat16 = lp_float<std::uint16_t, tinytc_bf16_as_ui16_to_f32, tinytc_f32_to_bf16_as_ui16>;
+using bfloat16 = lp_float<std::uint16_t, bf16_format>;
+/**
+ * @brief fp16 host emulation type
+ */
+using half = lp_float<std::uint16_t, f16_format>;
 
 ////////////////////////////
 //////// Scalar type ///////
@@ -2036,8 +2235,8 @@ class region_builder {
     /**
      * @brief Build if with functor then(region_builder&) -> void
      *
-     * Note: If the if instruction returns values then we must have a "yield" instruction in both
-     * the "then" and the "else" branch. So to return values use the "ifelse" function.
+     * Note: If the if instruction returns values then we must have a "yield" instruction in
+     * both the "then" and the "else" branch. So to return values use the "ifelse" function.
      *
      * @tparam F Functor type
      * @param condition Condition value
@@ -2701,9 +2900,10 @@ inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type 
 } // namespace tinytc
 
 namespace std {
-template <> struct hash<tinytc::half> {
-    size_t operator()(tinytc::half const &val) const noexcept {
-        return hash<float>{}(static_cast<float>(val));
+template <typename... T> struct hash<tinytc::lp_float<T...>> {
+    size_t operator()(tinytc::lp_float<T...> const &val) const noexcept {
+        using h = hash<typename tinytc::lp_float<T...>::lp_format::bits_type>;
+        return h{}(val.bits());
     }
 };
 

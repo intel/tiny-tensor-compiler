@@ -49,10 +49,18 @@ Core C++-API:
     class:
       - tinytc::core_info
   FP math:
+    function:
+      - tinytc::ieee754_extend
+      - tinytc::ieee754_truncate
     class:
       - tinytc::lp_float
+    struct:
+      - tinytc::ieee754_format
     typedef:
+      - tinytc::bf16_format
       - tinytc::bfloat16
+      - tinytc::f16_format
+      - tinytc::f32_format
       - tinytc::half
   Parser:
     function:

@@ -78,7 +78,7 @@ template <typename T> void test(queue q, args &a) {
         q.copy(C, C_host.data(), M * N).wait();
         std::size_t num_err = 0;
         for (std::int64_t i = 0; i < M * N; ++i) {
-            auto err = std::abs(C_host[i] - C_ref_host[i]);
+            auto err = examples::compute_error(C_host[i], C_ref_host[i]);
             if (err > 10.0 * std::numeric_limits<decltype(err)>::epsilon()) {
                 if (num_err < 10) {
                     std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]

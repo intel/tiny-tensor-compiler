@@ -291,15 +291,44 @@ core_info
 FP math
 =======
 
+* Functions
+
+  * :ref:`ieee754_extend`
+
+  * :ref:`ieee754_truncate`
+
 * Classes
 
   * :ref:`lp_float`
 
+* Structures
+
+  * :ref:`ieee754_format`
+
 * Typedefs
+
+  * :ref:`bf16_format`
 
   * :ref:`bfloat16`
 
+  * :ref:`f16_format`
+
+  * :ref:`f32_format`
+
   * :ref:`half`
+
+FP math Functions
+-----------------
+
+ieee754_extend
+..............
+
+.. doxygenfunction:: tinytc::ieee754_extend
+
+ieee754_truncate
+................
+
+.. doxygenfunction:: tinytc::ieee754_truncate
 
 FP math Classes
 ---------------
@@ -309,13 +338,36 @@ lp_float
 
 .. doxygenclass:: tinytc::lp_float
 
+FP math Structures
+------------------
+
+ieee754_format
+..............
+
+.. doxygenstruct:: tinytc::ieee754_format
+
 FP math Typedefs
 ----------------
+
+bf16_format
+...........
+
+.. doxygentypedef:: tinytc::bf16_format
 
 bfloat16
 ........
 
 .. doxygentypedef:: tinytc::bfloat16
+
+f16_format
+..........
+
+.. doxygentypedef:: tinytc::f16_format
+
+f32_format
+..........
+
+.. doxygentypedef:: tinytc::f32_format
 
 half
 ....

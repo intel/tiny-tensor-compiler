@@ -10,6 +10,7 @@
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
+#include "support/fp_util.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -41,19 +42,6 @@ class constant_folding {
 
     bool unsafe_fp_math_;
 };
-
-template <typename T> struct is_complex : public std::false_type {};
-template <typename F>
-requires(std::is_floating_point_v<F>)
-struct is_complex<std::complex<F>> : public std::true_type {};
-template <typename T> inline constexpr bool is_complex_v = is_complex<T>::value;
-
-template <typename T> struct is_floating_point_or_lp_float : public std::false_type {};
-template <typename F>
-requires(std::is_floating_point_v<F> || std::is_same_v<F, half> || std::is_same_v<F, bfloat16>)
-struct is_floating_point_or_lp_float<F> : public std::true_type {};
-template <typename T>
-inline constexpr bool is_floating_point_or_lp_float_v = is_floating_point_or_lp_float<T>::value;
 
 struct compute_unary_op {
     arithmetic_unary operation;
