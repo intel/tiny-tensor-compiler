@@ -324,8 +324,11 @@ int main(int argc, char **argv) {
               << std::endl;
     try {
         switch (a.ty) {
+        case scalar_type::bf16:
+            test<tinytc::bfloat16>(std::move(q), a);
+            break;
         case scalar_type::f16:
-            test<sycl::half>(std::move(q), a);
+            test<tinytc::half>(std::move(q), a);
             break;
         case scalar_type::f32:
             test<float>(std::move(q), a);

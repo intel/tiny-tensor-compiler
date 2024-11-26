@@ -3,11 +3,16 @@
 
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
-; CHECK: OpCapability Int64
+; CHECK-DAG: OpCapability BFloat16ConversionINTEL
+; CHECK-DAG: OpCapability Float16
+; CHECK-DAG: OpCapability Int64
+; CHECK-DAG: OpCapability Int16
+; CHECK: OpExtension "SPV_INTEL_bfloat16_conversion"
 ; CHECK: %[[#BOOL:]] = OpTypeBool
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#F16:]] = OpTypeFloat 16
+; CHECK: %[[#I16:]] = OpTypeInt 16 0
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 
 func @tbool(%a: bool, %b: bool) {
@@ -70,6 +75,35 @@ func @thalf(%a: f16, %b: f16) {
 ; CHECK-NEXT: %[[#]] = OpFMul %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFDiv %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFRem %[[#F16]] %[[#]] %[[#]]
+}
+
+func @tbf16(%a: bf16, %b: bf16) {
+    %0 = arith.add %a, %b : bf16
+    %1 = arith.sub %a, %b : bf16
+    %2 = arith.mul %a, %b : bf16
+    %3 = arith.div %a, %b : bf16
+    %4 = arith.rem %a, %b : bf16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:          %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF1:]] = OpFAdd %[[#F32]] %[[#BF16_AF1]] %[[#BF16_BF1]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF1]]
+; CHECK-NEXT:     %[[#BF16_AF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF2:]] = OpFSub %[[#F32]] %[[#BF16_AF2]] %[[#BF16_BF2]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF2]]
+; CHECK-NEXT:     %[[#BF16_AF3:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF3:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF3:]] = OpFMul %[[#F32]] %[[#BF16_AF3]] %[[#BF16_BF3]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF3]]
+; CHECK-NEXT:     %[[#BF16_AF4:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF4:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF4:]] = OpFDiv %[[#F32]] %[[#BF16_AF4]] %[[#BF16_BF4]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF4]]
+; CHECK-NEXT:     %[[#BF16_AF5:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF5:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF5:]] = OpFRem %[[#F32]] %[[#BF16_AF5]] %[[#BF16_BF5]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF5]]
 }
 
 func @tcomplex(%a: c32, %b: c32) {

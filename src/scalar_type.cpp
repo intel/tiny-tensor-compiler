@@ -14,6 +14,7 @@ namespace tinytc {
 
 bool is_floating_type(scalar_type ty) {
     switch (ty) {
+    case scalar_type::bf16:
     case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
@@ -85,6 +86,8 @@ char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty) {
         return "i64";
     case tinytc_scalar_type_index:
         return "index";
+    case tinytc_scalar_type_bf16:
+        return "bf16";
     case tinytc_scalar_type_f16:
         return "f16";
     case tinytc_scalar_type_f32:
@@ -103,6 +106,7 @@ size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty) {
     case tinytc_scalar_type_i8:
         return 1;
     case tinytc_scalar_type_i16:
+    case tinytc_scalar_type_bf16:
     case tinytc_scalar_type_f16:
         return 2;
     case tinytc_scalar_type_i32:

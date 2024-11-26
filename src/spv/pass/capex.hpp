@@ -16,7 +16,11 @@ class capex {
     capex(uniquifier &unique);
 
     void operator()(spv_inst const &in);
+    void operator()(OpAtomicStore const &in);
     void operator()(OpAtomicFAddEXT const &in);
+    void operator()(OpAtomicIAdd const &in);
+    void operator()(OpConvertBF16ToFINTEL const &in);
+    void operator()(OpConvertFToBF16INTEL const &in);
     void operator()(OpEntryPoint const &in);
     void operator()(OpExecutionMode const &in);
     void operator()(OpGroupBroadcast const &in);

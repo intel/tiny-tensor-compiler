@@ -409,6 +409,10 @@ template <> struct to_scalar_type<std::int64_t> {
     static constexpr scalar_type value = scalar_type::i64; ///< value
 };
 //! to_scalar_type specialization
+template <> struct to_scalar_type<bfloat16> {
+    static constexpr scalar_type value = scalar_type::bf16; ///< value
+};
+//! to_scalar_type specialization
 template <> struct to_scalar_type<half> {
     static constexpr scalar_type value = scalar_type::f16; ///< value
 };

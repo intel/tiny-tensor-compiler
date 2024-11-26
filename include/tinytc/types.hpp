@@ -113,6 +113,7 @@ enum class status {
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,
+    spirv_unsupported_atomic_data_type = tinytc_status_spirv_unsupported_atomic_data_type,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,
@@ -246,6 +247,7 @@ enum class scalar_type {
     i64 = tinytc_scalar_type_i64,     ///< Signed 64 bit integer
     index = tinytc_scalar_type_index, ///< Unsigned Integer type for indices
     f16 = tinytc_scalar_type_f16,     ///< Half precision floating point (16 bit)
+    bf16 = tinytc_scalar_type_bf16,   ///< Brain floating point format with 16 bits
     f32 = tinytc_scalar_type_f32,     ///< Single precision floating point (32 bit)
     f64 = tinytc_scalar_type_f64,     ///< Double precision floating point (64 bit)
     c32 = tinytc_scalar_type_c32,     ///< Single precision complex (2x32 bit)

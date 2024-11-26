@@ -162,13 +162,14 @@ Scalar types
 
     scalar-type                 = integer-type / floating-type / complex-type
     integer-type                = "i8" / "i16" / "i32" / "i64" / "index"
-    floating-type               = "f32" / "f64"
+    floating-type               = "bf16" / "f16" / "f32" / "f64"
     complex-type                = "c32" / "c64"
 
 Scalar types are either signless integer ("i"), floating point ("f"),
 or complex floating point ("c").
 The number behind the scalar type prefix denotes the number of bits,
 e.g. "f64" are double precision floating point numbers.
+The "bf16" type encodes bfloat16 floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
 
 Scalar types are ordered as 

@@ -49,6 +49,8 @@ template <typename F> class unary_op_dispatcher {
     }
     auto operator()(double const &A) -> fold_result {
         switch (switch_ty) {
+        case scalar_type::bf16:
+            return computer.template operator()<bfloat16>(A);
         case scalar_type::f16:
             return computer.template operator()<half>(A);
         case scalar_type::f32:
@@ -101,6 +103,8 @@ template <typename F> class binary_op_dispatcher {
     }
     auto operator()(double const &A, double const &B) -> fold_result {
         switch (switch_ty) {
+        case scalar_type::bf16:
+            return computer.template operator()<bfloat16>(A, B);
         case scalar_type::f16:
             return computer.template operator()<half>(A, B);
         case scalar_type::f32:

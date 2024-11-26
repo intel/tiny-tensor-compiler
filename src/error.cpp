@@ -257,6 +257,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Undefined SPIR-V value";
     case tinytc_status_spirv_missing_dope_vector:
         return "Dope vector missing (internal compiler error)";
+    case tinytc_status_spirv_unsupported_atomic_data_type:
+        return "Atomic data type unsupported by SPIR-V";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

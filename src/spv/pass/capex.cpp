@@ -19,9 +19,26 @@
 
 namespace tinytc::spv {
 
+template <typename T>
+concept inst_with_return_type = requires(T &t) {
+    { t.type() } -> std::same_as<IdResultType &>;
+};
+
 capex::capex(uniquifier &unique) : unique_{&unique} {}
 
 void capex::operator()(spv_inst const &) {}
+void capex::operator()(OpAtomicStore const &in) {
+    auto ty = visit(overloaded{[](inst_with_return_type auto &a) -> spv_inst * { return a.type(); },
+                               [](auto &) -> spv_inst * { return nullptr; }},
+                    *in.op3());
+    if (!ty) {
+        throw status::internal_compiler_error;
+    }
+    auto ity = dyn_cast<OpTypeInt>(ty);
+    if (ity && ity->op0() == 64) {
+        unique_->capability(Capability::Int64Atomics);
+    }
+}
 void capex::operator()(OpAtomicFAddEXT const &in) {
     auto ty = dyn_cast<OpTypeFloat>(in.type());
     if (!ty) {
@@ -43,6 +60,23 @@ void capex::operator()(OpAtomicFAddEXT const &in) {
     default:
         break;
     }
+}
+void capex::operator()(OpAtomicIAdd const &in) {
+    auto ty = dyn_cast<OpTypeInt>(in.type());
+    if (!ty) {
+        throw status::internal_compiler_error;
+    }
+    if (ty && ty->op0() == 64) {
+        unique_->capability(Capability::Int64Atomics);
+    }
+}
+void capex::operator()(OpConvertBF16ToFINTEL const &) {
+    unique_->capability(Capability::BFloat16ConversionINTEL);
+    unique_->extension("SPV_INTEL_bfloat16_conversion");
+}
+void capex::operator()(OpConvertFToBF16INTEL const &) {
+    unique_->capability(Capability::BFloat16ConversionINTEL);
+    unique_->extension("SPV_INTEL_bfloat16_conversion");
 }
 void capex::operator()(OpEntryPoint const &in) {
     for (auto const &cap : capabilities(in.op0())) {

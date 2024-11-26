@@ -709,6 +709,10 @@ auto to_string(Op op) -> char const * {
         return "AtomicFMaxEXT";
     case Op::AtomicFAddEXT:
         return "AtomicFAddEXT";
+    case Op::ConvertFToBF16INTEL:
+        return "ConvertFToBF16INTEL";
+    case Op::ConvertBF16ToFINTEL:
+        return "ConvertBF16ToFINTEL";
     }
     return "unknown";
 }

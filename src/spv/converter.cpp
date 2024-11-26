@@ -247,6 +247,13 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
     case scalar_type::i64:
     case scalar_type::index:
         return make_int(op, ty, a, b);
+    case scalar_type::bf16: {
+        auto float_ty = unique_.spv_ty(scalar_type::f32);
+        auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+        auto bf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, b);
+        auto af_op_bf = make_float(op, float_ty, af, bf);
+        return mod_->add<OpConvertFToBF16INTEL>(ty, af_op_bf);
+    }
     case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
@@ -274,6 +281,7 @@ auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
 
 auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty,
                                spv_inst *a, location const &loc) -> spv_inst * {
+    auto float_ty = unique_.spv_ty(scalar_type::f32);
     auto const cast_from_int = [&](scalar_type to_ty, spv_inst *spv_to_ty,
                                    spv_inst *a) -> spv_inst * {
         switch (to_ty) {
@@ -283,6 +291,10 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         case scalar_type::i64:
         case scalar_type::index:
             return mod_->add<OpSConvert>(spv_to_ty, a);
+        case scalar_type::bf16: {
+            auto af = mod_->add<OpConvertSToF>(float_ty, a);
+            return mod_->add<OpConvertFToBF16INTEL>(spv_to_ty, af);
+        }
         case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
@@ -306,6 +318,8 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         case scalar_type::i64:
         case scalar_type::index:
             return mod_->add<OpConvertFToS>(spv_to_ty, a);
+        case scalar_type::bf16:
+            return mod_->add<OpConvertFToBF16INTEL>(spv_to_ty, a);
         case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
@@ -340,6 +354,10 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     case scalar_type::i64:
     case scalar_type::index:
         return cast_from_int(to_ty, spv_to_ty, a);
+    case scalar_type::bf16: {
+        auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+        return cast_from_float(to_ty, spv_to_ty, af);
+    }
     case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
@@ -414,6 +432,8 @@ auto inst_converter::make_constant(scalar_type sty, spv_inst *spv_ty,
         },
         [&](double d) -> spv_inst * {
             switch (sty) {
+            case scalar_type::bf16:
+                return unique_.constant(bfloat16{static_cast<float>(d)}.bits());
             case scalar_type::f16:
                 return unique_.constant(half{static_cast<float>(d)});
             case scalar_type::f32:
@@ -495,7 +515,7 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
         a = mod_->add<OpCompositeInsert>(spv_mul_ty, a, dummy, std::vector<LiteralInteger>{0});
         a = mod_->add<OpVectorShuffle>(spv_mul_ty, a, dummy, std::vector<LiteralInteger>{0, 0});
     }
-    if (!a_complex_b_complex && mul_ty == add_ty) {
+    if (!a_complex_b_complex && mul_ty == add_ty && mul_ty != scalar_type::bf16) {
         return mod_->add<OpExtInst>(spv_mul_ty, unique_.opencl_ext(),
                                     static_cast<std::int32_t>(OpenCLEntrypoint::fma),
                                     std::vector<IdRef>{a, b, c});
@@ -505,6 +525,13 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
         if (a_complex_b_complex) {
             return make_complex_mul(spv_mul_ty, a, b);
         } else if (a_non_complex_b_complex || is_floating_type(mul_ty)) {
+            if (mul_ty == scalar_type::bf16) {
+                auto float_ty = unique_.spv_ty(scalar_type::f32);
+                auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+                auto bf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, b);
+                auto af_mul_bf = mod_->add<OpFMul>(float_ty, af, bf);
+                return mod_->add<OpConvertFToBF16INTEL>(spv_mul_ty, af_mul_bf);
+            }
             return mod_->add<OpFMul>(spv_mul_ty, a, b);
         }
         return mod_->add<OpIMul>(spv_mul_ty, a, b);
@@ -517,7 +544,7 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
 }
 
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
-                                spv_inst *pointer, spv_inst *value) {
+                                spv_inst *pointer, spv_inst *value, location const &loc) {
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = element_type(sty);
         auto float_ty = unique_.spv_ty(component_sty);
@@ -548,9 +575,16 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
             mod_->add<OpAtomicStore>(re_im[1][0], scope, semantics, re_im[1][1]);
             break;
         }
-        default:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
             mod_->add<OpAtomicStore>(pointer, scope, semantics, value);
             break;
+        default:
+            throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
         }
         break;
     }
@@ -559,8 +593,6 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
         switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
         case scalar_type::i32:
         case scalar_type::i64:
         case scalar_type::index:
@@ -580,6 +612,8 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
             break;
         }
+        default:
+            throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
         }
         break;
     } break;
@@ -747,6 +781,12 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case scalar_type::i64:
         case scalar_type::index:
             return make_int(op, ty, a);
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+            auto op_af = make_float(op, float_ty, af);
+            return mod_->add<OpConvertFToBF16INTEL>(ty, op_af);
+        }
         case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
@@ -913,6 +953,13 @@ void inst_converter::operator()(compare_inst const &in) {
         case scalar_type::i64:
         case scalar_type::index:
             return compare_int(cond, spv_to_ty, a, b);
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+            auto bf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, b);
+            auto af_op_bf = compare_float(cond, float_ty, af, bf);
+            return mod_->add<OpConvertFToBF16INTEL>(spv_to_ty, af_op_bf);
+        }
         case scalar_type::f16:
         case scalar_type::f32:
         case scalar_type::f64:
@@ -1227,7 +1274,7 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     const auto scatter_store = [&](spv_inst *offset, spv_inst *value) {
         auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
                                                                std::vector<spv_inst *>{});
-        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value);
+        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value, in.loc());
     };
 
     spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
@@ -1663,7 +1710,7 @@ void inst_converter::operator()(store_inst const &in) {
         };
 
         make_store(in.flag(), memref_ty->element_ty(), memref_ty->addrspace(), pointer(),
-                   val(in.val()));
+                   val(in.val()), in.loc());
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref);
     }
@@ -1746,6 +1793,13 @@ void inst_converter::operator()(work_group_inst const &in) {
             case scalar_type::i64:
             case scalar_type::index:
                 return mod_->add<OpGroupIAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
+            case scalar_type::bf16: {
+                auto float_ty = unique_.spv_ty(scalar_type::f32);
+                auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
+                auto reduced =
+                    mod_->add<OpGroupFAdd>(float_ty, scope, GroupOperation::Reduce, operandf);
+                return mod_->add<OpConvertFToBF16INTEL>(spv_ty, reduced);
+            }
             case scalar_type::f16:
             case scalar_type::f32:
             case scalar_type::f64:

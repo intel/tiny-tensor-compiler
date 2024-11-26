@@ -717,6 +717,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
         return visitor(static_cast<OpAtomicFMaxEXT &>(inst));
     case Op::AtomicFAddEXT:
         return visitor(static_cast<OpAtomicFAddEXT &>(inst));
+    case Op::ConvertFToBF16INTEL:
+        return visitor(static_cast<OpConvertFToBF16INTEL &>(inst));
+    case Op::ConvertBF16ToFINTEL:
+        return visitor(static_cast<OpConvertBF16ToFINTEL &>(inst));
     }
     throw internal_compiler_error();
 }
@@ -1421,6 +1425,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpAtomicFMaxEXT const &>(inst));
     case Op::AtomicFAddEXT:
         return visitor(static_cast<OpAtomicFAddEXT const &>(inst));
+    case Op::ConvertFToBF16INTEL:
+        return visitor(static_cast<OpConvertFToBF16INTEL const &>(inst));
+    case Op::ConvertBF16ToFINTEL:
+        return visitor(static_cast<OpConvertBF16ToFINTEL const &>(inst));
     }
     throw internal_compiler_error();
 }
@@ -4431,6 +4439,20 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
         static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpConvertFToBF16INTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpConvertBF16ToFINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->post_visit(in);
     }
 };

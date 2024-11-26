@@ -122,7 +122,12 @@ template <typename T> void test(queue q, args &a) {
                 ldB = c.k;
                 ldC = c.m;
             }
-            auto r = make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC, 0);
+            auto ctx = make_compiler_context();
+            ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
+                                      void *) { std::cerr << what << std::endl; },
+                                   nullptr);
+            auto r =
+                make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC, 0, ctx);
             if (a.dump) {
                 r.get_prog().dump();
             }
@@ -205,8 +210,11 @@ int main(int argc, char **argv) {
     std::cout << "precision,m,n,k,update,time,bandwidth,gflops" << std::endl;
     try {
         switch (a.ty) {
+        case scalar_type::bf16:
+            test<tinytc::bfloat16>(std::move(q), a);
+            break;
         case scalar_type::f16:
-            test<sycl::half>(std::move(q), a);
+            test<tinytc::half>(std::move(q), a);
             break;
         case scalar_type::f32:
             test<float>(std::move(q), a);

@@ -410,6 +410,8 @@ class OpSubgroupBlockWriteINTEL;                 // IWYU pragma: export
 class OpAtomicFMinEXT;                           // IWYU pragma: export
 class OpAtomicFMaxEXT;                           // IWYU pragma: export
 class OpAtomicFAddEXT;                           // IWYU pragma: export
+class OpConvertFToBF16INTEL;                     // IWYU pragma: export
+class OpConvertBF16ToFINTEL;                     // IWYU pragma: export
 
 } // namespace tinytc::spv
 

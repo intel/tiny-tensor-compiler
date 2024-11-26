@@ -231,6 +231,8 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         }
                         return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i32));
                     }
+                    case scalar_type::bf16:
+                        return spv_ty(scalar_data_type::get(mod_->context(), scalar_type::i16));
                     case scalar_type::f16:
                     case scalar_type::f32:
                     case scalar_type::f64:

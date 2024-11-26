@@ -26,8 +26,6 @@ class lexer {
     std::uint64_t lex_number(char const *s, char const *e);
     std::int64_t lex_integer_constant(char const *s, char const *e);
     double lex_floating_constant(char const *s, char const *e);
-    scalar_type lex_integer_type(char const *s, char const *e);
-    scalar_type lex_floating_type(char const *s, char const *e);
 
     char const *input_;
     std::size_t len_;

@@ -6768,6 +6768,38 @@ class OpAtomicFAddEXT : public spv_inst {
     IdMemorySemantics op2_;
     IdRef op3_;
 };
+class OpConvertFToBF16INTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ConvertFToBF16INTEL; }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::BFloat16ConversionINTEL};
+    OpConvertFToBF16INTEL(IdResultType type, IdRef op0)
+        : spv_inst{Op::ConvertFToBF16INTEL, true}, type_(std::move(type)), op0_(std::move(op0)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+};
+class OpConvertBF16ToFINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::ConvertBF16ToFINTEL; }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::BFloat16ConversionINTEL};
+    OpConvertBF16ToFINTEL(IdResultType type, IdRef op0)
+        : spv_inst{Op::ConvertBF16ToFINTEL, true}, type_(std::move(type)), op0_(std::move(op0)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+};
 
 } // namespace tinytc::spv
 

@@ -363,6 +363,8 @@ enum class Op {
     AtomicFMinEXT = 5614,
     AtomicFMaxEXT = 5615,
     AtomicFAddEXT = 6035,
+    ConvertFToBF16INTEL = 6116,
+    ConvertBF16ToFINTEL = 6117,
 };
 enum class ImageOperands {
     None = 0x0000,

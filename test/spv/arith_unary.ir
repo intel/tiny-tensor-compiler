@@ -9,10 +9,12 @@
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#F16:]] = OpTypeFloat 16
+; CHECK: %[[#I16:]] = OpTypeInt 16 0
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
 
 func @tbool(%a: bool) {
     %0 = arith.not %a : bool
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpLogicalNot %[[#BOOL]] %[[#]]
 }
 
@@ -20,6 +22,7 @@ func @tint(%a: i64) {
     %0 = arith.abs %a : i64
     %1 = arith.neg %a : i64
     %2 = arith.not %a : i64
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpExtInst %[[#I64]] %[[#EXT]] s_abs %[[#]]
 ; CHECK-NEXT: OpSNegate %[[#I64]] %[[#]]
 ; CHECK-NEXT: OpNot %[[#I64]] %[[#]]
@@ -28,6 +31,7 @@ func @tint(%a: i64) {
 func @tfloat(%a: f32) {
     %0 = arith.abs %a : f32
     %1 = arith.neg %a : f32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] fabs %[[#]]
 ; CHECK-NEXT: OpFNegate %[[#F32]] %[[#]]
 }
@@ -35,8 +39,21 @@ func @tfloat(%a: f32) {
 func @thalf(%a: f16) {
     %0 = arith.abs %a : f16
     %1 = arith.neg %a : f16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpExtInst %[[#F16]] %[[#EXT]] fabs %[[#]]
 ; CHECK-NEXT: OpFNegate %[[#F16]] %[[#]]
+}
+
+func @tbf16(%a: bf16) {
+    %0 = arith.abs %a : bf16
+    %1 = arith.neg %a : bf16
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:        %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_OPAF1:]] = OpExtInst %[[#F32]] %[[#EXT]] fabs %[[#BF16_AF1]]
+; CHECK-NEXT:            %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_OPAF1]]
+; CHECK-NEXT:   %[[#BF16_AF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_OPAF2:]] = OpFNegate %[[#F32]] %[[#BF16_AF2]]
+; CHECK-NEXT:            %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_OPAF2]]
 }
 
 func @tcomplex(%a: c32) {
@@ -45,6 +62,7 @@ func @tcomplex(%a: c32) {
     %2 = arith.conj %a : c32
     %3 = arith.im %a : f32
     %4 = arith.re %a : f32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#A2:]] = OpFMul %[[#C32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
 ; CHECK-NEXT: %[[#A2_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1
@@ -61,6 +79,7 @@ func @tcomplex(%a: c32) {
 func @tfloatcoopmatrix() subgroup_size(16) {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = arith.neg %0 : coopmatrix<f32x16x4,matrix_a>
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFNegate %[[#F32]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFNegate %[[#F32]] %[[#]]

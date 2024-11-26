@@ -139,7 +139,7 @@ class inst_converter {
                        constant_inst::value_type const &val) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
     void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
-                    spv_inst *value);
+                    spv_inst *value, location const &loc);
 
     tinytc_spv_mod_t mod_;
     uniquifier unique_;

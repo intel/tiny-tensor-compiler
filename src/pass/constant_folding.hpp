@@ -457,6 +457,8 @@ auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_res
         return make_constant(value_cast<std::int64_t>(A), to_ty, loc);
     case scalar_type::index:
         return make_constant(value_cast<host_index_type>(A), to_ty, loc);
+    case scalar_type::bf16:
+        return make_constant(value_cast<bfloat16>(A), to_ty, loc);
     case scalar_type::f16:
         return make_constant(value_cast<half>(A), to_ty, loc);
     case scalar_type::f32:

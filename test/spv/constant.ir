@@ -13,11 +13,12 @@ func @t1() {
     %6 = constant -42 : i32
     %7 = constant 42 : i64
     %8 = constant -42 : i64
-    %9 = constant 42.42424242 : f16
-    %10 = constant 42.42424242 : f32
-    %11 = constant 42.42424242 : f64
-    %12 = constant [42.42424242, 0.0] : c32
-    %13 = constant [42.42424242, 0.0] : c64
+    %9 = constant 42.42424242 : bf16
+    %10 = constant 42.42424242 : f16
+    %11 = constant 42.42424242 : f32
+    %12 = constant 42.42424242 : f64
+    %13 = constant [42.42424242, 0.0] : c32
+    %14 = constant [42.42424242, 0.0] : c64
 ; CHECK:      %[[#]] = OpConstant %[[#]] 42
 ; CHECK:      %[[#]] = OpConstant %[[#]] 214
 ; CHECK:      %[[#]] = OpConstant %[[#]] 42
@@ -26,6 +27,7 @@ func @t1() {
 ; CHECK:      %[[#]] = OpConstant %[[#]] 4294967254
 ; CHECK:      %[[#]] = OpConstant %[[#]] 42
 ; CHECK:      %[[#]] = OpConstant %[[#]] 18446744073709551574
+; CHECK:      %[[#]] = OpConstant %[[#]] 16938
 ; CHECK:      %[[#]] = OpConstant %[[#]] 0x1.538p+5
 ; CHECK:      %[[#CST32:]] = OpConstant %[[#]] 0x1.5364dap+5
 ; CHECK:      %[[#CST64:]] = OpConstant %[[#]] 0x1.5364d935bbceap+5

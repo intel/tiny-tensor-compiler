@@ -41,9 +41,6 @@ lex:
         local_named_identifier   = "%" named_identifier;
         global_identifier     = "@" (unnamed_identifier | named_identifier);
 
-        integer_type          = "i" ("8" | "16" | "32" | "64") | "index";
-        floating_type         = ("f" | "c") ("16" | "32" | "64");
-
         digit                 = [0-9];
         hexdigit              = [0-9a-fA-F];
         integer_constant      = [-+]? digit+;
@@ -118,16 +115,17 @@ lex:
 
         // types
         "bool"              { return parser::make_BOOLEAN(loc_); }
-        integer_type        {
-            adv_loc();
-            auto t = lex_integer_type(b, YYCURSOR);
-            return parser::make_INTEGER_TYPE(t, loc_);
-        }
-        floating_type       {
-            adv_loc();
-            auto t = lex_floating_type(b, YYCURSOR);
-            return parser::make_FLOATING_TYPE(t, loc_);
-        }
+        "i8"                { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i8, loc_); }
+        "i16"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i16, loc_); }
+        "i32"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i32, loc_); }
+        "i64"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i64, loc_); }
+        "index"             { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::index, loc_); }
+        "bf16"              { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::bf16, loc_); }
+        "f16"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f16, loc_); }
+        "f32"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f32, loc_); }
+        "f64"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f64, loc_); }
+        "c32"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::c32, loc_); }
+        "c64"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::c64, loc_); }
         "coopmatrix"        { adv_loc(); return parser::make_COOPMATRIX(loc_); }
         "memref"            { adv_loc(); return parser::make_MEMREF(loc_); }
         "group"             { adv_loc(); return parser::make_GROUP(loc_); }
@@ -160,21 +158,19 @@ lex:
         "cmp"               { adv_loc(); return parser::make_CMP(loc_); }
         "constant"          { adv_loc(); return parser::make_CONSTANT(loc_); }
         "cooperative_matrix_load" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
-        "cooperative_matrix_mul_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
-        "cooperative_matrix_scale" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
-        "cooperative_matrix_store" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
-        "expand"            { adv_loc(); return parser::make_EXPAND(loc_); }
-        "fuse"              { adv_loc(); return parser::make_FUSE(loc_); }
-        "load"              { adv_loc(); return parser::make_LOAD(loc_); }
-        "for"               { adv_loc(); return parser::make_FOR(loc_); }
-        "foreach"           { adv_loc(); return parser::make_FOREACH(loc_); }
-        "if"                { adv_loc(); return parser::make_IF(loc_); }
-        "parallel"          { adv_loc(); return parser::make_PARALLEL(loc_); }
-        "else"              { adv_loc(); return parser::make_ELSE(loc_); }
-        "size"              { adv_loc(); return parser::make_SIZE(loc_); }
-        "subview"           { adv_loc(); return parser::make_SUBVIEW(loc_); }
-        "store"             { adv_loc(); return parser::make_STORE(loc_); }
-        "sum"               { adv_loc(); return parser::make_SUM(loc_); }
+        "cooperative_matrix_mul_add" { adv_loc(); return
+       parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); } "cooperative_matrix_scale" { adv_loc();
+       return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); } "cooperative_matrix_store" { adv_loc();
+       return parser::make_COOPERATIVE_MATRIX_STORE(loc_); } "expand"            { adv_loc(); return
+       parser::make_EXPAND(loc_); } "fuse"              { adv_loc(); return parser::make_FUSE(loc_);
+       } "load"              { adv_loc(); return parser::make_LOAD(loc_); } "for"               {
+       adv_loc(); return parser::make_FOR(loc_); } "foreach"           { adv_loc(); return
+       parser::make_FOREACH(loc_); } "if"                { adv_loc(); return parser::make_IF(loc_);
+       } "parallel"          { adv_loc(); return parser::make_PARALLEL(loc_); } "else" { adv_loc();
+       return parser::make_ELSE(loc_); } "size"              { adv_loc(); return
+       parser::make_SIZE(loc_); } "subview"           { adv_loc(); return
+       parser::make_SUBVIEW(loc_); } "store"             { adv_loc(); return
+       parser::make_STORE(loc_); } "sum"               { adv_loc(); return parser::make_SUM(loc_); }
         "work_group"        { adv_loc(); return parser::make_WORK_GROUP(loc_); }
         "yield"             { adv_loc(); return parser::make_YIELD(loc_); }
 
@@ -191,28 +187,46 @@ lex:
         ".xor"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
 
         // unary op
-        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
-        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
-        ".not"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
-        ".conj"             { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
-        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
-        ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
+        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs,
+       loc_); }
+        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg,
+       loc_); }
+        ".not"              { adv_loc(); return
+       parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
+        ".conj"             { adv_loc(); return
+       parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
+        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im,
+       loc_); }
+        ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re,
+       loc_); }
 
         // builtin
-        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_); }
-        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size, loc_); }
-        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups, loc_); }
-        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size, loc_); }
-        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id, loc_); }
-        ".subgroup_local_id" { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
+        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_);
+       }
+        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size,
+       loc_); }
+        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups,
+       loc_); }
+        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size,
+       loc_); }
+        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id,
+       loc_); }
+        ".subgroup_local_id" { adv_loc(); return
+       parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
 
         // comparison condition
-        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
-        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
-        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
-        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
-        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
-        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
+        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_);
+       }
+        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_);
+       }
+        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_);
+       }
+        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_);
+       }
+        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_);
+       }
+        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_);
+       }
 
         // work group operation
         ".reduce_add"       {
@@ -277,39 +291,6 @@ double lexer::lex_floating_constant(char const *s, char const *e) {
         throw parser::syntax_error(loc_, "Floating point value out of range: " + std::string(s, e));
     }
     return d;
-}
-
-scalar_type lexer::lex_integer_type(char const *s, char const *) {
-    char const *YYMARKER;
-    /*!re2c
-        re2c:yyfill:enable = 0;
-        re2c:define:YYCURSOR = s;
-
-        "i8"    { return scalar_type::i8; }
-        "i16"   { return scalar_type::i16; }
-        "i32"   { return scalar_type::i32; }
-        "i64"   { return scalar_type::i64; }
-        "index" { return scalar_type::index; }
-        $       { return {}; }
-        *       { return {}; }
-    */
-    return scalar_type{};
-}
-scalar_type lexer::lex_floating_type(char const *s, char const *) {
-    char const *YYMARKER;
-    /*!re2c
-        re2c:yyfill:enable = 0;
-        re2c:define:YYCURSOR = s;
-
-        "f16"  { return scalar_type::f16; }
-        "f32"  { return scalar_type::f32; }
-        "f64"  { return scalar_type::f64; }
-        "c32"  { return scalar_type::c32; }
-        "c64"  { return scalar_type::c64; }
-        $      { return {}; }
-        *      { return {}; }
-    */
-    return scalar_type{};
 }
 
 } // namespace tinytc

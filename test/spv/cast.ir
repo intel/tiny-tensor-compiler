@@ -3,11 +3,9 @@
 
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
-; CHECK: OpCapability Int64
-; CHECK: OpCapability Int8
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
-; CHECK: %[[#I8:]] = OpTypeInt 8 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#I8:]] = OpTypeInt 8 0
 ; CHECK: %[[#F64:]] = OpTypeFloat 64
 ; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
 ; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
@@ -18,41 +16,60 @@ func @tint(%a: i64) {
     %1 = cast %a : i8
     %2 = cast %a : f32
     %3 = cast %a : c64
-; CHECK:      %[[#]] = OpCopyObject %[[#I64]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpSConvert %[[#I8]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpConvertSToF %[[#F32]] %[[#]]
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:                 %[[#]] = OpCopyObject %[[#I64]] %[[#]]
+; CHECK-NEXT:            %[[#]] = OpSConvert %[[#I8]] %[[#]]
+; CHECK-NEXT:            %[[#]] = OpConvertSToF %[[#F32]] %[[#]]
 ; CHECK-NEXT: %[[#I64_TO_F64:]] = OpConvertSToF %[[#F64]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#I64_TO_F64]] %[[#C64_NULL]] 0
+; CHECK-NEXT:            %[[#]] = OpCompositeInsert %[[#C64]] %[[#I64_TO_F64]] %[[#C64_NULL]] 0
 }
 
 func @tfloat(%a: f32) {
     %1 = cast %a : i8
     %2 = cast %a : f64
     %3 = cast %a : c64
-; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:                 %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
+; CHECK-NEXT:            %[[#]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#F32_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#F32_TO_F64]] %[[#C64_NULL]] 0
+; CHECK-NEXT:            %[[#]] = OpCompositeInsert %[[#C64]] %[[#F32_TO_F64]] %[[#C64_NULL]] 0
 }
 
 func @thalf(%a: f16) {
     %1 = cast %a : i8
     %2 = cast %a : f64
     %3 = cast %a : c64
-; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpFConvert %[[#F64]] %[[#]]
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:                 %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
+; CHECK-NEXT:            %[[#]] = OpFConvert %[[#F64]] %[[#]]
 ; CHECK-NEXT: %[[#F16_TO_F64:]] = OpFConvert %[[#F64]] %[[#]]
-; CHECK-NEXT: %[[#]] = OpCompositeInsert %[[#C64]] %[[#F16_TO_F64]] %[[#C64_NULL]] 0
+; CHECK-NEXT:            %[[#]] = OpCompositeInsert %[[#C64]] %[[#F16_TO_F64]] %[[#C64_NULL]] 0
+}
+
+func @tbf16(%a: bf16) {
+    %1 = cast %a : i8
+    %2 = cast %a : f64
+    %3 = cast %a : c64
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:         %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:             %[[#]] = OpConvertFToS %[[#I8]] %[[#BF16_AF1]]
+; CHECK-NEXT:    %[[#BF16_AF2:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:             %[[#]] = OpFConvert %[[#F64]] %[[#BF16_AF2]]
+; CHECK-NEXT:    %[[#BF16_AF3:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_TO_F64:]] = OpFConvert %[[#F64]] %[[#BF16_AF3]]
+; CHECK-NEXT:             %[[#]] = OpCompositeInsert %[[#C64]] %[[#BF16_TO_F64]] %[[#C64_NULL]] 0
 }
 
 func @tcomplex(%a: c32) {
     %1 = cast %a : c64
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFConvert %[[#C64]] %[[#]]
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = cast %0  : coopmatrix<i8x16x4,matrix_a>
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpConvertFToS %[[#I8]] %[[#]]
