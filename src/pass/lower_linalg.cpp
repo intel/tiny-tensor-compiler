@@ -54,7 +54,21 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         return checked_flag::none;
     }();
+
+    const auto c_acc_ty = [&c_ty, &loc]() {
+        auto ct = dyn_cast<scalar_data_type>(c_ty);
+        if (ct == nullptr) {
+            throw compilation_error(loc, status::internal_compiler_error);
+        }
+        if (ct->ty() == scalar_type::bf16) {
+            return scalar_data_type::get(c_ty->context(), scalar_type::f32);
+        }
+        return c_ty;
+    }();
+
     auto coopmatrix_c_ty = get_coopmatrix(c_ty, m_block_size, n_block_size, matrix_use::acc, loc);
+    auto coopmatrix_c_acc_ty =
+        get_coopmatrix(c_acc_ty, m_block_size, n_block_size, matrix_use::acc, loc);
     auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, value K0, value K1,
                                value c_acc) -> value {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
@@ -81,13 +95,13 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 auto b = bb.add(make_cooperative_matrix_load(tB, check_b, B, pos_b[0], pos_b[1],
                                                              coopmatrix_b_ty));
                 auto c_next =
-                    bb.add(make_cooperative_matrix_mul_add(a, b, p[1], coopmatrix_c_ty, loc));
+                    bb.add(make_cooperative_matrix_mul_add(a, b, p[1], coopmatrix_c_acc_ty, loc));
                 bb.add(make_yield(c_next, loc));
             });
         return return_values[0];
     };
 
-    auto c_acc = bb.add(make_constant_zero(coopmatrix_c_ty, loc));
+    auto c_acc = bb.add(make_constant_zero(coopmatrix_c_acc_ty, loc));
 
     auto k_block_size = max_K_unrolling;
 
@@ -117,10 +131,14 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 auto c_next = compute_c(bb, 1, K0, K, c_acc);
                 bb.add(make_yield(c_next, loc));
             },
-            [&](region_builder &bb) { bb.add(make_yield(c_acc, loc)); }, {coopmatrix_c_ty}, loc);
+            [&](region_builder &bb) { bb.add(make_yield(c_acc, loc)); }, {coopmatrix_c_acc_ty},
+            loc);
         c_acc = remainder[0];
     }
 
+    if (coopmatrix_c_ty != coopmatrix_c_acc_ty) {
+        c_acc = bb.add(make_cast(c_acc, coopmatrix_c_ty, loc));
+    }
     auto alpha_ab = mixed_precision_coopmatrix_scale(bb, alpha, c_acc, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);

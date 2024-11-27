@@ -521,23 +521,26 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
                                     std::vector<IdRef>{a, b, c});
     }
 
+    if (mul_ty == scalar_type::bf16) {
+        auto float_ty = unique_.spv_ty(scalar_type::f32);
+        a = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+        b = mod_->add<OpConvertBF16ToFINTEL>(float_ty, b);
+    }
+
     auto product = [&]() -> spv_inst * {
         if (a_complex_b_complex) {
             return make_complex_mul(spv_mul_ty, a, b);
         } else if (a_non_complex_b_complex || is_floating_type(mul_ty)) {
-            if (mul_ty == scalar_type::bf16) {
-                auto float_ty = unique_.spv_ty(scalar_type::f32);
-                auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
-                auto bf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, b);
-                auto af_mul_bf = mod_->add<OpFMul>(float_ty, af, bf);
-                return mod_->add<OpConvertFToBF16INTEL>(spv_mul_ty, af_mul_bf);
-            }
             return mod_->add<OpFMul>(spv_mul_ty, a, b);
         }
         return mod_->add<OpIMul>(spv_mul_ty, a, b);
     }();
 
-    if (mul_ty != add_ty) {
+    if (mul_ty == scalar_type::bf16) {
+        if (add_ty != scalar_type::f32) {
+            product = make_cast(add_ty, scalar_type::f32, spv_add_ty, product, loc);
+        }
+    } else if (mul_ty != add_ty) {
         product = make_cast(add_ty, mul_ty, spv_add_ty, product, loc);
     }
     return make_binary_op(add_ty, arithmetic::add, spv_add_ty, c, product, loc);
