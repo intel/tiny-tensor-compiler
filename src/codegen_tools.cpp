@@ -119,14 +119,14 @@ auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value 
         throw compilation_error(loc, status::ir_expected_scalar);
     }
     if (at->ty() != bt->ty()) {
-        auto compatible_scalar_ty = compatible_type(at->ty(), bt->ty());
-        auto compatible_ty = scalar_data_type::get(at->context(), compatible_scalar_ty);
+        auto promoted_scalar_ty = promote_or_throw(at->ty(), bt->ty(), loc);
+        auto promoted_ty = scalar_data_type::get(at->context(), promoted_scalar_ty);
 
-        if (at->ty() != compatible_scalar_ty) {
-            a = bb.add(make_cast(a, compatible_ty, loc));
+        if (at->ty() != promoted_scalar_ty) {
+            a = bb.add(make_cast(a, promoted_ty, loc));
         }
-        if (bt->ty() != compatible_scalar_ty) {
-            b = bb.add(make_cast(b, compatible_ty, loc));
+        if (bt->ty() != promoted_scalar_ty) {
+            b = bb.add(make_cast(b, promoted_ty, loc));
         }
     }
     return bb.add(make_arith(operation, a, b, a->ty(), loc));
@@ -144,12 +144,10 @@ auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
     const auto a_ty = at->ty();
     const auto b_ty = bt->component_ty();
     if (a_ty != b_ty) {
-        const auto compatible_scalar_ty = compatible_type(a_ty, b_ty);
-
-        if (a_ty != compatible_type(a_ty, b_ty)) {
-            auto compatible_ty = scalar_data_type::get(at->context(), compatible_scalar_ty);
-            a = bb.add(make_cast(a, compatible_ty, loc));
+        if (!promotable(a_ty, b_ty)) {
+            throw compilation_error(loc, status::ir_forbidden_promotion);
         }
+        a = bb.add(make_cast(a, bt->ty(), loc));
     }
     return bb.add(make_cooperative_matrix_scale(a, b, bt, loc));
 }

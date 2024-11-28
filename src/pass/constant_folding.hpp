@@ -132,7 +132,7 @@ struct compute_unary_op {
             if (!sty) {
                 throw compilation_error(loc, status::ir_expected_scalar);
             }
-            auto cst_ty = scalar_data_type::get(sty->context(), element_type(sty->ty()));
+            auto cst_ty = scalar_data_type::get(sty->context(), component_type(sty->ty()));
             return make_constant(val, cst_ty, loc);
         };
 

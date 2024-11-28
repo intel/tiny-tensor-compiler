@@ -260,7 +260,7 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
         return make_float(op, ty, a, b);
     case scalar_type::c32:
     case scalar_type::c64:
-        return make_complex(op, ty, unique_.spv_ty(element_type(sty)), a, b);
+        return make_complex(op, ty, unique_.spv_ty(component_type(sty)), a, b);
     }
     throw compilation_error(loc, status::internal_compiler_error);
 }
@@ -301,7 +301,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
             return mod_->add<OpConvertSToF>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(element_type(to_ty));
+            auto spv_float_ty = unique_.spv_ty(component_type(to_ty));
             auto re = mod_->add<OpConvertSToF>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -326,7 +326,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
             return mod_->add<OpFConvert>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(element_type(to_ty));
+            auto spv_float_ty = unique_.spv_ty(component_type(to_ty));
             auto re = mod_->add<OpFConvert>(spv_float_ty, a);
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
@@ -487,8 +487,8 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
 auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty,
                                               spv_inst *a, spv_inst *b, spv_inst *c,
                                               location const &loc) -> spv_inst * {
-    const auto mul_ty = compatible_type(a_ty, b_ty);
-    const auto add_ty = compatible_type(mul_ty, c_ty);
+    const auto mul_ty = promote_or_throw(a_ty, b_ty, loc);
+    const auto add_ty = promote_or_throw(mul_ty, c_ty, loc);
     auto spv_mul_ty = unique_.spv_ty(mul_ty);
     auto spv_add_ty = unique_.spv_ty(add_ty);
 
@@ -504,7 +504,7 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
 
     const bool a_non_complex_b_complex = !is_complex_type(a_ty) && is_complex_type(b_ty);
     const bool a_complex_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
-    const auto a_cast_ty = a_non_complex_b_complex ? element_type(mul_ty) : mul_ty;
+    const auto a_cast_ty = a_non_complex_b_complex ? component_type(mul_ty) : mul_ty;
     auto spv_a_cast_ty = unique_.spv_ty(a_cast_ty);
 
     if (a_ty != a_cast_ty) {
@@ -549,7 +549,7 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
                                 spv_inst *pointer, spv_inst *value, location const &loc) {
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
-        auto component_sty = element_type(sty);
+        auto component_sty = component_type(sty);
         auto float_ty = unique_.spv_ty(component_sty);
         const auto storage_cls = address_space_to_storage_class(as);
         auto pointer_ty = unique_.spv_pointer_ty(storage_cls, float_ty, alignment(component_sty));
@@ -609,7 +609,7 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         case scalar_type::c32:
         case scalar_type::c64: {
             auto re_im = split_re_im();
-            auto component_sty = element_type(sty);
+            auto component_sty = component_type(sty);
             auto float_ty = unique_.spv_ty(component_sty);
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
             mod_->add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
@@ -760,7 +760,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         case arithmetic_unary::neg:
             return mod_->add<OpFNegate>(ty, a);
         case arithmetic_unary::conj: {
-            auto spv_float_ty = unique_.spv_ty(element_type(sty));
+            auto spv_float_ty = unique_.spv_ty(component_type(sty));
             auto a_im =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
             auto neg_a_im = mod_->add<OpFNegate>(spv_float_ty, a_im);
@@ -1156,7 +1156,7 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
 
     const auto a_ty = at->component_ty();
     const auto b_ty = bt->component_ty();
-    const auto b_component_ty = element_type(b_ty);
+    const auto b_component_ty = component_type(b_ty);
     const auto c_ty = ct->component_ty();
     const auto r_ty = rt->component_ty();
     const auto spv_b_ty = unique_.spv_ty(bt->ty());
@@ -1874,7 +1874,7 @@ void inst_converter::run_on_function(function_node const &fn, core_config const 
             auto stack_array_ty = unique_.spv_array_ty(stack_element_ty, high_water_mark);
             auto stack_ptr_ty =
                 unique_.spv_pointer_ty(StorageClass::Workgroup, stack_array_ty,
-                                       alignment(scalar_type::f64, component_count::v2));
+                                       alignment(scalar_type::f64, vector_size::v2));
             stack_ = mod_->add_to<OpVariable>(section::type_const_var, stack_ptr_ty,
                                               StorageClass::Workgroup);
             vars_used_by_function_.emplace_back(stack_);

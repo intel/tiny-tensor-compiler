@@ -231,8 +231,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_unsupported_coopmatrix_shape:
         return "Unsupported coopmatrix shape for the combination of scalar type, matrix use, and "
                "target architecture";
-    case tinytc_status_ir_incompatible_scalar_types:
-        return "Scalar type violates compatibility rules";
+    case tinytc_status_ir_forbidden_promotion:
+        return "Scalar type promotion is forbidden";
     case tinytc_status_ir_constant_mismatch:
         return "Type of constant does not match type of returned value";
     case tinytc_status_ir_insufficient_alignment:

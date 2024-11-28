@@ -93,7 +93,7 @@ typedef enum {
     tinytc_status_ir_init_return_mismatch = 0x12c, ///< Mismatch of init values and returned values
     tinytc_status_ir_invalid_matrix_use = 0x12d,   ///< Invalid matrix use
     tinytc_status_ir_unsupported_coopmatrix_shape = 0x12e, ///< Unsupported coopmatrix shape
-    tinytc_status_ir_incompatible_scalar_types = 0x12f,    ///< Incompatible scalar types
+    tinytc_status_ir_forbidden_promotion = 0x12f,          ///< Forbidden promotion
     tinytc_status_ir_constant_mismatch = 0x130,            ///< Constant mismatch
     tinytc_status_ir_insufficient_alignment = 0x131,       ///< Insufficient alignment
     tinytc_status_ir_must_have_yield = 0x132,              ///< Must have yield instruction

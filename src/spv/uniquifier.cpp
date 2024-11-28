@@ -67,7 +67,7 @@ auto uniquifier::builtin_alignment(BuiltIn b) -> std::int32_t {
     case BuiltIn::NumWorkgroups:
     case BuiltIn::WorkgroupId:
     case BuiltIn::GlobalOffset:
-        return alignment(scalar_type::index, component_count::v3);
+        return alignment(scalar_type::index, vector_size::v3);
         break;
     default:
         throw status::internal_compiler_error;

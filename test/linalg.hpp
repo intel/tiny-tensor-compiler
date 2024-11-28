@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <complex>
+#include <cstdint>
 
 using runtime_class = RUNTIME_CLASS;
 using namespace tinytc;
@@ -157,8 +158,8 @@ TEST_CASE(RUNTIME_NAME " gemm packed mixed precision") {
     std::int64_t M, N, K;
     DOCTEST_TENSOR3_TEST(MM, NN, KK);
 
-    auto op = test::gemm<int, int, int, float, float>(transpose::N, transpose::N, {{M, K}},
-                                                      {{K, N}}, {{M, N}});
+    auto op = test::gemm<std::int16_t, std::int16_t, std::int16_t, float, float>(
+        transpose::N, transpose::N, {{M, K}}, {{K, N}}, {{M, N}});
     test::test_blas_a3<runtime_class>(op, 1, 0);
 }
 

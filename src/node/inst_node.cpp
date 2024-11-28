@@ -160,13 +160,14 @@ blas_a2_inst::blas_a2_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
     auto alphat = get_scalar_type(loc(), op(op_alpha));
     auto betat = get_scalar_type(loc(), op(op_beta));
 
-    if (compatible_type(alphat->ty(), At->element_ty()) != At->element_ty()) {
-        throw compilation_error(loc(), {&op(op_alpha), &op(op_A)},
-                                status::ir_incompatible_scalar_types);
+    if (!promotable(alphat->ty(), At->element_ty())) {
+        throw compilation_error(loc(), {&op(op_alpha), &op(op_A)}, status::ir_forbidden_promotion);
     }
-    if (compatible_type(betat->ty(), Bt->element_ty()) != Bt->element_ty()) {
-        throw compilation_error(loc(), {&op(op_beta), &op(op_B)},
-                                status::ir_incompatible_scalar_types);
+    if (!promotable(At->element_ty(), Bt->element_ty())) {
+        throw compilation_error(loc(), {&op(op_A), &op(op_B)}, status::ir_forbidden_promotion);
+    }
+    if (!promotable(betat->ty(), Bt->element_ty())) {
+        throw compilation_error(loc(), {&op(op_beta), &op(op_B)}, status::ir_forbidden_promotion);
     }
 }
 
@@ -186,14 +187,20 @@ blas_a3_inst::blas_a3_inst(IK tid, tinytc_value_t alpha, tinytc_value_t A, tinyt
     auto alphat = get_scalar_type(loc(), op(op_alpha));
     auto betat = get_scalar_type(loc(), op(op_beta));
 
-    const auto AB_ty = compatible_type(At->element_ty(), Bt->element_ty());
-    if (compatible_type(alphat->ty(), AB_ty) != AB_ty) {
-        throw compilation_error(loc(), {&op(op_alpha), &op(op_A), &op(op_B)},
-                                status::ir_incompatible_scalar_types);
+    const auto AB_ty = promote(At->element_ty(), Bt->element_ty());
+    if (!AB_ty) {
+        throw compilation_error(loc(), {&op(op_A), &op(op_B)}, status::ir_forbidden_promotion);
     }
-    if (compatible_type(betat->ty(), Ct->element_ty()) != Ct->element_ty()) {
-        throw compilation_error(loc(), {&op(op_beta), &op(op_C)},
-                                status::ir_incompatible_scalar_types);
+    if (!promotable(alphat->ty(), *AB_ty)) {
+        throw compilation_error(loc(), {&op(op_alpha), &op(op_A), &op(op_B)},
+                                status::ir_forbidden_promotion);
+    }
+    if (!promotable(*AB_ty, Ct->element_ty())) {
+        throw compilation_error(loc(), {&op(op_A), &op(op_B), &op(op_C)},
+                                status::ir_forbidden_promotion);
+    }
+    if (!promotable(betat->ty(), Ct->element_ty())) {
+        throw compilation_error(loc(), {&op(op_beta), &op(op_C)}, status::ir_forbidden_promotion);
     }
 }
 
@@ -330,8 +337,8 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
     case arithmetic_unary::re: {
         auto a_ty = get_scalar_type(a().loc(), a());
         auto r_ty = get_scalar_type(loc(), result(0));
-        if (r_ty->ty() != element_type(a_ty->ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_incompatible_scalar_types);
+        if (r_ty->ty() != component_type(a_ty->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
         }
         break;
     }
@@ -431,12 +438,6 @@ cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const
     op(op_a, a0);
     loc(lc);
 
-    auto const check_scalar_casting_rules = [&](scalar_type a_ty, scalar_type r_ty) {
-        if (is_complex_type(a_ty) && !is_complex_type(r_ty)) {
-            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
-        }
-    };
-
     if (auto rt = dyn_cast<coopmatrix_data_type>(to_ty); rt) {
         auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
         if (!ct) {
@@ -445,7 +446,9 @@ cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const
         if (ct->rows() != rt->rows() || ct->cols() != rt->cols() || ct->use() != rt->use()) {
             throw compilation_error(lc, {&a()}, status::ir_forbidden_cast);
         }
-        check_scalar_casting_rules(ct->component_ty(), rt->component_ty());
+        if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
+        }
     } else {
         auto to_ty_scalar = dyn_cast<scalar_data_type>(to_ty);
         if (to_ty_scalar == nullptr) {
@@ -453,7 +456,9 @@ cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const
         }
 
         auto at = get_scalar_type(loc(), a());
-        check_scalar_casting_rules(at->ty(), to_ty_scalar->ty());
+        if (!is_cast_allowed(at->ty(), to_ty_scalar->ty())) {
+            throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
+        }
     }
 
     result(0) = value_node{to_ty, this, loc()};
@@ -597,8 +602,8 @@ cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t 
     auto M = rt->rows();
     auto N = rt->cols();
     auto K = at->cols();
-    if (ct->rows() != M || ct->cols() != N || at->rows() != M || bt->rows() != K ||
-        bt->cols() != N) {
+    if (rt->rows() != M || rt->cols() != N || ct->rows() != M || ct->cols() != N ||
+        at->rows() != M || bt->rows() != K || bt->cols() != N) {
         std::ostringstream oss;
         oss << "Got ";
         oss << "A=" << at->rows() << "x" << at->cols() << ", ";
@@ -609,9 +614,15 @@ cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t 
                                 oss.str());
     }
 
-    const auto AB_ty = compatible_type(at->component_ty(), bt->component_ty());
-    if (compatible_type(AB_ty, ct->component_ty()) != ct->component_ty()) {
-        throw compilation_error(loc(), {&a(), &b(), &c()}, status::ir_incompatible_scalar_types);
+    const auto AB_ty = promote(at->component_ty(), bt->component_ty());
+    if (!AB_ty) {
+        throw compilation_error(loc(), {&a(), &b()}, status::ir_forbidden_promotion);
+    }
+    if (!promotable(*AB_ty, ct->component_ty())) {
+        throw compilation_error(loc(), {&a(), &b(), &c()}, status::ir_forbidden_promotion);
+    }
+    if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {
+        throw compilation_error(loc(), {&c()}, status::ir_forbidden_cast);
     }
 
     result(0) = value_node{to_ty, this, lc};

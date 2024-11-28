@@ -101,7 +101,7 @@ enum class status {
     ir_init_return_mismatch = tinytc_status_ir_init_return_mismatch,
     ir_invalid_matrix_use = tinytc_status_ir_invalid_matrix_use,
     ir_unsupported_coopmatrix_shape = tinytc_status_ir_unsupported_coopmatrix_shape,
-    ir_incompatible_scalar_types = tinytc_status_ir_incompatible_scalar_types,
+    ir_forbidden_promotion = tinytc_status_ir_forbidden_promotion,
     ir_constant_mismatch = tinytc_status_ir_constant_mismatch,
     ir_insufficient_alignment = tinytc_status_ir_insufficient_alignment,
     ir_must_have_yield = tinytc_status_ir_must_have_yield,

@@ -172,15 +172,39 @@ e.g. "f64" are double precision floating point numbers.
 The "bf16" type encodes bfloat16 floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
 
-Scalar types are ordered as 
-:math:`\text{i8} \prec \text{i16} \prec \text{i32} \prec \text{i64} \prec \text{f32} \prec \text{f64} \prec \text{c32} \prec \text{c64}`.
-A scalar type :math:`\alpha` is called *compatible to* a scalar type :math:`\beta` if
-:math:`\alpha \preceq \beta`.
-If an arithmetic operation involves mixed types :math:`\alpha` and :math:`\beta` and
-:math:`\alpha \preceq \beta`, then :math:`\alpha` is casted to :math:`\beta` and the arithmetic operation
-is done with type :math:`\beta`.
-The function :math:`\text{compatible_type}(a, b)` returns the highest ranking type,
-e.g. :math:`\text{compatible_type}(\text{i32},\text{f32}) = \text{f32}`.
+Mixed precision operands might be allowed in instructions if the operands' types are *promotable*.
+The scalar type :math:`\alpha` may be promoted to the scalar type :math:`\beta` if all values an operand
+of type :math:`\alpha` may take can be exactly represented in type :math:`\beta`.
+Formally, :math:`\alpha` is promotable to :math:`\beta` if :math:`\alpha \preceq \beta`,
+where the partial order :math:`\preceq` is defined by the following relation matrix:
+
+=============== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+:math:`\preceq`   i8  i16  i32  i64 bf16  f16  f32  f64  c32  c64
+=============== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+i8                 1    1    1    1    1    1    1    1    1    1
+i16                     1    1    1              1    1    1    1
+i32                          1    1                   1    1    1
+i64                               1
+bf16                                   1         1    1    1    1
+f16                                         1    1    1    1    1
+f32                                              1    1    1    1
+f64                                                   1         1
+c32                                                        1    1
+c64                                                             1
+=============== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+
+Moreover, for scalar types :math:`\alpha,\beta` we define
+
+.. math::
+
+   \text{promote}(\alpha, \beta) = \left\{\begin{array}{rcl}
+       \beta & \text{ if } & \alpha \preceq \beta, \\
+       \alpha & \text{ if } & \beta \preceq \alpha, \\
+       \text{fail} & \text{ else.}
+   \end{array}\right.
+
+Here, "fail" means that the promotion is not allowed and the compiler should throw an error.
+
 
 
 Memref type
@@ -428,7 +452,7 @@ Restrictions
 
 * :math:`\text{shape}(B) = \text{shape}(\text{op}(A))`
 * :math:`\text{order}(B) = 0 \lor \text{order}(B) = 1 \lor \text{order}(B) = 2`
-* :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
+* :math:`\text{type}(\alpha) \preceq \text{element_type}(A) \preceq \text{element_type}(B)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
@@ -521,7 +545,7 @@ Restrictions
 * :math:`\text{colums}(\text{op}_1(A)) = \text{rows}(\text{op}_2(B))`
 * :math:`\text{rows}(C) = \text{rows}(\text{op}_1(A))`
 * :math:`\text{columns}(C) = \text{columns}(\text{op}_2(B))`
-* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(B))`
+* :math:`\text{type}(\alpha) \preceq \text{promote}(\text{element_type}(A), \text{element_type}(B)) \preceq \text{element_type}(C)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
@@ -566,7 +590,7 @@ Restrictions
 * :math:`\text{order}(b) = \text{order}(c) = 1`
 * :math:`\text{colums}(\text{op}_1(A)) = \text{rows}(b)`
 * :math:`\text{rows}(c) = \text{rows}(\text{op}_1(A))`
-* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(A), \text{element_type}(b))`
+* :math:`\text{type}(\alpha) \preceq \text{promote}(\text{element_type}(A), \text{element_type}(b)) \preceq \text{element_type}(C)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
@@ -609,7 +633,7 @@ Restrictions
 * :math:`\text{order}(C) = 2`
 * :math:`\text{rows}(C) = \text{rows}(a)`
 * :math:`\text{columns}(C) = \text{rows}(b)`
-* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
+* :math:`\text{type}(\alpha) \preceq \text{promote}(\text{element_type}(A), \text{element_type}(b)) \preceq \text{element_type}(C)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
@@ -652,8 +676,8 @@ Restrictions
 
 * :math:`\text{order}(a) = \text{order}(b) = \text{order}(c) = 1`
 * :math:`\text{shape}(a) = \text{shape}(b) = \text{shape}(c)`
-* :math:`\text{type}(\alpha) \preceq \text{compatible_type}(\text{element_type}(a), \text{element_type}(b))`
-* :math:`\text{type}(\beta) \preceq \text{element_type}(c)`
+* :math:`\text{type}(\alpha) \preceq \text{promote}(\text{element_type}(A), \text{element_type}(b)) \preceq \text{element_type}(C)`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(C)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 Parallel
@@ -714,7 +738,7 @@ Restrictions
 * :math:`\text{order}(b) = 1 \lor \text{order}(b) = 0`
 * :math:`\text{order}(A) = \text{order}(b)+1`
 * :math:`\text{rows}(b) = \text{rows}(\text{op}(A)) \text{ if } \text{order}(b) = 1`
-* :math:`\text{type}(\alpha) \preceq \text{element_type}(A)`
+* :math:`\text{type}(\alpha) \preceq \text{element_type}(A) \preceq \text{element_type}(B)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
@@ -1022,7 +1046,7 @@ Restrictions
 * :math:`\text{rows}(C) = \text{rows}(A) \land \text{columns}(C) = \text{columns}(B)`
 * :math:`\text{shape}(D) = \text{shape}(C)`
 * :math:`\text{use}(D) = \text{matrix_acc}`
-* :math:`\text{compatible_type}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
+* :math:`\text{promote}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
 * Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
 
 Cooperative matrix scale

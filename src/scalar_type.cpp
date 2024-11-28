@@ -2,8 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "scalar_type.hpp"
-#include "support/util.hpp"
+#include "error.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -50,7 +51,17 @@ bool is_integer_type(scalar_type ty) {
     return false;
 }
 
-scalar_type element_type(scalar_type ty) {
+auto component_count(scalar_type ty) -> vector_size {
+    switch (ty) {
+    case scalar_type::c32:
+    case scalar_type::c64:
+        return vector_size::v2;
+    default:
+        break;
+    }
+    return vector_size::v1;
+}
+auto component_type(scalar_type ty) -> scalar_type {
     switch (ty) {
     case scalar_type::c32:
         return scalar_type::f32;
@@ -62,14 +73,42 @@ scalar_type element_type(scalar_type ty) {
     return ty;
 }
 
-scalar_type compatible_type(scalar_type a_ty, scalar_type b_ty) {
-    int max = std::max(static_cast<int>(a_ty), static_cast<int>(b_ty));
-    return enum_cast<scalar_type>(max);
+auto promotable(scalar_type a_ty, scalar_type b_ty) -> bool {
+    if (a_ty == b_ty) {
+        return true;
+    }
+    const auto a_cc = static_cast<int>(component_count(a_ty));
+    const auto b_cc = static_cast<int>(component_count(b_ty));
+    const auto a_ct = component_type(a_ty);
+    const auto b_ct = component_type(b_ty);
+    return (is_integer_type(a_ct) || !is_integer_type(b_ct)) &&
+           (size(a_ct) < size(b_ct) || a_ct == b_ct) && a_cc <= b_cc;
 }
 
-std::int32_t alignment(scalar_type ty, component_count count) {
-    const std::int32_t scale = count == component_count::v3 ? 4 : static_cast<std::int32_t>(count);
-    return scale * tinytc_scalar_type_size(static_cast<tinytc_scalar_type_t>(ty));
+auto promote(scalar_type a_ty, scalar_type b_ty) -> std::optional<scalar_type> {
+    if (promotable(a_ty, b_ty)) {
+        return b_ty;
+    } else if (promotable(b_ty, a_ty)) {
+        return a_ty;
+    }
+    return std::nullopt;
+}
+
+auto promote_or_throw(scalar_type a_ty, scalar_type b_ty, location const &loc) -> scalar_type {
+    auto res = promote(a_ty, b_ty);
+    if (res) {
+        return *res;
+    }
+    throw compilation_error(loc, status::ir_forbidden_promotion);
+}
+
+auto alignment(scalar_type ty, vector_size count) -> std::int32_t {
+    const std::int32_t scale = count == vector_size::v3 ? 4 : static_cast<std::int32_t>(count);
+    return scale * size(ty);
+}
+
+auto is_cast_allowed(scalar_type from_ty, scalar_type to_ty) -> bool {
+    return !is_complex_type(from_ty) || is_complex_type(to_ty);
 }
 
 } // namespace tinytc
