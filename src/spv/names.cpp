@@ -713,6 +713,10 @@ auto to_string(Op op) -> char const * {
         return "ConvertFToBF16INTEL";
     case Op::ConvertBF16ToFINTEL:
         return "ConvertBF16ToFINTEL";
+    case Op::CooperativeMatrixLoadCheckedINTEL:
+        return "CooperativeMatrixLoadCheckedINTEL";
+    case Op::CooperativeMatrixStoreCheckedINTEL:
+        return "CooperativeMatrixStoreCheckedINTEL";
     }
     return "unknown";
 }
@@ -2733,6 +2737,18 @@ auto to_string(Capability e) -> char const * {
         return "CacheControlsINTEL";
     case Capability::RegisterLimitsINTEL:
         return "RegisterLimitsINTEL";
+    case Capability::PackedCooperativeMatrixINTEL:
+        return "PackedCooperativeMatrixINTEL";
+    case Capability::CooperativeMatrixInvocationInstructionsINTEL:
+        return "CooperativeMatrixInvocationInstructionsINTEL";
+    case Capability::CooperativeMatrixTF32ComponentTypeINTEL:
+        return "CooperativeMatrixTF32ComponentTypeINTEL";
+    case Capability::CooperativeMatrixBFloat16ComponentTypeINTEL:
+        return "CooperativeMatrixBFloat16ComponentTypeINTEL";
+    case Capability::CooperativeMatrixCheckedInstructionsINTEL:
+        return "CooperativeMatrixCheckedInstructionsINTEL";
+    case Capability::CooperativeMatrixPrefetchINTEL:
+        return "CooperativeMatrixPrefetchINTEL";
     }
     return "unknown";
 }

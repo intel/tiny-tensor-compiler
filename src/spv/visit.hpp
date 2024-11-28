@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20241126_HPP
-#define GENERATED_VISIT_20241126_HPP
+#ifndef GENERATED_VISIT_20241127_HPP
+#define GENERATED_VISIT_20241127_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -721,6 +721,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
         return visitor(static_cast<OpConvertFToBF16INTEL &>(inst));
     case Op::ConvertBF16ToFINTEL:
         return visitor(static_cast<OpConvertBF16ToFINTEL &>(inst));
+    case Op::CooperativeMatrixLoadCheckedINTEL:
+        return visitor(static_cast<OpCooperativeMatrixLoadCheckedINTEL &>(inst));
+    case Op::CooperativeMatrixStoreCheckedINTEL:
+        return visitor(static_cast<OpCooperativeMatrixStoreCheckedINTEL &>(inst));
     }
     throw internal_compiler_error();
 }
@@ -1429,6 +1433,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpConvertFToBF16INTEL const &>(inst));
     case Op::ConvertBF16ToFINTEL:
         return visitor(static_cast<OpConvertBF16ToFINTEL const &>(inst));
+    case Op::CooperativeMatrixLoadCheckedINTEL:
+        return visitor(static_cast<OpCooperativeMatrixLoadCheckedINTEL const &>(inst));
+    case Op::CooperativeMatrixStoreCheckedINTEL:
+        return visitor(static_cast<OpCooperativeMatrixStoreCheckedINTEL const &>(inst));
     }
     throw internal_compiler_error();
 }
@@ -4455,8 +4463,55 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->post_visit(in);
     }
+    auto operator()(const_t<OpCooperativeMatrixLoadCheckedINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->operator()(in.op5());
+        if (in.op6()) {
+            static_cast<Derived *>(this)->operator()(*in.op6());
+        }
+
+        if (in.op7()) {
+            static_cast<Derived *>(this)->operator()(*in.op7());
+        }
+
+        if (in.op8()) {
+            static_cast<Derived *>(this)->operator()(*in.op8());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpCooperativeMatrixStoreCheckedINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->operator()(in.op4());
+        static_cast<Derived *>(this)->operator()(in.op5());
+        static_cast<Derived *>(this)->operator()(in.op6());
+        if (in.op7()) {
+            static_cast<Derived *>(this)->operator()(*in.op7());
+        }
+
+        if (in.op8()) {
+            static_cast<Derived *>(this)->operator()(*in.op8());
+        }
+
+        if (in.op9()) {
+            static_cast<Derived *>(this)->operator()(*in.op9());
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
 };
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20241126_HPP
+#endif // GENERATED_VISIT_20241127_HPP

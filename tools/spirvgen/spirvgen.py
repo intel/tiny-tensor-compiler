@@ -418,6 +418,9 @@ if __name__ == '__main__':
     parser.add_argument('-c',
                         help='clang-format binary',
                         default='clang-format'),
+    parser.add_argument('-e',
+                        help='Add extension JSON file',
+                        default=os.path.join(script_dir, 'joint_matrix.json')),
     parser.add_argument('-f',
                         help='Filter JSON file',
                         default=os.path.join(script_dir, 'filter.json')),
@@ -434,6 +437,14 @@ if __name__ == '__main__':
             grammar = json.load(f)
         with open(args.f) as f:
             filt = json.load(f)
+        with open(args.e) as f:
+            extension = json.load(f)
+            grammar['instructions'].extend(extension['instructions'])
+            for opkind_ext in extension['operand_kinds']:
+                for opkind in grammar['operand_kinds']:
+                    if opkind_ext['kind'] == opkind['kind']:
+                        opkind['enumerants'].extend(opkind_ext['enumerants'])
+                        continue
 
         grammar = filter_grammar(grammar, filt)
         grammar = patch_grammar(grammar)

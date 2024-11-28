@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_20241126_HPP
-#define GENERATED_INSTRUCTIONS_20241126_HPP
+#ifndef GENERATED_INSTRUCTIONS_20241127_HPP
+#define GENERATED_INSTRUCTIONS_20241127_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -6800,7 +6800,105 @@ class OpConvertBF16ToFINTEL : public spv_inst {
     IdResultType type_;
     IdRef op0_;
 };
+class OpCooperativeMatrixLoadCheckedINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::CooperativeMatrixLoadCheckedINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::CooperativeMatrixCheckedInstructionsINTEL};
+    OpCooperativeMatrixLoadCheckedINTEL(IdResultType type, IdRef op0, IdRef op1, IdRef op2,
+                                        IdRef op3, IdRef op4, IdRef op5,
+                                        std::optional<IdRef> op6 = std::nullopt,
+                                        std::optional<MemoryAccess> op7 = std::nullopt,
+                                        std::optional<MemoryAccessAttr> op8 = std::nullopt)
+        : spv_inst{Op::CooperativeMatrixLoadCheckedINTEL, true}, type_(std::move(type)),
+          op0_(std::move(op0)), op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)),
+          op4_(std::move(op4)), op5_(std::move(op5)), op6_(std::move(op6)), op7_(std::move(op7)),
+          op8_(std::move(op8)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdRef & { return op1_; }
+    inline auto op1() const -> IdRef const & { return op1_; }
+    inline auto op2() -> IdRef & { return op2_; }
+    inline auto op2() const -> IdRef const & { return op2_; }
+    inline auto op3() -> IdRef & { return op3_; }
+    inline auto op3() const -> IdRef const & { return op3_; }
+    inline auto op4() -> IdRef & { return op4_; }
+    inline auto op4() const -> IdRef const & { return op4_; }
+    inline auto op5() -> IdRef & { return op5_; }
+    inline auto op5() const -> IdRef const & { return op5_; }
+    inline auto op6() -> std::optional<IdRef> & { return op6_; }
+    inline auto op6() const -> std::optional<IdRef> const & { return op6_; }
+    inline auto op7() -> std::optional<MemoryAccess> & { return op7_; }
+    inline auto op7() const -> std::optional<MemoryAccess> const & { return op7_; }
+    inline auto op8() -> std::optional<MemoryAccessAttr> & { return op8_; }
+    inline auto op8() const -> std::optional<MemoryAccessAttr> const & { return op8_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    IdRef op1_;
+    IdRef op2_;
+    IdRef op3_;
+    IdRef op4_;
+    IdRef op5_;
+    std::optional<IdRef> op6_;
+    std::optional<MemoryAccess> op7_;
+    std::optional<MemoryAccessAttr> op8_;
+};
+class OpCooperativeMatrixStoreCheckedINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::CooperativeMatrixStoreCheckedINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::CooperativeMatrixCheckedInstructionsINTEL};
+    OpCooperativeMatrixStoreCheckedINTEL(IdRef op0, IdRef op1, IdRef op2, IdRef op3, IdRef op4,
+                                         IdRef op5, IdRef op6,
+                                         std::optional<IdRef> op7 = std::nullopt,
+                                         std::optional<MemoryAccess> op8 = std::nullopt,
+                                         std::optional<MemoryAccessAttr> op9 = std::nullopt)
+        : spv_inst{Op::CooperativeMatrixStoreCheckedINTEL, false}, op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)), op4_(std::move(op4)),
+          op5_(std::move(op5)), op6_(std::move(op6)), op7_(std::move(op7)), op8_(std::move(op8)),
+          op9_(std::move(op9)) {}
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdRef & { return op1_; }
+    inline auto op1() const -> IdRef const & { return op1_; }
+    inline auto op2() -> IdRef & { return op2_; }
+    inline auto op2() const -> IdRef const & { return op2_; }
+    inline auto op3() -> IdRef & { return op3_; }
+    inline auto op3() const -> IdRef const & { return op3_; }
+    inline auto op4() -> IdRef & { return op4_; }
+    inline auto op4() const -> IdRef const & { return op4_; }
+    inline auto op5() -> IdRef & { return op5_; }
+    inline auto op5() const -> IdRef const & { return op5_; }
+    inline auto op6() -> IdRef & { return op6_; }
+    inline auto op6() const -> IdRef const & { return op6_; }
+    inline auto op7() -> std::optional<IdRef> & { return op7_; }
+    inline auto op7() const -> std::optional<IdRef> const & { return op7_; }
+    inline auto op8() -> std::optional<MemoryAccess> & { return op8_; }
+    inline auto op8() const -> std::optional<MemoryAccess> const & { return op8_; }
+    inline auto op9() -> std::optional<MemoryAccessAttr> & { return op9_; }
+    inline auto op9() const -> std::optional<MemoryAccessAttr> const & { return op9_; }
+
+  private:
+    IdRef op0_;
+    IdRef op1_;
+    IdRef op2_;
+    IdRef op3_;
+    IdRef op4_;
+    IdRef op5_;
+    IdRef op6_;
+    std::optional<IdRef> op7_;
+    std::optional<MemoryAccess> op8_;
+    std::optional<MemoryAccessAttr> op9_;
+};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_20241126_HPP
+#endif // GENERATED_INSTRUCTIONS_20241127_HPP

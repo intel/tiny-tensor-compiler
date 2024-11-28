@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20241126_HPP
-#define GENERATED_ENUMS_20241126_HPP
+#ifndef GENERATED_ENUMS_20241127_HPP
+#define GENERATED_ENUMS_20241127_HPP
 
 #include <cstdint>
 
@@ -365,6 +365,8 @@ enum class Op {
     AtomicFAddEXT = 6035,
     ConvertFToBF16INTEL = 6116,
     ConvertBF16ToFINTEL = 6117,
+    CooperativeMatrixLoadCheckedINTEL = 6193,
+    CooperativeMatrixStoreCheckedINTEL = 6194,
 };
 enum class ImageOperands {
     None = 0x0000,
@@ -1356,6 +1358,12 @@ enum class Capability {
     MaskedGatherScatterINTEL = 6427,
     CacheControlsINTEL = 6441,
     RegisterLimitsINTEL = 6460,
+    PackedCooperativeMatrixINTEL = 6434,
+    CooperativeMatrixInvocationInstructionsINTEL = 6435,
+    CooperativeMatrixTF32ComponentTypeINTEL = 6436,
+    CooperativeMatrixBFloat16ComponentTypeINTEL = 6437,
+    CooperativeMatrixCheckedInstructionsINTEL = 6192,
+    CooperativeMatrixPrefetchINTEL = 6449,
 };
 enum class RayQueryIntersection {
     RayQueryCandidateIntersectionKHR = 0,
@@ -1433,4 +1441,4 @@ enum class FPEncoding {};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20241126_HPP
+#endif // GENERATED_ENUMS_20241127_HPP
