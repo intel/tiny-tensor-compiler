@@ -86,24 +86,12 @@ tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_
         return tinytc_status_invalid_arguments;
     }
 
-    std::size_t extensions_size;
-    TINYTC_CL_CHECK_STATUS(
-        clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, 0, nullptr, &extensions_size));
-    std::string extensions;
-    extensions.resize(extensions_size);
-    TINYTC_CL_CHECK_STATUS(
-        clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, extensions_size, extensions.data(), nullptr));
-
-    auto ocl_exts = tinytc::get_opencl_extensions(extensions.size(), extensions.c_str());
+    auto ocl_exts = tinytc::get_opencl_extensions(device);
     bool has_subgroup =
         ocl_exts & (tinytc::opencl_ext_cl_intel_subgroups | tinytc::opencl_ext_cl_khr_subgroups);
 
     if (!has_subgroup) {
-        char version_str[32];
-        std::size_t version_str_size;
-        TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_VERSION, sizeof(version_str) - 1,
-                                               version_str, &version_str_size));
-        auto version = tinytc::get_opencl_version(version_str_size, version_str);
+        auto version = tinytc::get_opencl_version(device);
         if (version.major >= 3) {
             std::size_t features_size;
             TINYTC_CL_CHECK_STATUS(
@@ -170,7 +158,6 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
 
             TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_IP_VERSION_INTEL,
                                                    sizeof(ip_ver), &ip_ver, nullptr));
-
             TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_NUM_EUS_PER_SUB_SLICE_INTEL,
                                                    sizeof(num_eus_per_subslice),
                                                    &num_eus_per_subslice, nullptr));

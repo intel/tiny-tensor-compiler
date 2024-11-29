@@ -143,11 +143,37 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 7,
                                                       std::vector<std::int32_t>{8, 16, 32})
                         .release();
+            (*info)->set_spirv_feature(spirv_feature::float16, true);
+            (*info)->set_spirv_feature(spirv_feature::float64, false);
+            (*info)->set_spirv_feature(spirv_feature::int64_atomics, true);
+            (*info)->set_spirv_feature(spirv_feature::groups, true);
+            (*info)->set_spirv_feature(spirv_feature::subgroup_dispatch, true);
+            (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_local, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_global, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, false);
+            (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, false);
             break;
         case tinytc_intel_gpu_architecture_pvc:
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
                         .release();
+            (*info)->set_spirv_feature(spirv_feature::float16, true);
+            (*info)->set_spirv_feature(spirv_feature::float64, true);
+            (*info)->set_spirv_feature(spirv_feature::int64_atomics, true);
+            (*info)->set_spirv_feature(spirv_feature::groups, true);
+            (*info)->set_spirv_feature(spirv_feature::subgroup_dispatch, true);
+            (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_local, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_global, false);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_global, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_local, true);
+            (*info)->set_spirv_feature(spirv_feature::atomic_float64_add_global, true);
+            (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, true);
             break;
         default:
             *info = nullptr;
