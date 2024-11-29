@@ -4,6 +4,7 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "support/fnv1a.hpp"
+#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -53,6 +54,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     register_size_ = 32;
     if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         register_size_ = 64;
+        set_spirv_feature(spirv_feature::bfloat16_conversion, true);
     }
 }
 
@@ -224,12 +226,33 @@ tinytc_status_t tinytc_core_info_set_core_features(tinytc_core_info_t info,
     return exception_to_status_code([&] { info->core_features(flags); });
 }
 
-tinytc_status_t tinytc_core_info_get_core_features(tinytc_core_info_t info,
+tinytc_status_t tinytc_core_info_get_core_features(const_tinytc_core_info_t info,
                                                    tinytc_core_feature_flags_t *flags) {
     if (info == nullptr || flags == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { *flags = info->core_features(); });
+}
+
+tinytc_status_t tinytc_core_info_set_spirv_feature(tinytc_core_info_t info,
+                                                   tinytc_spirv_feature_t feature,
+                                                   tinytc_bool_t available) {
+
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { info->set_spirv_feature(enum_cast<spirv_feature>(feature), available); });
+}
+
+tinytc_status_t tinytc_core_info_have_spirv_feature(const_tinytc_core_info_t info,
+                                                    tinytc_spirv_feature_t feature,
+                                                    tinytc_bool_t *available) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *available = info->have_spirv_feature(enum_cast<spirv_feature>(feature)); });
 }
 
 tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj) {
@@ -249,5 +272,37 @@ tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj) {
     }
     obj->inc_ref();
     return tinytc_status_success;
+}
+
+char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f) {
+    switch (f) {
+    case tinytc_spirv_feature_float16:
+        return "float16";
+    case tinytc_spirv_feature_float64:
+        return "float64";
+    case tinytc_spirv_feature_int64_atomics:
+        return "int64_atomics";
+    case tinytc_spirv_feature_groups:
+        return "groups";
+    case tinytc_spirv_feature_subgroup_dispatch:
+        return "subgroup_dispatch";
+    case tinytc_spirv_feature_subgroup_buffer_block_io:
+        return "subgroup_buffer_block_io";
+    case tinytc_spirv_feature_atomic_float16_add_local:
+        return "atomic_float16_add_local";
+    case tinytc_spirv_feature_atomic_float16_add_global:
+        return "atomic_float16_add_global";
+    case tinytc_spirv_feature_atomic_float32_add_local:
+        return "atomic_float32_add_local";
+    case tinytc_spirv_feature_atomic_float32_add_global:
+        return "atomic_float32_add_global";
+    case tinytc_spirv_feature_atomic_float64_add_local:
+        return "atomic_float64_add_local";
+    case tinytc_spirv_feature_atomic_float64_add_global:
+        return "atomic_float64_add_global";
+    case tinytc_spirv_feature_bfloat16_conversion:
+        return "bfloat16_conversion";
+    }
+    return "unknown";
 }
 }

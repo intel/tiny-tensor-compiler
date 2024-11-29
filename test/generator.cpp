@@ -4,7 +4,6 @@
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
 #include "scalar_type.hpp"
-#include "support/util.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -12,6 +11,7 @@
 
 #include <doctest/doctest.h>
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <utility>

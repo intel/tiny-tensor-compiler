@@ -473,7 +473,11 @@ Device Info
 
   * :ref:`tinytc_intel_gpu_architecture_t`
 
+  * :ref:`tinytc_spirv_feature_t`
+
 * Functions
+
+  * :ref:`tinytc_core_info_generic_create`
 
   * :ref:`tinytc_core_info_get_core_features`
 
@@ -481,9 +485,7 @@ Device Info
 
   * :ref:`tinytc_core_info_get_subgroup_sizes`
 
-  * :ref:`tinytc_core_info_set_core_features`
-
-  * :ref:`tinytc_core_info_generic_create`
+  * :ref:`tinytc_core_info_have_spirv_feature`
 
   * :ref:`tinytc_core_info_intel_create`
 
@@ -494,6 +496,12 @@ Device Info
   * :ref:`tinytc_core_info_release`
 
   * :ref:`tinytc_core_info_retain`
+
+  * :ref:`tinytc_core_info_set_core_features`
+
+  * :ref:`tinytc_core_info_set_spirv_feature`
+
+  * :ref:`tinytc_spirv_feature_to_string`
 
 * Typedefs
 
@@ -516,8 +524,22 @@ tinytc_intel_gpu_architecture_t
 
 .. doxygenenum:: tinytc_intel_gpu_architecture_t
 
+.. _tinytc_spirv_feature_t:
+
+tinytc_spirv_feature_t
+......................
+
+.. doxygenenum:: tinytc_spirv_feature_t
+
 Device Info Functions
 ---------------------
+
+.. _tinytc_core_info_generic_create:
+
+tinytc_core_info_generic_create
+...............................
+
+.. doxygenfunction:: tinytc_core_info_generic_create
 
 .. _tinytc_core_info_get_core_features:
 
@@ -540,19 +562,12 @@ tinytc_core_info_get_subgroup_sizes
 
 .. doxygenfunction:: tinytc_core_info_get_subgroup_sizes
 
-.. _tinytc_core_info_set_core_features:
+.. _tinytc_core_info_have_spirv_feature:
 
-tinytc_core_info_set_core_features
-..................................
+tinytc_core_info_have_spirv_feature
+...................................
 
-.. doxygenfunction:: tinytc_core_info_set_core_features
-
-.. _tinytc_core_info_generic_create:
-
-tinytc_core_info_generic_create
-...............................
-
-.. doxygenfunction:: tinytc_core_info_generic_create
+.. doxygenfunction:: tinytc_core_info_have_spirv_feature
 
 .. _tinytc_core_info_intel_create:
 
@@ -588,6 +603,27 @@ tinytc_core_info_retain
 .......................
 
 .. doxygenfunction:: tinytc_core_info_retain
+
+.. _tinytc_core_info_set_core_features:
+
+tinytc_core_info_set_core_features
+..................................
+
+.. doxygenfunction:: tinytc_core_info_set_core_features
+
+.. _tinytc_core_info_set_spirv_feature:
+
+tinytc_core_info_set_spirv_feature
+..................................
+
+.. doxygenfunction:: tinytc_core_info_set_spirv_feature
+
+.. _tinytc_spirv_feature_to_string:
+
+tinytc_spirv_feature_to_string
+..............................
+
+.. doxygenfunction:: tinytc_spirv_feature_to_string
 
 Device Info Typedefs
 --------------------

@@ -7,10 +7,13 @@
 #include "reference_counted.hpp"
 #include "tinytc/types.h"
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
 namespace tinytc {
+
+enum class spirv_feature;
 
 //! Core parameters for a specific choice of subgroup size and core feature flags
 class core_config {
@@ -39,11 +42,26 @@ struct tinytc_core_info : tinytc::reference_counted {
     virtual auto minmax_work_group_size() const -> std::int32_t = 0;
     //! Return core config for specific subgroup size and number of registers per tile
     virtual auto get_core_config(std::int32_t subgroup_size) const -> tinytc::core_config = 0;
+    virtual void set_spirv_feature(tinytc::spirv_feature f, bool available) = 0;
+    virtual auto have_spirv_feature(tinytc::spirv_feature f) const -> bool = 0;
 };
 
 namespace tinytc {
 
-class core_info_generic : public ::tinytc_core_info {
+class core_info_common : public ::tinytc_core_info {
+  public:
+    inline void set_spirv_feature(spirv_feature f, bool available) override {
+        spv_feature_[static_cast<int>(f)] = available;
+    }
+    auto have_spirv_feature(spirv_feature f) const -> bool override {
+        return spv_feature_[static_cast<int>(f)];
+    }
+
+  private:
+    std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> spv_feature_ = {};
+};
+
+class core_info_generic : public core_info_common {
   public:
     core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
                       std::vector<std::int32_t> subgroup_sizes);
@@ -61,7 +79,7 @@ class core_info_generic : public ::tinytc_core_info {
 };
 
 //! Set of core configurations for Intel GPUs
-class core_info_intel : public ::tinytc_core_info {
+class core_info_intel : public core_info_common {
   public:
     /**
      * @brief ctor

@@ -75,6 +75,7 @@ auto exception_to_status_code(F &&f,
             if (e.extra_info().size() > 0) {
                 auto what =
                     (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
+                context->report_error(e.loc(), e.ref_values(), what.c_str());
             } else {
                 context->report_error(e.loc(), e.ref_values(), e.what());
             }

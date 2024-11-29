@@ -1318,7 +1318,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_register_space(const_tinytc_c
 /**
  * @brief Set core features
  *
- * @param info [in] core info object
+ * @param info [inout] core info object
  * @param flags [in] set core features; must be 0 or a combination of tinytc_core_feature_flag_t
  *
  * @return tinytc_status_success on success and error otherwise
@@ -1334,8 +1334,34 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_core_features(tinytc_core_inf
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t
-tinytc_core_info_get_core_features(tinytc_core_info_t info, tinytc_core_feature_flags_t *flags);
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_core_features(
+    const_tinytc_core_info_t info, tinytc_core_feature_flags_t *flags);
+
+/**
+ * @brief Set SPIR-V feature
+ *
+ * @param info [inout] core info object
+ * @param feature [in] SPIR-V feature
+ * @param available [in] Set to true if feature is available and false otherwise
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_spirv_feature(tinytc_core_info_t info,
+                                                                 tinytc_spirv_feature_t feature,
+                                                                 tinytc_bool_t available);
+
+/**
+ * @brief Get SPIR-V feature
+ *
+ * @param info [in] core info object
+ * @param feature [in] SPIR-V feature
+ * @param available [out] Writes true to available if feature is available and false otherwise
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_have_spirv_feature(const_tinytc_core_info_t info,
+                                                                  tinytc_spirv_feature_t feature,
+                                                                  tinytc_bool_t *available);
 
 /**
  * @brief Release core info object
@@ -1356,6 +1382,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj);
+
+//! Convert SPIR-V feature to string
+TINYTC_EXPORT char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f);
 
 ////////////////////////////
 ////////// Parser //////////

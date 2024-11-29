@@ -62,17 +62,21 @@ Core C-API:
     enum:
       - tinytc_core_feature_flag_t
       - tinytc_intel_gpu_architecture_t
+      - tinytc_spirv_feature_t
     function:
+      - tinytc_core_info_generic_create
       - tinytc_core_info_get_core_features
       - tinytc_core_info_get_register_space
       - tinytc_core_info_get_subgroup_sizes
-      - tinytc_core_info_set_core_features
-      - tinytc_core_info_generic_create
+      - tinytc_core_info_have_spirv_feature
       - tinytc_core_info_intel_create
       - tinytc_core_info_intel_create_from_arch
       - tinytc_core_info_intel_create_from_name
       - tinytc_core_info_release
       - tinytc_core_info_retain
+      - tinytc_core_info_set_core_features
+      - tinytc_core_info_set_spirv_feature
+      - tinytc_spirv_feature_to_string
     typedef:
       - tinytc_core_feature_flags_t
   FP math:

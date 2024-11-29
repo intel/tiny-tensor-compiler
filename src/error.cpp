@@ -33,7 +33,7 @@ auto report_error_with_context(char const *code, std::size_t code_len, std::stri
     auto oerr = std::ostringstream{};
     oerr << file_name << ":";
     print_range(oerr, l.begin, l.end);
-    oerr << ": " << what << std::endl;
+    oerr << ": " << what;
 
     int cur_line = 1;
     const char *begin = code;
@@ -56,7 +56,7 @@ auto report_error_with_context(char const *code, std::size_t code_len, std::stri
             if (start_col < 0) {
                 start_col = static_cast<int>(end - begin);
             }
-            oerr << std::string(begin, end) << std::endl;
+            oerr << std::endl << std::string(begin, end) << std::endl;
             if (cur_line >= l.begin.line) {
                 int col_begin = 0;
                 int num_col = 0;
@@ -259,6 +259,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Dope vector missing (internal compiler error)";
     case tinytc_status_spirv_unsupported_atomic_data_type:
         return "Atomic data type unsupported by SPIR-V";
+    case tinytc_status_spirv_required_feature_unavailable:
+        return "A required SPIR-V feature is unavailable";
     // Level Zero
     case tinytc_status_ze_result_not_ready:
         return "ZE_RESULT_NOT_READY";

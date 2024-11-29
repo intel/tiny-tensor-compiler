@@ -2326,13 +2326,13 @@ class core_info : public shared_handle<tinytc_core_info_t> {
     /**
      * @brief Get subgroup sizes
      *
-     * Cf. @ref tinytc_core_info_get_subgroup_sizes
-     *
-     * @param sgs_size Pointer to size of subgroup size array
-     * @param sgs Pointer ot subgroup size array
+     * @return Subgroup sizes
      */
-    void get_subgroup_sizes(std::uint32_t *sgs_size, std::int32_t const **sgs) {
-        CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(obj_, sgs_size, sgs));
+    auto get_subgroup_sizes() const -> array_view<std::int32_t> {
+        std::uint32_t sgs_size = 0;
+        std::int32_t const *sgs = nullptr;
+        CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(obj_, &sgs_size, &sgs));
+        return array_view(sgs, static_cast<std::size_t>(sgs_size));
     }
 
     /**
@@ -2340,7 +2340,7 @@ class core_info : public shared_handle<tinytc_core_info_t> {
      *
      * @return Register space
      */
-    auto get_register_space() -> std::int32_t {
+    auto get_register_space() const -> std::int32_t {
         std::int32_t space;
         CHECK_STATUS(tinytc_core_info_get_register_space(obj_, &space));
         return space;
@@ -2364,6 +2364,31 @@ class core_info : public shared_handle<tinytc_core_info_t> {
         tinytc_core_feature_flags_t flags;
         CHECK_STATUS(tinytc_core_info_get_core_features(obj_, &flags));
         return flags;
+    }
+
+    /**
+     * @brief Set SPIR-V feature
+     *
+     * @param feature SPIR-V feature
+     * @param available true if feature is available and false otherwise
+     */
+    void set_spirv_feature(spirv_feature feature, bool available) {
+        CHECK_STATUS(tinytc_core_info_set_spirv_feature(
+            obj_, static_cast<tinytc_spirv_feature_t>(feature), available));
+    }
+
+    /**
+     * @brief Get SPIR-V feature
+     *
+     * @param feature SPIR-V feature
+     *
+     * @return true if feature is available and false otherwise
+     */
+    auto have_spirv_feature(spirv_feature feature) const -> bool {
+        tinytc_bool_t available;
+        CHECK_STATUS(tinytc_core_info_have_spirv_feature(
+            obj_, static_cast<tinytc_spirv_feature_t>(feature), &available));
+        return available;
     }
 };
 
@@ -2428,6 +2453,11 @@ inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
                                                num_threads_per_eu, sgs.size(), sgs.data()));
     return core_info{info};
+}
+
+//! Convert SPIR-V feature to string
+inline char const *to_string(spirv_feature f) {
+    return ::tinytc_spirv_feature_to_string(static_cast<tinytc_spirv_feature_t>(f));
 }
 
 ////////////////////////////

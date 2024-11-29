@@ -7,6 +7,12 @@
 #include "spv/defs.hpp"
 #include "tinytc/types.h"
 
+#include <array>
+
+namespace tinytc {
+enum class spirv_feature;
+}
+
 namespace tinytc::spv {
 
 class uniquifier;
@@ -35,8 +41,13 @@ class capex {
 
     void run_on_module(tinytc_spv_mod const &mod);
 
+    inline auto requires_feature(spirv_feature f) const -> bool {
+        return required_features_[static_cast<int>(f)];
+    }
+
   private:
     uniquifier *unique_;
+    std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> required_features_ = {};
 };
 
 } // namespace tinytc::spv

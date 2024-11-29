@@ -3,7 +3,9 @@
 
 #include "../device_info.hpp"
 #include "device_info_helper.hpp"
+#include "error.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
 
@@ -14,6 +16,69 @@
 #include <cstring>
 #include <string>
 #include <vector>
+
+#ifndef CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT 0x4231
+#endif
+#ifndef CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT 0x4232
+#endif
+#ifndef CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT
+#define CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT 0x4233
+#endif
+
+#ifndef CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT
+#define CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT (1 << 1)
+#endif
+#ifndef CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT
+#define CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT (1 << 17)
+#endif
+
+namespace tinytc {
+void set_spirv_features(tinytc_core_info_t info, cl_device_id device) {
+    auto const set_feature = [&info](tinytc_spirv_feature_t feature, bool available) {
+        CHECK_STATUS(tinytc_core_info_set_spirv_feature(info, feature, available));
+    };
+
+    const auto ocl_exts = get_opencl_extensions(device);
+    const auto ocl_version = get_opencl_version(device);
+    const auto max_num_subgroups = device_info<cl_uint>(device, CL_DEVICE_MAX_NUM_SUB_GROUPS);
+    const auto double_fp_config =
+        device_info<cl_device_fp_config>(device, CL_DEVICE_DOUBLE_FP_CONFIG);
+
+    set_feature(tinytc_spirv_feature_float16, ocl_exts & opencl_ext_cl_khr_fp16);
+    set_feature(tinytc_spirv_feature_float64,
+                double_fp_config != 0 || ocl_exts & opencl_ext_cl_khr_fp64);
+    set_feature(tinytc_spirv_feature_groups, ocl_version.major >= 2 && max_num_subgroups != 0);
+    set_feature(tinytc_spirv_feature_subgroup_dispatch,
+                ocl_version.major >= 2 && max_num_subgroups != 0);
+    set_feature(tinytc_spirv_feature_subgroup_buffer_block_io,
+                ocl_exts & opencl_ext_cl_intel_spirv_subgroups);
+    set_feature(tinytc_spirv_feature_int64_atomics,
+                ocl_exts & (opencl_ext_cl_khr_int64_base_atomics |
+                            opencl_ext_cl_khr_int64_extended_atomics));
+    if (ocl_exts & opencl_ext_cl_ext_float_atomics) {
+        auto f16_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_HALF_FP_ATOMIC_CAPABILITIES_EXT);
+        auto f32_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT);
+        auto f64_flags =
+            device_info<cl_bitfield>(device, CL_DEVICE_DOUBLE_FP_ATOMIC_CAPABILITIES_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_add_local,
+                    f16_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_add_local,
+                    f32_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_add_local,
+                    f64_flags & CL_DEVICE_LOCAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_add_global,
+                    f16_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_add_global,
+                    f32_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_add_global,
+                    f64_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+    }
+}
+} // namespace tinytc
 
 extern "C" {
 tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_level_t *level) {
@@ -29,7 +94,9 @@ tinytc_status_t tinytc_cl_get_support_level(cl_device_id device, tinytc_support_
     TINYTC_CL_CHECK_STATUS(
         clGetDeviceInfo(device, CL_DEVICE_EXTENSIONS, extensions_size, extensions.data(), nullptr));
 
-    bool has_subgroup = tinytc::has_subgroup_extension(extensions.size(), extensions.c_str());
+    auto ocl_exts = tinytc::get_opencl_extensions(extensions.size(), extensions.c_str());
+    bool has_subgroup =
+        ocl_exts & (tinytc::opencl_ext_cl_intel_subgroups | tinytc::opencl_ext_cl_khr_subgroups);
 
     if (!has_subgroup) {
         char version_str[32];
@@ -147,7 +214,7 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         return tinytc_status_unsupported_device;
     }
 
-    return tinytc_status_success;
+    return tinytc::exception_to_status_code_cl([&] { set_spirv_features(*info, device); });
 }
 }
 

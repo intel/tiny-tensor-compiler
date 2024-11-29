@@ -114,6 +114,7 @@ enum class status {
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,
     spirv_unsupported_atomic_data_type = tinytc_status_spirv_unsupported_atomic_data_type,
+    spirv_required_feature_unavailable = tinytc_status_spirv_required_feature_unavailable,
     ze_result_not_ready = tinytc_status_ze_result_not_ready,
     ze_result_error_device_lost = tinytc_status_ze_result_error_device_lost,
     ze_result_error_out_of_host_memory = tinytc_status_ze_result_error_out_of_host_memory,
@@ -332,6 +333,22 @@ enum class matrix_use {
     a = tinytc_matrix_use_a,    ///< matrix_a
     b = tinytc_matrix_use_b,    ///< matrix_b
     acc = tinytc_matrix_use_acc ///< matrix_acc
+};
+
+//! @brief Cf. @ref tinytc_spirv_feature_t
+enum class spirv_feature {
+    float16 = tinytc_spirv_feature_float16,
+    float64 = tinytc_spirv_feature_float64,
+    int64_atomics = tinytc_spirv_feature_int64_atomics,
+    subgroup_dispatch = tinytc_spirv_feature_subgroup_dispatch,
+    subgroup_buffer_block_io = tinytc_spirv_feature_subgroup_buffer_block_io,
+    atomic_float16_add_local = tinytc_spirv_feature_atomic_float16_add_local,
+    atomic_float16_add_global = tinytc_spirv_feature_atomic_float16_add_global,
+    atomic_float32_add_local = tinytc_spirv_feature_atomic_float32_add_local,
+    atomic_float32_add_global = tinytc_spirv_feature_atomic_float32_add_global,
+    atomic_float64_add_local = tinytc_spirv_feature_atomic_float64_add_local,
+    atomic_float64_add_global = tinytc_spirv_feature_atomic_float64_add_global,
+    bfloat16_conversion = tinytc_spirv_feature_bfloat16_conversion,
 };
 
 //! @brief Cf. @ref tinytc_core_feature_flag_t

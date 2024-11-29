@@ -8,7 +8,6 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
-#include <algorithm>
 #include <cstddef>
 
 namespace tinytc {

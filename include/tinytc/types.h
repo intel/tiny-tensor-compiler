@@ -110,6 +110,7 @@ typedef enum {
     tinytc_status_spirv_undefined_value = 0x1001,     ///< Undefined value
     tinytc_status_spirv_missing_dope_vector = 0x1002, ///< Missing dope vector
     tinytc_status_spirv_unsupported_atomic_data_type = 0x1003, ///< Unsupported atomic data type
+    tinytc_status_spirv_required_feature_unavailable = 0x1004, ///< Required feature unavailable
     // Level zero errors
     tinytc_status_ze_result_not_ready = 0x10000,         ///< ZE_RESULT_NOT_READY
     tinytc_status_ze_result_error_device_lost = 0x10001, ///< ZE_RESULT_ERROR_DEVICE_LOST
@@ -359,6 +360,24 @@ typedef enum {
     tinytc_matrix_use_b,  ///< matrix_b
     tinytc_matrix_use_acc ///< matrix_acc
 } tinytc_matrix_use_t;
+
+//! SPIR-V features
+typedef enum {
+    tinytc_spirv_feature_float16 = 0,                    ///< f16 support
+    tinytc_spirv_feature_float64 = 1,                    ///< f64 support
+    tinytc_spirv_feature_int64_atomics = 2,              ///< i64 atomics support
+    tinytc_spirv_feature_groups = 3,                     ///< work group collectives
+    tinytc_spirv_feature_subgroup_dispatch = 4,          ///< subgroup support
+    tinytc_spirv_feature_subgroup_buffer_block_io = 5,   ///< subgroup block read/write support
+    tinytc_spirv_feature_atomic_float16_add_local = 6,   ///< f16 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float16_add_global = 7,  ///< f16 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float32_add_local = 8,   ///< f32 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float32_add_global = 9,  ///< f32 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float64_add_local = 10,  ///< f64 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float64_add_global = 11, ///< f64 atomic add on global pointer
+    tinytc_spirv_feature_bfloat16_conversion = 12,       ///< bf16 -> f32 and f32 -> bf16 conversion
+} tinytc_spirv_feature_t;
+#define TINYTC_NUMBER_OF_SPIRV_FEATURES 13 // @todo Keep up to date with tinytc_spirv_feature_t
 
 //! Core features that may be optionally enabled
 typedef enum {

@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <sstream>
 #include <utility>
 

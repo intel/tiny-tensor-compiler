@@ -276,6 +276,8 @@ Device Info
 
   * :ref:`tinytc::intel_gpu_architecture`
 
+  * :ref:`tinytc::spirv_feature`
+
 * Functions
 
   * :ref:`tinytc::make_core_info_generic`
@@ -285,6 +287,8 @@ Device Info
   * :ref:`tinytc::make_core_info_intel_from_arch`
 
   * :ref:`tinytc::make_core_info_intel_from_name`
+
+  * :ref:`tinytc::to_string(spirv_feature)`
 
 * Classes
 
@@ -306,6 +310,13 @@ intel_gpu_architecture
 ......................
 
 .. doxygenenum:: tinytc::intel_gpu_architecture
+
+.. _tinytc::spirv_feature:
+
+spirv_feature
+.............
+
+.. doxygenenum:: tinytc::spirv_feature
 
 Device Info Functions
 ---------------------
@@ -337,6 +348,13 @@ make_core_info_intel_from_name
 ..............................
 
 .. doxygenfunction:: tinytc::make_core_info_intel_from_name
+
+.. _tinytc::to_string(spirv_feature):
+
+to_string(spirv_feature)
+........................
+
+.. doxygenfunction:: tinytc::to_string(spirv_feature)
 
 Device Info Classes
 -------------------

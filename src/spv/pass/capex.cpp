@@ -15,6 +15,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <concepts>
 #include <cstdint>
 
 namespace tinytc::spv {
@@ -37,6 +38,7 @@ void capex::operator()(OpAtomicStore const &in) {
     auto ity = dyn_cast<OpTypeInt>(ty);
     if (ity && ity->op0() == 64) {
         unique_->capability(Capability::Int64Atomics);
+        required_features_[tinytc_spirv_feature_int64_atomics] = true;
     }
 }
 void capex::operator()(OpAtomicFAddEXT const &in) {
@@ -44,18 +46,38 @@ void capex::operator()(OpAtomicFAddEXT const &in) {
     if (!ty) {
         throw status::internal_compiler_error;
     }
+
+    auto pointer_ty = visit(overloaded{[](inst_with_return_type auto &a) -> OpTypePointer * {
+                                           return dyn_cast<OpTypePointer>(a.type());
+                                       },
+                                       [](auto &) -> OpTypePointer * { return nullptr; }},
+                            *in.op0());
+    if (!pointer_ty) {
+        throw status::internal_compiler_error;
+    }
+    const auto storage_cls = pointer_ty->op0();
+
     switch (ty->op0()) {
     case 16:
         unique_->capability(Capability::AtomicFloat16AddEXT);
         unique_->extension("SPV_EXT_shader_atomic_float16_add");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float16_add_local
+                               : tinytc_spirv_feature_atomic_float16_add_global] = true;
         break;
     case 32:
         unique_->capability(Capability::AtomicFloat32AddEXT);
         unique_->extension("SPV_EXT_shader_atomic_float_add");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float32_add_local
+                               : tinytc_spirv_feature_atomic_float32_add_global] = true;
         break;
     case 64:
         unique_->capability(Capability::AtomicFloat64AddEXT);
         unique_->extension("SPV_EXT_shader_atomic_float_add");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float64_add_local
+                               : tinytc_spirv_feature_atomic_float64_add_global] = true;
         break;
     default:
         break;
@@ -68,15 +90,18 @@ void capex::operator()(OpAtomicIAdd const &in) {
     }
     if (ty && ty->op0() == 64) {
         unique_->capability(Capability::Int64Atomics);
+        required_features_[tinytc_spirv_feature_int64_atomics] = true;
     }
 }
 void capex::operator()(OpConvertBF16ToFINTEL const &) {
     unique_->capability(Capability::BFloat16ConversionINTEL);
     unique_->extension("SPV_INTEL_bfloat16_conversion");
+    required_features_[tinytc_spirv_feature_bfloat16_conversion] = true;
 }
 void capex::operator()(OpConvertFToBF16INTEL const &) {
     unique_->capability(Capability::BFloat16ConversionINTEL);
     unique_->extension("SPV_INTEL_bfloat16_conversion");
+    required_features_[tinytc_spirv_feature_bfloat16_conversion] = true;
 }
 void capex::operator()(OpEntryPoint const &in) {
     for (auto const &cap : capabilities(in.op0())) {
@@ -86,11 +111,23 @@ void capex::operator()(OpEntryPoint const &in) {
 void capex::operator()(OpExecutionMode const &in) {
     for (auto const &cap : capabilities(in.op1())) {
         unique_->capability(cap);
+        if (cap == Capability::SubgroupDispatch) {
+            required_features_[tinytc_spirv_feature_subgroup_dispatch] = true;
+        }
     }
 }
-void capex::operator()(OpGroupBroadcast const &) { unique_->capability(Capability::Groups); }
-void capex::operator()(OpGroupFAdd const &) { unique_->capability(Capability::Groups); }
-void capex::operator()(OpGroupIAdd const &) { unique_->capability(Capability::Groups); }
+void capex::operator()(OpGroupBroadcast const &) {
+    unique_->capability(Capability::Groups);
+    required_features_[tinytc_spirv_feature_groups] = true;
+}
+void capex::operator()(OpGroupFAdd const &) {
+    unique_->capability(Capability::Groups);
+    required_features_[tinytc_spirv_feature_groups] = true;
+}
+void capex::operator()(OpGroupIAdd const &) {
+    unique_->capability(Capability::Groups);
+    required_features_[tinytc_spirv_feature_groups] = true;
+}
 void capex::operator()(OpInBoundsPtrAccessChain const &) {
     unique_->capability(Capability::Addresses);
 }
@@ -105,18 +142,22 @@ void capex::operator()(OpMemoryModel const &in) {
 void capex::operator()(OpSubgroupBlockReadINTEL const &) {
     unique_->capability(Capability::SubgroupBufferBlockIOINTEL);
     unique_->extension("SPV_INTEL_subgroups");
+    required_features_[tinytc_spirv_feature_subgroup_buffer_block_io] = true;
 }
 void capex::operator()(OpSubgroupBlockWriteINTEL const &) {
     unique_->capability(Capability::SubgroupBufferBlockIOINTEL);
     unique_->extension("SPV_INTEL_subgroups");
+    required_features_[tinytc_spirv_feature_subgroup_buffer_block_io] = true;
 }
 void capex::operator()(OpTypeFloat const &in) {
     switch (in.op0()) {
     case 16:
         unique_->capability(Capability::Float16);
+        required_features_[tinytc_spirv_feature_float16] = true;
         break;
     case 64:
         unique_->capability(Capability::Float64);
+        required_features_[tinytc_spirv_feature_float64] = true;
         break;
     default:
         break;
