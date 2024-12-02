@@ -14,7 +14,6 @@
 #include <CL/cl_platform.h>
 #include <cstddef>
 #include <cstring>
-#include <string>
 #include <vector>
 
 #ifndef CL_DEVICE_SINGLE_FP_ATOMIC_CAPABILITIES_EXT

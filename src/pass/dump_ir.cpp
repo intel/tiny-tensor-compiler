@@ -203,7 +203,11 @@ void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     dump_val(c.pos0());
     *os_ << ",";
     dump_val(c.pos1());
-    *os_ << "] : ";
+    *os_ << "]";
+    if (c.align() != 0) {
+        *os_ << ", align " << c.align();
+    }
+    *os_ << " : ";
     visit(*this, *c.result(0).ty());
 }
 
@@ -246,6 +250,9 @@ void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
     *os_ << ",";
     dump_val(c.pos1());
     *os_ << "]";
+    if (c.align() != 0) {
+        *os_ << ", align " << c.align();
+    }
 }
 
 void dump_ir_pass::operator()(expand_inst const &e) {
@@ -285,7 +292,11 @@ void dump_ir_pass::operator()(load_inst const &e) {
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
                   [this](auto const &i) { dump_val(i); });
-    *os_ << "] : ";
+    *os_ << "]";
+    if (e.align() != 0) {
+        *os_ << ", align " << e.align();
+    }
+    *os_ << " : ";
     visit(*this, *e.result(0).ty());
 }
 
@@ -431,6 +442,9 @@ void dump_ir_pass::operator()(subview_inst const &s) {
         }
     }
     *os_ << "]";
+    if (s.align() != 0) {
+        *os_ << ", align " << s.align();
+    }
     *os_ << " : ";
     visit(*this, *s.result(0).ty());
 }
@@ -447,8 +461,10 @@ void dump_ir_pass::operator()(store_inst const &e) {
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
                   [this](auto const &i) { dump_val(i); });
-    *os_ << "] : ";
-    visit(*this, *e.operand().ty());
+    *os_ << "]";
+    if (e.align() != 0) {
+        *os_ << ", align " << e.align();
+    }
 }
 
 void dump_ir_pass::operator()(sum_inst const &a) {
@@ -496,12 +512,16 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
     *os_ << "func @" << fn.name() << "(";
     std::string infix = ",\n       ";
     infix += std::string(fn.name().size(), ' ');
-    do_with_infix(
+    do_with_infix_enumerated(
         fn.params().begin(), fn.params().end(),
-        [this](auto const &a) {
+        [this, &fn](std::int32_t arg_no, auto const &a) {
             dump_val(a);
             *os_ << ": ";
             visit(*this, *a.ty());
+            const auto align = fn.align(arg_no);
+            if (align > 0) {
+                *os_ << " align(" << align << ")";
+            }
         },
         infix);
     *os_ << ") ";

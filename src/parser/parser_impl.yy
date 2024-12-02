@@ -26,7 +26,11 @@
         using unique_ptr_to_if_inst = std::unique_ptr<if_inst>;
 
         using identifier = std::variant<std::int64_t, std::string>;
-        using identifier_and_location = std::pair<identifier, location>;
+        struct param_attrs {
+            identifier id;
+            location loc;
+            std::int32_t align;
+        };
     }
 }
 
@@ -94,6 +98,7 @@
     LSQBR           "["
     RSQBR           "]"
     FUNC            "func"
+    ALIGN           "align"
     WORK_GROUP_SIZE "work_group_size"
     SUBGROUP_SIZE   "subgroup_size"
     ARROW           "->"
@@ -162,8 +167,9 @@
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
 %nterm <func> func
-%nterm <std::pair<std::vector<identifier_and_location>,std::vector<tinytc_data_type_t>>> parameters
-%nterm <std::pair<identifier_and_location,tinytc_data_type_t>> parameter
+%nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_data_type_t>>> parameters
+%nterm <std::pair<param_attrs,tinytc_data_type_t>> parameter
+%nterm <std::int32_t> optional_parameter_align
 %nterm <std::vector<std::function<void(function_node&)>>> attributes
 %nterm <std::function<void(function_node&)>> attribute
 %nterm <tinytc_data_type_t> data_type
@@ -216,6 +222,7 @@
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
 %nterm <inst> cooperative_matrix_load_inst
+%nterm <std::int32_t> optional_align
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_scale_inst
 %nterm <inst> cooperative_matrix_store_inst
@@ -266,7 +273,10 @@ func:
             ctx.push_scope();
             auto name_it = $parameters.first.begin();
             for (auto &p : func_node->params()) {
-                ctx.val(name_it->first, p, name_it->second);
+                ctx.val(name_it->id, p, name_it->loc);
+                if (name_it->align != 0) {
+                    func_node->align(name_it - $parameters.first.begin(), name_it->align);
+                }
                 ++name_it;
             }
             ctx.push_region(&func_node->body());
@@ -297,9 +307,14 @@ parameters:
 ;
 
 parameter:
-    LOCAL_IDENTIFIER COLON data_type {
-        $$ = std::make_pair(std::make_pair($LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER), $data_type);
+    LOCAL_IDENTIFIER COLON data_type optional_parameter_align[align] {
+        $$ = std::make_pair(param_attrs{$LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER, $align}, $data_type);
     }
+;
+
+optional_parameter_align:
+    %empty { $$ = 0; }
+  | ALIGN LPAREN INTEGER_CONSTANT RPAREN { $$ = $INTEGER_CONSTANT; }
 ;
 
 attributes:
@@ -851,12 +866,12 @@ constant_inst:
 ;
 
 cooperative_matrix_load_inst:
-    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
+    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR optional_align COLON data_type[result_ty]  {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_load_inst>(
-                    $transpose, $checked, std::move($op), std::move($p0), std::move($p1), std::move($result_ty),
-                    @cooperative_matrix_load_inst)
+                    $transpose, $checked, std::move($op), std::move($p0), std::move($p1), $optional_align,
+                    std::move($result_ty), @cooperative_matrix_load_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -864,6 +879,11 @@ cooperative_matrix_load_inst:
             YYERROR;
         }
     }
+;
+
+optional_align:
+    %empty { $$ = 0; }
+  | COMMA ALIGN INTEGER_CONSTANT { $$ = $INTEGER_CONSTANT; }
 ;
 
 checked:
@@ -903,12 +923,12 @@ cooperative_matrix_scale_inst:
 ;
 
 cooperative_matrix_store_inst:
-    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
+    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR optional_align {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_store_inst>(
                     $checked, $store_flag, std::move($val), std::move($op), std::move($p0), std::move($p1),
-                    @cooperative_matrix_store_inst)
+                    $optional_align, @cooperative_matrix_store_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -978,11 +998,11 @@ fuse_inst:
 ;
 
 load_inst:
-    LOAD var LSQBR optional_value_list RSQBR COLON data_type {
+    LOAD var LSQBR optional_value_list RSQBR optional_align COLON data_type {
         try {
             $$ = inst {
                 std::make_unique<load_inst>(std::move($var), std::move($optional_value_list),
-                                            std::move($data_type), @load_inst)
+                                            $optional_align, std::move($data_type), @load_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -993,11 +1013,11 @@ load_inst:
 ;
 
 store_inst:
-    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
+    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR optional_align {
         try {
             $$ = inst {
                 std::make_unique<store_inst>($store_flag, std::move($a), std::move($b),
-                                             std::move($optional_value_list), @store_inst)
+                                             std::move($optional_value_list), $optional_align, @store_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1087,7 +1107,7 @@ size_inst:
 ;
 
 subview_inst:
-    SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type[ty] {
+    SUBVIEW var LSQBR optional_slice_list RSQBR optional_align COLON memref_type[ty] {
         try {
             auto static_offsets = std::vector<std::int64_t>{};
             auto static_sizes = std::vector<std::int64_t>{};
@@ -1099,32 +1119,34 @@ subview_inst:
             sizes.reserve($optional_slice_list.size());
             for (auto &s : $optional_slice_list) {
                 std::visit(overloaded{
-                    [&](std::int64_t i) { static_offsets.push_back(i); },
-                    [&](tinytc_value_t v) {
-                        static_offsets.push_back(dynamic);
-                        offsets.push_back(v);
-                    },
-                }, s.first);
+                               [&](std::int64_t i) { static_offsets.push_back(i); },
+                               [&](tinytc_value_t v) {
+                                   static_offsets.push_back(dynamic);
+                                   offsets.push_back(v);
+                               },
+                           },
+                           s.first);
                 std::visit(overloaded{
-                    [&](std::int64_t i) { static_sizes.push_back(i); },
-                    [&](tinytc_value_t v) {
-                        static_sizes.push_back(dynamic);
-                        sizes.push_back(v);
-                    },
-                }, s.second);
+                               [&](std::int64_t i) { static_sizes.push_back(i); },
+                               [&](tinytc_value_t v) {
+                                   static_sizes.push_back(dynamic);
+                                   sizes.push_back(v);
+                               },
+                           },
+                           s.second);
             }
             $$ = inst {
-                std::make_unique<subview_inst>(std::move($var), std::move(static_offsets), std::move(static_sizes),
-                                               std::move(offsets), std::move(sizes), std::move($ty), @subview_inst)
+                std::make_unique<subview_inst>(
+                    std::move($var), std::move(static_offsets), std::move(static_sizes), std::move(offsets),
+                    std::move(sizes), $optional_align, std::move($ty), @subview_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
-        } catch (std::exception const& e) {
+        } catch (std::exception const &e) {
             error(@subview_inst, e.what());
         }
-
     }
 ;
 

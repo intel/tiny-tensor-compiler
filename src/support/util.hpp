@@ -12,6 +12,10 @@
 
 namespace tinytc {
 
+template <std::integral T> auto is_positive_power_of_two(T x) -> bool {
+    return x >= 1 && ((x & (x - 1)) == 0);
+}
+
 template <typename T, typename V> auto enum_cast(V val) {
     return T{std::underlying_type_t<T>(val)};
 }

@@ -1,0 +1,83 @@
+{
+  "copyright" : [
+    "Copyright (C) 2024 Intel Corporation",
+    "SPDX-License-Identifier: BSD-3-Clause"
+  ],
+  "instructions" : [
+    {
+      "opname" : "OpCooperativeMatrixLoadCheckedINTEL",
+      "class"  : "Memory",
+      "opcode" : 6193,
+      "operands" : [
+        { "kind" : "IdResultType" },
+        { "kind" : "IdResult" },
+        { "kind" : "IdRef",             "name" : "'Pointer'" },
+        { "kind" : "IdRef",             "name" : "'X offset'" },
+        { "kind" : "IdRef",             "name" : "'Y offset'" },
+        { "kind" : "IdRef",             "name" : "'MemoryLayout'" },
+        { "kind" : "IdRef",             "name" : "'Height'" },
+        { "kind" : "IdRef",             "name" : "'Width'" },
+        { "kind" : "IdRef",             "name" : "'Stride'", "quantifier": "?" },
+        { "kind" : "MemoryAccess",      "name" : "'Memory Operand'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "CooperativeMatrixCheckedInstructionsINTEL" ],
+      "version" : "None"
+    },
+    {
+      "opname" : "OpCooperativeMatrixStoreCheckedINTEL",
+      "class"  : "Memory",
+      "opcode" : 6194,
+      "operands" : [
+        { "kind" : "IdRef",             "name" : "'Pointer'" },
+        { "kind" : "IdRef",             "name" : "'X offset'" },
+        { "kind" : "IdRef",             "name" : "'Y offset'" },
+        { "kind" : "IdRef",             "name" : "'Object'" },
+        { "kind" : "IdRef",             "name" : "'MemoryLayout'" },
+        { "kind" : "IdRef",             "name" : "'Height'" },
+        { "kind" : "IdRef",             "name" : "'Width'" },
+        { "kind" : "IdRef",             "name" : "'Stride'", "quantifier": "?" },
+        { "kind" : "MemoryAccess",      "name" : "'Memory Operand'", "quantifier" : "?" }
+      ],
+      "capabilities" : [ "CooperativeMatrixCheckedInstructionsINTEL" ],
+      "version" : "None"
+    }
+  ],
+  "operand_kinds" : [
+    {
+      "category" : "ValueEnum",
+      "kind" : "Capability",
+      "enumerants" : [
+        {
+          "enumerant" : "PackedCooperativeMatrixINTEL",
+          "value" : 6434,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        },
+        {
+          "enumerant" : "CooperativeMatrixInvocationInstructionsINTEL",
+          "value" : 6435,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        },
+        {
+          "enumerant" : "CooperativeMatrixTF32ComponentTypeINTEL",
+          "value" : 6436,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        },
+        {
+          "enumerant" : "CooperativeMatrixBFloat16ComponentTypeINTEL",
+          "value" : 6437,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        },
+        {
+          "enumerant" : "CooperativeMatrixCheckedInstructionsINTEL",
+          "value" : 6192,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        },
+        {
+          "enumerant" : "CooperativeMatrixPrefetchINTEL",
+          "value" : 6449,
+          "extensions" : [ "SPV_INTEL_joint_matrix" ]
+        }
+      ]
+    }
+  ]
+}

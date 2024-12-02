@@ -83,6 +83,16 @@ class dump_ir_pass {
             a(*it);
         }
     }
+    template <typename Iterator, typename Action>
+    void do_with_infix_enumerated(Iterator begin, Iterator end, Action a,
+                                  std::string const &infix = ",") {
+        for (auto it = begin; it != end; ++it) {
+            if (it != begin) {
+                *os_ << infix;
+            }
+            a(it - begin, *it);
+        }
+    }
     inline auto indent() { return std::string(2 * lvl_, ' '); }
     std::ostream *os_;
     int lvl_limit_;

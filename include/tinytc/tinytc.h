@@ -434,6 +434,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
  * @param op [in] %op
  * @param p0 [in] %p0
  * @param p1 [in] %p1
+ * @param align [in][optional] minimum alignment; can be 0
  * @param to_ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -441,8 +442,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
     tinytc_inst_t *instr, tinytc_transpose_t transpose, tinytc_checked_flag_t flag,
-    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty,
-    const tinytc_location_t *loc);
+    tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, int32_t align,
+    tinytc_data_type_t to_ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create cooperative matrix mul add instruction
@@ -492,13 +493,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(
  * @param op [in] %op
  * @param p0 [in] %p0
  * @param p1 [in] %p1
+ * @param align [in][optional] minimum alignment; can be 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_store_inst_create(
     tinytc_inst_t *instr, tinytc_checked_flag_t cflag, tinytc_store_flag_t sflag,
-    tinytc_value_t val, tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1,
+    tinytc_value_t val, tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1, int32_t align,
     const tinytc_location_t *loc);
 
 /**
@@ -592,6 +594,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
  * @param index_list_size [in] number of indices
  * @param index_list [in][range(0, index_list_size)] indices array; may be nullptr if
  * index_list_size is 0
+ * @param align [in][optional] minimum alignment; can be 0
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -600,7 +603,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
 TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       uint32_t index_list_size,
                                                       const tinytc_value_t *index_list,
-                                                      tinytc_data_type_t ty,
+                                                      int32_t align, tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
 
 /**
@@ -750,6 +753,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
  * offset_list_size is 0
  * @param size_list_size [in] number of dynamic sizes
  * @param size_list [in][range(0, size_list_size)] size array; may be nullptr if size_list_size is 0
+ * @param align [in][optional] minimum alignment; can be 0
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -759,7 +763,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
     tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
     const int64_t *static_offset_list, const int64_t *static_size_list, uint32_t offset_list_size,
     const tinytc_value_t *offset_list, uint32_t size_list_size, const tinytc_value_t *size_list,
-    tinytc_data_type_t ty, const tinytc_location_t *loc);
+    int32_t align, tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create store instruction
@@ -773,6 +777,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
  * @param index_list_size [in] number of indices
  * @param index_list [in][range(0, index_list_size)] indices array; may be nullptr if
  * index_list_size is 0
+ * @param align [in][optional] minimum alignment; can be 0
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -781,7 +786,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr,
                                                        tinytc_store_flag_t flag, tinytc_value_t val,
                                                        tinytc_value_t a, uint32_t index_list_size,
                                                        const tinytc_value_t *index_list,
-                                                       const tinytc_location_t *loc);
+                                                       int32_t align, const tinytc_location_t *loc);
 
 /**
  * @brief Create sum instruction

@@ -1398,6 +1398,31 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
+ * @param align minimum alignment; can be 0
+ * @param to_ty result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, value op, value p0,
+                                         value p1, std::int32_t align, data_type to_ty,
+                                         location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_load_inst_create(
+                         &instr, static_cast<tinytc_transpose_t>(trans),
+                         static_cast<tinytc_checked_flag_t>(flag), op, p0, p1, align, to_ty, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix load instruction
+ *
+ * @param trans transpose operation applied on load
+ * @param flag out-of-bounds checks type
+ * @param op %op
+ * @param p0 %p0
+ * @param p1 %p1
  * @param to_ty result type
  * @param loc Source code location
  *
@@ -1405,12 +1430,8 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
  */
 inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, value op, value p0,
                                          value p1, data_type to_ty, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_load_inst_create(
-                         &instr, static_cast<tinytc_transpose_t>(trans),
-                         static_cast<tinytc_checked_flag_t>(flag), op, p0, p1, to_ty, &loc),
-                     loc);
-    return inst(instr);
+    return make_cooperative_matrix_load(trans, flag, std::move(op), std::move(p0), std::move(p1), 0,
+                                        to_ty, loc);
 }
 
 /**
@@ -1458,18 +1479,39 @@ inline inst make_cooperative_matrix_scale(value a, value b, data_type ty,
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
+ * @param align minimum alignment; can be 0
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_store(checked_flag cflag, store_flag sflag, value val, value op,
+                                          value p0, value p1, std::int32_t align,
+                                          location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_store_inst_create(
+                         &instr, static_cast<tinytc_checked_flag_t>(cflag),
+                         static_cast<tinytc_store_flag_t>(sflag), val, op, p0, p1, align, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix store instruction
+ *
+ * @param cflag out-of-bounds checks type
+ * @param sflag store flag
+ * @param val %val
+ * @param op %op
+ * @param p0 %p0
+ * @param p1 %p1
  * @param loc Source code location
  *
  * @return Instruction
  */
 inline inst make_cooperative_matrix_store(checked_flag cflag, store_flag sflag, value val, value op,
                                           value p0, value p1, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_store_inst_create(
-                         &instr, static_cast<tinytc_checked_flag_t>(cflag),
-                         static_cast<tinytc_store_flag_t>(sflag), val, op, p0, p1, &loc),
-                     loc);
-    return inst(instr);
+    return make_cooperative_matrix_store(cflag, sflag, std::move(val), std::move(op), std::move(p0),
+                                         std::move(p1), 0, loc);
 }
 
 /**
@@ -1562,6 +1604,29 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
  *
  * @param a Operand
  * @param index_list Vector of indices
+ * @param align minimum alignment; can be 0
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_load(value a, array_view<value> index_list, std::int32_t align,
+                      tinytc_data_type_t ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    auto len = index_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("index list too long");
+    }
+    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
+    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, align, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make load instruction
+ *
+ * @param a Operand
+ * @param index_list Vector of indices
  * @param ty Result type
  * @param loc Source code location
  *
@@ -1569,14 +1634,7 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
  */
 inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t ty,
                       location const &loc = {}) {
-    tinytc_inst_t instr;
-    auto len = index_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("index list too long");
-    }
-    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, ty, &loc), loc);
-    return inst(instr);
+    return make_load(std::move(a), std::move(index_list), 0, ty, loc);
 }
 
 /**
@@ -1706,6 +1764,7 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
  * contains "dynamic"
  * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
  * "dynamic"
+ * @param align minimum alignment; can be 0
  * @param ty Return type
  * @param loc Source code location
  *
@@ -1713,7 +1772,8 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
  */
 inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
                          array_view<std::int64_t> static_size_list, array_view<value> offset_list,
-                         array_view<value> size_list, data_type ty, location const &loc = {}) {
+                         array_view<value> size_list, std::int32_t align, data_type ty,
+                         location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(
@@ -1735,9 +1795,57 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
     const tinytc_value_t *sl = reinterpret_cast<const tinytc_value_t *>(size_list.data());
     CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a, static_len, static_offset_list.data(),
                                                 static_size_list.data(), offset_len, ol, size_len,
-                                                sl, ty, &loc),
+                                                sl, align, ty, &loc),
                      loc);
     return inst(instr);
+}
+
+/**
+ * @brief Make store instruction
+ *
+ * @param flag store flag
+ * @param val Value that is stored
+ * @param a Target memref
+ * @param index_list Vector of indices
+ * @param align minimum alignment; can be 0
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_store(store_flag flag, value val, value a, array_view<value> index_list,
+                       std::int32_t align, location const &loc = {}) {
+    tinytc_inst_t instr;
+    auto len = index_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("index list too long");
+    }
+    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
+    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, static_cast<tinytc_store_flag_t>(flag), val,
+                                              a, len, il, align, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make subview instruction
+ *
+ * @param a Operand
+ * @param static_offset_list Static offsets
+ * @param static_size_list Static sizes
+ * @param offset_list Vector of offsets; need to add dynamic offsets here if static_offset_list
+ * contains "dynamic"
+ * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
+ * "dynamic"
+ * @param ty Return type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
+                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
+                         array_view<value> size_list, data_type ty, location const &loc = {}) {
+    return make_subview(std::move(a), std::move(static_offset_list), std::move(static_size_list),
+                        std::move(offset_list), std::move(size_list), 0, ty, loc);
 }
 
 /**
@@ -1753,16 +1861,7 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
  */
 inline inst make_store(store_flag flag, value val, value a, array_view<value> index_list,
                        location const &loc = {}) {
-    tinytc_inst_t instr;
-    auto len = index_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("index list too long");
-    }
-    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, static_cast<tinytc_store_flag_t>(flag), val,
-                                              a, len, il, &loc),
-                     loc);
-    return inst(instr);
+    return make_store(flag, std::move(val), std::move(a), std::move(index_list), 0, loc);
 }
 
 /**

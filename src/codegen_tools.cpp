@@ -217,15 +217,27 @@ auto get_bool_constant(tinytc_value_t val) -> std::optional<bool> {
     return std::nullopt;
 }
 
-auto get_int_constant(tinytc_value_t val) -> std::optional<std::int64_t> {
+auto get_int_constant(const_tinytc_value_t val) -> std::optional<std::int64_t> {
     if (auto i = val->defining_inst(); i) {
-        if (auto *ci = dyn_cast<constant_inst>(i); ci) {
+        if (auto *ci = dyn_cast<const constant_inst>(i); ci) {
             if (std::holds_alternative<std::int64_t>(ci->value())) {
                 return std::get<std::int64_t>(ci->value());
             }
         }
     }
     return std::nullopt;
+}
+
+auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t> {
+    return get_int_constant(&val);
+}
+
+auto get_memref_type(tinytc_value const &v) -> memref_data_type * {
+    auto mt = dyn_cast<memref_data_type>(v.ty());
+    if (!mt) {
+        throw compilation_error(v.loc(), status::ir_expected_memref);
+    }
+    return mt;
 }
 
 } // namespace tinytc

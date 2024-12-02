@@ -110,6 +110,7 @@ enum class status {
     ir_operand_type_must_match_return_type = tinytc_status_ir_operand_type_must_match_return_type,
     ir_invalid_stride = tinytc_status_ir_invalid_stride,
     ir_init_return_type_mismatch = tinytc_status_ir_init_return_type_mismatch,
+    ir_invalid_alignment = tinytc_status_ir_invalid_alignment,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,

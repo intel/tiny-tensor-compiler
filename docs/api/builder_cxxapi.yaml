@@ -68,10 +68,12 @@ Builder C++-API:
       - tinytc::make_constant(std::int64_t,data_type,location const&)
       - tinytc::make_constant_one
       - tinytc::make_constant_zero
-      - tinytc::make_cooperative_matrix_load
+      - tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&)
+      - tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&)
       - tinytc::make_cooperative_matrix_mul_add
       - tinytc::make_cooperative_matrix_scale
-      - tinytc::make_cooperative_matrix_store
+      - tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&)
+      - tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&)
       - tinytc::make_expand
       - tinytc::make_for
       - tinytc::make_foreach
@@ -81,11 +83,14 @@ Builder C++-API:
       - tinytc::make_ger
       - tinytc::make_hadamard
       - tinytc::make_if
-      - tinytc::make_load
+      - tinytc::make_load(value,array_view<value>,tinytc_data_type_t,location const&)
+      - tinytc::make_load(value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
       - tinytc::make_parallel
       - tinytc::make_size
-      - tinytc::make_store
-      - tinytc::make_subview
+      - tinytc::make_store(store_flag,value,value,array_view<value>,location const&)
+      - tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
+      - tinytc::make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,data_type,location const&)
+      - tinytc::make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,std::int32_t,data_type,location const&)
       - tinytc::make_sum
       - tinytc::make_work_group
       - tinytc::make_yield

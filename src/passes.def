@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+FUNCTION_PASS("alignment-propagation", alignment_propagation_pass{})
 FUNCTION_PASS("check-ir", check_ir_pass{})
 FUNCTION_PASS("constant-propagation", constant_propagation_pass{}, tinytc::optflag::unsafe_fp_math)
 FUNCTION_PASS("dead-code-elimination", dead_code_elimination_pass{})

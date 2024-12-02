@@ -85,6 +85,7 @@ lex:
 
         // keywords
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
+        "align"             { adv_loc(); return parser::make_ALIGN(loc_); }
         "work_group_size"   { adv_loc(); return parser::make_WORK_GROUP_SIZE(loc_); }
         "subgroup_size"     { adv_loc(); return parser::make_SUBGROUP_SIZE(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }

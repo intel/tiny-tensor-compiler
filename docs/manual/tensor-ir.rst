@@ -95,16 +95,17 @@ Functions
 
 .. code:: abnf
 
-    function-definition         = "func" global-identifier "(" [argument-list] ")" *attribute region
+    function-definition         = "func" global-identifier "(" [argument-list] ")" *function-attribute region
     argument-list               = argument *("," argument)
-    argument                    = local-identifier ":" type
-    attribute                   = work-group-size-attribute / subgroup-size-attribute
+    argument                    = local-identifier ":" type [align-attribute]
+    align-attribute             = "align" "(" 1*DIGIT ")"
+    function-attribute          = work-group-size-attribute / subgroup-size-attribute
     work-group-size-attribute   = "work_group_size" "(" 1*DIGIT "," 1*DIGIT ")"
     subgroup-size-attribute     = "subgroup_size" "(" 1*DIGIT ")"
 
 Defines a function that is callable from the host.
 
-Attributes are optional and autoatically determined if omitted.
+Function attributes are optional and automatically determined if omitted.
 
 The work-group size attribute defines the size of the local work group.
 Due to the focus on matrix operations, the work-group size is always two-dimensional,
@@ -121,10 +122,16 @@ is always a multiple of the subgroup size.
 The subgroup size attribute enforces a particular subgroup device supported by
 the device.
 
+Parameters might be decorated with attributes.
+The attributes are part of the function and not part of the parameter's type.
+The only supported parameter attribute is "align" that requires that the data
+a memref points to has the given minimum alignment (power-of-two, in bytes).
+
 Restrictions
 ------------
 
-Arguments must not have coopmatrix type.
+* Arguments must not have coopmatrix type.
+* The "align" attribute must only be applied to parameters of memref type.
 
 Regions
 =======
@@ -957,7 +964,7 @@ Cooperative matrix load
 
     value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
                                    local-identifier "[" local-identifier "," local-identifier "]"
-                                   ":" coopmatrix-type
+                                   ["," "align" 1*DIGIT] ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
 
 Overview
@@ -990,6 +997,10 @@ Flag            Description
 .both_checked.n .rows_checked.n + .cols_checked.n
 .both_checked.t .rows_checked.t + .cols_checked.t
 =============== =======================================================================================================
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~
@@ -1087,6 +1098,7 @@ Cooperative matrix store
 
     instruction     =/ "cooperative_matrix_store" checked-flag [store-flag] local-identifier ","
                        local-identifier "[" local-identifier "," local-identifier "]"
+                       ["," "align" 1*DIGIT]
 
 Overview
 ~~~~~~~~
@@ -1115,6 +1127,10 @@ When the atomic_add flag is set, the coopmatrix is added to the memref atomicall
 
 When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
 for the the real and imaginary separately.
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~
@@ -1367,7 +1383,7 @@ Load
 .. code:: abnf
 
     value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
-                                   ":" scalar-or-memref-type
+                                          ["," "align" 1*DIGIT] ":" scalar-or-memref-type
     scalar-or-memref-type       =  scalar-type / memref-type
 
 Overview
@@ -1376,6 +1392,10 @@ Overview
 Load the element given by the index list from a memref or group.
 The number of indices must match the order of the memref
 and a single index must be given for a group.
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~~
@@ -1427,7 +1447,8 @@ Subview
 
 .. code:: abnf
 
-    value-instruction       =/ "subview" local-identifier "[" [index-or-slice-list] "]" ":" memref-type
+    value-instruction       =/ "subview" local-identifier "[" [index-or-slice-list] "]"
+                                         ["," "align" 1*DIGIT] ":" memref-type
     index-or-slice-list     =  index-or-slice *("," index-or-slice)
     index-or-slice          =  integer-constant-or-identifier [":" integer-constant-or-identifier]
 
@@ -1460,6 +1481,12 @@ A dynamic size of zero is undefined behaviour.
 There is no run-time check whether the indices are within bounds.
 Offset and size must be of index type.
 Offset must be non-negative and size must be positive.
+
+The optional "align" attribute may be passed to enforce that the base pointer of the returned
+memref has a known minimum alignment (power-of-two, in bytes).
+The user should make sure that the offset and the alignment of the incomining memref are such that
+the returned does indeed have the required alignment.
+It is undefined behaviour if the base pointer does not have the required minimum alignment at run-time.
 
 Restrictions
 ~~~~~~~~~~~~
@@ -1498,8 +1525,8 @@ Store
 
 .. code:: abnf
 
-    instruction     =/ "store" [store-flag]
-                       local-identifier "," local-identifier "[" [local-identifier-list] "]"
+    instruction     =/ "store" [store-flag] local-identifier ","
+                               local-identifier "[" [local-identifier-list] "]" ["," "align" 1*DIGIT]
     store-flag      = ".atomic" / ".atomic_add"
 
 Overview
@@ -1518,6 +1545,10 @@ for the the real and imaginary separately.
 
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~

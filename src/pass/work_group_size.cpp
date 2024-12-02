@@ -2,12 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/work_group_size.hpp"
+#include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
-#include "node/value_node.hpp"
-#include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
@@ -21,14 +20,6 @@
 #include <vector>
 
 namespace tinytc {
-
-auto get_memref_type(value_node const &v) {
-    auto t = dyn_cast<memref_data_type>(v.ty());
-    if (t == nullptr) {
-        throw compilation_error(v.loc(), status::ir_expected_memref);
-    }
-    return t;
-}
 
 work_group_size_pass::work_group_size_pass(::tinytc_core_info const *info)
     : info_(std::move(info)) {

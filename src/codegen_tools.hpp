@@ -11,8 +11,11 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <vector>
 
 namespace tinytc {
+
+class memref_data_type;
 
 // tools for OpenCL codegen
 
@@ -38,7 +41,19 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
 
 auto instant_constant_fold_add(region_builder &bb, inst i) -> value;
 auto get_bool_constant(tinytc_value_t val) -> std::optional<bool>;
-auto get_int_constant(tinytc_value_t val) -> std::optional<std::int64_t>;
+auto get_int_constant(const_tinytc_value_t val) -> std::optional<std::int64_t>;
+auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t>;
+auto get_memref_type(tinytc_value const &v) -> memref_data_type *;
+
+template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::int64_t> {
+    auto result = std::vector<std::int64_t>{};
+    result.reserve(val_range.size());
+    for (auto &val : val_range) {
+        const auto cst = get_int_constant(val);
+        result.emplace_back(cst ? *cst : dynamic);
+    }
+    return result;
+}
 
 } // namespace tinytc
 

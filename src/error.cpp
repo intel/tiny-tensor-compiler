@@ -250,6 +250,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_init_return_type_mismatch:
         return "Type of initializer does not match return type or the number of return types is "
                "not equal the number of initializers";
+    case tinytc_status_ir_invalid_alignment:
+        return "Invalid alignment, must be a positive power of two";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

@@ -465,11 +465,13 @@ class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
     }
     enum op_number { op_operand = 0, op_pos0 = 1, op_pos1 = 2 };
     cooperative_matrix_load_inst(transpose t, checked_flag flag, tinytc_value_t op0,
-                                 tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty,
-                                 location const &lc = {});
+                                 tinytc_value_t p0, tinytc_value_t p1, std::int32_t align,
+                                 tinytc_data_type_t to_ty, location const &lc = {});
 
     inline auto t() const -> transpose { return t_; }
     inline auto checked() const -> checked_flag { return flag_; }
+    inline void align(std::int32_t a) { align_ = a; }
+    inline auto align() const -> std::int32_t { return align_; }
     inline auto operand() -> tinytc_value & { return op(op_operand); }
     inline auto operand() const -> tinytc_value const & { return op(op_operand); }
     inline auto pos0() -> tinytc_value & { return op(op_pos0); }
@@ -480,6 +482,7 @@ class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
   private:
     transpose t_;
     checked_flag flag_;
+    std::int32_t align_;
 };
 
 class cooperative_matrix_mul_add_inst : public standard_inst<3, 1, 0> {
@@ -522,10 +525,12 @@ class cooperative_matrix_store_inst : public standard_inst<4, 0, 0> {
     enum op_number { op_val = 0, op_operand = 1, op_pos0 = 2, op_pos1 = 3 };
     cooperative_matrix_store_inst(checked_flag cflag, store_flag sflag, tinytc_value_t val0,
                                   tinytc_value_t op0, tinytc_value_t p0, tinytc_value_t p1,
-                                  location const &lc = {});
+                                  std::int32_t align, location const &lc = {});
 
     inline auto checked() const -> checked_flag { return cflag_; }
     inline auto flag() const -> store_flag { return sflag_; }
+    inline void align(std::int32_t a) { align_ = a; }
+    inline auto align() const -> std::int32_t { return align_; }
     inline auto val() -> tinytc_value & { return op(op_val); }
     inline auto val() const -> tinytc_value const & { return op(op_val); }
     inline auto operand() -> tinytc_value & { return op(op_operand); }
@@ -538,6 +543,7 @@ class cooperative_matrix_store_inst : public standard_inst<4, 0, 0> {
   private:
     checked_flag cflag_;
     store_flag sflag_;
+    std::int32_t align_;
 };
 
 class expand_inst : public standard_inst<dynamic, 1> {
@@ -582,13 +588,18 @@ class fuse_inst : public standard_inst<1, 1> {
 class load_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::load; }
-    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, tinytc_data_type_t ty,
-              location const &lc = {});
+    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, std::int32_t align,
+              tinytc_data_type_t ty, location const &lc = {});
 
+    inline void align(std::int32_t a) { align_ = a; }
+    inline auto align() const -> std::int32_t { return align_; }
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }
     inline auto index_list() { return operands() | std::views::drop(1); }
     inline auto index_list() const { return operands() | std::views::drop(1); }
+
+  private:
+    std::int32_t align_;
 };
 
 class lifetime_stop_inst : public standard_inst<1, 0> {
@@ -735,10 +746,13 @@ class subview_inst : public standard_inst<dynamic, 1> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
     subview_inst(tinytc_value_t op, array_view<std::int64_t> static_offsets,
                  array_view<std::int64_t> static_sizes, array_view<tinytc_value_t> offsets,
-                 array_view<tinytc_value_t> sizes, tinytc_data_type_t ty, location const &lc = {});
+                 array_view<tinytc_value_t> sizes, std::int32_t align, tinytc_data_type_t ty,
+                 location const &lc = {});
 
     inline auto static_offsets() const -> array_view<std::int64_t> { return static_offsets_; }
     inline auto static_sizes() const -> array_view<std::int64_t> { return static_sizes_; }
+    inline void align(std::int32_t a) { align_ = a; }
+    inline auto align() const -> std::int32_t { return align_; }
 
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }
@@ -754,6 +768,7 @@ class subview_inst : public standard_inst<dynamic, 1> {
   private:
     std::vector<std::int64_t> static_offsets_, static_sizes_;
     std::int32_t num_dyn_offsets_;
+    std::int32_t align_;
 };
 
 class store_inst : public standard_inst<dynamic, 0> {
@@ -761,9 +776,11 @@ class store_inst : public standard_inst<dynamic, 0> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::store; }
     enum op_number { op_val = 0, op_operand = 1 };
     store_inst(store_flag flag, tinytc_value_t val, tinytc_value_t op,
-               array_view<tinytc_value_t> index_list, location const &lc = {});
+               array_view<tinytc_value_t> index_list, std::int32_t align, location const &lc = {});
 
     inline auto flag() const -> store_flag { return flag_; }
+    inline void align(std::int32_t a) { align_ = a; }
+    inline auto align() const -> std::int32_t { return align_; }
     inline auto val() -> tinytc_value & { return op(op_val); }
     inline auto val() const -> tinytc_value const & { return op(op_val); }
     inline auto operand() -> tinytc_value & { return op(op_operand); }
@@ -773,6 +790,7 @@ class store_inst : public standard_inst<dynamic, 0> {
 
   private:
     store_flag flag_;
+    std::int32_t align_;
 };
 
 class sum_inst : public blas_a2_inst {

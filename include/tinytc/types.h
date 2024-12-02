@@ -104,6 +104,7 @@ typedef enum {
         0x135,                                          /// Operand type must match return type
     tinytc_status_ir_invalid_stride = 0x136,            ///< Invalid stride
     tinytc_status_ir_init_return_type_mismatch = 0x137, ///< Init return type mismatch
+    tinytc_status_ir_invalid_alignment = 0x138,         ///< Invalid alignment
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

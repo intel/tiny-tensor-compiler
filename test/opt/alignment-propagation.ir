@@ -1,0 +1,87 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -palignment-propagation < %s | filecheck %s
+func @load1(%0: memref<i16x64x64> align(64), %x: index, %y: index) {
+    %c0 = constant 0 : index
+    %c4 = constant 4 : index
+    %1 = load %0[%c0,%c0] : i16
+    %2 = load %0[%c0,%y] : i16
+    %3 = load %0[%c4,%y] : i16
+    %4 = load %0[%x,%y] : i16
+; CHECK-LABEL: func @load1({{.*}}
+; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
+; CHECK:       %2 = load %0[%c0,%y], align 64 : i16
+; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
+; CHECK:       %4 = load %0[%x,%y] : i16
+}
+func @load2(%0: memref<i16x64x64,strided<1,72>> align(64), %x: index, %y: index) {
+    %c0 = constant 0 : index
+    %c4 = constant 4 : index
+    %1 = load %0[%c0,%c0] : i16
+    %2 = load %0[%c0,%y] : i16
+    %3 = load %0[%c4,%y] : i16
+    %4 = load %0[%x,%y] : i16
+; CHECK-LABEL: func @load2({{.*}}
+; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
+; CHECK:       %2 = load %0[%c0,%y], align 16 : i16
+; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
+; CHECK:       %4 = load %0[%x,%y] : i16
+}
+func @load3(%0: memref<i16x64x64,strided<1,?>> align(64), %x: index, %y: index) {
+    %c0 = constant 0 : index
+    %c4 = constant 4 : index
+    %1 = load %0[%c0,%c0] : i16
+    %2 = load %0[%c0,%y] : i16
+    %3 = load %0[%c4,%c4] : i16
+    %4 = load %0[%x,%y] : i16
+; CHECK-LABEL: func @load3({{.*}}
+; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
+; CHECK:       %2 = load %0[%c0,%y] : i16
+; CHECK:       %3 = load %0[%c4,%c4], align 8 : i16
+; CHECK:       %4 = load %0[%x,%y] : i16
+}
+func @store1(%0: memref<i16x64x64> align(64), %x: index, %y: index) {
+    %cst = constant 42 : i16
+    %c0 = constant 0 : index
+    %c4 = constant 4 : index
+    store %cst, %0[%c0,%c0]
+    store %cst, %0[%c0,%y]
+    store %cst, %0[%c4,%y]
+    store %cst, %0[%x,%y]
+; CHECK-LABEL: func @store1({{.*}}
+; CHECK:       store %cst, %0[%c0,%c0], align 64
+; CHECK:       store %cst, %0[%c0,%y], align 64
+; CHECK:       store %cst, %0[%c4,%y], align 8
+; CHECK:       store %cst, %0[%x,%y]
+}
+
+func @expand(%a: memref<i8x64> align(64)) {
+    %z = constant 0 : index
+    %0 = expand %a[0->8x8] : memref<i8x8x8>
+    %1 = load %0[%z,%z] : i8
+; CHECK-LABEL: func @expand({{.*}}
+; CHECK:       %1 = load %0[%z,%z], align 64 : i8 
+}
+
+func @fuse(%a: memref<i8x8x8> align(128)) {
+    %z = constant 0 : index
+    %0 = fuse %a[0,1] : memref<i8x64>
+    %1 = load %0[%z] : i8
+; CHECK-LABEL: func @fuse({{.*}}
+; CHECK:       %1 = load %0[%z], align 128 : i8 
+}
+
+func @subview(%a: memref<i16x8x8> align(32), %x: index) {
+    %0 = subview %a[0:8,0:8] : memref<i16x8x8>
+    %1 = subview %a[4:8,0:8] : memref<i16x8x8>
+    %2 = subview %a[4:8,5:8] : memref<i16x8x8>
+    %3 = subview %a[%x,0] : memref<i16x8>
+    %4 = subview %a[0,%x] : memref<i16x8>
+; CHECK-LABEL: func @subview({{.*}}
+; CHECK:       %0 = subview %a[0:8,0:8], align 32 : memref<i16x8x8>
+; CHECK:       %1 = subview %a[4:8,0:8], align 8 : memref<i16x8x8>
+; CHECK:       %2 = subview %a[4:8,5:8], align 8 : memref<i16x8x8>
+; CHECK:       %3 = subview %a[%x,0] : memref<i16x8>
+; CHECK:       %4 = subview %a[0,%x], align 16 : memref<i16x8>
+}
