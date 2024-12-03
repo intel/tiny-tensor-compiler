@@ -9,11 +9,18 @@ func @load1(%0: memref<i16x64x64> align(64), %x: index, %y: index) {
     %2 = load %0[%c0,%y] : i16
     %3 = load %0[%c4,%y] : i16
     %4 = load %0[%x,%y] : i16
+    %c32 = constant 32 : index
+    %5 = arith.div %x, %c32 : index
+    %6 = arith.mul %c32, %5 : index
+    %7 = load %0[%x,%c0] : i16
+    %8 = load %0[%6,%c0] : i16
 ; CHECK-LABEL: func @load1({{.*}}
 ; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
 ; CHECK:       %2 = load %0[%c0,%y], align 64 : i16
 ; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
 ; CHECK:       %4 = load %0[%x,%y] : i16
+; CHECK:       %7 = load %0[%x,%c0] : i16
+; CHECK:       %8 = load %0[%6,%c0], align 64 : i16
 }
 func @load2(%0: memref<i16x64x64,strided<1,72>> align(64), %x: index, %y: index) {
     %c0 = constant 0 : index
