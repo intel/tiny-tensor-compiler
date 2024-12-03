@@ -70,7 +70,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
         return tinytc_status_invalid_arguments;
     }
 
-    auto ctx_ = ctx ? compiler_context{ctx} : make_compiler_context();
+    auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
     std::int32_t source_id = 0;
     TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(ctx_.get(), "recipe/tall_and_skinny.cpp",
                                                            "", &source_id));

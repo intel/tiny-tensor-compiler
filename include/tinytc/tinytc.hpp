@@ -2551,7 +2551,7 @@ inline char const *to_string(spirv_feature f) {
  *
  * @return Program
  */
-inline auto parse_file(char const *filename, compiler_context ctx = {}) -> prog {
+inline auto parse_file(char const *filename, compiler_context const &ctx = {}) -> prog {
     tinytc_prog_t prg;
     CHECK_STATUS(tinytc_parse_file(&prg, filename, ctx.get()));
     return prog(prg);
