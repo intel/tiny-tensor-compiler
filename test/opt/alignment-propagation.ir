@@ -92,3 +92,16 @@ func @subview(%a: memref<i16x8x8> align(32), %x: index) {
 ; CHECK:       store %cst, %3[%z]
 ; CHECK:       store %cst, %4[%z], align 16
 }
+
+func @subview_indirect(%a: memref<i16x8x8> align(32), %x: index) {
+    %cst = constant 42 : i16
+    %c16 = constant 16 : index
+    %c128 = constant 128 : index
+    %0 = arith.mul %c16, %x : index
+    %1 = arith.add %0, %c128 : index
+    %2 = subview %a[%1:8,0:8] : memref<i16x8x8>
+    %z = constant 0 : index
+    store %cst, %2[%z,%z]
+; CHECK-LABEL: func @subview_indirect({{.*}}
+; CHECK:       store %cst, %2[%z,%z], align 32
+}

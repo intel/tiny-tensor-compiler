@@ -19,6 +19,7 @@ set(SOURCES
     analysis/aa_results.cpp
     analysis/alias.cpp
     analysis/cfg.cpp
+    analysis/gcd.cpp
     analysis/equal.cpp
     analysis/stack.cpp
     binary.cpp
@@ -51,6 +52,7 @@ set(SOURCES
     pass/dead_code_elimination.cpp
     pass/dump_cfg.cpp
     pass/dump_def_use.cpp
+    pass/dump_gcd.cpp
     pass/dump_ir.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp

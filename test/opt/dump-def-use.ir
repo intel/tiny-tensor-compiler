@@ -11,7 +11,7 @@ func @foobar() {
         %0 = arith.add %i, %one : index
         %1 = arith.rem %0, %one : index
     }
-; CHECK:      Def-use in foobar
+; CHECK:      Def-use in @foobar
 ; CHECK-NEXT: > %one = constant 1 : index
 ; CHECK-NEXT:   def %one
 ; CHECK-NEXT:     > %1 = arith.rem %0, %one : index

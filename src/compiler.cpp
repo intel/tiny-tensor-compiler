@@ -7,6 +7,7 @@
 // IWYU pragma: begin_keep
 #include "pass/dump_cfg.hpp"
 #include "pass/dump_def_use.hpp"
+#include "pass/dump_gcd.hpp"
 #include "pass/dump_ir.hpp"
 // IWYU pragma: end_keep
 #include "pass/alignment_propagation.hpp"

@@ -7,6 +7,7 @@ FUNCTION_PASS("constant-propagation", constant_propagation_pass{}, tinytc::optfl
 FUNCTION_PASS("dead-code-elimination", dead_code_elimination_pass{})
 FUNCTION_PASS("dump-control-flow-graph", dump_cfg_pass{std::cout})
 FUNCTION_PASS("dump-def-use", dump_def_use_pass{std::cout})
+FUNCTION_PASS("dump-gcd", dump_gcd_pass{std::cout})
 FUNCTION_PASS("dump-ir", dump_ir_pass{std::cout})
 FUNCTION_PASS("insert-barrier", insert_barrier_pass{})
 FUNCTION_PASS("insert-lifetime-stop", insert_lifetime_stop_pass{})
