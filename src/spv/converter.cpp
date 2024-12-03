@@ -1036,9 +1036,13 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
     const bool check_k = in.checked() == checked_flag::both ||
                          (rmode == 1 && in.checked() == checked_flag::rows) ||
                          (rmode == 0 && in.checked() == checked_flag::cols);
+    const std::int32_t alignment = std::max(in.align(), ot->alignment());
+    const std::int32_t sub_group_read_required_alignment =
+        ot->addrspace() == address_space::local ? 16 : 4;
     const bool enable_sub_group_reads = core_cfg_.block_read_write_supported &&
                                         !is_complex_type(ot->element_ty()) &&
-                                        in.t() == transpose::N && ot->stride(omode) == 1;
+                                        in.t() == transpose::N && ot->stride(omode) == 1 &&
+                                        alignment >= sub_group_read_required_alignment;
 
     spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
     auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
@@ -1060,12 +1064,13 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
         auto const cast_load_cast = [&](scalar_type int_sty) {
             auto int_ty = unique_.spv_ty(int_sty);
             const auto storage_cls = address_space_to_storage_class(ot->addrspace());
-            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, ot->alignment());
+            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
             auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
             auto value = mod_->add<OpSubgroupBlockReadINTEL>(int_ty, int_ptr);
             return mod_->add<OpBitcast>(spv_ty, value);
         };
         switch (ot->element_ty()) {
+        case scalar_type::bf16:
         case scalar_type::f16:
             return cast_load_cast(scalar_type::i16);
         case scalar_type::f32:
@@ -1118,14 +1123,13 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
         };
 
         auto const load_block = [&]() -> std::vector<spv_inst *> {
+            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
             if (enable_sub_group_reads && !needs_mask && !check_m) {
-                return load_block_impl(block_load,
-                                       unique_.constant(block * core_cfg_.subgroup_size));
+                return load_block_impl(block_load, block_offset);
             } else {
                 spv_inst *offset = m;
                 if (block > 0) {
-                    offset = mod_->add<OpIAdd>(spv_index_ty, offset,
-                                               unique_.constant(block * core_cfg_.subgroup_size));
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
                 }
                 offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
                 return load_block_impl(gather_load, offset);
@@ -1267,6 +1271,12 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     const bool check_k = in.checked() == checked_flag::both ||
                          (vmode == 1 && in.checked() == checked_flag::rows) ||
                          (vmode == 0 && in.checked() == checked_flag::cols);
+    const std::int32_t alignment = std::max(in.align(), ot->alignment());
+    constexpr std::int32_t sub_group_write_required_alignment = 16;
+    const bool enable_sub_group_writes =
+        core_cfg_.block_read_write_supported && !is_complex_type(ot->element_ty()) &&
+        in.flag() == store_flag::regular && ot->stride(omode) == 1 &&
+        alignment >= sub_group_write_required_alignment;
 
     spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
     auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
@@ -1282,6 +1292,32 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()), offset,
                                                        std::vector<spv_inst *>{});
 
+    const auto block_store = [&](spv_inst *offset, spv_inst *value) {
+        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
+                                                               std::vector<spv_inst *>{});
+        auto const cast_write = [&](scalar_type int_sty) {
+            auto int_ty = unique_.spv_ty(int_sty);
+            const auto storage_cls = address_space_to_storage_class(ot->addrspace());
+            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
+            auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
+            mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, value);
+        };
+        switch (ot->element_ty()) {
+        case scalar_type::bf16:
+        case scalar_type::f16:
+            cast_write(scalar_type::i16);
+            break;
+        case scalar_type::f32:
+            cast_write(scalar_type::i32);
+            break;
+        case scalar_type::f64:
+            cast_write(scalar_type::i64);
+            break;
+        default:
+            mod_->add<OpSubgroupBlockWriteINTEL>(sub_pointer, value);
+            break;
+        }
+    };
     const auto scatter_store = [&](spv_inst *offset, spv_inst *value) {
         auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
                                                                std::vector<spv_inst *>{});
@@ -1325,13 +1361,17 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
         };
 
         auto const store_block = [&]() -> std::vector<spv_inst *> {
-            spv_inst *offset = m;
-            if (block > 0) {
-                offset = mod_->add<OpIAdd>(spv_index_ty, offset,
-                                           unique_.constant(block * core_cfg_.subgroup_size));
+            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
+            if (enable_sub_group_writes && !needs_mask && !check_m) {
+                store_block_impl(block_store, block_offset);
+            } else {
+                spv_inst *offset = m;
+                if (block > 0) {
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
+                }
+                offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
+                store_block_impl(scatter_store, offset);
             }
-            offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
-            store_block_impl(scatter_store, offset);
             return {};
         };
         spv_inst *cond = nullptr;

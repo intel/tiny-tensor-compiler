@@ -40,7 +40,10 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
         subgroup_sizes_.end()) {
         throw std::out_of_range("Requested subgroup size not available");
     }
-    return core_config{subgroup_size, max_work_group_size_, register_space_, false};
+    const bool block_read_write_supported =
+        have_spirv_feature(spirv_feature::subgroup_buffer_block_io);
+    return core_config{subgroup_size, max_work_group_size_, register_space_,
+                       block_read_write_supported};
 }
 
 core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
@@ -108,7 +111,9 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
         throw std::out_of_range("Requested subgroup size not available");
     }
 
-    bool block_read_write_supported = !(subgroup_size == 32 && register_size_ == 32);
+    const bool block_read_write_supported =
+        have_spirv_feature(spirv_feature::subgroup_buffer_block_io) &&
+        !(subgroup_size == 32 && register_size_ == 32);
 
     return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
                        block_read_write_supported};
