@@ -1297,10 +1297,11 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
                                                                std::vector<spv_inst *>{});
         auto const cast_write = [&](scalar_type int_sty) {
             auto int_ty = unique_.spv_ty(int_sty);
+            auto ival = mod_->add<OpBitcast>(int_ty, value);
             const auto storage_cls = address_space_to_storage_class(ot->addrspace());
             auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
             auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
-            mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, value);
+            mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, ival);
         };
         switch (ot->element_ty()) {
         case scalar_type::bf16:

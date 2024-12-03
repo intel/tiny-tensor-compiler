@@ -1063,6 +1063,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_set_subgroup_size(tinytc_func_t fun, i
 TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_region_t *body);
 
 /**
+ * @brief Set alignment of parameter (can only be applied to memref)
+ *
+ * @param fun [in] function object
+ * @param arg_no [in] argument number (0 to num_arguments-1)
+ * @param alignment [in] alignment in bytes (must be a power of two)
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_alignment(tinytc_func_t fun, int32_t arg_no,
+                                                        int32_t alignment);
+
+/**
  * @brief Delete function object
  *
  * @param fun [inout] function object
@@ -1785,9 +1797,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  *
  * Similar to tinytc_recipe_tall_and_skinny_create but with the additional specialization
  * constants M, ldA, ldB, and ldC.
- * The specializtion constants may be either set to a fixed value or to TINYTC_DYNAMIC.
+ * The specialization constants may be either set to a fixed value or to TINYTC_DYNAMIC.
  * Note that if a specialization constant is set to a fixed value then the parameter with the
  * same name in tinytc_recipe_tall_and_skinny_set_args is ignored.
+ *
+ * Furthermore, the memory alignment may be passed with alignA, alignB, and alignC or set to 0 to
+ * use the default memory alignment (= size of scalar type).
  *
  * The generated kernels have the following signature:
  *
@@ -1808,6 +1823,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @param ldA [in] Leading dimension of A; can be TINYTC_DYNAMIC
  * @param ldB [in] Leading dimension of B; can be TINYTC_DYNAMIC
  * @param ldC [in] Leading dimension of C; can be TINYTC_DYNAMIC
+ * @param alignA [in] Memory alignment of A; can be 0
+ * @param alignB [in] Memory alignment of B; can be 0
+ * @param alignC [in] Memory alignment of C; can be 0
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
  * the parameter auto-selected
  * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
@@ -1816,8 +1834,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
-    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
-    tinytc_compiler_context_t ctx);
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
+    int32_t alignC, int32_t M_block_size, tinytc_compiler_context_t ctx);
 
 /**
  * @brief Suggest an M block size for tall and skinny recipe

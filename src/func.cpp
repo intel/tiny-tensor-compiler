@@ -30,6 +30,13 @@ tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length, cha
     });
 }
 
+tinytc_status_t tinytc_func_set_alignment(tinytc_func_t fun, int32_t arg_no, int32_t alignment) {
+    if (fun == nullptr || arg_no < 0 || arg_no >= fun->num_params()) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { fun->align(arg_no, alignment); });
+}
+
 tinytc_status_t tinytc_func_set_work_group_size(tinytc_func_t fun, int32_t x, int32_t y) {
     if (fun == nullptr) {
         return tinytc_status_invalid_arguments;

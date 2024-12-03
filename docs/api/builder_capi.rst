@@ -455,13 +455,15 @@ Function
 
   * :ref:`tinytc_func_create`
 
-  * :ref:`tinytc_func_set_subgroup_size`
-
-  * :ref:`tinytc_func_set_work_group_size`
+  * :ref:`tinytc_func_destroy`
 
   * :ref:`tinytc_func_get_body`
 
-  * :ref:`tinytc_func_destroy`
+  * :ref:`tinytc_func_set_alignment`
+
+  * :ref:`tinytc_func_set_subgroup_size`
+
+  * :ref:`tinytc_func_set_work_group_size`
 
 Function Functions
 ------------------
@@ -472,6 +474,27 @@ tinytc_func_create
 ..................
 
 .. doxygenfunction:: tinytc_func_create
+
+.. _tinytc_func_destroy:
+
+tinytc_func_destroy
+...................
+
+.. doxygenfunction:: tinytc_func_destroy
+
+.. _tinytc_func_get_body:
+
+tinytc_func_get_body
+....................
+
+.. doxygenfunction:: tinytc_func_get_body
+
+.. _tinytc_func_set_alignment:
+
+tinytc_func_set_alignment
+.........................
+
+.. doxygenfunction:: tinytc_func_set_alignment
 
 .. _tinytc_func_set_subgroup_size:
 
@@ -486,20 +509,6 @@ tinytc_func_set_work_group_size
 ...............................
 
 .. doxygenfunction:: tinytc_func_set_work_group_size
-
-.. _tinytc_func_get_body:
-
-tinytc_func_get_body
-....................
-
-.. doxygenfunction:: tinytc_func_get_body
-
-.. _tinytc_func_destroy:
-
-tinytc_func_destroy
-...................
-
-.. doxygenfunction:: tinytc_func_destroy
 
 Instruction
 ===========

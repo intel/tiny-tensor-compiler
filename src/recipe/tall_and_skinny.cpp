@@ -57,15 +57,15 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      tinytc_scalar_type_t ty, int64_t N, int64_t K,
                                                      int32_t M_block_size,
                                                      tinytc_compiler_context_t ctx) {
-    return tinytc_recipe_tall_and_skinny_create_specialized(recipe, info, ty, TINYTC_DYNAMIC, N, K,
-                                                            TINYTC_DYNAMIC, TINYTC_DYNAMIC,
-                                                            TINYTC_DYNAMIC, M_block_size, ctx);
+    return tinytc_recipe_tall_and_skinny_create_specialized(
+        recipe, info, ty, TINYTC_DYNAMIC, N, K, TINYTC_DYNAMIC, TINYTC_DYNAMIC, TINYTC_DYNAMIC, 0,
+        0, 0, M_block_size, ctx);
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
-    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t M_block_size,
-    tinytc_compiler_context_t ctx) {
+    int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
+    int32_t alignC, int32_t M_block_size, tinytc_compiler_context_t ctx) {
     if (recipe == nullptr || info == nullptr || N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
@@ -166,6 +166,15 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto B_ty = get_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc());
                 auto C_ty = get_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
+                if (alignA > 0) {
+                    f.set_alignment(1, alignA);
+                }
+                if (alignB > 0) {
+                    f.set_alignment(2, alignB);
+                }
+                if (alignC > 0) {
+                    f.set_alignment(4, alignC);
+                }
                 auto fn_body = f.get_body();
                 auto params = std::array<value, 5u>{};
                 fn_body.get_parameters(params);

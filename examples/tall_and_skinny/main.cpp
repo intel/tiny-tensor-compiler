@@ -29,6 +29,7 @@ struct args {
     scalar_type ty = scalar_type::f32;
     bool update = false;
     bool verify = false;
+    std::int32_t alignment = 64;
     std::vector<examples::test_case> tc;
 };
 
@@ -65,9 +66,9 @@ template <typename T> void test(queue q, args &a) {
     auto C_host = std::vector<T>(nc_max);
     auto C_ref_host = std::vector<T>(nc_max);
     T *C_ref = malloc_device<T>(nc_max, q);
-    T *A = malloc_device<T>(na_max, q);
-    T *B = malloc_device<T>(nb_max, q);
-    T *C = malloc_device<T>(nc_max, q);
+    T *A = aligned_alloc_device<T>(a.alignment, na_max, q);
+    T *B = aligned_alloc_device<T>(a.alignment, nb_max, q);
+    T *C = aligned_alloc_device<T>(a.alignment, nc_max, q);
     fill(A_host);
     fill(B_host);
     q.copy(A_host.data(), A, na_max).wait();
@@ -127,7 +128,8 @@ template <typename T> void test(queue q, args &a) {
                                       void *) { std::cerr << what << std::endl; },
                                    nullptr);
             auto r =
-                make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC, 0, ctx);
+                make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
+                                                 a.alignment, a.alignment, a.alignment, 0, ctx);
             if (a.dump) {
                 r.get_prog().dump();
             }
@@ -179,6 +181,7 @@ int main(int argc, char **argv) {
 
     auto parser = cmd::arg_parser{};
     try {
+        parser.set_short_opt('a', &a.alignment, "Memory alignment");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
         parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
             .converter(examples::convert_data_type);

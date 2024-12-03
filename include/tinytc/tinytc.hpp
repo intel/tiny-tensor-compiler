@@ -2014,6 +2014,10 @@ class func : public unique_handle<tinytc_func_t> {
         CHECK_STATUS(tinytc_func_get_body(obj_, &body));
         return region{body};
     }
+
+    void set_alignment(std::int32_t arg_no, std::int32_t alignment) {
+        CHECK_STATUS(tinytc_func_set_alignment(obj_, arg_no, alignment));
+    }
 };
 
 /**
@@ -2989,6 +2993,9 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int
  * @param ldA Leading dimension of A; can be dynamic
  * @param ldB Leading dimension of B; can be dynamic
  * @param ldC Leading dimension of C; can be dynamic
+ * @param alignA [in] Memory alignment of A; can be 0
+ * @param alignB [in] Memory alignment of B; can be 0
+ * @param alignC [in] Memory alignment of C; can be 0
  * @param M_block_size Chunk size for M-mode
  * @param ctx Compiler context
  *
@@ -2997,12 +3004,13 @@ inline auto make_tall_and_skinny(core_info const &info, scalar_type ty, std::int
 inline auto make_tall_and_skinny_specialized(core_info const &info, scalar_type ty, std::int64_t M,
                                              std::int64_t N, std::int64_t K, std::int64_t ldA,
                                              std::int64_t ldB, std::int64_t ldC,
-                                             std::int32_t M_block_size = 0,
+                                             std::int32_t alignA, std::int32_t alignB,
+                                             std::int32_t alignC, std::int32_t M_block_size = 0,
                                              compiler_context const &ctx = {}) -> tall_and_skinny {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
-        &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), M, N, K, ldA, ldB, ldC,
-        M_block_size, ctx.get()));
+        &rec, info.get(), static_cast<tinytc_scalar_type_t>(ty), M, N, K, ldA, ldB, ldC, alignA,
+        alignB, alignC, M_block_size, ctx.get()));
     return tall_and_skinny{rec};
 }
 
