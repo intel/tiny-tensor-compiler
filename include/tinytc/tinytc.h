@@ -753,7 +753,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
  * offset_list_size is 0
  * @param size_list_size [in] number of dynamic sizes
  * @param size_list [in][range(0, size_list_size)] size array; may be nullptr if size_list_size is 0
- * @param align [in][optional] minimum alignment; can be 0
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
@@ -763,7 +762,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
     tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
     const int64_t *static_offset_list, const int64_t *static_size_list, uint32_t offset_list_size,
     const tinytc_value_t *offset_list, uint32_t size_list_size, const tinytc_value_t *size_list,
-    int32_t align, tinytc_data_type_t ty, const tinytc_location_t *loc);
+    tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create store instruction

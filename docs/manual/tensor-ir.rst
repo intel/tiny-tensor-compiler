@@ -1448,7 +1448,7 @@ Subview
 .. code:: abnf
 
     value-instruction       =/ "subview" local-identifier "[" [index-or-slice-list] "]"
-                                         ["," "align" 1*DIGIT] ":" memref-type
+                                         ":" memref-type
     index-or-slice-list     =  index-or-slice *("," index-or-slice)
     index-or-slice          =  integer-constant-or-identifier [":" integer-constant-or-identifier]
 
@@ -1481,12 +1481,6 @@ A dynamic size of zero is undefined behaviour.
 There is no run-time check whether the indices are within bounds.
 Offset and size must be of index type.
 Offset must be non-negative and size must be positive.
-
-The optional "align" attribute may be passed to enforce that the base pointer of the returned
-memref has a known minimum alignment (power-of-two, in bytes).
-The user should make sure that the offset and the alignment of the incomining memref are such that
-the returned does indeed have the required alignment.
-It is undefined behaviour if the base pointer does not have the required minimum alignment at run-time.
 
 Restrictions
 ~~~~~~~~~~~~

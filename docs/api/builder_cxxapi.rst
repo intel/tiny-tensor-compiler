@@ -479,9 +479,7 @@ Instruction
 
   * :ref:`tinytc::make_store(store_flag,value,value,array_view\<value\>,std::int32_t,location const&)`
 
-  * :ref:`tinytc::make_subview(value,array_view\<std::int64_t\>,array_view\<std::int64_t\>,array_view\<value\>,array_view\<value\>,data_type,location const&)`
-
-  * :ref:`tinytc::make_subview(value,array_view\<std::int64_t\>,array_view\<std::int64_t\>,array_view\<value\>,array_view\<value\>,std::int32_t,data_type,location const&)`
+  * :ref:`tinytc::make_subview`
 
   * :ref:`tinytc::make_sum`
 
@@ -741,19 +739,12 @@ make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&
 
 .. doxygenfunction:: tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
 
-.. _tinytc::make_subview(value,array_view\<std::int64_t\>,array_view\<std::int64_t\>,array_view\<value\>,array_view\<value\>,data_type,location const&):
+.. _tinytc::make_subview:
 
-make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,data_type,location const&)
-...................................................................................................................................
+make_subview
+............
 
-.. doxygenfunction:: tinytc::make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,data_type,location const&)
-
-.. _tinytc::make_subview(value,array_view\<std::int64_t\>,array_view\<std::int64_t\>,array_view\<value\>,array_view\<value\>,std::int32_t,data_type,location const&):
-
-make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,std::int32_t,data_type,location const&)
-................................................................................................................................................
-
-.. doxygenfunction:: tinytc::make_subview(value,array_view<std::int64_t>,array_view<std::int64_t>,array_view<value>,array_view<value>,std::int32_t,data_type,location const&)
+.. doxygenfunction:: tinytc::make_subview
 
 .. _tinytc::make_sum:
 

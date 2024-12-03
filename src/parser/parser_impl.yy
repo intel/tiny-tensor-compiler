@@ -1107,7 +1107,7 @@ size_inst:
 ;
 
 subview_inst:
-    SUBVIEW var LSQBR optional_slice_list RSQBR optional_align COLON memref_type[ty] {
+    SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type[ty] {
         try {
             auto static_offsets = std::vector<std::int64_t>{};
             auto static_sizes = std::vector<std::int64_t>{};
@@ -1138,7 +1138,7 @@ subview_inst:
             $$ = inst {
                 std::make_unique<subview_inst>(
                     std::move($var), std::move(static_offsets), std::move(static_sizes), std::move(offsets),
-                    std::move(sizes), $optional_align, std::move($ty), @subview_inst)
+                    std::move(sizes), std::move($ty), @subview_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

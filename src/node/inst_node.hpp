@@ -746,13 +746,10 @@ class subview_inst : public standard_inst<dynamic, 1> {
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subview; }
     subview_inst(tinytc_value_t op, array_view<std::int64_t> static_offsets,
                  array_view<std::int64_t> static_sizes, array_view<tinytc_value_t> offsets,
-                 array_view<tinytc_value_t> sizes, std::int32_t align, tinytc_data_type_t ty,
-                 location const &lc = {});
+                 array_view<tinytc_value_t> sizes, tinytc_data_type_t ty, location const &lc = {});
 
     inline auto static_offsets() const -> array_view<std::int64_t> { return static_offsets_; }
     inline auto static_sizes() const -> array_view<std::int64_t> { return static_sizes_; }
-    inline void align(std::int32_t a) { align_ = a; }
-    inline auto align() const -> std::int32_t { return align_; }
 
     inline auto operand() -> tinytc_value & { return op(0); }
     inline auto operand() const -> tinytc_value const & { return op(0); }
@@ -768,7 +765,6 @@ class subview_inst : public standard_inst<dynamic, 1> {
   private:
     std::vector<std::int64_t> static_offsets_, static_sizes_;
     std::int32_t num_dyn_offsets_;
-    std::int32_t align_;
 };
 
 class store_inst : public standard_inst<dynamic, 0> {

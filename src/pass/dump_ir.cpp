@@ -441,11 +441,7 @@ void dump_ir_pass::operator()(subview_inst const &s) {
             }
         }
     }
-    *os_ << "]";
-    if (s.align() != 0) {
-        *os_ << ", align " << s.align();
-    }
-    *os_ << " : ";
+    *os_ << "] : ";
     visit(*this, *s.result(0).ty());
 }
 

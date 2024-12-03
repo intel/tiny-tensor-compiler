@@ -556,7 +556,7 @@ tinytc_status_t
 tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
                            const int64_t *static_offset_list, const int64_t *static_size_list,
                            uint32_t offset_list_size, const tinytc_value_t *offset_list,
-                           uint32_t size_list_size, const tinytc_value_t *size_list, int32_t align,
+                           uint32_t size_list_size, const tinytc_value_t *size_list,
                            tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr ||
         (static_list_size > 0 && (static_offset_list == nullptr || static_size_list == nullptr)) ||
@@ -568,7 +568,7 @@ tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t stat
         *instr = std::make_unique<subview_inst>(a, array_view{static_offset_list, static_list_size},
                                                 array_view{static_size_list, static_list_size},
                                                 array_view{offset_list, offset_list_size},
-                                                array_view{size_list, size_list_size}, align, ty,
+                                                array_view{size_list, size_list_size}, ty,
                                                 get_optional(loc))
                      .release();
     });

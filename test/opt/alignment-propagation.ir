@@ -73,15 +73,22 @@ func @fuse(%a: memref<i8x8x8> align(128)) {
 }
 
 func @subview(%a: memref<i16x8x8> align(32), %x: index) {
+    %cst = constant 42 : i16
     %0 = subview %a[0:8,0:8] : memref<i16x8x8>
     %1 = subview %a[4:8,0:8] : memref<i16x8x8>
     %2 = subview %a[4:8,5:8] : memref<i16x8x8>
     %3 = subview %a[%x,0] : memref<i16x8>
     %4 = subview %a[0,%x] : memref<i16x8>
+    %z = constant 0 : index
+    store %cst, %0[%z,%z]
+    store %cst, %1[%z,%z]
+    store %cst, %2[%z,%z]
+    store %cst, %3[%z]
+    store %cst, %4[%z]
 ; CHECK-LABEL: func @subview({{.*}}
-; CHECK:       %0 = subview %a[0:8,0:8], align 32 : memref<i16x8x8>
-; CHECK:       %1 = subview %a[4:8,0:8], align 8 : memref<i16x8x8>
-; CHECK:       %2 = subview %a[4:8,5:8], align 8 : memref<i16x8x8>
-; CHECK:       %3 = subview %a[%x,0] : memref<i16x8>
-; CHECK:       %4 = subview %a[0,%x], align 16 : memref<i16x8>
+; CHECK:       store %cst, %0[%z,%z], align 32
+; CHECK:       store %cst, %1[%z,%z], align 8
+; CHECK:       store %cst, %2[%z,%z], align 8
+; CHECK:       store %cst, %3[%z]
+; CHECK:       store %cst, %4[%z], align 16
 }

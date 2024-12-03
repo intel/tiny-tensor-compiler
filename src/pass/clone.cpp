@@ -145,7 +145,7 @@ auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
 auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<subview_inst>(
         subs(&in.operand()), in.static_offsets(), in.static_sizes(), subs_value_range(in.offsets()),
-        subs_value_range(in.sizes()), in.align(), in.result(0).ty(), in.loc());
+        subs_value_range(in.sizes()), in.result(0).ty(), in.loc());
 }
 
 auto inst_cloner::operator()(store_inst &in) -> std::unique_ptr<tinytc_inst> {

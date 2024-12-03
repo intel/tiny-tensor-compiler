@@ -1084,10 +1084,9 @@ size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t t
 subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_offsets0,
                            array_view<std::int64_t> static_sizes0,
                            array_view<tinytc_value_t> offsets0, array_view<tinytc_value_t> sizes0,
-                           std::int32_t align, tinytc_data_type_t ty, location const &lc)
+                           tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::subview, static_cast<std::int64_t>(1 + offsets0.size() + sizes0.size())},
-      static_offsets_(std::move(static_offsets0)), static_sizes_(std::move(static_sizes0)),
-      align_{align} {
+      static_offsets_(std::move(static_offsets0)), static_sizes_(std::move(static_sizes0)) {
     op(0, op0);
     {
         std::size_t i = 1;
@@ -1101,7 +1100,6 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
             op(i++, val);
         }
     }
-    check_align(lc, align_);
     loc(lc);
 
     auto [ot, rt] = get_and_check_memref_type_addrspace(operand(), ty, loc());

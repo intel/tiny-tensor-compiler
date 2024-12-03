@@ -140,7 +140,7 @@ void alignment_propagation_helper::operator()(subview_inst &in) {
 
     const auto align = compute_max_alignment(in.operand(), offset);
     if (align != 0) {
-        in.align(align);
+        known_alignment(in.result(0), align);
     }
 }
 void alignment_propagation_helper::operator()(store_inst &in) {

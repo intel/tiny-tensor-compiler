@@ -1764,7 +1764,6 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
  * contains "dynamic"
  * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
  * "dynamic"
- * @param align minimum alignment; can be 0
  * @param ty Return type
  * @param loc Source code location
  *
@@ -1772,8 +1771,7 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
  */
 inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
                          array_view<std::int64_t> static_size_list, array_view<value> offset_list,
-                         array_view<value> size_list, std::int32_t align, data_type ty,
-                         location const &loc = {}) {
+                         array_view<value> size_list, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(
@@ -1795,7 +1793,7 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
     const tinytc_value_t *sl = reinterpret_cast<const tinytc_value_t *>(size_list.data());
     CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a, static_len, static_offset_list.data(),
                                                 static_size_list.data(), offset_len, ol, size_len,
-                                                sl, align, ty, &loc),
+                                                sl, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -1824,28 +1822,6 @@ inline inst make_store(store_flag flag, value val, value a, array_view<value> in
                                               a, len, il, align, &loc),
                      loc);
     return inst(instr);
-}
-
-/**
- * @brief Make subview instruction
- *
- * @param a Operand
- * @param static_offset_list Static offsets
- * @param static_size_list Static sizes
- * @param offset_list Vector of offsets; need to add dynamic offsets here if static_offset_list
- * contains "dynamic"
- * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
- * "dynamic"
- * @param ty Return type
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
-                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
-                         array_view<value> size_list, data_type ty, location const &loc = {}) {
-    return make_subview(std::move(a), std::move(static_offset_list), std::move(static_size_list),
-                        std::move(offset_list), std::move(size_list), 0, ty, loc);
 }
 
 /**
