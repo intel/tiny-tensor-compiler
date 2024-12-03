@@ -56,7 +56,10 @@ class alignment_propagation_helper {
   public:
     inline alignment_propagation_helper(gcd_analysis_result &&gcd) : gcd_{std::move(gcd)} {}
 
+    constexpr static std::int64_t alloca_max_alignment = 64;
+
     void operator()(inst_node &in);
+    void operator()(alloca_inst &in);
     void operator()(cooperative_matrix_load_inst &in);
     void operator()(cooperative_matrix_store_inst &in);
     void operator()(expand_inst &in);
@@ -85,8 +88,8 @@ class alignment_propagation_helper {
 };
 
 auto alignment_propagation_helper::compute_max_alignment(
-    tinytc_value const &operand,
-    std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t {
+    tinytc_value const &operand, std::vector<std::int64_t> const &offset_gcds) const
+    -> std::int32_t {
     const auto op_align = known_alignment(operand);
     const auto ot = get_memref_type(operand);
 
@@ -102,6 +105,20 @@ auto alignment_propagation_helper::compute_max_alignment(
 }
 
 void alignment_propagation_helper::operator()(inst_node &) {}
+void alignment_propagation_helper::operator()(alloca_inst &in) {
+    if (in.stack_ptr() >= 0) {
+        const auto rt = get_memref_type(in.result(0).ty());
+        std::int32_t i = rt->alignment();
+        for (; i <= alloca_max_alignment; ++i) {
+            if (in.stack_ptr() % i != 0) {
+                break;
+            }
+        }
+        if (i > rt->alignment()) {
+            known_alignment(in.result(0), i);
+        }
+    }
+}
 void alignment_propagation_helper::operator()(expand_inst &in) {
     known_alignment(in.result(0), known_alignment(in.operand()));
 }

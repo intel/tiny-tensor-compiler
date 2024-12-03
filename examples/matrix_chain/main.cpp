@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
     auto parser = cmd::arg_parser{};
     try {
-        parser.set_short_opt('a', &alignment, "Alignment");
+        parser.set_short_opt('a', &alignment, "Alignment (in number of bytes)");
         parser.set_short_opt('d', &dump, "Dump IR to stdout");
         parser.set_short_opt('f', &precision, "Data type (s or d)").validator([](char f) {
             return f == 's' || f == 'd';
