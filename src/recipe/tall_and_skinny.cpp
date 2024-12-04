@@ -95,9 +95,12 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             auto const bool_ty = get_boolean(ctx_);
             auto const index_ty = get_scalar(ctx_, scalar_type::index);
 
-            auto const shapes =
-                std::vector{blas_shape{enum_cast<scalar_type>(ty), {M_block_size, N}}};
-            auto [sgs, tiling] = suggest_subgroup_size_and_tiling(shapes, *info);
+            auto const bshape = blas_shape{enum_cast<scalar_type>(ty),
+                                           enum_cast<scalar_type>(ty),
+                                           enum_cast<scalar_type>(ty),
+                                           {M_block_size, N},
+                                           true};
+            auto [sgs, tiling] = suggest_subgroup_size_and_tiling(array_view(bshape), *info);
 
             // We want to avoid working on too many columns in parallel as there is a high
             // chance to trash the cache due to the large pitch

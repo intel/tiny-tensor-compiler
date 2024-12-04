@@ -4,6 +4,7 @@
 #ifndef TILING_20240306_HPP
 #define TILING_20240306_HPP
 
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
 #include <array>
@@ -11,7 +12,6 @@
 #include <cstdint>
 #include <functional>
 #include <tuple>
-#include <vector>
 
 namespace tinytc {
 
@@ -45,8 +45,21 @@ class local_tiling : public std::array<std::int32_t, 2> {
  * Matrix shape and element type
  */
 struct blas_shape {
-    scalar_type ty;                                         ///< Element type
-    std::array<std::int64_t, 2u> shape;                     ///< Matrix shape
+    // op2_ty == op1_ty if there is only one operand
+    scalar_type op1_ty, op2_ty, dst_ty;
+    /*
+     * With shape we encode the shape of the destination (set shape[1] == 0 for vectors)
+     *
+     * AXPBY (1d): M
+     * AXPBY (2d): MxN
+     * GEMM      : MxN
+     * GEMV      : M
+     * GER       : MxN
+     * Hadamard  : M
+     * Sum (1d)  : M
+     */
+    std::array<std::int64_t, 2u> shape;
+    bool is_gemm = false;
     auto operator==(blas_shape const &other) const -> bool; ///< equal
     auto operator!=(blas_shape const &other) const -> bool; ///< not equal
 };
@@ -57,7 +70,7 @@ struct blas_shape {
  * @param shapes Shapes that occur in kernel
  * @param info Core info
  */
-auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
+auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
                            ::tinytc_core_info const &info) -> std::int32_t;
 
 /**
@@ -68,7 +81,8 @@ auto suggest_subgroup_size(std::vector<blas_shape> const &shapes,
  *
  * @return
  */
-auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg) -> local_tiling;
+auto suggest_local_tiling(std::size_t type_size, std::array<std::int64_t, 2u> const &shape,
+                          core_config const &core_cfg) -> local_tiling;
 /**
  * @brief Suggest a local tiling based on blas sizes
  *
@@ -77,7 +91,7 @@ auto suggest_local_tiling(blas_shape const &bshape, core_config const &core_cfg)
  *
  * @return
  */
-auto suggest_local_tiling(std::vector<blas_shape> const &shapes,
+auto suggest_local_tiling(array_view<blas_shape> const &shapes,
                           core_config const &core_cfg) -> local_tiling;
 
 /**
@@ -88,7 +102,7 @@ auto suggest_local_tiling(std::vector<blas_shape> const &shapes,
  *
  * @return {subgroup size, local tiling}
  */
-auto suggest_subgroup_size_and_tiling(std::vector<blas_shape> const &shapes,
+auto suggest_subgroup_size_and_tiling(array_view<blas_shape> const &shapes,
                                       ::tinytc_core_info const &dev_info)
     -> std::tuple<std::int32_t, local_tiling>;
 

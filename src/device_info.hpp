@@ -4,6 +4,7 @@
 #ifndef DEVICE_INFO_20240304_HPP
 #define DEVICE_INFO_20240304_HPP
 
+#include "coopmatrix_info.hpp"
 #include "reference_counted.hpp"
 #include "tinytc/types.h"
 
@@ -29,8 +30,7 @@ class core_config {
 struct tinytc_core_info : tinytc::reference_counted {
     //! empty dtor
     virtual ~tinytc_core_info();
-    //! Returns available subgroup sizes
-    virtual auto subgroup_sizes() const -> std::vector<std::int32_t> const & = 0;
+    virtual auto subgroup_sizes() const -> tinytc::array_view<std::int32_t> = 0;
     //! Returns availabe register space per subgroup
     virtual auto register_space() const -> std::int32_t = 0;
     //! Get core features
@@ -44,6 +44,7 @@ struct tinytc_core_info : tinytc::reference_counted {
     virtual auto get_core_config(std::int32_t subgroup_size) const -> tinytc::core_config = 0;
     virtual void set_spirv_feature(tinytc::spirv_feature f, bool available) = 0;
     virtual auto have_spirv_feature(tinytc::spirv_feature f) const -> bool = 0;
+    virtual auto coopmatrix_info() const -> tinytc::accelerated_coopmatrix_info const & = 0;
 };
 
 namespace tinytc {
@@ -65,17 +66,19 @@ class core_info_generic : public core_info_common {
   public:
     core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
                       std::vector<std::int32_t> subgroup_sizes);
-    auto subgroup_sizes() const -> std::vector<std::int32_t> const & override;
+    auto subgroup_sizes() const -> array_view<std::int32_t> override;
     auto register_space() const -> std::int32_t override;
     auto core_features() const -> tinytc_core_feature_flags_t override;
     void core_features(tinytc_core_feature_flags_t flags) override;
     auto minmax_work_group_size() const -> std::int32_t override;
     auto get_core_config(std::int32_t subgroup_size) const -> tinytc::core_config override;
+    auto coopmatrix_info() const -> accelerated_coopmatrix_info const & override;
 
   private:
     std::int32_t register_space_;
     std::int32_t max_work_group_size_;
     std::vector<std::int32_t> subgroup_sizes_;
+    accelerated_coopmatrix_info coopmatrix_info_;
 };
 
 //! Set of core configurations for Intel GPUs
@@ -93,8 +96,7 @@ class core_info_intel : public core_info_common {
     core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
                     std::int32_t num_threads_per_eu, std::vector<std::int32_t> subgroup_sizes);
 
-    //! @copydoc ::tinytc_core_info::subgroup_sizes
-    auto subgroup_sizes() const -> std::vector<std::int32_t> const & override;
+    auto subgroup_sizes() const -> array_view<std::int32_t> override;
     //! @copydoc ::tinytc_core_info::register_space
     auto register_space() const -> std::int32_t override;
     //! @copydoc ::tinytc_core_info::core_features()
@@ -105,6 +107,7 @@ class core_info_intel : public core_info_common {
     auto minmax_work_group_size() const -> std::int32_t override;
     //! @copydoc ::tinytc_core_info::get_core_config
     auto get_core_config(std::int32_t subgroup_size) const -> core_config override;
+    auto coopmatrix_info() const -> accelerated_coopmatrix_info const & override;
 
   private:
     auto num_reg_small_grf() const -> std::int32_t;
@@ -118,6 +121,7 @@ class core_info_intel : public core_info_common {
     std::vector<std::int32_t> subgroup_sizes_;
     std::int32_t register_size_;
     tinytc_core_feature_flags_t core_features_;
+    accelerated_coopmatrix_info coopmatrix_info_;
 };
 
 } // namespace tinytc

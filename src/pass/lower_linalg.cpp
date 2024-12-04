@@ -60,7 +60,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         if (ct == nullptr) {
             throw compilation_error(loc, status::internal_compiler_error);
         }
-        if (ct->ty() == scalar_type::bf16) {
+        if (ct->ty() == scalar_type::bf16 || ct->ty() == scalar_type::f16) {
             return scalar_data_type::get(c_ty->context(), scalar_type::f32);
         }
         return c_ty;

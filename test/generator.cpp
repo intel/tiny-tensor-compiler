@@ -25,7 +25,7 @@ TEST_CASE("suggest work group size") {
     auto check = [&info](std::int64_t M, std::int64_t N, std::size_t sgs, std::size_t m_tiles,
                          std::size_t n_tiles) {
         auto const core_cfg = info->get_core_config(sgs);
-        auto const shape = blas_shape{scalar_type::f64, {M, N}};
+        auto const shape = blas_shape{scalar_type::f64, scalar_type::f64, scalar_type::f64, {M, N}};
         auto tiling = suggest_local_tiling(shape, core_cfg);
         CHECK(tiling.m_tiles() == m_tiles);
         CHECK(tiling.n_tiles() == n_tiles);

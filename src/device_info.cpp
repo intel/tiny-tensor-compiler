@@ -26,7 +26,7 @@ core_info_generic::core_info_generic(std::int32_t register_space, std::int32_t m
     : register_space_(register_space), max_work_group_size_(max_work_group_size),
       subgroup_sizes_(std::move(subgroup_sizes)) {}
 
-auto core_info_generic::subgroup_sizes() const -> std::vector<std::int32_t> const & {
+auto core_info_generic::subgroup_sizes() const -> array_view<std::int32_t> {
     return subgroup_sizes_;
 }
 auto core_info_generic::register_space() const -> std::int32_t { return register_space_; }
@@ -45,6 +45,9 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
     return core_config{subgroup_size, max_work_group_size_, register_space_,
                        block_read_write_supported};
 }
+auto core_info_generic::coopmatrix_info() const -> accelerated_coopmatrix_info const & {
+    return coopmatrix_info_;
+}
 
 core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
                                  std::int32_t num_threads_per_eu,
@@ -58,6 +61,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
+        coopmatrix_info_ = accelerated_coopmatrix_info(16, pvc_accelerated_coopmatrix_types);
     }
 }
 
@@ -74,9 +78,7 @@ auto core_info_intel::num_reg() const -> std::int32_t {
                                                                          : num_reg_small_grf();
 }
 
-auto core_info_intel::subgroup_sizes() const -> std::vector<std::int32_t> const & {
-    return subgroup_sizes_;
-}
+auto core_info_intel::subgroup_sizes() const -> array_view<std::int32_t> { return subgroup_sizes_; }
 
 auto core_info_intel::register_space() const -> std::int32_t { return register_size_ * num_reg(); }
 
@@ -117,6 +119,10 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
 
     return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
                        block_read_write_supported};
+}
+
+auto core_info_intel::coopmatrix_info() const -> accelerated_coopmatrix_info const & {
+    return coopmatrix_info_;
 }
 
 } // namespace tinytc

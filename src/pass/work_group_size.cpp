@@ -37,20 +37,28 @@ void work_group_size_pass::run_on_function(function_node &fn) {
     if (subgroup_size == 0 || work_group_size[0] == 0 || work_group_size[1] == 0) {
         walk<walk_order::pre_order>(fn, [&shape_set](inst_node &i) {
             visit(
-                overloaded{[&shape_set](blas_a2_inst &in) {
+                overloaded{[&](blas_a2_inst &in) {
+                               auto aty = get_memref_type(in.A())->element_ty();
                                auto b = get_memref_type(in.B());
                                if (b->dim() == 1) {
-                                   shape_set.insert({b->element_ty(), {b->shape(0), 0}});
+                                   shape_set.insert({aty, aty, b->element_ty(), {b->shape(0), 0}});
                                } else if (b->dim() >= 2) {
-                                   shape_set.insert({b->element_ty(), {b->shape(0), b->shape(1)}});
+                                   shape_set.insert(
+                                       {aty, aty, b->element_ty(), {b->shape(0), b->shape(1)}});
                                }
                            },
-                           [&shape_set](blas_a3_inst &in) {
+                           [&](blas_a3_inst &in) {
+                               auto aty = get_memref_type(in.A())->element_ty();
+                               auto bty = get_memref_type(in.B())->element_ty();
                                auto c = get_memref_type(in.C());
                                if (c->dim() == 1) {
-                                   shape_set.insert({c->element_ty(), {c->shape(0), 0}});
+                                   shape_set.insert({aty, bty, c->element_ty(), {c->shape(0), 0}});
                                } else if (c->dim() >= 2) {
-                                   shape_set.insert({c->element_ty(), {c->shape(0), c->shape(1)}});
+                                   shape_set.insert({aty,
+                                                     bty,
+                                                     c->element_ty(),
+                                                     {c->shape(0), c->shape(1)},
+                                                     isa<gemm_inst>(in)});
                                }
                            },
                            [](inst_node &) {}},
