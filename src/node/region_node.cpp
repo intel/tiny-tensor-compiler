@@ -6,8 +6,6 @@
 #include "support/ilist_base.hpp"
 #include "tinytc/tinytc.h"
 
-#include <utility>
-
 namespace tinytc {
 
 auto ilist_callbacks<tinytc_inst>::get_parent_region() -> tinytc_region * {
@@ -24,12 +22,8 @@ void ilist_callbacks<tinytc_inst>::node_removed(tinytc_inst_t node) { tinytc_ins
 
 using namespace tinytc;
 
-tinytc_region::tinytc_region(array_view<tinytc_data_type_t> param_types, location const &lc)
-    : kind_(region_kind::mixed), params_{param_types.size()} {
-    loc(lc);
+tinytc_region::tinytc_region() : def_inst_{nullptr}, kind_{tinytc::region_kind::mixed} {}
 
-    set_params(std::move(param_types), lc);
-}
 tinytc_region::~tinytc_region() {
     // Erase instructions in reverse order such that we delete value use before value definition
     auto prev_it = insts_.end();
@@ -38,14 +32,27 @@ tinytc_region::~tinytc_region() {
     }
 }
 
-void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types, location const &lc) {
+void tinytc_region::loc(tinytc::location const &loc) {
+    loc_ = loc;
+    for (auto &param : params_) {
+        param.loc(loc_);
+    }
+}
+void tinytc_region::defining_inst(tinytc_inst_t def_inst) {
+    def_inst_ = def_inst;
+    for (auto &param : params_) {
+        param.defining_inst(def_inst_);
+    }
+}
+
+void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types) {
     params_.resize(param_types.size());
     for (std::size_t i = 0; i < param_types.size(); ++i) {
-        params_[i] = tinytc_value{param_types[i], nullptr, lc};
+        set_param(i, param_types[i]);
     }
 }
 
 void tinytc_region::set_num_params(std::size_t num_params) { params_.resize(num_params); }
-void tinytc_region::set_param(std::size_t idx, tinytc_data_type_t param_type, location const &lc) {
-    params_[idx] = tinytc_value{param_type, nullptr, lc};
+void tinytc_region::set_param(std::size_t idx, tinytc_data_type_t param_type) {
+    params_[idx] = tinytc_value{param_type, def_inst_, loc_};
 }

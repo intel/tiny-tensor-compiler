@@ -19,7 +19,6 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <optional>
 #include <ranges>
 #include <unordered_map>
 #include <utility>
@@ -88,8 +87,8 @@ class alignment_propagation_helper {
 };
 
 auto alignment_propagation_helper::compute_max_alignment(
-    tinytc_value const &operand, std::vector<std::int64_t> const &offset_gcds) const
-    -> std::int32_t {
+    tinytc_value const &operand,
+    std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t {
     const auto op_align = known_alignment(operand);
     const auto ot = get_memref_type(operand);
 

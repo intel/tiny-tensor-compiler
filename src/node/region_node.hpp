@@ -34,15 +34,23 @@ struct tinytc_region final {
     using iterator = tinytc::ilist<tinytc_inst>::iterator;
     using const_iterator = tinytc::ilist<tinytc_inst>::const_iterator;
 
-    tinytc_region(tinytc::array_view<tinytc_data_type_t> param_types = {},
-                  tinytc::location const &lc = {});
+    tinytc_region();
     ~tinytc_region();
+
+    tinytc_region(tinytc_region const &) = delete;
+    tinytc_region(tinytc_region &&) = delete;
+    tinytc_region &operator=(tinytc_region const &) = delete;
+    tinytc_region &operator=(tinytc_region &&) = delete;
 
     inline auto kind() const noexcept -> tinytc::region_kind { return kind_; }
     inline void kind(tinytc::region_kind kind) noexcept { kind_ = kind; }
 
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
-    inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
+    void loc(tinytc::location const &loc);
+
+    // Can be nullptr, e.g. if the region is the body of a function
+    inline auto defining_inst() const -> tinytc_inst_t { return def_inst_; }
+    void defining_inst(tinytc_inst_t def_inst);
 
     inline auto begin() -> iterator { return insts_.begin(); }
     inline auto end() -> iterator { return insts_.end(); }
@@ -63,9 +71,9 @@ struct tinytc_region final {
         return tinytc::iterator_range_wrapper{param_begin(), param_end()};
     }
     inline auto num_params() const noexcept -> std::int64_t { return params_.size(); }
-    void set_params(tinytc::array_view<tinytc_data_type_t> param_types, tinytc::location const &lc);
+    void set_params(tinytc::array_view<tinytc_data_type_t> param_types);
     void set_num_params(std::size_t num_params);
-    void set_param(std::size_t idx, tinytc_data_type_t param_type, tinytc::location const &lc);
+    void set_param(std::size_t idx, tinytc_data_type_t param_type);
 
   private:
     static auto inst_list_offset() -> std::size_t {
@@ -74,10 +82,11 @@ struct tinytc_region final {
     }
     friend struct tinytc::ilist_callbacks<tinytc_inst>;
 
+    tinytc_inst_t def_inst_;
     tinytc::region_kind kind_;
+    tinytc::location loc_;
     tinytc::ilist<tinytc_inst> insts_;
     std::vector<tinytc_value> params_;
-    tinytc::location loc_;
 };
 
 namespace tinytc {

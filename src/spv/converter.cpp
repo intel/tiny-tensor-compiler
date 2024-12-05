@@ -3,6 +3,7 @@
 
 #include "spv/converter.hpp"
 #include "analysis/stack.hpp"
+#include "codegen_tools.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
@@ -52,11 +53,7 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
                              MemoryModel::OpenCL);
 
     for (auto const &fn : p) {
-        try {
-            conv.run_on_function(fn, info.get_core_config(fn.subgroup_size()));
-        } catch (std::out_of_range const &e) {
-            throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
-        }
+        conv.run_on_function(fn, info);
     }
 
     // Add missing capabilites and extensions
@@ -121,30 +118,6 @@ auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
         return &it->second;
     }
     return nullptr;
-}
-
-auto inst_converter::get_memref_type(tinytc_value const &v) const -> memref_data_type const * {
-    auto mt = dyn_cast<memref_data_type>(v.ty());
-    if (!mt) {
-        throw compilation_error(v.loc(), status::ir_expected_memref);
-    }
-    return mt;
-}
-
-auto inst_converter::get_scalar_type(value_node const &v) const -> scalar_type {
-    auto st = dyn_cast<scalar_data_type>(v.ty());
-    if (!st) {
-        throw compilation_error(v.loc(), status::ir_expected_scalar);
-    }
-    return st->ty();
-}
-auto inst_converter::get_coopmatrix_type(value_node const &v) const
-    -> coopmatrix_data_type const * {
-    auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
-    if (!ct) {
-        throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
-    }
-    return ct;
 }
 
 auto inst_converter::load_builtin(BuiltIn b) -> spv_inst * {
@@ -273,20 +246,6 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
-                                      bool conj_b) -> spv_inst * {
-    auto neg_a = mod_->add<OpFNegate>(ty, a);
-    auto a_times_i =
-        conj_b ? mod_->add<OpVectorShuffle>(ty, a, neg_a, std::vector<LiteralInteger>{1, 2})
-               : mod_->add<OpVectorShuffle>(ty, neg_a, a, std::vector<LiteralInteger>{1, 2});
-    auto b_1 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{1, 1});
-    auto b_1_a_times_i = mod_->add<OpFMul>(ty, b_1, a_times_i);
-    auto b_0 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{0, 0});
-    return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                static_cast<std::int32_t>(OpenCLEntrypoint::fma),
-                                std::vector<IdRef>{a, b_0, b_1_a_times_i});
-}
-
 auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty,
                                spv_inst *a, location const &loc) -> spv_inst * {
     auto float_ty = unique_.spv_ty(scalar_type::f32);
@@ -376,6 +335,20 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     }
     }
     throw compilation_error(loc, status::internal_compiler_error);
+}
+
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
+                                      bool conj_b) -> spv_inst * {
+    auto neg_a = mod_->add<OpFNegate>(ty, a);
+    auto a_times_i =
+        conj_b ? mod_->add<OpVectorShuffle>(ty, a, neg_a, std::vector<LiteralInteger>{1, 2})
+               : mod_->add<OpVectorShuffle>(ty, neg_a, a, std::vector<LiteralInteger>{1, 2});
+    auto b_1 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{1, 1});
+    auto b_1_a_times_i = mod_->add<OpFMul>(ty, b_1, a_times_i);
+    auto b_0 = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{0, 0});
+    return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                static_cast<std::int32_t>(OpenCLEntrypoint::fma),
+                                std::vector<IdRef>{a, b_0, b_1_a_times_i});
 }
 
 auto inst_converter::make_conditional_execution(
@@ -628,6 +601,389 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
         }
         break;
     } break;
+    }
+}
+
+void inst_converter::emulate_cooperative_matrix_load(cooperative_matrix_load_inst const &in) {
+    auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto ot = get_memref_type(in.operand());
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    auto rt = get_coopmatrix_type(in.result(0));
+
+    const int rmode = rt->distributed_mode();
+    const int omode = in.t() == transpose::T ? 1 - rmode : rmode;
+    const bool check_m = in.checked() == checked_flag::both ||
+                         (rmode == 0 && in.checked() == checked_flag::rows) ||
+                         (rmode == 1 && in.checked() == checked_flag::cols);
+    const bool check_k = in.checked() == checked_flag::both ||
+                         (rmode == 1 && in.checked() == checked_flag::rows) ||
+                         (rmode == 0 && in.checked() == checked_flag::cols);
+    const std::int32_t alignment = std::max(in.align(), ot->alignment());
+    const std::int32_t sub_group_read_required_alignment =
+        ot->addrspace() == address_space::local ? 16 : 4;
+    const bool enable_sub_group_reads = core_cfg_.block_read_write_supported &&
+                                        !is_complex_type(ot->element_ty()) &&
+                                        in.t() == transpose::N && ot->stride(omode) == 1 &&
+                                        alignment >= sub_group_read_required_alignment;
+
+    spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
+    auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
+        if (rem[index] == nullptr) {
+            rem[index] = mod_->add<OpISub>(spv_index_ty, odv->shape(index), pv[index]);
+        }
+        return rem[index];
+    };
+
+    auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, pv[0], odv->stride(0));
+    auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, pv[1], odv->stride(1));
+    auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+    auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()), offset,
+                                                       std::vector<spv_inst *>{});
+
+    const auto block_load = [&](spv_inst *offset) -> spv_inst * {
+        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
+                                                               std::vector<spv_inst *>{});
+        auto const cast_load_cast = [&](scalar_type int_sty) {
+            auto int_ty = unique_.spv_ty(int_sty);
+            const auto storage_cls = address_space_to_storage_class(ot->addrspace());
+            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
+            auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
+            auto value = mod_->add<OpSubgroupBlockReadINTEL>(int_ty, int_ptr);
+            return mod_->add<OpBitcast>(spv_ty, value);
+        };
+        switch (ot->element_ty()) {
+        case scalar_type::bf16:
+        case scalar_type::f16:
+            return cast_load_cast(scalar_type::i16);
+        case scalar_type::f32:
+            return cast_load_cast(scalar_type::i32);
+        case scalar_type::f64:
+            return cast_load_cast(scalar_type::i64);
+        default:
+            return mod_->add<OpSubgroupBlockReadINTEL>(spv_ty, sub_pointer);
+        }
+    };
+    const auto gather_load = [&](spv_inst *offset) -> spv_inst * {
+        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
+                                                               std::vector<spv_inst *>{});
+        return mod_->add<OpLoad>(spv_ty, sub_pointer);
+    };
+
+    spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
+    m = mod_->add<OpSConvert>(spv_index_ty, m);
+    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    const std::int64_t K = rt->shape(1 - rmode);
+    auto loaded_values = std::vector<spv_inst *>{};
+    loaded_values.reserve(K * num_blocks);
+    for (std::int64_t block = 0; block < num_blocks; ++block) {
+        auto const remainder = rt->shape(rmode) - core_cfg_.subgroup_size * block;
+        const bool needs_mask = remainder < core_cfg_.subgroup_size;
+
+        const auto load_block_impl = [&](auto load_impl,
+                                         spv_inst *offset) -> std::vector<spv_inst *> {
+            auto result = std::vector<spv_inst *>{};
+            result.reserve(K);
+            for (std::int64_t k = 0; k < K; ++k) {
+                if (check_k) {
+                    auto check1 = mod_->add<OpSLessThanEqual>(spv_boolean_ty, unique_.constant(-k),
+                                                              pv[1 - omode]);
+                    auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, unique_.constant(k),
+                                                         get_rem(1 - omode));
+                    auto cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
+                    auto vals = make_conditional_execution(
+                        spv_ty, cond, [&] { return std::vector<spv_inst *>{load_impl(offset)}; },
+                        in.loc());
+                    result.insert(result.end(), vals.begin(), vals.end());
+                } else {
+                    result.emplace_back(load_impl(offset));
+                }
+                if (k + 1 < K) {
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, odv->stride(1 - omode));
+                }
+            }
+            return result;
+        };
+
+        auto const load_block = [&]() -> std::vector<spv_inst *> {
+            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
+            if (enable_sub_group_reads && !needs_mask && !check_m) {
+                return load_block_impl(block_load, block_offset);
+            } else {
+                spv_inst *offset = m;
+                if (block > 0) {
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
+                }
+                offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
+                return load_block_impl(gather_load, offset);
+            }
+        };
+        spv_inst *cond = nullptr;
+        if (check_m) {
+            spv_inst *m_offset = m;
+            if (block > 0) {
+                m_offset = mod_->add<OpIAdd>(spv_index_ty, m_offset,
+                                             unique_.constant(block * core_cfg_.subgroup_size));
+            }
+            auto neg = mod_->add<OpSNegate>(spv_index_ty, pv[omode]);
+            auto check1 = mod_->add<OpSGreaterThanEqual>(spv_boolean_ty, m_offset, neg);
+            auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, m_offset, get_rem(omode));
+            cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
+        }
+        if (needs_mask) {
+            spv_inst *mask = mod_->add<OpSLessThan>(spv_boolean_ty, m, unique_.constant(remainder));
+            cond = cond ? mod_->add<OpLogicalAnd>(spv_boolean_ty, cond, mask) : mask;
+        }
+        auto block_vals =
+            cond ? make_conditional_execution(spv_ty, cond, load_block, in.loc()) : load_block();
+        loaded_values.insert(loaded_values.end(), block_vals.begin(), block_vals.end());
+    }
+    multi_declare(in.result(0), std::move(loaded_values));
+}
+void inst_converter::emulate_cooperative_matrix_mul_add(cooperative_matrix_mul_add_inst const &in) {
+    auto at = get_coopmatrix_type(in.a());
+    auto bt = get_coopmatrix_type(in.b());
+    auto ct = get_coopmatrix_type(in.c());
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto &av = multi_val(in.a());
+    auto &bv = multi_val(in.b());
+    auto &cv = multi_val(in.c());
+
+    const auto a_ty = at->component_ty();
+    const auto b_ty = bt->component_ty();
+    const auto b_component_ty = component_type(b_ty);
+    const auto c_ty = ct->component_ty();
+    const auto r_ty = rt->component_ty();
+    const auto spv_b_ty = unique_.spv_ty(bt->ty());
+    const auto spv_b_component_ty = unique_.spv_ty(b_component_ty);
+    const auto spv_c_ty = unique_.spv_ty(ct->ty());
+    const auto spv_r_ty = unique_.spv_ty(rt->ty());
+    const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
+
+    const std::int32_t N = rt->cols(), K = at->cols();
+
+    const std::int32_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
+    constexpr std::int32_t nbb = 4;
+    auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+
+    auto result = std::vector<spv_inst *>(cv.begin(), cv.end());
+    auto result_im = a_and_b_complex
+                         ? std::vector<spv_inst *>(cv.size(), unique_.null_constant(spv_c_ty))
+                         : std::vector<spv_inst *>{};
+    for (std::int32_t m_block = 0; m_block < num_blocks; ++m_block) {
+        for (std::int32_t nb = 0; nb < N; nb += nbb) {
+            for (std::int32_t k = 0; k < K; ++k) {
+                for (std::int32_t n = 0; n < nbb; ++n) {
+                    if (nb + n < N) {
+                        auto const n_block = (nb + n) / core_cfg_.subgroup_size;
+                        auto n_offset = unique_.constant((nb + n) % core_cfg_.subgroup_size);
+
+                        auto a = av[k + m_block * K];
+                        auto b = bv[k + n_block * K];
+                        auto b_bc =
+                            mod_->add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b, n_offset);
+                        auto &c = result[nb + n + m_block * N];
+
+                        if (a_and_b_complex) {
+                            auto &c_im = result_im[nb + n + m_block * N];
+                            auto b_bc_re = mod_->add<OpCompositeExtract>(
+                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{0});
+                            auto b_bc_im = mod_->add<OpCompositeExtract>(
+                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{1});
+                            c = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_re, c,
+                                                         in.loc());
+                            c_im = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_im,
+                                                            c_im, in.loc());
+                        } else {
+                            c = make_mixed_precision_fma(a_ty, b_ty, c_ty, a, b_bc, c, in.loc());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if (a_and_b_complex) {
+        for (std::size_t i = 0; i < result.size(); ++i) {
+            auto &c = result[i];
+            auto c_im = result_im[i];
+            auto neg_c_im = mod_->add<OpFNegate>(spv_c_ty, c_im);
+            auto c_im_times_i = mod_->add<OpVectorShuffle>(spv_c_ty, neg_c_im, c_im,
+                                                           std::vector<LiteralInteger>{1, 2});
+            c = mod_->add<OpFAdd>(spv_c_ty, c, c_im_times_i);
+        }
+    }
+    for (auto &r : result) {
+        if (c_ty != r_ty) {
+            r = make_cast(r_ty, c_ty, spv_r_ty, r, in.loc());
+        }
+    }
+    multi_declare(in.result(0), std::move(result));
+}
+void inst_converter::emulate_cooperative_matrix_scale(cooperative_matrix_scale_inst const &in) {
+    auto av = val(in.a());
+    auto &bv = multi_val(in.b());
+
+    auto insts = std::vector<spv_inst *>{};
+    insts.reserve(bv.size());
+
+    for (std::size_t i = 0; i < bv.size(); ++i) {
+        insts.emplace_back(make_binary_op(get_coopmatrix_type(in.result(0))->component_ty(),
+                                          arithmetic::mul, unique_.spv_ty(in.a().ty()), av, bv[i],
+                                          in.loc()));
+    }
+
+    multi_declare(in.result(0), std::move(insts));
+}
+void inst_converter::emulate_cooperative_matrix_store(cooperative_matrix_store_inst const &in) {
+    auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
+    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
+    auto spv_ty = unique_.spv_ty(in.val().ty());
+    auto ot = get_memref_type(in.operand());
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+    auto vt = get_coopmatrix_type(in.val());
+
+    const int vmode = vt->distributed_mode();
+    const int omode = vmode;
+    const bool check_m = in.checked() == checked_flag::both ||
+                         (vmode == 0 && in.checked() == checked_flag::rows) ||
+                         (vmode == 1 && in.checked() == checked_flag::cols);
+    const bool check_k = in.checked() == checked_flag::both ||
+                         (vmode == 1 && in.checked() == checked_flag::rows) ||
+                         (vmode == 0 && in.checked() == checked_flag::cols);
+    const std::int32_t alignment = std::max(in.align(), ot->alignment());
+    constexpr std::int32_t sub_group_write_required_alignment = 16;
+    const bool enable_sub_group_writes =
+        core_cfg_.block_read_write_supported && !is_complex_type(ot->element_ty()) &&
+        in.flag() == store_flag::regular && ot->stride(omode) == 1 &&
+        alignment >= sub_group_write_required_alignment;
+
+    spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
+    auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
+        if (rem[index] == nullptr) {
+            rem[index] = mod_->add<OpISub>(spv_index_ty, odv->shape(index), pv[index]);
+        }
+        return rem[index];
+    };
+
+    auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, pv[0], odv->stride(0));
+    auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, pv[1], odv->stride(1));
+    auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+    auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()), offset,
+                                                       std::vector<spv_inst *>{});
+
+    const auto block_store = [&](spv_inst *offset, spv_inst *value) {
+        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
+                                                               std::vector<spv_inst *>{});
+        auto const cast_write = [&](scalar_type int_sty) {
+            auto int_ty = unique_.spv_ty(int_sty);
+            auto ival = mod_->add<OpBitcast>(int_ty, value);
+            const auto storage_cls = address_space_to_storage_class(ot->addrspace());
+            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
+            auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
+            mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, ival);
+        };
+        switch (ot->element_ty()) {
+        case scalar_type::bf16:
+        case scalar_type::f16:
+            cast_write(scalar_type::i16);
+            break;
+        case scalar_type::f32:
+            cast_write(scalar_type::i32);
+            break;
+        case scalar_type::f64:
+            cast_write(scalar_type::i64);
+            break;
+        default:
+            mod_->add<OpSubgroupBlockWriteINTEL>(sub_pointer, value);
+            break;
+        }
+    };
+    const auto scatter_store = [&](spv_inst *offset, spv_inst *value) {
+        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
+                                                               std::vector<spv_inst *>{});
+        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value, in.loc());
+    };
+
+    spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
+    m = mod_->add<OpSConvert>(spv_index_ty, m);
+    const std::int64_t num_blocks = vt->num_blocks(core_cfg_.subgroup_size);
+    const std::int64_t K = vt->shape(1 - vmode);
+    auto &values = multi_val(in.val());
+    for (std::int64_t block = 0; block < num_blocks; ++block) {
+        auto const remainder = vt->shape(vmode) - core_cfg_.subgroup_size * block;
+        const bool needs_mask = remainder < core_cfg_.subgroup_size;
+
+        const auto store_block_impl = [&](auto store_impl,
+                                          spv_inst *offset) -> std::vector<spv_inst *> {
+            for (std::int64_t k = 0; k < K; ++k) {
+                auto &value = values[k + block * vt->shape(1 - vmode)];
+                if (check_k) {
+                    auto check1 = mod_->add<OpSLessThanEqual>(spv_boolean_ty, unique_.constant(-k),
+                                                              pv[1 - omode]);
+                    auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, unique_.constant(k),
+                                                         get_rem(1 - omode));
+                    auto cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
+                    auto vals = make_conditional_execution(
+                        spv_ty, cond,
+                        [&] {
+                            store_impl(offset, value);
+                            return std::vector<spv_inst *>{};
+                        },
+                        in.loc());
+                } else {
+                    store_impl(offset, value);
+                }
+                if (k + 1 < K) {
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, odv->stride(1 - omode));
+                }
+            }
+            return {};
+        };
+
+        auto const store_block = [&]() -> std::vector<spv_inst *> {
+            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
+            if (enable_sub_group_writes && !needs_mask && !check_m) {
+                store_block_impl(block_store, block_offset);
+            } else {
+                spv_inst *offset = m;
+                if (block > 0) {
+                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
+                }
+                offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
+                store_block_impl(scatter_store, offset);
+            }
+            return {};
+        };
+        spv_inst *cond = nullptr;
+        if (check_m) {
+            spv_inst *m_offset = m;
+            if (block > 0) {
+                m_offset = mod_->add<OpIAdd>(spv_index_ty, m_offset,
+                                             unique_.constant(block * core_cfg_.subgroup_size));
+            }
+            auto neg = mod_->add<OpSNegate>(spv_index_ty, pv[omode]);
+            auto check1 = mod_->add<OpSGreaterThanEqual>(spv_boolean_ty, m_offset, neg);
+            auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, m_offset, get_rem(omode));
+            cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
+        }
+        if (needs_mask) {
+            spv_inst *mask = mod_->add<OpSLessThan>(spv_boolean_ty, m, unique_.constant(remainder));
+            cond = cond ? mod_->add<OpLogicalAnd>(spv_boolean_ty, cond, mask) : mask;
+        }
+        if (cond) {
+            make_conditional_execution(spv_ty, cond, store_block, in.loc());
+        } else {
+            store_block();
+        }
     }
 }
 
@@ -1017,385 +1373,63 @@ void inst_converter::operator()(constant_inst const &in) {
 }
 
 void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
-    auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
-    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_ty = unique_.spv_ty(in.result(0).ty());
-    auto ot = get_memref_type(in.operand());
-    auto odv = get_dope_vector(in.operand());
-    if (!odv) {
-        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    if (mext_.get(in.result(0))) {
+        auto odv = get_dope_vector(in.operand());
+        if (!odv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+        }
+        auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
+        auto spv_result_ty = unique_.spv_matrix_ty(in.result(0).ty());
+
+        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                           offset, std::vector<spv_inst *>{});
+
+        auto row_major =
+            unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
+        declare(in.result(0), mod_->add<OpCooperativeMatrixLoadKHR>(spv_result_ty, pointer,
+                                                                    row_major, odv->stride(1)));
+    } else {
+        emulate_cooperative_matrix_load(in);
     }
-    auto rt = get_coopmatrix_type(in.result(0));
-
-    const int rmode = rt->distributed_mode();
-    const int omode = in.t() == transpose::T ? 1 - rmode : rmode;
-    const bool check_m = in.checked() == checked_flag::both ||
-                         (rmode == 0 && in.checked() == checked_flag::rows) ||
-                         (rmode == 1 && in.checked() == checked_flag::cols);
-    const bool check_k = in.checked() == checked_flag::both ||
-                         (rmode == 1 && in.checked() == checked_flag::rows) ||
-                         (rmode == 0 && in.checked() == checked_flag::cols);
-    const std::int32_t alignment = std::max(in.align(), ot->alignment());
-    const std::int32_t sub_group_read_required_alignment =
-        ot->addrspace() == address_space::local ? 16 : 4;
-    const bool enable_sub_group_reads = core_cfg_.block_read_write_supported &&
-                                        !is_complex_type(ot->element_ty()) &&
-                                        in.t() == transpose::N && ot->stride(omode) == 1 &&
-                                        alignment >= sub_group_read_required_alignment;
-
-    spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
-    auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
-        if (rem[index] == nullptr) {
-            rem[index] = mod_->add<OpISub>(spv_index_ty, odv->shape(index), pv[index]);
-        }
-        return rem[index];
-    };
-
-    auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, pv[0], odv->stride(0));
-    auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, pv[1], odv->stride(1));
-    auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-    auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()), offset,
-                                                       std::vector<spv_inst *>{});
-
-    const auto block_load = [&](spv_inst *offset) -> spv_inst * {
-        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
-                                                               std::vector<spv_inst *>{});
-        auto const cast_load_cast = [&](scalar_type int_sty) {
-            auto int_ty = unique_.spv_ty(int_sty);
-            const auto storage_cls = address_space_to_storage_class(ot->addrspace());
-            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
-            auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
-            auto value = mod_->add<OpSubgroupBlockReadINTEL>(int_ty, int_ptr);
-            return mod_->add<OpBitcast>(spv_ty, value);
-        };
-        switch (ot->element_ty()) {
-        case scalar_type::bf16:
-        case scalar_type::f16:
-            return cast_load_cast(scalar_type::i16);
-        case scalar_type::f32:
-            return cast_load_cast(scalar_type::i32);
-        case scalar_type::f64:
-            return cast_load_cast(scalar_type::i64);
-        default:
-            return mod_->add<OpSubgroupBlockReadINTEL>(spv_ty, sub_pointer);
-        }
-    };
-    const auto gather_load = [&](spv_inst *offset) -> spv_inst * {
-        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
-                                                               std::vector<spv_inst *>{});
-        return mod_->add<OpLoad>(spv_ty, sub_pointer);
-    };
-
-    spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
-    m = mod_->add<OpSConvert>(spv_index_ty, m);
-    const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
-    const std::int64_t K = rt->shape(1 - rmode);
-    auto loaded_values = std::vector<spv_inst *>{};
-    loaded_values.reserve(K * num_blocks);
-    for (std::int64_t block = 0; block < num_blocks; ++block) {
-        auto const remainder = rt->shape(rmode) - core_cfg_.subgroup_size * block;
-        const bool needs_mask = remainder < core_cfg_.subgroup_size;
-
-        const auto load_block_impl = [&](auto load_impl,
-                                         spv_inst *offset) -> std::vector<spv_inst *> {
-            auto result = std::vector<spv_inst *>{};
-            result.reserve(K);
-            for (std::int64_t k = 0; k < K; ++k) {
-                if (check_k) {
-                    auto check1 = mod_->add<OpSLessThanEqual>(spv_boolean_ty, unique_.constant(-k),
-                                                              pv[1 - omode]);
-                    auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, unique_.constant(k),
-                                                         get_rem(1 - omode));
-                    auto cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
-                    auto vals = make_conditional_execution(
-                        spv_ty, cond, [&] { return std::vector<spv_inst *>{load_impl(offset)}; },
-                        in.loc());
-                    result.insert(result.end(), vals.begin(), vals.end());
-                } else {
-                    result.emplace_back(load_impl(offset));
-                }
-                if (k + 1 < K) {
-                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, odv->stride(1 - omode));
-                }
-            }
-            return result;
-        };
-
-        auto const load_block = [&]() -> std::vector<spv_inst *> {
-            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
-            if (enable_sub_group_reads && !needs_mask && !check_m) {
-                return load_block_impl(block_load, block_offset);
-            } else {
-                spv_inst *offset = m;
-                if (block > 0) {
-                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
-                }
-                offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
-                return load_block_impl(gather_load, offset);
-            }
-        };
-        spv_inst *cond = nullptr;
-        if (check_m) {
-            spv_inst *m_offset = m;
-            if (block > 0) {
-                m_offset = mod_->add<OpIAdd>(spv_index_ty, m_offset,
-                                             unique_.constant(block * core_cfg_.subgroup_size));
-            }
-            auto neg = mod_->add<OpSNegate>(spv_index_ty, pv[omode]);
-            auto check1 = mod_->add<OpSGreaterThanEqual>(spv_boolean_ty, m_offset, neg);
-            auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, m_offset, get_rem(omode));
-            cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
-        }
-        if (needs_mask) {
-            spv_inst *mask = mod_->add<OpSLessThan>(spv_boolean_ty, m, unique_.constant(remainder));
-            cond = cond ? mod_->add<OpLogicalAnd>(spv_boolean_ty, cond, mask) : mask;
-        }
-        auto block_vals =
-            cond ? make_conditional_execution(spv_ty, cond, load_block, in.loc()) : load_block();
-        loaded_values.insert(loaded_values.end(), block_vals.begin(), block_vals.end());
-    }
-    multi_declare(in.result(0), std::move(loaded_values));
 }
 void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
-    auto at = get_coopmatrix_type(in.a());
-    auto bt = get_coopmatrix_type(in.b());
-    auto ct = get_coopmatrix_type(in.c());
-    auto rt = get_coopmatrix_type(in.result(0));
-    auto &av = multi_val(in.a());
-    auto &bv = multi_val(in.b());
-    auto &cv = multi_val(in.c());
-
-    const auto a_ty = at->component_ty();
-    const auto b_ty = bt->component_ty();
-    const auto b_component_ty = component_type(b_ty);
-    const auto c_ty = ct->component_ty();
-    const auto r_ty = rt->component_ty();
-    const auto spv_b_ty = unique_.spv_ty(bt->ty());
-    const auto spv_b_component_ty = unique_.spv_ty(b_component_ty);
-    const auto spv_c_ty = unique_.spv_ty(ct->ty());
-    const auto spv_r_ty = unique_.spv_ty(rt->ty());
-    const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
-
-    const std::int32_t N = rt->cols(), K = at->cols();
-
-    const std::int32_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
-    constexpr std::int32_t nbb = 4;
-    auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
-
-    auto result = std::vector<spv_inst *>(cv.begin(), cv.end());
-    auto result_im = a_and_b_complex
-                         ? std::vector<spv_inst *>(cv.size(), unique_.null_constant(spv_c_ty))
-                         : std::vector<spv_inst *>{};
-    for (std::int32_t m_block = 0; m_block < num_blocks; ++m_block) {
-        for (std::int32_t nb = 0; nb < N; nb += nbb) {
-            for (std::int32_t k = 0; k < K; ++k) {
-                for (std::int32_t n = 0; n < nbb; ++n) {
-                    if (nb + n < N) {
-                        auto const n_block = (nb + n) / core_cfg_.subgroup_size;
-                        auto n_offset = unique_.constant((nb + n) % core_cfg_.subgroup_size);
-
-                        auto a = av[k + m_block * K];
-                        auto b = bv[k + n_block * K];
-                        auto b_bc =
-                            mod_->add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b, n_offset);
-                        auto &c = result[nb + n + m_block * N];
-
-                        if (a_and_b_complex) {
-                            auto &c_im = result_im[nb + n + m_block * N];
-                            auto b_bc_re = mod_->add<OpCompositeExtract>(
-                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{0});
-                            auto b_bc_im = mod_->add<OpCompositeExtract>(
-                                spv_b_component_ty, b_bc, std::vector<LiteralInteger>{1});
-                            c = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_re, c,
-                                                         in.loc());
-                            c_im = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_im,
-                                                            c_im, in.loc());
-                        } else {
-                            c = make_mixed_precision_fma(a_ty, b_ty, c_ty, a, b_bc, c, in.loc());
-                        }
-                    }
-                }
-            }
-        }
+    if (mext_.get(in.result(0))) {
+        auto spv_result_ty = unique_.spv_matrix_ty(in.result(0).ty());
+        // Swap a and b here due to using RowMajorKHR instead of ColumnMajorKHR
+        declare(in.result(0), mod_->add<OpCooperativeMatrixMulAddKHR>(spv_result_ty, val(in.b()),
+                                                                      val(in.a()), val(in.c())));
+    } else {
+        emulate_cooperative_matrix_mul_add(in);
     }
-    if (a_and_b_complex) {
-        for (std::size_t i = 0; i < result.size(); ++i) {
-            auto &c = result[i];
-            auto c_im = result_im[i];
-            auto neg_c_im = mod_->add<OpFNegate>(spv_c_ty, c_im);
-            auto c_im_times_i = mod_->add<OpVectorShuffle>(spv_c_ty, neg_c_im, c_im,
-                                                           std::vector<LiteralInteger>{1, 2});
-            c = mod_->add<OpFAdd>(spv_c_ty, c, c_im_times_i);
-        }
-    }
-    for (auto &r : result) {
-        if (c_ty != r_ty) {
-            r = make_cast(r_ty, c_ty, spv_r_ty, r, in.loc());
-        }
-    }
-    multi_declare(in.result(0), std::move(result));
 }
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
-    auto av = val(in.a());
-    auto &bv = multi_val(in.b());
-
-    auto insts = std::vector<spv_inst *>{};
-    insts.reserve(bv.size());
-
-    for (std::size_t i = 0; i < bv.size(); ++i) {
-        insts.emplace_back(make_binary_op(get_coopmatrix_type(in.result(0))->component_ty(),
-                                          arithmetic::mul, unique_.spv_ty(in.a().ty()), av, bv[i],
-                                          in.loc()));
-    }
-
-    multi_declare(in.result(0), std::move(insts));
+    emulate_cooperative_matrix_scale(in);
 }
 void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
-    auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
-    auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_ty = unique_.spv_ty(in.val().ty());
-    auto ot = get_memref_type(in.operand());
-    auto odv = get_dope_vector(in.operand());
-    if (!odv) {
-        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
-    }
-    auto vt = get_coopmatrix_type(in.val());
-
-    const int vmode = vt->distributed_mode();
-    const int omode = vmode;
-    const bool check_m = in.checked() == checked_flag::both ||
-                         (vmode == 0 && in.checked() == checked_flag::rows) ||
-                         (vmode == 1 && in.checked() == checked_flag::cols);
-    const bool check_k = in.checked() == checked_flag::both ||
-                         (vmode == 1 && in.checked() == checked_flag::rows) ||
-                         (vmode == 0 && in.checked() == checked_flag::cols);
-    const std::int32_t alignment = std::max(in.align(), ot->alignment());
-    constexpr std::int32_t sub_group_write_required_alignment = 16;
-    const bool enable_sub_group_writes =
-        core_cfg_.block_read_write_supported && !is_complex_type(ot->element_ty()) &&
-        in.flag() == store_flag::regular && ot->stride(omode) == 1 &&
-        alignment >= sub_group_write_required_alignment;
-
-    spv_inst *pv[] = {val(in.pos0()), val(in.pos1())};
-    auto get_rem = [&, rem = std::array<spv_inst *, 2u>{}](std::int64_t index) mutable {
-        if (rem[index] == nullptr) {
-            rem[index] = mod_->add<OpISub>(spv_index_ty, odv->shape(index), pv[index]);
+    if (mext_.get(in.val())) {
+        auto odv = get_dope_vector(in.operand());
+        if (!odv) {
+            throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
         }
-        return rem[index];
-    };
+        auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
 
-    auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, pv[0], odv->stride(0));
-    auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, pv[1], odv->stride(1));
-    auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-    auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()), offset,
-                                                       std::vector<spv_inst *>{});
+        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                           offset, std::vector<spv_inst *>{});
 
-    const auto block_store = [&](spv_inst *offset, spv_inst *value) {
-        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
-                                                               std::vector<spv_inst *>{});
-        auto const cast_write = [&](scalar_type int_sty) {
-            auto int_ty = unique_.spv_ty(int_sty);
-            auto ival = mod_->add<OpBitcast>(int_ty, value);
-            const auto storage_cls = address_space_to_storage_class(ot->addrspace());
-            auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, alignment);
-            auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, sub_pointer);
-            mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, ival);
-        };
-        switch (ot->element_ty()) {
-        case scalar_type::bf16:
-        case scalar_type::f16:
-            cast_write(scalar_type::i16);
-            break;
-        case scalar_type::f32:
-            cast_write(scalar_type::i32);
-            break;
-        case scalar_type::f64:
-            cast_write(scalar_type::i64);
-            break;
-        default:
-            mod_->add<OpSubgroupBlockWriteINTEL>(sub_pointer, value);
-            break;
-        }
-    };
-    const auto scatter_store = [&](spv_inst *offset, spv_inst *value) {
-        auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
-                                                               std::vector<spv_inst *>{});
-        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value, in.loc());
-    };
-
-    spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
-    m = mod_->add<OpSConvert>(spv_index_ty, m);
-    const std::int64_t num_blocks = vt->num_blocks(core_cfg_.subgroup_size);
-    const std::int64_t K = vt->shape(1 - vmode);
-    auto &values = multi_val(in.val());
-    for (std::int64_t block = 0; block < num_blocks; ++block) {
-        auto const remainder = vt->shape(vmode) - core_cfg_.subgroup_size * block;
-        const bool needs_mask = remainder < core_cfg_.subgroup_size;
-
-        const auto store_block_impl = [&](auto store_impl,
-                                          spv_inst *offset) -> std::vector<spv_inst *> {
-            for (std::int64_t k = 0; k < K; ++k) {
-                auto &value = values[k + block * vt->shape(1 - vmode)];
-                if (check_k) {
-                    auto check1 = mod_->add<OpSLessThanEqual>(spv_boolean_ty, unique_.constant(-k),
-                                                              pv[1 - omode]);
-                    auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, unique_.constant(k),
-                                                         get_rem(1 - omode));
-                    auto cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
-                    auto vals = make_conditional_execution(
-                        spv_ty, cond,
-                        [&] {
-                            store_impl(offset, value);
-                            return std::vector<spv_inst *>{};
-                        },
-                        in.loc());
-                } else {
-                    store_impl(offset, value);
-                }
-                if (k + 1 < K) {
-                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, odv->stride(1 - omode));
-                }
-            }
-            return {};
-        };
-
-        auto const store_block = [&]() -> std::vector<spv_inst *> {
-            auto block_offset = unique_.constant(block * core_cfg_.subgroup_size);
-            if (enable_sub_group_writes && !needs_mask && !check_m) {
-                store_block_impl(block_store, block_offset);
-            } else {
-                spv_inst *offset = m;
-                if (block > 0) {
-                    offset = mod_->add<OpIAdd>(spv_index_ty, offset, block_offset);
-                }
-                offset = mod_->add<OpIMul>(spv_index_ty, offset, odv->stride(omode));
-                store_block_impl(scatter_store, offset);
-            }
-            return {};
-        };
-        spv_inst *cond = nullptr;
-        if (check_m) {
-            spv_inst *m_offset = m;
-            if (block > 0) {
-                m_offset = mod_->add<OpIAdd>(spv_index_ty, m_offset,
-                                             unique_.constant(block * core_cfg_.subgroup_size));
-            }
-            auto neg = mod_->add<OpSNegate>(spv_index_ty, pv[omode]);
-            auto check1 = mod_->add<OpSGreaterThanEqual>(spv_boolean_ty, m_offset, neg);
-            auto check2 = mod_->add<OpSLessThan>(spv_boolean_ty, m_offset, get_rem(omode));
-            cond = mod_->add<OpLogicalAnd>(spv_boolean_ty, check1, check2);
-        }
-        if (needs_mask) {
-            spv_inst *mask = mod_->add<OpSLessThan>(spv_boolean_ty, m, unique_.constant(remainder));
-            cond = cond ? mod_->add<OpLogicalAnd>(spv_boolean_ty, cond, mask) : mask;
-        }
-        if (cond) {
-            make_conditional_execution(spv_ty, cond, store_block, in.loc());
-        } else {
-            store_block();
-        }
+        auto row_major =
+            unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
+        declare(in.result(0), mod_->add<OpCooperativeMatrixStoreKHR>(pointer, val(in.val()),
+                                                                     row_major, odv->stride(1)));
+    } else {
+        emulate_cooperative_matrix_store(in);
     }
 }
 
@@ -1912,8 +1946,13 @@ auto inst_converter::run_on_region_with_yield(region_node const &reg,
     return yielded_vals;
 }
 
-void inst_converter::run_on_function(function_node const &fn, core_config const &core_cfg) {
-    core_cfg_ = core_cfg;
+void inst_converter::run_on_function(function_node const &fn, tinytc_core_info const &info) {
+    try {
+        core_cfg_ = info.get_core_config(fn.subgroup_size());
+    } catch (std::out_of_range const &e) {
+        throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
+    }
+    mext_ = matrix_ext_analysis{}.run_on_function(fn, info);
 
     // Stack
     auto const make_stack = [&] {

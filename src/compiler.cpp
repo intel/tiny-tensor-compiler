@@ -9,6 +9,7 @@
 #include "pass/dump_def_use.hpp"
 #include "pass/dump_gcd.hpp"
 #include "pass/dump_ir.hpp"
+#include "pass/dump_matrix_ext.hpp"
 // IWYU pragma: end_keep
 #include "pass/alignment_propagation.hpp"
 #include "pass/check_ir.hpp"

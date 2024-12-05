@@ -26,8 +26,8 @@ class gcd_analysis_result {
 };
 
 /**
- * In the "GCD-analysis" we want to infer at compile time which integer divide an SSA value is divisible
- * For example, for
+ * In the "GCD-analysis" we want to infer at compile time which integer divide an SSA value is
+ * divisible. For example, for
  *
  * %0 = constant 32 : index
  * %1 = arith.mul %0, %x : index
@@ -49,7 +49,7 @@ class gcd_analysis_result {
  * For efficiency, we encode the set of prime factors by its product, that is, by the integer
  *
  * p(%x) := \prod_{f\in P(%x)} f
- * 
+ *
  * We can update p without having to resort to P as following:
  *
  * "%x = constant C": p(%x) := C
@@ -59,6 +59,11 @@ class gcd_analysis_result {
  * "%x = unknown":          p(%x) := 1
  *
  * where gcd is the greatest common divisor.
+ *
+ * One special case is when we have %zero = constant 0. By definition gcd(%zero) = 0.
+ * We then have automatically
+ * "%z = arith.add %zero, %x": p(%z) = p(%x) // Fine, 0 + x = x so we must have p(%z) = p(%x)
+ * "%z = arith.mul %zero, %x": p(%z) = 0     // Fine, 0 * x = 0 so we must have p(%z) = p(%zero)
  */
 class gcd_analysis {
   public:

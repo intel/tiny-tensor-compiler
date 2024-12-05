@@ -751,15 +751,16 @@ for_inst::for_inst(tinytc_data_type_t loop_var_type, tinytc_value_t from0, tinyt
         op(op_step, step0);
     }
 
-    body().set_num_params(1 + init_values.size());
-    body().set_param(0, loop_var_type, lc);
     body().loc(lc);
+    body().defining_inst(this);
+    body().set_num_params(1 + init_values.size());
+    body().set_param(0, loop_var_type);
     for (std::size_t i = 0; i < return_types.size(); ++i) {
         if (!isa<boolean_data_type>(*return_types[i]) && !isa<scalar_data_type>(*return_types[i]) &&
             !isa<coopmatrix_data_type>(*return_types[i])) {
             throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
-        body().set_param(1 + i, return_types[i], lc);
+        body().set_param(1 + i, return_types[i]);
         result(i) = value_node{return_types[i], this, lc};
     }
     if (init_values.size() != return_types.size()) {
@@ -805,11 +806,12 @@ foreach_inst::foreach_inst(tinytc_data_type_t loop_var_type, array_view<tinytc_v
     for (auto &v : to) {
         op(op_no++, v);
     }
+    body().loc(lc);
+    body().defining_inst(this);
     body().set_num_params(from.size());
     for (std::int64_t i = 0; i < static_cast<std::int64_t>(from.size()); ++i) {
-        body().set_param(i, loop_var_type, lc);
+        body().set_param(i, loop_var_type);
     }
-    body().loc(lc);
     child_region(0).kind(region_kind::spmd);
     loc(lc);
 
@@ -1042,7 +1044,9 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
     op(0, condition);
     loc(lc);
     then().loc(lc);
+    then().defining_inst(this);
     otherwise().loc(lc);
+    otherwise().defining_inst(this);
     if (!isa<boolean_data_type>(*condition->ty())) {
         throw compilation_error(loc(), {condition}, status::ir_expected_boolean);
     }
@@ -1059,6 +1063,8 @@ parallel_inst::parallel_inst(location const &lc) : standard_inst{IK::parallel} {
     loc(lc);
 
     child_region(0).kind(region_kind::spmd);
+    child_region(0).loc(lc);
+    child_region(0).defining_inst(this);
 }
 
 size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t ty,

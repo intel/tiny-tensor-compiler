@@ -7,6 +7,7 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "support/casting.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"

@@ -27,6 +27,9 @@ class capex {
     void operator()(OpAtomicIAdd const &in);
     void operator()(OpConvertBF16ToFINTEL const &in);
     void operator()(OpConvertFToBF16INTEL const &in);
+    void operator()(OpCooperativeMatrixLoadKHR const &in);
+    void operator()(OpCooperativeMatrixMulAddKHR const &in);
+    void operator()(OpCooperativeMatrixStoreKHR const &in);
     void operator()(OpEntryPoint const &in);
     void operator()(OpExecutionMode const &in);
     void operator()(OpGroupBroadcast const &in);

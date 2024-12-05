@@ -12,17 +12,12 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 struct tinytc_func final {
   public:
-    inline tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
-                       tinytc_location const &lc = {})
-        : name_(std::move(name)), body_(std::move(params)), work_group_size_{0, 0},
-          subgroup_size_{0}, loc_{lc} {
-        body_.kind(tinytc::region_kind::collective);
-    }
+    tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
+                tinytc_location const &lc = {});
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }

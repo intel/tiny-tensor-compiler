@@ -5,8 +5,8 @@
 #include "node/inst_node.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
+#include "tinytc/types.hpp"
 
-#include <cmath>
 #include <functional>
 #include <numeric>
 #include <utility>

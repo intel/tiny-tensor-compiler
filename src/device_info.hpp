@@ -4,8 +4,9 @@
 #ifndef DEVICE_INFO_20240304_HPP
 #define DEVICE_INFO_20240304_HPP
 
-#include "coopmatrix_info.hpp"
+#include "matrix_ext_info.hpp"
 #include "reference_counted.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
 #include <array>
@@ -44,7 +45,7 @@ struct tinytc_core_info : tinytc::reference_counted {
     virtual auto get_core_config(std::int32_t subgroup_size) const -> tinytc::core_config = 0;
     virtual void set_spirv_feature(tinytc::spirv_feature f, bool available) = 0;
     virtual auto have_spirv_feature(tinytc::spirv_feature f) const -> bool = 0;
-    virtual auto coopmatrix_info() const -> tinytc::accelerated_coopmatrix_info const & = 0;
+    virtual auto matrix() const -> tinytc::matrix_ext_info const & = 0;
 };
 
 namespace tinytc {
@@ -72,13 +73,13 @@ class core_info_generic : public core_info_common {
     void core_features(tinytc_core_feature_flags_t flags) override;
     auto minmax_work_group_size() const -> std::int32_t override;
     auto get_core_config(std::int32_t subgroup_size) const -> tinytc::core_config override;
-    auto coopmatrix_info() const -> accelerated_coopmatrix_info const & override;
+    auto matrix() const -> matrix_ext_info const & override;
 
   private:
     std::int32_t register_space_;
     std::int32_t max_work_group_size_;
     std::vector<std::int32_t> subgroup_sizes_;
-    accelerated_coopmatrix_info coopmatrix_info_;
+    matrix_ext_info matrix_;
 };
 
 //! Set of core configurations for Intel GPUs
@@ -107,7 +108,7 @@ class core_info_intel : public core_info_common {
     auto minmax_work_group_size() const -> std::int32_t override;
     //! @copydoc ::tinytc_core_info::get_core_config
     auto get_core_config(std::int32_t subgroup_size) const -> core_config override;
-    auto coopmatrix_info() const -> accelerated_coopmatrix_info const & override;
+    auto matrix() const -> matrix_ext_info const & override;
 
   private:
     auto num_reg_small_grf() const -> std::int32_t;
@@ -121,7 +122,7 @@ class core_info_intel : public core_info_common {
     std::vector<std::int32_t> subgroup_sizes_;
     std::int32_t register_size_;
     tinytc_core_feature_flags_t core_features_;
-    accelerated_coopmatrix_info coopmatrix_info_;
+    matrix_ext_info matrix_;
 };
 
 } // namespace tinytc

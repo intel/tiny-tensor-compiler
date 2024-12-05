@@ -47,6 +47,7 @@ class uniquifier {
     auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
                         std::int32_t alignment) -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
+    auto spv_matrix_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto spv_ty(scalar_type sty) -> spv_inst *;
 
   private:
@@ -96,6 +97,7 @@ class uniquifier {
                        pointer_key_hash>
         spv_pointer_tys_;
     std::unordered_map<const_tinytc_data_type_t, spv_inst *> spv_tys_;
+    std::unordered_map<const_tinytc_data_type_t, spv_inst *> spv_matrix_tys_;
 };
 
 } // namespace tinytc::spv

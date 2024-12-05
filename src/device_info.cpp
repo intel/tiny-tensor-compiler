@@ -45,9 +45,7 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
     return core_config{subgroup_size, max_work_group_size_, register_space_,
                        block_read_write_supported};
 }
-auto core_info_generic::coopmatrix_info() const -> accelerated_coopmatrix_info const & {
-    return coopmatrix_info_;
-}
+auto core_info_generic::matrix() const -> matrix_ext_info const & { return matrix_; }
 
 core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
                                  std::int32_t num_threads_per_eu,
@@ -61,7 +59,12 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
-        coopmatrix_info_ = accelerated_coopmatrix_info(16, pvc_accelerated_coopmatrix_types);
+        matrix_ = matrix_ext_info(16,
+                                  matrix_ext_block_io_info{.address_alignment = 4,
+                                                           .base_address_alignment = 64,
+                                                           .min_stride = 64,
+                                                           .stride_alignment = 8},
+                                  pvc_matrix_ext_types);
     }
 }
 
@@ -121,9 +124,7 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
                        block_read_write_supported};
 }
 
-auto core_info_intel::coopmatrix_info() const -> accelerated_coopmatrix_info const & {
-    return coopmatrix_info_;
-}
+auto core_info_intel::matrix() const -> matrix_ext_info const & { return matrix_; }
 
 } // namespace tinytc
 

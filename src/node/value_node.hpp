@@ -52,7 +52,8 @@ struct tinytc_value final {
     auto has_uses() const -> bool;
 
     // Can be nullptr, e.g. if value is a region parameter
-    auto defining_inst() const -> tinytc_inst_t { return def_inst_; }
+    inline auto defining_inst() const -> tinytc_inst_t { return def_inst_; }
+    inline void defining_inst(tinytc_inst_t def_inst) { def_inst_ = def_inst; }
 
   private:
     tinytc_data_type_t ty_;

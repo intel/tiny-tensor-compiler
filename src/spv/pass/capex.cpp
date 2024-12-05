@@ -103,6 +103,18 @@ void capex::operator()(OpConvertFToBF16INTEL const &) {
     unique_->extension("SPV_INTEL_bfloat16_conversion");
     required_features_[tinytc_spirv_feature_bfloat16_conversion] = true;
 }
+void capex::operator()(OpCooperativeMatrixLoadKHR const &) {
+    unique_->capability(Capability::CooperativeMatrixKHR);
+    unique_->extension("SPV_KHR_cooperative_matrix");
+}
+void capex::operator()(OpCooperativeMatrixMulAddKHR const &) {
+    unique_->capability(Capability::CooperativeMatrixKHR);
+    unique_->extension("SPV_KHR_cooperative_matrix");
+}
+void capex::operator()(OpCooperativeMatrixStoreKHR const &) {
+    unique_->capability(Capability::CooperativeMatrixKHR);
+    unique_->extension("SPV_KHR_cooperative_matrix");
+}
 void capex::operator()(OpEntryPoint const &in) {
     for (auto const &cap : capabilities(in.op0())) {
         unique_->capability(cap);

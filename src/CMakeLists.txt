@@ -21,13 +21,13 @@ set(SOURCES
     analysis/cfg.cpp
     analysis/gcd.cpp
     analysis/equal.cpp
+    analysis/matrix_ext.cpp
     analysis/stack.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
     compiler_context.cpp
     compiler_context_cache.cpp
-    coopmatrix_info.cpp
     data_type.cpp
     device_info.cpp
     error.cpp
@@ -36,6 +36,7 @@ set(SOURCES
     half.cpp
     inst.cpp
     location.cpp
+    matrix_ext_info.cpp
     node/data_type_node.cpp
     node/function_node.cpp
     node/inst_node.cpp
@@ -55,6 +56,7 @@ set(SOURCES
     pass/dump_def_use.cpp
     pass/dump_gcd.cpp
     pass/dump_ir.cpp
+    pass/dump_matrix_ext.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
     pass/lower_foreach.cpp

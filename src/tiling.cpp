@@ -4,6 +4,7 @@
 #include "tiling.hpp"
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
+#include "matrix_ext_info.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -11,6 +12,7 @@
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include <vector>
 
 namespace tinytc {
 
@@ -28,9 +30,9 @@ auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
     }
 
     for (auto &shape : shapes) {
-        auto const &cinfo = info.coopmatrix_info();
-        if (shape.is_gemm && cinfo.have_precision(shape.op1_ty, shape.op2_ty, shape.dst_ty)) {
-            return cinfo.required_subgroup_size();
+        auto const &mext = info.matrix();
+        if (shape.is_gemm && mext.have_precision(shape.op1_ty, shape.op2_ty, shape.dst_ty)) {
+            return mext.required_subgroup_size();
         }
     }
 

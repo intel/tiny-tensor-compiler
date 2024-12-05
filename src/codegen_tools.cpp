@@ -6,10 +6,12 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "pass/constant_folding.hpp"
 #include "scalar_type.hpp"
 #include "support/casting.hpp"
+#include "support/ilist_base.hpp"
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 
@@ -232,12 +234,36 @@ auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t> {
     return get_int_constant(&val);
 }
 
-auto get_memref_type(tinytc_value const &v) -> memref_data_type * {
+auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const * {
+    auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
+    if (!ct) {
+        throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
+    }
+    return ct;
+}
+auto get_memref_type(tinytc_value const &v) -> memref_data_type const * {
     auto mt = dyn_cast<memref_data_type>(v.ty());
     if (!mt) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
     return mt;
+}
+auto get_scalar_type(tinytc_value const &v) -> scalar_type {
+    auto st = dyn_cast<scalar_data_type>(v.ty());
+    if (!st) {
+        throw compilation_error(v.loc(), status::ir_expected_scalar);
+    }
+    return st->ty();
+}
+auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst const * {
+    const yield_inst *y = nullptr;
+    if (auto it = reg.end(); --it != reg.end()) {
+        y = dyn_cast<const yield_inst>(it.get());
+    }
+    if (!y) {
+        throw compilation_error(loc, status::ir_must_have_yield);
+    }
+    return y;
 }
 
 } // namespace tinytc

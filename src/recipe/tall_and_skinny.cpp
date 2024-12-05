@@ -19,7 +19,6 @@
 #include <memory>
 #include <source_location>
 #include <utility>
-#include <vector>
 
 namespace tinytc {
 

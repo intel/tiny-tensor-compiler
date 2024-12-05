@@ -15,7 +15,9 @@
 
 namespace tinytc {
 
+class coopmatrix_data_type;
 class memref_data_type;
+class yield_inst;
 
 // tools for OpenCL codegen
 
@@ -43,7 +45,10 @@ auto instant_constant_fold_add(region_builder &bb, inst i) -> value;
 auto get_bool_constant(tinytc_value_t val) -> std::optional<bool>;
 auto get_int_constant(const_tinytc_value_t val) -> std::optional<std::int64_t>;
 auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t>;
-auto get_memref_type(tinytc_value const &v) -> memref_data_type *;
+auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const *;
+auto get_memref_type(tinytc_value const &v) -> memref_data_type const *;
+auto get_scalar_type(tinytc_value const &v) -> scalar_type;
+auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst const *;
 
 template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::int64_t> {
     auto result = std::vector<std::int64_t>{};
