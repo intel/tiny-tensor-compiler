@@ -140,6 +140,7 @@ void alignment_propagation_helper::operator()(cooperative_matrix_store_inst &in)
 }
 void alignment_propagation_helper::operator()(load_inst &in) {
     if (isa<group_data_type>(*in.operand().ty())) {
+        known_alignment(in.result(0), known_alignment(in.operand()));
         return;
     }
     const auto align = compute_max_alignment(in.operand(), get_gcds(in.index_list()));

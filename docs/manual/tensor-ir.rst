@@ -124,8 +124,10 @@ the device.
 
 Parameters might be decorated with attributes.
 The attributes are part of the function and not part of the parameter's type.
-The only supported parameter attribute is "align" that requires that the data
-a memref points to has the given minimum alignment (power-of-two, in bytes).
+The only supported parameter attribute is "align".
+Applied to a memref, "align" requires that the data a memref points to has the given minimum alignment
+(power-of-two, in bytes).
+Applied to a group, "align" requires that the each memref in the group has the given minimum alignment.
 
 Restrictions
 ------------
