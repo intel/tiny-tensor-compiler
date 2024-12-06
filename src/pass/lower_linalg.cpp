@@ -6,6 +6,7 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "gemm_tools.hpp"
+#include "matrix_ext_info.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
@@ -28,6 +29,7 @@
 #include <memory>
 #include <optional>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -35,8 +37,9 @@ namespace tinytc {
 
 void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomic, value alpha,
                       value A, value B, value beta, value C, value K, value m_block,
-                      std::int64_t m_block_size, bool m_check, value n_block,
-                      std::int64_t n_block_size, bool n_check, data_type a_ty, data_type b_ty,
+                      std::int32_t m_block_size, bool m_check, value n_block,
+                      std::int32_t n_block_size, bool n_check,
+                      array_view<std::int32_t> K_block_sizes, data_type a_ty, data_type b_ty,
                       data_type c_ty, location const &loc) {
     auto ctx = m_block->context();
     auto bool_ty = boolean_data_type::get(ctx);
@@ -70,7 +73,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto coopmatrix_c_acc_ty =
         get_coopmatrix(c_acc_ty, m_block_size, n_block_size, matrix_use::acc, loc);
     auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, value K0, value K1,
-                               value c_acc) -> value {
+                               value c_acc, bool check_k = false) -> value {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
         auto return_values = bb.for_loop(
             index_ty, K0, K1, c_step, {c_acc}, {c_acc->ty()},
@@ -83,7 +86,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 }
                 auto coopmatrix_a_ty =
                     get_coopmatrix(a_ty, m_block_size, k_block_size, matrix_use::a, loc);
-                auto a = bb.add(make_cooperative_matrix_load(tA, check_a, A, pos_a[0], pos_a[1],
+                const auto my_check_a = check_k ? add_check(check_a, checked_flag::cols) : check_a;
+                auto a = bb.add(make_cooperative_matrix_load(tA, my_check_a, A, pos_a[0], pos_a[1],
                                                              coopmatrix_a_ty));
 
                 value pos_b[2] = {k, n_block};
@@ -92,7 +96,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 }
                 auto coopmatrix_b_ty =
                     get_coopmatrix(b_ty, k_block_size, n_block_size, matrix_use::b, loc);
-                auto b = bb.add(make_cooperative_matrix_load(tB, check_b, B, pos_b[0], pos_b[1],
+                const auto my_check_b = check_k ? add_check(check_b, checked_flag::rows) : check_b;
+                auto b = bb.add(make_cooperative_matrix_load(tB, my_check_b, B, pos_b[0], pos_b[1],
                                                              coopmatrix_b_ty));
                 auto c_next =
                     bb.add(make_cooperative_matrix_mul_add(a, b, p[1], coopmatrix_c_acc_ty, loc));
@@ -103,11 +108,11 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
     auto c_acc = bb.add(make_constant_zero(coopmatrix_c_acc_ty, loc));
 
-    auto k_block_size = max_K_unrolling;
+    auto k_block_size = K_block_sizes.back();
 
     const auto const_K = get_int_constant(K);
     if (const_K) {
-        k_block_size = compute_k_block_size(*const_K);
+        k_block_size = choose_k_block_size(K_block_sizes, *const_K);
     }
 
     auto c_zero = bb.add(make_constant_zero(index_ty, loc));
@@ -122,13 +127,15 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto r = get_bool_constant(needs_remainder);
     if (r) {
         if (*r != 0) {
-            c_acc = compute_c(bb, 1, K0, K, c_acc);
+            const auto K_block_size = K_block_sizes.front();
+            c_acc = compute_c(bb, K_block_size, K0, K, c_acc, K_block_size > 1);
         }
     } else {
         auto remainder = bb.ifelse(
             needs_remainder,
             [&](region_builder &bb) {
-                auto c_next = compute_c(bb, 1, K0, K, c_acc);
+                const auto K_block_size = K_block_sizes.front();
+                auto c_next = compute_c(bb, K_block_size, K0, K, c_acc, K_block_size > 1);
                 bb.add(make_yield(c_next, loc));
             },
             [&](region_builder &bb) { bb.add(make_yield(c_acc, loc)); }, {coopmatrix_c_acc_ty},
@@ -311,12 +318,34 @@ void linalg_generator::operator()(gemm_inst &in) {
     auto const_shape0 = get_int_constant(c_shape0);
     auto const_shape1 = get_int_constant(c_shape1);
 
-    const auto block_size0 = const_shape0 ? compute_m_block_size(core_cfg_.subgroup_size, max_rows,
-                                                                 tiling_.m_tiles(), *const_shape0)
-                                          : max_rows;
-    const auto block_size1 = max_cols;
+    const auto [block_size0, block_size1, do_tile_uniformly, K_block_sizes] =
+        [&]() -> std::tuple<std::int32_t, std::int32_t, bool, std::vector<std::int32_t>> {
+        if (auto ext_type = core_cfg_.matrix->get_precision(at->element_ty(), bt->element_ty(),
+                                                            ct->element_ty());
+            ext_type) {
+            const auto M_bs = ext_type->M_block_sizes();
+            const auto block_size0 =
+                const_shape0 ? choose_block_size(M_bs, tiling_.m_tiles(), *const_shape0) : M_bs[0];
+            const auto N_bs = ext_type->N_block_sizes(block_size0);
+            const auto block_size1 =
+                const_shape1 ? choose_block_size(N_bs, tiling_.n_tiles(), *const_shape1) : N_bs[0];
+            const auto K_bs = ext_type->K_block_sizes(block_size0, block_size1);
 
-    if (const_shape1) {
+            return std::make_tuple(block_size0, block_size1, false, K_bs);
+        }
+
+        const auto block_size0 = const_shape0
+                                     ? compute_m_block_size(core_cfg_.subgroup_size, max_rows,
+                                                            tiling_.m_tiles(), *const_shape0)
+                                     : max_rows;
+        const auto block_size1 = max_cols;
+
+        return std::make_tuple(block_size0, block_size1, const_shape1.has_value(),
+                               std::vector<std::int32_t>(standard_K_block_sizes.begin(),
+                                                         standard_K_block_sizes.end()));
+    }();
+
+    if (do_tile_uniformly) {
         tile_loop_uniformly(
             bb, c_shape1, block_size1, tiling_.n_tiles(), sg_n,
             [&](region_builder &bb, value n_block, value trip_count) {
@@ -326,12 +355,12 @@ void linalg_generator::operator()(gemm_inst &in) {
                 }
                 tile_loop_by_sgs(bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
                                  [&](region_builder &bb, value m_block, bool m_check, value) {
-                                     gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
-                                                      &in.alpha(), &in.A(), &in.B(), &in.beta(),
-                                                      &in.C(), K, m_block, block_size0, m_check,
-                                                      n_block, *const_trip_count, false,
-                                                      at->element_data_ty(), bt->element_data_ty(),
-                                                      ct->element_data_ty(), in.loc());
+                                     gemm_microkernel(
+                                         bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
+                                         &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
+                                         m_check, n_block, *const_trip_count, false, K_block_sizes,
+                                         at->element_data_ty(), bt->element_data_ty(),
+                                         ct->element_data_ty(), in.loc());
                                  });
             });
     } else {
@@ -343,7 +372,7 @@ void linalg_generator::operator()(gemm_inst &in) {
                                      gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
                                                       &in.alpha(), &in.A(), &in.B(), &in.beta(),
                                                       &in.C(), K, m_block, block_size0, m_check,
-                                                      n_block, block_size1, n_check,
+                                                      n_block, block_size1, n_check, K_block_sizes,
                                                       at->element_data_ty(), bt->element_data_ty(),
                                                       ct->element_data_ty(), in.loc());
                                  });

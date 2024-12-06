@@ -43,7 +43,7 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
     const bool block_read_write_supported =
         have_spirv_feature(spirv_feature::subgroup_buffer_block_io);
     return core_config{subgroup_size, max_work_group_size_, register_space_,
-                       block_read_write_supported};
+                       block_read_write_supported, &matrix_};
 }
 auto core_info_generic::matrix() const -> matrix_ext_info const & { return matrix_; }
 
@@ -63,6 +63,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                   matrix_ext_block_io_info{.address_alignment = 4,
                                                            .base_address_alignment = 64,
                                                            .min_stride = 64,
+                                                           .max_stride = (1 << 24) - 1,
                                                            .stride_alignment = 8},
                                   pvc_matrix_ext_types);
     }
@@ -121,7 +122,7 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
         !(subgroup_size == 32 && register_size_ == 32);
 
     return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
-                       block_read_write_supported};
+                       block_read_write_supported, &matrix_};
 }
 
 auto core_info_intel::matrix() const -> matrix_ext_info const & { return matrix_; }

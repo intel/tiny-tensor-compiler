@@ -106,7 +106,7 @@ class inst_converter {
     auto num_yielded_vals(Iterator begin, Iterator end) -> std::int64_t {
         std::int64_t num_results = 0;
         for (; begin != end; ++begin) {
-            if (auto ct = dyn_cast<coopmatrix_data_type>(begin->ty()); ct) {
+            if (auto ct = dyn_cast<coopmatrix_data_type>(begin->ty()); ct && !mext_.get(*begin)) {
                 num_results += ct->length(core_cfg_.subgroup_size);
             } else {
                 ++num_results;

@@ -60,6 +60,8 @@ template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::
     return result;
 }
 
+auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag;
+
 } // namespace tinytc
 
 #endif // CODEGEN_TOOLS_20240229_HPP

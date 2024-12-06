@@ -15,6 +15,7 @@
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -264,6 +265,11 @@ auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst cons
         throw compilation_error(loc, status::ir_must_have_yield);
     }
     return y;
+}
+
+auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag {
+    return checked_flag{std::underlying_type_t<checked_flag>(flag) |
+                        std::underlying_type_t<checked_flag>(new_flag)};
 }
 
 } // namespace tinytc

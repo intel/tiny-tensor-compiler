@@ -24,6 +24,7 @@ class core_config {
     std::int32_t max_work_group_size; ///< Maximum size of local work group in number of works items
     std::int32_t register_space;      ///< Size of register file in bytes
     bool block_read_write_supported;  ///< True if block reads / block writes are suppported
+    matrix_ext_info const *matrix;
 };
 
 } // namespace tinytc

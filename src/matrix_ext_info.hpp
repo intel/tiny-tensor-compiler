@@ -7,10 +7,9 @@
 #include "tinytc/tinytc.hpp"
 
 #include <array>
-#include <cstddef>
 #include <cstdint>
-#include <initializer_list>
 #include <utility>
+#include <vector>
 
 namespace tinytc {
 
@@ -24,15 +23,17 @@ struct gemm_mnk {
 
 class matrix_ext_type {
   public:
-    matrix_ext_type(scalar_type a, scalar_type b, std::initializer_list<scalar_type> acc,
-                    std::initializer_list<gemm_mnk> mnk);
+    matrix_ext_type(scalar_type a, scalar_type b, std::vector<scalar_type> acc,
+                    std::vector<gemm_mnk> mnk);
 
     inline auto a() const -> scalar_type { return a_; }
     inline auto b() const -> scalar_type { return b_; }
-    inline auto acc() const -> array_view<scalar_type> {
-        return array_view(acc_.data(), acc_size_);
-    }
-    inline auto mnk() const -> array_view<gemm_mnk> { return array_view(mnk_.data(), mnk_size_); }
+    inline auto acc() const -> array_view<scalar_type> { return acc_; }
+    inline auto mnk() const -> array_view<gemm_mnk> { return mnk_; }
+
+    auto M_block_sizes() const -> std::vector<std::int32_t>;
+    auto N_block_sizes(std::int32_t M) const -> std::vector<std::int32_t>;
+    auto K_block_sizes(std::int32_t M, std::int32_t N) const -> std::vector<std::int32_t>;
 
     auto have_acc(scalar_type acc) const -> bool;
     auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
@@ -40,15 +41,15 @@ class matrix_ext_type {
 
   private:
     scalar_type a_, b_;
-    std::array<scalar_type, 2u> acc_;
-    std::array<gemm_mnk, 4u> mnk_;
-    std::size_t acc_size_, mnk_size_;
+    std::vector<scalar_type> acc_;
+    std::vector<gemm_mnk> mnk_;
 };
 
 struct matrix_ext_block_io_info {
     std::int32_t address_alignment;
     std::int32_t base_address_alignment;
     std::int32_t min_stride;
+    std::int32_t max_stride;
     std::int32_t stride_alignment;
 };
 
@@ -59,6 +60,8 @@ class matrix_ext_info {
                            array_view<matrix_ext_type> types)
         : required_sgs_{required_subgroup_size}, block_io_{block_io}, types_(std::move(types)) {}
 
+    auto get_precision(scalar_type a, scalar_type b,
+                       scalar_type acc) const -> matrix_ext_type const *;
     auto have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d, std::int64_t M,
                    std::int64_t N, std::int64_t K) const -> bool;
     auto have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool;

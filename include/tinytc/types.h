@@ -340,12 +340,19 @@ typedef enum {
     tinytc_address_space_local = 0x2   ///< Local memory, returned by alloca
 } tinytc_address_space_t;
 
-//! Checked flag
+/**
+ * @brief Checked flag
+ *
+ * Checks can be combined by bitwise or, that is,
+ *
+ * tinytc_checked_flag_both = tinytc_checked_flag_rows | tinytc_checked_flag_cols
+ * tinytc_checked_flag_rows = tinytc_checked_flag_rows | tinytc_checked_flag_none
+ */
 typedef enum {
-    tinytc_checked_flag_none = 0, ///< Perform no checks
-    tinytc_checked_flag_rows = 1, ///< Check for out-of-bound rows
-    tinytc_checked_flag_cols = 2, ///< Check for out-of-bound cols
-    tinytc_checked_flag_both = 3  ///< Check for out-of-bound rows and cols
+    tinytc_checked_flag_none = 0x0, ///< Perform no checks
+    tinytc_checked_flag_rows = 0x1, ///< Check for out-of-bound rows
+    tinytc_checked_flag_cols = 0x2, ///< Check for out-of-bound cols
+    tinytc_checked_flag_both = 0x3  ///< Check for out-of-bound rows and cols
 } tinytc_checked_flag_t;
 
 //! Store flag

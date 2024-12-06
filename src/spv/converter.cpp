@@ -608,7 +608,7 @@ void inst_converter::emulate_cooperative_matrix_load(cooperative_matrix_load_ins
     auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
     auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto spv_ty = unique_.spv_ty(get_coopmatrix_type(in.result(0).ty())->ty());
     auto ot = get_memref_type(in.operand());
     auto odv = get_dope_vector(in.operand());
     if (!odv) {
@@ -843,7 +843,7 @@ void inst_converter::emulate_cooperative_matrix_store(cooperative_matrix_store_i
     auto spv_boolean_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
     auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_ty = unique_.spv_ty(in.val().ty());
+    auto spv_ty = unique_.spv_ty(get_coopmatrix_type(in.val().ty())->ty());
     auto ot = get_memref_type(in.operand());
     auto odv = get_dope_vector(in.operand());
     if (!odv) {
@@ -1042,13 +1042,13 @@ void inst_converter::operator()(arith_inst const &in) {
         throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
 
-    auto ty = unique_.spv_ty(in.result(0).ty());
-
     if (isa<boolean_data_type>(*in.result(0).ty())) {
+        auto ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(0), make_boolean(in.operation(), ty, av, bv));
     } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+        auto ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(0), make_binary_op(st->ty(), in.operation(), ty, av, bv, in.loc()));
@@ -1057,6 +1057,7 @@ void inst_converter::operator()(arith_inst const &in) {
         auto insts = std::vector<spv_inst *>{};
         insts.reserve(length);
 
+        auto ty = unique_.spv_ty(ct->ty());
         auto &av = multi_val(in.a());
         auto &bv = multi_val(in.b());
         for (std::int64_t i = 0; i < length; ++i) {
@@ -1166,11 +1167,12 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
-    auto ty = unique_.spv_ty(in.result(0).ty());
     if (isa<boolean_data_type>(*in.a().ty())) {
+        auto ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         declare(in.result(0), make_boolean(in.operation(), ty, av));
     } else if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
+        auto ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         declare(in.result(0), make(st->ty(), in.operation(), ty, av));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
@@ -1178,6 +1180,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         auto insts = std::vector<spv_inst *>{};
         insts.reserve(length);
 
+        auto ty = unique_.spv_ty(ct->ty());
         auto &av = multi_val(in.a());
         for (std::int64_t i = 0; i < length; ++i) {
             insts.emplace_back(make(ct->component_ty(), in.operation(), ty, av[i]));
@@ -1236,9 +1239,8 @@ void inst_converter::operator()(builtin_inst const &in) {
 }
 
 void inst_converter::operator()(cast_inst const &in) {
-    auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
-
     if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+        auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         auto a_ty = get_scalar_type(in.a());
         declare(in.result(0), make_cast(st->ty(), a_ty, spv_to_ty, av, in.loc()));
@@ -1247,6 +1249,7 @@ void inst_converter::operator()(cast_inst const &in) {
         auto insts = std::vector<spv_inst *>{};
         insts.reserve(length);
 
+        auto spv_to_ty = unique_.spv_ty(ct->ty());
         auto &av = multi_val(in.a());
         auto a_ty = get_coopmatrix_type(in.a())->component_ty();
         for (std::int64_t i = 0; i < length; ++i) {
@@ -1346,27 +1349,32 @@ void inst_converter::operator()(compare_inst const &in) {
 }
 
 void inst_converter::operator()(constant_inst const &in) {
-    auto spv_ty = unique_.spv_ty(in.result(0).ty());
-
     if (isa<boolean_data_type>(*in.result(0).ty())) {
         if (!std::holds_alternative<bool>(in.value())) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
         declare(in.result(0), unique_.bool_constant(std::get<bool>(in.value())));
     } else if (auto st = dyn_cast<scalar_data_type>(in.result(0).ty()); st) {
+        auto spv_ty = unique_.spv_ty(in.result(0).ty());
         auto cst = make_constant(st->ty(), spv_ty, in.value());
         if (cst == nullptr) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
         declare(in.result(0), cst);
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        auto const length = ct->length(core_cfg_.subgroup_size);
+        auto spv_ty = unique_.spv_ty(ct->ty());
         auto cst = make_constant(ct->component_ty(), spv_ty, in.value());
         if (cst == nullptr) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
 
-        multi_declare(in.result(0), std::vector<spv_inst *>(length, cst));
+        if (mext_.get(in.result(0))) {
+            auto spv_ty = unique_.spv_ty(in.result(0).ty());
+            declare(in.result(0), mod_->add<OpCompositeConstruct>(spv_ty, std::vector<IdRef>{cst}));
+        } else {
+            auto const length = ct->length(core_cfg_.subgroup_size);
+            multi_declare(in.result(0), std::vector<spv_inst *>(length, cst));
+        }
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -1379,26 +1387,39 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
             throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
         }
         auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-        auto spv_result_ty = unique_.spv_matrix_ty(in.result(0).ty());
-
-        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
-        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
-        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
-                                                           offset, std::vector<spv_inst *>{});
+        auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
 
         auto row_major =
             unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
-        declare(in.result(0), mod_->add<OpCooperativeMatrixLoadKHR>(spv_result_ty, pointer,
-                                                                    row_major, odv->stride(1)));
+        if (in.checked() != checked_flag::none) {
+            auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
+            auto pointer = val(in.operand());
+            auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
+            auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
+            auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
+            auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
+            auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
+            declare(in.result(0),
+                    mod_->add<OpCooperativeMatrixLoadCheckedINTEL>(
+                        spv_result_ty, pointer, x, y, row_major, height, width, stride));
+        } else {
+            auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+            auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+            auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+            auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+            auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                               offset, std::vector<spv_inst *>{});
+
+            declare(in.result(0), mod_->add<OpCooperativeMatrixLoadKHR>(spv_result_ty, pointer,
+                                                                        row_major, odv->stride(1)));
+        }
     } else {
         emulate_cooperative_matrix_load(in);
     }
 }
 void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
     if (mext_.get(in.result(0))) {
-        auto spv_result_ty = unique_.spv_matrix_ty(in.result(0).ty());
+        auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
         // Swap a and b here due to using RowMajorKHR instead of ColumnMajorKHR
         declare(in.result(0), mod_->add<OpCooperativeMatrixMulAddKHR>(spv_result_ty, val(in.b()),
                                                                       val(in.a()), val(in.c())));
@@ -1416,18 +1437,30 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
             throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
         }
         auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-
-        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
-        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
-        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
-                                                           offset, std::vector<spv_inst *>{});
-
+        auto spv_val = val(in.val());
         auto row_major =
             unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
-        declare(in.result(0), mod_->add<OpCooperativeMatrixStoreKHR>(pointer, val(in.val()),
-                                                                     row_major, odv->stride(1)));
+
+        if (in.checked() != checked_flag::none) {
+            auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
+            auto pointer = val(in.operand());
+            auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
+            auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
+            auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
+            auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
+            auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
+            declare(in.result(0), mod_->add<OpCooperativeMatrixStoreCheckedINTEL>(
+                                      pointer, x, y, spv_val, row_major, height, width, stride));
+        } else {
+            auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+            auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+            auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+            auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+            auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                               offset, std::vector<spv_inst *>{});
+
+            mod_->add<OpCooperativeMatrixStoreKHR>(pointer, spv_val, row_major, odv->stride(1));
+        }
     } else {
         emulate_cooperative_matrix_store(in);
     }
@@ -1525,8 +1558,9 @@ void inst_converter::operator()(for_inst const &in) {
         auto phis = std::vector<OpPhi *>{};
         phis.reserve(num_results);
         for (std::int64_t i = 0; i < in.num_results(); ++i) {
-            auto ty = unique_.spv_ty(in.iter_arg(i).ty());
-            if (isa<coopmatrix_data_type>(*in.iter_arg(i).ty())) {
+            if (auto iter_argt = dyn_cast<coopmatrix_data_type>(in.iter_arg(i).ty());
+                iter_argt && !mext_.get(in.iter_arg(i))) {
+                auto ty = unique_.spv_ty(iter_argt->ty());
                 auto &init_vals = multi_val(in.iter_init(i));
                 auto iter_arg_vals = std::vector<spv_inst *>(init_vals.size(), nullptr);
                 for (auto init_val = init_vals.begin(), iter_arg_val = iter_arg_vals.begin();
@@ -1540,6 +1574,7 @@ void inst_converter::operator()(for_inst const &in) {
                 }
                 multi_declare(in.iter_arg(i), std::move(iter_arg_vals));
             } else {
+                auto ty = unique_.spv_ty(in.iter_arg(i).ty());
                 phis.emplace_back(mod_->add<OpPhi>(
                     ty, std::vector<PairIdRefIdRef>{
                             PairIdRefIdRef{val(in.iter_init(i)), header_block_last_label},
@@ -1584,8 +1619,9 @@ void inst_converter::operator()(for_inst const &in) {
     auto const &set_results = [&] {
         std::int64_t val_no = 0;
         for (std::int64_t i = 0; i < in.num_results(); ++i) {
-            auto ty = unique_.spv_ty(in.result(i).ty());
-            if (isa<coopmatrix_data_type>(*in.result(i).ty())) {
+            if (auto rt = dyn_cast<coopmatrix_data_type>(in.result(i).ty());
+                rt && !mext_.get(in.result(i))) {
+                auto ty = unique_.spv_ty(rt->ty());
                 auto &init_vals = multi_val(in.iter_init(i));
                 auto results = std::vector<spv_inst *>(init_vals.size(), nullptr);
                 for (auto init_val = init_vals.begin(), result = results.begin();
@@ -1597,6 +1633,7 @@ void inst_converter::operator()(for_inst const &in) {
                 }
                 multi_declare(in.result(i), std::move(results));
             } else {
+                auto ty = unique_.spv_ty(in.result(i).ty());
                 declare(
                     in.result(i),
                     mod_->add<OpPhi>(
@@ -1685,8 +1722,9 @@ void inst_converter::operator()(if_inst const &in) {
 
     std::int64_t val_no = 0;
     for (std::int64_t i = 0; i < in.num_results(); ++i) {
-        auto ty = unique_.spv_ty(in.result(i).ty());
-        if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(i).ty()); ct) {
+        if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(i).ty());
+            ct && !mext_.get(in.result(i))) {
+            auto ty = unique_.spv_ty(ct->ty());
             const auto length = ct->length(core_cfg_.subgroup_size);
             auto phi_insts = std::vector<spv_inst *>(length, nullptr);
             for (auto &phi_inst : phi_insts) {
@@ -1698,6 +1736,7 @@ void inst_converter::operator()(if_inst const &in) {
             }
             multi_declare(in.result(i), std::move(phi_insts));
         } else {
+            auto ty = unique_.spv_ty(in.result(i).ty());
             auto phi_inst = mod_->add<OpPhi>(
                 ty, std::vector<PairIdRefIdRef>{
                         PairIdRefIdRef{yielded_then[val_no], then_last_label},
@@ -1915,7 +1954,7 @@ void inst_converter::operator()(yield_inst const &in) {
 
     std::int64_t i = 0;
     for (auto &op : in.operands()) {
-        if (auto ct = dyn_cast<coopmatrix_data_type>(op.ty()); ct) {
+        if (auto ct = dyn_cast<coopmatrix_data_type>(op.ty()); ct && !mext_.get(op)) {
             auto &vals = multi_val(op);
             for (auto &v : vals) {
                 top[i++] = v;

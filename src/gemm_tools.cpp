@@ -3,6 +3,8 @@
 
 #include "gemm_tools.hpp"
 
+#include <cstddef>
+
 namespace tinytc {
 
 auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int32_t subgroup_size,
@@ -15,6 +17,8 @@ auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int3
 
     auto const max_scalars = register_space * max_fill_fraction.first /
                              (max_fill_fraction.second * C_scalar_type_size_in_bytes);
+
+    constexpr std::int32_t max_K_unrolling = standard_K_block_sizes.back();
 
     // The required number of scalars is given by
     // num_scalars = rows * (cols * C_blocks + max_K_unrolling) + cols * max_K_unrolling.
@@ -58,7 +62,7 @@ auto max_register_block_gemm(std::int32_t C_scalar_type_size_in_bytes, std::int3
 //                          and num_blocks(k) % num_tiles == 0  ; no load imbalance
 //                          and block_size(k) - size < sgs      ; no excessive block size
 //
-// If the above optimization does not have a solution, the minimum block size (= subgroup size is
+// If the above optimization does not have a solution, the minimum block size (= subgroup size) is
 // returned)
 //
 auto compute_m_block_size(std::int32_t subgroup_size, std::int32_t max_block_size,
@@ -76,12 +80,26 @@ auto compute_m_block_size(std::int32_t subgroup_size, std::int32_t max_block_siz
     return k * subgroup_size;
 }
 
-auto compute_k_block_size(std::int64_t K) -> std::int32_t {
-    auto k_block_size = max_K_unrolling;
-    while (K < k_block_size && k_block_size > 1) {
-        k_block_size /= 2;
+// Similar as compute_m_block_size for fixed sizes
+// block_sizes array must be sorted in ascending order
+auto choose_block_size(array_view<std::int32_t> block_sizes, std::int32_t num_tiles,
+                       std::int64_t size) -> std::int32_t {
+    auto const num_blocks = [&size](std::int32_t block_size) -> std::int64_t {
+        return 1 + (size - 1) / block_size;
+    };
+    std::size_t k = block_sizes.size() - 1;
+    while (k > 1 && (num_blocks(block_sizes[k]) % num_tiles != 0 ||
+                     block_sizes[k] - size >= block_sizes[0])) {
+        --k;
     }
-    return k_block_size;
+    return block_sizes[k];
+}
+
+auto choose_k_block_size(array_view<std::int32_t> block_sizes, std::int64_t K) -> std::int32_t {
+    std::int64_t j = static_cast<std::int64_t>(block_sizes.size()) - 1;
+    for (; K < block_sizes[j] && j > 0; --j) {
+    }
+    return block_sizes[j];
 }
 
 } // namespace tinytc

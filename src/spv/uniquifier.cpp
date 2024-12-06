@@ -7,7 +7,6 @@
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
-#include "support/casting.hpp"
 #include "support/fnv1a_array_view.hpp"
 #include "support/visit.hpp"
 #include "tinytc/types.hpp"
@@ -252,44 +251,31 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                     }
                     throw status::internal_compiler_error;
                 },
-                [&](coopmatrix_data_type const &ty) -> spv_inst * { return spv_ty(ty.ty()); },
+                [&](coopmatrix_data_type const &ty) -> spv_inst * {
+                    auto spv_use = [](matrix_use use) {
+                        switch (use) {
+                        case matrix_use::a:
+                            return CooperativeMatrixUse::MatrixBKHR;
+                        case matrix_use::b:
+                            return CooperativeMatrixUse::MatrixAKHR;
+                        case matrix_use::acc:
+                            return CooperativeMatrixUse::MatrixAccumulatorKHR;
+                        }
+                        throw status::internal_compiler_error;
+                    };
+                    auto scalar_ty = spv_ty(ty.component_ty());
+                    auto scope = constant(static_cast<std::int32_t>(Scope::Subgroup));
+                    auto rows = constant(static_cast<std::int32_t>(ty.cols()));
+                    auto cols = constant(static_cast<std::int32_t>(ty.rows()));
+                    auto use = constant(static_cast<std::int32_t>(spv_use(ty.use())));
+                    return mod_->add_to<OpTypeCooperativeMatrixKHR>(
+                        section::type_const_var, scalar_ty, scope, rows, cols, use);
+                },
                 [](auto const &) -> spv_inst * {
                     // @todo
                     throw status::not_implemented;
                 }},
             *ty);
-    });
-}
-
-auto uniquifier::spv_matrix_ty(const_tinytc_data_type_t ty) -> spv_inst * {
-    return lookup(spv_matrix_tys_, ty, [&](const_tinytc_data_type_t ty) -> spv_inst * {
-        /*
-         * We use RowMajorKHR instead of ColumnMajorKHR as the memory layout due to the better
-         * support. As tinytc uses column major, we have to swap the role of matrix B and matrix A
-         * and swap rows and cols.
-         */
-        if (auto ct = dyn_cast<const coopmatrix_data_type>(ty); ct) {
-            auto spv_use = [](matrix_use use) {
-                switch (use) {
-                case matrix_use::a:
-                    return CooperativeMatrixUse::MatrixBKHR;
-                case matrix_use::b:
-                    return CooperativeMatrixUse::MatrixAKHR;
-                case matrix_use::acc:
-                    return CooperativeMatrixUse::MatrixAccumulatorKHR;
-                }
-                throw status::internal_compiler_error;
-            };
-            auto scalar_ty = spv_ty(ct->component_ty());
-            auto scope = constant(static_cast<std::int32_t>(Scope::Subgroup));
-            auto rows = constant(static_cast<std::int32_t>(ct->cols()));
-            auto cols = constant(static_cast<std::int32_t>(ct->rows()));
-            auto use = constant(static_cast<std::int32_t>(spv_use(ct->use())));
-            return mod_->add_to<OpTypeCooperativeMatrixKHR>(section::type_const_var, scalar_ty,
-                                                            scope, rows, cols, use);
-        } else {
-            throw status::internal_compiler_error;
-        }
     });
 }
 

@@ -47,7 +47,6 @@ class uniquifier {
     auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
                         std::int32_t alignment) -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
-    auto spv_matrix_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto spv_ty(scalar_type sty) -> spv_inst *;
 
   private:

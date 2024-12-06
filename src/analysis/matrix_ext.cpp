@@ -114,7 +114,9 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
         flag == checked_flag::none || alignment >= block_io.base_address_alignment;
     const bool stride_ok = ot->stride(0) == 1 &&
                            (ot->stride(1) * element_size) >= block_io.min_stride &&
+                           (ot->stride(1) * element_size) <= block_io.max_stride &&
                            (ot->stride(1) * element_size) % block_io.stride_alignment == 0;
+
     return address_alignment_ok && base_address_alignment_ok && stride_ok;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {

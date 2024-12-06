@@ -6,18 +6,13 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <optional>
 
 namespace tinytc {
 
-matrix_ext_type::matrix_ext_type(scalar_type a, scalar_type b,
-                                 std::initializer_list<scalar_type> acc,
-                                 std::initializer_list<gemm_mnk> mnk)
-    : a_{a}, b_{b} {
-    std::copy(acc.begin(), acc.end(), acc_.begin());
-    acc_size_ = acc.size();
-    std::copy(mnk.begin(), mnk.end(), mnk_.begin());
-    mnk_size_ = mnk.size();
-}
+matrix_ext_type::matrix_ext_type(scalar_type a, scalar_type b, std::vector<scalar_type> acc,
+                                 std::vector<gemm_mnk> mnk)
+    : a_{a}, b_{b}, acc_(std::move(acc)), mnk_(std::move(mnk)) {}
 
 auto matrix_ext_type::have_acc(scalar_type acc) const -> bool {
     return std::find(acc_.begin(), acc_.end(), acc) != acc_.end();
@@ -43,6 +38,48 @@ auto matrix_ext_type::have_type(scalar_type sty, std::int64_t rows, std::int64_t
     }
 }
 
+template <typename Get>
+auto block_sizes(std::vector<gemm_mnk> const &mnks, Get get) -> std::vector<std::int32_t> {
+    auto bs = std::vector<std::int32_t>{};
+    bs.reserve(mnks.size());
+    for (auto &mnk : mnks) {
+        auto val = get(mnk);
+        if (val) {
+            bs.push_back(*val);
+        }
+    }
+    std::sort(bs.begin(), bs.end());
+    auto end = std::unique(bs.begin(), bs.end());
+    bs.erase(end, bs.end());
+    return bs;
+}
+
+auto matrix_ext_type::M_block_sizes() const -> std::vector<std::int32_t> {
+    return block_sizes(mnk_,
+                       [](gemm_mnk const &mnk) -> std::optional<std::int32_t> { return mnk.M; });
+}
+auto matrix_ext_type::N_block_sizes(std::int32_t M) const -> std::vector<std::int32_t> {
+    return block_sizes(mnk_, [&M](gemm_mnk const &mnk) -> std::optional<std::int32_t> {
+        return mnk.M == M ? std::make_optional(mnk.N) : std::nullopt;
+    });
+}
+auto matrix_ext_type::K_block_sizes(std::int32_t M,
+                                    std::int32_t N) const -> std::vector<std::int32_t> {
+    return block_sizes(mnk_, [&M, N](gemm_mnk const &mnk) -> std::optional<std::int32_t> {
+        return mnk.M == M && mnk.N == N ? std::make_optional(mnk.K) : std::nullopt;
+    });
+}
+
+auto matrix_ext_info::get_precision(scalar_type a, scalar_type b,
+                                    scalar_type acc) const -> matrix_ext_type const * {
+    for (auto const &type : types_) {
+        if (type.a() == a && type.b() == b && type.have_acc(acc)) {
+            return &type;
+        }
+    }
+    return nullptr;
+}
+
 auto matrix_ext_info::have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d,
                                 std::int64_t M, std::int64_t N, std::int64_t K) const -> bool {
     for (auto const &type : types_) {
@@ -55,12 +92,7 @@ auto matrix_ext_info::have_gemm(scalar_type a, scalar_type b, scalar_type c, sca
 }
 
 auto matrix_ext_info::have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool {
-    for (auto const &type : types_) {
-        if (type.a() == a && type.b() == b && type.have_acc(acc)) {
-            return true;
-        }
-    }
-    return false;
+    return get_precision(a, b, acc) != nullptr;
 }
 
 auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
