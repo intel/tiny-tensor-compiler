@@ -44,17 +44,16 @@ auto coopmatrix_data_type::get(tinytc_data_type_t ty, std::int64_t rows, std::in
 }
 
 coopmatrix_data_type::coopmatrix_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty,
-                                           std::int64_t rows, std::int64_t cols, matrix_use use,
+                                           std::int64_t rows0, std::int64_t cols0, matrix_use use,
                                            location const &lc)
-    : data_type_node(DTK::coopmatrix, ctx), ty_(std::move(ty)), rows_(rows), cols_(cols),
-      use_(use) {
+    : data_type_node(DTK::coopmatrix, ctx), ty_(std::move(ty)), shape_{rows0, cols0}, use_(use) {
     if (!isa<scalar_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
     }
-    if (rows_ < 0 || is_dynamic_value(rows_)) {
+    if (rows() < 0 || is_dynamic_value(rows())) {
         throw compilation_error(lc, status::ir_invalid_shape);
     }
-    if (cols_ < 0 || is_dynamic_value(cols_)) {
+    if (cols() < 0 || is_dynamic_value(cols())) {
         throw compilation_error(lc, status::ir_invalid_shape);
     }
 }

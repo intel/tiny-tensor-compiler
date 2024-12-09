@@ -10,6 +10,7 @@
 #include "tinytc/types.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -57,9 +58,10 @@ class coopmatrix_data_type : public data_type_node {
 
     inline auto ty() const -> tinytc_data_type_t { return ty_; }
     auto component_ty() const -> scalar_type;
-    inline auto shape(int mode) const -> std::int64_t { return mode == 1 ? cols_ : rows_; }
-    inline auto rows() const -> std::int64_t { return rows_; }
-    inline auto cols() const -> std::int64_t { return cols_; }
+    inline auto shape() const -> std::array<std::int64_t, 2u> { return shape_; }
+    inline auto shape(int mode) const -> std::int64_t { return shape_[mode]; }
+    inline auto rows() const -> std::int64_t { return shape_[0]; }
+    inline auto cols() const -> std::int64_t { return shape_[1]; }
     inline auto use() const -> matrix_use { return use_; }
     inline auto distributed_mode() const -> int { return use_ == matrix_use::b ? 1 : 0; }
     inline auto num_blocks(std::int32_t subgroup_size) const -> std::int64_t {
@@ -76,7 +78,7 @@ class coopmatrix_data_type : public data_type_node {
 
   private:
     tinytc_data_type_t ty_;
-    std::int64_t rows_, cols_;
+    std::array<std::int64_t, 2u> shape_;
     matrix_use use_;
 };
 

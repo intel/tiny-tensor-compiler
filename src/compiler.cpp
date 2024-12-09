@@ -18,6 +18,7 @@
 #include "pass/dead_code_elimination.hpp"
 #include "pass/insert_barrier.hpp"
 #include "pass/insert_lifetime_stop.hpp"
+#include "pass/lower_coopmatrix.hpp"
 #include "pass/lower_foreach.hpp"
 #include "pass/lower_linalg.hpp"
 #include "pass/stack.hpp"

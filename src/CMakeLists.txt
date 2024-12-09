@@ -59,6 +59,8 @@ set(SOURCES
     pass/dump_matrix_ext.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
+    pass/lower_coopmatrix.cpp
+    pass/lower_coopmatrix_aux.cpp
     pass/lower_foreach.cpp
     pass/lower_linalg.cpp
     pass/slot_tracker.cpp

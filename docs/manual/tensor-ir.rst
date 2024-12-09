@@ -983,26 +983,28 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
 
 .. math::
 
-    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2] 
+    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2],
 
+where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
 When the transpose modifier ".t" is given, we have
 
 .. math::
 
     \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + j) S_1 + (y + i) S_2] 
 
-When the checked flag is set, the following out-of-bound checks are added:
+When the checked flag is set, the following out-of-bound checks are added
+(with memref shape :math:`s_1\times s_2`):
 
-=============== =======================================================================================================
+=============== ===================================================================
 Flag            Description
-=============== =======================================================================================================
-.rows_checked.n :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < X \text{ else } 0`
-.rows_checked.t :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < Y \text{ else } 0`
-.cols_checked.n :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < Y \text{ else } 0`
-.cols_checked.t :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < X \text{ else } 0`
-.both_checked.n .rows_checked.n + .cols_checked.n
-.both_checked.t .rows_checked.t + .cols_checked.t
-=============== =======================================================================================================
+=============== ===================================================================
+.n.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < s_1 \text{ else } 0`
+.t.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < s_2 \text{ else } 0`
+.n.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < s_2 \text{ else } 0`
+.t.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < s_1 \text{ else } 0`
+.n.both_checked .n.rows_checked.n and .n.cols_checked
+.t.both_checked .t.rows_checked.t and .t.cols_checked
+=============== ===================================================================
 
 The optional "align" attribute may be passed to set the known minimum alignment of the access
 (power-of-two, in bytes).
@@ -1116,15 +1118,17 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
 
 .. math::
 
-    \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij}
+    \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij},
 
-When the checked flag is set, the following out-of-bound checks are added:
+where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
+When the checked flag is set, the following out-of-bound checks are added
+(with memref shape :math:`s_1\times s_2`):
 
 ============= =======================================================================================================
 Flag            Description
 ============= =======================================================================================================
-.rows_checked Only execute store if :math:`0 \leq x+i < X`
-.cols_checked Only execute store if :math:`0 \leq y+j < Y`
+.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
+.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
 .both_checked .rows_checked + .cols_checked
 ============= =======================================================================================================
 
