@@ -760,15 +760,17 @@ Arithmetic (binary)
 
 .. code:: abnf
 
-    arith-binary-type       =  ".add"  /
-                               ".sub"  /
-                               ".mul"  /
+    arith-binary-type       =  ".add" /
+                               ".sub" /
+                               ".mul" /
                                ".div" /
                                ".rem" /
-                               ".shl"  /
+                               ".min" /
+                               ".max" /
+                               ".shl" /
                                ".shr" /
-                               ".and"  /
-                               ".or"   /
+                               ".and" /
+                               ".or"  /
                                ".xor"
     value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier
                                ":" (boolean-type / scalar-type / coopmatrix-type)
@@ -790,12 +792,14 @@ Op   Allowed type                  Description
 .sub scalar-type / coopmatrix-type Difference of operands
 .mul scalar-type / coopmatrix-type Product of operands
 .div scalar-type / coopmatrix-type Quotient of operands
-.rem scalar-type  \\ complex-type  Remainder from the division of operands
+.rem scalar-type \\ complex-type   Remainder from the division of operands
 .shl integer-type                  Left shift first operand by second operand
 .shr integer-type                  Arithmetic right shift first operand by second operand
 .and boolean-type / integer-type   Bitwise and
 .or  boolean-type / integer-type   Bitwise or
 .xor boolean-type / integer-type   Bitwise xor
+.min scalar-type \\ complex-type   Minimum of operands
+.max scalar-type \\ complex-type   Maximum of operands
 ==== ============================= ======================================================
 
 Arithmetic (unary)

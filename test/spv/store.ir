@@ -13,7 +13,6 @@
 ; CHECK: %[[#I64_C1:]] = OpConstant %[[#I64]] 1
 ; CHECK: %[[#I64_C0:]] = OpConstant %[[#I64]] 0
 ; CHECK: %[[#I8_C214:]] = OpConstant %[[#I8]] 214
-; CHECK: %[[#INDEX_NULL:]] = OpConstantNull %[[#I64]]
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#F32]]
 ; CHECK: %[[#F32_C42:]] = OpConstant %[[#F32]] 0x1.5p+5
@@ -36,10 +35,8 @@ func @si8(%0: memref<i8x4x4>, %1: memref<i8>) {
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:     %[[#SI8_MR1:]] = OpFunctionParameter %[[#PTR_I8]]
 ; CHECK-NEXT:     %[[#SI8_MR2:]] = OpFunctionParameter %[[#PTR_I8]]
-; CHECK:         %[[#SI8_TMP1:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C1]]
-; CHECK-NEXT: %[[#SI8_OFFSET1:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[#SI8_TMP1]]
-; CHECK-NEXT:    %[[#SI8_TMP2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C4]]
-; CHECK-NEXT: %[[#SI8_OFFSET2:]] = OpIAdd %[[#I64]] %[[#SI8_OFFSET1]] %[[#SI8_TMP2]]
+; CHECK:         %[[#SI8_TMP2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C4]]
+; CHECK-NEXT: %[[#SI8_OFFSET2:]] = OpIAdd %[[#I64]] %[[#I64_C0]] %[[#SI8_TMP2]]
 ; CHECK-NEXT:  %[[#SI8_MR1SUB:]] = OpInBoundsPtrAccessChain %[[#PTR_I8]] %[[#SI8_MR1]] %[[#SI8_OFFSET2]]
 ; CHECK-NEXT:                      OpStore %[[#SI8_MR1SUB]] %[[#I8_C214]]
 }

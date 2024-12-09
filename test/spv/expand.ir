@@ -37,7 +37,6 @@ func @f1(%0: memref<f32x32x?x7>, %1: index) {
 ; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#P_INDEX]]
 ; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#I64_C5]]
 ; CHECK-NEXT:           %[[#]] = OpNot %[[#I64]] %[[#I64_C7]]
-; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C1]]
 ; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C32]]
 ; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#ESTRIDE2]]
 ; CHECK:                %[[#]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#ESTRIDE3]]

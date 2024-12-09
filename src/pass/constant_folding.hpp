@@ -15,6 +15,7 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <cstdint>
@@ -207,6 +208,12 @@ struct compute_binary_op {
         case arithmetic::xor_:
             val = a ^ b;
             break;
+        case arithmetic::min:
+            val = std::min(a, b);
+            break;
+        case arithmetic::max:
+            val = std::max(a, b);
+            break;
         }
         return make_constant(val, ty, loc);
     }
@@ -235,6 +242,20 @@ struct compute_binary_op {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             } else {
                 val = std::fmod(a, b);
+            }
+            break;
+        case arithmetic::min:
+            if constexpr (is_complex_v<T>) {
+                throw compilation_error(loc, status::ir_complex_unsupported);
+            } else {
+                val = std::min(a, b);
+            }
+            break;
+        case arithmetic::max:
+            if constexpr (is_complex_v<T>) {
+                throw compilation_error(loc, status::ir_complex_unsupported);
+            } else {
+                val = std::max(a, b);
             }
             break;
         default:

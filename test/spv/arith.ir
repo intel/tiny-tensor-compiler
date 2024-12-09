@@ -8,6 +8,7 @@
 ; CHECK-DAG: OpCapability Int64
 ; CHECK-DAG: OpCapability Int16
 ; CHECK: OpExtension "SPV_INTEL_bfloat16_conversion"
+; CHECK: %[[#OCLEXT:]] = OpExtInstImport "OpenCL.std"
 ; CHECK: %[[#BOOL:]] = OpTypeBool
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
@@ -36,6 +37,8 @@ func @tint(%a: i64, %b: i64) {
     %7 = arith.and %a, %b : i64
     %8 = arith.or %a, %b : i64
     %9 = arith.xor %a, %b : i64
+    %10 = arith.min %a, %b : i64
+    %11 = arith.max %a, %b : i64
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpIAdd %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpISub %[[#I64]] %[[#]] %[[#]]
@@ -47,6 +50,8 @@ func @tint(%a: i64, %b: i64) {
 ; CHECK-NEXT: %[[#]] = OpBitwiseAnd %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpBitwiseOr %[[#I64]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpBitwiseXor %[[#I64]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#I64]] %[[#OCLEXT]] s_min %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#I64]] %[[#OCLEXT]] s_max %[[#]] %[[#]]
 }
 
 func @tfloat(%a: f32, %b: f32) {
@@ -55,12 +60,16 @@ func @tfloat(%a: f32, %b: f32) {
     %2 = arith.mul %a, %b : f32
     %3 = arith.div %a, %b : f32
     %4 = arith.rem %a, %b : f32
+    %5 = arith.min %a, %b : f32
+    %6 = arith.max %a, %b : f32
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFSub %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFMul %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFDiv %[[#F32]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFRem %[[#F32]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F32]] %[[#OCLEXT]] fmin %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F32]] %[[#OCLEXT]] fmax %[[#]] %[[#]]
 }
 
 func @thalf(%a: f16, %b: f16) {
@@ -69,12 +78,16 @@ func @thalf(%a: f16, %b: f16) {
     %2 = arith.mul %a, %b : f16
     %3 = arith.div %a, %b : f16
     %4 = arith.rem %a, %b : f16
+    %5 = arith.min %a, %b : f16
+    %6 = arith.max %a, %b : f16
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      %[[#]] = OpFAdd %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFSub %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFMul %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFDiv %[[#F16]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFRem %[[#F16]] %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F16]] %[[#OCLEXT]] fmin %[[#]] %[[#]]
+; CHECK-NEXT: %[[#]] = OpExtInst %[[#F16]] %[[#OCLEXT]] fmax %[[#]] %[[#]]
 }
 
 func @tbf16(%a: bf16, %b: bf16) {
@@ -83,6 +96,8 @@ func @tbf16(%a: bf16, %b: bf16) {
     %2 = arith.mul %a, %b : bf16
     %3 = arith.div %a, %b : bf16
     %4 = arith.rem %a, %b : bf16
+    %5 = arith.min %a, %b : bf16
+    %6 = arith.max %a, %b : bf16
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:          %[[#BF16_AF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
 ; CHECK-NEXT:     %[[#BF16_BF1:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
@@ -104,6 +119,14 @@ func @tbf16(%a: bf16, %b: bf16) {
 ; CHECK-NEXT:     %[[#BF16_BF5:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
 ; CHECK-NEXT: %[[#BF16_AFOPBF5:]] = OpFRem %[[#F32]] %[[#BF16_AF5]] %[[#BF16_BF5]]
 ; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF5]]
+; CHECK-NEXT:     %[[#BF16_AF6:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF6:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF6:]] = OpExtInst %[[#F32]] %[[OCLEXT]] fmin %[[#BF16_AF6]] %[[#BF16_BF6]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF6]]
+; CHECK-NEXT:     %[[#BF16_AF7:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT:     %[[#BF16_BF7:]] = OpConvertBF16ToFINTEL %[[#F32]] %[[#]]
+; CHECK-NEXT: %[[#BF16_AFOPBF7:]] = OpExtInst %[[#F32]] %[[OCLEXT]] fmax %[[#BF16_AF7]] %[[#BF16_BF7]]
+; CHECK-NEXT:              %[[#]] = OpConvertFToBF16INTEL %[[#I16]] %[[#BF16_AFOPBF7]]
 }
 
 func @tcomplex(%a: c32, %b: c32) {

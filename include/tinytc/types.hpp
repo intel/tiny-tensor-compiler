@@ -267,7 +267,9 @@ enum class arithmetic {
     shr = tinytc_arithmetic_shr,  ///< arithmetic right shift
     and_ = tinytc_arithmetic_and, ///< bitwise and
     or_ = tinytc_arithmetic_or,   ///< bitwise or
-    xor_ = tinytc_arithmetic_xor  ///< bitwise xor
+    xor_ = tinytc_arithmetic_xor, ///< bitwise xor
+    min = tinytc_arithmetic_min,  ///< minimum
+    max = tinytc_arithmetic_max   ///< maximum
 };
 
 //! Arithmetic operations (unary)

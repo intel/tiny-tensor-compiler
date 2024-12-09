@@ -171,6 +171,14 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
             return mod_->add<OpBitwiseOr>(ty, a, b);
         case arithmetic::xor_:
             return mod_->add<OpBitwiseXor>(ty, a, b);
+        case arithmetic::min:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::s_min),
+                                        std::vector<IdRef>{a, b});
+        case arithmetic::max:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::s_max),
+                                        std::vector<IdRef>{a, b});
         }
         throw compilation_error(loc, status::internal_compiler_error);
     };
@@ -187,6 +195,14 @@ auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty
             return mod_->add<OpFDiv>(ty, a, b);
         case arithmetic::rem:
             return mod_->add<OpFRem>(ty, a, b);
+        case arithmetic::min:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::fmin),
+                                        std::vector<IdRef>{a, b});
+        case arithmetic::max:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::fmax),
+                                        std::vector<IdRef>{a, b});
         default:
             break;
         }
@@ -1787,8 +1803,11 @@ void inst_converter::operator()(load_inst const &in) {
                 return val(in.operand());
             }
 
-            auto offset = unique_.null_constant(spv_index_ty);
-            for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
+            auto idx0 = val(in.index_list()[0]);
+            spv_inst *offset = memref_ty->stride(0) != 1
+                                   ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0))
+                                   : idx0;
+            for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
                 auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
                 offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
             }
@@ -1825,11 +1844,15 @@ void inst_converter::operator()(store_inst const &in) {
                 return val(in.operand());
             }
 
-            auto offset = unique_.null_constant(spv_index_ty);
-            for (std::int64_t i = 0; i < memref_ty->dim(); ++i) {
+            auto idx0 = val(in.index_list()[0]);
+            auto offset = memref_ty->stride(0) != 1
+                              ? mod_->add<OpIMul>(spv_index_ty, idx0, dv->stride(0))
+                              : idx0;
+            for (std::int64_t i = 1; i < memref_ty->dim(); ++i) {
                 auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
                 offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
             }
+
             return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
                                                        std::vector<spv_inst *>{});
         };

@@ -57,6 +57,10 @@ char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op) {
         return "or";
     case tinytc_arithmetic_xor:
         return "xor";
+    case tinytc_arithmetic_min:
+        return "min";
+    case tinytc_arithmetic_max:
+        return "max";
     }
     return "unknown";
 }

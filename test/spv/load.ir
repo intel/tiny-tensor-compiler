@@ -9,7 +9,6 @@
 ; CHECK: %[[#I64_C1:]] = OpConstant %[[#I64]] 1
 ; CHECK: %[[#I64_C0:]] = OpConstant %[[#I64]] 0
 ; CHECK: %[[#PTR_I64:]] = OpTypePointer CrossWorkgroup %[[#I64]]
-; CHECK: %[[#INDEX_NULL:]] = OpConstantNull %[[#I64]]
 ; CHECK: %[[#PTR_PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#PTR_F32]]
 
 func @l1(%0: memref<f32x?x?>) {
@@ -20,10 +19,8 @@ func @l1(%0: memref<f32x?x?>) {
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
 ; CHECK-NEXT:  %[[#L1_STRIDE:]] = OpFunctionParameter %[[#I64]]
-; CHECK:         %[[#L1_TMP1:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#I64_C1]]
-; CHECK-NEXT: %[[#L1_OFFSET1:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[#L1_TMP1]]
-; CHECK-NEXT:    %[[#L1_TMP2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L1_STRIDE]]
-; CHECK-NEXT: %[[#L1_OFFSET2:]] = OpIAdd %[[#I64]] %[[#L1_OFFSET1]] %[[#L1_TMP2]]
+; CHECK:         %[[#L1_TMP2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L1_STRIDE]]
+; CHECK-NEXT: %[[#L1_OFFSET2:]] = OpIAdd %[[#I64]] %[[#I64_C0]] %[[#L1_TMP2]]
 ; CHECK-NEXT:   %[[#L1_MRSUB:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L1_MR]] %[[#L1_OFFSET2]]
 ; CHECK-NEXT:            %[[#]] = OpLoad %[[#F32]] %[[#L1_MRSUB]]
 }
@@ -44,8 +41,7 @@ func @l2(%0: group<memref<f32x?,strided<?>>, offset: ?>) {
 ; CHECK-NEXT:                  %[[#]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_SHAPE]]
 ; CHECK-NEXT: %[[#L2_SUBPTR_STRIDE:]] = OpInBoundsPtrAccessChain %[[#PTR_I64]] %[[#L2_PTR_STRIDE]] %[[#L2_OFFSET1]]
 ; CHECK-NEXT:        %[[#L2_STRIDE:]] = OpLoad %[[#I64]] %[[#L2_SUBPTR_STRIDE]]
-; CHECK-NEXT:           %[[#L2_TMP:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L2_STRIDE]]
-; CHECK-NEXT:       %[[#L2_OFFSET2:]] = OpIAdd %[[#I64]] %[[#INDEX_NULL]] %[[L2_TMP]]
+; CHECK-NEXT:       %[[#L2_OFFSET2:]] = OpIMul %[[#I64]] %[[#I64_C0]] %[[#L2_STRIDE]]
 ; CHECK-NEXT:         %[[#L2_SUBMR:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L2_MR2]] %[[#L2_OFFSET2]]
 ; CHECK-NEXT:                  %[[#]] = OpLoad %[[#F32]] %[[#L2_SUBMR]]
 }

@@ -281,16 +281,18 @@ typedef enum {
 
 //! Arithmetic operations
 typedef enum {
-    tinytc_arithmetic_add = 0, ///< add
-    tinytc_arithmetic_sub = 1, ///< subtract
-    tinytc_arithmetic_mul = 2, ///< multiply
-    tinytc_arithmetic_div = 3, ///< divide
-    tinytc_arithmetic_rem = 4, ///< division remainder
-    tinytc_arithmetic_shl = 5, ///< left shift
-    tinytc_arithmetic_shr = 6, ///< arithmetic right shift
-    tinytc_arithmetic_and = 7, ///< bitwise and
-    tinytc_arithmetic_or = 8,  ///< bitwise or
-    tinytc_arithmetic_xor = 9  ///< bitwise xor
+    tinytc_arithmetic_add = 0,  ///< add
+    tinytc_arithmetic_sub = 1,  ///< subtract
+    tinytc_arithmetic_mul = 2,  ///< multiply
+    tinytc_arithmetic_div = 3,  ///< divide
+    tinytc_arithmetic_rem = 4,  ///< division remainder
+    tinytc_arithmetic_shl = 5,  ///< left shift
+    tinytc_arithmetic_shr = 6,  ///< arithmetic right shift
+    tinytc_arithmetic_and = 7,  ///< bitwise and
+    tinytc_arithmetic_or = 8,   ///< bitwise or
+    tinytc_arithmetic_xor = 9,  ///< bitwise xor
+    tinytc_arithmetic_min = 10, ///< minimum
+    tinytc_arithmetic_max = 11  ///< maximum
 } tinytc_arithmetic_t;
 
 //! Arithmetic operations (unary)

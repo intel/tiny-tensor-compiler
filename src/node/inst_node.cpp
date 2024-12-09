@@ -303,6 +303,8 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         case arithmetic::mul:
         case arithmetic::div:
             break;
+        case arithmetic::min:
+        case arithmetic::max:
         case arithmetic::rem:
             inst_supports_complex = false;
             break;

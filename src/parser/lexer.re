@@ -184,8 +184,10 @@ lex:
         ".shl"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shl, loc_); }
         ".shr"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shr, loc_); }
         ".and"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::and_, loc_); }
-        ".or"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
+        ".or"               { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
         ".xor"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
+        ".min"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::min, loc_); }
+        ".max"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::max, loc_); }
 
         // unary op
         ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs,
