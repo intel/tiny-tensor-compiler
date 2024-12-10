@@ -35,6 +35,7 @@ class constant_folding {
     auto operator()(cast_inst &) -> fold_result;
     auto operator()(compare_inst &) -> fold_result;
     auto operator()(size_inst &in) -> fold_result;
+    auto operator()(subgroup_broadcast_inst &in) -> fold_result;
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;

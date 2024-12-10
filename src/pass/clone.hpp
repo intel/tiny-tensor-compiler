@@ -43,6 +43,7 @@ class inst_cloner {
     auto operator()(if_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(size_inst &in) -> std::unique_ptr<tinytc_inst>;
+    auto operator()(subgroup_broadcast_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(store_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst>;

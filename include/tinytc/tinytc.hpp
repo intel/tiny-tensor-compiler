@@ -1755,6 +1755,22 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
 }
 
 /**
+ * @brief Make subgroup broadcast instruction
+ *
+ * @param a Operand
+ * @param idx Subgroup local index
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_broadcast(value a, value idx, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_broadcast_inst_create(&instr, a, idx, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make subview instruction
  *
  * @param a Operand

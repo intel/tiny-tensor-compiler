@@ -25,6 +25,7 @@ lex:
     char const *b = YYCURSOR;
     step(loc_);
     auto const adv_loc = [&]() { columns(loc_, YYCURSOR - b); };
+    // clang-format off
     /*!re2c
         re2c:define:YYCTYPE = char;
         re2c:yyfill:enable = 0;
@@ -146,34 +147,37 @@ lex:
         ".both_checked"     { adv_loc(); return parser::make_CHECKED(checked_flag::both, loc_); }
 
         // instructions
-        "axpby"             { adv_loc(); return parser::make_AXPBY(loc_); }
-        "arith"             { adv_loc(); return parser::make_ARITH(loc_); }
-        "barrier"           { adv_loc(); return parser::make_BARRIER(loc_); }
-        "builtin"           { adv_loc(); return parser::make_BUILTIN(loc_); }
-        "gemm"              { adv_loc(); return parser::make_GEMM(loc_); }
-        "gemv"              { adv_loc(); return parser::make_GEMV(loc_); }
-        "ger"               { adv_loc(); return parser::make_GER(loc_); }
-        "hadamard"          { adv_loc(); return parser::make_HADAMARD(loc_); }
-        "alloca"            { adv_loc(); return parser::make_ALLOCA(loc_); }
-        "cast"              { adv_loc(); return parser::make_CAST(loc_); }
-        "cmp"               { adv_loc(); return parser::make_CMP(loc_); }
-        "constant"          { adv_loc(); return parser::make_CONSTANT(loc_); }
-        "cooperative_matrix_load" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
-        "cooperative_matrix_mul_add" { adv_loc(); return
-       parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); } "cooperative_matrix_scale" { adv_loc();
-       return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); } "cooperative_matrix_store" { adv_loc();
-       return parser::make_COOPERATIVE_MATRIX_STORE(loc_); } "expand"            { adv_loc(); return
-       parser::make_EXPAND(loc_); } "fuse"              { adv_loc(); return parser::make_FUSE(loc_);
-       } "load"              { adv_loc(); return parser::make_LOAD(loc_); } "for"               {
-       adv_loc(); return parser::make_FOR(loc_); } "foreach"           { adv_loc(); return
-       parser::make_FOREACH(loc_); } "if"                { adv_loc(); return parser::make_IF(loc_);
-       } "parallel"          { adv_loc(); return parser::make_PARALLEL(loc_); } "else" { adv_loc();
-       return parser::make_ELSE(loc_); } "size"              { adv_loc(); return
-       parser::make_SIZE(loc_); } "subview"           { adv_loc(); return
-       parser::make_SUBVIEW(loc_); } "store"             { adv_loc(); return
-       parser::make_STORE(loc_); } "sum"               { adv_loc(); return parser::make_SUM(loc_); }
-        "work_group"        { adv_loc(); return parser::make_WORK_GROUP(loc_); }
-        "yield"             { adv_loc(); return parser::make_YIELD(loc_); }
+        "axpby"              { adv_loc(); return parser::make_AXPBY(loc_); }
+        "arith"              { adv_loc(); return parser::make_ARITH(loc_); }
+        "barrier"            { adv_loc(); return parser::make_BARRIER(loc_); }
+        "builtin"            { adv_loc(); return parser::make_BUILTIN(loc_); }
+        "gemm"               { adv_loc(); return parser::make_GEMM(loc_); }
+        "gemv"               { adv_loc(); return parser::make_GEMV(loc_); }
+        "ger"                { adv_loc(); return parser::make_GER(loc_); }
+        "hadamard"           { adv_loc(); return parser::make_HADAMARD(loc_); }
+        "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
+        "cast"               { adv_loc(); return parser::make_CAST(loc_); }
+        "cmp"                { adv_loc(); return parser::make_CMP(loc_); }
+        "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
+        "cooperative_matrix_load"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
+        "cooperative_matrix_mul_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
+        "cooperative_matrix_scale"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_SCALE(loc_); }
+        "cooperative_matrix_store"   { adv_loc(); return parser::make_COOPERATIVE_MATRIX_STORE(loc_); }
+        "expand"             { adv_loc(); return parser::make_EXPAND(loc_); }
+        "fuse"               { adv_loc(); return parser::make_FUSE(loc_); }
+        "load"               { adv_loc(); return parser::make_LOAD(loc_); }
+        "for"                { adv_loc(); return parser::make_FOR(loc_); }
+        "foreach"            { adv_loc(); return parser::make_FOREACH(loc_); }
+        "if"                 { adv_loc(); return parser::make_IF(loc_); }
+        "parallel"           { adv_loc(); return parser::make_PARALLEL(loc_); }
+        "else"               { adv_loc(); return parser::make_ELSE(loc_); }
+        "size"               { adv_loc(); return parser::make_SIZE(loc_); }
+        "subgroup_broadcast" { adv_loc(); return parser::make_SUBGROUP_BROADCAST(loc_); }
+        "subview"            { adv_loc(); return parser::make_SUBVIEW(loc_); }
+        "store"              { adv_loc(); return parser::make_STORE(loc_); }
+        "sum"                { adv_loc(); return parser::make_SUM(loc_); }
+        "work_group"         { adv_loc(); return parser::make_WORK_GROUP(loc_); }
+        "yield"              { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
         ".add"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::add, loc_); }
@@ -190,46 +194,29 @@ lex:
         ".max"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::max, loc_); }
 
         // unary op
-        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs,
-       loc_); }
-        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg,
-       loc_); }
-        ".not"              { adv_loc(); return
-       parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
-        ".conj"             { adv_loc(); return
-       parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
-        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im,
-       loc_); }
+        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
+        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
+        ".not"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
+        ".conj"             { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
+        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
         ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re,
        loc_); }
 
         // builtin
-        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_);
-       }
-        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size,
-       loc_); }
-        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups,
-       loc_); }
-        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size,
-       loc_); }
-        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id,
-       loc_); }
-        ".subgroup_local_id" { adv_loc(); return
-       parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
+        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_); }
+        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size, loc_); }
+        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups, loc_); }
+        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size, loc_); }
+        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id, loc_); }
+        ".subgroup_local_id" { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
 
         // comparison condition
-        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_);
-       }
-        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_);
-       }
-        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_);
-       }
-        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_);
-       }
-        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_);
-       }
-        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_);
-       }
+        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
+        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
+        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
+        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
+        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
+        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
         // work group operation
         ".reduce_add"       {
@@ -247,6 +234,7 @@ lex:
             throw parser::syntax_error(loc_, "Unknown token");
         }
      */
+    // clang-format on
 }
 
 std::uint64_t lexer::lex_number(char const *s, char const *e) {

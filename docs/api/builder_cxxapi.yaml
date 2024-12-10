@@ -89,6 +89,7 @@ Builder C++-API:
       - tinytc::make_size
       - tinytc::make_store(store_flag,value,value,array_view<value>,location const&)
       - tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
+      - tinytc::make_subgroup_broadcast
       - tinytc::make_subview
       - tinytc::make_sum
       - tinytc::make_work_group

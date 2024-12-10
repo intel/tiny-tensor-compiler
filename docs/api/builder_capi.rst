@@ -573,6 +573,8 @@ Instruction
 
   * :ref:`tinytc_size_inst_create`
 
+  * :ref:`tinytc_subgroup_broadcast_inst_create`
+
   * :ref:`tinytc_store_inst_create`
 
   * :ref:`tinytc_subview_inst_create`
@@ -794,6 +796,13 @@ tinytc_size_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_size_inst_create
+
+.. _tinytc_subgroup_broadcast_inst_create:
+
+tinytc_subgroup_broadcast_inst_create
+.....................................
+
+.. doxygenfunction:: tinytc_subgroup_broadcast_inst_create
 
 .. _tinytc_store_inst_create:
 

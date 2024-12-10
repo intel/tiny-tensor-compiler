@@ -479,6 +479,8 @@ Instruction
 
   * :ref:`tinytc::make_store(store_flag,value,value,array_view\<value\>,std::int32_t,location const&)`
 
+  * :ref:`tinytc::make_subgroup_broadcast`
+
   * :ref:`tinytc::make_subview`
 
   * :ref:`tinytc::make_sum`
@@ -738,6 +740,13 @@ make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&
 .................................................................................
 
 .. doxygenfunction:: tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
+
+.. _tinytc::make_subgroup_broadcast:
+
+make_subgroup_broadcast
+.......................
+
+.. doxygenfunction:: tinytc::make_subgroup_broadcast
 
 .. _tinytc::make_subview:
 

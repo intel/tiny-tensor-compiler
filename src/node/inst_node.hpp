@@ -54,6 +54,7 @@ enum class IK {
     if_,
     parallel,
     size,
+    subgroup_broadcast,
     subview,
     store,
     work_group,
@@ -76,16 +77,15 @@ enum class IK {
     foreach_loop,
     last_loop
 };
-using inst_nodes =
-    type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
-              class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
-              class constant_inst, class cooperative_matrix_load_inst,
-              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
-              class cooperative_matrix_store_inst, class expand_inst, class fuse_inst,
-              class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
-              class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
-              class if_inst, class parallel_inst, class size_inst, class subview_inst,
-              class store_inst, class sum_inst, class work_group_inst, class yield_inst>;
+using inst_nodes = type_list<
+    class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
+    class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
+    class constant_inst, class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
+    class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst, class expand_inst,
+    class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
+    class ger_inst, class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
+    class parallel_inst, class size_inst, class subgroup_broadcast_inst, class subview_inst,
+    class store_inst, class sum_inst, class work_group_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -739,6 +739,18 @@ class size_inst : public standard_inst<1, 1> {
 
   private:
     std::int64_t mode_;
+};
+
+class subgroup_broadcast_inst : public standard_inst<2, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_broadcast; }
+    subgroup_broadcast_inst(tinytc_value_t a, tinytc_value_t idx, tinytc_data_type_t ty,
+                            location const &lc = {});
+
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+    inline auto idx() -> tinytc_value & { return op(1); }
+    inline auto idx() const -> tinytc_value const & { return op(1); }
 };
 
 class subview_inst : public standard_inst<dynamic, 1> {

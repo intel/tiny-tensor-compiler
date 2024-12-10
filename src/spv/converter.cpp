@@ -1830,6 +1830,14 @@ void inst_converter::operator()(size_inst const &in) {
     declare(in.result(0), dv->shape(in.mode()));
 }
 
+void inst_converter::operator()(subgroup_broadcast_inst const &in) {
+    auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto av = val(in.a());
+    auto idxv = val(in.idx());
+    declare(in.result(0), mod_->add<OpGroupBroadcast>(spv_ty, broadcast_scope, av, idxv));
+}
+
 void inst_converter::operator()(store_inst const &in) {
     auto spv_index_ty = unique_.spv_ty(scalar_type::index);
     auto spv_pointer_ty = unique_.spv_ty(in.operand().ty());

@@ -1,0 +1,22 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: OpCapability Groups
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#I32_C4:]] = OpConstant %[[#I32]] 4
+; CHECK: %[[#I32_C3:]] = OpConstant %[[#I32]] 3
+
+
+func @size(%0: f32) {
+    parallel {
+        %c4 = constant 4 : i32
+        %1 = subgroup_broadcast %0, %c4 : f32
+    }
+; CHECK-LABEL:        %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#SCALAR:]] = OpFunctionParameter %[[#F32]]
+; CHECK:              %[[#]] = OpGroupBroadcast %[[#F32]] %[[#I32_C3]] %[[#SCALAR]] %[[I32_C4]]
+}
+

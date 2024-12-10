@@ -67,6 +67,8 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::for_loop:
     case tinytc::IK::last_loop:
         return tinytc::inst_execution_kind::mixed;
+    case tinytc::IK::subgroup_broadcast:
+        return tinytc::inst_execution_kind::spmd;
     case tinytc::IK::builtin:
         return tinytc::dyn_cast<const tinytc::builtin_inst>(this)->kind();
     };
@@ -1084,6 +1086,29 @@ size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t t
     bool const range_ok = 0 <= mode_ && mode_ < m->dim();
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
+    }
+
+    result(0) = value_node{ty, this, lc};
+}
+
+subgroup_broadcast_inst::subgroup_broadcast_inst(tinytc_value_t a0, tinytc_value_t idx0,
+                                                 tinytc_data_type_t ty, location const &lc)
+    : standard_inst{IK::subgroup_broadcast} {
+    op(0, a0);
+    op(1, idx0);
+    loc(lc);
+
+    if (!isa<scalar_data_type>(*ty)) {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+
+    if (a().ty() != ty) {
+        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
+    }
+
+    if (auto idxt = dyn_cast<scalar_data_type>(idx().ty());
+        !idxt || idxt->ty() != scalar_type::i32) {
+        throw compilation_error(loc(), {&idx()}, status::ir_expected_i32);
     }
 
     result(0) = value_node{ty, this, lc};

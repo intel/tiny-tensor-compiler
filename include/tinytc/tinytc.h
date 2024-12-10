@@ -737,6 +737,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
                                                       const tinytc_location_t *loc);
 
 /**
+ * @brief Create subgroup broadcast instruction
+ *
+ * @code %value = subgroup_broadcast %a, %idx : ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param a [in] operand
+ * @param idx [in] subgroup local index
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_t *instr,
+                                                                    tinytc_value_t a,
+                                                                    tinytc_value_t idx,
+                                                                    tinytc_data_type_t ty,
+                                                                    const tinytc_location_t *loc);
+
+/**
  * @brief Create subview instruction
  *
  * @code %value = subview %a[%offset1:%size1,...,%offsetN:%sizeN] : ty @endcode

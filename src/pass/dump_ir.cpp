@@ -414,6 +414,16 @@ void dump_ir_pass::operator()(size_inst const &s) {
     visit(*this, *s.result(0).ty());
 }
 
+void dump_ir_pass::operator()(subgroup_broadcast_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = subgroup_broadcast ";
+    dump_val(in.a());
+    *os_ << ", ";
+    dump_val(in.idx());
+    *os_ << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
 void dump_ir_pass::operator()(subview_inst const &s) {
     dump_val(s.result(0));
     *os_ << " = subview ";

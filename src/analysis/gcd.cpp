@@ -38,6 +38,7 @@ class gcd_helper {
     void operator()(cast_inst const &in);
     void operator()(constant_inst const &in);
     void operator()(for_inst const &in);
+    void operator()(subgroup_broadcast_inst const &in);
 
     auto get_result() && { return std::move(gcd_); }
 
@@ -94,6 +95,12 @@ void gcd_helper::operator()(for_inst const &in) {
     if (in.has_step()) {
         auto g = std::gcd(gcd_.get(in.from()), gcd_.get(in.step()));
         gcd_.set(in.loop_var(), g);
+    }
+}
+void gcd_helper::operator()(subgroup_broadcast_inst const &in) {
+    auto g = gcd_.get_if(in.a());
+    if (g) {
+        gcd_.set(in.result(0), *g);
     }
 }
 

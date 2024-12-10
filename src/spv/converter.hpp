@@ -89,6 +89,7 @@ class inst_converter {
     void operator()(load_inst const &in);
     void operator()(parallel_inst const &in);
     void operator()(size_inst const &in);
+    void operator()(subgroup_broadcast_inst const &in);
     void operator()(store_inst const &in);
     void operator()(subview_inst const &in);
     void operator()(work_group_inst const &in);

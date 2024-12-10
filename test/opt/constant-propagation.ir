@@ -179,3 +179,12 @@ func @known_arith_f16() {
 ; CHECK-NEXT:  %10 = constant 0x1p+0 : f16
 ; CHECK-NEXT:  %11 = arith.abs %b : f16
 }
+
+func @known_subgroup_broadcast() {
+    %c5 = constant 5 : i32
+    %0 = subgroup_broadcast %c5, %c5 : i32
+    %1 = arith.neg %0 : i32
+; CHECK-LABEL: func @known_subgroup_broadcast({{.*}}
+; CHECK:  %1 = constant -5 : i32
+; CHECK:  %2 = arith.neg %c5 : i32
+}

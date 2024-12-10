@@ -549,11 +549,22 @@ tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr, const tinytc_l
 
 tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t mode,
                                         tinytc_data_type_t ty, const tinytc_location_t *loc) {
-    if (instr == nullptr) {
+    if (instr == nullptr || a == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code(
         [&] { *instr = std::make_unique<size_inst>(a, mode, ty, get_optional(loc)).release(); });
+}
+
+tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
+                                                      tinytc_value_t idx, tinytc_data_type_t ty,
+                                                      const tinytc_location_t *loc) {
+    if (instr == nullptr || a == nullptr || idx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<subgroup_broadcast_inst>(a, idx, ty, get_optional(loc)).release();
+    });
 }
 
 tinytc_status_t

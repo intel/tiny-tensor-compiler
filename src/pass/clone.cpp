@@ -142,6 +142,11 @@ auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.result(0).ty(), in.loc());
 }
 
+auto inst_cloner::operator()(subgroup_broadcast_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<subgroup_broadcast_inst>(subs(&in.a()), subs(&in.idx()),
+                                                     in.result(0).ty(), in.loc());
+}
+
 auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<subview_inst>(
         subs(&in.operand()), in.static_offsets(), in.static_sizes(), subs_value_range(in.offsets()),

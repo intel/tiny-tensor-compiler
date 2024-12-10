@@ -1656,6 +1656,35 @@ Builtin             Type  Description
 .subgroup_local_id  i32   Returns the work-item id within the subgroup; integer from 0 to subgroup_size - 1
 =================== ===== =================================================================================
 
+Subgroup broadcast
+..................
+
+.. code:: abnf
+
+    value-instruction       =/ "subgroup_broadcast" local-identifier "," local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Broadcast a scalar to all work-items in the subgroup.
+The scalar type of the first operand and the type of the result must match.
+The second identifier must have i32 type.
+
+Operands
+~~~~~~~~
+
+======= =============== ==================================================================================================
+Op.-No. Type            Description
+======= =============== ==================================================================================================
+1       scalar-type     Value that is to be distributed to all work-items of the sub-group
+2       i32             Subgroup local index that identifies the work-item whose value is returned to all other work-items
+======= =============== ==================================================================================================
+
+Restrictions
+~~~~~~~~~~~~
+
+* The second operand **must** be dynamically uniform.
+
 Sample code
 ===========
 

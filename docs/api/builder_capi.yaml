@@ -93,6 +93,7 @@ Builder C-API:
       - tinytc_load_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
+      - tinytc_subgroup_broadcast_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create
       - tinytc_sum_inst_create

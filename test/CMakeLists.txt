@@ -76,6 +76,7 @@ if(SPIRVTools_FOUND)
         spv/load.ir
         spv/size.ir
         spv/store.ir
+        spv/subgroup_broadcast.ir
         spv/subview.ir
         spv/work_group.ir
         spv/unique_function_type.ir

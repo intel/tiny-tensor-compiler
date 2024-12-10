@@ -309,4 +309,14 @@ auto constant_folding::operator()(size_inst &in) -> fold_result {
     return tinytc_value_t{};
 }
 
+auto constant_folding::operator()(subgroup_broadcast_inst &in) -> fold_result {
+    auto &op_a = in.a();
+
+    constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
+    if (a_const != nullptr) {
+        return &a_const->result(0);
+    }
+    return tinytc_value_t{};
+}
+
 } // namespace tinytc

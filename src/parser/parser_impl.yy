@@ -143,6 +143,7 @@
     ELSE            "else"
     PARALLEL        "parallel"
     SIZE            "size"
+    SUBGROUP_BROADCAST "subgroup_broadcast"
     SUBVIEW         "subview"
     STORE           "store"
     SUM             "sum"
@@ -234,6 +235,7 @@
 %nterm <inst> load_inst
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
+%nterm <inst> subgroup_broadcast_inst
 %nterm <inst> store_inst
 %nterm <store_flag> store_flag
 %nterm <inst> subview_inst
@@ -742,6 +744,7 @@ valued_inst:
   | if_inst                 { $$ = std::move($1); }
   | load_inst               { $$ = std::move($1); }
   | size_inst               { $$ = std::move($1); }
+  | subgroup_broadcast_inst { $$ = std::move($1); }
   | subview_inst            { $$ = std::move($1); }
   | work_group_inst         { $$ = std::move($1); }
 ;
@@ -1098,6 +1101,21 @@ size_inst:
         try {
             $$ = inst {
                 std::make_unique<size_inst>(std::move($var), $mode, $scalar_type, @size_inst).release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+subgroup_broadcast_inst:
+    SUBGROUP_BROADCAST var[a] COMMA var[idx] COLON scalar_type {
+        try {
+            $$ = inst {
+                std::make_unique<subgroup_broadcast_inst>(std::move($a), std::move($idx), $scalar_type,
+                                                          @subgroup_broadcast_inst)
+                    .release()
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
