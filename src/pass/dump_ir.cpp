@@ -369,7 +369,7 @@ void dump_ir_pass::operator()(foreach_inst const &in) {
     do_with_infix(in.from().begin(), in.from().end(), [this](auto const &i) { dump_val(i); });
     *os_ << "),(";
     do_with_infix(in.to().begin(), in.to().end(), [this](auto const &i) { dump_val(i); });
-    *os_ << " ";
+    *os_ << ") ";
     dump_region(in.body());
 }
 

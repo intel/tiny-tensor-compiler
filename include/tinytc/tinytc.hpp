@@ -1172,8 +1172,58 @@ class region : public handle<tinytc_region_t> {
      *
      * @param instruction instruction object
      */
-    inline void add_instruction(inst instruction) {
-        CHECK_STATUS(tinytc_region_add_instruction(obj_, instruction.release()));
+    inline void append(inst instruction) {
+        CHECK_STATUS(tinytc_region_append(obj_, instruction.release()));
+    }
+
+    /**
+     * @brief Get iterator pointing to the begin of the region
+     *
+     * @return iterator
+     */
+    inline auto begin() -> tinytc_inst_iterator_t {
+        tinytc_inst_iterator_t it;
+        CHECK_STATUS(tinytc_region_begin(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Get iterator pointing to past the end of the region
+     *
+     * @return iterator
+     */
+    inline auto end() -> tinytc_inst_iterator_t {
+        tinytc_inst_iterator_t it;
+        CHECK_STATUS(tinytc_region_end(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Erase instruction at iterator
+     *
+     * @param iterator Iterator
+     *
+     * @return Iterator pointing to the instruction after the one erased
+     */
+    inline auto erase(tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
+        auto it = iterator;
+        CHECK_STATUS(tinytc_region_erase(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Insert instruction into region before the iterator
+     *
+     * @param iterator Iterator
+     * @param instruction instruction object
+     *
+     * @return Iterator pointing to the newly inserted instruction
+     */
+    inline auto insert(tinytc_inst_iterator_t iterator,
+                       inst instruction) -> tinytc_inst_iterator_t {
+        auto it = iterator;
+        CHECK_STATUS(tinytc_region_insert(obj_, &it, instruction.release()));
+        return it;
     }
 
     /**
@@ -1194,6 +1244,19 @@ class region : public handle<tinytc_region_t> {
     }
 };
 static_assert(std::is_standard_layout_v<region> && sizeof(region) == sizeof(tinytc_region_t));
+
+/**
+ * @brief Move iterator to next instruction
+ *
+ * @param iterator
+ */
+inline void next(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_next_inst(&iterator)); }
+/**
+ * @brief Move iterator to previous instruction
+ *
+ * @param iterator
+ */
+inline void prev(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_prev_inst(&iterator)); }
 
 ////////////////////////////
 /////// Instructions ///////
@@ -2193,7 +2256,21 @@ class region_builder {
      *
      * @param reg region object
      */
-    region_builder(region reg) : reg_{reg} {}
+    region_builder(region reg) : reg_{reg}, ip_{reg_.end()} {}
+    /**
+     * @brief ctor
+     *
+     * @param reg region object
+     * @param ip insertion point
+     */
+    region_builder(region reg, tinytc_inst_iterator_t ip) : reg_{reg}, ip_{ip} {}
+
+    /**
+     * @brief Get insertion point
+     *
+     * @return Iterator
+     */
+    inline auto get_insertion_point() const -> tinytc_inst_iterator_t { return ip_; }
 
     /**
      * @brief Add instruction
@@ -2205,7 +2282,7 @@ class region_builder {
     [[maybe_unused]] inline auto add(inst i) -> value {
         auto result = value{};
         i.get_values(result);
-        reg_.add_instruction(std::move(i));
+        reg_.insert(ip_, std::move(i));
         return result;
     }
 
@@ -2220,7 +2297,7 @@ class region_builder {
         auto num_results = i.get_values({});
         auto results = std::vector<value>(static_cast<std::size_t>(num_results));
         results.resize(i.get_values(results));
-        reg_.add_instruction(std::move(i));
+        reg_.insert(ip_, std::move(i));
         return results;
     }
 
@@ -2265,7 +2342,7 @@ class region_builder {
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        reg_.add_instruction(std::move(fi));
+        reg_.insert(ip_, std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);
     }
@@ -2315,8 +2392,8 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void foreach (data_type loop_var_ty, array_view<value> from, array_view<value> to, F && f,
-                  location const &loc = {}) {
+    void foreach_loop(data_type loop_var_ty, array_view<value> from, array_view<value> to, F &&f,
+                      location const &loc = {}) {
         auto fi = ::tinytc::make_foreach(loop_var_ty, std::move(from), std::move(to), loc);
         auto reg = region{};
         fi.get_regions(reg);
@@ -2326,7 +2403,7 @@ class region_builder {
         if (!reg || num_params != from.size() || num_params != to.size()) {
             throw status::internal_compiler_error;
         }
-        reg_.add_instruction(std::move(fi));
+        reg_.insert(ip_, std::move(fi));
         auto bb = region_builder{reg};
         f(bb, array_view<value>(params));
     }
@@ -2351,7 +2428,7 @@ class region_builder {
         if (!reg) {
             throw status::internal_compiler_error;
         }
-        reg_.add_instruction(std::move(ii));
+        reg_.insert(ip_, std::move(ii));
         auto bb = region_builder{reg};
         then(bb);
     }
@@ -2396,6 +2473,7 @@ class region_builder {
 
   private:
     region reg_;
+    tinytc_inst_iterator_t ip_;
 };
 
 ////////////////////////////

@@ -18,11 +18,57 @@ using namespace tinytc;
 
 extern "C" {
 
-tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg, tinytc_inst_t instruction) {
-    if (reg == nullptr || instruction == nullptr) {
+tinytc_status_t tinytc_region_append(tinytc_region_t reg, tinytc_inst_t instr) {
+    if (reg == nullptr || instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { reg->insts().push_back(instruction); });
+    return exception_to_status_code([&] { reg->insts().push_back(instr); });
+}
+
+tinytc_status_t tinytc_region_begin(tinytc_region_t reg, tinytc_inst_iterator_t *iterator) {
+    if (reg == nullptr || iterator == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *iterator = reg->insts().begin().get(); });
+}
+
+tinytc_status_t tinytc_region_end(tinytc_region_t reg, tinytc_inst_iterator_t *iterator) {
+    if (reg == nullptr || iterator == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *iterator = reg->insts().end().get(); });
+}
+
+tinytc_status_t tinytc_region_erase(tinytc_region_t reg, tinytc_inst_iterator_t *iterator) {
+    if (reg == nullptr || iterator == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *iterator = reg->insts().erase(*iterator).get(); });
+}
+
+tinytc_status_t tinytc_region_insert(tinytc_region_t reg, tinytc_inst_iterator_t *iterator,
+                                     tinytc_inst_t instr) {
+    if (reg == nullptr || iterator == nullptr || instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *iterator = reg->insts().insert(*iterator, instr).get(); });
+}
+
+tinytc_status_t tinytc_next_inst(tinytc_inst_iterator_t *iterator) {
+    if (iterator == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *iterator = static_cast<tinytc_inst_iterator_t>((*iterator)->next()); });
+}
+
+tinytc_status_t tinytc_prev_inst(tinytc_inst_iterator_t *iterator) {
+    if (iterator == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code(
+        [&] { *iterator = static_cast<tinytc_inst_iterator_t>((*iterator)->prev()); });
 }
 
 tinytc_status_t tinytc_region_get_parameter(tinytc_region_t reg, uint32_t param_no,

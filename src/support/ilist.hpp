@@ -10,18 +10,15 @@ namespace tinytc {
 
 template <typename NodeT> struct ilist_callbacks {
     void node_added(NodeT *) {}
+    void node_moved(NodeT *) {}
     void node_removed(NodeT *) {}
 };
 
-template <typename NodeT, typename IListCallback = ilist_callbacks<NodeT>>
-class ilist : public ilist_base<NodeT, IListCallback> {
+template <typename NodeT, typename IListCallback = ilist_callbacks<NodeT>,
+          ilist_clear_order ClearOrder = ilist_clear_order::reverse>
+class ilist : public ilist_base<NodeT, IListCallback, ClearOrder> {
   public:
     ilist() = default;
-
-    ilist(ilist const &other) = delete;
-    ilist(ilist &&other) = default;
-    ilist &operator=(ilist const &other) = delete;
-    ilist &operator=(ilist &&other) = default;
 };
 
 } // namespace tinytc

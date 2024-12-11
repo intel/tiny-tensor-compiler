@@ -963,203 +963,6 @@ The type of the constant must match the scalar or component type
 
 When the result is a cooperative matrix, all entries are set to the same constant value.
 
-Cooperative matrix load
-.......................
-
-.. code:: abnf
-
-    value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
-                                   local-identifier "[" local-identifier "," local-identifier "]"
-                                   ["," "align" 1*DIGIT] ":" coopmatrix-type
-    checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
-
-Overview
-~~~~~~~~
-
-Load a cooperative matrix from a 2d-memref at the position given by the indices in square brackets.
-The position gives the starting row and column index, that is,
-when a coopmatrix of size :math:`X\times Y` is loaded from memref :math:`M` at
-position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are given by
-
-.. math::
-
-    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2],
-
-where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
-When the transpose modifier ".t" is given, we have
-
-.. math::
-
-    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + j) S_1 + (y + i) S_2] 
-
-When the checked flag is set, the following out-of-bound checks are added
-(with memref shape :math:`s_1\times s_2`):
-
-=============== ===================================================================
-Flag            Description
-=============== ===================================================================
-.n.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < s_1 \text{ else } 0`
-.t.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < s_2 \text{ else } 0`
-.n.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < s_2 \text{ else } 0`
-.t.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < s_1 \text{ else } 0`
-.n.both_checked .n.rows_checked.n and .n.cols_checked
-.t.both_checked .t.rows_checked.t and .t.cols_checked
-=============== ===================================================================
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
-
-Operands
-~~~~~~~~
-
-======= =============== ===========
-Op.-No. Type            Description
-======= =============== ===========
-1       memref-type     M
-2       index           x
-3       index           y
-======= =============== ===========
-
-Restrictions
-~~~~~~~~~~~~
-
-* :math:`\text{order}(M) = 2`
-* :math:`\text{component_type}(A) = \text{element_type}(M)`
-* All arguments **must** be dynamically uniform.
-
-Cooperative matrix mul add
-..........................
-
-.. code:: abnf
-
-    value-instruction           =/ "cooperative_matrix_mul_add" local-identifier ","
-                                   local-identifier "," local-identifier ":" coopmatrix-type
-
-Overview
-~~~~~~~~
-
-Matrix mul add returns the value of 
-
-.. math::
-
-    D := AB + C,
-
-where A, B, and C are matrices given by the three operands.
-
-Operands
-~~~~~~~~
-
-======= =============== ========== ===========
-Op.-No. Type            Use        Description
-======= =============== ========== ===========
-1       coopmatrix-type matrix_a   A
-2       coopmatrix-type matrix_b   B
-3       coopmatrix-type matrix_acc C
-======= =============== ========== ===========
-
-Restrictions
-~~~~~~~~~~~~
-
-* :math:`\text{columns}(A) = \text{rows}(B)`
-* :math:`\text{rows}(C) = \text{rows}(A) \land \text{columns}(C) = \text{columns}(B)`
-* :math:`\text{shape}(D) = \text{shape}(C)`
-* :math:`\text{use}(D) = \text{matrix_acc}`
-* :math:`\text{promote}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
-* Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
-
-Cooperative matrix scale
-........................
-
-.. code:: abnf
-
-    value-instruction           =/ "cooperative_matrix_scale" local-identifier "," local-identifier
-                                   ":" coopmatrix-type
-
-Overview
-~~~~~~~~
-
-Scale a coopmatrix by a scalar. 
-The scalar type of the scalar and the component type of the coopmatrix must match,
-and the returned must have the same coopmatrix type as the matrix operand.
-
-Operands
-~~~~~~~~
-
-======= =============== ===========
-Op.-No. Type            Description
-======= =============== ===========
-1       scalar-type     scalar
-2       coopmatrix-type matrix
-======= =============== ===========
-
-Restrictions
-~~~~~~~~~~~~
-
-* :math:`\text{type}(scalar) = \text{component_type}(matrix)`
-* :math:`\text{type}(result) = \text{type}(matrix)`
-
-Cooperative matrix store
-........................
-
-.. code:: abnf
-
-    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag] local-identifier ","
-                       local-identifier "[" local-identifier "," local-identifier "]"
-                       ["," "align" 1*DIGIT]
-
-Overview
-~~~~~~~~
-
-Store a cooperative matrix value in a 2d-memref at the position given by the indices in square brackets.
-The position gives the starting row and column index, that is,
-when a coopmatrix of size :math:`X\times Y` is written to memref :math:`M` at
-position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are written to
-
-.. math::
-
-    \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij},
-
-where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
-When the checked flag is set, the following out-of-bound checks are added
-(with memref shape :math:`s_1\times s_2`):
-
-============= =======================================================================================================
-Flag            Description
-============= =======================================================================================================
-.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
-.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
-.both_checked .rows_checked + .cols_checked
-============= =======================================================================================================
-
-The store is atomic when the atomic flag is set with relaxed memory ordering.
-When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
-
-When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
-for the the real and imaginary separately.
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
-
-Operands
-~~~~~~~~
-
-======= =============== ===========
-Op.-No. Type            Description
-======= =============== ===========
-1       coopmatrix-type A
-2       memref-type     M
-3       index           x
-4       index           y
-======= =============== ===========
-
-Restrictions
-~~~~~~~~~~~~
-
-* :math:`\text{component_type}(A) = \text{element_type}(B)`
-* All arguments **must** be dynamically uniform.
-
 Expand
 ......
 
@@ -1655,6 +1458,204 @@ Builtin             Type  Description
 .subgroup_id        i32   Returns the subgroup id; integer from 0 to num_subgroups - 1.
 .subgroup_local_id  i32   Returns the work-item id within the subgroup; integer from 0 to subgroup_size - 1
 =================== ===== =================================================================================
+
+Cooperative matrix load
+.......................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
+                                   local-identifier "[" local-identifier "," local-identifier "]"
+                                   ["," "align" 1*DIGIT] ":" coopmatrix-type
+    checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
+
+Overview
+~~~~~~~~
+
+Load a cooperative matrix from a 2d-memref at the position given by the indices in square brackets.
+The position gives the starting row and column index, that is,
+when a coopmatrix of size :math:`X\times Y` is loaded from memref :math:`M` at
+position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are given by
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + i) S_1 + (y + j) S_2],
+
+where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
+When the transpose modifier ".t" is given, we have
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): A_{ij} := M[(x + j) S_1 + (y + i) S_2] 
+
+When the checked flag is set, the following out-of-bound checks are added
+(with memref shape :math:`s_1\times s_2`):
+
+=============== ===================================================================
+Flag            Description
+=============== ===================================================================
+.n.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < s_1 \text{ else } 0`
+.t.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < s_2 \text{ else } 0`
+.n.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < s_2 \text{ else } 0`
+.t.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < s_1 \text{ else } 0`
+.n.both_checked .n.rows_checked.n and .n.cols_checked
+.t.both_checked .t.rows_checked.t and .t.cols_checked
+=============== ===================================================================
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+
+Operands
+~~~~~~~~
+
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       memref-type     M
+2       index           x
+3       index           y
+======= =============== ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{order}(M) = 2`
+* :math:`\text{component_type}(A) = \text{element_type}(M)`
+* All arguments **must** be dynamically uniform.
+
+Cooperative matrix mul add
+..........................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_mul_add" local-identifier ","
+                                   local-identifier "," local-identifier ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Matrix mul add returns the value of 
+
+.. math::
+
+    D := AB + C,
+
+where A, B, and C are matrices given by the three operands.
+
+Operands
+~~~~~~~~
+
+======= =============== ========== ===========
+Op.-No. Type            Use        Description
+======= =============== ========== ===========
+1       coopmatrix-type matrix_a   A
+2       coopmatrix-type matrix_b   B
+3       coopmatrix-type matrix_acc C
+======= =============== ========== ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{columns}(A) = \text{rows}(B)`
+* :math:`\text{rows}(C) = \text{rows}(A) \land \text{columns}(C) = \text{columns}(B)`
+* :math:`\text{shape}(D) = \text{shape}(C)`
+* :math:`\text{use}(D) = \text{matrix_acc}`
+* :math:`\text{promote}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
+* Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
+
+Cooperative matrix scale
+........................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_scale" local-identifier "," local-identifier
+                                   ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Scale a coopmatrix by a scalar. 
+The scalar type of the scalar and the component type of the coopmatrix must match,
+and the returned must have the same coopmatrix type as the matrix operand.
+
+Operands
+~~~~~~~~
+
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       scalar-type     scalar
+2       coopmatrix-type matrix
+======= =============== ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{type}(scalar) = \text{component_type}(matrix)`
+* :math:`\text{type}(result) = \text{type}(matrix)`
+
+Cooperative matrix store
+........................
+
+.. code:: abnf
+
+    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag] local-identifier ","
+                       local-identifier "[" local-identifier "," local-identifier "]"
+                       ["," "align" 1*DIGIT]
+
+Overview
+~~~~~~~~
+
+Store a cooperative matrix value in a 2d-memref at the position given by the indices in square brackets.
+The position gives the starting row and column index, that is,
+when a coopmatrix of size :math:`X\times Y` is written to memref :math:`M` at
+position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are written to
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij},
+
+where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
+When the checked flag is set, the following out-of-bound checks are added
+(with memref shape :math:`s_1\times s_2`):
+
+============= =======================================================================================================
+Flag            Description
+============= =======================================================================================================
+.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
+.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
+.both_checked .rows_checked + .cols_checked
+============= =======================================================================================================
+
+The store is atomic when the atomic flag is set with relaxed memory ordering.
+When the atomic_add flag is set, the coopmatrix is added to the memref atomically.
+
+When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
+for the the real and imaginary separately.
+
+The optional "align" attribute may be passed to set the known minimum alignment of the access
+(power-of-two, in bytes).
+It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+
+Operands
+~~~~~~~~
+
+======= =============== ===========
+Op.-No. Type            Description
+======= =============== ===========
+1       coopmatrix-type A
+2       memref-type     M
+3       index           x
+4       index           y
+======= =============== ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{component_type}(A) = \text{element_type}(B)`
+* All arguments **must** be dynamically uniform.
+
 
 Subgroup broadcast
 ..................

@@ -27,6 +27,21 @@ auto tinytc_inst::context() const -> tinytc_compiler_context_t {
     return nullptr;
 }
 
+void tinytc_inst::subs(tinytc_value_t old_value, tinytc_value_t new_value, bool recursive) {
+    for (auto op = op_begin_; op != op_end_; ++op) {
+        if (op->get() == old_value) {
+            op->set(new_value);
+        }
+    }
+    if (recursive) {
+        for (auto &reg : child_regions()) {
+            for (auto &in : reg) {
+                in.subs(old_value, new_value, true);
+            }
+        }
+    }
+}
+
 auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     switch (type_id()) {
     case tinytc::IK::alloca:
@@ -50,10 +65,6 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::cast:
     case tinytc::IK::compare:
     case tinytc::IK::constant:
-    case tinytc::IK::cooperative_matrix_load:
-    case tinytc::IK::cooperative_matrix_mul_add:
-    case tinytc::IK::cooperative_matrix_scale:
-    case tinytc::IK::cooperative_matrix_store:
     case tinytc::IK::expand:
     case tinytc::IK::fuse:
     case tinytc::IK::load:
@@ -67,6 +78,10 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::for_loop:
     case tinytc::IK::last_loop:
         return tinytc::inst_execution_kind::mixed;
+    case tinytc::IK::cooperative_matrix_load:
+    case tinytc::IK::cooperative_matrix_mul_add:
+    case tinytc::IK::cooperative_matrix_scale:
+    case tinytc::IK::cooperative_matrix_store:
     case tinytc::IK::subgroup_broadcast:
         return tinytc::inst_execution_kind::spmd;
     case tinytc::IK::builtin:
@@ -754,6 +769,7 @@ for_inst::for_inst(tinytc_data_type_t loop_var_type, tinytc_value_t from0, tinyt
     if (step0) {
         op(op_step, step0);
     }
+    loc(lc);
 
     body().loc(lc);
     body().defining_inst(this);
@@ -776,7 +792,6 @@ for_inst::for_inst(tinytc_data_type_t loop_var_type, tinytc_value_t from0, tinyt
         }
         op(op_init() + i, init_values[i]);
     }
-    loc(lc);
 
     auto lvt = get_scalar_type(loc(), loop_var());
     auto fromt = get_scalar_type(loc(), from());

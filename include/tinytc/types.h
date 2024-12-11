@@ -105,6 +105,7 @@ typedef enum {
     tinytc_status_ir_invalid_stride = 0x136,            ///< Invalid stride
     tinytc_status_ir_init_return_type_mismatch = 0x137, ///< Init return type mismatch
     tinytc_status_ir_invalid_alignment = 0x138,         ///< Invalid alignment
+    tinytc_status_ir_value_still_has_uses = 0x139,      ///< Value still has uses
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden
@@ -477,6 +478,9 @@ struct tinytc_inst; // IWYU pragma: export
 typedef struct tinytc_inst *tinytc_inst_t;
 //! @brief const inst handle
 typedef const struct tinytc_inst *const_tinytc_inst_t;
+
+//! @brief inst iterator handle
+typedef struct tinytc_inst *tinytc_inst_iterator_t;
 
 //! @struct tinytc_region
 //! @brief Opaque struct for a region

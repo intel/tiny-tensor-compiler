@@ -46,15 +46,15 @@ int main(void) {
     tinytc_constant_inst_create_one(&tmp, element_ty, NULL);
     num_results = 1;
     tinytc_inst_get_values(tmp, &num_results, &alpha);
-    tinytc_region_add_instruction(copy_body, tmp);
+    tinytc_region_append(copy_body, tmp);
 
     tinytc_constant_inst_create_zero(&tmp, element_ty, NULL);
     num_results = 1;
     tinytc_inst_get_values(tmp, &num_results, &beta);
-    tinytc_region_add_instruction(copy_body, tmp);
+    tinytc_region_append(copy_body, tmp);
 
     tinytc_axpby_inst_create(&tmp, tinytc_transpose_N, 0, alpha, params[0], beta, params[1], NULL);
-    tinytc_region_add_instruction(copy_body, tmp);
+    tinytc_region_append(copy_body, tmp);
 
     // Dump program
     tinytc_prog_dump(program);

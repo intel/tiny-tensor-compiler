@@ -698,6 +698,13 @@ tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr, uint32_t yield_li
 
 void tinytc_inst_destroy(tinytc_inst_t obj) { delete obj; }
 
+tinytc_status_t tinytc_inst_get_parent_region(tinytc_inst_t instr, tinytc_region_t *parent) {
+    if (instr == nullptr || parent == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *parent = instr->parent(); });
+}
+
 tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_list_size,
                                        tinytc_value_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||

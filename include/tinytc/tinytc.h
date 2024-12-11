@@ -952,23 +952,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_yield_inst_create(tinytc_inst_t *instr,
 TINYTC_EXPORT void tinytc_inst_destroy(tinytc_inst_t instr);
 
 /**
- * @brief Get values produced by instruction
- *
- * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
- * the number of results
+ * @brief Get parent region of instruction
  *
  * @param instr [in] inst object
- * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
- * it is updated with the number of results; if result_list_size is greater than the number of
- * results, the value is updated with the correct number of results
- * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
- * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
+ * @param parent [out] parent region
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
-                                                     uint32_t *result_list_size,
-                                                     tinytc_value_t *result_list);
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_parent_region(tinytc_inst_t instr,
+                                                            tinytc_region_t *parent);
 
 /**
  * @brief Get child regions of instruction
@@ -989,6 +981,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr,
                                                       uint32_t *result_list_size,
                                                       tinytc_region_t *result_list);
 
+/**
+ * @brief Get values produced by instruction
+ *
+ * Function can be called with result_list_size = 0 and result_list = nullptr in order to obtain
+ * the number of results
+ *
+ * @param instr [in] inst object
+ * @param result_list_size [inout] pointer to the number of results; if result_list_size is 0, then
+ * it is updated with the number of results; if result_list_size is greater than the number of
+ * results, the value is updated with the correct number of results
+ * @param result_list [out][range(0, result_list_size)] user-provided memory for storing result
+ * handles; at most result_list_size values are written; can be nullptr if result_list_size is 0
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
+                                                     uint32_t *result_list_size,
+                                                     tinytc_value_t *result_list);
+
 ////////////////////////////
 ////////// Region //////////
 ////////////////////////////
@@ -1000,12 +1011,84 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr,
  * An instruction must not be added to multiple regions.
  *
  * @param reg [inout] region object
- * @param instruction [in,pass_ownership] instruction
+ * @param instr [in,pass_ownership] instruction
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_region_add_instruction(tinytc_region_t reg,
-                                                            tinytc_inst_t instruction);
+TINYTC_EXPORT tinytc_status_t tinytc_region_append(tinytc_region_t reg, tinytc_inst_t instr);
+
+/**
+ * @brief Returns iterator pointing to begin of the region
+ *
+ * @param reg [in] region
+ * @param iterator [out] inst iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_begin(tinytc_region_t reg,
+                                                  tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Returns iterator pointing to the end of the region
+ *
+ * The end iterator must not be dereferenced.
+ *
+ * @param reg [in] region]
+ * @param iterator [out] inst iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_end(tinytc_region_t reg,
+                                                tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Erase instruction at the position of the iterator
+ *
+ * The iterator is updated to point to the instruction coming after the iterator or the end iterator
+ *
+ * @param reg [inout] region object
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_erase(tinytc_region_t reg,
+                                                  tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Insert instruction at the position before the iterator
+ *
+ * The iterator is updated to point to the instruction that was just inserted.
+ *
+ * The region takes ownership of the instruction.
+ * An instruction must not be inserted into multiple regions.
+ *
+ * @param reg [inout] region object
+ * @param iterator [inout]
+ * @param instr [in,pass_ownership]
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_region_insert(tinytc_region_t reg,
+                                                   tinytc_inst_iterator_t *iterator,
+                                                   tinytc_inst_t instr);
+
+/**
+ * @brief Move iterator to the next instruction
+ *
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_next_inst(tinytc_inst_iterator_t *iterator);
+
+/**
+ * @brief Move iterator to the previous instruction
+ *
+ * @param iterator [inout] iterator
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prev_inst(tinytc_inst_iterator_t *iterator);
 
 /**
  * @brief Get region parameters

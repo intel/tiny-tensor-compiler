@@ -19,6 +19,7 @@ namespace tinytc {
 
 template <> struct ilist_callbacks<spv::spv_inst> {
     void node_added(spv::spv_inst *node);
+    void node_moved(spv::spv_inst *node);
     void node_removed(spv::spv_inst *node);
 };
 

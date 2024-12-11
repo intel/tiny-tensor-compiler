@@ -26,7 +26,6 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
@@ -166,8 +165,9 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
 class linalg_generator {
   public:
-    linalg_generator(local_tiling tiling, core_config core_cfg)
-        : tiling_{std::move(tiling)}, core_cfg_{std::move(core_cfg)} {}
+    linalg_generator(local_tiling const &tiling, core_config const &core_cfg, region_node &reg,
+                     tinytc_inst_iterator_t ip)
+        : tiling_{tiling}, core_cfg_{core_cfg}, bb_{&reg, ip} {}
     inline void operator()(inst_node &in) {
         throw compilation_error(in.loc(), status::not_implemented);
     }
@@ -178,31 +178,14 @@ class linalg_generator {
     void operator()(hadamard_inst &in);
     void operator()(sum_inst &in);
 
-    inline auto insertion_point() const -> region_node::iterator { return ip_; }
-    inline auto insertion_point(region_node::iterator ip) { ip_ = ip; }
-
-    inline auto add(inst in) -> value {
-        auto result = value{};
-        in.get_values(result);
-        ip_ = ip_->parent()->insts().insert(++ip_, in.release());
-        return result;
-    }
+    inline auto insertion_point() -> tinytc_inst_iterator_t { return bb_.get_insertion_point(); }
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;
 
-    template <typename F>
-    void add_foreach(data_type loop_var_ty, array_view<tinytc_value_t> from,
-                     array_view<tinytc_value_t> to, F &&f, location const &loc = {}) {
-        auto fi = std::make_unique<foreach_inst>(loop_var_ty, std::move(from), std::move(to), loc);
-        auto bb = region_builder{&fi->body()};
-        f(bb, fi->loop_vars());
-        add(inst{fi.release()});
-    }
-
-    local_tiling tiling_ = {};
-    core_config core_cfg_ = {};
-    region_node::iterator ip_;
+    local_tiling const &tiling_;
+    core_config const &core_cfg_;
+    region_builder bb_;
 };
 
 auto linalg_generator::get_memref_type(value_node const &v) const -> const memref_data_type * {
@@ -237,33 +220,33 @@ void linalg_generator::operator()(axpby_inst &in) {
             blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
         });
 
-        add(std::move(parallel));
+        bb_.add(std::move(parallel));
     } else if (bt->dim() == 1) {
-        auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
-        add_foreach(
+        auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
+        bb_.foreach_loop(
             index_ty, {c0.get()}, {c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
                 auto a =
-                    bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
-                blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {&loop_vars[0]},
+                    bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
+                blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {loop_vars[0]},
                             in.loc());
             },
             in.loc());
     } else if (bt->dim() == 2) {
-        auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
-        auto c_shape1 = add(make_size(&in.B(), 1, index_ty, in.loc()));
-        add_foreach(
+        auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
+        auto c_shape1 = bb_.add(make_size(&in.B(), 1, index_ty, in.loc()));
+        bb_.foreach_loop(
             index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
             [&](region_builder &bb, auto loop_vars) {
-                auto a_idx = std::array<value, 2u>{&loop_vars[0], &loop_vars[1]};
+                auto a_idx = std::array<value, 2u>{loop_vars[0], loop_vars[1]};
                 if (in.tA() == transpose::T) {
                     std::swap(a_idx[0], a_idx[1]);
                 }
                 auto a = bb.add(make_load(&in.A(), a_idx, at->element_data_ty(), in.loc()));
                 blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(),
-                            {&loop_vars[0], &loop_vars[1]}, in.loc());
+                            {loop_vars[0], loop_vars[1]}, in.loc());
             },
             in.loc());
     }
@@ -271,19 +254,19 @@ void linalg_generator::operator()(axpby_inst &in) {
 
 void linalg_generator::operator()(ger_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
-    auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
-    auto c_shape1 = add(make_size(&in.C(), 1, index_ty, in.loc()));
-    add_foreach(
+    auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape1 = bb_.add(make_size(&in.C(), 1, index_ty, in.loc()));
+    bb_.foreach_loop(
         index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
-            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
-            auto b = bb.add(make_load(&in.B(), {&loop_vars[1]}, bt->element_data_ty(), in.loc()));
+            auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), {loop_vars[1]}, bt->element_data_ty(), in.loc()));
             auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
-                        {&loop_vars[0], &loop_vars[1]}, in.loc());
+                        {loop_vars[0], loop_vars[1]}, in.loc());
         },
         in.loc());
 }
@@ -379,15 +362,15 @@ void linalg_generator::operator()(gemm_inst &in) {
                          });
     }
 
-    add(std::move(parallel));
+    bb_.add(std::move(parallel));
 }
 
 void linalg_generator::operator()(gemv_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
-    auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
-    add_foreach(
+    bb_.foreach_loop(
         index_ty, {c0.get()}, {c_shape0.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto c_init = bb.add(make_constant_zero(ct->element_data_ty()));
@@ -396,7 +379,7 @@ void linalg_generator::operator()(gemv_inst &in) {
             auto c_acc = bb.for_loop(
                 index_ty, c0, K, {}, {c_init}, {ct->element_data_ty()},
                 [&](region_builder &bb, array_view<value> p) {
-                    auto a_idx = std::array<value, 2u>{&loop_vars[0], p[0]};
+                    auto a_idx = std::array<value, 2u>{loop_vars[0], p[0]};
                     if (in.tA() == transpose::T) {
                         std::swap(a_idx[0], a_idx[1]);
                     }
@@ -408,25 +391,25 @@ void linalg_generator::operator()(gemv_inst &in) {
                     auto ab_c = mixed_precision_arithmetic(bb, arithmetic::add, p[1], ab, in.loc());
                     bb.add(make_yield({ab_c}, in.loc()));
                 });
-            blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(),
-                        {&loop_vars[0]}, in.loc());
+            blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {loop_vars[0]},
+                        in.loc());
         },
         in.loc());
 }
 
 void linalg_generator::operator()(hadamard_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
-    auto c0 = add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = add(make_size(&in.C(), 0, index_ty, in.loc()));
-    add_foreach(
+    auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
+    bb_.foreach_loop(
         index_ty, {c0.get()}, {c_shape0.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
-            auto a = bb.add(make_load(&in.A(), {&loop_vars[0]}, at->element_data_ty(), in.loc()));
-            auto b = bb.add(make_load(&in.B(), {&loop_vars[0]}, bt->element_data_ty(), in.loc()));
+            auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), {loop_vars[0]}, bt->element_data_ty(), in.loc()));
             auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
-            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {&loop_vars[0]},
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {loop_vars[0]},
                         in.loc());
         },
         in.loc());
@@ -478,10 +461,10 @@ void linalg_generator::operator()(sum_inst &in) {
             in.loc());
     } else if (bt->dim() == 1) {
         auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
-        auto c0 = add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = add(make_size(&in.B(), 0, index_ty, in.loc()));
-        add_foreach(
-            index_ty, {c0.get()}, {c_shape0.get()},
+        auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
+        bb_.foreach_loop(
+            index_ty, array_view<value>{c0.get()}, array_view<value>{c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
                 auto K =
                     bb.add(make_size(&in.A(), in.tA() == transpose::T ? 0 : 1, index_ty, in.loc()));
@@ -489,7 +472,7 @@ void linalg_generator::operator()(sum_inst &in) {
                 auto acc = bb.for_loop(
                     index_ty, c0, K, {}, {c_init}, {bt->element_data_ty()},
                     [&](region_builder &bb, array_view<value> args) {
-                        auto index_list = std::array<value, 2u>{&loop_vars[0], args[0]};
+                        auto index_list = std::array<value, 2u>{loop_vars[0], args[0]};
                         if (in.tA() == transpose::T) {
                             std::swap(index_list[0], index_list[1]);
                         }
@@ -500,12 +483,12 @@ void linalg_generator::operator()(sum_inst &in) {
                         bb.add(make_yield({sum}, in.loc()));
                     });
                 blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),
-                            {&loop_vars[0]}, in.loc());
+                            {loop_vars[0]}, in.loc());
             },
             in.loc());
     }
 
-    add(std::move(parallel));
+    bb_.add(std::move(parallel));
 }
 
 lower_linalg_pass::lower_linalg_pass(::tinytc_core_info const *info) : info_(std::move(info)) {
@@ -527,14 +510,12 @@ void lower_linalg_pass::run_on_function(function_node &fn) {
     tiling[0] = work_group_size[0] / subgroup_size;
     tiling[1] = work_group_size[1];
 
-    auto gen = linalg_generator{tiling, core_cfg};
     walk<walk_order::post_order>(fn, [&](region_node &reg) {
         for (auto it = reg.begin(); it != reg.end(); ++it) {
             if (isa<blas_a2_inst>(*it) || isa<blas_a3_inst>(*it)) {
-                gen.insertion_point(it);
+                auto gen = linalg_generator{tiling, core_cfg, reg, it.get()};
                 visit(gen, *it);
-                reg.insts().erase(it);
-                it = gen.insertion_point();
+                it = reg.insts().erase(gen.insertion_point());
             }
         }
     });

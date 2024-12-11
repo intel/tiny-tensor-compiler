@@ -140,6 +140,8 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline auto get_use(std::size_t pos) const -> tinytc::use const & { return op_begin_[pos]; }
     inline auto num_operands() const -> std::int64_t { return op_end_ - op_begin_; }
 
+    void subs(tinytc_value_t old_value, tinytc_value_t new_value, bool recursive = true);
+
     // Iterator over results
     inline auto result_begin() -> tinytc_value_t { return result_begin_; }
     inline auto result_end() -> tinytc_value_t { return result_end_; }

@@ -1,0 +1,19 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-opt -plower-coopmatrix < %s | filecheck %s
+
+
+func @scale() subgroup_size(16) {
+    parallel {
+        %0 = constant 3.14159265358979323846 : f32
+        %1 = constant 13.36901521971920820459 : coopmatrix<f32x16x4,matrix_acc>
+        %2 = cooperative_matrix_scale %0, %1 : coopmatrix<f32x16x4,matrix_acc>
+    }
+; CHECK:      %0 = constant 0x1.921fb54442d18p+1 : f32
+; CHECK-NEXT: %1 = constant 0x1.abcef9018d72bp+3 : f32
+; CHECK-NEXT: %2 = arith.mul %0, %1 : f32
+; CHECK-NEXT: %3 = arith.mul %0, %1 : f32
+; CHECK-NEXT: %4 = arith.mul %0, %1 : f32
+; CHECK-NEXT: %5 = arith.mul %0, %1 : f32
+}

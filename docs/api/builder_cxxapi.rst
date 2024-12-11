@@ -820,11 +820,34 @@ prog
 Region
 ======
 
+* Functions
+
+  * :ref:`tinytc::next`
+
+  * :ref:`tinytc::prev`
+
 * Classes
 
   * :ref:`tinytc::region`
 
   * :ref:`tinytc::region_builder`
+
+Region Functions
+----------------
+
+.. _tinytc::next:
+
+next
+....
+
+.. doxygenfunction:: tinytc::next
+
+.. _tinytc::prev:
+
+prev
+....
+
+.. doxygenfunction:: tinytc::prev
 
 Region Classes
 --------------

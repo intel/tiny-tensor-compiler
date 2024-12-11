@@ -24,6 +24,7 @@ enum class region_kind { mixed = 0x0, collective = 0x1, spmd = 0x2 };
 template <> struct ilist_callbacks<tinytc_inst> {
     auto get_parent_region() -> tinytc_region *;
     void node_added(tinytc_inst_t node);
+    void node_moved(tinytc_inst_t node);
     void node_removed(tinytc_inst_t node);
 };
 
@@ -85,8 +86,9 @@ struct tinytc_region final {
     tinytc_inst_t def_inst_;
     tinytc::region_kind kind_;
     tinytc::location loc_;
-    tinytc::ilist<tinytc_inst> insts_;
+    // params_ must come before insts_ such that the dtors are called in the correct order
     std::vector<tinytc_value> params_;
+    tinytc::ilist<tinytc_inst> insts_;
 };
 
 namespace tinytc {

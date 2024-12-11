@@ -84,6 +84,8 @@ Common
 
   * :ref:`tinytc_inst_t`
 
+  * :ref:`tinytc_inst_iterator_t`
+
   * :ref:`tinytc_region_t`
 
   * :ref:`tinytc_value_t`
@@ -339,6 +341,13 @@ tinytc_inst_t
 
 .. doxygentypedef:: tinytc_inst_t
 
+.. _tinytc_inst_iterator_t:
+
+tinytc_inst_iterator_t
+......................
+
+.. doxygentypedef:: tinytc_inst_iterator_t
+
 .. _tinytc_region_t:
 
 tinytc_region_t
@@ -584,6 +593,8 @@ Instruction
   * :ref:`tinytc_work_group_inst_create`
 
   * :ref:`tinytc_yield_inst_create`
+
+  * :ref:`tinytc_inst_get_parent_region`
 
   * :ref:`tinytc_inst_get_regions`
 
@@ -839,6 +850,13 @@ tinytc_yield_inst_create
 
 .. doxygenfunction:: tinytc_yield_inst_create
 
+.. _tinytc_inst_get_parent_region:
+
+tinytc_inst_get_parent_region
+.............................
+
+.. doxygenfunction:: tinytc_inst_get_parent_region
+
 .. _tinytc_inst_get_regions:
 
 tinytc_inst_get_regions
@@ -945,19 +963,73 @@ Region
 
 * Functions
 
-  * :ref:`tinytc_region_add_instruction`
+  * :ref:`tinytc_region_append`
+
+  * :ref:`tinytc_region_begin`
+
+  * :ref:`tinytc_region_end`
+
+  * :ref:`tinytc_region_erase`
+
+  * :ref:`tinytc_region_insert`
+
+  * :ref:`tinytc_next_inst`
+
+  * :ref:`tinytc_prev_inst`
 
   * :ref:`tinytc_region_get_parameters`
 
 Region Functions
 ----------------
 
-.. _tinytc_region_add_instruction:
+.. _tinytc_region_append:
 
-tinytc_region_add_instruction
-.............................
+tinytc_region_append
+....................
 
-.. doxygenfunction:: tinytc_region_add_instruction
+.. doxygenfunction:: tinytc_region_append
+
+.. _tinytc_region_begin:
+
+tinytc_region_begin
+...................
+
+.. doxygenfunction:: tinytc_region_begin
+
+.. _tinytc_region_end:
+
+tinytc_region_end
+.................
+
+.. doxygenfunction:: tinytc_region_end
+
+.. _tinytc_region_erase:
+
+tinytc_region_erase
+...................
+
+.. doxygenfunction:: tinytc_region_erase
+
+.. _tinytc_region_insert:
+
+tinytc_region_insert
+....................
+
+.. doxygenfunction:: tinytc_region_insert
+
+.. _tinytc_next_inst:
+
+tinytc_next_inst
+................
+
+.. doxygenfunction:: tinytc_next_inst
+
+.. _tinytc_prev_inst:
+
+tinytc_prev_inst
+................
+
+.. doxygenfunction:: tinytc_prev_inst
 
 .. _tinytc_region_get_parameters:
 

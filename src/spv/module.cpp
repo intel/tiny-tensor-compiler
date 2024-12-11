@@ -20,6 +20,7 @@
 
 namespace tinytc {
 void ilist_callbacks<spv::spv_inst>::node_added(spv::spv_inst *) {}
+void ilist_callbacks<spv::spv_inst>::node_moved(spv::spv_inst *) {}
 void ilist_callbacks<spv::spv_inst>::node_removed(spv::spv_inst *node) { delete node; }
 } // namespace tinytc
 

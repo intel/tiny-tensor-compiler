@@ -102,6 +102,9 @@ Builder C++-API:
     class:
       - tinytc::prog
   Region:
+    function:
+      - tinytc::next
+      - tinytc::prev
     class:
       - tinytc::region
       - tinytc::region_builder

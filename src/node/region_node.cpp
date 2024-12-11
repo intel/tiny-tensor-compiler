@@ -3,7 +3,6 @@
 
 #include "node/region_node.hpp"
 #include "node/inst_node.hpp"
-#include "support/ilist_base.hpp"
 #include "tinytc/tinytc.h"
 
 namespace tinytc {
@@ -16,6 +15,9 @@ auto ilist_callbacks<tinytc_inst>::get_parent_region() -> tinytc_region * {
 void ilist_callbacks<tinytc_inst>::node_added(tinytc_inst_t node) {
     node->parent(get_parent_region());
 }
+void ilist_callbacks<tinytc_inst>::node_moved(tinytc_inst_t node) {
+    node->parent(get_parent_region());
+}
 void ilist_callbacks<tinytc_inst>::node_removed(tinytc_inst_t node) { tinytc_inst_destroy(node); }
 
 } // namespace tinytc
@@ -24,13 +26,7 @@ using namespace tinytc;
 
 tinytc_region::tinytc_region() : def_inst_{nullptr}, kind_{tinytc::region_kind::mixed} {}
 
-tinytc_region::~tinytc_region() {
-    // Erase instructions in reverse order such that we delete value use before value definition
-    auto prev_it = insts_.end();
-    while (prev_it != insts_.begin()) {
-        prev_it = insts_.erase(--prev_it);
-    }
-}
+tinytc_region::~tinytc_region() {}
 
 void tinytc_region::loc(tinytc::location const &loc) {
     loc_ = loc;

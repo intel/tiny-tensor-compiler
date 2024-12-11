@@ -84,7 +84,10 @@ template <typename IListNodeT, bool IsConst> class ilist_iterator {
     base_pointer pos_;
 };
 
-template <typename NodeT, typename IListCallback>
+enum class ilist_clear_order { forward, reverse };
+
+template <typename NodeT, typename IListCallback,
+          ilist_clear_order ClearOrder = ilist_clear_order::reverse>
 requires requires(IListCallback &cb, NodeT *node) {
     std::is_base_of_v<ilist_node<NodeT>, NodeT>;
     cb.node_added(node);
@@ -112,6 +115,21 @@ class ilist_base : protected IListCallback {
     }
     ~ilist_base() { clear(); }
 
+    ilist_base(ilist_base const &other) = delete;
+    ilist_base &operator=(ilist_base const &other) = delete;
+
+    ilist_base(ilist_base &&other) {
+        sentinel_.set_sentinel();
+        sentinel_.prev(&sentinel_);
+        sentinel_.next(&sentinel_);
+
+        swap(other);
+    }
+    ilist_base &operator=(ilist_base &&other) {
+        swap(other);
+        return *this;
+    }
+
     auto begin() -> iterator { return ++iterator{&sentinel_}; }
     auto begin() const -> const_iterator { return cbegin(); }
     auto cbegin() const -> const_iterator { return ++const_iterator{&sentinel_}; }
@@ -134,7 +152,16 @@ class ilist_base : protected IListCallback {
     void push_back(pointer node) { insert(end(), node); }
     void pop_front() { erase(begin()); }
     void pop_back() { erase(--end()); }
-    void clear() { erase(begin(), end()); }
+    void clear() {
+        if constexpr (ClearOrder == ilist_clear_order::reverse) {
+            auto it = end();
+            while (it != begin()) {
+                it = erase(--it);
+            }
+        } else {
+            erase(begin(), end());
+        }
+    }
 
     auto insert(iterator it, pointer node) -> iterator {
         // let s = sentinel
@@ -165,7 +192,7 @@ class ilist_base : protected IListCallback {
     }
     auto insert_after(iterator it, pointer node) -> iterator { return insert(++it, node); }
 
-    auto erase(iterator it) -> iterator {
+    auto unlink(iterator it) -> iterator {
         // let s = sentinel
         // |1|: n0{prev->s,next->s}, s{prev->n0,next->n0}
         // |2|: n0{prev->s,next->n1}, n1{prev->n0,next->s}, s{prev->n1,next->n0}
@@ -178,8 +205,19 @@ class ilist_base : protected IListCallback {
         // |1| (it -> n0): s{prev->s,next->s}
         // |2| (it -> n0): n1{prev->s,next->s}, s{prev->n1,next->n1}
         // |2| (it -> n1): n0{prev->s,next->s}, s{prev->n0,next->n0}
-        this->node_removed(&*it);
         return iterator{next};
+    }
+    auto unlink(iterator begin, iterator end) -> iterator {
+        while (begin != end) {
+            begin = unlínk(begin);
+        }
+        return begin;
+    }
+
+    auto erase(iterator it) -> iterator {
+        auto next = unlink(it);
+        this->node_removed(&*it);
+        return next;
     }
     auto erase(iterator begin, iterator end) -> iterator {
         while (begin != end) {
@@ -189,6 +227,26 @@ class ilist_base : protected IListCallback {
     }
 
   private:
+    void swap(ilist_base &o) {
+        auto o_prev = sentinel_.prev() != &sentinel_ ? sentinel_.prev() : &o.sentinel_;
+        auto o_next = sentinel_.next() != &sentinel_ ? sentinel_.next() : &o.sentinel_;
+        sentinel_.prev(o.sentinel_.prev() != &o.sentinel_ ? o.sentinel_.prev() : &sentinel_);
+        sentinel_.next(o.sentinel_.next() != &o.sentinel_ ? o.sentinel_.next() : &sentinel_);
+        sentinel_.next()->prev(&sentinel_);
+        sentinel_.prev()->next(&sentinel_);
+        o.sentinel_.prev(o_prev);
+        o.sentinel_.next(o_next);
+        o.sentinel_.next()->prev(&o.sentinel_);
+        o.sentinel_.prev()->next(&o.sentinel_);
+
+        for (auto &node : *this) {
+            this->node_moved(&node);
+        }
+        for (auto &node : o) {
+            this->node_moved(&node);
+        }
+    }
+
     base_type sentinel_;
 };
 

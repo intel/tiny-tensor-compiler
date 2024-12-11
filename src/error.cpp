@@ -252,6 +252,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
                "not equal the number of initializers";
     case tinytc_status_ir_invalid_alignment:
         return "Invalid alignment, must be a positive power of two";
+    case tinytc_status_ir_value_still_has_uses:
+        return "A value shall be erased that still has uses";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";
