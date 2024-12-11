@@ -292,7 +292,7 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         }
         throw compilation_error(loc, status::ir_forbidden_cast);
     };
-    auto const cast_from_float = [&](scalar_type to_ty, spv_inst *spv_to_ty,
+    auto const cast_from_float = [&](scalar_type to_ty, spv_inst *spv_to_ty, scalar_type a_ty,
                                      spv_inst *a) -> spv_inst * {
         switch (to_ty) {
         case scalar_type::i8:
@@ -309,8 +309,12 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
             return mod_->add<OpFConvert>(spv_to_ty, a);
         case scalar_type::c32:
         case scalar_type::c64: {
-            auto spv_float_ty = unique_.spv_ty(component_type(to_ty));
-            auto re = mod_->add<OpFConvert>(spv_float_ty, a);
+            auto re = a;
+            if (component_type(to_ty) != a_ty) {
+                auto spv_float_ty = unique_.spv_ty(component_type(to_ty));
+                re = mod_->add<OpFConvert>(spv_float_ty, a);
+            }
+            // If the line below is change, adjust make_complex_mul as well
             return mod_->add<OpCompositeInsert>(spv_to_ty, re, unique_.null_constant(spv_to_ty),
                                                 std::vector<LiteralInteger>{0});
         }
@@ -339,12 +343,12 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
         return cast_from_int(to_ty, spv_to_ty, a);
     case scalar_type::bf16: {
         auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
-        return cast_from_float(to_ty, spv_to_ty, af);
+        return cast_from_float(to_ty, spv_to_ty, scalar_type::f32, af);
     }
     case scalar_type::f16:
     case scalar_type::f32:
     case scalar_type::f64:
-        return cast_from_float(to_ty, spv_to_ty, a);
+        return cast_from_float(to_ty, spv_to_ty, a_ty, a);
     case scalar_type::c32:
     case scalar_type::c64: {
         return cast_from_complex(to_ty, spv_to_ty, a);
@@ -355,6 +359,23 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
 
 auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
                                       bool conj_b) -> spv_inst * {
+    const auto is_imag_zero = [&](spv_inst *a) -> bool {
+        // We capture the case here if "a" stems from a non-complex -> complex cast
+        if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
+            return ci->type() == ty && ci->op1() == unique_.null_constant(ty) &&
+                   ci->op2().size() == 1 && ci->op2()[0] == 0;
+        }
+        return false;
+    };
+
+    if (is_imag_zero(a)) {
+        a = mod_->add<OpVectorShuffle>(ty, a, a, std::vector<LiteralInteger>{0, 0});
+        return mod_->add<OpFMul>(ty, a, b);
+    } else if (is_imag_zero(b)) {
+        b = mod_->add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{0, 0});
+        return mod_->add<OpFMul>(ty, a, b);
+    }
+
     auto neg_a = mod_->add<OpFNegate>(ty, a);
     auto a_times_i =
         conj_b ? mod_->add<OpVectorShuffle>(ty, a, neg_a, std::vector<LiteralInteger>{1, 2})

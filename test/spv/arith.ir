@@ -15,6 +15,7 @@
 ; CHECK: %[[#F16:]] = OpTypeFloat 16
 ; CHECK: %[[#I16:]] = OpTypeInt 16 0
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK: %[[#C32_NULL:]] = OpConstantNull %[[#C32]]
 
 func @tbool(%a: bool, %b: bool) {
     %0 = arith.and %a, %b : bool
@@ -159,6 +160,18 @@ func @tcomplex(%a: c32, %b: c32) {
 ; CHECK-NEXT:              %[[#TC_B_ABS_1:]] = OpCompositeInsert %[[#C32]] %[[#TC_B_ABS]] %[[#TC_DUMMY]] 0
 ; CHECK-NEXT:              %[[#TC_B_ABS_2:]] = OpVectorShuffle %[[#C32]] %[[#TC_B_ABS_1]] %[[#TC_DUMMY]] 0 0
 ; CHECK-NEXT:                         %[[#]] = OpFDiv %[[#C32]] %[[#TC_A_TIMES_CONJ_B]] %[[#TC_B_ABS_2]]
+}
+
+func @tfloatcomplex(%a: f32, %b: c32) {
+    %a2 = cast %a : c32
+    %0 = arith.mul %a2, %b : c32
+    %1 = arith.mul %b, %a2 : c32
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:        %[[#A2:]] = OpCompositeInsert %[[#C32]] %[[#]] %[[#C32_NULL]] 0
+; CHECK-NEXT: %[[#A2_1:]] = OpVectorShuffle %[[#C32]] %[[#A2]] %[[#A2]] 0 0
+; CHECK-NEXT:      %[[#]] = OpFMul %[[#C32]] %[[#A2_1]] %[[#]]
+; CHECK-NEXT: %[[#A2_2:]] = OpVectorShuffle %[[#C32]] %[[#A2]] %[[#A2]] 0 0
+; CHECK-NEXT:      %[[#]] = OpFMul %[[#C32]] %[[#]] %[[#A2_2]]
 }
 
 func @tfloatcoopmatrix() subgroup_size(16) {
