@@ -45,24 +45,30 @@ TEST_CASE("suggest work group size") {
 }
 
 TEST_CASE("max register block") {
-    auto s1 = max_register_block_gemm(4, 16, 8192);
+    auto s1 = max_register_block_gemm(4, 4, 4, 16, 8192);
     CHECK(s1.first == 32);
     CHECK(s1.second == 19);
-    auto s2 = max_register_block_gemm(4, 16, 16384);
+    auto s2 = max_register_block_gemm(4, 4, 4, 16, 16384);
     CHECK(s2.first == 32);
     CHECK(s2.second == 44);
-    auto s3 = max_register_block_gemm(4, 32, 8192);
+    auto s3 = max_register_block_gemm(4, 4, 4, 32, 8192);
     CHECK(s3.first == 32);
     CHECK(s3.second == 19);
-    auto s4 = max_register_block_gemm(4, 32, 16384);
+    auto s4 = max_register_block_gemm(4, 4, 4, 32, 16384);
     CHECK(s4.first == 32);
     CHECK(s4.second == 44);
-    auto d1 = max_register_block_gemm(8, 16, 8192);
+    auto d1 = max_register_block_gemm(8, 8, 8, 16, 8192);
     CHECK(d1.first == 16);
     CHECK(d1.second == 16);
-    auto d2 = max_register_block_gemm(8, 16, 16384);
+    auto d2 = max_register_block_gemm(8, 8, 8, 16, 16384);
     CHECK(d2.first == 32);
     CHECK(d2.second == 19);
+    auto m1 = max_register_block_gemm(2, 2, 4, 16, 8192);
+    CHECK(m1.first == 32);
+    CHECK(m1.second == 24);
+    auto m2 = max_register_block_gemm(2, 2, 4, 16, 16384);
+    CHECK(m2.first == 48);
+    CHECK(m2.second == 35);
 }
 
 TEST_CASE("block size") {

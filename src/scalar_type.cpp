@@ -50,6 +50,18 @@ bool is_integer_type(scalar_type ty) {
     return false;
 }
 
+auto acc_type(scalar_type ty) -> scalar_type {
+    switch (ty) {
+    case scalar_type::i8:
+        return scalar_type::i32;
+    case scalar_type::bf16:
+    case scalar_type::f16:
+        return scalar_type::f32;
+    default:
+        return ty;
+    }
+}
+
 auto component_count(scalar_type ty) -> vector_size {
     switch (ty) {
     case scalar_type::c32:

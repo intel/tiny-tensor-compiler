@@ -5,6 +5,7 @@
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
+#include "scalar_type.hpp"
 #include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 
@@ -88,12 +89,12 @@ auto suggest_local_tiling(array_view<blas_shape> const &shapes,
         return {1, 1};
     }
 
-    auto max_ty_size = std::max_element(shapes.begin(), shapes.end(),
-                                        [](blas_shape const &a, blas_shape const &b) {
-                                            auto const a0 = size(a.dst_ty);
-                                            auto const b0 = size(b.dst_ty);
-                                            return a0 < b0;
-                                        });
+    auto max_ty = std::max_element(shapes.begin(), shapes.end(),
+                                   [](blas_shape const &a, blas_shape const &b) {
+                                       auto const a0 = size(acc_type(a.dst_ty));
+                                       auto const b0 = size(acc_type(b.dst_ty));
+                                       return a0 < b0;
+                                   });
 
     auto const max_shapei = [](array_view<blas_shape> const &shapes, std::size_t idx) {
         auto max_it = std::max_element(
@@ -108,13 +109,15 @@ auto suggest_local_tiling(array_view<blas_shape> const &shapes,
     auto M = max_shapei(shapes, 0);
     auto N = max_shapei(shapes, 1);
 
-    return suggest_local_tiling(size(max_ty_size->dst_ty), {M, N}, core_cfg);
+    return suggest_local_tiling(size(max_ty->op1_ty), size(max_ty->op2_ty),
+                                size(acc_type(max_ty->dst_ty)), {M, N}, core_cfg);
 }
 
-auto suggest_local_tiling(std::size_t type_size, std::array<std::int64_t, 2u> const &shape,
+auto suggest_local_tiling(std::size_t A_size, std::size_t B_size, std::size_t C_size,
+                          std::array<std::int64_t, 2u> const &shape,
                           core_config const &core_cfg) -> local_tiling {
-    auto [rows, cols] =
-        max_register_block_gemm(type_size, core_cfg.subgroup_size, core_cfg.register_space);
+    auto [rows, cols] = max_register_block_gemm(A_size, B_size, C_size, core_cfg.subgroup_size,
+                                                core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {
         auto limit = std::numeric_limits<std::int32_t>::max();
         if (!is_dynamic_value(mode)) {

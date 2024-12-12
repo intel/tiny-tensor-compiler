@@ -18,6 +18,7 @@ enum class vector_size { v1 = 1, v2 = 2, v3 = 3, v4 = 4, v8 = 8, v16 = 16 };
 bool is_floating_type(scalar_type ty);
 bool is_complex_type(scalar_type ty);
 bool is_integer_type(scalar_type ty);
+auto acc_type(scalar_type ty) -> scalar_type;
 auto component_count(scalar_type ty) -> vector_size;
 auto component_type(scalar_type ty) -> scalar_type;
 auto promotable(scalar_type a_ty, scalar_type b_ty) -> bool;
