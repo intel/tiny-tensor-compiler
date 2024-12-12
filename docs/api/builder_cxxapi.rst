@@ -487,7 +487,7 @@ Instruction
 
   * :ref:`tinytc::make_load(value,array_view\<value\>,tinytc_data_type_t,location const&)`
 
-  * :ref:`tinytc::make_load(value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&)`
+  * :ref:`tinytc::make_load(load_flag,value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&)`
 
   * :ref:`tinytc::make_parallel`
 
@@ -724,12 +724,12 @@ make_load(value,array_view<value>,tinytc_data_type_t,location const&)
 
 .. doxygenfunction:: tinytc::make_load(value,array_view<value>,tinytc_data_type_t,location const&)
 
-.. _tinytc::make_load(value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&):
+.. _tinytc::make_load(load_flag,value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&):
 
-make_load(value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
-..................................................................................
+make_load(load_flag,value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
+............................................................................................
 
-.. doxygenfunction:: tinytc::make_load(value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_load(load_flag,value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
 
 .. _tinytc::make_parallel:
 

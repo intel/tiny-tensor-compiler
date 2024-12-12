@@ -107,8 +107,6 @@ func @unsupported_loads(%A: memref<f16x32x16>, %B: memref<f16x33x16>) subgroup_s
     %0 = cooperative_matrix_load.n %A[%z,%z] : coopmatrix<f16x16x16,matrix_a>
     ; Transpose unsupported
     %1 = cooperative_matrix_load.t %A[%z,%z] : coopmatrix<f16x16x16,matrix_a>
-    ; Offset not 4 byte aligned
-    %2 = cooperative_matrix_load.n %A[%c1,%z], align 4 : coopmatrix<f16x16x16,matrix_a>
     ; Stride not 8 byte aligned
     %3 = cooperative_matrix_load.n %B[%z,%z], align 4 : coopmatrix<f16x16x16,matrix_a>
 
@@ -119,7 +117,6 @@ func @unsupported_loads(%A: memref<f16x32x16>, %B: memref<f16x33x16>) subgroup_s
 ; CHECK: matrix_ext(%0) = 0
 ; CHECK: matrix_ext(%1) = 0
 ; CHECK: matrix_ext(%2) = 0
-; CHECK: matrix_ext(%3) = 0
-; CHECK: matrix_ext(%4) = 1
-; CHECK: matrix_ext(%5) = 0
+; CHECK: matrix_ext(%3) = 1
+; CHECK: matrix_ext(%4) = 0
 }

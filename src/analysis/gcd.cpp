@@ -7,6 +7,7 @@
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 
+#include <cstdlib> // IWYU pragma: keep
 #include <functional>
 #include <numeric>
 #include <utility>

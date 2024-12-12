@@ -4,13 +4,11 @@
 #ifndef CONVERTER_20241111_HPP
 #define CONVERTER_20241111_HPP
 
-#include "analysis/matrix_ext.hpp"
 #include "device_info.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "spv/defs.hpp"
 #include "spv/uniquifier.hpp"
-#include "support/casting.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -20,10 +18,6 @@
 #include <stack>
 #include <unordered_map>
 #include <vector>
-
-namespace tinytc {
-class coopmatrix_data_type;
-} // namespace tinytc
 
 namespace tinytc::spv {
 
@@ -103,25 +97,11 @@ class inst_converter {
     inline auto unique() -> uniquifier & { return unique_; }
 
   private:
-    template <typename Iterator>
-    auto num_yielded_vals(Iterator begin, Iterator end) -> std::int64_t {
-        std::int64_t num_results = 0;
-        for (; begin != end; ++begin) {
-            if (auto ct = dyn_cast<coopmatrix_data_type>(begin->ty()); ct && !mext_.get(*begin)) {
-                num_results += ct->length(core_cfg_.subgroup_size);
-            } else {
-                ++num_results;
-            }
-        }
-        return num_results;
-    }
     auto get_last_label() -> spv_inst *;
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
-    auto multi_declare(tinytc_value const &v, std::vector<spv_inst *> insts);
-    auto multi_val(tinytc_value const &v) -> std::vector<spv_inst *> &;
     auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
                         location const &loc) -> spv_inst *;
     auto make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty, spv_inst *a,
@@ -134,25 +114,17 @@ class inst_converter {
     auto make_constant(scalar_type sty, spv_inst *spv_ty,
                        constant_inst::value_type const &val) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
-    auto make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty, spv_inst *a,
-                                  spv_inst *b, spv_inst *c, location const &loc) -> spv_inst *;
     void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
                     spv_inst *value, std::int32_t align, location const &loc);
-    void emulate_cooperative_matrix_load(cooperative_matrix_load_inst const &in);
-    void emulate_cooperative_matrix_mul_add(cooperative_matrix_mul_add_inst const &in);
-    void emulate_cooperative_matrix_scale(cooperative_matrix_scale_inst const &in);
-    void emulate_cooperative_matrix_store(cooperative_matrix_store_inst const &in);
 
     tinytc_spv_mod_t mod_;
     uniquifier unique_;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
-    std::unordered_map<const_tinytc_value_t, std::vector<spv_inst *>> multi_vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;
     std::vector<spv_inst *> vars_used_by_function_;
     spv_inst *stack_ = nullptr;
     core_config core_cfg_ = {};
-    matrix_ext_analysis_result mext_;
 };
 
 } // namespace tinytc::spv

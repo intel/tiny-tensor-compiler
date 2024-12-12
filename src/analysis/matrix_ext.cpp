@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/matrix_ext.hpp"
-#include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
@@ -37,8 +36,8 @@ class matrix_ext_helper {
   public:
     matrix_ext_helper(::tinytc_core_info const &info,
                       std::unordered_set<const_tinytc_value_t> &mext,
-                      std::queue<const_tinytc_inst_t> &q, gcd_analysis_result const &gcd)
-        : info_{&info}, mext_{&mext}, q_{&q}, gcd_{&gcd} {}
+                      std::queue<const_tinytc_inst_t> &q)
+        : info_{&info}, mext_{&mext}, q_{&q} {}
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
@@ -53,13 +52,12 @@ class matrix_ext_helper {
   private:
     auto have(value_node const &val) -> bool;
     void kill(value_node const &val);
-    auto check_2d_block_io(value_node const &operand, value_node const &pos0,
-                           std::int32_t alignment, checked_flag flag) -> bool;
+    auto check_2d_block_io(value_node const &operand, std::int32_t alignment,
+                           checked_flag flag) -> bool;
 
     ::const_tinytc_core_info_t info_;
     std::unordered_set<const_tinytc_value_t> *mext_;
     std::queue<const_tinytc_inst_t> *q_;
-    const gcd_analysis_result *gcd_;
 };
 
 auto matrix_ext_helper::have(value_node const &val) -> bool { return mext_->contains(&val); }
@@ -101,15 +99,13 @@ void matrix_ext_helper::operator()(cast_inst const &in) {
     kill(in.a());
     kill(in.result(0));
 }
-auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node const &pos0,
-                                          std::int32_t alignment, checked_flag flag) -> bool {
+auto matrix_ext_helper::check_2d_block_io(value_node const &operand, std::int32_t alignment,
+                                          checked_flag flag) -> bool {
     auto const &block_io = info_->matrix().block_io();
     auto ot = get_memref_type(operand);
     const auto element_size = static_cast<std::int32_t>(size(ot->element_ty()));
 
-    const bool address_alignment_ok =
-        alignment >= block_io.address_alignment &&
-        (gcd_->get(pos0) == 0 || gcd_->get(pos0) * element_size >= block_io.address_alignment);
+    const bool address_alignment_ok = alignment >= block_io.address_alignment;
     const bool base_address_alignment_ok =
         flag == checked_flag::none || alignment >= block_io.base_address_alignment;
     const bool stride_ok = ot->stride(0) == 1 &&
@@ -121,7 +117,7 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
     const bool transpose_ok = in.t() == transpose::N;
-    if (!transpose_ok || !check_2d_block_io(in.operand(), in.pos0(), in.align(), in.checked())) {
+    if (!transpose_ok || !check_2d_block_io(in.operand(), in.align(), in.checked())) {
         kill(in.result(0));
     }
 }
@@ -148,7 +144,7 @@ void matrix_ext_helper::operator()(cooperative_matrix_scale_inst const &in) {
 }
 void matrix_ext_helper::operator()(cooperative_matrix_store_inst const &in) {
     const bool store_flag_ok = in.flag() == store_flag::regular;
-    if (!store_flag_ok || !check_2d_block_io(in.operand(), in.pos0(), in.align(), in.checked())) {
+    if (!store_flag_ok || !check_2d_block_io(in.operand(), in.align(), in.checked())) {
         kill(in.val());
     }
 }
@@ -197,7 +193,6 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
     // mext = coopmatrix values that are mapped to matrix extension
     auto mext = std::unordered_set<const_tinytc_value_t>{};
     auto q = std::queue<const_tinytc_inst_t>{};
-    auto gcd = gcd_analysis{}.run_on_function(fn);
 
     // Insert all coopmatrix values that could be mapped to matrix extension
     for (auto const &in0 : fn.body()) {
@@ -225,7 +220,7 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
         });
     }
 
-    auto helper = matrix_ext_helper{info, mext, q, gcd};
+    auto helper = matrix_ext_helper{info, mext, q};
 
     // kill all values from mext that cannot be mapped to the matrix extension
     while (!q.empty()) {

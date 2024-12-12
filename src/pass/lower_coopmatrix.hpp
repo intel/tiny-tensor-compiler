@@ -8,8 +8,6 @@
 
 namespace tinytc {
 
-class core_config;
-
 class lower_coopmatrix_pass {
   public:
     lower_coopmatrix_pass(::tinytc_core_info const *info);
@@ -17,8 +15,6 @@ class lower_coopmatrix_pass {
     void run_on_function(::tinytc_func &fn);
 
   private:
-    void run_on_region(::tinytc_region &reg, core_config const &core_cfg);
-
     ::tinytc_core_info const *info_;
 };
 

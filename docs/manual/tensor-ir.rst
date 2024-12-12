@@ -1555,7 +1555,7 @@ Flag            Description
 
 The optional "align" attribute may be passed to set the known minimum alignment of the access
 (power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+It is undefined behaviour if the memref plus the 2d-offset does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~
@@ -1687,7 +1687,7 @@ for the the real and imaginary separately.
 
 The optional "align" attribute may be passed to set the known minimum alignment of the access
 (power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+It is undefined behaviour if the memref plus the 2d-offset does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~

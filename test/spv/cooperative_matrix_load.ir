@@ -3,96 +3,48 @@
 
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
-; CHECK:      %[[#I32:]] = OpTypeInt 32 0
-; CHECK:  %[[#I32_PTR:]] = OpTypePointer CrossWorkgroup %[[#I32]]
-; CHECK:      %[[#I64:]] = OpTypeInt 64 0
-; CHECK:  %[[#I64_C64:]] = OpConstant %[[#I64]] 64
-; CHECK:  %[[#I64_C48:]] = OpConstant %[[#I64]] 48
-; CHECK:   %[[#I64_C1:]] = OpConstant %[[#I64]] 1
-; CHECK:     %[[#BOOL:]] = OpTypeBool
-; CHECK:   %[[#I64_C0:]] = OpConstant %[[#I64]] 0
-; CHECK: %[[#I32_NULL:]] = OpConstantNull %[[#I32]]
-; CHECK:  %[[#I64_C16:]] = OpConstant %[[#I64]] 16
+; CHECK:              %[[#I8:]] = OpTypeInt 8 0
+; CHECK:          %[[#I8_PTR:]] = OpTypePointer CrossWorkgroup %[[#I8]]
+; CHECK:             %[[#I64:]] = OpTypeInt 64 0
+; CHECK:         %[[#I64_C64:]] = OpConstant %[[#I64]] 64
+; CHECK:         %[[#I64_C48:]] = OpConstant %[[#I64]] 48
+; CHECK:          %[[#I64_C1:]] = OpConstant %[[#I64]] 1
+; CHECK:             %[[#I32:]] = OpTypeInt 32 0
+; CHECK:          %[[#I32_C3:]] = OpConstant %[[#I32]] 3
+; CHECK:         %[[#I32_C32:]] = OpConstant %[[#I32]] 32
+; CHECK:         %[[#I32_C16:]] = OpConstant %[[#I32]] 16
+; CHECK:          %[[#I32_C1:]] = OpConstant %[[#I32]] 1
+; CHECK: %[[#COOP_I8_32x16_B:]] = OpTypeCooperativeMatrixKHR %[[#I8]] %[[#I32_C3]] %[[#I32_C32]] %[[#I32_C16]] %[[#I32_C1]]
+; CHECK:          %[[#I32_C0:]] = OpConstant %[[#I32]] 0
 
 
-func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n %A[%x,%y] : coopmatrix<i32x16x3,matrix_a>
+func @coopmatrix_a_load_n(%A: memref<i8x64x48>, %x: index, %y: index) subgroup_size(16) {
+    parallel {
+        %0 = cooperative_matrix_load.n %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
+    }
 ; CHECK:                        %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT:             %[[#T1_MR:]] = OpFunctionParameter %[[#I32_PTR]]
+; CHECK-NEXT:             %[[#T1_MR:]] = OpFunctionParameter %[[#I8_PTR]]
 ; CHECK-NEXT:              %[[#T1_X:]] = OpFunctionParameter %[[#I64]]
 ; CHECK-NEXT:              %[[#T1_Y:]] = OpFunctionParameter %[[#I64]]
-; CHECK:            %[[#T1_X_STRIDE:]] = OpIMul %[[#I64]] %[[#T1_X]] %[[#I64_C1]]
-; CHECK-NEXT:       %[[#T1_Y_STRIDE:]] = OpIMul %[[#I64]] %[[#T1_Y]] %[[#I64_C64]]
-; CHECK-NEXT:        %[[#T1_OFFSET0:]] = OpIAdd %[[#I64]] %[[#T1_X_STRIDE]] %[[#T1_Y_STRIDE]]
-; CHECK-NEXT:        %[[#T1_POINTER:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#T1_MR]] %[[#T1_OFFSET0]]
-; CHECK:             %[[#T1_SUBPTR1:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#T1_POINTER]] %[[#I64_C0]]
-; CHECK-NEXT:                   %[[#]] = OpSubgroupBlockReadINTEL %[[#I32]] %[[#T1_SUBPTR1]]
-; CHECK-NEXT:        %[[#T1_OFFSET1:]] = OpIAdd %[[#I64]] %[[#I64_C0]] %[[#I64_C64]]
-; CHECK-NEXT:        %[[#T1_SUBPTR2:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#T1_POINTER]] %[[#T1_OFFSET1]]
-; CHECK-NEXT:                   %[[#]] = OpSubgroupBlockReadINTEL %[[#I32]] %[[#T1_SUBPTR2]]
-; CHECK-NEXT:        %[[#T1_OFFSET2:]] = OpIAdd %[[#I64]] %[[#T1_OFFSET1]] %[[#I64_C64]]
-; CHECK-NEXT:        %[[#T1_SUBPTR3:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#T1_POINTER]] %[[#T1_OFFSET2]]
-; CHECK-NEXT:                   %[[#]] = OpSubgroupBlockReadINTEL %[[#I32]] %[[#T1_SUBPTR3]]
+; CHECK:       %[[#T1_X_OFFSET:]] = OpIMul %[[#I64]] %[[#T1_X]] %[[#I64_C1]]
+; CHECK:       %[[#T1_Y_OFFSET:]] = OpIMul %[[#I64]] %[[#T1_Y]] %[[#I64_C64]]
+; CHECK:         %[[#T1_OFFSET:]] = OpIAdd %[[#I64]] %[[#T1_X_OFFSET]] %[[#T1_Y_OFFSET]]
+; CHECK:            %[[#T1_PTR:]] = OpInBoundsPtrAccessChain %[[#I8_PTR]] %[[#T1_MR]] %[[#T1_OFFSET]]
+; CHECK:                   %[[#]] = OpCooperativeMatrixLoadKHR %[[#COOP_I8_32x16_B]] %[[#T1_PTR]] %[[#I32_C0]] %[[#I64_C64]]
 }
 
-func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : coopmatrix<i32x32x2,matrix_a>
-; CHECK:                  %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT:             %[[#]] = OpFunctionParameter %[[#I32_PTR]]
-; CHECK-NEXT:        %[[#T2_X:]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT:             %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT:    %[[#T2_BEGIN:]] = OpLabel
-; CHECK:         %[[#T2_M_I32:]] = OpLoad %[[#I32]] %[[#]] Aligned 4
-; CHECK-NEXT:        %[[#T2_M:]] = OpSConvert %[[#I64]] %[[#T2_M_I32]]
-; CHECK-NEXT:    %[[#T2_NEG_X:]] = OpSNegate %[[#I64]] %[[#T2_X]]
-; CHECK-NEXT:  %[[#T2_MCHECK1:]] = OpSGreaterThanEqual %[[#BOOL]] %[[#T2_M]] %[[#T2_NEG_X]]
-; CHECK-NEXT:     %[[#T2_MREM:]] = OpISub %[[#I64]] %[[#I64_C64]] %[[#T2_X]]
-; CHECK-NEXT:  %[[#T2_MCHECK2:]] = OpSLessThan %[[#BOOL]] %[[#T2_M]] %[[#T2_MREM]]
-; CHECK-NEXT:   %[[#T2_MCOND1:]] = OpLogicalAnd %[[#BOOL]] %[[#T2_MCHECK1]] %[[#T2_MCHECK2]]
-; CHECK:                           OpBranchConditional %[[#T2_MCOND1]] %[[#T2_THEN1:]] %[[#T2_MERGE1:]]
-; CHECK-NEXT:     %[[#T2_THEN1]] = OpLabel
-; CHECK:            %[[#T2_V1:]] = OpLoad %[[#I32]] %[[#]]
-; CHECK:            %[[#T2_V2:]] = OpLoad %[[#I32]] %[[#]]
-; CHECK-NEXT:                      OpBranch %[[#T2_MERGE1]]
-; CHECK-NEXT:    %[[#T2_MERGE1]] = OpLabel
-; CHECK-NEXT:             %[[#]] = OpPhi %[[#I32]] %[[#T2_V1]] %[[#T2_THEN1]] %[[#I32_NULL]] %[[#T2_BEGIN]]
-; CHECK-NEXT:             %[[#]] = OpPhi %[[#I32]] %[[#T2_V2]] %[[#T2_THEN1]] %[[#I32_NULL]] %[[#T2_BEGIN]]
-; CHECK-NEXT:     %[[#T2_M_B2:]] = OpIAdd %[[#I64]] %[[#T2_M]] %[[#I64_C16]]
-; CHECK-NEXT: %[[#T2_NEG_M_B2:]] = OpSNegate %[[#I64]] %[[#T2_X]]
-; CHECK-NEXT:  %[[#T2_MCHECK3:]] = OpSGreaterThanEqual %[[#BOOL]] %[[#T2_M_B2]] %[[#T2_NEG_M_B2]]
-; CHECK-NEXT:  %[[#T2_MCHECK4:]] = OpSLessThan %[[#BOOL]] %[[#T2_M_B2]] %[[#T2_MREM]]
-; CHECK-NEXT:             %[[#]] = OpLogicalAnd %[[#BOOL]] %[[#T2_MCHECK3]] %[[#T2_MCHECK4]]
-; CHECK:        %[[#T2_MTHEN2:]] = OpLabel
-; CHECK:            %[[#T2_V3:]] = OpLoad %[[#I32]] %[[#]]
-; CHECK:            %[[#T2_V4:]] = OpLoad %[[#I32]] %[[#]]
-; CHECK:                  %[[#]] = OpPhi %[[#I32]] %[[#T2_V3]] %[[#T2_MTHEN2]] %[[#I32_NULL]] %[[#T2_MERGE1]]
-; CHECK-NEXT:             %[[#]] = OpPhi %[[#I32]] %[[#T2_V4]] %[[#T2_MTHEN2]] %[[#I32_NULL]] %[[#T2_MERGE1]]
-}
-
-func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
-; CHECK:                 %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I32_PTR]]
-; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT:       %[[#T3_Y:]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT:   %[[#T3_BEGIN:]] = OpLabel
-; CHECK:      %[[#T3_KCHECK1:]] = OpSLessThanEqual %[[#BOOL]] %[[#I64_C0]] %[[#T3_Y]]
-; CHECK-NEXT:    %[[#T3_KREM:]] = OpISub %[[#I64]] %[[#I64_C48]] %[[#T3_Y]]
-; CHECK-NEXT: %[[#T3_KCHECK2:]] = OpSLessThan %[[#BOOL]] %[[#I64_C0]] %[[#T3_KREM]]
-; CHECK-NEXT:   %[[#T3_KCOND:]] = OpLogicalAnd %[[#BOOL]] %[[#T3_KCHECK1]] %[[#T3_KCHECK2]]
-; CHECK:                          OpBranchConditional %[[#T3_KCOND]] %[[#T3_THEN1:]] %[[#T3_MERGE1:]]
-; CHECK-NEXT:    %[[#T3_THEN1]] = OpLabel
-; CHECK-NEXT: %[[#T3_SUBPTR1:]] = OpInBoundsPtrAccessChain %[[#I32_PTR]] %[[#]] %[[#I64_C0]]
-; CHECK-NEXT:      %[[#T3_V1:]] = OpSubgroupBlockReadINTEL %[[#I32]] %[[#T3_SUBPTR1]]
-; CHECK-NEXT:                     OpBranch %[[#T3_MERGE1]]
-; CHECK-NEXT:   %[[#T3_MERGE1]] = OpLabel
-; CHECK-NEXT:            %[[#]] = OpPhi %[[#I32]] %[[#T3_V1]] %[[#T3_THEN1]] %[[#I32_NULL]] %[[#T3_BEGIN]]
-}
-
-func @coopmatrix_a_load_t(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
-    %0 = cooperative_matrix_load.t %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
-; CHECK:           %[[#]] = OpFunction {{.*}}
-; CHECK:      %[[#T4_M:]] = OpSConvert %[[#I64]] %[[#]]
-; CHECK: %[[#T4_OFFSET:]] = OpIMul %[[#I64]] %[[#T4_M]] %[[#I64_C64]]
-; CHECK:           %[[#]] = OpIAdd %[[#I64]] %[[#T4_OFFSET]] %[[#I64_C1]]
+func @coopmatrix_a_load_n_checked(%A: memref<i8x64x48>, %x: index, %y: index) subgroup_size(16) {
+    parallel {
+        %0 = cooperative_matrix_load.n.both_checked %A[%x,%y], align 64 : coopmatrix<i8x16x32,matrix_a>
+    }
+; CHECK:             %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT: %[[#T2_PTR:]] = OpFunctionParameter %[[#I8_PTR]]
+; CHECK-NEXT:   %[[#T2_X:]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:   %[[#T2_Y:]] = OpFunctionParameter %[[#I64]]
+; CHECK:       %[[#T2_P1:]] = OpSConvert %[[#I32]] %[[#T2_Y]]
+; CHECK:       %[[#T2_P2:]] = OpSConvert %[[#I32]] %[[#T2_X]]
+; CHECK:       %[[#T2_P3:]] = OpSConvert %[[#I32]] %[[#I64_C48]]
+; CHECK:       %[[#T2_P4:]] = OpSConvert %[[#I32]] %[[#I64_C64]]
+; CHECK:       %[[#T2_P5:]] = OpSConvert %[[#I32]] %[[#I64_C64]]
+; CHECK:             %[[#]] = OpCooperativeMatrixLoadCheckedINTEL %[[#COOP_I8_32x16_B]] %[[#T2_PTR]] %[[#T2_P1]] %[[#T2_P2]] %[[#I32_C0]] %[[#T2_P3]] %[[#T2_P4]] %[[#T2_P5]]
 }

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/lower_coopmatrix.hpp"
+#include "analysis/matrix_ext.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
@@ -37,8 +38,9 @@ namespace tinytc {
 
 class coopmatrix_code_generator {
   public:
-    coopmatrix_code_generator(core_config core_cfg, region_node &reg)
-        : core_cfg_{std::move(core_cfg)}, bb_{&reg} {}
+    coopmatrix_code_generator(core_config core_cfg, matrix_ext_analysis_result mext,
+                              region_node &reg)
+        : core_cfg_{std::move(core_cfg)}, mext_{std::move(mext)}, bb_{&reg} {}
     // Returns true if instruction was replaced
     bool operator()(inst_node &in);
     bool operator()(arith_inst &in);
@@ -56,6 +58,8 @@ class coopmatrix_code_generator {
     void run_on_region(region_node &reg);
 
   private:
+    auto needs_coopmatrix_vector_impl(inst_node &in);
+
     void declare(tinytc_value const &v, std::vector<value> vals);
     template <typename OldRange, typename NewRange>
     void declare_copy_expand(OldRange old_range, NewRange new_range) {
@@ -90,6 +94,7 @@ class coopmatrix_code_generator {
     }
 
     core_config core_cfg_;
+    matrix_ext_analysis_result mext_;
     region_builder bb_;
     std::unordered_map<const_tinytc_value_t, std::vector<value>> vals_;
 };
@@ -114,10 +119,19 @@ auto coopmatrix_code_generator::vals(location const &loc, value_node const &v,
                             "Lower coopmatrix: undefined value");
 }
 
+auto coopmatrix_code_generator::needs_coopmatrix_vector_impl(inst_node &in) {
+    const auto predicate = [this](tinytc_value &val) {
+        return isa<coopmatrix_data_type>(*val.ty()) && !this->mext_.get(val);
+    };
+    return std::any_of(in.result_begin(), in.result_end(), predicate) ||
+           std::any_of(in.op_begin(), in.op_end(), predicate);
+}
+
 bool coopmatrix_code_generator::operator()(inst_node &) { return false; }
 
 bool coopmatrix_code_generator::operator()(arith_inst &in) {
-    if (auto rt = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); rt) {
+    if (needs_coopmatrix_vector_impl(in)) {
+        auto rt = get_coopmatrix_type(in.result(0));
         auto &av = vals(in.loc(), in.a(), rt->length(core_cfg_.subgroup_size));
         auto &bv = vals(in.loc(), in.b(), rt->length(core_cfg_.subgroup_size));
         auto results = std::vector<value>{};
@@ -131,7 +145,8 @@ bool coopmatrix_code_generator::operator()(arith_inst &in) {
     return false;
 }
 bool coopmatrix_code_generator::operator()(arith_unary_inst &in) {
-    if (auto rt = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); rt) {
+    if (needs_coopmatrix_vector_impl(in)) {
+        auto rt = get_coopmatrix_type(in.result(0));
         auto &av = vals(in.loc(), in.a(), rt->length(core_cfg_.subgroup_size));
         auto results = std::vector<value>{};
         results.reserve(av.size());
@@ -144,7 +159,8 @@ bool coopmatrix_code_generator::operator()(arith_unary_inst &in) {
     return false;
 }
 bool coopmatrix_code_generator::operator()(cast_inst &in) {
-    if (auto rt = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); rt) {
+    if (needs_coopmatrix_vector_impl(in)) {
+        auto rt = get_coopmatrix_type(in.result(0));
         auto &av = vals(in.loc(), in.a(), rt->length(core_cfg_.subgroup_size));
         auto results = std::vector<value>{};
         results.reserve(av.size());
@@ -157,7 +173,8 @@ bool coopmatrix_code_generator::operator()(cast_inst &in) {
     return false;
 }
 bool coopmatrix_code_generator::operator()(constant_inst &in) {
-    if (auto rt = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); rt) {
+    if (needs_coopmatrix_vector_impl(in)) {
+        auto rt = get_coopmatrix_type(in.result(0));
         auto size = rt->length(core_cfg_.subgroup_size);
         auto cst_in = std::make_unique<constant_inst>(in.value(), rt->ty(), in.loc());
         auto cst_val = bb_.add(inst{cst_in.release()});
@@ -183,6 +200,9 @@ bool coopmatrix_code_generator::operator()(constant_inst &in) {
  *
  */
 bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
+    if (!needs_coopmatrix_vector_impl(in)) {
+        return false;
+    }
     auto ctx = in.operand().context();
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
@@ -272,6 +292,9 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
 }
 
 bool coopmatrix_code_generator::operator()(cooperative_matrix_mul_add_inst &in) {
+    if (!needs_coopmatrix_vector_impl(in)) {
+        return false;
+    }
     auto ctx = in.a().context();
     auto i32_ty = scalar_data_type::get(ctx, scalar_type::i32);
     auto at = get_coopmatrix_type(in.a());
@@ -361,6 +384,9 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_mul_add_inst &in) 
 }
 
 bool coopmatrix_code_generator::operator()(cooperative_matrix_scale_inst &in) {
+    if (!needs_coopmatrix_vector_impl(in)) {
+        return false;
+    }
     auto rt = get_coopmatrix_type(in.result(0));
     auto &bv = vals(in.loc(), in.b(), rt->length(core_cfg_.subgroup_size));
     auto scaled_vals = std::vector<value>{};
@@ -374,6 +400,9 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_scale_inst &in) {
 }
 
 bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
+    if (!needs_coopmatrix_vector_impl(in)) {
+        return false;
+    }
     auto ctx = in.operand().context();
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
@@ -457,8 +486,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
 }
 
 bool coopmatrix_code_generator::operator()(for_inst &in) {
-    if (std::any_of(in.result_begin(), in.result_end(),
-                    [](tinytc_value &val) { return isa<coopmatrix_data_type>(*val.ty()); })) {
+    if (needs_coopmatrix_vector_impl(in)) {
         auto new_for =
             make_for(in.loop_var().ty(), &in.from(), &in.to(), in.has_step() ? &in.step() : nullptr,
                      vals_copy_expand(in.loc(), in.iter_init()),
@@ -476,8 +504,7 @@ bool coopmatrix_code_generator::operator()(for_inst &in) {
     return false;
 }
 bool coopmatrix_code_generator::operator()(if_inst &in) {
-    if (std::any_of(in.result_begin(), in.result_end(),
-                    [](tinytc_value &val) { return isa<coopmatrix_data_type>(*val.ty()); })) {
+    if (needs_coopmatrix_vector_impl(in)) {
         auto new_if = std::make_unique<if_inst>(
             &in.condition(), get_return_types(in, core_cfg_.subgroup_size), in.loc());
         declare_copy_expand(in.results(), new_if->results());
@@ -493,8 +520,7 @@ bool coopmatrix_code_generator::operator()(if_inst &in) {
     return false;
 }
 bool coopmatrix_code_generator::operator()(yield_inst &in) {
-    if (std::any_of(in.op_begin(), in.op_end(),
-                    [](tinytc_value &val) { return isa<coopmatrix_data_type>(*val.ty()); })) {
+    if (needs_coopmatrix_vector_impl(in)) {
         bb_.add(make_yield(vals_copy_expand(in.loc(), in.operands()), in.loc()));
         return true;
     }
@@ -554,12 +580,9 @@ void lower_coopmatrix_pass::run_on_function(function_node &fn) {
         throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
 
-    run_on_region(fn.body(), core_cfg);
-}
-
-void lower_coopmatrix_pass::run_on_region(region_node &reg, core_config const &core_cfg) {
-    auto gen = coopmatrix_code_generator{core_cfg, reg};
-    gen.run_on_region(reg);
+    auto mext = matrix_ext_analysis{}.run_on_function(fn, *info_);
+    auto gen = coopmatrix_code_generator{core_cfg, std::move(mext), fn.body()};
+    gen.run_on_region(fn.body());
 }
 
 } // namespace tinytc
