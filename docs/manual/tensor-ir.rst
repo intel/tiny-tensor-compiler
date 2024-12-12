@@ -181,6 +181,15 @@ e.g. "f64" are double precision floating point numbers.
 The "bf16" type encodes bfloat16 floating point numbers.
 The "index" type is an integer type whose width is platform-specific.
 
+Type sizes in bytes are given by
+
+=========================== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+:math:`\alpha`                i8  i16  i32  i64 bf16  f16  f32  f64  c32  c64
+=========================== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+:math:`\text{size}(\alpha)`    1    2    4    8    2    2    4    8    8   16
+=========================== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
+
+
 Mixed precision operands might be allowed in instructions if the operands' types are *promotable*.
 The scalar type :math:`\alpha` may be promoted to the scalar type :math:`\beta` if all values an operand
 of type :math:`\alpha` may take can be exactly represented in type :math:`\beta`.
@@ -1195,9 +1204,10 @@ Load
 
 .. code:: abnf
 
-    value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
+    value-instruction           =/ "load" [load-flag] local-identifier "[" [local-identifier-list] "]"
                                           ["," "align" 1*DIGIT] ":" scalar-or-memref-type
     scalar-or-memref-type       =  scalar-type / memref-type
+    load-flag                   = ".block"
 
 Overview
 ~~~~~~~~
@@ -1208,7 +1218,24 @@ and a single index must be given for a group.
 
 The optional "align" attribute may be passed to set the known minimum alignment of the access
 (power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+It is undefined behaviour if the accessed location does not have the required minimum alignment at run-time.
+
+When the block flag is set then the subgroup local id is implicitly added to the first entry
+in the local identifier list. That is, when given the location %0[%1,%2,...,%N], each work-item in a subgroup
+reads from the location %0[%1+%s,%2,...,%N], where %s = builtin.subgroup_local_id : i32.
+The stride of the memref's first mode must be 1.
+The location must be dynamically uniform, meaning that all operands must be dynamically uniform.
+Moreover, block loads may only appear in SPMD regions.
+
+When the block flag is set then the work-items in a subgroup load their values from
+consecutive memory locations.
+Starting from the memory location M given by the second operand and the index list
+(e.g. %0[%1,%2,...,%N]), the work-item loads from the memory location
+:math:`M + \text{subgroup_local_id}`, where the offset is given in number of elements.
+Note that the stride of the memref type is ignored, the block load always loads from
+consecutive memorey locations.
+The location must be dynamically uniform, meaning that all operands must be dynamically uniform.
+Moreover, block loads may only appear in SPMD regions.
 
 Operands
 ~~~~~~~~~
@@ -1230,6 +1257,14 @@ Examples:
 #. ``load %0[5, %1] : f32 ; %0: memref<f32x10x?>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>, offset: ?>``
+
+Restrictions
+~~~~~~~~~~~~
+
+When the .block flag is set then the following restrictions apply:
+
+* The instruction must only appear in SPMD regions.
+* All operands must be dynamically uniform.
 
 Size
 ....
@@ -1334,7 +1369,7 @@ Store
 
     instruction     =/ "store" [store-flag] local-identifier ","
                                local-identifier "[" [local-identifier-list] "]" ["," "align" 1*DIGIT]
-    store-flag      = ".atomic" / ".atomic_add"
+    store-flag      = ".block" / ".atomic" / ".atomic_add"
 
 Overview
 ~~~~~~~~
@@ -1353,9 +1388,20 @@ for the the real and imaginary separately.
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.
 
+When the block flag is set then the work-items in a subgroup stores their values to
+consecutive memory locations.
+Starting from the memory location M given by the second operand and the index list
+(e.g. %0[%1,%2,...,%N]), the work-item write to the memory location
+:math:`M + \text{subgroup_local_id}`, where the offset is given in number of elements.
+Note that the stride of the memref type is ignored, the block store always writes to
+consecutive memorey locations.
+The location must be dynamically uniform,
+meaning that all but the first operand must be dynamically uniform.
+Moreover, block stores may only appear in SPMD regions.
+
 The optional "align" attribute may be passed to set the known minimum alignment of the access
 (power-of-two, in bytes).
-It is undefined behaviour if the memref operand does not have the required minimum alignment at run-time.
+It is undefined behaviour if the accessed location does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~
@@ -1372,6 +1418,11 @@ Restrictions
 ~~~~~~~~~~~~
 
 * :math:`\text{type}(value) = \text{element_type}(tensor)`
+
+When the .block flag is set the following additional restrictions apply:
+
+* The instruction must only appear in SPMD regions.
+* All but the first operand must be dynamically uniform.
 
 Work group collectives
 ......................

@@ -481,6 +481,8 @@ class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
     inline auto pos1() -> tinytc_value & { return op(op_pos1); }
     inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
 
+    auto kind() const -> tinytc::inst_execution_kind;
+
   private:
     transpose t_;
     checked_flag flag_;
@@ -590,9 +592,10 @@ class fuse_inst : public standard_inst<1, 1> {
 class load_inst : public standard_inst<dynamic, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::load; }
-    load_inst(tinytc_value_t op, array_view<tinytc_value_t> index_list, std::int32_t align,
-              tinytc_data_type_t ty, location const &lc = {});
+    load_inst(load_flag flag, tinytc_value_t op, array_view<tinytc_value_t> index_list,
+              std::int32_t align, tinytc_data_type_t ty, location const &lc = {});
 
+    inline auto flag() const -> load_flag { return flag_; }
     inline void align(std::int32_t a) { align_ = a; }
     inline auto align() const -> std::int32_t { return align_; }
     inline auto operand() -> tinytc_value & { return op(0); }
@@ -600,7 +603,10 @@ class load_inst : public standard_inst<dynamic, 1> {
     inline auto index_list() { return operands() | std::views::drop(1); }
     inline auto index_list() const { return operands() | std::views::drop(1); }
 
+    auto kind() const -> tinytc::inst_execution_kind;
+
   private:
+    load_flag flag_;
     std::int32_t align_;
 };
 
@@ -797,6 +803,8 @@ class store_inst : public standard_inst<dynamic, 0> {
     inline auto operand() const -> tinytc_value const & { return op(op_operand); }
     inline auto index_list() { return operands() | std::views::drop(2); }
     inline auto index_list() const { return operands() | std::views::drop(2); }
+
+    auto kind() const -> tinytc::inst_execution_kind;
 
   private:
     store_flag flag_;

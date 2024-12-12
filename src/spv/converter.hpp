@@ -137,7 +137,7 @@ class inst_converter {
     auto make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty, scalar_type c_ty, spv_inst *a,
                                   spv_inst *b, spv_inst *c, location const &loc) -> spv_inst *;
     void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
-                    spv_inst *value, location const &loc);
+                    spv_inst *value, std::int32_t align, location const &loc);
     void emulate_cooperative_matrix_load(cooperative_matrix_load_inst const &in);
     void emulate_cooperative_matrix_mul_add(cooperative_matrix_mul_add_inst const &in);
     void emulate_cooperative_matrix_scale(cooperative_matrix_scale_inst const &in);

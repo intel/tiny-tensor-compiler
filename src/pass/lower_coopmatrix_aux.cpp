@@ -13,14 +13,16 @@
 namespace tinytc {
 
 auto get_matrix_fibre(region_builder &bb, value operand, std::array<value, 2u> dyn_offsets,
-                      int omode, std::array<std::int64_t, 2u> const &shape, value subgroup_local_id,
+                      int omode, std::array<std::int64_t, 2u> const &shape, value work_item_offset,
                       location const &loc) -> value {
     auto index_ty = scalar_data_type::get(operand->context(), scalar_type::index);
     auto ot = get_memref_type(*operand);
     auto offsets = std::array<std::int64_t, 2u>{dynamic, dynamic};
 
-    dyn_offsets[omode] =
-        bb.add(make_arith(arithmetic::add, dyn_offsets[omode], subgroup_local_id, index_ty, loc));
+    if (work_item_offset) {
+        dyn_offsets[omode] = bb.add(
+            make_arith(arithmetic::add, dyn_offsets[omode], work_item_offset, index_ty, loc));
+    }
 
     auto sizes = std::array<std::int64_t, 2u>{0, 0};
     sizes[1 - omode] = shape[1];

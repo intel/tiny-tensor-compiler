@@ -79,6 +79,7 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
         run_function_pass(dead_code_elimination_pass{}, *prg);
         run_function_pass(alignment_propagation_pass{}, *prg);
     }
+    run_function_pass(lower_coopmatrix_pass{info}, *prg);
 
     run_function_pass(check_ir_pass{}, *prg);
 }

@@ -9,11 +9,16 @@
 ; CHECK: %[[#I64_C1:]] = OpConstant %[[#I64]] 1
 ; CHECK: %[[#I64_C0:]] = OpConstant %[[#I64]] 0
 ; CHECK: %[[#PTR_I64:]] = OpTypePointer CrossWorkgroup %[[#I64]]
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#PTR_I32:]] = OpTypePointer CrossWorkgroup %[[#I32]]
 ; CHECK: %[[#PTR_PTR_F32:]] = OpTypePointer CrossWorkgroup %[[#PTR_F32]]
 
 func @l1(%0: memref<f32x?x?>) {
     %2 = constant 0 : index
     %3 = load %0[%2,%2] : f32
+    parallel {
+        %4 = load.block %0[%2,%2] : f32
+    }
 ; CHECK:                 %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:      %[[#L1_MR:]] = OpFunctionParameter %[[#PTR_F32]]
 ; CHECK-NEXT:            %[[#]] = OpFunctionParameter %[[#I64]]
@@ -23,6 +28,9 @@ func @l1(%0: memref<f32x?x?>) {
 ; CHECK-NEXT: %[[#L1_OFFSET2:]] = OpIAdd %[[#I64]] %[[#I64_C0]] %[[#L1_TMP2]]
 ; CHECK-NEXT:   %[[#L1_MRSUB:]] = OpInBoundsPtrAccessChain %[[#PTR_F32]] %[[#L1_MR]] %[[#L1_OFFSET2]]
 ; CHECK-NEXT:            %[[#]] = OpLoad %[[#F32]] %[[#L1_MRSUB]]
+; CHECK:      %[[#L1_I32_PTR:]] = OpBitcast %[[#PTR_I32]] %[[#]]
+; CHECK:      %[[#L1_I32_VAL:]] = OpSubgroupBlockReadINTEL %[[#I32]] %[[#L1_I32_PTR]]
+; CHECK:                 %[[#]] = OpBitcast %[[#F32]] %[[#L1_I32_VAL]]
 }
 
 func @l2(%0: group<memref<f32x?,strided<?>>, offset: ?>) {

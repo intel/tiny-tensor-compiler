@@ -88,8 +88,9 @@ auto inst_cloner::operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_i
     return std::make_unique<lifetime_stop_inst>(subs(&in.object()), in.loc());
 }
 auto inst_cloner::operator()(load_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<load_inst>(subs(&in.operand()), subs_value_range(in.index_list()),
-                                       in.align(), in.result(0).ty(), in.loc());
+    return std::make_unique<load_inst>(in.flag(), subs(&in.operand()),
+                                       subs_value_range(in.index_list()), in.align(),
+                                       in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(gemm_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<gemm_inst>(in.tA(), in.tB(), subs(&in.alpha()), subs(&in.A()),

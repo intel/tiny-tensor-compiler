@@ -358,11 +358,18 @@ typedef enum {
     tinytc_checked_flag_both = 0x3  ///< Check for out-of-bound rows and cols
 } tinytc_checked_flag_t;
 
+//! Load flag
+typedef enum {
+    tinytc_load_flag_regular = 0, ///< Regular load
+    tinytc_load_flag_block = 1,   ///< Block load
+} tinytc_load_flag_t;
+
 //! Store flag
 typedef enum {
-    tinytc_store_flag_regular = 0,   ///< Non-atomic store
-    tinytc_store_flag_atomic = 1,    ///< Atomic store
-    tinytc_store_flag_atomic_add = 2 ///< Atomic fetch add
+    tinytc_store_flag_regular = 0,   ///< Non-atomic non-block store
+    tinytc_store_flag_block = 1,     ///< Block store
+    tinytc_store_flag_atomic = 2,    ///< Atomic store
+    tinytc_store_flag_atomic_add = 3 ///< Atomic fetch add
 } tinytc_store_flag_t;
 
 //! Matrix use

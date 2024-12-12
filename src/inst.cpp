@@ -133,10 +133,22 @@ char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
     return "unknown";
 }
 
+char const *tinytc_load_flag_to_string(tinytc_load_flag_t flag) {
+    switch (flag) {
+    case tinytc_load_flag_regular:
+        return "";
+    case tinytc_load_flag_block:
+        return "block";
+    }
+    return "unknown";
+}
+
 char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
     switch (flag) {
     case tinytc_store_flag_regular:
         return "";
+    case tinytc_store_flag_block:
+        return "block";
     case tinytc_store_flag_atomic:
         return "atomic";
     case tinytc_store_flag_atomic_add:
@@ -469,15 +481,16 @@ tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     });
 }
 
-tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                        uint32_t index_list_size, const tinytc_value_t *index_list,
-                                        int32_t align, tinytc_data_type_t ty,
-                                        const tinytc_location_t *loc) {
+tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_load_flag_t flag,
+                                        tinytc_value_t a, uint32_t index_list_size,
+                                        const tinytc_value_t *index_list, int32_t align,
+                                        tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<load_inst>(a, array_view{index_list, index_list_size}, align, ty,
+        *instr = std::make_unique<load_inst>(enum_cast<load_flag>(flag), a,
+                                             array_view{index_list, index_list_size}, align, ty,
                                              get_optional(loc))
                      .release();
     });

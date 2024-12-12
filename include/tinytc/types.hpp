@@ -325,9 +325,16 @@ enum class checked_flag {
     both = tinytc_checked_flag_both  ///< Check for out-of-bound rows and cols
 };
 
+//! Load flag
+enum class load_flag {
+    regular = tinytc_load_flag_regular, ///< Regular load
+    block = tinytc_load_flag_block      ///< Block load
+};
+
 //! Store flag
 enum class store_flag {
-    regular = tinytc_store_flag_regular,      ///< Non-atomic store
+    regular = tinytc_store_flag_regular,      ///< Non-atomic non-block store
+    block = tinytc_store_flag_block,          ///< Block store
     atomic = tinytc_store_flag_atomic,        ///< Atomic store
     atomic_add = tinytc_store_flag_atomic_add ///< Atomic fetch add
 };

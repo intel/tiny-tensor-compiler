@@ -107,6 +107,7 @@
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
+    BLOCK           ".block"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -233,6 +234,7 @@
 %nterm <std::vector<int_or_val>> expand_shape
 %nterm <inst> fuse_inst
 %nterm <inst> load_inst
+%nterm <load_flag> load_flag
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
 %nterm <inst> subgroup_broadcast_inst
@@ -1001,10 +1003,10 @@ fuse_inst:
 ;
 
 load_inst:
-    LOAD var LSQBR optional_value_list RSQBR optional_align COLON data_type {
+    LOAD load_flag var LSQBR optional_value_list RSQBR optional_align COLON data_type {
         try {
             $$ = inst {
-                std::make_unique<load_inst>(std::move($var), std::move($optional_value_list),
+                std::make_unique<load_inst>($load_flag, std::move($var), std::move($optional_value_list),
                                             $optional_align, std::move($data_type), @load_inst)
                     .release()
             };
@@ -1013,6 +1015,11 @@ load_inst:
             YYERROR;
         }
     }
+;
+
+load_flag:
+    %empty { $$ = load_flag::regular; }
+  | BLOCK  { $$ = load_flag::block; }
 ;
 
 store_inst:
@@ -1032,6 +1039,7 @@ store_inst:
 
 store_flag:
     %empty { $$ = store_flag::regular; }
+  | BLOCK  { $$ = store_flag::block; }
   | ATOMIC { $$ = store_flag::atomic; }
   | ATOMIC_ADD { $$ = store_flag::atomic_add; }
 ;

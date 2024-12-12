@@ -238,6 +238,8 @@ TINYTC_EXPORT char const *tinytc_builtin_to_string(tinytc_builtin_t b);
 TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
+//! Convert load flag to string
+TINYTC_EXPORT char const *tinytc_load_flag_to_string(tinytc_load_flag_t flag);
 //! Convert matrix use to string
 TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
 //! Convert store flag to string
@@ -587,9 +589,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
 /**
  * @brief Create load instruction
  *
- * @code %value = load %a[%index_list] : ty @endcode
+ * @code %value = load [flag] %a[%index_list] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param flag [in] load flag
  * @param a [in] operand
  * @param index_list_size [in] number of indices
  * @param index_list [in][range(0, index_list_size)] indices array; may be nullptr if
@@ -600,8 +603,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tiny
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                      uint32_t index_list_size,
+TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_load_flag_t flag,
+                                                      tinytc_value_t a, uint32_t index_list_size,
                                                       const tinytc_value_t *index_list,
                                                       int32_t align, tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);

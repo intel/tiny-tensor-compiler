@@ -1069,6 +1069,17 @@ inline char const *to_string(cmp_condition cond) {
 }
 
 /**
+ * @brief Convert Load flag to string
+ *
+ * @param flag Load flag
+ *
+ * @return C-string
+ */
+inline char const *to_string(load_flag flag) {
+    return ::tinytc_load_flag_to_string(static_cast<tinytc_load_flag_t>(flag));
+}
+
+/**
  * @brief Convert matrix use to string
  *
  * @param u Matrix use
@@ -1665,6 +1676,7 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
 /**
  * @brief Make load instruction
  *
+ * @param flag Load flag
  * @param a Operand
  * @param index_list Vector of indices
  * @param align minimum alignment; can be 0
@@ -1673,7 +1685,7 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
  *
  * @return Instruction
  */
-inline inst make_load(value a, array_view<value> index_list, std::int32_t align,
+inline inst make_load(load_flag flag, value a, array_view<value> index_list, std::int32_t align,
                       tinytc_data_type_t ty, location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
@@ -1681,7 +1693,9 @@ inline inst make_load(value a, array_view<value> index_list, std::int32_t align,
         throw std::out_of_range("index list too long");
     }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, align, ty, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, static_cast<tinytc_load_flag_t>(flag), a, len,
+                                             il, align, ty, &loc),
+                     loc);
     return inst(instr);
 }
 
@@ -1697,7 +1711,7 @@ inline inst make_load(value a, array_view<value> index_list, std::int32_t align,
  */
 inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t ty,
                       location const &loc = {}) {
-    return make_load(std::move(a), std::move(index_list), 0, ty, loc);
+    return make_load(load_flag::regular, std::move(a), std::move(index_list), 0, ty, loc);
 }
 
 /**

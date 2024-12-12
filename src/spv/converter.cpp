@@ -565,7 +565,8 @@ auto inst_converter::make_mixed_precision_fma(scalar_type a_ty, scalar_type b_ty
 }
 
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
-                                spv_inst *pointer, spv_inst *value, location const &loc) {
+                                spv_inst *pointer, spv_inst *value, std::int32_t align,
+                                location const &loc) {
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = component_type(sty);
         auto float_ty = unique_.spv_ty(component_sty);
@@ -585,6 +586,42 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
     case store_flag::regular:
         mod_->add<OpStore>(pointer, value);
         break;
+    case store_flag::block: {
+        const auto storage_cls = address_space_to_storage_class(as);
+        if (core_cfg_.block_read_write_supported && align >= 16 && size(sty) >= 2 &&
+            size(sty) <= 8) {
+            auto const cast_write = [&](scalar_type int_sty) {
+                auto int_ty = unique_.spv_ty(int_sty);
+                auto ival = mod_->add<OpBitcast>(int_ty, value);
+                auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, align);
+                auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, pointer);
+                mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, ival);
+            };
+            switch (sty) {
+            case scalar_type::bf16:
+            case scalar_type::f16:
+                cast_write(scalar_type::i16);
+                break;
+            case scalar_type::f32:
+                cast_write(scalar_type::i32);
+                break;
+            case scalar_type::c32:
+            case scalar_type::f64:
+                cast_write(scalar_type::i64);
+                break;
+            default:
+                throw compilation_error(loc, status::internal_compiler_error);
+                break;
+            }
+        } else {
+            auto offset = load_builtin(BuiltIn::SubgroupLocalInvocationId);
+            auto pointer_ty = unique_.spv_pointer_ty(storage_cls, unique_.spv_ty(sty), align);
+            auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(pointer_ty, pointer, offset,
+                                                                   std::vector<spv_inst *>{});
+            mod_->add<OpStore>(sub_pointer, value);
+        }
+        break;
+    }
     case store_flag::atomic: {
         auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
@@ -947,7 +984,8 @@ void inst_converter::emulate_cooperative_matrix_store(cooperative_matrix_store_i
     const auto scatter_store = [&](spv_inst *offset, spv_inst *value) {
         auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, pointer, offset,
                                                                std::vector<spv_inst *>{});
-        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value, in.loc());
+        make_store(in.flag(), ot->element_ty(), ot->addrspace(), sub_pointer, value, alignment,
+                   in.loc());
     };
 
     spv_inst *m = load_builtin(BuiltIn::SubgroupLocalInvocationId);
@@ -1799,6 +1837,10 @@ void inst_converter::operator()(load_inst const &in) {
 
     if (auto group_ty = dyn_cast<group_data_type>(in.operand().ty()); group_ty) {
         auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
+        if (in.flag() == load_flag::block) {
+            auto sgid = load_builtin(BuiltIn::SubgroupLocalInvocationId);
+            offset = mod_->add<OpIAdd>(spv_index_ty, offset, sgid);
+        }
         auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
                                                            offset, std::vector<spv_inst *>{});
         declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer));
@@ -1819,7 +1861,7 @@ void inst_converter::operator()(load_inst const &in) {
             rdv->stride(i, make_dope_par(dv->static_stride(i), dv->stride(i)));
         }
     } else if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
-        const auto pointer = [&]() -> spv_inst * {
+        const auto pointer = [&](spv_inst *additional_offset0 = nullptr) -> spv_inst * {
             if (memref_ty->dim() == 0) {
                 return val(in.operand());
             }
@@ -1832,10 +1874,48 @@ void inst_converter::operator()(load_inst const &in) {
                 auto tmp = mod_->add<OpIMul>(spv_index_ty, val(in.index_list()[i]), dv->stride(i));
                 offset = mod_->add<OpIAdd>(spv_index_ty, offset, tmp);
             }
+            if (additional_offset0) {
+                offset = mod_->add<OpIAdd>(spv_index_ty, offset, additional_offset0);
+            }
             return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
                                                        std::vector<spv_inst *>{});
         };
-        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer()));
+        if (in.flag() == load_flag::block) {
+            const std::int32_t align = std::max(in.align(), memref_ty->alignment());
+            const auto sty_size = size(memref_ty->element_ty());
+            if (core_cfg_.block_read_write_supported && align >= 4 && sty_size >= 2 &&
+                sty_size <= 8) {
+                auto const make_block_load = [&]() {
+                    auto const cast_load_cast = [&](scalar_type int_sty) {
+                        auto int_ty = unique_.spv_ty(int_sty);
+                        const auto storage_cls =
+                            address_space_to_storage_class(memref_ty->addrspace());
+                        auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, align);
+                        auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, pointer());
+                        auto value = mod_->add<OpSubgroupBlockReadINTEL>(int_ty, int_ptr);
+                        return mod_->add<OpBitcast>(spv_result_ty, value);
+                    };
+                    switch (memref_ty->element_ty()) {
+                    case scalar_type::bf16:
+                    case scalar_type::f16:
+                        return cast_load_cast(scalar_type::i16);
+                    case scalar_type::f32:
+                        return cast_load_cast(scalar_type::i32);
+                    case scalar_type::c32:
+                    case scalar_type::f64:
+                        return cast_load_cast(scalar_type::i64);
+                    default:
+                        throw compilation_error(in.loc(), status::internal_compiler_error);
+                    }
+                };
+                declare(in.result(0), make_block_load());
+            } else {
+                auto sgid = load_builtin(BuiltIn::SubgroupLocalInvocationId);
+                declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer(sgid)));
+            }
+        } else {
+            declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer()));
+        }
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
     }
@@ -1886,8 +1966,9 @@ void inst_converter::operator()(store_inst const &in) {
                                                        std::vector<spv_inst *>{});
         };
 
+        const std::int32_t alignment = std::max(in.align(), memref_ty->alignment());
         make_store(in.flag(), memref_ty->element_ty(), memref_ty->addrspace(), pointer(),
-                   val(in.val()), in.loc());
+                   val(in.val()), alignment, in.loc());
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref);
     }

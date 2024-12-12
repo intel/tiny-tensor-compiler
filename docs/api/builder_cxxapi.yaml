@@ -8,6 +8,7 @@ Builder C++-API:
       - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
+      - tinytc::load_flag
       - tinytc::matrix_use
       - tinytc::scalar_type
       - tinytc::store_flag
@@ -21,6 +22,7 @@ Builder C++-API:
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(load_flag)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)

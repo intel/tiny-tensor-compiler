@@ -22,6 +22,8 @@ Common
 
   * :ref:`tinytc::cmp_condition`
 
+  * :ref:`tinytc::load_flag`
+
   * :ref:`tinytc::matrix_use`
 
   * :ref:`tinytc::scalar_type`
@@ -47,6 +49,8 @@ Common
   * :ref:`tinytc::to_string(checked_flag)`
 
   * :ref:`tinytc::to_string(cmp_condition)`
+
+  * :ref:`tinytc::to_string(load_flag)`
 
   * :ref:`tinytc::to_string(matrix_use)`
 
@@ -111,6 +115,13 @@ cmp_condition
 .............
 
 .. doxygenenum:: tinytc::cmp_condition
+
+.. _tinytc::load_flag:
+
+load_flag
+.........
+
+.. doxygenenum:: tinytc::load_flag
 
 .. _tinytc::matrix_use:
 
@@ -198,6 +209,13 @@ to_string(cmp_condition)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
+
+.. _tinytc::to_string(load_flag):
+
+to_string(load_flag)
+....................
+
+.. doxygenfunction:: tinytc::to_string(load_flag)
 
 .. _tinytc::to_string(matrix_use):
 

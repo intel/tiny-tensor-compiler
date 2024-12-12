@@ -45,7 +45,7 @@ class check_condition_generator {
 };
 
 auto get_matrix_fibre(region_builder &bb, value operand, std::array<value, 2u> dyn_offsets,
-                      int omode, std::array<std::int64_t, 2u> const &shape, value subgroup_local_id,
+                      int omode, std::array<std::int64_t, 2u> const &shape, value work_item_offset,
                       location const &loc) -> value;
 
 auto get_return_types(inst_node &in, std::int32_t subgroup_size) -> std::vector<tinytc_data_type_t>;
