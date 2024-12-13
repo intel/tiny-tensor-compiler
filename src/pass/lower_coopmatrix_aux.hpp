@@ -24,19 +24,7 @@ class check_condition_generator {
     inline check_condition_generator(value operand, std::array<value, 2u> const &pos)
         : operand_(operand), pos_(pos), rem_{nullptr, nullptr} {}
 
-    template <typename Builder>
-    auto operator()(Builder &bb, value offset, int mode, location const &loc) -> value {
-        auto bool_ty = boolean_data_type::get(offset->context());
-        auto index_ty = scalar_data_type::get(offset->context(), scalar_type::index);
-        if (rem_[mode].get() == nullptr) {
-            auto size = bb.add(make_size(operand_, mode, index_ty, loc));
-            rem_[mode] = bb.add(make_arith(arithmetic::sub, size, pos_[mode], index_ty, loc));
-        }
-        auto neg_offset = bb.add(make_arith(arithmetic_unary::neg, offset, index_ty, loc));
-        auto check1 = bb.add(make_cmp(cmp_condition::le, neg_offset, pos_[mode], bool_ty, loc));
-        auto check2 = bb.add(make_cmp(cmp_condition::lt, offset, rem_[mode], bool_ty, loc));
-        return bb.add(make_arith(arithmetic::and_, check1, check2, bool_ty, loc));
-    }
+    auto operator()(region_builder &bb, value offset, int mode, location const &loc) -> value;
 
   private:
     value operand_;
