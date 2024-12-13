@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20241127_HPP
-#define GENERATED_VISIT_20241127_HPP
+#ifndef GENERATED_VISIT_20241213_HPP
+#define GENERATED_VISIT_20241213_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -711,6 +711,12 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
         return visitor(static_cast<OpSubgroupBlockReadINTEL &>(inst));
     case Op::SubgroupBlockWriteINTEL:
         return visitor(static_cast<OpSubgroupBlockWriteINTEL &>(inst));
+    case Op::AsmTargetINTEL:
+        return visitor(static_cast<OpAsmTargetINTEL &>(inst));
+    case Op::AsmINTEL:
+        return visitor(static_cast<OpAsmINTEL &>(inst));
+    case Op::AsmCallINTEL:
+        return visitor(static_cast<OpAsmCallINTEL &>(inst));
     case Op::AtomicFMinEXT:
         return visitor(static_cast<OpAtomicFMinEXT &>(inst));
     case Op::AtomicFMaxEXT:
@@ -1423,6 +1429,12 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpSubgroupBlockReadINTEL const &>(inst));
     case Op::SubgroupBlockWriteINTEL:
         return visitor(static_cast<OpSubgroupBlockWriteINTEL const &>(inst));
+    case Op::AsmTargetINTEL:
+        return visitor(static_cast<OpAsmTargetINTEL const &>(inst));
+    case Op::AsmINTEL:
+        return visitor(static_cast<OpAsmINTEL const &>(inst));
+    case Op::AsmCallINTEL:
+        return visitor(static_cast<OpAsmCallINTEL const &>(inst));
     case Op::AtomicFMinEXT:
         return visitor(static_cast<OpAtomicFMinEXT const &>(inst));
     case Op::AtomicFMaxEXT:
@@ -4419,6 +4431,34 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->post_visit(in);
     }
+    auto operator()(const_t<OpAsmTargetINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAsmINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->operator()(in.op3());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpAsmCallINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.type());
+        static_cast<Derived *>(this)->visit_result(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        for (auto &op : in.op1()) {
+            static_cast<Derived *>(this)->operator()(op);
+        }
+
+        static_cast<Derived *>(this)->post_visit(in);
+    }
     auto operator()(const_t<OpAtomicFMinEXT> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
@@ -4514,4 +4554,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20241127_HPP
+#endif // GENERATED_VISIT_20241213_HPP

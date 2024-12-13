@@ -703,6 +703,12 @@ auto to_string(Op op) -> char const * {
         return "SubgroupBlockReadINTEL";
     case Op::SubgroupBlockWriteINTEL:
         return "SubgroupBlockWriteINTEL";
+    case Op::AsmTargetINTEL:
+        return "AsmTargetINTEL";
+    case Op::AsmINTEL:
+        return "AsmINTEL";
+    case Op::AsmCallINTEL:
+        return "AsmCallINTEL";
     case Op::AtomicFMinEXT:
         return "AtomicFMinEXT";
     case Op::AtomicFMaxEXT:

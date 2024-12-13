@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_DEFS_20241127_HPP
-#define GENERATED_DEFS_20241127_HPP
+#ifndef GENERATED_DEFS_20241213_HPP
+#define GENERATED_DEFS_20241213_HPP
 
 #include "enums.hpp"
 #include "support/ilist_base.hpp"
@@ -407,6 +407,9 @@ class OpCooperativeMatrixMulAddKHR;              // IWYU pragma: export
 class OpCooperativeMatrixLengthKHR;              // IWYU pragma: export
 class OpSubgroupBlockReadINTEL;                  // IWYU pragma: export
 class OpSubgroupBlockWriteINTEL;                 // IWYU pragma: export
+class OpAsmTargetINTEL;                          // IWYU pragma: export
+class OpAsmINTEL;                                // IWYU pragma: export
+class OpAsmCallINTEL;                            // IWYU pragma: export
 class OpAtomicFMinEXT;                           // IWYU pragma: export
 class OpAtomicFMaxEXT;                           // IWYU pragma: export
 class OpAtomicFAddEXT;                           // IWYU pragma: export
@@ -417,4 +420,4 @@ class OpCooperativeMatrixStoreCheckedINTEL;      // IWYU pragma: export
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_DEFS_20241127_HPP
+#endif // GENERATED_DEFS_20241213_HPP

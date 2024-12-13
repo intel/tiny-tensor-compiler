@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_20241127_HPP
-#define GENERATED_INSTRUCTIONS_20241127_HPP
+#ifndef GENERATED_INSTRUCTIONS_20241213_HPP
+#define GENERATED_INSTRUCTIONS_20241213_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -6685,6 +6685,65 @@ class OpSubgroupBlockWriteINTEL : public spv_inst {
     IdRef op0_;
     IdRef op1_;
 };
+class OpAsmTargetINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AsmTargetINTEL; }
+    constexpr static std::array<Capability, 1> required_capabilities = {Capability::AsmINTEL};
+    OpAsmTargetINTEL(IdResultType type, LiteralString op0)
+        : spv_inst{Op::AsmTargetINTEL, true}, type_(std::move(type)), op0_(std::move(op0)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> LiteralString & { return op0_; }
+    inline auto op0() const -> LiteralString const & { return op0_; }
+
+  private:
+    IdResultType type_;
+    LiteralString op0_;
+};
+class OpAsmINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AsmINTEL; }
+    constexpr static std::array<Capability, 1> required_capabilities = {Capability::AsmINTEL};
+    OpAsmINTEL(IdResultType type, IdRef op0, IdRef op1, LiteralString op2, LiteralString op3)
+        : spv_inst{Op::AsmINTEL, true}, type_(std::move(type)), op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)), op3_(std::move(op3)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> IdRef & { return op1_; }
+    inline auto op1() const -> IdRef const & { return op1_; }
+    inline auto op2() -> LiteralString & { return op2_; }
+    inline auto op2() const -> LiteralString const & { return op2_; }
+    inline auto op3() -> LiteralString & { return op3_; }
+    inline auto op3() const -> LiteralString const & { return op3_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    IdRef op1_;
+    LiteralString op2_;
+    LiteralString op3_;
+};
+class OpAsmCallINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AsmCallINTEL; }
+    constexpr static std::array<Capability, 1> required_capabilities = {Capability::AsmINTEL};
+    OpAsmCallINTEL(IdResultType type, IdRef op0, std::vector<IdRef> op1)
+        : spv_inst{Op::AsmCallINTEL, true}, type_(std::move(type)), op0_(std::move(op0)),
+          op1_(std::move(op1)) {}
+    inline auto type() -> IdResultType & { return type_; }
+    inline auto type() const -> IdResultType const & { return type_; }
+    inline auto op0() -> IdRef & { return op0_; }
+    inline auto op0() const -> IdRef const & { return op0_; }
+    inline auto op1() -> std::vector<IdRef> & { return op1_; }
+    inline auto op1() const -> std::vector<IdRef> const & { return op1_; }
+
+  private:
+    IdResultType type_;
+    IdRef op0_;
+    std::vector<IdRef> op1_;
+};
 class OpAtomicFMinEXT : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AtomicFMinEXT; }
@@ -6901,4 +6960,4 @@ class OpCooperativeMatrixStoreCheckedINTEL : public spv_inst {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_20241127_HPP
+#endif // GENERATED_INSTRUCTIONS_20241213_HPP
