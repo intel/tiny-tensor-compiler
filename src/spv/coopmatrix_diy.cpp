@@ -239,14 +239,20 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
         const std::int32_t K = ops_per_chan * sdepth;
 
         for (std::int32_t m = 0; m < ct->rows(); m += exec_size) {
-            for (std::int32_t n = 0; n < ct->cols(); n += rcount) {
-                const auto aoffset = K * m * size(at->component_ty());
-                const auto brow = K * n * size(bt->component_ty()) / grf_size;
-                const auto coffset = (m * ct->cols() + n * exec_size) * size(ct->component_ty());
-                const auto roffset = (m * rt->cols() + n * exec_size) * size(rt->component_ty());
-                oasm << "dpas.hf.hf." << sdepth << "." << rcount << " (M1," << exec_size << ") $0."
-                     << roffset << " $3." << coffset << " $1." << aoffset << " $2(" << brow
-                     << ",0)\n";
+            for (std::int32_t k = 0; k < at->cols(); k += K) {
+                for (std::int32_t n = 0; n < ct->cols(); n += rcount) {
+                    const auto aoffset =
+                        (k * exec_size + m * at->cols()) * size(at->component_ty());
+                    const auto brow =
+                        (k * bt->cols() + n * K) * size(bt->component_ty()) / grf_size;
+                    const auto coffset =
+                        (m * ct->cols() + n * exec_size) * size(ct->component_ty());
+                    const auto roffset =
+                        (m * rt->cols() + n * exec_size) * size(rt->component_ty());
+                    oasm << "dpas.hf.hf." << sdepth << "." << rcount << " (M1," << exec_size
+                         << ") $0." << roffset << " $3." << coffset << " $1." << aoffset << " $2("
+                         << brow << ",0)\n";
+                }
             }
         }
 

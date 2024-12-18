@@ -272,9 +272,9 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                                 throw status::internal_compiler_error;
                             }
                         }(ty.component_ty(), ty.use());
-                        const auto sty_size = size(sty);
-                        const std::int64_t bytes = sty_size * ty.rows() * ty.cols();
-                        const auto bytes_multiple_of = sty_size * matrix_->required_subgroup_size();
+                        const std::int64_t bytes = size(ty.component_ty()) * ty.rows() * ty.cols();
+                        const auto bytes_multiple_of =
+                            size(sty) * matrix_->required_subgroup_size();
                         if (bytes % bytes_multiple_of != 0) {
                             throw status::internal_compiler_error;
                         }
