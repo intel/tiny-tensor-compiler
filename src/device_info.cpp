@@ -59,13 +59,14 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
-        matrix_ = matrix_ext_info(16,
-                                  matrix_ext_block_io_info{.address_alignment = 4,
-                                                           .base_address_alignment = 64,
-                                                           .min_stride = 64,
-                                                           .max_stride = (1 << 24) - 1,
-                                                           .stride_alignment = 8},
-                                  pvc_matrix_ext_types);
+
+        const auto block_info = matrix_ext_block_io_info{.address_alignment = 4,
+                                                         .base_address_alignment = 64,
+                                                         .min_stride = 64,
+                                                         .max_stride = (1 << 24) - 1,
+                                                         .stride_alignment = 8};
+        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
+        // matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
     }
 }
 

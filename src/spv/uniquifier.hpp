@@ -21,6 +21,8 @@
 namespace tinytc {
 enum class address_space;
 enum class scalar_type;
+enum class vector_size;
+class matrix_ext_info;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -29,8 +31,9 @@ auto address_space_to_storage_class(address_space as) -> StorageClass;
 
 class uniquifier {
   public:
-    uniquifier(tinytc_spv_mod &m);
+    uniquifier(tinytc_spv_mod &m, matrix_ext_info const &matrix);
 
+    auto asm_target() -> spv_inst *;
     auto bool2_ty() -> spv_inst *;
     auto bool_constant(bool b) -> spv_inst *;
     auto builtin_alignment(BuiltIn b) -> std::int32_t;
@@ -43,29 +46,16 @@ class uniquifier {
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
     auto spv_array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
-    auto spv_function_ty(array_view<spv_inst *> params) -> spv_inst *;
+    auto spv_function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst *;
     auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
                         std::int32_t alignment) -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto spv_ty(scalar_type sty) -> spv_inst *;
+    auto spv_vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst *;
+    auto spv_vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst *;
+    auto void_ty() -> spv_inst *;
 
   private:
-    template <typename Map, typename Key, typename Maker>
-    auto lookup(Map &map, Key &&key, Maker &&maker) {
-        auto it = map.find(key);
-        if (it == map.end()) {
-            map[key] = maker(key);
-            return map[key];
-        }
-        return it->second;
-    }
-    template <typename Maker> auto lookup(spv_inst *&var, Maker &&maker) -> spv_inst * {
-        if (!var) {
-            var = maker();
-        }
-        return var;
-    }
-
     struct array_key_hash {
         inline auto
         operator()(std::pair<spv_inst *, std::int32_t> const &key) const -> std::size_t {
@@ -80,9 +70,9 @@ class uniquifier {
     };
 
     tinytc_spv_mod_t mod_;
-    spv_inst *bool2_ty_ = nullptr;
+    matrix_ext_info const *matrix_;
+    spv_inst *asm_target_ = nullptr;
     spv_inst *bool_true_ = nullptr, *bool_false_ = nullptr;
-    spv_inst *index3_ty_ = nullptr;
     spv_inst *opencl_ext_ = nullptr;
     std::unordered_map<BuiltIn, spv_inst *> builtin_;
     std::unordered_set<Capability> capabilities_;
@@ -92,6 +82,8 @@ class uniquifier {
     std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash>
         spv_array_tys_;
     std::unordered_multimap<std::uint64_t, OpTypeFunction *> spv_function_tys_;
+    std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash>
+        spv_vec_tys_;
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
                        pointer_key_hash>
         spv_pointer_tys_;

@@ -2,9 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/uniquifier.hpp"
+#include "matrix_ext_info.hpp"
 #include "node/data_type_node.hpp"
 #include "scalar_type.hpp"
 #include "spv/instructions.hpp"
+#include "spv/lut.hpp"
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
@@ -24,13 +26,19 @@ auto address_space_to_storage_class(address_space as) -> StorageClass {
     return as == address_space::local ? StorageClass::Workgroup : StorageClass::CrossWorkgroup;
 }
 
-uniquifier::uniquifier(tinytc_spv_mod &m) : mod_(&m) {}
+uniquifier::uniquifier(tinytc_spv_mod &m, matrix_ext_info const &matrix)
+    : mod_(&m), matrix_(&matrix) {}
+
+auto uniquifier::asm_target() -> spv_inst * {
+    if (!asm_target_) {
+        asm_target_ =
+            mod_->add_to<OpAsmTargetINTEL>(section::type_const_var, "spirv64-unknown-unknown");
+    }
+    return asm_target_;
+}
 
 auto uniquifier::bool2_ty() -> spv_inst * {
-    return lookup(bool2_ty_, [&] {
-        auto bool_ty = spv_ty(boolean_data_type::get(mod_->context()));
-        return mod_->add_to<OpTypeVector>(section::type_const_var, bool_ty, 2);
-    });
+    return spv_vec_ty(spv_ty(boolean_data_type::get(mod_->context())), vector_size::v2);
 }
 
 auto uniquifier::bool_constant(bool b) -> spv_inst * {
@@ -139,10 +147,8 @@ void uniquifier::extension(char const *ext_name) {
 }
 
 auto uniquifier::index3_ty() -> spv_inst * {
-    return lookup(index3_ty_, [&] {
-        auto index_ty = spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index));
-        return mod_->add_to<OpTypeVector>(section::type_const_var, index_ty, 3);
-    });
+    return spv_vec_ty(spv_ty(scalar_data_type::get(mod_->context(), scalar_type::index)),
+                      vector_size::v3);
 }
 
 auto uniquifier::null_constant(spv_inst *spv_ty) -> spv_inst * {
@@ -163,19 +169,19 @@ auto uniquifier::spv_array_ty(spv_inst *element_ty, std::int32_t length) -> spv_
     });
 }
 
-auto uniquifier::spv_function_ty(array_view<spv_inst *> params) -> spv_inst * {
-    const auto map_key = fnv1a_step(fnv1a0(), params);
+auto uniquifier::spv_function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst * {
+    const auto map_key = fnv1a_step(fnv1a_step(fnv1a0(), return_ty), params);
     auto range = spv_function_tys_.equal_range(map_key);
     for (auto it = range.first; it != range.second; ++it) {
-        if (std::equal(params.begin(), params.end(), it->second->op1().begin(),
+        if (return_ty == it->second->op0() &&
+            std::equal(params.begin(), params.end(), it->second->op1().begin(),
                        it->second->op1().end())) {
             return it->second;
         }
     }
-    auto void_ty = spv_ty(void_data_type::get(mod_->context()));
     return spv_function_tys_
-        .emplace(map_key,
-                 mod_->add_to<OpTypeFunction>(section::type_const_var, void_ty, std::move(params)))
+        .emplace(map_key, mod_->add_to<OpTypeFunction>(section::type_const_var, return_ty,
+                                                       std::move(params)))
         ->second;
 }
 
@@ -239,19 +245,43 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         return mod_->add_to<OpTypeFloat>(section::type_const_var,
                                                          size(ty.ty()) * 8);
                     case scalar_type::c32: {
-                        auto float_ty =
-                            spv_ty(scalar_data_type::get(mod_->context(), scalar_type::f32));
-                        return mod_->add_to<OpTypeVector>(section::type_const_var, float_ty, 2);
+                        auto f32_ty = spv_ty(scalar_type::f32);
+                        return spv_vec_ty(f32_ty, vector_size::v2);
                     }
                     case scalar_type::c64: {
-                        auto float_ty =
-                            spv_ty(scalar_data_type::get(mod_->context(), scalar_type::f64));
-                        return mod_->add_to<OpTypeVector>(section::type_const_var, float_ty, 2);
+                        auto f64_ty = spv_ty(scalar_type::f64);
+                        return spv_vec_ty(f64_ty, vector_size::v2);
                     }
                     }
                     throw status::internal_compiler_error;
                 },
                 [&](coopmatrix_data_type const &ty) -> spv_inst * {
+                    if (!matrix_->use_khr_matrix_ext()) {
+                        const auto sty = [](scalar_type sty, matrix_use use) {
+                            switch (sty) {
+                            case scalar_type::i8:
+                            case scalar_type::i16:
+                            case scalar_type::i32:
+                                return scalar_type::i32;
+                            case scalar_type::bf16:
+                            case scalar_type::f16:
+                                return use == matrix_use::acc ? scalar_type::f32 : scalar_type::i32;
+                            case scalar_type::f32:
+                                return scalar_type::f32;
+                            default:
+                                throw status::internal_compiler_error;
+                            }
+                        }(ty.component_ty(), ty.use());
+                        const auto sty_size = size(sty);
+                        const std::int64_t bytes = sty_size * ty.rows() * ty.cols();
+                        const auto bytes_multiple_of = sty_size * matrix_->required_subgroup_size();
+                        if (bytes % bytes_multiple_of != 0) {
+                            throw status::internal_compiler_error;
+                        }
+
+                        return spv_vec_ty(spv_ty(sty), bytes / bytes_multiple_of);
+                    }
+
                     auto spv_use = [](matrix_use use) {
                         switch (use) {
                         case matrix_use::a:
@@ -282,6 +312,18 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
 auto uniquifier::spv_ty(scalar_type sty) -> spv_inst * {
     return spv_ty(scalar_data_type::get(mod_->context(), sty));
 }
+
+auto uniquifier::spv_vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst * {
+    auto key = std::make_pair(component_ty, length);
+    return lookup(spv_vec_tys_, key, [&](std::pair<spv_inst *, std::int32_t> const &key) {
+        return mod_->add_to<OpTypeVector>(section::type_const_var, key.first, key.second);
+    });
+}
+auto uniquifier::spv_vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst * {
+    return spv_vec_ty(component_ty, static_cast<std::int32_t>(length));
+}
+
+auto uniquifier::void_ty() -> spv_inst * { return spv_ty(void_data_type::get(mod_->context())); }
 
 } // namespace tinytc::spv
 

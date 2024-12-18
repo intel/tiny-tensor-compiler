@@ -6689,15 +6689,12 @@ class OpAsmTargetINTEL : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::AsmTargetINTEL; }
     constexpr static std::array<Capability, 1> required_capabilities = {Capability::AsmINTEL};
-    OpAsmTargetINTEL(IdResultType type, LiteralString op0)
-        : spv_inst{Op::AsmTargetINTEL, true}, type_(std::move(type)), op0_(std::move(op0)) {}
-    inline auto type() -> IdResultType & { return type_; }
-    inline auto type() const -> IdResultType const & { return type_; }
+    OpAsmTargetINTEL(LiteralString op0)
+        : spv_inst{Op::AsmTargetINTEL, true}, op0_(std::move(op0)) {}
     inline auto op0() -> LiteralString & { return op0_; }
     inline auto op0() const -> LiteralString const & { return op0_; }
 
   private:
-    IdResultType type_;
     LiteralString op0_;
 };
 class OpAsmINTEL : public spv_inst {

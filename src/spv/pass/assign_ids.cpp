@@ -29,7 +29,7 @@ void id_assigner::visit_result(spv_inst &in) { declare(&in); }
 void id_assigner::operator()(spv_inst *&in) {
     if (!slot_map_.contains(in)) {
         if (isa<OpFunction>(*in) || isa<OpVariable>(*in) || isa<OpLabel>(*in) ||
-            isa<OpTypePointer>(*in)) {
+            isa<OpTypePointer>(*in) || isa<OpAsmINTEL>(*in)) {
             declare(in);
         } else {
             throw status::spirv_forbidden_forward_declaration;

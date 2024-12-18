@@ -52,8 +52,7 @@ class matrix_ext_helper {
   private:
     auto have(value_node const &val) -> bool;
     void kill(value_node const &val);
-    auto check_2d_block_io(value_node const &operand, std::int32_t alignment,
-                           checked_flag flag) -> bool;
+    auto check_2d_block_io(value_node const &operand, std::int32_t alignment) -> bool;
 
     ::const_tinytc_core_info_t info_;
     std::unordered_set<const_tinytc_value_t> *mext_;
@@ -99,25 +98,24 @@ void matrix_ext_helper::operator()(cast_inst const &in) {
     kill(in.a());
     kill(in.result(0));
 }
-auto matrix_ext_helper::check_2d_block_io(value_node const &operand, std::int32_t alignment,
-                                          checked_flag flag) -> bool {
+auto matrix_ext_helper::check_2d_block_io(value_node const &operand,
+                                          std::int32_t alignment) -> bool {
     auto const &block_io = info_->matrix().block_io();
     auto ot = get_memref_type(operand);
     const auto element_size = static_cast<std::int32_t>(size(ot->element_ty()));
 
-    const bool address_alignment_ok = alignment >= block_io.address_alignment;
-    const bool base_address_alignment_ok =
-        flag == checked_flag::none || alignment >= block_io.base_address_alignment;
+    const bool base_address_alignment_ok = alignment >= block_io.base_address_alignment;
     const bool stride_ok = ot->stride(0) == 1 &&
                            (ot->stride(1) * element_size) >= block_io.min_stride &&
                            (ot->stride(1) * element_size) <= block_io.max_stride &&
                            (ot->stride(1) * element_size) % block_io.stride_alignment == 0;
+    const bool addrspace_ok = ot->addrspace() == address_space::global;
 
-    return address_alignment_ok && base_address_alignment_ok && stride_ok;
+    return base_address_alignment_ok && stride_ok && addrspace_ok;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
     const bool transpose_ok = in.t() == transpose::N;
-    if (!transpose_ok || !check_2d_block_io(in.operand(), in.align(), in.checked())) {
+    if (!transpose_ok || !check_2d_block_io(in.operand(), in.align())) {
         kill(in.result(0));
     }
 }
@@ -143,8 +141,10 @@ void matrix_ext_helper::operator()(cooperative_matrix_scale_inst const &in) {
     kill(in.result(0));
 }
 void matrix_ext_helper::operator()(cooperative_matrix_store_inst const &in) {
+    auto vt = get_coopmatrix_type(in.val());
     const bool store_flag_ok = in.flag() == store_flag::regular;
-    if (!store_flag_ok || !check_2d_block_io(in.operand(), in.align(), in.checked())) {
+    const bool use_ok = vt->use() == matrix_use::acc;
+    if (!store_flag_ok || !use_ok || !check_2d_block_io(in.operand(), in.align())) {
         kill(in.val());
     }
 }

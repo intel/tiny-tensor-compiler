@@ -123,4 +123,26 @@ const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types = {
       {scalar_type::bf16, scalar_type::f32},
       {{16, 1, 16}, {16, 2, 16}, {16, 4, 16}, {16, 8, 16}}}}};
 
+const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types_diy = {
+    {{scalar_type::i8,
+      scalar_type::i8,
+      {scalar_type::i32},
+      {{16, 8, 32},
+       {32, 8, 32},
+       {64, 8, 32},
+       {16, 16, 32},
+       {32, 16, 32},
+       {64, 16, 32},
+       {16, 32, 32},
+       {32, 32, 32},
+       {64, 32, 32}}},
+     {scalar_type::f16,
+      scalar_type::f16,
+      {scalar_type::f16, scalar_type::f32},
+      {{16, 8, 16}, {32, 8, 16}, {16, 16, 16}, {32, 16, 16}, {16, 32, 16}, {32, 32, 16}}},
+     {scalar_type::bf16,
+      scalar_type::bf16,
+      {scalar_type::bf16, scalar_type::f32},
+      {{16, 8, 16}, {32, 8, 16}, {16, 16, 16}, {32, 16, 16}, {16, 32, 16}, {32, 32, 16}}}}};
+
 } // namespace tinytc

@@ -7,7 +7,9 @@
 #include "device_info.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
+#include "spv/coopmatrix_diy.hpp"
 #include "spv/defs.hpp"
+#include "spv/dope_vector.hpp"
 #include "spv/uniquifier.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -25,41 +27,9 @@ enum class BuiltIn;
 
 auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
 
-class dope_vector {
-  public:
-    dope_vector() = default;
-    dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
-                std::vector<std::int64_t> static_stride, spv_inst *offset_ty = nullptr,
-                std::int64_t static_offset = 0);
-
-    inline auto dim() const -> std::int64_t { return static_shape_.size(); }
-    inline auto ty() const -> spv_inst * { return ty_; }
-    inline auto static_shape(std::int64_t i) const -> std::int64_t { return static_shape_[i]; }
-    inline auto static_stride(std::int64_t i) const -> std::int64_t { return static_stride_[i]; }
-    inline auto shape(std::int64_t i) const -> spv_inst * { return shape_[i]; }
-    inline auto stride(std::int64_t i) const -> spv_inst * { return stride_[i]; }
-    inline void shape(std::int64_t i, spv_inst *s) { shape_[i] = s; }
-    inline void stride(std::int64_t i, spv_inst *s) { stride_[i] = s; }
-
-    inline auto offset_ty() const -> spv_inst * { return offset_ty_; }
-    inline auto static_offset() const -> std::int64_t { return static_offset_; }
-    inline auto offset() -> spv_inst * { return offset_; }
-    inline void offset(spv_inst *offset) { offset_ = offset; }
-
-    auto num_dynamic() const -> std::int64_t;
-
-  private:
-    spv_inst *ty_ = nullptr;
-    std::vector<std::int64_t> static_shape_, static_stride_;
-    std::vector<spv_inst *> shape_, stride_;
-    spv_inst *offset_ty_ = nullptr;
-    std::int64_t static_offset_;
-    spv_inst *offset_ = nullptr;
-};
-
 class inst_converter {
   public:
-    inst_converter(tinytc_spv_mod &m);
+    inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info);
 
     // Instruction nodes
     void operator()(inst_node const &in);
@@ -92,7 +62,7 @@ class inst_converter {
     void run_on_region(tinytc_region const &reg);
     auto run_on_region_with_yield(region_node const &reg,
                                   std::int64_t num_results) -> std::vector<spv_inst *>;
-    void run_on_function(tinytc_func const &fn, tinytc_core_info const &info);
+    void run_on_function(tinytc_func const &fn);
 
     inline auto unique() -> uniquifier & { return unique_; }
 
@@ -118,7 +88,9 @@ class inst_converter {
                     spv_inst *value, std::int32_t align, location const &loc);
 
     tinytc_spv_mod_t mod_;
+    tinytc_core_info const *info_;
     uniquifier unique_;
+    coopmatrix_diy diy_;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;

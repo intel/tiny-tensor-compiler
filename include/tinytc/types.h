@@ -436,7 +436,7 @@ typedef enum {
 typedef enum {
     tinytc_optflag_unsafe_fp_math = 0 ///< Unsafe floating point math (e.g. 0.0 * x = 0.0)
 } tinytc_optflag_t;
-#define TINYTC_NUMBER_OF_OPTFLAGS 10 // @todo Keep up to date with tinytc_optflag_t
+#define TINYTC_NUMBER_OF_OPTFLAGS 1 // @todo Keep up to date with tinytc_optflag_t
 
 //! Memory object type
 typedef enum {

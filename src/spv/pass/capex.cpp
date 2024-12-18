@@ -93,6 +93,18 @@ void capex::operator()(OpAtomicIAdd const &in) {
         required_features_[tinytc_spirv_feature_int64_atomics] = true;
     }
 }
+void capex::operator()(OpAsmTargetINTEL const &) {
+    unique_->capability(Capability::AsmINTEL);
+    unique_->extension("SPV_INTEL_inline_assembly");
+}
+void capex::operator()(OpAsmINTEL const &) {
+    unique_->capability(Capability::AsmINTEL);
+    unique_->extension("SPV_INTEL_inline_assembly");
+}
+void capex::operator()(OpAsmCallINTEL const &) {
+    unique_->capability(Capability::AsmINTEL);
+    unique_->extension("SPV_INTEL_inline_assembly");
+}
 void capex::operator()(OpConvertBF16ToFINTEL const &) {
     unique_->capability(Capability::BFloat16ConversionINTEL);
     unique_->extension("SPV_INTEL_bfloat16_conversion");
@@ -188,6 +200,11 @@ void capex::operator()(OpTypeInt const &in) {
         break;
     default:
         break;
+    }
+}
+void capex::operator()(OpTypeVector const &in) {
+    if (in.op1() > 4) {
+        unique_->capability(Capability::Vector16);
     }
 }
 

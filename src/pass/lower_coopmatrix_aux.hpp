@@ -6,7 +6,6 @@
 
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
-#include "node/value_node.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"

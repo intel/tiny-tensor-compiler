@@ -25,6 +25,9 @@ class capex {
     void operator()(OpAtomicStore const &in);
     void operator()(OpAtomicFAddEXT const &in);
     void operator()(OpAtomicIAdd const &in);
+    void operator()(OpAsmTargetINTEL const &in);
+    void operator()(OpAsmINTEL const &in);
+    void operator()(OpAsmCallINTEL const &in);
     void operator()(OpConvertBF16ToFINTEL const &in);
     void operator()(OpConvertFToBF16INTEL const &in);
     void operator()(OpCooperativeMatrixLoadKHR const &in);
@@ -41,6 +44,7 @@ class capex {
     void operator()(OpSubgroupBlockWriteINTEL const &in);
     void operator()(OpTypeFloat const &in);
     void operator()(OpTypeInt const &in);
+    void operator()(OpTypeVector const &in);
 
     void run_on_module(tinytc_spv_mod const &mod);
 

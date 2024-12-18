@@ -388,6 +388,11 @@ def patch_grammar(grammar):
         elif instruction['opname'] == 'OpExecutionMode':
             if instruction['operands'][-1]['kind'] == 'ExecutionMode':
                 instruction['operands'].append({'kind': 'ExecutionModeAttr'})
+        elif instruction['opname'] == 'OpAsmTargetINTEL':
+            instruction['operands'] = [
+                op for op in instruction['operands']
+                if not op['kind'] == 'IdResultType'
+            ]
         elif 'operands' in instruction and instruction['operands'][-1][
                 'kind'] == 'MemoryAccess':
             instruction['operands'].append({

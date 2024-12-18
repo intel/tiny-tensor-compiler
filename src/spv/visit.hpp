@@ -4433,7 +4433,6 @@ template <typename Derived, bool IsConst = true> class default_visitor {
     }
     auto operator()(const_t<OpAsmTargetINTEL> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
-        static_cast<Derived *>(this)->operator()(in.type());
         static_cast<Derived *>(this)->visit_result(in);
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->post_visit(in);

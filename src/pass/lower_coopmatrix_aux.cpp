@@ -3,6 +3,7 @@
 
 #include "pass/lower_coopmatrix_aux.hpp"
 #include "codegen_tools.hpp"
+#include "node/value_node.hpp"
 #include "support/casting.hpp"
 #include "tinytc/types.hpp"
 

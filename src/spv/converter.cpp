@@ -5,6 +5,7 @@
 #include "analysis/stack.hpp"
 #include "codegen_tools.hpp"
 #include "error.hpp"
+#include "matrix_ext_info.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
@@ -48,13 +49,13 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
     auto m = ::tinytc::spv_mod{
         std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
-    auto conv = inst_converter{*m};
+    auto conv = inst_converter{*m, info};
 
     m->add_to<OpMemoryModel>(section::memory_model, AddressingModel::Physical64,
                              MemoryModel::OpenCL);
 
     for (auto const &fn : p) {
-        conv.run_on_function(fn, info);
+        conv.run_on_function(fn);
     }
 
     // Add missing capabilites and extensions
@@ -76,31 +77,8 @@ auto convert_prog_to_spirv(tinytc_prog const &p,
     return m;
 }
 
-dope_vector::dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
-                         std::vector<std::int64_t> static_stride, spv_inst *offset_ty,
-                         std::int64_t static_offset)
-    : ty_(ty), static_shape_(std::move(static_shape)), static_stride_(std::move(static_stride)),
-      shape_(dim(), nullptr), stride_(dim(), nullptr), offset_ty_(offset_ty),
-      static_offset_(static_offset) {
-    if (static_shape_.size() != static_stride_.size()) {
-        throw status::internal_compiler_error;
-    }
-}
-
-auto dope_vector::num_dynamic() const -> std::int64_t {
-    auto const sum_dynamic = [](std::vector<std::int64_t> const &vec) {
-        std::int64_t num_dynamic = 0;
-        for (auto &v : vec) {
-            if (is_dynamic_value(v)) {
-                ++num_dynamic;
-            }
-        }
-        return num_dynamic;
-    };
-    return sum_dynamic(static_shape_) + sum_dynamic(static_stride_);
-}
-
-inst_converter::inst_converter(tinytc_spv_mod &m) : mod_(&m), unique_(m) {}
+inst_converter::inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info)
+    : mod_(&m), info_(&info), unique_(m, info_->matrix()), diy_(m, unique_) {}
 
 auto inst_converter::get_last_label() -> spv_inst * {
     auto &insts = mod_->insts(section::function);
@@ -959,14 +937,18 @@ void inst_converter::operator()(constant_inst const &in) {
         }
         declare(in.result(0), cst);
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        auto spv_ty = unique_.spv_ty(ct->ty());
-        auto cst = make_constant(ct->component_ty(), spv_ty, in.value());
-        if (cst == nullptr) {
-            throw compilation_error(in.loc(), status::internal_compiler_error);
+        if (info_->matrix().use_khr_matrix_ext()) {
+            auto spv_ty = unique_.spv_ty(ct->ty());
+            auto cst = make_constant(ct->component_ty(), spv_ty, in.value());
+            if (cst == nullptr) {
+                throw compilation_error(in.loc(), status::internal_compiler_error);
+            }
+            auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
+            declare(in.result(0),
+                    mod_->add<OpCompositeConstruct>(spv_result_ty, std::vector<IdRef>{cst}));
+        } else {
+            declare(in.result(0), diy_.constant(in));
         }
-        auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
-        declare(in.result(0),
-                mod_->add<OpCompositeConstruct>(spv_result_ty, std::vector<IdRef>{cst}));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -977,38 +959,47 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
+    if (info_->matrix().use_khr_matrix_ext()) {
+        auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
+        auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
 
-    auto row_major =
-        unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
-    if (in.checked() != checked_flag::none) {
-        auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
-        auto pointer = val(in.operand());
-        auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
-        auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
-        auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
-        auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
-        auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
-        declare(in.result(0), mod_->add<OpCooperativeMatrixLoadCheckedINTEL>(
-                                  spv_result_ty, pointer, x, y, row_major, height, width, stride));
+        auto row_major =
+            unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
+        if (in.checked() != checked_flag::none) {
+            auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
+            auto pointer = val(in.operand());
+            auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
+            auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
+            auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
+            auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
+            auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
+            declare(in.result(0),
+                    mod_->add<OpCooperativeMatrixLoadCheckedINTEL>(
+                        spv_result_ty, pointer, x, y, row_major, height, width, stride));
+        } else {
+            auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+            auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+            auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+            auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+            auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                               offset, std::vector<spv_inst *>{});
+            declare(in.result(0), mod_->add<OpCooperativeMatrixLoadKHR>(spv_result_ty, pointer,
+                                                                        row_major, odv->stride(1)));
+        }
     } else {
-        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
-        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
-        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
-                                                           offset, std::vector<spv_inst *>{});
-
-        declare(in.result(0), mod_->add<OpCooperativeMatrixLoadKHR>(spv_result_ty, pointer,
-                                                                    row_major, odv->stride(1)));
+        declare(in.result(0),
+                diy_.load(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1())));
     }
 }
 void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
-    auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
-    // Swap a and b here due to using RowMajorKHR instead of ColumnMajorKHR
-    declare(in.result(0), mod_->add<OpCooperativeMatrixMulAddKHR>(spv_result_ty, val(in.b()),
-                                                                  val(in.a()), val(in.c())));
+    if (info_->matrix().use_khr_matrix_ext()) {
+        auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
+        // Swap a and b here due to using RowMajorKHR instead of ColumnMajorKHR
+        declare(in.result(0), mod_->add<OpCooperativeMatrixMulAddKHR>(spv_result_ty, val(in.b()),
+                                                                      val(in.a()), val(in.c())));
+    } else {
+        declare(in.result(0), diy_.mul_add(in, val(in.a()), val(in.b()), val(in.c())));
+    }
 }
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
@@ -1019,30 +1010,35 @@ void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
-    auto spv_val = val(in.val());
-    auto row_major =
-        unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
 
-    if (in.checked() != checked_flag::none) {
-        auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
-        auto pointer = val(in.operand());
-        auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
-        auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
-        auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
-        auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
-        auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
-        declare(in.result(0), mod_->add<OpCooperativeMatrixStoreCheckedINTEL>(
-                                  pointer, x, y, spv_val, row_major, height, width, stride));
+    if (info_->matrix().use_khr_matrix_ext()) {
+        auto spv_operand_ty = unique_.spv_ty(in.operand().ty());
+        auto spv_val = val(in.val());
+        auto row_major =
+            unique_.constant(static_cast<std::int32_t>(CooperativeMatrixLayout::RowMajorKHR));
+
+        if (in.checked() != checked_flag::none) {
+            auto spv_i32_ty = unique_.spv_ty(scalar_type::i32);
+            auto pointer = val(in.operand());
+            auto x = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos1()));
+            auto y = mod_->add<OpSConvert>(spv_i32_ty, val(in.pos0()));
+            auto height = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(1));
+            auto width = mod_->add<OpSConvert>(spv_i32_ty, odv->shape(0));
+            auto stride = mod_->add<OpSConvert>(spv_i32_ty, odv->stride(1));
+            declare(in.result(0), mod_->add<OpCooperativeMatrixStoreCheckedINTEL>(
+                                      pointer, x, y, spv_val, row_major, height, width, stride));
+        } else {
+            auto spv_index_ty = unique_.spv_ty(scalar_type::index);
+            auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
+            auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
+            auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
+            auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
+                                                               offset, std::vector<spv_inst *>{});
+
+            mod_->add<OpCooperativeMatrixStoreKHR>(pointer, spv_val, row_major, odv->stride(1));
+        }
     } else {
-        auto spv_index_ty = unique_.spv_ty(scalar_type::index);
-        auto pv0_stride0 = mod_->add<OpIMul>(spv_index_ty, val(in.pos0()), odv->stride(0));
-        auto pv1_stride1 = mod_->add<OpIMul>(spv_index_ty, val(in.pos1()), odv->stride(1));
-        auto offset = mod_->add<OpIAdd>(spv_index_ty, pv0_stride0, pv1_stride1);
-        auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_operand_ty, val(in.operand()),
-                                                           offset, std::vector<spv_inst *>{});
-
-        mod_->add<OpCooperativeMatrixStoreKHR>(pointer, spv_val, row_major, odv->stride(1));
+        diy_.store(in, *odv, val(in.val()), val(in.operand()), val(in.pos0()), val(in.pos1()));
     }
 }
 
@@ -1563,9 +1559,9 @@ auto inst_converter::run_on_region_with_yield(region_node const &reg,
     return yielded_vals;
 }
 
-void inst_converter::run_on_function(function_node const &fn, tinytc_core_info const &info) {
+void inst_converter::run_on_function(function_node const &fn) {
     try {
-        core_cfg_ = info.get_core_config(fn.subgroup_size());
+        core_cfg_ = info_->get_core_config(fn.subgroup_size());
     } catch (std::out_of_range const &e) {
         throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
@@ -1589,7 +1585,7 @@ void inst_converter::run_on_function(function_node const &fn, tinytc_core_info c
     make_stack();
 
     // Function type
-    auto fun_ty = unique_.spv_function_ty([&] {
+    auto fun_ty = unique_.spv_function_ty(unique_.void_ty(), [&] {
         auto params = std::vector<spv_inst *>{};
         params.reserve(fn.num_params());
         for (auto const &p : fn.params()) {

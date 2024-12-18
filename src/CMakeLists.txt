@@ -74,6 +74,8 @@ set(SOURCES
     scalar_type.cpp
     spv/capex_util.cpp
     spv/converter.cpp
+    spv/coopmatrix_diy.cpp
+    spv/dope_vector.cpp
     spv/inst_assembler.cpp
     spv/module.cpp
     spv/names.cpp

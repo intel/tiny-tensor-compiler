@@ -380,8 +380,7 @@ enum class bundle_format {
 
 //! Flags for optimizer
 enum class optflag {
-    unsafe_fp_math =
-        tinytc_optflag_unsafe_fp_math ///< Unsafe floating point math (e.g. 0.0 * x = 0.0)
+    unsafe_fp_math = tinytc_optflag_unsafe_fp_math
 };
 
 //! Memory object type
