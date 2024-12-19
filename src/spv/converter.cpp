@@ -1100,48 +1100,52 @@ void inst_converter::operator()(expand_inst const &in) {
 }
 
 void inst_converter::operator()(for_inst const &in) {
-    auto header_label = std::make_unique<OpLabel>();
-    auto body_label = std::make_unique<OpLabel>();
-    auto continue_label = std::make_unique<OpLabel>();
-    auto merge_label = std::make_unique<OpLabel>();
+    auto header_label_op = std::make_unique<OpLabel>();
+    auto body_label_op = std::make_unique<OpLabel>();
+    auto continue_label_op = std::make_unique<OpLabel>();
+    auto merge_label_op = std::make_unique<OpLabel>();
+    auto header_label = header_label_op.get();
+    auto body_label = body_label_op.get();
+    auto continue_label = continue_label_op.get();
+    auto merge_label = merge_label_op.get();
 
-    mod_->add<OpLoopMerge>(merge_label.get(), continue_label.get(), LoopControl::None);
-    mod_->add<OpBranch>(header_label.get());
+    auto entry_label = get_last_label();
+    if (!entry_label) {
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }
+
+    mod_->add<OpBranch>(header_label);
 
     // Header block
     auto spv_bool_ty = unique_.spv_ty(boolean_data_type::get(mod_->context()));
     auto spv_loop_var_ty = unique_.spv_ty(in.loop_var().ty());
-    auto header_block_last_label = header_label.get();
-    mod_->insts(section::function).push_back(header_label.release());
-
-    auto condition = mod_->add<OpSLessThan>(spv_bool_ty, val(in.from()), val(in.to()));
-    mod_->add<OpBranchConditional>(condition, body_label.get(), merge_label.get(),
-                                   std::vector<LiteralInteger>{});
-
-    // Body block
-    auto body_first_label = body_label.get();
-    mod_->insts(section::function).push_back(body_label.release());
+    mod_->insts(section::function).push_back(header_label_op.release());
     // nullptr needs to be replaced by the loop var update once it is defined
     auto loop_var_phi = mod_->add<OpPhi>(
-        spv_loop_var_ty,
-        std::vector<PairIdRefIdRef>{PairIdRefIdRef{val(in.from()), header_block_last_label},
-                                    PairIdRefIdRef{nullptr, continue_label.get()}});
+        spv_loop_var_ty, std::vector<PairIdRefIdRef>{PairIdRefIdRef{val(in.from()), entry_label},
+                                                     PairIdRefIdRef{nullptr, continue_label}});
     declare(in.loop_var(), loop_var_phi);
-
     auto const &make_iter_arg_phi = [&]() -> std::vector<OpPhi *> {
         auto phis = std::vector<OpPhi *>{};
         phis.reserve(in.num_results());
         for (std::int64_t i = 0; i < in.num_results(); ++i) {
             auto ty = unique_.spv_ty(in.iter_arg(i).ty());
             phis.emplace_back(mod_->add<OpPhi>(
-                ty, std::vector<PairIdRefIdRef>{
-                        PairIdRefIdRef{val(in.iter_init(i)), header_block_last_label},
-                        PairIdRefIdRef{nullptr, continue_label.get()}}));
+                ty, std::vector<PairIdRefIdRef>{PairIdRefIdRef{val(in.iter_init(i)), entry_label},
+                                                PairIdRefIdRef{nullptr, continue_label}}));
             declare(in.iter_arg(i), phis.back());
         }
         return phis;
     };
     auto iter_arg_phis = make_iter_arg_phi();
+
+    auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
+    mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::None);
+    mod_->add<OpBranchConditional>(condition, body_label, merge_label,
+                                   std::vector<LiteralInteger>{});
+
+    // Body block
+    mod_->insts(section::function).push_back(body_label_op.release());
 
     auto yielded_for = run_on_region_with_yield(in.body(), in.num_results());
     // Update phis with yielded values
@@ -1149,39 +1153,26 @@ void inst_converter::operator()(for_inst const &in) {
         iter_arg_phis[i]->op0().back().first = yielded_for[i];
     }
 
-    auto body_last_label = get_last_label();
-    if (!body_last_label) {
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    }
-    mod_->add<OpBranch>(continue_label.get());
+    mod_->add<OpBranch>(continue_label);
 
     // Continue block
-    auto continue_block_last_label = continue_label.get();
-    mod_->insts(section::function).push_back(continue_label.release());
+    mod_->insts(section::function).push_back(continue_label_op.release());
     auto step = [&]() -> spv_inst * {
         if (in.has_step()) {
             return val(in.step());
         }
         return make_constant(get_scalar_type(in.loop_var()), spv_loop_var_ty, std::int64_t{1});
     }();
-    auto loop_var_update = mod_->add<OpIAdd>(spv_loop_var_ty, val(in.loop_var()), step);
+    auto loop_var_update = mod_->add<OpIAdd>(spv_loop_var_ty, loop_var_phi, step);
     loop_var_phi->op0().back().first = loop_var_update;
-    auto condition2 = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_update, val(in.to()));
-    mod_->add<OpBranchConditional>(condition2, body_first_label, merge_label.get(),
-                                   std::vector<LiteralInteger>{});
+    mod_->add<OpBranch>(header_label);
 
     // Merge block
-    mod_->insts(section::function).push_back(merge_label.release());
+    mod_->insts(section::function).push_back(merge_label_op.release());
 
     auto const &set_results = [&] {
-        std::int64_t val_no = 0;
         for (std::int64_t i = 0; i < in.num_results(); ++i) {
-            auto ty = unique_.spv_ty(in.result(i).ty());
-            declare(in.result(i),
-                    mod_->add<OpPhi>(
-                        ty, std::vector<PairIdRefIdRef>{
-                                PairIdRefIdRef{val(in.iter_init(i)), header_block_last_label},
-                                PairIdRefIdRef{yielded_for[val_no++], continue_block_last_label}}));
+            declare(in.result(i), val(in.iter_arg(i)));
         }
     };
     set_results();
