@@ -233,11 +233,36 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
     auto key = std::array<coopmatrix_data_type const *, 4u>{at, bt, ct, rt};
     return lookup(mul_add_funs_, key, [&](std::array<coopmatrix_data_type const *, 4u> const &key) {
         const auto [at, bt, ct, rt] = key;
+
         auto oasm = std::ostringstream{};
 
         const std::int32_t ops_per_chan = channel_size / size(at->component_ty());
         const std::int32_t K = ops_per_chan * sdepth;
 
+        const auto precision = [](scalar_type sty) -> char const * {
+            switch (sty) {
+            case scalar_type::f16:
+                return "hf";
+            case scalar_type::bf16:
+                return "bf";
+            case scalar_type::i8:
+                return "s8";
+            default:
+                throw status::internal_compiler_error;
+            }
+        };
+
+        oasm << "{\n";
+        char const *result_placeholder = "$0";
+        if (rt->component_ty() == scalar_type::bf16) {
+            result_placeholder = "result_matrix";
+            oasm << ".decl " << result_placeholder
+                 << " v_type=G type=bf num_elts=" << rt->rows() * rt->cols()
+                 << " align=wordx32 alias=<$0, 0>\n";
+        }
+
+        const auto precision_src0 = precision(at->component_ty());
+        const auto precision_src1 = precision(bt->component_ty());
         for (std::int32_t m = 0; m < ct->rows(); m += exec_size) {
             for (std::int32_t k = 0; k < at->cols(); k += K) {
                 for (std::int32_t n = 0; n < ct->cols(); n += rcount) {
@@ -249,12 +274,14 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                         (m * ct->cols() + n * exec_size) * size(ct->component_ty());
                     const auto roffset =
                         (m * rt->cols() + n * exec_size) * size(rt->component_ty());
-                    oasm << "dpas.hf.hf." << sdepth << "." << rcount << " (M1," << exec_size
-                         << ") $0." << roffset << " $3." << coffset << " $1." << aoffset << " $2("
+                    oasm << "dpas." << precision_src0 << "." << precision_src1 << "." << sdepth
+                         << "." << rcount << " (M1," << exec_size << ") " << result_placeholder
+                         << "." << roffset << " $3." << coffset << " $1." << aoffset << " $2("
                          << brow << ",0)\n";
                 }
             }
         }
+        oasm << "}\n";
 
         auto spv_a_ty = unique_->spv_ty(at);
         auto spv_b_ty = unique_->spv_ty(bt);

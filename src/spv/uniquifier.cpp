@@ -258,19 +258,10 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                 [&](coopmatrix_data_type const &ty) -> spv_inst * {
                     if (!matrix_->use_khr_matrix_ext()) {
                         const auto sty = [](scalar_type sty, matrix_use use) {
-                            switch (sty) {
-                            case scalar_type::i8:
-                            case scalar_type::i16:
-                            case scalar_type::i32:
-                                return scalar_type::i32;
-                            case scalar_type::bf16:
-                            case scalar_type::f16:
-                                return use == matrix_use::acc ? scalar_type::f32 : scalar_type::i32;
-                            case scalar_type::f32:
-                                return scalar_type::f32;
-                            default:
-                                throw status::internal_compiler_error;
+                            if (use == matrix_use::acc) {
+                                return sty;
                             }
+                            return scalar_type::i32;
                         }(ty.component_ty(), ty.use());
                         const std::int64_t bytes = size(ty.component_ty()) * ty.rows() * ty.cols();
                         const auto bytes_multiple_of =

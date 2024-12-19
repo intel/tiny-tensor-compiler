@@ -56,6 +56,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         return checked_flag::none;
     }();
+    auto c_m_block_size = bb.add(make_constant(m_block_size, index_ty, loc));
+    auto c_n_block_size = bb.add(make_constant(n_block_size, index_ty, loc));
 
     const auto c_acc_ty = [&c_ty, &loc]() {
         auto ct = dyn_cast<scalar_data_type>(c_ty);
@@ -68,64 +70,69 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto coopmatrix_c_ty = get_coopmatrix(c_ty, m_block_size, n_block_size, matrix_use::acc, loc);
     auto coopmatrix_c_acc_ty =
         get_coopmatrix(c_acc_ty, m_block_size, n_block_size, matrix_use::acc, loc);
+    auto const compute_c_step = [&](region_builder &bb, std::int32_t k_block_size, value k,
+                                    array_view<value> const &c_acc,
+                                    array_view<tinytc_data_type_t> const &c_acc_tys,
+                                    bool check_k = false) {
+        value pos_a[2] = {m_block, k};
+        if (tA == transpose::T) {
+            std::swap(pos_a[0], pos_a[1]);
+        }
+        auto coopmatrix_a_ty = get_coopmatrix(a_ty, m_block_size, k_block_size, matrix_use::a, loc);
+        const auto my_check_a = check_k ? add_check(check_a, checked_flag::cols) : check_a;
+        auto a = std::vector<value>{};
+        a.reserve(num_m_blocks);
+        for (std::int32_t i = 0; i < num_m_blocks; ++i) {
+            a.emplace_back(bb.add(make_cooperative_matrix_load(tA, my_check_a, A, pos_a[0],
+                                                               pos_a[1], coopmatrix_a_ty)));
+            if (i + 1 < num_m_blocks) {
+                pos_a[0] =
+                    bb.add(make_arith(arithmetic::add, pos_a[0], c_m_block_size, index_ty, loc));
+            }
+        }
+
+        value pos_b[2] = {k, n_block};
+        if (tB == transpose::T) {
+            std::swap(pos_b[0], pos_b[1]);
+        }
+        auto coopmatrix_b_ty = get_coopmatrix(b_ty, k_block_size, n_block_size, matrix_use::b, loc);
+        const auto my_check_b = check_k ? add_check(check_b, checked_flag::rows) : check_b;
+        auto b = std::vector<value>{};
+        b.reserve(num_n_blocks);
+        for (std::int32_t i = 0; i < num_n_blocks; ++i) {
+            b.emplace_back(bb.add(make_cooperative_matrix_load(tB, my_check_b, B, pos_b[0],
+                                                               pos_b[1], coopmatrix_b_ty)));
+            if (i + 1 < num_n_blocks) {
+                pos_b[1] =
+                    bb.add(make_arith(arithmetic::add, pos_b[1], c_n_block_size, index_ty, loc));
+            }
+        }
+
+        auto c_next = std::vector<value>{};
+        c_next.reserve(num_m_blocks * num_n_blocks);
+        for (std::int32_t n = 0; n < num_n_blocks; ++n) {
+            for (std::int32_t m = 0; m < num_m_blocks; ++m) {
+                c_next.emplace_back(
+                    bb.add(make_cooperative_matrix_mul_add(a[m], b[n], c_acc[m + n * num_m_blocks],
+                                                           c_acc_tys[m + n * num_m_blocks], loc)));
+            }
+        }
+        return c_next;
+    };
     auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, value K0, value K1,
                                std::vector<value> const &c_acc,
                                std::vector<tinytc_data_type_t> const &c_acc_tys,
                                bool check_k = false) -> std::vector<value> {
-        auto c_m_block_size = bb.add(make_constant(m_block_size, index_ty, loc));
-        auto c_n_block_size = bb.add(make_constant(n_block_size, index_ty, loc));
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
-        auto return_values = bb.for_loop(
-            index_ty, K0, K1, c_step, c_acc, c_acc_tys,
-            [&](region_builder &bb, array_view<value> p) {
-                const auto k = p[0];
-
-                value pos_a[2] = {m_block, k};
-                if (tA == transpose::T) {
-                    std::swap(pos_a[0], pos_a[1]);
-                }
-                auto coopmatrix_a_ty =
-                    get_coopmatrix(a_ty, m_block_size, k_block_size, matrix_use::a, loc);
-                const auto my_check_a = check_k ? add_check(check_a, checked_flag::cols) : check_a;
-                auto a = std::vector<value>{};
-                a.reserve(num_m_blocks);
-                for (std::int32_t i = 0; i < num_m_blocks; ++i) {
-                    a.emplace_back(bb.add(make_cooperative_matrix_load(tA, my_check_a, A, pos_a[0],
-                                                                       pos_a[1], coopmatrix_a_ty)));
-                    if (i + 1 < num_m_blocks) {
-                        pos_a[0] = bb.add(
-                            make_arith(arithmetic::add, pos_a[0], c_m_block_size, index_ty, loc));
-                    }
-                }
-
-                value pos_b[2] = {k, n_block};
-                if (tB == transpose::T) {
-                    std::swap(pos_b[0], pos_b[1]);
-                }
-                auto coopmatrix_b_ty =
-                    get_coopmatrix(b_ty, k_block_size, n_block_size, matrix_use::b, loc);
-                const auto my_check_b = check_k ? add_check(check_b, checked_flag::rows) : check_b;
-                auto b = std::vector<value>{};
-                b.reserve(num_n_blocks);
-                for (std::int32_t i = 0; i < num_n_blocks; ++i) {
-                    b.emplace_back(bb.add(make_cooperative_matrix_load(tB, my_check_b, B, pos_b[0],
-                                                                       pos_b[1], coopmatrix_b_ty)));
-                    if (i + 1 < num_n_blocks) {
-                        pos_b[1] = bb.add(
-                            make_arith(arithmetic::add, pos_b[1], c_n_block_size, index_ty, loc));
-                    }
-                }
-
-                auto c_next = std::vector<value>{};
-                c_next.reserve(num_m_blocks * num_n_blocks);
-                for (std::int32_t n = 0; n < num_n_blocks; ++n) {
-                    for (std::int32_t m = 0; m < num_m_blocks; ++m) {
-                        c_next.emplace_back(bb.add(make_cooperative_matrix_mul_add(
-                            a[m], b[n], p[1 + m + n * num_m_blocks], coopmatrix_c_acc_ty, loc)));
-                    }
-                }
-                bb.add(make_yield(c_next, loc));
-            });
+        auto return_values =
+            bb.for_loop(index_ty, K0, K1, c_step, c_acc, c_acc_tys,
+                        [&](region_builder &bb, array_view<value> p) {
+                            const auto k = p[0];
+                            auto c_acc_iter = array_view<value>(p.begin() + 1, p.end());
+                            auto c_next =
+                                compute_c_step(bb, k_block_size, k, c_acc_iter, c_acc_tys, check_k);
+                            bb.add(make_yield(c_next, loc));
+                        });
         return return_values;
     };
 
@@ -134,10 +141,13 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     for (std::int32_t i = 0; i < num_m_blocks * num_n_blocks; ++i) {
         c_acc.emplace_back(bb.add(make_constant_zero(coopmatrix_c_acc_ty, loc)));
     }
-    auto c_acc_tys = std::vector<tinytc_data_type_t>{};
-    c_acc_tys.reserve(c_acc.size());
-    for (auto &a : c_acc) {
-        c_acc_tys.emplace_back(a->ty());
+    auto c_acc_tys = std::vector<tinytc_data_type_t>(c_acc.size());
+    for (auto &ty : c_acc_tys) {
+        ty = coopmatrix_c_acc_ty;
+    }
+    auto c_tys = std::vector<tinytc_data_type_t>(c_acc.size());
+    for (auto &ty : c_tys) {
+        ty = coopmatrix_c_ty;
     }
 
     auto k_block_size = K_block_sizes.back();
@@ -153,16 +163,28 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         bb, make_arith(arithmetic::div, K, c_k_block_size, index_ty, loc));
     auto K0 = instant_constant_fold_add(
         bb, make_arith(arithmetic::mul, tmp, c_k_block_size, index_ty, loc));
-    c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
     auto needs_remainder =
         instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, bool_ty, loc));
     auto r = get_bool_constant(needs_remainder);
+    bool needs_final_cast = coopmatrix_c_ty != coopmatrix_c_acc_ty;
     if (r) {
         if (*r != 0) {
+            c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
             const auto K_block_size = K_block_sizes.front();
             c_acc = compute_c(bb, K_block_size, K0, K, c_acc, c_acc_tys, K_block_size > 1);
+        } else {
+            if (c_ty != c_acc_ty) {
+                K0 = instant_constant_fold_add(
+                    bb, make_arith(arithmetic::sub, K0, c_k_block_size, index_ty, loc));
+                c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
+                c_acc = compute_c_step(bb, k_block_size, K0, c_acc, c_tys);
+                needs_final_cast = false;
+            } else {
+                c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
+            }
         }
     } else {
+        c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
         auto remainder = bb.ifelse(
             needs_remainder,
             [&](region_builder &bb) {
@@ -175,7 +197,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         c_acc = std::move(remainder);
     }
 
-    if (coopmatrix_c_ty != coopmatrix_c_acc_ty) {
+    if (needs_final_cast) {
         for (auto &a : c_acc) {
             a = bb.add(make_cast(a, coopmatrix_c_ty, loc));
         }

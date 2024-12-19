@@ -664,7 +664,8 @@ template <typename T> class array_view_base {
      * @param begin begin pointer
      * @param end end pointer (not included)
      */
-    array_view_base(T *begin, T *end) : data_{begin}, size_{end - begin} {}
+    array_view_base(T *begin, T *end)
+        : data_{begin}, size_{static_cast<std::size_t>(end - begin)} {}
 
     //! Begin iterator
     auto begin() const -> iterator { return data_; }
