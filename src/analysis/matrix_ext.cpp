@@ -11,6 +11,7 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "scalar_type.hpp"
 #include "support/casting.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
@@ -98,8 +99,8 @@ void matrix_ext_helper::operator()(cast_inst const &in) {
     kill(in.a());
     kill(in.result(0));
 }
-auto matrix_ext_helper::check_2d_block_io(value_node const &operand,
-                                          std::int32_t alignment) -> bool {
+auto matrix_ext_helper::check_2d_block_io(value_node const &operand, std::int32_t alignment)
+    -> bool {
     auto const &block_io = info_->matrix().block_io();
     auto ot = get_memref_type(operand);
     const auto element_size = static_cast<std::int32_t>(size(ot->element_ty()));
@@ -137,8 +138,12 @@ void matrix_ext_helper::operator()(cooperative_matrix_mul_add_inst const &in) {
 }
 void matrix_ext_helper::operator()(cooperative_matrix_scale_inst const &in) {
     // Missing: OpMatrixTimesScalar
-    kill(in.b());
-    kill(in.result(0));
+    // Ok for coopmatrix diy except for complex
+    auto rt = get_coopmatrix_type(in.result(0));
+    if (is_complex_type(rt->component_ty()) || !have(in.b()) || !have(in.result(0))) {
+        kill(in.b());
+        kill(in.result(0));
+    }
 }
 void matrix_ext_helper::operator()(cooperative_matrix_store_inst const &in) {
     auto vt = get_coopmatrix_type(in.val());

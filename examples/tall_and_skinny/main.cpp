@@ -30,6 +30,7 @@ struct args {
     bool update = false;
     bool verify = false;
     std::int32_t alignment = 64;
+    std::int32_t M_block_size = 0;
     std::vector<examples::test_case> tc;
 };
 
@@ -127,9 +128,9 @@ template <typename T> void test(queue q, args &a) {
             ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
                                       void *) { std::cerr << what << std::endl; },
                                    nullptr);
-            auto r =
-                make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
-                                                 a.alignment, a.alignment, a.alignment, 0, ctx);
+            auto r = make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
+                                                      a.alignment, a.alignment, a.alignment,
+                                                      a.M_block_size, ctx);
             if (a.dump) {
                 r.get_prog().dump();
             }
@@ -190,6 +191,8 @@ int main(int argc, char **argv) {
                              "Add A*B to C (beta=1) instead of overwriting C (beta=0)");
         parser.set_short_opt('v', &a.verify, "Verify optimized implementation");
         parser.set_long_opt("help", &help, "Show help");
+        parser.set_long_opt("m-block-size", &a.M_block_size,
+                            "Set block size for M mode (one work-group per block)");
         parser.set_long_opt("specialize-m", &a.specialize_M,
                             "Specialize M instead of using dynamic value");
         parser.set_long_opt("specialize-ld", &a.specialize_ld,

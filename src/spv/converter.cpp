@@ -44,8 +44,8 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p,
-                           tinytc_core_info const &info) -> ::tinytc::spv_mod {
+auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
+    -> ::tinytc::spv_mod {
     auto m = ::tinytc::spv_mod{
         std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
@@ -327,8 +327,8 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
-                                      bool conj_b) -> spv_inst * {
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
+    -> spv_inst * {
     const auto is_imag_zero = [&](spv_inst *a) -> bool {
         // We capture the case here if "a" stems from a non-complex -> complex cast
         if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
@@ -360,8 +360,8 @@ auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
 
 auto inst_converter::make_conditional_execution(
     spv_inst *returned_element_ty, spv_inst *condition,
-    std::function<std::vector<spv_inst *>()> conditional_code,
-    location const &loc) -> std::vector<spv_inst *> {
+    std::function<std::vector<spv_inst *>()> conditional_code, location const &loc)
+    -> std::vector<spv_inst *> {
     auto then_label = std::make_unique<OpLabel>();
     auto merge_label = std::make_unique<OpLabel>();
 
@@ -1003,7 +1003,12 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
 }
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
-    declare(in.result(0), mod_->add<OpMatrixTimesScalar>(spv_result_ty, val(in.b()), val(in.a())));
+    if (info_->matrix().use_khr_matrix_ext()) {
+        declare(in.result(0),
+                mod_->add<OpMatrixTimesScalar>(spv_result_ty, val(in.b()), val(in.a())));
+    } else {
+        declare(in.result(0), diy_.scale(in, val(in.a()), val(in.b())));
+    }
 }
 void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     auto odv = get_dope_vector(in.operand());
@@ -1536,8 +1541,8 @@ void inst_converter::run_on_region(region_node const &reg) {
     }
 }
 
-auto inst_converter::run_on_region_with_yield(region_node const &reg,
-                                              std::int64_t num_results) -> std::vector<spv_inst *> {
+auto inst_converter::run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
+    -> std::vector<spv_inst *> {
     yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
     run_on_region(reg);
     auto yielded_vals = std::move(yielded_vals_.top());
