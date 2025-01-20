@@ -21,3 +21,8 @@ target_link_libraries(test-ze-linalg PRIVATE test-ze-lib test-lib-linalg)
 doctest_discover_tests(test-ze-linalg)
 set_cxx_common_options(test-ze-linalg)
 
+add_executable(test-ze-xmx xmx.cpp)
+target_link_libraries(test-ze-xmx PRIVATE test-ze-lib)
+doctest_discover_tests(test-ze-xmx)
+set_cxx_common_options(test-ze-xmx)
+

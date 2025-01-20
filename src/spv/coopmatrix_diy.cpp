@@ -29,6 +29,42 @@
 
 namespace tinytc::spv {
 
+auto precision(scalar_type sty) -> char const * {
+    switch (sty) {
+    case scalar_type::f16:
+        return "hf";
+    case scalar_type::bf16:
+        return "bf";
+    case scalar_type::i8:
+        return "s8";
+    default:
+        throw status::internal_compiler_error;
+    }
+}
+auto visa_type(scalar_type sty) -> char const * {
+    switch (sty) {
+    case scalar_type::i8:
+        return "b";
+    case scalar_type::i16:
+        return "w";
+    case scalar_type::i32:
+        return "d";
+    case scalar_type::i64:
+    case scalar_type::index:
+        return "q";
+    case scalar_type::f16:
+        return "hf";
+    case scalar_type::bf16:
+        return "bf";
+    case scalar_type::f32:
+        return "f";
+    case scalar_type::f64:
+        return "df";
+    default:
+        throw status::internal_compiler_error;
+    }
+}
+
 coopmatrix_diy::coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique)
     : mod_{&m}, unique_{&unique} {}
 
@@ -76,7 +112,7 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
             const auto cfg = load_config(result_ty);
 
             const std::uint32_t num_dst =
-                std::min(31, cfg.element_size * cfg.rows * cfg.cols / grf_size);
+                std::min(31, cfg.element_size * cfg.array_length * cfg.rows * cfg.cols / grf_size);
             const std::uint32_t desc = [&] {
                 const std::uint32_t data_size = cfg.element_size == 4 ? 2 : 1;
                 std::uint32_t d = 3;
@@ -118,7 +154,7 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
                 if (m + 1 < cfg.row_blocks) {
                     oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> "
                          << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
-                    oasm << "add (M1,1) temp(0,7)<1> temp(0,7)<0;1,0> " << cfg.rows << ":ud\n";
+                    oasm << "add (M1,1) temp(0,5)<1> temp(0,5)<0;1,0> " << cfg.rows << ":ud\n";
                 }
             }
             oasm << "}\n";
@@ -147,8 +183,8 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct) -> block_confi
     cfg.vnni = false;
 
     if (cfg.cols > max_cols_in_block) {
-        cfg.cols = max_cols_in_block;
         cfg.col_blocks = cfg.cols / max_cols_in_block;
+        cfg.cols = max_cols_in_block;
     }
 
     const auto max_rows = max_rows_in_block(ct);
@@ -210,7 +246,7 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
                 if (m + 1 < cfg.row_blocks) {
                     oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> "
                          << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
-                    oasm << "add (M1,1) temp(0,7)<1> temp(0,7)<0;1,0> " << cfg.rows << ":ud\n";
+                    oasm << "add (M1,1) temp(0,5)<1> temp(0,5)<0;1,0> " << cfg.rows << ":ud\n";
                 }
             }
             oasm << "}\n";
@@ -222,9 +258,11 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
                 spv_void_ty,
                 array_view<spv_inst *>{spv_val_ty, spv_operand_ty, spv_i32_ty, spv_i32_ty,
                                        spv_i32_ty, spv_i32_ty, spv_i32_ty});
-            return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
-                                            unique_->asm_target(), std::move(oasm).str(),
-                                            "rw,rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
+            auto asmop = mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
+                                                  unique_->asm_target(), std::move(oasm).str(),
+                                                  "rw,rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
+            mod_->add_to<OpDecorate>(section::decoration, asmop, Decoration::SideEffectsINTEL);
+            return asmop;
         });
 }
 
@@ -240,19 +278,6 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
         const std::int32_t ops_per_chan = channel_size / size(at->component_ty());
         const std::int32_t K = ops_per_chan * sdepth;
 
-        const auto precision = [](scalar_type sty) -> char const * {
-            switch (sty) {
-            case scalar_type::f16:
-                return "hf";
-            case scalar_type::bf16:
-                return "bf";
-            case scalar_type::i8:
-                return "s8";
-            default:
-                throw status::internal_compiler_error;
-            }
-        };
-
         oasm << "{\n";
         char const *result_placeholder = "$0";
         if (rt->component_ty() == scalar_type::bf16) {
@@ -261,11 +286,21 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                  << " v_type=G type=bf num_elts=" << rt->rows() * rt->cols()
                  << " align=wordx32 alias=<$0, 0>\n";
         }
+        char const *temp = result_placeholder;
+        if (rt->component_ty() != ct->component_ty() && at->cols() / K > 1) {
+            temp = "temp";
+            oasm << ".decl " << temp << " v_type=G type=" << visa_type(ct->component_ty())
+                 << " num_elts=" << ct->rows() * ct->cols() << " align=wordx32\n";
+        }
 
-        const auto precision_src0 = precision(at->component_ty());
-        const auto precision_src1 = precision(bt->component_ty());
-        for (std::int32_t m = 0; m < ct->rows(); m += exec_size) {
-            for (std::int32_t k = 0; k < at->cols(); k += K) {
+        const auto precision_src1 = precision(at->component_ty());
+        const auto precision_src2 = precision(bt->component_ty());
+        for (std::int32_t k = 0; k < at->cols(); k += K) {
+            char const *src0 = k > 0 ? temp : "$3";
+            char const *dst = k + K >= at->cols() ? result_placeholder : temp;
+            const auto rsize =
+                k + K >= at->cols() ? size(rt->component_ty()) : size(ct->component_ty());
+            for (std::int32_t m = 0; m < ct->rows(); m += exec_size) {
                 for (std::int32_t n = 0; n < ct->cols(); n += rcount) {
                     const auto aoffset =
                         (k * exec_size + m * at->cols()) * size(at->component_ty());
@@ -273,12 +308,11 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                         (k * bt->cols() + n * K) * size(bt->component_ty()) / grf_size;
                     const auto coffset =
                         (m * ct->cols() + n * exec_size) * size(ct->component_ty());
-                    const auto roffset =
-                        (m * rt->cols() + n * exec_size) * size(rt->component_ty());
-                    oasm << "dpas." << precision_src0 << "." << precision_src1 << "." << sdepth
-                         << "." << rcount << " (M1," << exec_size << ") " << result_placeholder
-                         << "." << roffset << " $3." << coffset << " $1." << aoffset << " $2("
-                         << brow << ",0)\n";
+                    const auto roffset = (m * rt->cols() + n * exec_size) * rsize;
+                    oasm << "dpas." << precision_src1 << "." << precision_src2 << "." << sdepth
+                         << "." << rcount << " (M1," << exec_size << ") " << dst << "." << roffset
+                         << " " << src0 << "." << coffset << " $1." << aoffset << " $2(" << brow
+                         << ",0)\n";
                 }
             }
         }
@@ -302,37 +336,13 @@ auto coopmatrix_diy::scale_fun(coopmatrix_data_type const *rt) -> spv_inst * {
         auto oasm = std::ostringstream{};
 
         const std::int32_t num_components = rt->rows() * rt->cols();
-
-        const auto visa_type = [](scalar_type sty) -> char const * {
-            switch (sty) {
-            case scalar_type::i8:
-                return "b";
-            case scalar_type::i16:
-                return "w";
-            case scalar_type::i32:
-                return "d";
-            case scalar_type::i64:
-            case scalar_type::index:
-                return "q";
-            case scalar_type::bf16:
-                return "bf";
-            case scalar_type::f16:
-                return "hf";
-            case scalar_type::f32:
-                return "f";
-            case scalar_type::f64:
-                return "df";
-            default:
-                throw status::internal_compiler_error;
-            }
-        }(rt->component_ty());
+        const auto visa_ty = visa_type(rt->component_ty());
 
         oasm << "{\n";
-        oasm << ".decl c_tmp v_type=G type=" << visa_type << " num_elts=" << num_components
+        oasm << ".decl c_tmp v_type=G type=" << visa_ty << " num_elts=" << num_components
              << " align=wordx32 alias=<$0, 0>\n";
-        oasm << ".decl a_tmp v_type=G type=" << visa_type
-             << " num_elts=1 align=word alias=<$1, 0>\n";
-        oasm << ".decl b_tmp v_type=G type=" << visa_type << " num_elts=" << num_components
+        oasm << ".decl a_tmp v_type=G type=" << visa_ty << " num_elts=1 align=word alias=<$1, 0>\n";
+        oasm << ".decl b_tmp v_type=G type=" << visa_ty << " num_elts=" << num_components
              << " align=wordx32 alias=<$2, 0>\n";
         for (std::int32_t m = 0; m < num_components; m += exec_size) {
             oasm << "mul (M1," << exec_size << ") c_tmp(0," << m
@@ -354,55 +364,87 @@ auto coopmatrix_diy::scale_fun(coopmatrix_data_type const *rt) -> spv_inst * {
 
 auto coopmatrix_diy::constant(constant_inst const &in) -> spv_inst * {
     auto spv_result_ty = unique_->spv_ty(in.result(0).ty());
+    if (in.is_zero()) {
+        return unique_->null_constant(spv_result_ty);
+    }
+
     auto spv_vec_ty = dyn_cast<OpTypeVector>(spv_result_ty);
     if (!spv_vec_ty) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     }
-
     const auto sty = get_coopmatrix_type(in.result(0))->component_ty();
-    const auto pack_const_in_i32 =
-        overloaded{[&](std::int64_t i) -> std::optional<std::int32_t> {
-                       switch (sty) {
-                       case scalar_type::i8: {
-                           auto v8 = std::bit_cast<std::uint8_t>(static_cast<std::int8_t>(i));
-                           return std::int32_t{v8 | (v8 << 8) | (v8 << 16) | (v8 << 24)};
-                       }
-                       case scalar_type::i32:
-                           return static_cast<std::int32_t>(i);
-                       default:
-                           return std::nullopt;
-                       }
-                   },
-                   [&](double d) -> std::optional<std::int32_t> {
-                       switch (sty) {
-                       case scalar_type::bf16: {
-                           std::uint16_t v16 = bfloat16{static_cast<float>(d)}.bits();
-                           return std::int32_t{v16 | (v16 << 16)};
-                       }
-                       case scalar_type::f16: {
-                           std::uint16_t v16 = half{static_cast<float>(d)}.bits();
-                           return std::int32_t{v16 | (v16 << 16)};
-                       }
-                       case scalar_type::f32:
-                           return std::bit_cast<std::int32_t>(static_cast<float>(d));
-                       default:
-                           return std::nullopt;
-                       }
-                   },
-                   [&](auto const &) -> std::optional<std::int32_t> { return std::nullopt; }};
-    auto const_as_i32 = std::visit(pack_const_in_i32, in.value());
-    if (!const_as_i32) {
+
+    spv_inst *cst = nullptr;
+    if (sty == scalar_type::i32) {
+        cst = std::visit(
+            overloaded{[&](std::int64_t i) -> spv_inst * {
+                           switch (sty) {
+                           case scalar_type::i8: {
+                               auto v8 = std::bit_cast<std::uint8_t>(static_cast<std::int8_t>(i));
+                               return unique_->constant(
+                                   std::int32_t{v8 | (v8 << 8) | (v8 << 16) | (v8 << 24)});
+                               return unique_->constant(static_cast<std::int8_t>(i));
+                           }
+                           case scalar_type::i32:
+                               return unique_->constant(static_cast<std::int32_t>(i));
+                           default:
+                               return nullptr;
+                           }
+                       },
+                       [&](double d) -> spv_inst * {
+                           const float f = static_cast<float>(d);
+                           switch (sty) {
+                           case scalar_type::bf16: {
+                               std::uint16_t v16 = bfloat16{f}.bits();
+                               return unique_->constant(std::int32_t{v16 | (v16 << 16)});
+                           }
+                           case scalar_type::f16: {
+                               std::uint16_t v16 = half{f}.bits();
+                               return unique_->constant(std::int32_t{v16 | (v16 << 16)});
+                           }
+                           case scalar_type::f32:
+                               return unique_->constant(std::bit_cast<std::int32_t>(f));
+                           default:
+                               return nullptr;
+                           }
+                       },
+                       [&](auto const &) -> spv_inst * { return nullptr; }},
+            in.value());
+    } else {
+        cst = std::visit(overloaded{[&](std::int64_t i) -> spv_inst * {
+                                        switch (sty) {
+                                        case scalar_type::i8: {
+                                            return unique_->constant(static_cast<std::int8_t>(i));
+                                        }
+                                        case scalar_type::i32:
+                                            return unique_->constant(static_cast<std::int32_t>(i));
+                                        default:
+                                            return nullptr;
+                                        }
+                                    },
+                                    [&](double d) -> spv_inst * {
+                                        const float f = static_cast<float>(d);
+                                        switch (sty) {
+                                        case scalar_type::bf16: {
+                                            return unique_->constant(
+                                                std::bit_cast<std::int16_t>(bfloat16{f}.bits()));
+                                        }
+                                        case scalar_type::f16: {
+                                            return unique_->constant(half{f});
+                                        }
+                                        case scalar_type::f32:
+                                            return unique_->constant(f);
+                                        default:
+                                            return nullptr;
+                                        }
+                                    },
+                                    [&](auto const &) -> spv_inst * { return nullptr; }},
+                         in.value());
+    }
+
+    if (!cst) {
         throw compilation_error(in.loc(), status::internal_compiler_error);
     }
-
-    if (*const_as_i32 == 0) {
-        return unique_->null_constant(spv_result_ty);
-    }
-
-    auto cst = isa<OpTypeFloat>(*spv_vec_ty->op0())
-                   ? unique_->constant(std::bit_cast<float>(*const_as_i32))
-                   : unique_->constant(*const_as_i32);
-
     return mod_->add_to<OpConstantComposite>(section::type_const_var, spv_result_ty,
                                              std::vector<spv_inst *>(spv_vec_ty->op1(), cst));
 }
