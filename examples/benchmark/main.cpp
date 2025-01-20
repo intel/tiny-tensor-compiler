@@ -26,9 +26,10 @@ using namespace sycl;
 using namespace tinytc;
 
 struct args {
+    std::int32_t alignment = 65536;
     bool atomic = false;
     bool dump = false;
-    int internal_repetitions = 1;
+    std::int32_t internal_repetitions = 1;
     bool trans_a = false;
     bool trans_b = false;
     scalar_type ty = scalar_type::f32;
@@ -55,7 +56,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::int64_t M, std::int64_t N, std::int64_t K,
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride, bool update,
-                                       std::array<std::int64_t, 2> C_stride,
+                                       std::array<std::int64_t, 2> C_stride, std::int32_t alignment,
                                        std::int32_t repetitions, bool dump, queue q) -> binary {
     auto ctx = make_compiler_context();
     ctx.set_error_reporter(
@@ -92,6 +93,9 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                            {get_group(A_ty, 0, my_loc()), get_group(B_ty, 0, my_loc()),
                             get_group(C_ty, 0, my_loc())},
                            my_loc());
+        f.set_alignment(0, alignment);
+        f.set_alignment(1, alignment);
+        f.set_alignment(2, alignment);
         auto fn_body = f.get_body();
         auto params = std::array<value, 3u>{};
         fn_body.get_parameters(params);
@@ -147,10 +151,10 @@ template <typename T> void test(queue q, args &a) {
     T *B_host = new T[total_reals];
     T *C_host = new T[total_reals];
     T *C_ref_host = new T[total_reals];
-    T *C_ref = malloc_device<T>(total_reals, q);
-    T *A = malloc_device<T>(total_reals, q);
-    T *B = malloc_device<T>(total_reals, q);
-    T *C = malloc_device<T>(total_reals, q);
+    T *C_ref = aligned_alloc_device<T>(a.alignment, total_reals, q);
+    T *A = aligned_alloc_device<T>(a.alignment, total_reals, q);
+    T *B = aligned_alloc_device<T>(a.alignment, total_reals, q);
+    T *C = aligned_alloc_device<T>(a.alignment, total_reals, q);
     fill(A_host, total_reals);
     fill(B_host, total_reals);
     q.copy(A_host, A, total_reals).wait();
@@ -221,7 +225,7 @@ template <typename T> void test(queue q, args &a) {
                 a.ty, a.trans_a ? transpose::T : transpose::N,
                 a.trans_b ? transpose::T : transpose::N, a.atomic, c.m, c.n, c.k,
                 {1, a.trans_a ? c.k : c.m}, {1, a.trans_b ? c.n : c.k}, a.update, {1, c.m},
-                a.internal_repetitions, a.dump, q);
+                a.alignment, a.internal_repetitions, a.dump, q);
             if (src) {
                 auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src);
                 auto kernel = make_kernel(bundle, "gemm");
@@ -301,6 +305,7 @@ int main(int argc, char **argv) {
                              "Add A*B to C (beta=1) instead of overwriting C (beta=0)");
         parser.set_short_opt('v', &a.verify, "Verify optimized implementation");
         parser.set_long_opt("help", &help, "Show help");
+        parser.set_long_opt("alignment", &a.alignment, "Memory alignment");
         parser.set_long_opt("transpose-a", &a.trans_a, "Transpose A matrix");
         parser.set_long_opt("transpose-b", &a.trans_b, "Transpose B matrix");
         parser.add_positional_arg("test-case", &a.tc, "MxNxK triplet (e.g. 64x64x64)")

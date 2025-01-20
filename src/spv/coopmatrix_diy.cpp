@@ -409,15 +409,19 @@ auto coopmatrix_diy::constant(constant_inst const &in) -> spv_inst * {
 
 auto coopmatrix_diy::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                           spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+    auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.result(0));
     auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
     auto fun = load_fun(ct, spv_operand_ty);
 
     auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
-    auto c1 = unique_->constant(std::int64_t{1});
-    auto width = mod_->add<OpISub>(spv_i32_ty, odv.shape(0), c1);
+    auto c1 = unique_->constant(std::int32_t{1});
+    auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));
+    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.shape(0), csize);
+    auto width = mod_->add<OpISub>(spv_i32_ty, width_in_bytes, c1);
     auto height = mod_->add<OpISub>(spv_i32_ty, odv.shape(1), c1);
-    auto stride = mod_->add<OpISub>(spv_i32_ty, odv.stride(1), c1);
+    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.stride(1), csize);
+    auto stride = mod_->add<OpISub>(spv_i32_ty, stride_in_bytes, c1);
 
     auto spv_result_ty = unique_->spv_ty(in.result(0).ty());
     return mod_->add<OpAsmCallINTEL>(
@@ -481,16 +485,20 @@ auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a,
 
 void coopmatrix_diy::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
                            spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
+    auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.val());
     auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
     auto fun = store_fun(ct, spv_operand_ty);
 
     auto spv_void_ty = unique_->void_ty();
     auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
-    auto c1 = unique_->constant(std::int64_t{1});
-    auto width = mod_->add<OpISub>(spv_i32_ty, odv.shape(0), c1);
+    auto c1 = unique_->constant(std::int32_t{1});
+    auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));
+    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.shape(0), csize);
+    auto width = mod_->add<OpISub>(spv_i32_ty, width_in_bytes, c1);
     auto height = mod_->add<OpISub>(spv_i32_ty, odv.shape(1), c1);
-    auto stride = mod_->add<OpISub>(spv_i32_ty, odv.stride(1), c1);
+    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.stride(1), csize);
+    auto stride = mod_->add<OpISub>(spv_i32_ty, stride_in_bytes, c1);
 
     mod_->add<OpAsmCallINTEL>(
         spv_void_ty, fun, array_view<spv_inst *>{val, pointer, width, height, stride, pos0, pos1});

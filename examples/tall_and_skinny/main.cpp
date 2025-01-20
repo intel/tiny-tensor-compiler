@@ -49,11 +49,6 @@ template <typename F> double bench(F f, int nrepeat = 10) {
 }
 
 template <typename T> void test(queue q, args &a) {
-    auto const fill = [](std::vector<T> &x) {
-        for (std::size_t i = 0; i < x.size(); ++i) {
-            x[i] = i % 101;
-        }
-    };
     std::int64_t na_max = 0;
     std::int64_t nb_max = 0;
     std::int64_t nc_max = 0;
@@ -65,28 +60,25 @@ template <typename T> void test(queue q, args &a) {
     auto A_host = std::vector<T>(na_max);
     auto B_host = std::vector<T>(nb_max);
     auto C_host = std::vector<T>(nc_max);
-    auto C_ref_host = std::vector<T>(nc_max);
-    T *C_ref = malloc_device<T>(nc_max, q);
     T *A = aligned_alloc_device<T>(a.alignment, na_max, q);
     T *B = aligned_alloc_device<T>(a.alignment, nb_max, q);
     T *C = aligned_alloc_device<T>(a.alignment, nc_max, q);
-    fill(A_host);
-    fill(B_host);
-    q.copy(A_host.data(), A, na_max).wait();
-    q.copy(B_host.data(), B, nb_max).wait();
 
-    auto const check = [&](std::int64_t M, std::int64_t N) {
-        q.copy(C_ref, C_ref_host.data(), M * N).wait();
+    auto const check = [&](std::int64_t M, std::int64_t N, std::int64_t K) {
         q.copy(C, C_host.data(), M * N).wait();
         std::size_t num_err = 0;
-        for (std::int64_t i = 0; i < M * N; ++i) {
-            auto err = examples::compute_error(C_host[i], C_ref_host[i]);
-            if (err > 10.0 * std::numeric_limits<decltype(err)>::epsilon()) {
-                if (num_err < 10) {
-                    std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]
-                              << std::endl;
+        const auto error_bound = examples::test_gemm_error_bound<T>(K);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < M; ++i) {
+                const auto relerr = examples::test_gemm_rel_error<T>(C_host.data(), i, j, M);
+                if (relerr > error_bound) {
+                    if (num_err < 10) {
+                        std::cout << "C_{" << i << "," << j << "}=" << C_host[i + j * M]
+                                  << ", relative_error=" << relerr
+                                  << ", error_bound=" << error_bound << std::endl;
+                    }
+                    ++num_err;
                 }
-                ++num_err;
             }
         }
         if (num_err > 10) {
@@ -95,24 +87,13 @@ template <typename T> void test(queue q, args &a) {
     };
 
     for (auto &c : a.tc) {
-        auto beta = a.update ? T{1} : T{0};
-        if (a.verify) {
-            q.memset(C, 0, c.m * c.n * sizeof(T)).wait();
-            q.memset(C_ref, 0, c.m * c.n * sizeof(T)).wait();
-            q.submit([&](auto &h) {
-                 h.parallel_for(range{static_cast<std::size_t>(c.n), static_cast<std::size_t>(c.m)},
-                                [=](id<2> it) {
-                                    auto m = it[1];
-                                    auto n = it[0];
-                                    auto c_acc = T(0.0);
-                                    for (std::int64_t k = 0; k < c.k; ++k) {
-                                        c_acc += A[m + k * c.m] * B[k + n * c.k];
-                                    }
-                                    C_ref[m + n * c.m] = c_acc + T(beta) * C_ref[m + n * c.m];
-                                });
-             }).wait();
-        }
+        examples::test_gemm_matrix<T, matrix_use::a>(A_host.data(), c.m, c.k);
+        examples::test_gemm_matrix<T, matrix_use::b>(B_host.data(), c.k, c.n);
+        q.copy(A_host.data(), A, c.m * c.k).wait();
+        q.copy(B_host.data(), B, c.k * c.n).wait();
+        q.memset(C, 0, c.m * c.n * sizeof(T)).wait();
 
+        auto beta = a.update ? T{1} : T{0};
         try {
             auto info = make_core_info(q.get_device());
             info.set_core_features(tinytc_core_feature_flag_large_register_file);
@@ -141,7 +122,7 @@ template <typename T> void test(queue q, args &a) {
                                       mem(C, mem_type::usm_pointer), c.m);
             tas.submit(q).wait();
             if (a.verify) {
-                check(c.m, c.n);
+                check(c.m, c.n, c.k);
             }
             double min_exec_time_ns = bench([&]() { tas.submit(q).wait(); });
 
@@ -173,7 +154,6 @@ template <typename T> void test(queue q, args &a) {
     free(A, q);
     free(B, q);
     free(C, q);
-    free(C_ref, q);
 };
 
 int main(int argc, char **argv) {
