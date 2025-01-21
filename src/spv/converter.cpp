@@ -828,10 +828,14 @@ void inst_converter::operator()(cast_inst const &in) {
         auto a_ty = get_scalar_type(in.a());
         declare(in.result(0), make_cast(st->ty(), a_ty, spv_to_ty, av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
-        auto av = val(in.a());
-        auto a_ty = get_coopmatrix_type(in.a())->component_ty();
-        declare(in.result(0), make_cast(ct->component_ty(), a_ty, spv_to_ty, av, in.loc()));
+        if (info_->matrix().use_khr_matrix_ext()) {
+            auto spv_to_ty = unique_.spv_ty(in.result(0).ty());
+            auto av = val(in.a());
+            auto a_ty = get_coopmatrix_type(in.a())->component_ty();
+            declare(in.result(0), make_cast(ct->component_ty(), a_ty, spv_to_ty, av, in.loc()));
+        } else {
+            declare(in.result(0), diy_.cast(in, val(in.a())));
+        }
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -1145,7 +1149,8 @@ void inst_converter::operator()(for_inst const &in) {
     auto iter_arg_phis = make_iter_arg_phi();
 
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
-    mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::None);
+    // mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::None);
+    mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::DontUnroll);
     mod_->add<OpBranchConditional>(condition, body_label, merge_label,
                                    std::vector<LiteralInteger>{});
 

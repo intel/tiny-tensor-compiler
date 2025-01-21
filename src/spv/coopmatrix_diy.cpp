@@ -338,6 +338,45 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
     });
 }
 
+auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
+    -> spv_inst * {
+    auto key = std::make_tuple(to_ty, from_ty, num_components);
+    return lookup(
+        cast_funs_, key, [&](std::tuple<scalar_type, scalar_type, std::int32_t> const &key) {
+            auto &[to_ty, from_ty, num_components] = key;
+
+            auto spv_component_ty = unique_->spv_ty(to_ty);
+            auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
+            const auto to_width = grf_size / size(to_ty);
+            const auto from_width = grf_size / size(from_ty);
+            const auto to_visa_ty = visa_type(to_ty);
+            const auto from_visa_ty = visa_type(from_ty);
+
+            auto oasm = std::ostringstream{};
+            const auto a_tmp = make_tmp("a_tmp");
+            const auto b_tmp = make_tmp("b_tmp");
+            oasm << "{\n";
+            oasm << ".decl " << a_tmp << " v_type=G type=" << from_visa_ty
+                 << " num_elts=" << num_components << " align=wordx32 alias=<$1, 0>\n";
+            oasm << ".decl " << b_tmp << " v_type=G type=" << to_visa_ty
+                 << " num_elts=" << num_components << " align=wordx32 alias=<$0, 0>\n";
+            for (std::int32_t m = 0; m < num_components * exec_size; m += exec_size) {
+                auto R_from = m / from_width;
+                auto C_from = m % from_width;
+                auto R_to = m / to_width;
+                auto C_to = m % to_width;
+                oasm << "mov (M1," << exec_size << ") " << b_tmp << "(" << R_to << "," << C_to
+                     << ")<1> " << a_tmp << "(" << R_from << "," << C_from << ")<1;1,0>\n";
+            }
+            oasm << "}\n";
+
+            auto fun_ty = unique_->spv_function_ty(spv_operation_ty,
+                                                   array_view<spv_inst *>{spv_operation_ty});
+            return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_operation_ty, fun_ty,
+                                            unique_->asm_target(), std::move(oasm).str(), "=rw,rw");
+        });
+}
+
 auto coopmatrix_diy::scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst * {
     auto key = std::make_pair(cty, num_components);
     return lookup(scale_funs_, key, [&](std::pair<scalar_type, std::int32_t> const &key) {
@@ -373,6 +412,21 @@ auto coopmatrix_diy::scale_fun(scalar_type cty, std::int32_t num_components) -> 
                                         unique_->asm_target(), std::move(oasm).str(),
                                         "=rw,rw.u,rw");
     });
+}
+
+auto coopmatrix_diy::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
+    auto at = get_coopmatrix_type(in.a());
+    auto rt = get_coopmatrix_type(in.result(0));
+
+    const scalar_type to_ty = rt->component_ty();
+    const scalar_type from_ty = at->component_ty();
+    const std::int32_t num_components = rt->rows() * rt->cols() / exec_size;
+    auto spv_component_ty = unique_->spv_ty(to_ty);
+    auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
+
+    auto fun = cast_fun(to_ty, from_ty, num_components);
+    auto b = mod_->add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a});
+    return mod_->add<OpBitcast>(unique_->spv_ty(rt), b);
 }
 
 auto coopmatrix_diy::constant(constant_inst const &in) -> spv_inst * {
@@ -505,7 +559,6 @@ auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a,
     auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
 
     auto fun = scale_fun(cty, num_components);
-    b = mod_->add<OpBitcast>(spv_operation_ty, b);
     auto c = mod_->add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a, b});
     return mod_->add<OpBitcast>(unique_->spv_ty(rt), c);
 }

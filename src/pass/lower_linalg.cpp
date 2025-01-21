@@ -166,22 +166,13 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto needs_remainder =
         instant_constant_fold_add(bb, make_cmp(cmp_condition::lt, K0, K, bool_ty, loc));
     auto r = get_bool_constant(needs_remainder);
-    bool needs_final_cast = coopmatrix_c_ty != coopmatrix_c_acc_ty;
     if (r) {
         if (*r != 0) {
             c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
             const auto K_block_size = K_block_sizes.front();
             c_acc = compute_c(bb, K_block_size, K0, K, c_acc, c_acc_tys, K_block_size > 1);
         } else {
-            if (c_ty != c_acc_ty) {
-                K0 = instant_constant_fold_add(
-                    bb, make_arith(arithmetic::sub, K0, c_k_block_size, index_ty, loc));
-                c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
-                c_acc = compute_c_step(bb, k_block_size, K0, c_acc, c_tys);
-                needs_final_cast = false;
-            } else {
-                c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
-            }
+            c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
         }
     } else {
         c_acc = compute_c(bb, k_block_size, c_zero, K0, c_acc, c_acc_tys);
@@ -197,17 +188,11 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         c_acc = std::move(remainder);
     }
 
-    if (needs_final_cast) {
-        for (auto &a : c_acc) {
-            a = bb.add(make_cast(a, coopmatrix_c_ty, loc));
-        }
-    }
-    auto alpha_ab = std::vector<value>{};
-    alpha_ab.reserve(c_acc.size());
     for (auto &a : c_acc) {
-        alpha_ab.emplace_back(mixed_precision_coopmatrix_scale(bb, alpha, a, loc));
+        a = mixed_precision_coopmatrix_scale(bb, alpha, a, loc);
     }
 
+    const bool needs_final_cast = coopmatrix_c_ty != coopmatrix_c_acc_ty;
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -220,8 +205,12 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 auto pos0_offset = bb.add(make_constant(m * m_block_size, index_ty, loc));
                 auto pos0 =
                     bb.add(make_arith(arithmetic::add, m_block, pos0_offset, index_ty, loc));
-                bb.add(make_cooperative_matrix_store(check_c, *flag, alpha_ab[m + n * num_m_blocks],
-                                                     C, pos0, pos1, loc));
+                auto alpha_ab_mn = c_acc[m + n * num_m_blocks];
+                if (needs_final_cast) {
+                    alpha_ab_mn = bb.add(make_cast(alpha_ab_mn, coopmatrix_c_ty, loc));
+                }
+                bb.add(
+                    make_cooperative_matrix_store(check_c, *flag, alpha_ab_mn, C, pos0, pos1, loc));
             }
         }
     } else {
@@ -234,10 +223,20 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                     bb.add(make_arith(arithmetic::add, m_block, pos0_offset, index_ty, loc));
                 auto c_load = bb.add(make_cooperative_matrix_load(transpose::N, check_c, C, pos0,
                                                                   pos1, coopmatrix_c_ty));
-                auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load, loc);
-                auto &alpha_ab_mn = alpha_ab[m + n * num_m_blocks];
-                auto alpha_ab_plus_beta_c = bb.add(
-                    make_arith(arithmetic::add, alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc));
+                auto &alpha_ab_mn = c_acc[m + n * num_m_blocks];
+                auto alpha_ab_plus_beta_c = [&] {
+                    if (needs_final_cast) {
+                        auto c_load_acc = bb.add(make_cast(c_load, coopmatrix_c_acc_ty, loc));
+                        auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load_acc, loc);
+                        auto alpha_ab_plus_beta_c = bb.add(make_arith(
+                            arithmetic::add, alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc));
+                        return bb.add(make_cast(alpha_ab_plus_beta_c, coopmatrix_c_ty, loc));
+                    } else {
+                        auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load, loc);
+                        return bb.add(make_arith(arithmetic::add, alpha_ab_mn, beta_c,
+                                                 alpha_ab_mn->ty(), loc));
+                    }
+                }();
                 bb.add(make_cooperative_matrix_store(check_c, store_flag::regular,
                                                      alpha_ab_plus_beta_c, C, pos0, pos1, loc));
             }

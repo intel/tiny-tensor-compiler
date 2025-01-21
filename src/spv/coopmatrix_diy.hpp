@@ -15,6 +15,7 @@
 #include <utility>
 
 namespace tinytc {
+class cast_inst;
 class constant_inst;
 class cooperative_matrix_load_inst;
 class cooperative_matrix_mul_add_inst;
@@ -40,6 +41,7 @@ class coopmatrix_diy {
 
     coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique);
 
+    auto cast(cast_inst const &in, spv_inst *a) -> spv_inst *;
     auto constant(constant_inst const &in) -> spv_inst *;
     auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *pointer,
               spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
@@ -77,6 +79,12 @@ class coopmatrix_diy {
             return fnv1a_combine(key[0], key[1], key[2], key[3]);
         }
     };
+    struct cast_hash {
+        inline auto operator()(std::tuple<scalar_type, scalar_type, std::int32_t> const &key) const
+            -> std::size_t {
+            return fnv1a_combine(std::get<0>(key), std::get<1>(key), std::get<2>(key));
+        }
+    };
     struct scale_hash {
         inline auto operator()(std::pair<scalar_type, std::int32_t> const &key) const
             -> std::size_t {
@@ -92,6 +100,8 @@ class coopmatrix_diy {
     auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt) -> spv_inst *;
+    auto cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
+        -> spv_inst *;
     auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
 
     tinytc_spv_mod *mod_;
@@ -101,6 +111,8 @@ class coopmatrix_diy {
         load_funs_, store_funs_;
     std::unordered_map<std::array<coopmatrix_data_type const *, 4u>, spv_inst *, gemm_hash>
         mul_add_funs_;
+    std::unordered_map<std::tuple<scalar_type, scalar_type, std::int32_t>, spv_inst *, cast_hash>
+        cast_funs_;
     std::unordered_map<std::pair<scalar_type, std::int32_t>, spv_inst *, scale_hash> scale_funs_;
     std::int64_t tmp_counter_ = 0;
 };

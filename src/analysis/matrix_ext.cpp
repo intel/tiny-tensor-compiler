@@ -96,8 +96,11 @@ void matrix_ext_helper::operator()(arith_unary_inst const &in) {
 }
 void matrix_ext_helper::operator()(cast_inst const &in) {
     // Missing: OpConvertFToS, OpConvertSToF, OpConvertUToF, OpSConvert, OpFConvert
-    kill(in.a());
-    kill(in.result(0));
+    auto rt = get_coopmatrix_type(in.result(0));
+    if (is_complex_type(rt->component_ty()) || !have(in.a()) || !have(in.result(0))) {
+        kill(in.a());
+        kill(in.result(0));
+    }
 }
 auto matrix_ext_helper::check_2d_block_io(value_node const &operand, std::int32_t alignment)
     -> bool {
