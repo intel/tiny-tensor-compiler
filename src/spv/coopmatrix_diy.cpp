@@ -68,6 +68,10 @@ auto visa_type(scalar_type sty) -> char const * {
 coopmatrix_diy::coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique)
     : mod_{&m}, unique_{&unique} {}
 
+auto coopmatrix_diy::make_tmp(char const *prefix) -> std::string {
+    return (std::ostringstream{} << prefix << tmp_counter_++).str();
+}
+
 auto coopmatrix_diy::max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t {
     if (ct->use() == matrix_use::b) {
         std::int32_t ops_per_chan = channel_size / size(ct->component_ty());
@@ -126,35 +130,40 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
             }();
             const std::uint32_t block_size =
                 ((cfg.array_length - 1) << 16) | ((cfg.cols - 1) << 8) | (cfg.rows - 1);
+            auto temp = make_tmp("temp");
+            auto tempq = make_tmp("tempq");
             auto oasm = std::ostringstream{};
             oasm << "{\n"
-                    ".decl temp v_type=G type=ud num_elts=8 align=wordx32\n"
-                    ".decl tempq v_type=G type=uq num_elts=4 align=wordx32 alias=<temp, 0>\n"
-                    "mov (M1,1) tempq(0,0)<1> $1(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,2)<1> $2(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,3)<1> $3(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,4)<1> $4(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,5)<1> $5(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,6)<1> $6(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,7)<1> 0x"
-                 << std::hex << block_size << ":ud\n";
+                    ".decl "
+                 << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
+                 << ".decl " << tempq
+                 << " v_type = G type = uq num_elts = 4 align = wordx32 alias =<" << temp << ",0>\n"
+                 << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
 
             for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
                 for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
                     oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x"
-                         << std::hex << desc << ":ud temp.0 %null.0 $0." << std::dec
+                         << std::hex << desc << ":ud " << temp << ".0 %null.0 $0." << std::dec
                          << cfg.byte_offset(m, n) << "\n";
                     if (n + 1 < cfg.col_blocks) {
-                        oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> " << cfg.cols << ":ud\n";
+                        oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
+                             << cfg.cols << ":ud\n";
                     }
                     // oasm << "lsc_load_block2d.ugm (M1,1) $0." << cfg.byte_offset(m, n) << ":d"
                     //<< cfg.element_size * 8 << "." << cfg.array_length << "x" << cfg.rows << "x"
                     //<< cfg.cols << "n" << (vnni ? "t" : "n") << " flat[$1,$2,$3,$4,$5,$6]\n";
                 }
                 if (m + 1 < cfg.row_blocks) {
-                    oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> "
+                    oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
                          << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
-                    oasm << "add (M1,1) temp(0,5)<1> temp(0,5)<0;1,0> " << cfg.rows << ":ud\n";
+                    oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> "
+                         << cfg.rows << ":ud\n";
                 }
             }
             oasm << "}\n";
@@ -216,26 +225,29 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
             }();
             const std::uint32_t block_size =
                 ((cfg.array_length - 1) << 16) | ((cfg.cols - 1) << 8) | (cfg.rows - 1);
+            auto temp = make_tmp("temp");
+            auto tempq = make_tmp("tempq");
             auto oasm = std::ostringstream{};
             oasm << "{\n"
-                    ".decl temp v_type=G type=ud num_elts=8 align=wordx32\n"
-                    ".decl tempq v_type=G type=uq num_elts=4 align=wordx32 alias=<temp, 0>\n"
-                    "mov (M1,1) tempq(0,0)<1> $1(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,2)<1> $2(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,3)<1> $3(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,4)<1> $4(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,5)<1> $5(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,6)<1> $6(0,0)<0;1,0>\n"
-                    "mov (M1,1) temp(0,7)<1> 0x"
-                 << std::hex << block_size << ":ud\n";
+                 << ".decl " << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
+                 << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<"
+                 << temp << ", 0>\n"
+                 << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
+                 << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
 
             for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
                 for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
                     oasm << "raw_sends.15.1." << num_src1 << ".0 (M1, 1) 0x0:ud 0x" << std::hex
-                         << desc << ":ud temp.0 $0." << std::dec << cfg.byte_offset(m, n)
+                         << desc << ":ud " << temp << ".0 $0." << std::dec << cfg.byte_offset(m, n)
                          << " %null.0\n";
                     if (n + 1 < cfg.col_blocks) {
-                        oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> " << cfg.cols << ":ud\n";
+                        oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
+                             << cfg.cols << ":ud\n";
                     }
                     // oasm << "lsc_store_block2d.ugm (M1,1) flat[$1,$2,$3,$4,$5,$6] $0." <<
                     // cfg.byte_offset(m)
@@ -244,9 +256,10 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
                     //<< cfg.cols << "nn" << "\n";
                 }
                 if (m + 1 < cfg.row_blocks) {
-                    oasm << "add (M1,1) temp(0,6)<1> temp(0,6)<0;1,0> "
+                    oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
                          << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
-                    oasm << "add (M1,1) temp(0,5)<1> temp(0,5)<0;1,0> " << cfg.rows << ":ud\n";
+                    oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> "
+                         << cfg.rows << ":ud\n";
                 }
             }
             oasm << "}\n";
@@ -279,16 +292,10 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
         const std::int32_t K = ops_per_chan * sdepth;
 
         oasm << "{\n";
-        char const *result_placeholder = "$0";
-        if (rt->component_ty() == scalar_type::bf16) {
-            result_placeholder = "result_matrix";
-            oasm << ".decl " << result_placeholder
-                 << " v_type=G type=bf num_elts=" << rt->rows() * rt->cols()
-                 << " align=wordx32 alias=<$0, 0>\n";
-        }
-        char const *temp = result_placeholder;
+        std::string result_placeholder = "$0";
+        std::string temp = result_placeholder;
         if (rt->component_ty() != ct->component_ty() && at->cols() / K > 1) {
-            temp = "temp";
+            temp = make_tmp("temp");
             oasm << ".decl " << temp << " v_type=G type=" << visa_type(ct->component_ty())
                  << " num_elts=" << ct->rows() * ct->cols() << " align=wordx32\n";
         }
@@ -296,8 +303,8 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
         const auto precision_src1 = precision(at->component_ty());
         const auto precision_src2 = precision(bt->component_ty());
         for (std::int32_t k = 0; k < at->cols(); k += K) {
-            char const *src0 = k > 0 ? temp : "$3";
-            char const *dst = k + K >= at->cols() ? result_placeholder : temp;
+            char const *src0 = k > 0 ? temp.c_str() : "$3";
+            char const *dst = k + K >= at->cols() ? result_placeholder.c_str() : temp.c_str();
             const auto rsize =
                 k + K >= at->cols() ? size(rt->component_ty()) : size(ct->component_ty());
             for (std::int32_t m = 0; m < ct->rows(); m += exec_size) {
@@ -331,32 +338,38 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
     });
 }
 
-auto coopmatrix_diy::scale_fun(coopmatrix_data_type const *rt) -> spv_inst * {
-    return lookup(scale_funs_, rt, [&](coopmatrix_data_type const *const &rt) {
+auto coopmatrix_diy::scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst * {
+    auto key = std::make_pair(cty, num_components);
+    return lookup(scale_funs_, key, [&](std::pair<scalar_type, std::int32_t> const &key) {
+        auto &[cty, num_components] = key;
+
+        auto spv_component_ty = unique_->spv_ty(cty);
+        auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
+        const auto width = grf_size / size(cty);
+        const auto visa_ty = visa_type(cty);
+
         auto oasm = std::ostringstream{};
-
-        const std::int32_t num_components = rt->rows() * rt->cols();
-        const auto visa_ty = visa_type(rt->component_ty());
-
+        const auto a_tmp = make_tmp("a_tmp");
+        const auto b_tmp = make_tmp("b_tmp");
+        const auto c_tmp = make_tmp("c_tmp");
         oasm << "{\n";
-        oasm << ".decl c_tmp v_type=G type=" << visa_ty << " num_elts=" << num_components
-             << " align=wordx32 alias=<$0, 0>\n";
-        oasm << ".decl a_tmp v_type=G type=" << visa_ty << " num_elts=1 align=word alias=<$1, 0>\n";
-        oasm << ".decl b_tmp v_type=G type=" << visa_ty << " num_elts=" << num_components
+        oasm << ".decl " << a_tmp << " v_type=G type=" << visa_ty
+             << " num_elts=1 align=word alias=<$1, 0>\n";
+        oasm << ".decl " << b_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_components
              << " align=wordx32 alias=<$2, 0>\n";
-        for (std::int32_t m = 0; m < num_components; m += exec_size) {
-            oasm << "mul (M1," << exec_size << ") c_tmp(0," << m
-                 << ")<1> a_tmp(0,0)<0;1,0> b_tmp(0," << m << ")<1;1,0>\n";
+        oasm << ".decl " << c_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_components
+             << " align=wordx32 alias=<$0, 0>\n";
+        for (std::int32_t m = 0; m < num_components * exec_size; m += exec_size) {
+            auto R = m / width;
+            auto C = m % width;
+            oasm << "mul (M1," << exec_size << ") " << c_tmp << "(" << R << "," << C << ")<1> "
+                 << a_tmp << "(0,0)<0;1,0> " << b_tmp << "(" << R << "," << C << ")<1;1,0>\n";
         }
         oasm << "}\n";
 
-        auto spv_a_ty = unique_->spv_ty(rt->ty());
-        auto spv_b_ty = unique_->spv_ty(rt);
-        auto spv_result_ty = unique_->spv_ty(rt);
-        auto fun_ty =
-            unique_->spv_function_ty(spv_result_ty, array_view<spv_inst *>{spv_a_ty, spv_b_ty});
-
-        return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_result_ty, fun_ty,
+        auto fun_ty = unique_->spv_function_ty(
+            spv_operation_ty, array_view<spv_inst *>{spv_component_ty, spv_operation_ty});
+        return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_operation_ty, fun_ty,
                                         unique_->asm_target(), std::move(oasm).str(),
                                         "=rw,rw.u,rw");
     });
@@ -485,44 +498,16 @@ auto coopmatrix_diy::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst
 auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
     -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto spv_result_ty = unique_->spv_ty(rt);
 
-    auto fun = scale_fun(rt);
-    return mod_->add<OpAsmCallINTEL>(spv_result_ty, fun, array_view<spv_inst *>{a, b});
-    /*auto rt = get_coopmatrix_type(in.result(0));
-    auto spv_result_ty = unique_->spv_ty(rt);
-
-    const std::int32_t num_components = rt->rows() * rt->cols();
-    auto spv_component_ty = unique_->spv_ty(rt->ty());
+    const scalar_type cty = rt->component_ty();
+    const std::int32_t num_components = rt->rows() * rt->cols() / exec_size;
+    auto spv_component_ty = unique_->spv_ty(cty);
     auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
+
+    auto fun = scale_fun(cty, num_components);
     b = mod_->add<OpBitcast>(spv_operation_ty, b);
-
-    const auto splat = [&](spv_inst *spv_vec_ty, spv_inst *scalar) {
-        auto dummy = mod_->add<OpUndef>(spv_vec_ty);
-        auto vec =
-            mod_->add<OpCompositeInsert>(spv_vec_ty, scalar, dummy, std::vector<LiteralInteger>{0});
-        return mod_->add<OpVectorShuffle>(spv_vec_ty, vec, dummy,
-                                          std::vector<LiteralInteger>(num_components, 0));
-    };
-
-    auto c = [&]() -> spv_inst * {
-        const auto sty = rt->component_ty();
-        if (sty == scalar_type::bf16) {
-            auto spv_float_ty = unique_->spv_ty(scalar_type::f32);
-            auto spv_float_vec_ty = unique_->spv_vec_ty(spv_float_ty, num_components);
-
-            auto af = mod_->add<OpConvertBF16ToFINTEL>(spv_float_ty, a);
-            auto bf = mod_->add<OpConvertBF16ToFINTEL>(spv_float_vec_ty, b);
-            auto cf = mod_->add<OpFMul>(spv_float_vec_ty, splat(spv_float_vec_ty, af), bf);
-            return mod_->add<OpConvertFToBF16INTEL>(spv_operation_ty, cf);
-        } else if (is_floating_type(sty)) {
-            return mod_->add<OpFMul>(spv_operation_ty, splat(spv_operation_ty, a), b);
-        } else {
-            return mod_->add<OpIMul>(spv_operation_ty, splat(spv_operation_ty, a), b);
-        }
-    }();
-
-    return mod_->add<OpBitcast>(spv_result_ty, c);*/
+    auto c = mod_->add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a, b});
+    return mod_->add<OpBitcast>(unique_->spv_ty(rt), c);
 }
 
 void coopmatrix_diy::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,

@@ -10,6 +10,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string>
 #include <unordered_map>
 #include <utility>
 
@@ -20,6 +21,7 @@ class cooperative_matrix_mul_add_inst;
 class cooperative_matrix_scale_inst;
 class cooperative_matrix_store_inst;
 class coopmatrix_data_type;
+enum class scalar_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -75,7 +77,14 @@ class coopmatrix_diy {
             return fnv1a_combine(key[0], key[1], key[2], key[3]);
         }
     };
+    struct scale_hash {
+        inline auto operator()(std::pair<scalar_type, std::int32_t> const &key) const
+            -> std::size_t {
+            return fnv1a_combine(key.first, key.second);
+        }
+    };
 
+    auto make_tmp(char const *prefix = "") -> std::string;
     auto max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t;
     auto load_config(coopmatrix_data_type const *ct) -> block_config;
     auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty) -> spv_inst *;
@@ -83,7 +92,7 @@ class coopmatrix_diy {
     auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt) -> spv_inst *;
-    auto scale_fun(coopmatrix_data_type const *rt) -> spv_inst *;
+    auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
 
     tinytc_spv_mod *mod_;
     uniquifier *unique_;
@@ -92,7 +101,8 @@ class coopmatrix_diy {
         load_funs_, store_funs_;
     std::unordered_map<std::array<coopmatrix_data_type const *, 4u>, spv_inst *, gemm_hash>
         mul_add_funs_;
-    std::unordered_map<coopmatrix_data_type const *, spv_inst *> scale_funs_;
+    std::unordered_map<std::pair<scalar_type, std::int32_t>, spv_inst *, scale_hash> scale_funs_;
+    std::int64_t tmp_counter_ = 0;
 };
 
 } // namespace tinytc::spv
