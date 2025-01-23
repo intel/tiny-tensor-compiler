@@ -343,9 +343,11 @@ void linalg_generator::operator()(ger_inst &in) {
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
+            auto ct = get_memref_type(in.C());
             auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
             auto b = bb.add(make_load(&in.B(), {loop_vars[1]}, bt->element_data_ty(), in.loc()));
-            auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
+            auto ab =
+                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
                         {loop_vars[0], loop_vars[1]}, in.loc());
         },
@@ -480,8 +482,10 @@ void linalg_generator::operator()(gemv_inst &in) {
                     auto bt = get_memref_type(in.B());
                     auto a = bb.add(make_load(&in.A(), a_idx, at->element_data_ty(), in.loc()));
                     auto b = bb.add(make_load(&in.B(), {p[0]}, bt->element_data_ty(), in.loc()));
-                    auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
-                    auto ab_c = mixed_precision_arithmetic(bb, arithmetic::add, p[1], ab, in.loc());
+                    auto ab = mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a,
+                                                         b, in.loc());
+                    auto ab_c = mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::add,
+                                                           p[1], ab, in.loc());
                     bb.add(make_yield({ab_c}, in.loc()));
                 });
             blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {loop_vars[0]},
@@ -499,9 +503,11 @@ void linalg_generator::operator()(hadamard_inst &in) {
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
+            auto ct = get_memref_type(in.C());
             auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
             auto b = bb.add(make_load(&in.B(), {loop_vars[0]}, bt->element_data_ty(), in.loc()));
-            auto ab = mixed_precision_arithmetic(bb, arithmetic::mul, a, b, in.loc());
+            auto ab =
+                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {loop_vars[0]},
                         in.loc());
         },
@@ -541,7 +547,8 @@ void linalg_generator::operator()(sum_inst &in) {
             index_ty, from_index, c_trip_count, c_step, {c_init}, {bt->element_data_ty()},
             [&](region_builder &bb, array_view<value> args) {
                 auto a = bb.add(make_load(&in.A(), {args[0]}, at->element_data_ty(), in.loc()));
-                auto sum = mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
+                auto sum = mixed_precision_arithmetic(bb, bt->element_ty(), arithmetic::add,
+                                                      args[1], a, in.loc());
                 bb.add(make_yield({sum}, in.loc()));
             });
         auto sum = bb.add(
@@ -571,8 +578,8 @@ void linalg_generator::operator()(sum_inst &in) {
                         }
                         auto a =
                             bb.add(make_load(&in.A(), index_list, at->element_data_ty(), in.loc()));
-                        auto sum =
-                            mixed_precision_arithmetic(bb, arithmetic::add, args[1], a, in.loc());
+                        auto sum = mixed_precision_arithmetic(bb, bt->element_ty(), arithmetic::add,
+                                                              args[1], a, in.loc());
                         bb.add(make_yield({sum}, in.loc()));
                     });
                 blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),

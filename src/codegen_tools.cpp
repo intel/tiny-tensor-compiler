@@ -114,28 +114,31 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
                 [&](region_builder &bb, value block) { body(bb, block, bs); });
 }
 
-auto mixed_precision_arithmetic(region_builder &bb, arithmetic operation, value a, value b,
-                                location const &loc) -> value {
+auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
+                                value a, value b, location const &loc) -> value {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     scalar_data_type *bt = dyn_cast<scalar_data_type>(b->ty());
     if (at == nullptr || bt == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
     }
-    if (at->ty() != bt->ty()) {
-        auto promoted_scalar_ty = promote_or_throw(at->ty(), bt->ty(), loc);
-        auto promoted_ty = scalar_data_type::get(at->context(), promoted_scalar_ty);
+    if (at->ty() != result_ty || bt->ty() != result_ty) {
+        if (!promotable(at->ty(), result_ty) || !promotable(bt->ty(), result_ty)) {
+            throw compilation_error(loc, status::ir_forbidden_promotion);
+        }
+        auto promoted_ty = scalar_data_type::get(at->context(), result_ty);
 
-        if (at->ty() != promoted_scalar_ty) {
+        if (at->ty() != result_ty) {
             a = bb.add(make_cast(a, promoted_ty, loc));
         }
-        if (bt->ty() != promoted_scalar_ty) {
+        if (bt->ty() != result_ty) {
             b = bb.add(make_cast(b, promoted_ty, loc));
         }
     }
-    return bb.add(make_arith(operation, a, b, a->ty(), loc));
+    return bb.add(
+        make_arith(operation, a, b, scalar_data_type::get(at->context(), result_ty), loc));
 }
-auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
-                                      location const &loc) -> value {
+auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
+    -> value {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     if (at == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
@@ -168,7 +171,12 @@ auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {
 }
 void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,
                  array_view<value> index_list, location const &loc) {
-    auto alpha_ab = mixed_precision_arithmetic(bb, arithmetic::mul, alpha, ab, loc);
+    memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
+    if (ct == nullptr) {
+        throw compilation_error(loc, {C.get()}, status::ir_expected_scalar);
+    }
+    auto alpha_ab =
+        mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, alpha, ab, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -176,14 +184,11 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
         }
         bb.add(make_store(*flag, alpha_ab, C, index_list, loc));
     } else {
-        memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
-        if (ct == nullptr) {
-            throw compilation_error(loc, {C.get()}, status::ir_expected_scalar);
-        }
         auto c = bb.add(make_load(C, index_list, ct->element_data_ty(), loc));
-        auto beta_c = mixed_precision_arithmetic(bb, arithmetic::mul, beta, c, loc);
-        auto alpha_ab_plus_beta_c =
-            mixed_precision_arithmetic(bb, arithmetic::add, alpha_ab, beta_c, loc);
+        auto beta_c =
+            mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, beta, c, loc);
+        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic(
+            bb, ct->element_ty(), arithmetic::add, alpha_ab, beta_c, loc);
         bb.add(make_store(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc));
     }
 }

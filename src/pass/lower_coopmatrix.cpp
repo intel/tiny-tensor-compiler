@@ -76,8 +76,8 @@ class coopmatrix_code_generator {
             }
         }
     }
-    auto vals(location const &loc, tinytc_value const &v,
-              std::int64_t expected_size) -> std::vector<value> &;
+    auto vals(location const &loc, tinytc_value const &v, std::int64_t expected_size)
+        -> std::vector<value> &;
     template <typename Range>
     auto vals_copy_expand(location const &loc, Range range) -> std::vector<value> {
         auto expanded_vals = std::vector<value>{};
@@ -345,18 +345,20 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_mul_add_inst &in) 
                             auto b_bc_im = bb_.add(make_arith(arithmetic_unary::im, b_bc,
                                                               scalar_b_element_ty, in.loc()));
 
-                            auto ab = mixed_precision_arithmetic(bb_, arithmetic::mul, a, b_bc_re,
-                                                                 in.loc());
-                            c = mixed_precision_arithmetic(bb_, arithmetic::add, ab, c, in.loc());
+                            auto ab = mixed_precision_arithmetic(bb_, c_ty, arithmetic::mul, a,
+                                                                 b_bc_re, in.loc());
+                            c = mixed_precision_arithmetic(bb_, c_ty, arithmetic::add, ab, c,
+                                                           in.loc());
 
-                            auto ab_im = mixed_precision_arithmetic(bb_, arithmetic::mul, a,
+                            auto ab_im = mixed_precision_arithmetic(bb_, c_ty, arithmetic::mul, a,
                                                                     b_bc_im, in.loc());
-                            c_im = mixed_precision_arithmetic(bb_, arithmetic::add, ab_im, c_im,
-                                                              in.loc());
+                            c_im = mixed_precision_arithmetic(bb_, c_ty, arithmetic::add, ab_im,
+                                                              c_im, in.loc());
                         } else {
-                            auto ab =
-                                mixed_precision_arithmetic(bb_, arithmetic::mul, a, b_bc, in.loc());
-                            c = mixed_precision_arithmetic(bb_, arithmetic::add, ab, c, in.loc());
+                            auto ab = mixed_precision_arithmetic(bb_, c_ty, arithmetic::mul, a,
+                                                                 b_bc, in.loc());
+                            c = mixed_precision_arithmetic(bb_, c_ty, arithmetic::add, ab, c,
+                                                           in.loc());
                         }
                     }
                 }
