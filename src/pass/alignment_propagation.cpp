@@ -108,10 +108,12 @@ void alignment_propagation_helper::operator()(alloca_inst &in) {
     if (in.stack_ptr() >= 0) {
         const auto rt = get_memref_type(in.result(0).ty());
         std::int32_t i = rt->alignment();
-        for (; i <= alloca_max_alignment; ++i) {
-            if (in.stack_ptr() % i != 0) {
+        while (i < alloca_max_alignment) {
+            const auto i2 = 2 * i;
+            if (in.stack_ptr() % i2 != 0) {
                 break;
             }
+            i = i2;
         }
         if (i > rt->alignment()) {
             known_alignment(in.result(0), i);
