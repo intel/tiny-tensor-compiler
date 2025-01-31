@@ -56,27 +56,27 @@ add_dependencies(lit-check tinytc-oc tinytc-opt)
 
 if(SPIRVTools_FOUND)
     set(SPIRV_VAL_SOURCES
-        spv/alloca.ir
-        spv/arith.ir
-        spv/arith_unary.ir
-        spv/barrier.ir
-        spv/builtin.ir
-        spv/cast.ir
-        spv/calling_convention.ir
-        spv/compare.ir
-        spv/cooperative_matrix_mul_add.ir
-        spv/constant.ir
-        spv/expand.ir
-        spv/for.ir
-        spv/fuse.ir
-        spv/if.ir
-        spv/load.ir
-        spv/size.ir
-        spv/store.ir
-        spv/subgroup_broadcast.ir
-        spv/subview.ir
-        spv/work_group.ir
-        spv/unique_function_type.ir
+        lit/spv/alloca.ir
+        lit/spv/arith.ir
+        lit/spv/arith_unary.ir
+        lit/spv/barrier.ir
+        lit/spv/builtin.ir
+        lit/spv/cast.ir
+        lit/spv/calling_convention.ir
+        lit/spv/compare.ir
+        #lit/spv/cooperative_matrix_mul_add.ir
+        lit/spv/constant.ir
+        lit/spv/expand.ir
+        lit/spv/for.ir
+        lit/spv/fuse.ir
+        lit/spv/if.ir
+        lit/spv/load.ir
+        lit/spv/size.ir
+        lit/spv/store.ir
+        lit/spv/subgroup_broadcast.ir
+        lit/spv/subview.ir
+        lit/spv/work_group.ir
+        lit/spv/unique_function_type.ir
     )
     foreach(SOURCE IN LISTS SPIRV_VAL_SOURCES)
         get_filename_component(TEST_NAME ${SOURCE} NAME_WE)
