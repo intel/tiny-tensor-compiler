@@ -445,19 +445,21 @@ void linalg_generator::operator()(gemm_inst &in) {
                                  });
             });
     } else {
-        tile_loop_by_sgs(bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
-                         [&](region_builder &bb, value n_block, bool n_check, value) {
-                             tile_loop_by_sgs(
-                                 bb, c_shape0, block_size0 * num_blocks0, tiling_.m_tiles(), sg_m,
-                                 [&](region_builder &bb, value m_block, bool m_check, value) {
-                                     gemm_microkernel(
-                                         bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
+        tile_loop_by_sgs(
+            bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
+            [&](region_builder &bb, value n_block, bool n_check, value) {
+                tile_loop_by_sgs(
+                    bb, c_shape0, block_size0 * num_blocks0, tiling_.m_tiles(), sg_m,
+                    [&](region_builder &bb, value m_block, bool m_check, value) {
+                        gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
                                          &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
                                          num_blocks0, m_check, n_block, block_size1, num_blocks1,
                                          n_check, K_block_sizes, at->element_data_ty(),
                                          bt->element_data_ty(), ct->element_data_ty(), in.loc());
-                                 });
-                         });
+                    },
+                    1);
+            },
+            1);
     }
 
     bb_.add(std::move(parallel));

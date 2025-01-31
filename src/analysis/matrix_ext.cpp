@@ -85,9 +85,14 @@ void matrix_ext_helper::kill(value_node const &val) {
 void matrix_ext_helper::operator()(inst_node const &) {}
 void matrix_ext_helper::operator()(arith_inst const &in) {
     // Missing: OpIAdd, OpFAdd, OpISub, OpFSub, OpFMul, OpIMul, OpFDiv, OpSDiv
-    kill(in.a());
-    kill(in.b());
-    kill(in.result(0));
+    // Ok for coopmatrix diy except for complex
+    auto rt = get_coopmatrix_type(in.result(0));
+    if (is_complex_type(rt->component_ty()) || !have(in.a()) || !have(in.b()) ||
+        !have(in.result(0))) {
+        kill(in.a());
+        kill(in.b());
+        kill(in.result(0));
+    }
 }
 void matrix_ext_helper::operator()(arith_unary_inst const &in) {
     // Missing: OpSNegate, OpFNegate

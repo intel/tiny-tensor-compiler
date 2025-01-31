@@ -46,8 +46,8 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p,
-                           tinytc_core_info const &info) -> ::tinytc::spv_mod {
+auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
+    -> ::tinytc::spv_mod {
     auto m = ::tinytc::spv_mod{
         std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
@@ -329,8 +329,8 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
-                                      bool conj_b) -> spv_inst * {
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
+    -> spv_inst * {
     const auto is_imag_zero = [&](spv_inst *a) -> bool {
         // We capture the case here if "a" stems from a non-complex -> complex cast
         if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
@@ -362,8 +362,8 @@ auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
 
 auto inst_converter::make_conditional_execution(
     spv_inst *returned_element_ty, spv_inst *condition,
-    std::function<std::vector<spv_inst *>()> conditional_code,
-    location const &loc) -> std::vector<spv_inst *> {
+    std::function<std::vector<spv_inst *>()> conditional_code, location const &loc)
+    -> std::vector<spv_inst *> {
     auto then_label = std::make_unique<OpLabel>();
     auto merge_label = std::make_unique<OpLabel>();
 
@@ -654,11 +654,15 @@ void inst_converter::operator()(arith_inst const &in) {
         auto bv = val(in.b());
         declare(in.result(0), make_binary_op(st->ty(), in.operation(), ty, av, bv, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        auto ty = unique_.spv_ty(in.result(0).ty());
         auto av = val(in.a());
         auto bv = val(in.b());
-        declare(in.result(0),
-                make_binary_op(ct->component_ty(), in.operation(), ty, av, bv, in.loc()));
+        if (info_->matrix().use_khr_matrix_ext()) {
+            auto ty = unique_.spv_ty(in.result(0).ty());
+            declare(in.result(0),
+                    make_binary_op(ct->component_ty(), in.operation(), ty, av, bv, in.loc()));
+        } else {
+            declare(in.result(0), diy_.arith(in, av, bv));
+        }
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -1559,8 +1563,8 @@ void inst_converter::run_on_region(region_node const &reg) {
     }
 }
 
-auto inst_converter::run_on_region_with_yield(region_node const &reg,
-                                              std::int64_t num_results) -> std::vector<spv_inst *> {
+auto inst_converter::run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
+    -> std::vector<spv_inst *> {
     yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
     run_on_region(reg);
     auto yielded_vals = std::move(yielded_vals_.top());

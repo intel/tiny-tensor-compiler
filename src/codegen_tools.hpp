@@ -27,10 +27,12 @@ using sgs_loop_body_builder = std::function<void(region_builder &, value, bool, 
 using uniform_loop_body_builder = std::function<void(region_builder &, value, value)>;
 
 void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
-                      value sg_id, sgs_loop_body_builder const &body);
+                      value sg_id, sgs_loop_body_builder const &body,
+                      std::int32_t unroll_factor = 0);
 
 void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_size, int num_tiles,
-                         value sg_id, uniform_loop_body_builder const &body);
+                         value sg_id, uniform_loop_body_builder const &body,
+                         std::int32_t unroll_factor = 0);
 
 auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
                                 value a, value b, location const &loc) -> value;
