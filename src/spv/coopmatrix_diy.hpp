@@ -11,6 +11,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 
@@ -45,8 +46,8 @@ class coopmatrix_diy {
     auto constant(constant_inst const &in) -> spv_inst *;
     auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *pointer,
               spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
-    auto mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b, spv_inst *c)
-        -> spv_inst *;
+    auto mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b,
+                 spv_inst *c) -> spv_inst *;
     auto scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
                spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
@@ -61,8 +62,8 @@ class coopmatrix_diy {
         std::int32_t col_blocks;
         bool vnni;
 
-        inline auto byte_offset(std::int32_t row_block, std::int32_t col_block) const
-            -> std::int32_t {
+        inline auto byte_offset(std::int32_t row_block,
+                                std::int32_t col_block) const -> std::int32_t {
             const auto block_size = element_size * array_length * rows * cols;
             return (col_block + col_blocks * row_block) * block_size;
         }
@@ -74,8 +75,8 @@ class coopmatrix_diy {
         }
     };
     struct gemm_hash {
-        inline auto operator()(std::array<coopmatrix_data_type const *, 4u> const &key) const
-            -> std::size_t {
+        inline auto
+        operator()(std::array<coopmatrix_data_type const *, 4u> const &key) const -> std::size_t {
             return fnv1a_combine(key[0], key[1], key[2], key[3]);
         }
     };
@@ -86,8 +87,8 @@ class coopmatrix_diy {
         }
     };
     struct scale_hash {
-        inline auto operator()(std::pair<scalar_type, std::int32_t> const &key) const
-            -> std::size_t {
+        inline auto
+        operator()(std::pair<scalar_type, std::int32_t> const &key) const -> std::size_t {
             return fnv1a_combine(key.first, key.second);
         }
     };
@@ -100,8 +101,8 @@ class coopmatrix_diy {
     auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt) -> spv_inst *;
-    auto cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
-        -> spv_inst *;
+    auto cast_fun(scalar_type to_ty, scalar_type from_ty,
+                  std::int32_t num_components) -> spv_inst *;
     auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
 
     tinytc_spv_mod *mod_;

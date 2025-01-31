@@ -7,9 +7,9 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
-#include "scalar_type.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
+#include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/lut.hpp"
 #include "spv/module.hpp"
@@ -21,7 +21,6 @@
 
 #include <algorithm>
 #include <bit>
-#include <optional>
 #include <sstream>
 #include <utility>
 #include <variant>
@@ -106,8 +105,8 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct) -> block_config
     return cfg;
 }
 
-auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty)
-    -> spv_inst * {
+auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty,
+                              spv_inst *spv_operand_ty) -> spv_inst * {
     auto key = std::make_pair(result_ty, spv_operand_ty);
     return lookup(
         load_funs_, key, [&](std::pair<coopmatrix_data_type const *, spv_inst *> const &key) {
@@ -136,8 +135,8 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
             oasm << "{\n"
                     ".decl "
                  << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
-                 << ".decl " << tempq
-                 << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp << ",0>\n"
+                 << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<"
+                 << temp << ",0>\n"
                  << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
                  << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
                  << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"
@@ -205,8 +204,8 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct) -> block_confi
     return cfg;
 }
 
-auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty)
-    -> spv_inst * {
+auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty,
+                               spv_inst *spv_operand_ty) -> spv_inst * {
     auto key = std::make_pair(val_ty, spv_operand_ty);
     return lookup(
         store_funs_, key, [&](std::pair<coopmatrix_data_type const *, spv_inst *> const &key) {
@@ -280,8 +279,8 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
 }
 
 auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
-                                 coopmatrix_data_type const *ct, coopmatrix_data_type const *rt)
-    -> spv_inst * {
+                                 coopmatrix_data_type const *ct,
+                                 coopmatrix_data_type const *rt) -> spv_inst * {
     auto key = std::array<coopmatrix_data_type const *, 4u>{at, bt, ct, rt};
     return lookup(mul_add_funs_, key, [&](std::array<coopmatrix_data_type const *, 4u> const &key) {
         const auto [at, bt, ct, rt] = key;
@@ -338,8 +337,8 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
     });
 }
 
-auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
-    -> spv_inst * {
+auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty,
+                              std::int32_t num_components) -> spv_inst * {
     auto key = std::make_tuple(to_ty, from_ty, num_components);
     return lookup(
         cast_funs_, key, [&](std::tuple<scalar_type, scalar_type, std::int32_t> const &key) {
@@ -549,8 +548,8 @@ auto coopmatrix_diy::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst
     return mod_->add<OpAsmCallINTEL>(spv_result_ty, fun, array_view<spv_inst *>{a, b, c});
 }
 
-auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
-    -> spv_inst * {
+auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a,
+                           spv_inst *b) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
 
     const scalar_type cty = rt->component_ty();
