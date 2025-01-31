@@ -113,6 +113,7 @@
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
     GLOBAL_ATTR     ".global"
+    UNROLL_ATTR     ".unroll"
     BOOLEAN         "bool"
     COOPMATRIX      "coopmatrix"
     MEMREF          "memref"
@@ -204,6 +205,8 @@
 %nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
 %nterm <std::pair<identifier, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
+%nterm <std::int32_t> optional_unroll
+%nterm <std::int32_t> optional_unroll_factor
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
 %nterm <inst> if_inst
@@ -604,9 +607,10 @@ for_inst:
             report_error(ctx.cctx(), e);
             YYERROR;
         }
-    }[loop_header] region {
+    }[loop_header] region optional_unroll {
         ctx.pop_region();
         ctx.pop_scope();
+        static_cast<for_inst*>($loop_header.get())->unroll_factor($optional_unroll);
         $$ = std::move($loop_header);
     }
 ;
@@ -638,6 +642,24 @@ init_value_list:
 
 init_value:
     LOCAL_IDENTIFIER EQUALS var { $$ = std::make_pair($LOCAL_IDENTIFIER, $var); }
+;
+
+optional_unroll:
+    %empty { $$ = 0; }
+  | UNROLL_ATTR optional_unroll_factor { $$ = $optional_unroll_factor; }
+;
+
+optional_unroll_factor:
+    %empty { $$ = std::numeric_limits<std::int32_t>::max(); }
+  | LPAREN INTEGER_CONSTANT RPAREN {
+        if ($INTEGER_CONSTANT < 0) {
+            throw syntax_error(@INTEGER_CONSTANT, "Unroll factor must be nonnegative");
+        }
+        if ($INTEGER_CONSTANT < 0 || $INTEGER_CONSTANT > std::numeric_limits<std::int32_t>::max()) {
+            throw syntax_error(@INTEGER_CONSTANT, "Unroll factor is too large");
+        }
+        $$ = static_cast<std::int32_t>($INTEGER_CONSTANT);
+  }
 ;
 
 foreach_inst:

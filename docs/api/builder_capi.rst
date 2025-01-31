@@ -620,6 +620,8 @@ Instruction
 
   * :ref:`tinytc_inst_destroy`
 
+  * :ref:`tinytc_inst_set_loop_unroll_factor`
+
 Instruction Functions
 ---------------------
 
@@ -895,6 +897,13 @@ tinytc_inst_destroy
 ...................
 
 .. doxygenfunction:: tinytc_inst_destroy
+
+.. _tinytc_inst_set_loop_unroll_factor:
+
+tinytc_inst_set_loop_unroll_factor
+..................................
+
+.. doxygenfunction:: tinytc_inst_set_loop_unroll_factor
 
 Program
 =======

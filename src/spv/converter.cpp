@@ -44,8 +44,8 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
-    -> ::tinytc::spv_mod {
+auto convert_prog_to_spirv(tinytc_prog const &p,
+                           tinytc_core_info const &info) -> ::tinytc::spv_mod {
     auto m = ::tinytc::spv_mod{
         std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
@@ -327,8 +327,8 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
-    -> spv_inst * {
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
+                                      bool conj_b) -> spv_inst * {
     const auto is_imag_zero = [&](spv_inst *a) -> bool {
         // We capture the case here if "a" stems from a non-complex -> complex cast
         if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
@@ -360,8 +360,8 @@ auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bo
 
 auto inst_converter::make_conditional_execution(
     spv_inst *returned_element_ty, spv_inst *condition,
-    std::function<std::vector<spv_inst *>()> conditional_code, location const &loc)
-    -> std::vector<spv_inst *> {
+    std::function<std::vector<spv_inst *>()> conditional_code,
+    location const &loc) -> std::vector<spv_inst *> {
     auto then_label = std::make_unique<OpLabel>();
     auto merge_label = std::make_unique<OpLabel>();
 
@@ -1149,8 +1149,19 @@ void inst_converter::operator()(for_inst const &in) {
     auto iter_arg_phis = make_iter_arg_phi();
 
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
-    // mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::None);
-    mod_->add<OpLoopMerge>(merge_label, continue_label, LoopControl::DontUnroll);
+    auto [loop_control,
+          unroll_count] = [&]() -> std::pair<LoopControl, std::optional<std::int32_t>> {
+        if (in.unroll_factor() == 0) {
+            return {LoopControl::None, std::nullopt};
+        } else if (in.unroll_factor() == 1) {
+            return {LoopControl::DontUnroll, std::nullopt};
+        } else if (in.unroll_factor() == std::numeric_limits<std::int32_t>::max()) {
+            return {LoopControl::Unroll, std::nullopt};
+        } else {
+            return {LoopControl::PartialCount, std::make_optional(in.unroll_factor())};
+        }
+    }();
+    mod_->add<OpLoopMerge>(merge_label, continue_label, loop_control, unroll_count);
     mod_->add<OpBranchConditional>(condition, body_label, merge_label,
                                    std::vector<LiteralInteger>{});
 
@@ -1546,8 +1557,8 @@ void inst_converter::run_on_region(region_node const &reg) {
     }
 }
 
-auto inst_converter::run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
-    -> std::vector<spv_inst *> {
+auto inst_converter::run_on_region_with_yield(region_node const &reg,
+                                              std::int64_t num_results) -> std::vector<spv_inst *> {
     yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
     run_on_region(reg);
     auto yielded_vals = std::move(yielded_vals_.top());

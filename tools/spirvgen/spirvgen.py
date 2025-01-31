@@ -241,6 +241,7 @@ using IdResultType = spv_inst*;
 using IdRef = spv_inst*;
 using IdScope = spv_inst*;
 using IdMemorySemantics = spv_inst*;
+using LoopControlAttr = std::int32_t;
 using MemoryAccessAttr = std::int32_t;
 using PairIdRefIdRef = std::pair<spv_inst*, spv_inst*>;
 using PairLiteralIntegerIdRef
@@ -393,6 +394,9 @@ def patch_grammar(grammar):
                 op for op in instruction['operands']
                 if not op['kind'] == 'IdResultType'
             ]
+        elif instruction['opname'] == 'OpLoopMerge':
+            if instruction['operands'][-1]['kind'] == 'LoopControl':
+                instruction['operands'].append({'kind': 'LoopControlAttr', 'quantifier': '?'})
         elif 'operands' in instruction and instruction['operands'][-1][
                 'kind'] == 'MemoryAccess':
             instruction['operands'].append({

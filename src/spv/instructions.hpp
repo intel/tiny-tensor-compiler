@@ -1,11 +1,11 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_20241213_HPP
-#define GENERATED_INSTRUCTIONS_20241213_HPP
+#ifndef GENERATED_INSTRUCTIONS_20250131_HPP
+#define GENERATED_INSTRUCTIONS_20250131_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -3823,20 +3823,24 @@ class OpPhi : public spv_inst {
 class OpLoopMerge : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) { return s.opcode() == Op::LoopMerge; }
-    OpLoopMerge(IdRef op0, IdRef op1, LoopControl op2)
+    OpLoopMerge(IdRef op0, IdRef op1, LoopControl op2,
+                std::optional<LoopControlAttr> op3 = std::nullopt)
         : spv_inst{Op::LoopMerge, false}, op0_(std::move(op0)), op1_(std::move(op1)),
-          op2_(std::move(op2)) {}
+          op2_(std::move(op2)), op3_(std::move(op3)) {}
     inline auto op0() -> IdRef & { return op0_; }
     inline auto op0() const -> IdRef const & { return op0_; }
     inline auto op1() -> IdRef & { return op1_; }
     inline auto op1() const -> IdRef const & { return op1_; }
     inline auto op2() -> LoopControl & { return op2_; }
     inline auto op2() const -> LoopControl const & { return op2_; }
+    inline auto op3() -> std::optional<LoopControlAttr> & { return op3_; }
+    inline auto op3() const -> std::optional<LoopControlAttr> const & { return op3_; }
 
   private:
     IdRef op0_;
     IdRef op1_;
     LoopControl op2_;
+    std::optional<LoopControlAttr> op3_;
 };
 class OpSelectionMerge : public spv_inst {
   public:
@@ -6957,4 +6961,4 @@ class OpCooperativeMatrixStoreCheckedINTEL : public spv_inst {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_20241213_HPP
+#endif // GENERATED_INSTRUCTIONS_20250131_HPP

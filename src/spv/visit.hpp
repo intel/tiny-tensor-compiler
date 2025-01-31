@@ -1,11 +1,11 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20241213_HPP
-#define GENERATED_VISIT_20241213_HPP
+#ifndef GENERATED_VISIT_20250131_HPP
+#define GENERATED_VISIT_20250131_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -3256,6 +3256,10 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->operator()(in.op1());
         static_cast<Derived *>(this)->operator()(in.op2());
+        if (in.op3()) {
+            static_cast<Derived *>(this)->operator()(*in.op3());
+        }
+
         static_cast<Derived *>(this)->post_visit(in);
     }
     auto operator()(const_t<OpSelectionMerge> &in) {
@@ -4553,4 +4557,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20241213_HPP
+#endif // GENERATED_VISIT_20250131_HPP

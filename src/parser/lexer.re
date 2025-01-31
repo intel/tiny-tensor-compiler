@@ -101,6 +101,7 @@ lex:
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
         ".local"            { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
         ".global"           { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
+        ".unroll"           { adv_loc(); return parser::make_UNROLL_ATTR(loc_); }
 
         // constants
         "true"              { adv_loc(); return parser::make_BOOLEAN_CONSTANT(true, loc_); }

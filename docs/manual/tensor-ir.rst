@@ -1050,10 +1050,13 @@ For
     multi-value-instruction = "for" local-identifier [":" integer-type] "="
                                     local-identifier "," local-identifier ["," local-identifier]
                               ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
+                              [for-attributes]
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
     return-type             = boolean-type / scalar-type / coopmatrix-type
+    for-attributes          = ".unroll" ["(" integer-constant ")"]
+
 
 Overview
 ~~~~~~~~
@@ -1078,6 +1081,11 @@ the initial value of the loop-carried value, and its type must coincide with the
 When loop-carried values are present, the loop's last instruction must be a yield instruction that
 updates the loop-carried values for the next iteration.
 The number and types of the yielded values must correspond the scalar-type-list.
+
+Optionally, a loop-unrolling hint can be supplied to the compiler with an optional loop-unrolling factor.
+The unrolling factor must lie in the range :math:`0,\dots,2^{31}-1`.
+(Setting the unroll count to 1 makes the request to not unroll the loop and omitting the factor is a 
+request to fully unroll the loop.)
 
 Returns
 ~~~~~~~

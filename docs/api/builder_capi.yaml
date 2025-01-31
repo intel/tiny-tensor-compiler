@@ -106,6 +106,7 @@ Builder C-API:
       - tinytc_inst_get_regions
       - tinytc_inst_get_values
       - tinytc_inst_destroy
+      - tinytc_inst_set_loop_unroll_factor
   Program:
     function:
       - tinytc_prog_create

@@ -1,11 +1,11 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_CAPEX_UTIL_20241213_HPP
-#define GENERATED_CAPEX_UTIL_20241213_HPP
+#ifndef GENERATED_CAPEX_UTIL_20250131_HPP
+#define GENERATED_CAPEX_UTIL_20250131_HPP
 
 #include "tinytc/tinytc.hpp"
 
@@ -27,4 +27,4 @@ auto extensions(ExecutionMode op) -> array_view<char const *>;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_CAPEX_UTIL_20241213_HPP
+#endif // GENERATED_CAPEX_UTIL_20250131_HPP

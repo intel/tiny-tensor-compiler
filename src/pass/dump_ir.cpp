@@ -357,6 +357,12 @@ void dump_ir_pass::operator()(for_inst const &in) {
     }
     *os_ << " ";
     dump_region(in.body());
+    if (in.unroll_factor() != 0) {
+        *os_ << ".unroll";
+        if (in.unroll_factor() != std::numeric_limits<std::int32_t>::max()) {
+            *os_ << "(" << in.unroll_factor() << ")";
+        }
+    }
 }
 
 void dump_ir_pass::operator()(foreach_inst const &in) {

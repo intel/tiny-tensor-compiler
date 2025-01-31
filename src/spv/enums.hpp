@@ -1,11 +1,11 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20241213_HPP
-#define GENERATED_ENUMS_20241213_HPP
+#ifndef GENERATED_ENUMS_20250131_HPP
+#define GENERATED_ENUMS_20250131_HPP
 
 #include <cstdint>
 
@@ -1444,4 +1444,4 @@ enum class FPEncoding {};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20241213_HPP
+#endif // GENERATED_ENUMS_20250131_HPP

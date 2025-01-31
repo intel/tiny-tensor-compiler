@@ -682,9 +682,13 @@ class for_inst : public loop_inst {
     }
     inline auto iter_init() { return operands() | std::views::drop(op_init()); }
     inline auto iter_init() const { return operands() | std::views::drop(op_init()); }
+    inline auto unroll_factor() const { return unroll_factor_; }
+    inline void unroll_factor(std::int32_t factor) { unroll_factor_ = factor; }
 
   private:
     inline auto op_init() const -> std::int64_t { return num_operands() - num_results(); }
+
+    std::int32_t unroll_factor_ = 0;
 };
 
 class foreach_inst : public loop_inst {

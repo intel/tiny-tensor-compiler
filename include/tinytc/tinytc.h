@@ -1003,6 +1003,23 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      uint32_t *result_list_size,
                                                      tinytc_value_t *result_list);
 
+/**
+ * @brief Set loop unroll factor
+ *
+ * Special values are as following:
+ *
+ * - unroll_factor=0: Automatic loop unrolling (default)
+ * - unroll_factor=1: Request to not unroll the loop
+ * - unroll_factor=INT64_MAX: Request to fully unroll the loop
+ *
+ * @param instr [inout] for instruction
+ * @param unroll_factor [in] loop unrolling factor
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_set_loop_unroll_factor(tinytc_inst_t instr,
+                                                                 int32_t unroll_factor);
+
 ////////////////////////////
 ////////// Region //////////
 ////////////////////////////

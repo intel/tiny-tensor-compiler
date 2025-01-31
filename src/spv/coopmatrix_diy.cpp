@@ -137,7 +137,7 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
                     ".decl "
                  << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
                  << ".decl " << tempq
-                 << " v_type = G type = uq num_elts = 4 align = wordx32 alias =<" << temp << ",0>\n"
+                 << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp << ",0>\n"
                  << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
                  << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
                  << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"

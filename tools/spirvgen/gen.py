@@ -22,7 +22,7 @@ def generate_header(args, filename, grammar, generator, includes=[]):
         now = datetime.datetime.now()
         basename = os.path.splitext(os.path.basename(filename))[0].upper()
         basename = basename.replace('.', '_')
-        headerguard_name = f'GENERATED_{basename}_{now.year}{now.month}{now.day}_HPP'
+        headerguard_name = f'GENERATED_{basename}_{now.year}{now.month:02}{now.day:02}_HPP'
 
         print(f"""// Copyright (C) {now.year} Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
