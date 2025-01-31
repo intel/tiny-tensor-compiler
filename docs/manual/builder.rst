@@ -21,9 +21,9 @@ Consider the following simple copy kernel
 .. code-block::
 
     func @copy(%A: memref<${type}x${M}x${N}>, %B: memref<${type}x${M}x${M}>) {
-        %c0 = constant 0.0 -> ${type}
-        %c1 = constant 1.0 -> ${type}
-        axpby.n %c1, %A, %c0, %B : ${type}, memref<${type}x${M}x${N}>, ${type}, memref<${type}x${M}x${N}>
+        %c0 = constant 0.0 : ${type}
+        %c1 = constant 1.0 : ${type}
+        axpby.n %c1, %A, %c0, %B
     }
 
 In the following example we build the above code programmatically and replace the place-holders (${.})
@@ -63,7 +63,7 @@ by actual values:
 
           // Create function
           tinytc_data_type_t param_types[2] = {ty, ty};
-          tinytc_func_create(&copy_fun, sizeof(copy_fun_name), copy_fun_name, 2, param_types, NULL);
+          tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, NULL);
           tinytc_prog_add_function(program, copy_fun);
 
           // Get body
@@ -75,15 +75,15 @@ by actual values:
           tinytc_constant_inst_create_one(&tmp, element_ty, NULL);
           num_results = 1;
           tinytc_inst_get_values(tmp, &num_results, &alpha);
-          tinytc_region_add_instruction(copy_body, tmp);
+          tinytc_region_append(copy_body, tmp);
 
           tinytc_constant_inst_create_zero(&tmp, element_ty, NULL);
           num_results = 1;
           tinytc_inst_get_values(tmp, &num_results, &beta);
-          tinytc_region_add_instruction(copy_body, tmp);
+          tinytc_region_append(copy_body, tmp);
 
           tinytc_axpby_inst_create(&tmp, tinytc_transpose_N, 0, alpha, params[0], beta, params[1], NULL);
-          tinytc_region_add_instruction(copy_body, tmp);
+          tinytc_region_append(copy_body, tmp);
 
           // Dump program
           tinytc_prog_dump(program);
@@ -119,4 +119,3 @@ by actual values:
           p.add_function(std::move(f));
 
           p.dump();
-

@@ -29,48 +29,55 @@ In the :ref:`tensor language <tensor language>` we can implement the kernel as f
                        %P: memref<f32x56x9x?>,
                        %A: group<memref<f32x9x9>>,
                        %Q: memref<f32x56x9x?>) {
-        %gid = group_id                                ; Get our index e
-    
-        %p = subview %P[:,:,%gid] : memref<f32x56x9x?> ; %p has type memref<f32x56x9>
-        %a = load %A[%gid] : group<memref<f32x9x9>>    ; %a has type memref<f32x9x9>
-        %q = subview %Q[:,:,%gid] : memref<f32x56x9x?> ; %q has type memref<f32x56x9>
-    
-        %tmp = alloca -> memref<f32x56x9>              ; Reserve temporary memory
-    
-        gemm.n.n 1.0, %K, %p, 0.0, %tmp                ; Compute tmp <- K P(:,:,e)
-            : f32, memref<f32x56x56>, memref<f32x56x9>, f32, memref<f32x56x9>
-        gemm.n.n 1.0, %tmp, %a, 1.0, %q                ; Update Q(:,:,e) <- Q(:,:,e) + tmp A_e
-            : f32, memref<f32x56x9>, memref<f32x9x9>, f32, memref<f32x56x9>
+        %gid = builtin.group_id : index                   ; Get our index e
+
+        %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9> ; Get view on submatrix
+        %a = load %A[%gid]             : memref<f32x9x9>  ; Load matrix from group
+        %q = subview %Q[0:56,0:9,%gid] : memref<f32x56x9> ; Get view on submatrix
+
+        %tmp = alloca : memref<f32x56x9,local>            ; Reserve temporary memory
+                                                          ; in the Shared Local Memory
+        %c0 = constant 0.0 : f32
+        %c1 = constant 1.0 : f32
+        gemm.n.n %c1, %K, %p, %c0, %tmp                   ; Compute tmp <- K P(:,:,e)
+        gemm.n.n %c1, %tmp, %a, %c1, %q                   ; Update Q(:,:,e) <- Q(:,:,e) + tmp A_e
     }
 
-Compilation with the Tiny Tensor Compiler generates the following OpenCL-C code
+Using the *tinytc-opt* tool we can run compiler passes on the code to get insight on what is happening under the hood.
+For example, running the insert-lifetime-stop, insert-barrier, and work-group-size pass,
 
-.. code-block:: c
+.. code-block:: bash
 
-    kernel
-    __attribute__((reqd_work_group_size(64,1,1)))
-    __attribute__((intel_reqd_sub_group_size(32)))
-    fused_kernel(global float *K, global float *P, long P_shape2, global float *global *A,
-                 global float *Q, long Q_shape2) {
-        local uchar stack[2016] __attribute__((aligned(64)));
-        long gid = get_global_id(2);
-        global float *p = P + 0ll * 1 + 0ll * 56 + gid * 504;
-        global float *a = *(A + gid);
-        global float *q = Q + 0ll * 1 + 0ll * 56 + gid * 504;
-        local float *tmp = (local float *)(stack + 0);
-        gemm_f32f32f32f32f32_An_Bn_M56_N9_K56_Astride1_56_Bstride1_56_Cstride1_56_alpha3ff0000000000000_beta0(
-            56, 9, 56, 0x1p+0f, K, 1, 56, p, 1, 56, 0x0p+0f, tmp, 1, 56);
-        barrier(CLK_LOCAL_MEM_FENCE);
-        gemm_f32f32f32f32f32_An_Bn_M56_N9_K9_Astride1_56_Bstride1_9_Cstride1_56_alpha3ff0000000000000_beta3ff0000000000000(
-            56, 9, 9, 0x1p+0f, tmp, 1, 56, a, 1, 9, 0x1p+0f, q, 1, 56);
-    }
+   tinytc-opt -pinsert-lifetime-stop -pinsert-barrier -pwork-group-size test.ir
 
-where the definition of the generated GEMM functions have been omitted for brevity.
+we get
+
+.. code-block::
+   :emphasize-lines: 4, 13, 15
+
+   func @fused_kernel(%K: memref<f32x56x56>,
+                   %P: memref<f32x56x9x?>,
+                   %A: group<memref<f32x9x9>>,
+                   %Q: memref<f32x56x9x?>) subgroup_size(32) work_group_size(64,1) {
+      %gid = builtin.group_id : index
+      %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9>
+      %a = load %A[%gid] : memref<f32x9x9>
+      %q = subview %Q[0:56,0:9,%gid] : memref<f32x56x9>
+      %tmp = alloca : memref<f32x56x9,local>
+      %c0 = constant 0x0p+0 : f32
+      %c1 = constant 0x1p+0 : f32
+      gemm.n.n %c1, %K, %p, %c0, %tmp
+      barrier.local
+      gemm.n.n %c1, %tmp, %a, %c1, %q
+      lifetime_stop %tmp
+    } 
+
 We observe that
 
-* a GEMM is processed in parallel by a work-group with 64 threads,
-* temporary memory is mapped to shared local memory (local uchar stack),
-* load and subview calls translate to simple pointer manipulation,
+* the kernel is executed concurrently by 64 work-items,
+* temporary memory is only needed until after the lifetime_stop instruction after the GEMM
+  (if multiple alloca's are present that do not overlap, that is, lifetime_stop for alloca #1 appears before alloca #2,
+  then Shared Local Memory is reused, reducing the total amount needed),
 * and that a barrier has been introduced between the GEMM calls to avoid data races.
 
 When using SYCL, we can run the kernel using the following pseudo-code:
@@ -81,16 +88,15 @@ When using SYCL, we can run the kernel using the following pseudo-code:
     #include <tinytc/tinytc_sycl.hpp>
     #include <sycl/sycl.hpp>
 
-    auto source_ctx = tinytc::make_source_context();
+    #include <iostream>
+
+    auto ctx = tinytc::make_compiler_context();
+    ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
+                              void *) { std::cerr << what << std::endl; },
+                           nullptr);
     try {
         // Parse tensor program
-        auto prog = tinytc::parse_file("fused_kernel.ir", source_ctx);
-
-        // JIT compile program
-        auto q = sycl::queue{};
-        auto info = tinytc::make_core_info(q.get_device());
-        auto bin = tinytc::compile_to_binary(std::move(prog), info, tinytc::bundle_format::native,
-                                             source_ctx);
+        auto prog = tinytc::parse_file("fused_kernel.ir", ctx);
 
         // Initialize tensors
         float* K = ...;
@@ -98,7 +104,10 @@ When using SYCL, we can run the kernel using the following pseudo-code:
         float** A = ...;
         float* Q = ...;
 
-        auto bundle = tinytc::make_kernel_bundle(q.get_context(), q.get_device(), bin);
+        // JIT compile program
+        auto q = sycl::queue{};
+        auto bundle = tinytc::make_kernel_bundle(q.get_context(), q.get_device(), prog);
+
         auto kernel = tinytc::make_kernel(bundle, "fused_kernel");
         auto exe_range = tinytc::get_execution_range(kernel, howmany);
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
@@ -110,8 +119,6 @@ When using SYCL, we can run the kernel using the following pseudo-code:
     } catch (tinytc::status const& st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): "
                   << tinytc::error_string(st) << std::endl;
-        std::cerr << "Error log:" << std::endl
-                  << source_ctx.get_error_log() << std::endl;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
     }
