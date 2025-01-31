@@ -37,7 +37,7 @@
 * Instruction creation function always include return type
 
 ### Compiler
-* Overhauled infrastructure for wirting advanced compiler passes
+* Overhauled infrastructure for writing advanced compiler passes
 * Introduced data flow analysis to properly insert barriers automatically when for-loops are present
 * Added constant folding, constant propagation, and dead code elimination passes
 * Added memref alignment analysis
