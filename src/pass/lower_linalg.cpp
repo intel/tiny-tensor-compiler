@@ -133,6 +133,9 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                                 compute_c_step(bb, k_block_size, k, c_acc_iter, c_acc_tys, check_k);
                             bb.add(make_yield(c_next, loc));
                         });
+        auto it = bb.get_insertion_point();
+        prev(it);
+        CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, 1));
         return return_values;
     };
 
