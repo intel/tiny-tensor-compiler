@@ -1523,7 +1523,7 @@ Cooperative matrix load
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_load" transpose checked-flag 
+    value-instruction           =/ "cooperative_matrix_load" transpose [checked-flag]
                                    local-identifier "[" local-identifier "," local-identifier "]"
                                    ["," "align" 1*DIGIT] ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
@@ -1659,7 +1659,7 @@ Cooperative matrix store
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" checked-flag [store-flag] local-identifier ","
+    instruction     =/ "cooperative_matrix_store" [checked-flag] [store-flag] local-identifier ","
                        local-identifier "[" local-identifier "," local-identifier "]"
                        ["," "align" 1*DIGIT]
 
