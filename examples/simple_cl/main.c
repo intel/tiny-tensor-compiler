@@ -147,13 +147,12 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
 
     static const char source_text[] =
         "func @copy(%A: memref<i32x" CHUNK_SIZE_S "x?>, %B: memref<i32x" CHUNK_SIZE_S "x?>) {\n"
-        "    %gid = group_id\n"
-        "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S "x?>\n"
-        "    %c0 = constant 0 -> i32\n"
-        "    %c1 = constant 1 -> i32\n"
+        "    %gid = builtin.group_id : index\n"
+        "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
+        "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
+        "    %c0 = constant 0 : i32\n"
+        "    %c1 = constant 1 : i32\n"
         "    axpby.n %c1, %a, %c0, %b\n"
-        "        : i32, memref<i32x" CHUNK_SIZE_S ">, i32, memref<i32x" CHUNK_SIZE_S ">\n"
         "}\n";
 
     CHECK(tinytc_parse_string(&program, sizeof(source_text), source_text, NULL));
