@@ -22,7 +22,7 @@ void tinytc_func::align(std::int32_t arg_no, std::int32_t alignment) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
     if (static_cast<std::int64_t>(align_.size()) != num_params()) {
-        align_.resize(num_params());
+        align_.resize(num_params(), 0);
     }
     align_[arg_no] = alignment;
 }

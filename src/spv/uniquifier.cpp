@@ -217,7 +217,7 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                 [&](memref_data_type const &mr) -> spv_inst * {
                     const auto storage_cls = address_space_to_storage_class(mr.addrspace());
                     auto spv_element_ty = spv_ty(mr.element_data_ty());
-                    const auto align = mr.alignment();
+                    const auto align = mr.element_alignment();
                     return spv_pointer_ty(storage_cls, spv_element_ty, align);
                 },
                 [&](scalar_data_type const &ty) -> spv_inst * {

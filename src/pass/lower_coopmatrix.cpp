@@ -76,8 +76,8 @@ class coopmatrix_code_generator {
             }
         }
     }
-    auto vals(location const &loc, tinytc_value const &v, std::int64_t expected_size)
-        -> std::vector<value> &;
+    auto vals(location const &loc, tinytc_value const &v,
+              std::int64_t expected_size) -> std::vector<value> &;
     template <typename Range>
     auto vals_copy_expand(location const &loc, Range range) -> std::vector<value> {
         auto expanded_vals = std::vector<value>{};
@@ -218,8 +218,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
     const bool check_m = checked == checked_flag::both || checked == checked_flag::rows;
     const bool check_k = checked == checked_flag::both || checked == checked_flag::cols;
     const auto sty_size = size(ot->element_ty());
-    const std::int32_t max_align = core_cfg_.subgroup_size * sty_size;
-    const std::int32_t align = std::min(std::max(in.align(), ot->alignment()), max_align);
+    const std::int32_t align = std::max(in.align(), ot->element_alignment());
     auto const get_flag = [&](bool needs_check) {
         if (!needs_check && core_cfg_.block_read_write_supported && ot->stride(omode) == 1 &&
             align >= 4 && sty_size >= 2 && sty_size <= 8) {
@@ -422,8 +421,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
     const bool check_m = checked == checked_flag::both || checked == checked_flag::rows;
     const bool check_k = checked == checked_flag::both || checked == checked_flag::cols;
     const auto sty_size = size(ot->element_ty());
-    const std::int32_t max_align = core_cfg_.subgroup_size * sty_size;
-    const std::int32_t align = std::min(std::max(in.align(), ot->alignment()), max_align);
+    const std::int32_t align = std::max(in.align(), ot->element_alignment());
     auto const get_flag = [&](store_flag flag, bool needs_check, std::int32_t align) {
         if (!needs_check && core_cfg_.block_read_write_supported && flag == store_flag::regular &&
             ot->stride(omode) == 1 && align >= 16 && sty_size >= 2 && sty_size <= 8) {

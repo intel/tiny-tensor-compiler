@@ -1,7 +1,6 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-FUNCTION_PASS("alignment-propagation", alignment_propagation_pass{})
 FUNCTION_PASS("check-ir", check_ir_pass{})
 FUNCTION_PASS("constant-propagation", constant_propagation_pass{}, tinytc::optflag::unsafe_fp_math)
 FUNCTION_PASS("dead-code-elimination", dead_code_elimination_pass{})
@@ -12,6 +11,7 @@ FUNCTION_PASS("dump-ir", dump_ir_pass{std::cout})
 FUNCTION_PASS("insert-barrier", insert_barrier_pass{})
 FUNCTION_PASS("insert-lifetime-stop", insert_lifetime_stop_pass{})
 FUNCTION_PASS("set-stack-ptr", set_stack_ptr_pass{})
+FUNCTION_PASS_WITH_INFO("alignment-propagation", [](tinytc_core_info const* info) { return alignment_propagation_pass{info}; })
 FUNCTION_PASS_WITH_INFO("dump-matrix-ext", [](tinytc_core_info const* info) { return dump_matrix_ext_pass(std::cout, info); })
 FUNCTION_PASS_WITH_INFO("lower-coopmatrix", [](tinytc_core_info const* info) { return lower_coopmatrix_pass{info}; })
 FUNCTION_PASS_WITH_INFO("lower-foreach", [](tinytc_core_info const* info) { return lower_foreach_pass{info}; })

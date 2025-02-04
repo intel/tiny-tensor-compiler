@@ -31,7 +31,7 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                       if (t == nullptr) {
                           throw compilation_error(a.loc(), status::ir_expected_memref);
                       }
-                      const auto align = t->alignment();
+                      const auto align = t->element_alignment();
                       auto size = t->size_in_bytes();
                       std::int64_t stack_ptr = 0;
                       auto it = allocs.begin();

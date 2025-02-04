@@ -295,6 +295,22 @@ tinytc_status_t tinytc_core_info_have_spirv_feature(const_tinytc_core_info_t inf
         [&] { *available = info->have_spirv_feature(enum_cast<spirv_feature>(feature)); });
 }
 
+tinytc_status_t tinytc_core_info_get_default_alignment(const_tinytc_core_info_t info,
+                                                       uint32_t *alignment) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *alignment = info->alignment(); });
+}
+
+tinytc_status_t tinytc_core_info_set_default_alignment(tinytc_core_info_t info,
+                                                       uint32_t alignment) {
+    if (info == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { info->alignment(alignment); });
+}
+
 tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj) {
     if (obj == nullptr) {
         return tinytc_status_invalid_arguments;

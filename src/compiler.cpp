@@ -64,7 +64,7 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
         // (later on they are maybe "in use" due to the lifetime_stop instruction)
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);
-        run_function_pass(alignment_propagation_pass{}, *prg);
+        run_function_pass(alignment_propagation_pass{info}, *prg);
     }
 
     run_function_pass(insert_lifetime_stop_pass{}, *prg);
@@ -77,7 +77,7 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
     if (opt_level >= 1) {
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);
-        run_function_pass(alignment_propagation_pass{}, *prg);
+        run_function_pass(alignment_propagation_pass{info}, *prg);
     }
     run_function_pass(lower_coopmatrix_pass{info}, *prg);
 

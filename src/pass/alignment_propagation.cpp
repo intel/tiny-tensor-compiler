@@ -4,6 +4,7 @@
 #include "pass/alignment_propagation.hpp"
 #include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
+#include "device_info.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
@@ -53,9 +54,8 @@ auto is_aligned(std::vector<std::int64_t> const &offset_gcds,
 
 class alignment_propagation_helper {
   public:
-    inline alignment_propagation_helper(gcd_analysis_result &&gcd) : gcd_{std::move(gcd)} {}
-
-    constexpr static std::int64_t alloca_max_alignment = 64;
+    inline alignment_propagation_helper(gcd_analysis_result &&gcd, std::uint32_t default_alignment)
+        : gcd_{std::move(gcd)}, alloca_max_alignment_{default_alignment} {}
 
     void operator()(inst_node &in);
     void operator()(alloca_inst &in);
@@ -84,6 +84,7 @@ class alignment_propagation_helper {
 
     gcd_analysis_result gcd_;
     std::unordered_map<value_node const *, std::int32_t> known_alignment_;
+    std::int64_t alloca_max_alignment_;
 };
 
 auto alignment_propagation_helper::compute_max_alignment(
@@ -95,7 +96,7 @@ auto alignment_propagation_helper::compute_max_alignment(
     const auto &stride = ot->stride();
     const auto sty_size = size(ot->element_ty());
 
-    for (std::int32_t align = op_align; align > ot->alignment(); align /= 2) {
+    for (std::int32_t align = op_align; align > ot->element_alignment(); align /= 2) {
         if (is_aligned(offset_gcds, stride, align / sty_size)) {
             return align;
         }
@@ -107,15 +108,15 @@ void alignment_propagation_helper::operator()(inst_node &) {}
 void alignment_propagation_helper::operator()(alloca_inst &in) {
     if (in.stack_ptr() >= 0) {
         const auto rt = get_memref_type(in.result(0).ty());
-        std::int32_t i = rt->alignment();
-        while (i < alloca_max_alignment) {
+        std::int32_t i = rt->element_alignment();
+        while (i < alloca_max_alignment_) {
             const auto i2 = 2 * i;
             if (in.stack_ptr() % i2 != 0) {
                 break;
             }
             i = i2;
         }
-        if (i > rt->alignment()) {
+        if (i > rt->element_alignment()) {
             known_alignment(in.result(0), i);
         }
     }
@@ -189,11 +190,24 @@ void alignment_propagation_helper::known_alignment(value_node const &val, std::i
     }
 }
 
+alignment_propagation_pass::alignment_propagation_pass(const_tinytc_core_info_t info) {
+    if (info == nullptr) {
+        throw std::invalid_argument("info must not be nullptr");
+    }
+    default_alignment_ = info->alignment();
+}
+
 void alignment_propagation_pass::run_on_function(function_node &fn) {
-    auto visitor = alignment_propagation_helper{gcd_analysis{}.run_on_function(fn)};
+    auto visitor =
+        alignment_propagation_helper{gcd_analysis{}.run_on_function(fn), default_alignment_};
+    for (std::int32_t arg_no = fn.num_params() - 1; arg_no >= 0; --arg_no) {
+        auto const &ty = *fn.params()[arg_no].ty();
+        if (fn.align(arg_no) == 0 && (isa<memref_data_type>(ty) || isa<group_data_type>(ty))) {
+            fn.align(arg_no, default_alignment_);
+        }
+    }
     for (std::int32_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
-        auto align = fn.align(arg_no);
-        visitor.known_alignment(fn.params()[arg_no], align);
+        visitor.known_alignment(fn.params()[arg_no], fn.align(arg_no));
     }
 
     walk<walk_order::pre_order>(fn, [&visitor](inst_node &in) { visit(visitor, in); });

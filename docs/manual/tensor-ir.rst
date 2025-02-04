@@ -133,7 +133,7 @@ Restrictions
 ------------
 
 * Arguments must not have coopmatrix type.
-* The "align" attribute must only be applied to parameters of memref type.
+* The "align" attribute must only be applied to parameters of memref or group type.
 
 Regions
 =======

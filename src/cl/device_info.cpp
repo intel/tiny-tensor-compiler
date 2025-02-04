@@ -129,7 +129,7 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
         return tinytc_status_invalid_arguments;
     }
 
-    cl_uint vendor_id;
+    cl_uint vendor_id, mem_base_addr_align;
 
     TINYTC_CL_CHECK_STATUS(
         clGetDeviceInfo(device, CL_DEVICE_VENDOR_ID, sizeof(vendor_id), &vendor_id, nullptr));
@@ -199,6 +199,12 @@ tinytc_status_t tinytc_cl_core_info_create(tinytc_core_info_t *info, cl_device_i
     } else {
         return tinytc_status_unsupported_device;
     }
+
+    TINYTC_CL_CHECK_STATUS(clGetDeviceInfo(device, CL_DEVICE_MEM_BASE_ADDR_ALIGN,
+                                           sizeof(mem_base_addr_align), &mem_base_addr_align,
+                                           nullptr));
+    // mem_base_addr_align is in bits -> convert to bytes
+    TINYTC_CHECK_STATUS(tinytc_core_info_set_default_alignment(*info, mem_base_addr_align / 8));
 
     return tinytc::exception_to_status_code_cl([&] { set_spirv_features(*info, device); });
 }

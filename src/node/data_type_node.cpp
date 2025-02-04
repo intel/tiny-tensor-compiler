@@ -122,7 +122,7 @@ scalar_type memref_data_type::element_ty() const {
     return dyn_cast<scalar_data_type>(element_ty_)->ty();
 }
 
-auto memref_data_type::alignment() const -> std::int32_t {
+auto memref_data_type::element_alignment() const -> std::int32_t {
     return ::tinytc::alignment(element_ty());
 }
 auto memref_data_type::size_in_bytes() const -> std::int64_t {

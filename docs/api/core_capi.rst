@@ -481,6 +481,8 @@ Device Info
 
   * :ref:`tinytc_core_info_get_core_features`
 
+  * :ref:`tinytc_core_info_get_default_alignment`
+
   * :ref:`tinytc_core_info_get_register_space`
 
   * :ref:`tinytc_core_info_get_subgroup_sizes`
@@ -498,6 +500,8 @@ Device Info
   * :ref:`tinytc_core_info_retain`
 
   * :ref:`tinytc_core_info_set_core_features`
+
+  * :ref:`tinytc_core_info_set_default_alignment`
 
   * :ref:`tinytc_core_info_set_spirv_feature`
 
@@ -547,6 +551,13 @@ tinytc_core_info_get_core_features
 ..................................
 
 .. doxygenfunction:: tinytc_core_info_get_core_features
+
+.. _tinytc_core_info_get_default_alignment:
+
+tinytc_core_info_get_default_alignment
+......................................
+
+.. doxygenfunction:: tinytc_core_info_get_default_alignment
 
 .. _tinytc_core_info_get_register_space:
 
@@ -610,6 +621,13 @@ tinytc_core_info_set_core_features
 ..................................
 
 .. doxygenfunction:: tinytc_core_info_set_core_features
+
+.. _tinytc_core_info_set_default_alignment:
+
+tinytc_core_info_set_default_alignment
+......................................
+
+.. doxygenfunction:: tinytc_core_info_set_default_alignment
 
 .. _tinytc_core_info_set_spirv_feature:
 

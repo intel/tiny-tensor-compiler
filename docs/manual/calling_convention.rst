@@ -72,6 +72,16 @@ leads to
 Note that `memref_example3` and `memref_example4` have the same signature,
 because `memref<i64x5x?x6>` has the canonical stride `strided<1,5,?>`.
 
+.. _memref alignment requirements:
+
+**Memory alignment:** The base pointer must be sufficiently aligned.
+The required alignment depends on the core info and may be queried with
+:ref:`tinytc_core_info_get_default_alignment`.
+Using :ref:`tinytc_core_info_set_default_alignment` the alignment requirements may be overriden.
+The alignment requirement may also be overriden per memref using the :ref:`align attribute <tensor language functions>`.
+When the core info object is created using :ref:`tinytc_cl_core_info_create` the default alignment
+is queried from `CL_DEVICE_MEM_BASE_ADDR_ALIGN <https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_API.html#platform-querying-devices>`_.
+
 Group types
 ===========
 
@@ -99,3 +109,6 @@ leads to
 Note that `a_shape_0`, `a_shape1`, and `a_stride2` must contain at least as many values as the group size.
 That is, if a is accessed with `load %a[%id] : group<memref<i32x5x?x6>>`, then
 `*(a_shape0 + id)`, `*(a_shape1 + id)`, and `*(a_stride2 + id)` must not lead to out-of-bounds memory access.
+
+**Memory alignment:** The memrefs the group points to are subject to the same alignment requirements as a
+:ref:`regular memref argument (see above) <memref alignment requirements>`. 

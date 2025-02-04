@@ -1502,6 +1502,28 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_have_spirv_feature(const_tinytc_c
                                                                   tinytc_bool_t *available);
 
 /**
+ * @brief Get default memref alignment
+ *
+ * @param info [in] Core info
+ * @param alignment [out] pointer to alignment in bytes
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_default_alignment(const_tinytc_core_info_t info,
+                                                                     uint32_t *alignment);
+
+/**
+ * @brief Set default memref alignment
+ *
+ * @param info [inout] Core info
+ * @param alignment [in] alignment in bytes
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_set_default_alignment(tinytc_core_info_t info,
+                                                                     uint32_t alignment);
+
+/**
  * @brief Release core info object
  *
  * Decreases reference count by 1, free memory if reference count is 0.

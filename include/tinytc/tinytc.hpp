@@ -2591,6 +2591,26 @@ class core_info : public shared_handle<tinytc_core_info_t> {
             obj_, static_cast<tinytc_spirv_feature_t>(feature), &available));
         return available;
     }
+
+    /**
+     * @brief Get default alignment
+     *
+     * @return alignment in bytes
+     */
+    auto get_default_alignment() const -> std::uint32_t {
+        std::uint32_t alignment;
+        CHECK_STATUS(tinytc_core_info_get_default_alignment(obj_, &alignment));
+        return alignment;
+    }
+
+    /**
+     * @brief Set default alignment
+     *
+     * @param alignment alignment in bytes
+     */
+    void set_default_alignment(std::uint32_t alignment) {
+        CHECK_STATUS(tinytc_core_info_set_default_alignment(obj_, alignment));
+    }
 };
 
 /**

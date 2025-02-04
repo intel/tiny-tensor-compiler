@@ -137,7 +137,7 @@ class memref_data_type : public data_type_node {
     inline bool is_dynamic() const { return is_dynamic_shape() || is_dynamic_stride(); }
     inline bool is_canonical_stride() const { return stride_ == canonical_stride(shape_); }
 
-    auto alignment() const -> std::int32_t;
+    auto element_alignment() const -> std::int32_t;
     auto size_in_bytes() const -> std::int64_t;
 
   protected:
