@@ -130,14 +130,14 @@ void alignment_propagation_helper::operator()(fuse_inst &in) {
 void alignment_propagation_helper::operator()(cooperative_matrix_load_inst &in) {
     auto index_list = std::array<const_tinytc_value_t, 2u>{&in.pos0(), &in.pos1()};
     const auto align = compute_max_alignment(in.operand(), get_gcds(index_list));
-    if (align != 0) {
+    if (in.align() == 0 && align != 0) {
         in.align(align);
     }
 }
 void alignment_propagation_helper::operator()(cooperative_matrix_store_inst &in) {
     auto index_list = std::array<const_tinytc_value_t, 2u>{&in.pos0(), &in.pos1()};
     const auto align = compute_max_alignment(in.operand(), get_gcds(index_list));
-    if (align != 0) {
+    if (in.align() == 0 && align != 0) {
         in.align(align);
     }
 }
@@ -147,7 +147,7 @@ void alignment_propagation_helper::operator()(load_inst &in) {
         return;
     }
     const auto align = compute_max_alignment(in.operand(), get_gcds(in.index_list()));
-    if (align != 0) {
+    if (in.align() == 0 && align != 0) {
         in.align(align);
     }
 }
@@ -173,7 +173,7 @@ void alignment_propagation_helper::operator()(subview_inst &in) {
 }
 void alignment_propagation_helper::operator()(store_inst &in) {
     const auto align = compute_max_alignment(in.operand(), get_int_constants(in.index_list()));
-    if (align != 0) {
+    if (in.align() == 0 && align != 0) {
         in.align(align);
     }
 }
