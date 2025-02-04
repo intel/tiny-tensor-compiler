@@ -26,7 +26,7 @@ using namespace sycl;
 using namespace tinytc;
 
 struct args {
-    std::int32_t alignment = 65536;
+    std::int32_t alignment = 0;
     bool atomic = false;
     bool dump = false;
     std::int32_t internal_repetitions = 1;
@@ -93,9 +93,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                            {get_group(A_ty, 0, my_loc()), get_group(B_ty, 0, my_loc()),
                             get_group(C_ty, 0, my_loc())},
                            my_loc());
-        f.set_alignment(0, alignment);
-        f.set_alignment(1, alignment);
-        f.set_alignment(2, alignment);
+        if (alignment > 0) {
+            f.set_alignment(0, alignment);
+            f.set_alignment(1, alignment);
+            f.set_alignment(2, alignment);
+        }
         auto fn_body = f.get_body();
         auto params = std::array<value, 3u>{};
         fn_body.get_parameters(params);
@@ -151,10 +153,17 @@ template <typename T> void test(queue q, args &a) {
     T *B_host = new T[total_reals];
     T *C_host = new T[total_reals];
     T *C_ref_host = new T[total_reals];
-    T *C_ref = aligned_alloc_device<T>(a.alignment, total_reals, q);
-    T *A = aligned_alloc_device<T>(a.alignment, total_reals, q);
-    T *B = aligned_alloc_device<T>(a.alignment, total_reals, q);
-    T *C = aligned_alloc_device<T>(a.alignment, total_reals, q);
+    auto const alloc_device = [&a, &q](std::size_t num_bytes) {
+        if (a.alignment == 0) {
+            return malloc_device<T>(num_bytes, q);
+        } else {
+            return aligned_alloc_device<T>(a.alignment, num_bytes, q);
+        }
+    };
+    T *C_ref = alloc_device(total_reals);
+    T *A = alloc_device(total_reals);
+    T *B = alloc_device(total_reals);
+    T *C = alloc_device(total_reals);
     fill(A_host, total_reals);
     fill(B_host, total_reals);
     q.copy(A_host, A, total_reals).wait();

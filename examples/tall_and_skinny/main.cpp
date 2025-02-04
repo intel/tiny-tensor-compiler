@@ -29,7 +29,7 @@ struct args {
     scalar_type ty = scalar_type::f32;
     bool update = false;
     bool verify = false;
-    std::int32_t alignment = 64;
+    std::int32_t alignment = 0;
     std::int32_t M_block_size = 0;
     std::vector<examples::test_case> tc;
 };
@@ -60,9 +60,16 @@ template <typename T> void test(queue q, args &a) {
     auto A_host = std::vector<T>(na_max);
     auto B_host = std::vector<T>(nb_max);
     auto C_host = std::vector<T>(nc_max);
-    T *A = aligned_alloc_device<T>(a.alignment, na_max, q);
-    T *B = aligned_alloc_device<T>(a.alignment, nb_max, q);
-    T *C = aligned_alloc_device<T>(a.alignment, nc_max, q);
+    auto const alloc_device = [&a, &q](std::size_t num_bytes) {
+        if (a.alignment == 0) {
+            return malloc_device<T>(num_bytes, q);
+        } else {
+            return aligned_alloc_device<T>(a.alignment, num_bytes, q);
+        }
+    };
+    T *A = alloc_device(na_max);
+    T *B = alloc_device(nb_max);
+    T *C = alloc_device(nc_max);
 
     auto const check = [&](std::int64_t M, std::int64_t N, std::int64_t K) {
         q.copy(C, C_host.data(), M * N).wait();
@@ -162,7 +169,7 @@ int main(int argc, char **argv) {
 
     auto parser = cmd::arg_parser{};
     try {
-        parser.set_short_opt('a', &a.alignment, "Memory alignment");
+        parser.set_short_opt('a', &a.alignment, "Override memory alignment");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
         parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
             .converter(examples::convert_data_type);
