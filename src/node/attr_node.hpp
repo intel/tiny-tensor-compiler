@@ -84,10 +84,15 @@ class dictionary_attr : public tinytc_attr {
     inline auto end() const -> std::vector<named_attr>::const_iterator { return attrs_.end(); }
     inline auto const &attrs() const { return attrs_; }
 
+    auto find(tinytc_attr_t name) -> tinytc_attr_t;
+    auto find(std::string_view name) -> tinytc_attr_t;
+
   protected:
     dictionary_attr(tinytc_compiler_context_t ctx, std::vector<named_attr> sorted_attrs);
 
   private:
+    static auto get_name_string(tinytc_attr_t name) -> std::string_view;
+
     std::vector<named_attr> attrs_;
 };
 

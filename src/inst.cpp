@@ -763,4 +763,11 @@ tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_li
         *result_list_size = num;
     });
 }
+
+tinytc_status_t tinytc_inst_set_attribute(tinytc_inst_t instr, tinytc_attr_t attr) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { instr->attr(attr); });
+}
 }

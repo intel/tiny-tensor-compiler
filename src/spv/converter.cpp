@@ -6,6 +6,7 @@
 #include "codegen_tools.hpp"
 #include "error.hpp"
 #include "matrix_ext_info.hpp"
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
@@ -1155,19 +1156,18 @@ void inst_converter::operator()(for_inst const &in) {
     auto iter_arg_phis = make_iter_arg_phi();
 
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
-    auto [loop_control,
-          unroll_count] = [&]() -> std::pair<LoopControl, std::optional<std::int32_t>> {
-        if (in.unroll_factor() == 0) {
-            return {LoopControl::None, std::nullopt};
-        } else if (in.unroll_factor() == 1) {
-            return {LoopControl::DontUnroll, std::nullopt};
-        } else if (in.unroll_factor() == std::numeric_limits<std::int32_t>::max()) {
-            return {LoopControl::Unroll, std::nullopt};
-        } else {
-            return {LoopControl::PartialCount, std::make_optional(in.unroll_factor())};
+    auto loop_control = [&]() -> LoopControl {
+        auto unroll = in.get_attr("unroll");
+        if (unroll) {
+            auto ba = dyn_cast<boolean_attr>(unroll);
+            if (ba) {
+                return ba->value() ? LoopControl::Unroll : LoopControl::DontUnroll;
+            }
+            throw status::ir_expected_boolean;
         }
+        return LoopControl::None;
     }();
-    mod_->add<OpLoopMerge>(merge_label, continue_label, loop_control, unroll_count);
+    mod_->add<OpLoopMerge>(merge_label, continue_label, loop_control);
     mod_->add<OpBranchConditional>(condition, body_label, merge_label,
                                    std::vector<LiteralInteger>{});
 

@@ -117,7 +117,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
             [&](region_builder &bb, value const &) {
                 bb.add(make_gemm(tA, tB, atomic, calpha, a, b, cbeta, c, my_loc()));
             },
-            my_loc());
+            nullptr, my_loc());
 
         return f;
     };

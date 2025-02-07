@@ -445,6 +445,8 @@ void linalg_generator::operator()(gemm_inst &in) {
                                  });
             });
     } else {
+        auto no_unroll = get_dictionary_attr_with_sorted(
+            ctx, named_attr{get_string_attr(ctx, "unroll"), get_boolean_attr(ctx, false)});
         tile_loop_by_sgs(
             bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
             [&](region_builder &bb, value n_block, bool n_check, value) {
@@ -457,9 +459,9 @@ void linalg_generator::operator()(gemm_inst &in) {
                                          n_check, K_block_sizes, at->element_data_ty(),
                                          bt->element_data_ty(), ct->element_data_ty(), in.loc());
                     },
-                    1);
+                    no_unroll);
             },
-            1);
+            no_unroll);
     }
 
     bb_.add(std::move(parallel));

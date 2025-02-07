@@ -1277,6 +1277,13 @@ class inst : public unique_handle<tinytc_inst_t> {
         CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
         return result_list_size;
     }
+
+    /**
+     * @brief Set attribute
+     *
+     * @param a attribute
+     */
+    inline void set_attribute(attr a) { CHECK_STATUS(tinytc_inst_set_attribute(obj_, a)); }
 };
 
 ////////////////////////////
@@ -2435,12 +2442,14 @@ class region_builder {
      * @param to Loop variable bound
      * @param loop_var_ty Type of loop variable
      * @param f Functor
+     * @param attributes For attributes
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(data_type loop_var_ty, value from, value to, F &&f, location const &loc = {}) {
+    void for_loop(data_type loop_var_ty, value from, value to, F &&f, attr attributes = nullptr,
+                  location const &loc = {}) {
         for_loop<F>(std::move(loop_var_ty), std::move(from), std::move(to), nullptr,
-                    std::forward<F>(f), loc);
+                    std::forward<F>(f), attributes, loc);
     }
     /**
      * @brief Build for-loop with functor f(region_builder&, value) -> void
@@ -2453,12 +2462,14 @@ class region_builder {
      * @param to Loop variable bound
      * @param step Loop variable step
      * @param f Functor
+     * @param attributes For attributes
      * @param loc Source code location
      */
     template <typename F>
     void for_loop(data_type loop_var_ty, value from, value to, value step, F &&f,
-                  location const &loc = {}) {
+                  attr attributes = nullptr, location const &loc = {}) {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, {}, {}, loc);
+        fi.set_attribute(attributes);
         auto reg = region{};
         fi.get_regions(reg);
         auto loop_var = value{};
@@ -2484,14 +2495,17 @@ class region_builder {
      * @param initial_value_list Array of initial values; can be {}
      * @param return_type_list Array of return types; can be {}
      * @param f Functor
+     * @param attributes For attributes
      * @param loc Source code location
      */
     template <typename F>
     auto for_loop(data_type loop_var_ty, value from, value to, value step,
                   array_view<value> initial_value_list, array_view<data_type> return_type_list,
-                  F &&f, location const &loc = {}) -> std::vector<value> {
+                  F &&f, attr attributes = nullptr,
+                  location const &loc = {}) -> std::vector<value> {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, initial_value_list,
                                      return_type_list, loc);
+        fi.set_attribute(attributes);
         auto reg = region{};
         fi.get_regions(reg);
         auto num_params = reg.get_parameters({});

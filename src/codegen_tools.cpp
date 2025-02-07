@@ -22,7 +22,7 @@
 namespace tinytc {
 
 void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
-                      value sg_id, sgs_loop_body_builder const &body, std::int32_t unroll_factor) {
+                      value sg_id, sgs_loop_body_builder const &body, attr for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c_sgs = bb.add(make_constant(sgs, ity));
@@ -43,12 +43,10 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, sg_id_cast, ity));
         auto block_end =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, blocks, ity));
-        bb.for_loop(ity, std::move(block_start), std::move(block_end), c_sgs_tiles,
-                    [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
-        auto it = bb.get_insertion_point();
-        prev(it);
-
-        // CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+        bb.for_loop(
+            ity, std::move(block_start), std::move(block_end), c_sgs_tiles,
+            [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); },
+            for_attributes);
     });
 
     auto condition0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0, bool_ty));
@@ -64,8 +62,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
 }
 
 void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_size, int num_tiles,
-                         value sg_id, uniform_loop_body_builder const &body,
-                         std::int32_t unroll_factor) {
+                         value sg_id, uniform_loop_body_builder const &body, attr for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c0 = bb.add(make_constant(0, ity));
@@ -104,11 +101,9 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
         auto step_1 =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, c_tiles, ity));
-        bb.for_loop(ity, std::move(block_start_1), std::move(block_end_1), std::move(step_1),
-                    [&](region_builder &bb, value block) { body(bb, block, bs_1); });
-        auto it = bb.get_insertion_point();
-        prev(it);
-        // CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+        bb.for_loop(
+            ity, std::move(block_start_1), std::move(block_end_1), std::move(step_1),
+            [&](region_builder &bb, value block) { body(bb, block, bs_1); }, for_attributes);
     });
 
     auto tmp0 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, rem, c_tiles, ity));
@@ -118,11 +113,9 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     auto tmp3 = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, rem, ity));
     auto block_start = instant_constant_fold_add(bb, make_arith(arithmetic::add, tmp3, tmp2, ity));
     auto step = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, c_tiles, ity));
-    bb.for_loop(ity, std::move(block_start), loop_trip_count, std::move(step),
-                [&](region_builder &bb, value block) { body(bb, block, bs); });
-    auto it = bb.get_insertion_point();
-    prev(it);
-    // CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+    bb.for_loop(
+        ity, std::move(block_start), loop_trip_count, std::move(step),
+        [&](region_builder &bb, value block) { body(bb, block, bs); }, for_attributes);
 }
 
 auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,

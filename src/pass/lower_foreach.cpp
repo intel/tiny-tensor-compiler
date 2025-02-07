@@ -100,7 +100,7 @@ auto foreach_generator::operator()(foreach_inst &in) -> inst {
                     cloner.set_subs(&loop_vars[1], loop_var1.get());
                     cloner.clone_region(in.body(), *bb.get_region());
                 },
-                in.loc());
+                nullptr, in.loc());
         };
 
         auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), sg_id->ty(), in.loc()));

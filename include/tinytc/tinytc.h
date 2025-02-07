@@ -1105,6 +1105,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      uint32_t *result_list_size,
                                                      tinytc_value_t *result_list);
 
+/**
+ * @brief Set instruction attribute (typically a dictionary attribute)
+ *
+ * @param instr [inout] inst object
+ * @param attr [in] attribute object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_inst_set_attribute(tinytc_inst_t instr, tinytc_attr_t attr);
+
 ////////////////////////////
 ////////// Region //////////
 ////////////////////////////

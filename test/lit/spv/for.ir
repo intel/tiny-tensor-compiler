@@ -110,13 +110,10 @@ func @for4() {
   %lb = constant 0 : i16
   %ub = constant 10 : i16
   for %0:i16 = %lb,%ub {
-  }.unroll(1)
-  for %1:i16 = %lb,%ub {
-  }.unroll(2)
+  } { unroll = false }
   for %2:i16 = %lb,%ub {
-  }.unroll
+  } { unroll = true }
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:                               OpLoopMerge %[[#]] %[[#]] DontUnroll
-; CHECK:                               OpLoopMerge %[[#]] %[[#]] PartialCount 2
 ; CHECK:                               OpLoopMerge %[[#]] %[[#]] Unroll
 }

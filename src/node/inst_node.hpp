@@ -126,6 +126,9 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline auto attr() const noexcept -> tinytc_attr_t { return attr_; }
     inline void attr(tinytc_attr_t attr) noexcept { attr_ = attr; }
 
+    auto get_attr(tinytc_attr_t name) const -> tinytc_attr_t;
+    auto get_attr(std::string_view name) const -> tinytc_attr_t;
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
@@ -204,7 +207,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     tinytc::use *op_begin_ = nullptr, *op_end_ = nullptr;
     tinytc_value_t result_begin_ = nullptr, result_end_ = nullptr;
     tinytc_region_t child_regions_begin_ = nullptr, child_regions_end_ = nullptr;
-    tinytc_attr_t attr_;
+    tinytc_attr_t attr_ = nullptr;
 };
 
 namespace tinytc {
@@ -686,13 +689,9 @@ class for_inst : public loop_inst {
     }
     inline auto iter_init() { return operands() | std::views::drop(op_init()); }
     inline auto iter_init() const { return operands() | std::views::drop(op_init()); }
-    inline auto unroll_factor() const { return unroll_factor_; }
-    inline void unroll_factor(std::int32_t factor) { unroll_factor_ = factor; }
 
   private:
     inline auto op_init() const -> std::int64_t { return num_operands() - num_results(); }
-
-    std::int32_t unroll_factor_ = 0;
 };
 
 class foreach_inst : public loop_inst {

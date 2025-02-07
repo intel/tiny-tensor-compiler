@@ -62,18 +62,21 @@ auto dictionary_attr::get(tinytc_compiler_context_t ctx,
     return attrs.get(hash(), std::move(is_equal), std::move(make));
 }
 
+auto dictionary_attr::get_name_string(tinytc_attr_t name) -> std::string_view {
+    auto stra = dyn_cast<string_attr>(name);
+    if (stra) {
+        return stra->str();
+    }
+    throw status::ir_expected_string_attribute;
+}
+
 void dictionary_attr::sort(mutable_array_view<named_attr> unsorted_attrs) {
     if (unsorted_attrs.empty()) {
         return;
     }
     std::sort(unsorted_attrs.begin(), unsorted_attrs.end(),
               [](named_attr const &a, named_attr const &b) {
-                  auto aa = dyn_cast<string_attr>(a.name);
-                  auto ba = dyn_cast<string_attr>(b.name);
-                  if (!aa || !ba) {
-                      throw status::ir_expected_string_attribute;
-                  }
-                  return aa->str() < ba->str();
+                  return get_name_string(a.name) < get_name_string(b.name);
               });
     for (std::size_t i = 1; i < unsorted_attrs.size(); ++i) {
         if (unsorted_attrs[i - 1].name == unsorted_attrs[i].name) {
@@ -85,6 +88,30 @@ void dictionary_attr::sort(mutable_array_view<named_attr> unsorted_attrs) {
 dictionary_attr::dictionary_attr(tinytc_compiler_context_t ctx,
                                  std::vector<named_attr> sorted_attrs)
     : tinytc_attr(AK::dictionary, ctx), attrs_{std::move(sorted_attrs)} {}
+
+auto dictionary_attr::find(tinytc_attr_t name) -> tinytc_attr_t {
+    if (!attrs_.empty() && name) {
+        auto namestr = get_name_string(name);
+        std::size_t lb = 0;
+        std::size_t ub = attrs_.size();
+
+        do {
+            std::size_t mid = (lb + ub) / 2;
+            auto cmp = namestr.compare(get_name_string(attrs_[mid].name));
+            if (cmp == 0) {
+                return attrs_[mid].attr;
+            } else if (cmp < 0) {
+                ub = mid;
+            } else {
+                lb = mid + 1;
+            }
+        } while (ub > lb);
+    }
+    return nullptr;
+}
+auto dictionary_attr::find(std::string_view name) -> tinytc_attr_t {
+    return find(string_attr::get(context(), name));
+}
 
 auto integer_attr::get(tinytc_compiler_context_t ctx, std::int64_t value) -> tinytc_attr_t {
     const auto hash = fnv1a_combine(value);

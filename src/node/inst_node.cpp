@@ -3,6 +3,7 @@
 
 #include "node/inst_node.hpp"
 #include "error.hpp"
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
@@ -23,6 +24,19 @@ auto tinytc_inst::context() const -> tinytc_compiler_context_t {
         return result(0).context();
     } else if (num_operands() > 0) {
         return op(0).context();
+    }
+    return nullptr;
+}
+
+auto tinytc_inst::get_attr(tinytc_attr_t name) const -> tinytc_attr_t {
+    if (auto da = tinytc::dyn_cast<tinytc::dictionary_attr>(attr_); da) {
+        return da->find(name);
+    }
+    return nullptr;
+}
+auto tinytc_inst::get_attr(std::string_view name) const -> tinytc_attr_t {
+    if (auto da = tinytc::dyn_cast<tinytc::dictionary_attr>(attr_); da) {
+        return da->find(name);
     }
     return nullptr;
 }
