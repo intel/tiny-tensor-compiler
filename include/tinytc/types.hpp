@@ -112,6 +112,11 @@ enum class status {
     ir_init_return_type_mismatch = tinytc_status_ir_init_return_type_mismatch,
     ir_invalid_alignment = tinytc_status_ir_invalid_alignment,
     ir_value_still_has_uses = tinytc_status_ir_value_still_has_uses,
+    ir_expected_array_attribute = tinytc_status_ir_expected_array_attribute,
+    ir_expected_dictionary_attribute = tinytc_status_ir_expected_dictionary_attribute,
+    ir_expected_integer_attribute = tinytc_status_ir_expected_integer_attribute,
+    ir_expected_string_attribute = tinytc_status_ir_expected_string_attribute,
+    ir_duplicate_key_in_dictionary = tinytc_status_ir_duplicate_key_in_dictionary,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,
@@ -379,9 +384,7 @@ enum class bundle_format {
 };
 
 //! Flags for optimizer
-enum class optflag {
-    unsafe_fp_math = tinytc_optflag_unsafe_fp_math
-};
+enum class optflag { unsafe_fp_math = tinytc_optflag_unsafe_fp_math };
 
 //! Memory object type
 enum class mem_type {
@@ -404,6 +407,8 @@ enum class support_level {
 /////// Type aliases ///////
 ////////////////////////////
 
+//! @brief Alias for tinytc_named_attr in namespace tinytc
+using named_attr = ::tinytc_named_attr;
 //! @brief Alias for tinytc_position in namespace tinytc
 using position = ::tinytc_position;
 //! @brief Alias for tinytc_location in namespace tinytc

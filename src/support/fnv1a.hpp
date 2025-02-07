@@ -6,6 +6,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <string_view>
 #include <type_traits>
 
 namespace tinytc {
@@ -33,6 +34,10 @@ constexpr auto fnv1a_step(std::uint64_t hash, T const &data) -> std::uint64_t {
     char buf[sizeof(T)];
     std::memcpy(buf, &data, sizeof(T));
     return fnv1a_steps(hash, buf, sizeof(T));
+}
+
+constexpr auto fnv1a_step(std::uint64_t hash, std::string_view const &str) -> std::uint64_t {
+    return fnv1a_steps(hash, str.data(), str.size());
 }
 
 template <typename... T> constexpr auto fnv1a_combine(T const &...t) -> std::uint64_t {

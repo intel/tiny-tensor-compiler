@@ -101,11 +101,16 @@ typedef enum {
         0x133,                                 ///< Must have yield instruction in else branch
     tinytc_status_ir_from_to_mismatch = 0x134, ///< size(from) != size(to) in foreach
     tinytc_status_ir_operand_type_must_match_return_type =
-        0x135,                                          /// Operand type must match return type
-    tinytc_status_ir_invalid_stride = 0x136,            ///< Invalid stride
-    tinytc_status_ir_init_return_type_mismatch = 0x137, ///< Init return type mismatch
-    tinytc_status_ir_invalid_alignment = 0x138,         ///< Invalid alignment
-    tinytc_status_ir_value_still_has_uses = 0x139,      ///< Value still has uses
+        0x135,                                              /// Operand type must match return type
+    tinytc_status_ir_invalid_stride = 0x136,                ///< Invalid stride
+    tinytc_status_ir_init_return_type_mismatch = 0x137,     ///< Init return type mismatch
+    tinytc_status_ir_invalid_alignment = 0x138,             ///< Invalid alignment
+    tinytc_status_ir_value_still_has_uses = 0x139,          ///< Value still has uses
+    tinytc_status_ir_expected_array_attribute = 0x140,      ///< Expected array attribute
+    tinytc_status_ir_expected_dictionary_attribute = 0x141, ///< Expected dictionary attribute
+    tinytc_status_ir_expected_integer_attribute = 0x142,    ///< Expected integer attribute
+    tinytc_status_ir_expected_string_attribute = 0x143,     ///< Expected string attribute
+    tinytc_status_ir_duplicate_key_in_dictionary = 0x144,   ///< Duplicate key
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden
@@ -462,6 +467,14 @@ typedef enum {
 //! @brief Bool type {0,1}
 typedef uint8_t tinytc_bool_t;
 
+//! @struct tinytc_attr
+//! @brief Opaque struct for an attribute
+struct tinytc_attr; // IWYU pragma: export
+//! @brief data_type handle
+typedef struct tinytc_attr *tinytc_attr_t;
+//! @brief const data_type handle
+typedef const struct tinytc_attr *const_tinytc_attr_t;
+
 //! @struct tinytc_data_type
 //! @brief Opaque struct for a data type
 struct tinytc_data_type; // IWYU pragma: export
@@ -564,6 +577,12 @@ typedef const struct tinytc_recipe_handler *const_tinytc_recipe_handler_t;
 ////////////////////////////
 ////////// Structs /////////
 ////////////////////////////
+
+//! @brief Named attribute
+typedef struct tinytc_named_attr {
+    tinytc_attr_t name; ///< Name stored as string attribute
+    tinytc_attr_t attr; ///< Attribute
+} tinytc_named_attr_t;
 
 //! @brief Source code position
 typedef struct tinytc_position {

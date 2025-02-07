@@ -41,7 +41,7 @@ auto level_zero_test_runtime::create_buffer(std::size_t bytes) const -> mem_t {
     void *ptr;
     auto device_desc =
         ze_device_mem_alloc_desc_t{ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC, nullptr, 0, 0};
-    ZE_CHECK_STATUS(zeMemAllocDevice(ctx_, &device_desc, bytes, 64, dev_, &ptr));
+    ZE_CHECK_STATUS(zeMemAllocDevice(ctx_, &device_desc, bytes, 0, dev_, &ptr));
     return ptr;
 }
 void level_zero_test_runtime::free_buffer(mem_t buf) const {

@@ -856,6 +856,13 @@ inline auto make_compiler_context() -> compiler_context {
 }
 
 ////////////////////////////
+///////// Attribute ////////
+////////////////////////////
+
+//! Alias for tinytc_attr_t
+using attr = tinytc_attr_t;
+
+////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
 
@@ -1167,19 +1174,6 @@ class inst : public unique_handle<tinytc_inst_t> {
         tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
         CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
         return result_list_size;
-    }
-
-    /**
-     * @brief Set loop unroll factor
-     *
-     * Must only be applied to for-loops
-     *
-     * cf. \ref tinytc_inst_set_loop_unroll_factor
-     *
-     * @param unroll_factor Loop unroll factor
-     */
-    inline void set_loop_unroll_factor(std::int32_t unroll_factor) {
-        CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(obj_, unroll_factor));
     }
 };
 

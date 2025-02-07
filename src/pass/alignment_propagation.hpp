@@ -7,6 +7,8 @@
 #include "node/function_node.hpp"
 #include "tinytc/types.h"
 
+#include <cstdint>
+
 namespace tinytc {
 
 class alignment_propagation_pass {

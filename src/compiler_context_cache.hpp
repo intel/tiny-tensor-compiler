@@ -26,6 +26,30 @@ template <> class hash<std::pair<tinytc_data_type_t, std::int64_t>> {
 
 namespace tinytc {
 
+template <typename T> class unique_storage {
+  public:
+    ~unique_storage() {
+        for (auto &m : map_) {
+            delete m.second;
+        }
+    }
+
+    template <typename EqualFun, typename MakeFun>
+    auto get(std::uint64_t hash, EqualFun &&is_equal, MakeFun &&make) -> T {
+        auto range = map_.equal_range(hash);
+        for (auto it = range.first; it != range.second; ++it) {
+            if (is_equal(it->second)) {
+                return it->second;
+            }
+        }
+
+        return map_.emplace(hash, make())->second;
+    }
+
+  private:
+    std::unordered_multimap<std::uint64_t, T> map_;
+};
+
 class compiler_context_cache {
   public:
     compiler_context_cache(tinytc_compiler_context_t ctx);
@@ -36,9 +60,10 @@ class compiler_context_cache {
 
     std::unique_ptr<tinytc_data_type> void_ty, bool_ty;
     std::array<std::unique_ptr<tinytc_data_type>, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys;
-    std::unordered_multimap<std::uint64_t, tinytc_data_type_t> memref_tys;
-    std::unordered_multimap<std::uint64_t, tinytc_data_type_t> coopmatrix_tys;
-    std::unordered_map<std::pair<tinytc_data_type_t, std::int64_t>, tinytc_data_type_t> group_tys;
+    unique_storage<tinytc_data_type_t> coopmatrix_tys, group_tys, memref_tys;
+
+    unique_storage<tinytc_attr_t> array_attrs, dictionary_attrs, integer_attrs, string_attrs;
+    std::unique_ptr<tinytc_attr> false_attr, true_attr;
 };
 
 } // namespace tinytc

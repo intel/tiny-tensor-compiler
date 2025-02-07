@@ -15,7 +15,6 @@
 #include <array>
 #include <cstddef>
 #include <memory>
-#include <unordered_map>
 #include <utility>
 
 namespace tinytc {
@@ -24,29 +23,25 @@ auto boolean_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t
     return ctx->cache()->bool_ty.get();
 }
 
-auto coopmatrix_data_type::get(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols,
-                               matrix_use use, location const &lc) -> tinytc_data_type_t {
-    auto ctx = ty->context();
+auto coopmatrix_data_type::get(tinytc_data_type_t component_ty, std::int64_t rows,
+                               std::int64_t cols, matrix_use use,
+                               location const &lc) -> tinytc_data_type_t {
+    const auto hash = fnv1a_combine(component_ty, rows, cols, use);
+    const auto is_equal = [&](tinytc_data_type_t ty) {
+        const auto ct = dyn_cast<coopmatrix_data_type>(ty);
+        return ct && component_ty == ct->ty() && rows == ct->rows() && cols == ct->cols() &&
+               use == ct->use();
+    };
+    const auto make = [&]() { return new coopmatrix_data_type(component_ty, rows, cols, use, lc); };
 
-    auto key = coopmatrix_data_type_key(ty, rows, cols, use);
-    std::uint64_t map_key = key.hash();
-
-    auto &tys = ctx->cache()->coopmatrix_tys;
-    auto range = tys.equal_range(map_key);
-    for (auto it = range.first; it != range.second; ++it) {
-        if (key == *dyn_cast<coopmatrix_data_type>(it->second)) {
-            return it->second;
-        }
-    }
-    auto new_ct = std::unique_ptr<coopmatrix_data_type>(
-        new coopmatrix_data_type(ctx, key.ty, key.rows, key.cols, key.use, lc));
-    return tys.emplace(map_key, new_ct.release())->second;
+    auto &tys = component_ty->context()->cache()->coopmatrix_tys;
+    return tys.get(hash, is_equal, make);
 }
 
-coopmatrix_data_type::coopmatrix_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty,
-                                           std::int64_t rows0, std::int64_t cols0, matrix_use use,
-                                           location const &lc)
-    : data_type_node(DTK::coopmatrix, ctx), ty_(std::move(ty)), shape_{rows0, cols0}, use_(use) {
+coopmatrix_data_type::coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t rows0,
+                                           std::int64_t cols0, matrix_use use, location const &lc)
+    : data_type_node(DTK::coopmatrix, ty->context()), ty_(std::move(ty)), shape_{rows0, cols0},
+      use_(use) {
     if (!isa<scalar_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
     }
@@ -62,30 +57,21 @@ auto coopmatrix_data_type::component_ty() const -> scalar_type {
     return dyn_cast<scalar_data_type>(ty_)->ty();
 }
 
-auto coopmatrix_data_type_key::hash() -> std::uint64_t {
-    return fnv1a_combine(ty, rows, cols, use);
-}
-
-auto coopmatrix_data_type_key::operator==(coopmatrix_data_type const &ct) -> bool {
-    return ty == ct.ty() && rows == ct.rows() && cols == ct.cols() && use == ct.use();
-}
-
-auto group_data_type::get(tinytc_data_type_t ty, std::int64_t offset,
+auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t offset,
                           location const &lc) -> tinytc_data_type_t {
-    auto ctx = ty->context();
-    auto &value = ctx->cache()->group_tys[std::make_pair(ty, offset)];
+    const auto hash = fnv1a_combine(memref_ty, offset);
+    const auto is_equal = [&](tinytc_data_type_t ty) {
+        const auto gt = dyn_cast<group_data_type>(ty);
+        return gt && memref_ty == gt->ty() && offset == gt->offset();
+    };
+    const auto make = [&]() { return new group_data_type(memref_ty, offset, lc); };
 
-    if (value == nullptr) {
-        value =
-            std::unique_ptr<group_data_type>(new group_data_type(ctx, ty, offset, lc)).release();
-    }
-
-    return value;
+    auto &tys = memref_ty->context()->cache()->group_tys;
+    return tys.get(hash, std::move(is_equal), std::move(make));
 }
 
-group_data_type::group_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty,
-                                 std::int64_t offset, location const &lc)
-    : data_type_node(DTK::group, ctx), ty_(std::move(ty)), offset_(offset) {
+group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t offset, location const &lc)
+    : data_type_node(DTK::group, ty->context()), ty_(std::move(ty)), offset_(offset) {
     if (!isa<memref_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_memref);
     }
@@ -94,12 +80,11 @@ group_data_type::group_data_type(tinytc_compiler_context_t ctx, tinytc_data_type
     }
 }
 
-memref_data_type::memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t element_ty,
-                                   std::vector<std::int64_t> shape,
+memref_data_type::memref_data_type(tinytc_data_type_t element_ty, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, address_space addrspace,
                                    location const &lc)
-    : data_type_node(DTK::memref, ctx), element_ty_(element_ty), shape_(std::move(shape)),
-      stride_(std::move(stride)), addrspace_(addrspace) {
+    : data_type_node(DTK::memref, element_ty->context()), element_ty_(element_ty),
+      shape_(std::move(shape)), stride_(std::move(stride)), addrspace_(addrspace) {
     if (!isa<scalar_data_type>(*element_ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
     }
@@ -139,7 +124,6 @@ auto memref_data_type::size_in_bytes() const -> std::int64_t {
 auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
                            array_view<std::int64_t> stride, address_space addrspace,
                            location const &lc) -> tinytc_data_type_t {
-    auto ctx = element_ty->context();
 
     auto stride_buffer = std::vector<std::int64_t>{};
     if (stride.empty()) {
@@ -147,19 +131,22 @@ auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_
         stride = array_view<std::int64_t>{stride_buffer};
     }
 
-    auto key = memref_data_type_key(element_ty, shape, stride, addrspace);
-    std::uint64_t map_key = key.hash();
-
-    auto &tys = ctx->cache()->memref_tys;
-    auto range = tys.equal_range(map_key);
-    for (auto it = range.first; it != range.second; ++it) {
-        if (key == *dyn_cast<memref_data_type>(it->second)) {
-            return it->second;
+    const auto hash = fnv1a_combine(element_ty, shape, stride, addrspace);
+    const auto is_equal = [&](tinytc_data_type_t ty) {
+        const auto mt = dyn_cast<memref_data_type>(ty);
+        return mt && element_ty == mt->element_data_ty() && addrspace == mt->addrspace() &&
+               std::equal(shape.begin(), shape.end(), mt->shape().begin(), mt->shape().end()) &&
+               std::equal(stride.begin(), stride.end(), mt->stride().begin(), mt->stride().end());
+    };
+    const auto make = [&]() {
+        if (!stride_buffer.empty()) {
+            return new memref_data_type(element_ty, shape, std::move(stride_buffer), addrspace, lc);
         }
-    }
-    auto new_mt = std::unique_ptr<memref_data_type>(
-        new memref_data_type(ctx, key.element_ty, shape, stride, key.addrspace, lc));
-    return tys.emplace(map_key, new_mt.release())->second;
+        return new memref_data_type(element_ty, shape, stride, addrspace, lc);
+    };
+
+    auto &tys = element_ty->context()->cache()->memref_tys;
+    return tys.get(hash, std::move(is_equal), std::move(make));
 }
 
 auto memref_data_type::canonical_stride(array_view<std::int64_t> shape)
@@ -173,16 +160,6 @@ auto memref_data_type::canonical_stride(array_view<std::int64_t> shape)
         stride[i + 1] = stride[i] * shape[i];
     }
     return stride;
-}
-
-auto memref_data_type_key::hash() -> std::uint64_t {
-    return fnv1a_combine(element_ty, shape, stride, addrspace);
-}
-
-auto memref_data_type_key::operator==(memref_data_type const &mt) -> bool {
-    return element_ty == mt.element_data_ty() && addrspace == mt.addrspace() &&
-           std::equal(shape.begin(), shape.end(), mt.shape().begin(), mt.shape().end()) &&
-           std::equal(stride.begin(), stride.end(), mt.stride().begin(), mt.stride().end());
 }
 
 auto scalar_data_type::get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_data_type_t {

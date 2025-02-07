@@ -32,10 +32,14 @@ Builder C++-API:
     class:
       - tinytc::builder_error
     typedef:
-      - tinytc::position
+      - tinytc::named_attr
       - tinytc::location
+      - tinytc::position
     variable:
       - tinytc::dynamic
+  Attribute:
+    typedef:
+      - tinytc::attr
   Data Type:
     function:
       - tinytc::get_boolean

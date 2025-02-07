@@ -32,11 +32,14 @@ Builder C-API:
       - tinytc_transpose_to_string
       - tinytc_work_group_operation_to_string
     struct:
-      - tinytc_position
+      - tinytc_named_attr
       - tinytc_location
+      - tinytc_position
     typedef:
+      - tinytc_attr_t
       - tinytc_data_type_t
       - tinytc_func_t
+      - tinytc_named_attr_t
       - tinytc_location_t
       - tinytc_position_t
       - tinytc_prog_t
@@ -44,6 +47,7 @@ Builder C-API:
       - tinytc_inst_iterator_t
       - tinytc_region_t
       - tinytc_value_t
+      - const_tinytc_attr_t
       - const_tinytc_data_type_t
       - const_tinytc_func_t
       - const_tinytc_inst_t
@@ -106,7 +110,6 @@ Builder C-API:
       - tinytc_inst_get_regions
       - tinytc_inst_get_values
       - tinytc_inst_destroy
-      - tinytc_inst_set_loop_unroll_factor
   Program:
     function:
       - tinytc_prog_create

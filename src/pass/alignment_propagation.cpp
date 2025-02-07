@@ -21,6 +21,7 @@
 #include <cstdint>
 #include <functional>
 #include <ranges>
+#include <stdexcept>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -202,12 +203,12 @@ void alignment_propagation_pass::run_on_function(function_node &fn) {
         alignment_propagation_helper{gcd_analysis{}.run_on_function(fn), default_alignment_};
     for (std::int32_t arg_no = fn.num_params() - 1; arg_no >= 0; --arg_no) {
         auto const &ty = *fn.params()[arg_no].ty();
-        if (fn.align(arg_no) == 0 && (isa<memref_data_type>(ty) || isa<group_data_type>(ty))) {
-            fn.align(arg_no, default_alignment_);
+        if (fn.aligned(arg_no) == 0 && (isa<memref_data_type>(ty) || isa<group_data_type>(ty))) {
+            fn.aligned(arg_no, default_alignment_);
         }
     }
     for (std::int32_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
-        visitor.known_alignment(fn.params()[arg_no], fn.align(arg_no));
+        visitor.known_alignment(fn.params()[arg_no], fn.aligned(arg_no));
     }
 
     walk<walk_order::pre_order>(fn, [&visitor](inst_node &in) { visit(visitor, in); });

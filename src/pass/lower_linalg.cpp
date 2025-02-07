@@ -19,6 +19,7 @@
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
+#include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -135,7 +136,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                         });
         auto it = bb.get_insertion_point();
         prev(it);
-        CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, 1));
+        // CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, 1));
         return return_values;
     };
 

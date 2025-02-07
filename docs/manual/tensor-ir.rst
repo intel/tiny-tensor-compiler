@@ -88,6 +88,21 @@ The hexadecimal floating point syntax is supported, too.
 `strtod <https://en.cppreference.com/w/c/string/byte/strtof>`_ can be used for parsing floating
 point numbers.
 
+Attributes
+==========
+
+.. code:: abnf
+
+    attribute                   = boolean-attribute / integer-attribute / array-attribute / dictionary-attribute
+    boolean-attribute           = boolean-constant
+    integer-attribute           = integer-constant
+    array-attribute             = "[" [attribute *(", " attribute)] "]"
+    dictionary-attribute        = "{" [named-attribute *("," named-attribute)] "}"
+    named-attribute             = attribute-name "=" attribute
+    attribute-name              = "unroll"
+
+Attributes add information about an operation, for example to assert properties or to direct the compiler.
+
 .. _tensor language functions:
 
 Functions
@@ -97,8 +112,11 @@ Functions
 
     function-definition         = "func" global-identifier "(" [argument-list] ")" *function-attribute region
     argument-list               = argument *("," argument)
-    argument                    = local-identifier ":" type [align-attribute]
-    align-attribute             = "align" "(" 1*DIGIT ")"
+    argument                    = local-identifier ":" type *argument-attribute
+    argument-attribute          = aligned-attribute / divisible-attribute
+    aligned-attribute           = "aligned" "(" 1*DIGIT ")"
+    divisible-attribute         = "divisible" "(" integer-list [";" integer-list] ")"
+    integer-list                = 1*DIGIT *("," 1*DIGIT)
     function-attribute          = work-group-size-attribute / subgroup-size-attribute
     work-group-size-attribute   = "work_group_size" "(" 1*DIGIT "," 1*DIGIT ")"
     subgroup-size-attribute     = "subgroup_size" "(" 1*DIGIT ")"
@@ -122,18 +140,19 @@ is always a multiple of the subgroup size.
 The subgroup size attribute enforces a particular subgroup device supported by
 the device.
 
-Parameters might be decorated with attributes.
-The attributes are part of the function and not part of the parameter's type.
-The only supported parameter attribute is "align".
-Applied to a memref, "align" requires that the data a memref points to has the given minimum alignment
-(power-of-two, in bytes).
-Applied to a group, "align" requires that the each memref in the group has the given minimum alignment.
+Parameters can be decorated with attributes.
+When a parameter is decorated with an attribute, the user must ensure that the function argument
+satisfies the properties specified by the attribute definition.
+The "aligned" attribute specifies a minimum alignment of a memref's base pointer and the "divisible"
+attribute asserts the divisors of a dynamic tensor shape.
+The attribute specification w.r.t. parameter type is given in the
+documentation of the :ref:`memref type <memref attributes>` and the :ref:`group type <group attributes>`.
 
 Restrictions
 ------------
 
 * Arguments must not have coopmatrix type.
-* The "align" attribute must only be applied to parameters of memref or group type.
+* The "aligned" and "divisible" attributes must only be applied to parameters of memref or group type.
 
 Regions
 =======
@@ -293,6 +312,8 @@ Memory layout
 
     memory-layout               = strided-layout
 
+.. _strided layout:
+
 Strided layout
 ~~~~~~~~~~~~~~
 
@@ -322,6 +343,38 @@ The default packed dense layout is given by
 
 Stride modes might be dynamic as well, indicated by a question mark.
 
+.. _memref attributes:
+
+Aligned attribute
+.................
+
+The *aligned(X)* gives the alignment X of the memref's base pointer in bytes.
+That is, for the pointer P pointing to the first element of the memref we must have :math:`P = 0 \pmod{X}`.
+
+**Restriction:** The alignment must be a multiple of the size of the memref's element type.
+
+
+Divisible attribute
+...................
+
+The *divisible(d_1,...,d_k; D_1,...,D_m)* attribute asserts that :math:`s_i = 0 \pmod{d_i}, i=1,\dots,k`,
+where k is smaller or equal than the order of the tensor n.
+
+The divisibility information for the stride (D) can be omitted or partially given.
+Omitted divisibility is inferred from the divisibility of the shape, assuming the canonical stride computation.
+Formally, we define :math:`\hat{D}_0=1` and
+
+.. math::
+
+    j=1,\dots,n: \widehat{D}_j = \left\{\begin{array}{rcl}
+        D_{j} & \text{ if } & 1 \leq j \leq m, \\
+        \widehat{D}_{j-1}d_{j-1} & \text{ if } & m < j \leq k+1, \\
+        \widehat{D}_{j-1} & \text{ else.}
+    \end{array}\right.
+
+and assert that :math:`S_j = 0 \pmod{\widehat{D}_j}, j=1,\dots,n`.
+
+
 Group type
 ----------
 
@@ -341,6 +394,15 @@ The default offset is 0.
 Dynamic values ('?') may appear in the memref-type and in the offset.
 These values are stored in the dope vector;
 the calling convention for groups is implementation-defined.
+
+.. _group attributes:
+
+Attributes
+..........
+
+Attributes applied on a group type are passed through to the memrefs.
+That is, when a memref is loaded from the group then the :ref:`memref attributes <memref attributes>`
+are equal to the attributes of the group.
 
 Cooperative matrix type
 -----------------------
@@ -1050,12 +1112,11 @@ For
     multi-value-instruction = "for" local-identifier [":" integer-type] "="
                                     local-identifier "," local-identifier ["," local-identifier]
                               ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
-                              [for-attributes]
+                              [dictionary-attribute]
     init-value-list         = init-value *("," init-value)
     init-value              = local-identifier "=" local-identifier
     return-type-list        = return-type *("," return-type)
     return-type             = boolean-type / scalar-type / coopmatrix-type
-    for-attributes          = ".unroll" ["(" integer-constant ")"]
 
 
 Overview
@@ -1082,11 +1143,6 @@ When loop-carried values are present, the loop's last instruction must be a yiel
 updates the loop-carried values for the next iteration.
 The number and types of the yielded values must correspond the scalar-type-list.
 
-Optionally, a loop-unrolling hint can be supplied to the compiler with an optional loop-unrolling factor.
-The unrolling factor must lie in the range :math:`0,\dots,2^{31}-1`.
-(Setting the unroll count to 1 makes the request to not unroll the loop and omitting the factor is a 
-request to fully unroll the loop.)
-
 Returns
 ~~~~~~~
 
@@ -1106,6 +1162,20 @@ Example:
            yield (%fn_1, %fn)
        }
        ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
+
+Attributes
+~~~~~~~~~~
+
+The following named attributes may be passed in the attribute dictionary:
+
+.. list-table::
+
+    * - Name
+      - Type
+      - Description
+    * - unroll-factor
+      - integer-attribute
+      - An integer factor hinting the desired loop unrolling.
 
 Fuse
 ....

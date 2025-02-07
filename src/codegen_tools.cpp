@@ -13,6 +13,7 @@
 #include "support/casting.hpp"
 #include "support/ilist_base.hpp"
 #include "support/visit.hpp"
+#include "tinytc/tinytc.h"
 #include "tinytc/types.h"
 
 #include <type_traits>
@@ -47,7 +48,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
                     [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); });
         auto it = bb.get_insertion_point();
         prev(it);
-        CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+        //CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
     });
 
     auto condition0 = instant_constant_fold_add(bb, make_cmp(cmp_condition::gt, rem, c0, bool_ty));
@@ -107,7 +108,7 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
                     [&](region_builder &bb, value block) { body(bb, block, bs_1); });
         auto it = bb.get_insertion_point();
         prev(it);
-        CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+        //CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
     });
 
     auto tmp0 = instant_constant_fold_add(bb, make_arith(arithmetic::rem, rem, c_tiles, ity));
@@ -121,7 +122,7 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
                 [&](region_builder &bb, value block) { body(bb, block, bs); });
     auto it = bb.get_insertion_point();
     prev(it);
-    CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
+    //CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, unroll_factor));
 }
 
 auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
@@ -147,8 +148,8 @@ auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arith
     return bb.add(
         make_arith(operation, a, b, scalar_data_type::get(at->context(), result_ty), loc));
 }
-auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
-    -> value {
+auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
+                                      location const &loc) -> value {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     if (at == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);

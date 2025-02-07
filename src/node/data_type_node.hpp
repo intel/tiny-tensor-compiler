@@ -73,22 +73,13 @@ class coopmatrix_data_type : public data_type_node {
     }
 
   protected:
-    coopmatrix_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t rows,
-                         std::int64_t cols, matrix_use use, location const &lc = {});
+    coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols,
+                         matrix_use use, location const &lc = {});
 
   private:
     tinytc_data_type_t ty_;
     std::array<std::int64_t, 2u> shape_;
     matrix_use use_;
-};
-
-struct coopmatrix_data_type_key {
-    tinytc_data_type_t ty;
-    std::int64_t rows, cols;
-    matrix_use use;
-
-    auto hash() -> std::uint64_t;
-    auto operator==(coopmatrix_data_type const &ct) -> bool;
 };
 
 class group_data_type : public data_type_node {
@@ -101,8 +92,7 @@ class group_data_type : public data_type_node {
     inline auto offset() const -> std::int64_t { return offset_; }
 
   protected:
-    group_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t ty, std::int64_t offset = 0,
-                    location const &lc = {});
+    group_data_type(tinytc_data_type_t memref_ty, std::int64_t offset = 0, location const &lc = {});
 
   private:
     tinytc_data_type_t ty_;
@@ -141,22 +131,13 @@ class memref_data_type : public data_type_node {
     auto size_in_bytes() const -> std::int64_t;
 
   protected:
-    memref_data_type(tinytc_compiler_context_t ctx, tinytc_data_type_t element_ty,
-                     std::vector<std::int64_t> shape, std::vector<std::int64_t> stride,
+    memref_data_type(tinytc_data_type_t element_ty, std::vector<std::int64_t> shape,
+                     std::vector<std::int64_t> stride,
                      address_space addrspace = address_space::global, location const &lc = {});
 
     tinytc_data_type_t element_ty_;
     std::vector<std::int64_t> shape_, stride_;
     address_space addrspace_ = address_space::global;
-};
-
-struct memref_data_type_key {
-    tinytc_data_type_t element_ty;
-    array_view<std::int64_t> shape, stride;
-    address_space addrspace;
-
-    auto hash() -> std::uint64_t;
-    auto operator==(memref_data_type const &mt) -> bool;
 };
 
 class scalar_data_type : public data_type_node {

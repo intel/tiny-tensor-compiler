@@ -87,6 +87,8 @@ lex:
         // keywords
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
         "align"             { adv_loc(); return parser::make_ALIGN(loc_); }
+        "aligned"           { adv_loc(); return parser::make_ALIGNED(loc_); }
+        "divisible"         { adv_loc(); return parser::make_DIVISIBLE(loc_); }
         "work_group_size"   { adv_loc(); return parser::make_WORK_GROUP_SIZE(loc_); }
         "subgroup_size"     { adv_loc(); return parser::make_SUBGROUP_SIZE(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }
@@ -101,7 +103,6 @@ lex:
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
         ".local"            { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
         ".global"           { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
-        ".unroll"           { adv_loc(); return parser::make_UNROLL_ATTR(loc_); }
 
         // constants
         "true"              { adv_loc(); return parser::make_BOOLEAN_CONSTANT(true, loc_); }
@@ -115,6 +116,13 @@ lex:
             adv_loc();
             auto f = lex_floating_constant(b, YYCURSOR);
             return parser::make_FLOATING_CONSTANT(f, loc_);
+        }
+
+        // attibutes
+        "unroll" {
+            adv_loc();
+            auto name = std::string(b, YYCURSOR);
+            return parser::make_ATTR_NAME(std::move(name), loc_);
         }
 
         // types

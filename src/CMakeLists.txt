@@ -37,6 +37,7 @@ set(SOURCES
     inst.cpp
     location.cpp
     matrix_ext_info.cpp
+    node/attr_node.cpp
     node/data_type_node.cpp
     node/function_node.cpp
     node/inst_node.cpp

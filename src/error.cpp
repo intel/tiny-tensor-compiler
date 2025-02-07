@@ -254,6 +254,16 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Invalid alignment, must be a positive power of two";
     case tinytc_status_ir_value_still_has_uses:
         return "A value shall be erased that still has uses";
+    case tinytc_status_ir_expected_array_attribute:
+        return "Expected array attribute";
+    case tinytc_status_ir_expected_dictionary_attribute:
+        return "Expected dictionary attribute";
+    case tinytc_status_ir_expected_integer_attribute:
+        return "Expected integer attribute";
+    case tinytc_status_ir_expected_string_attribute:
+        return "Expected string attribute";
+    case tinytc_status_ir_duplicate_key_in_dictionary:
+        return "Duplicate key detected in list of named attributes passed to dictionary";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

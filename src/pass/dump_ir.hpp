@@ -4,6 +4,7 @@
 #ifndef DUMP_IR_20230330_HPP
 #define DUMP_IR_20230330_HPP
 
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
@@ -20,6 +21,13 @@ namespace tinytc {
 class dump_ir_pass {
   public:
     dump_ir_pass(std::ostream &os, int level_limit = std::numeric_limits<int>::max());
+
+    /* Attribute nodes */
+    void operator()(array_attr const &a);
+    void operator()(boolean_attr const &a);
+    void operator()(dictionary_attr const &a);
+    void operator()(integer_attr const &a);
+    void operator()(string_attr const &a);
 
     /* Data type nodes */
     void operator()(void_data_type const &);

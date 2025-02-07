@@ -17,7 +17,7 @@ tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t
     body_.set_params(std::move(params));
 }
 
-void tinytc_func::align(std::int32_t arg_no, std::int32_t alignment) {
+void tinytc_func::aligned(std::int32_t arg_no, std::int32_t alignment) {
     if (arg_no < 0 || arg_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
@@ -26,7 +26,7 @@ void tinytc_func::align(std::int32_t arg_no, std::int32_t alignment) {
     }
     align_[arg_no] = alignment;
 }
-auto tinytc_func::align(std::int32_t arg_no) const -> std::int32_t {
+auto tinytc_func::aligned(std::int32_t arg_no) const -> std::int32_t {
     if (arg_no < 0 || arg_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }

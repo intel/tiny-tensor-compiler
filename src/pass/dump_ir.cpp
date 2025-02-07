@@ -21,6 +21,25 @@ namespace tinytc {
 
 dump_ir_pass::dump_ir_pass(std::ostream &os, int level_limit) : os_(&os), lvl_limit_(level_limit) {}
 
+/* Attribute nodes */
+void dump_ir_pass::operator()(array_attr const &a) {
+    *os_ << "[";
+    do_with_infix(a.begin(), a.end(), [&](auto const &a) { visit(*this, *a); });
+    *os_ << "]";
+}
+void dump_ir_pass::operator()(boolean_attr const &a) { *os_ << (a.value() ? "true" : "false"); }
+void dump_ir_pass::operator()(dictionary_attr const &a) {
+    *os_ << "{";
+    do_with_infix(a.begin(), a.end(), [&](auto const &a) {
+        visit(*this, *a.name);
+        *os_ << " = ";
+        visit(*this, *a.attr);
+    });
+    *os_ << "}";
+}
+void dump_ir_pass::operator()(integer_attr const &a) { *os_ << a.value(); }
+void dump_ir_pass::operator()(string_attr const &a) { *os_ << a.str(); }
+
 /* Data type nodes */
 void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
 void dump_ir_pass::operator()(boolean_data_type const &) { *os_ << "bool"; }
@@ -357,11 +376,9 @@ void dump_ir_pass::operator()(for_inst const &in) {
     }
     *os_ << " ";
     dump_region(in.body());
-    if (in.unroll_factor() != 0) {
-        *os_ << ".unroll";
-        if (in.unroll_factor() != std::numeric_limits<std::int32_t>::max()) {
-            *os_ << "(" << in.unroll_factor() << ")";
-        }
+    if (in.attr()) {
+        *os_ << " ";
+        visit(*this, *in.attr());
     }
 }
 
@@ -530,9 +547,9 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
             dump_val(a);
             *os_ << ": ";
             visit(*this, *a.ty());
-            const auto align = fn.align(arg_no);
-            if (align > 0) {
-                *os_ << " align(" << align << ")";
+            const auto aligned = fn.aligned(arg_no);
+            if (aligned > 0) {
+                *os_ << " aligned(" << aligned << ")";
             }
         },
         infix);

@@ -1,0 +1,121 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef ATTR_NODE_20250205_HPP
+#define ATTR_NODE_20250205_HPP
+
+#include "support/type_list.hpp"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <vector>
+
+namespace tinytc {
+enum class AK { array, boolean, dictionary, integer, string };
+using attr_nodes = type_list<class array_attr, class boolean_attr, class dictionary_attr,
+                             class integer_attr, class string_attr>;
+} // namespace tinytc
+
+struct tinytc_attr {
+  public:
+    using leaves = tinytc::attr_nodes;
+
+    inline tinytc_attr(tinytc::AK tid, tinytc_compiler_context_t ctx) : tid_(tid), ctx_(ctx) {}
+    virtual ~tinytc_attr() = default;
+    inline auto type_id() const -> tinytc::AK { return tid_; }
+    inline auto context() const -> tinytc_compiler_context_t { return ctx_; }
+
+  private:
+    tinytc::AK tid_;
+    tinytc_compiler_context_t ctx_;
+};
+
+namespace tinytc {
+
+class array_attr : public tinytc_attr {
+  public:
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::array; }
+    static auto get(tinytc_compiler_context_t ctx,
+                    array_view<tinytc_attr_t> values) -> tinytc_attr_t;
+
+    inline auto begin() const -> std::vector<tinytc_attr_t>::const_iterator {
+        return values_.begin();
+    }
+    inline auto end() const -> std::vector<tinytc_attr_t>::const_iterator { return values_.end(); }
+    inline auto size() const { return values_.size(); }
+    inline auto const &values() const { return values_; }
+    inline auto value(std::size_t i) const -> tinytc_attr_t { return values_[i]; }
+
+  protected:
+    array_attr(tinytc_compiler_context_t ctx, std::vector<tinytc_attr_t> values);
+
+  private:
+    std::vector<tinytc_attr_t> values_;
+};
+
+class boolean_attr : public tinytc_attr {
+  public:
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::boolean; }
+    static auto get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr_t;
+
+    inline auto value() const { return value_; }
+
+  protected:
+    boolean_attr(tinytc_compiler_context_t ctx, bool value);
+    friend class compiler_context_cache;
+
+  private:
+    bool value_;
+};
+
+class dictionary_attr : public tinytc_attr {
+  public:
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::dictionary; }
+    static auto get(tinytc_compiler_context_t ctx,
+                    array_view<named_attr> sorted_attrs) -> tinytc_attr_t;
+    static void sort(mutable_array_view<named_attr> unsorted_attrs);
+
+    inline auto begin() const -> std::vector<named_attr>::const_iterator { return attrs_.begin(); }
+    inline auto end() const -> std::vector<named_attr>::const_iterator { return attrs_.end(); }
+    inline auto const &attrs() const { return attrs_; }
+
+  protected:
+    dictionary_attr(tinytc_compiler_context_t ctx, std::vector<named_attr> sorted_attrs);
+
+  private:
+    std::vector<named_attr> attrs_;
+};
+
+class integer_attr : public tinytc_attr {
+  public:
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::integer; }
+    static auto get(tinytc_compiler_context_t ctx, std::int64_t value) -> tinytc_attr_t;
+
+    inline auto value() const -> std::int64_t { return value_; }
+
+  protected:
+    integer_attr(tinytc_compiler_context_t ctx, std::int64_t value);
+
+  private:
+    std::int64_t value_;
+};
+
+class string_attr : public tinytc_attr {
+  public:
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::string; }
+    static auto get(tinytc_compiler_context_t ctx, std::string_view str) -> tinytc_attr_t;
+
+    inline auto str() const -> std::string_view { return str_; }
+
+  protected:
+    string_attr(tinytc_compiler_context_t ctx, std::string str);
+
+  private:
+    std::string str_;
+};
+
+} // namespace tinytc
+
+#endif // ATTR_NODE_20250205_HPP

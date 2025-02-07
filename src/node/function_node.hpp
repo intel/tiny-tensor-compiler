@@ -37,8 +37,8 @@ struct tinytc_func final {
     inline auto subgroup_size() const -> std::int32_t { return subgroup_size_; }
     inline void subgroup_size(std::int32_t subgroup_size) { subgroup_size_ = subgroup_size; }
 
-    void align(std::int32_t arg_no, std::int32_t alignment);
-    auto align(std::int32_t arg_no) const -> std::int32_t;
+    void aligned(std::int32_t arg_no, std::int32_t alignment);
+    auto aligned(std::int32_t arg_no) const -> std::int32_t;
 
   private:
     std::string name_;

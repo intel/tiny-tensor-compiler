@@ -37,6 +37,7 @@
 %code {
     #include "compiler_context.hpp"
     #include "error.hpp"
+    #include "node/attr_node.hpp"
     #include "node/program_node.hpp"
     #include "node/region_node.hpp"
     #include "node/value_node.hpp"
@@ -100,6 +101,8 @@
     RSQBR           "]"
     FUNC            "func"
     ALIGN           "align"
+    ALIGNED         "aligned"
+    DIVISIBLE       "divisible"
     WORK_GROUP_SIZE "work_group_size"
     SUBGROUP_SIZE   "subgroup_size"
     ARROW           "->"
@@ -114,7 +117,6 @@
     GLOBAL          "global"
     LOCAL_ATTR      ".local"
     GLOBAL_ATTR     ".global"
-    UNROLL_ATTR     ".unroll"
     BOOLEAN         "bool"
     COOPMATRIX      "coopmatrix"
     MEMREF          "memref"
@@ -155,6 +157,7 @@
 ;
 %token <identifier> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
+%token <std::string> ATTR_NAME
 %token <bool> BOOLEAN_CONSTANT
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
@@ -174,8 +177,15 @@
 %nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_data_type_t>>> parameters
 %nterm <std::pair<param_attrs,tinytc_data_type_t>> parameter
 %nterm <std::int32_t> optional_parameter_align
-%nterm <std::vector<std::function<void(function_node&)>>> attributes
-%nterm <std::function<void(function_node&)>> attribute
+%nterm <std::vector<std::function<void(function_node&)>>> function_attributes
+%nterm <std::function<void(function_node&)>> function_attribute
+%nterm <tinytc_attr_t> attribute
+%nterm <tinytc_attr_t> array_attribute
+%nterm <std::vector<tinytc_attr_t>> attribute_list
+%nterm <tinytc_attr_t> dictionary_attribute
+%nterm <std::vector<named_attr>> named_attribute_list
+%nterm <named_attr> named_attribute
+%nterm <tinytc_attr_t> optional_dictionary_attribute
 %nterm <tinytc_data_type_t> data_type
 %nterm <tinytc_data_type_t> boolean_type
 %nterm <tinytc_data_type_t> scalar_type
@@ -206,8 +216,6 @@
 %nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
 %nterm <std::pair<identifier, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
-%nterm <std::int32_t> optional_unroll
-%nterm <std::int32_t> optional_unroll_factor
 %nterm <inst> foreach_inst
 %nterm <inst> hadamard_inst
 %nterm <inst> if_inst
@@ -268,14 +276,14 @@ func_list:
   | func_list func { $$ = std::move($1); $$.emplace_back(std::move($func)); }
 
 func:
-    FUNC GLOBAL_IDENTIFIER LPAREN parameters RPAREN attributes <func>{
+    FUNC GLOBAL_IDENTIFIER LPAREN parameters RPAREN function_attributes <func>{
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
         try {
             ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
             auto func_node =
                 std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second, loc);
-            for (auto &attr : $attributes) {
+            for (auto &attr : $function_attributes) {
                 attr(*func_node);
             }
             ctx.push_scope();
@@ -283,7 +291,7 @@ func:
             for (auto &p : func_node->params()) {
                 ctx.val(name_it->id, p, name_it->loc);
                 if (name_it->align != 0) {
-                    func_node->align(name_it - $parameters.first.begin(), name_it->align);
+                    func_node->aligned(name_it - $parameters.first.begin(), name_it->align);
                 }
                 ++name_it;
             }
@@ -325,12 +333,12 @@ optional_parameter_align:
   | ALIGN LPAREN INTEGER_CONSTANT RPAREN { $$ = $INTEGER_CONSTANT; }
 ;
 
-attributes:
+function_attributes:
     %empty {}
-  | attributes attribute { $$ = std::move($1); $$.emplace_back(std::move($attribute)); }
+  | function_attributes function_attribute { $$ = std::move($1); $$.emplace_back(std::move($function_attribute)); }
 ;
 
-attribute:
+function_attribute:
     WORK_GROUP_SIZE LPAREN INTEGER_CONSTANT[m] COMMA INTEGER_CONSTANT[n] RPAREN {
         if ($m <= 0) {
             throw parser::syntax_error(@m, "Must be a non-negative number");
@@ -349,6 +357,47 @@ attribute:
         auto const sgs = static_cast<std::int32_t>($INTEGER_CONSTANT);
         $$ = [=](function_node &f) { f.subgroup_size(sgs); };
     }
+;
+
+attribute:
+    BOOLEAN_CONSTANT { $$ = boolean_attr::get(ctx.cctx().get(), $BOOLEAN_CONSTANT); }
+  | INTEGER_CONSTANT { $$ = integer_attr::get(ctx.cctx().get(), $INTEGER_CONSTANT); }
+  | array_attribute { $$ = $array_attribute; }
+  | dictionary_attribute { $$ = $dictionary_attribute; }
+;
+
+array_attribute:
+    LSQBR RSQBR { $$ = array_attr::get(ctx.cctx().get(), {}); }
+  | LSQBR attribute_list RSQBR { $$ = array_attr::get(ctx.cctx().get(), $attribute_list); }
+
+attribute_list:
+    attribute { $$.push_back($attribute); }
+  | attribute_list COMMA attribute { $$ = std::move($1); $$.push_back($attribute); }
+;
+
+dictionary_attribute:
+    LBRACE RBRACE { $$ = dictionary_attr::get(ctx.cctx().get(), {}); }
+  | LBRACE named_attribute_list RBRACE {
+        dictionary_attr::sort($named_attribute_list);
+        $$ = dictionary_attr::get(ctx.cctx().get(), $named_attribute_list);
+    }
+;
+
+named_attribute_list:
+    named_attribute { $$.push_back($named_attribute); }
+  | named_attribute_list COMMA named_attribute { $$ = std::move($1); $$.push_back($named_attribute); }
+;
+
+named_attribute:
+    ATTR_NAME EQUALS attribute {
+        auto name = string_attr::get(ctx.cctx().get(), $ATTR_NAME);
+        $$ = named_attr{name, $attribute};
+    }
+;
+
+optional_dictionary_attribute:
+    %empty { $$ = nullptr; }
+  | dictionary_attribute { $$ = $dictionary_attribute; }
 ;
 
 
@@ -608,10 +657,10 @@ for_inst:
             report_error(ctx.cctx(), e);
             YYERROR;
         }
-    }[loop_header] region optional_unroll {
+    }[loop_header] region optional_dictionary_attribute {
         ctx.pop_region();
         ctx.pop_scope();
-        static_cast<for_inst*>($loop_header.get())->unroll_factor($optional_unroll);
+        $loop_header->attr($optional_dictionary_attribute);
         $$ = std::move($loop_header);
     }
 ;
@@ -643,24 +692,6 @@ init_value_list:
 
 init_value:
     LOCAL_IDENTIFIER EQUALS var { $$ = std::make_pair($LOCAL_IDENTIFIER, $var); }
-;
-
-optional_unroll:
-    %empty { $$ = 0; }
-  | UNROLL_ATTR optional_unroll_factor { $$ = $optional_unroll_factor; }
-;
-
-optional_unroll_factor:
-    %empty { $$ = std::numeric_limits<std::int32_t>::max(); }
-  | LPAREN INTEGER_CONSTANT RPAREN {
-        if ($INTEGER_CONSTANT < 0) {
-            throw syntax_error(@INTEGER_CONSTANT, "Unroll factor must be nonnegative");
-        }
-        if ($INTEGER_CONSTANT < 0 || $INTEGER_CONSTANT > std::numeric_limits<std::int32_t>::max()) {
-            throw syntax_error(@INTEGER_CONSTANT, "Unroll factor is too large");
-        }
-        $$ = static_cast<std::int32_t>($INTEGER_CONSTANT);
-  }
 ;
 
 foreach_inst:

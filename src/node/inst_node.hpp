@@ -123,6 +123,9 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     auto context() const -> tinytc_compiler_context_t;
     inline auto type_id() const -> tinytc::IK { return tid_; }
 
+    inline auto attr() const noexcept -> tinytc_attr_t { return attr_; }
+    inline void attr(tinytc_attr_t attr) noexcept { attr_ = attr; }
+
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
@@ -201,6 +204,7 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     tinytc::use *op_begin_ = nullptr, *op_end_ = nullptr;
     tinytc_value_t result_begin_ = nullptr, result_end_ = nullptr;
     tinytc_region_t child_regions_begin_ = nullptr, child_regions_end_ = nullptr;
+    tinytc_attr_t attr_;
 };
 
 namespace tinytc {
