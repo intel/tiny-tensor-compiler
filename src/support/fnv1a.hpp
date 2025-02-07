@@ -21,13 +21,6 @@ constexpr auto fnv1a_steps(std::uint64_t hash, char const *s, std::size_t len) -
     }
     return hash;
 }
-constexpr auto fnv1a(char const *s, std::size_t len) -> std::uint64_t {
-    return fnv1a_steps(fnv1a0(), s, len);
-}
-constexpr auto operator""_fnv1a(char const *s, std::size_t len) -> std::uint64_t {
-    return fnv1a_steps(fnv1a0(), s, len);
-}
-
 template <typename T>
 requires(std::is_trivial_v<T>)
 constexpr auto fnv1a_step(std::uint64_t hash, T const &data) -> std::uint64_t {
@@ -43,6 +36,14 @@ constexpr auto fnv1a_step(std::uint64_t hash, std::string_view const &str) -> st
 template <typename... T> constexpr auto fnv1a_combine(T const &...t) -> std::uint64_t {
     auto impl = [hash = fnv1a0()](auto const &ti) mutable { return hash = fnv1a_step(hash, ti); };
     return (..., impl(t));
+}
+
+constexpr auto fnv1a(char const *s, std::size_t len) -> std::uint64_t {
+    return fnv1a_steps(fnv1a0(), s, len);
+}
+constexpr auto fnv1a(std::string_view s) -> std::uint64_t { return fnv1a_step(fnv1a0(), s); }
+constexpr auto operator""_fnv1a(char const *s, std::size_t len) -> std::uint64_t {
+    return fnv1a_steps(fnv1a0(), s, len);
 }
 
 } // namespace tinytc

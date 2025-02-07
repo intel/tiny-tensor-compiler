@@ -94,9 +94,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                             get_group(C_ty, 0, my_loc())},
                            my_loc());
         if (alignment > 0) {
-            f.set_alignment(0, alignment);
-            f.set_alignment(1, alignment);
-            f.set_alignment(2, alignment);
+            auto align_attr = get_dictionary_attr_with_sorted(
+                ctx, named_attr{get_string_attr(ctx, "align"), get_integer_attr(ctx, alignment)});
+            f.set_parameter_attr(0, align_attr);
+            f.set_parameter_attr(1, align_attr);
+            f.set_parameter_attr(2, align_attr);
         }
         auto fn_body = f.get_body();
         auto params = std::array<value, 3u>{};

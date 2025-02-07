@@ -1283,7 +1283,7 @@ class inst : public unique_handle<tinytc_inst_t> {
      *
      * @param a attribute
      */
-    inline void set_attribute(attr a) { CHECK_STATUS(tinytc_inst_set_attribute(obj_, a)); }
+    inline void set_attr(attr a) { CHECK_STATUS(tinytc_inst_set_attr(obj_, a)); }
 };
 
 ////////////////////////////
@@ -2225,8 +2225,8 @@ class func : public unique_handle<tinytc_func_t> {
         return region{body};
     }
 
-    void set_alignment(std::int32_t arg_no, std::int32_t alignment) {
-        CHECK_STATUS(tinytc_func_set_alignment(obj_, arg_no, alignment));
+    void set_parameter_attr(std::int32_t arg_no, attr a) {
+        CHECK_STATUS(tinytc_func_set_parameter_attr(obj_, arg_no, a));
     }
 };
 
@@ -2469,7 +2469,7 @@ class region_builder {
     void for_loop(data_type loop_var_ty, value from, value to, value step, F &&f,
                   attr attributes = nullptr, location const &loc = {}) {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, {}, {}, loc);
-        fi.set_attribute(attributes);
+        fi.set_attr(attributes);
         auto reg = region{};
         fi.get_regions(reg);
         auto loop_var = value{};
@@ -2505,7 +2505,7 @@ class region_builder {
                   location const &loc = {}) -> std::vector<value> {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, initial_value_list,
                                      return_type_list, loc);
-        fi.set_attribute(attributes);
+        fi.set_attr(attributes);
         auto reg = region{};
         fi.get_regions(reg);
         auto num_params = reg.get_parameters({});

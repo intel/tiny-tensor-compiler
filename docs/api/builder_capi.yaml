@@ -75,7 +75,7 @@ Builder C-API:
       - tinytc_func_create
       - tinytc_func_destroy
       - tinytc_func_get_body
-      - tinytc_func_set_alignment
+      - tinytc_func_set_parameter_attr
       - tinytc_func_set_subgroup_size
       - tinytc_func_set_work_group_size
   Instruction:
@@ -119,7 +119,7 @@ Builder C-API:
       - tinytc_inst_get_regions
       - tinytc_inst_get_values
       - tinytc_inst_destroy
-      - tinytc_inst_set_attribute
+      - tinytc_inst_set_attr
   Program:
     function:
       - tinytc_prog_create

@@ -29,7 +29,7 @@
         struct param_attrs {
             identifier id;
             location loc;
-            std::int32_t align;
+            attr dict;
         };
     }
 }
@@ -100,8 +100,6 @@
     RSQBR           "]"
     FUNC            "func"
     ALIGN           "align"
-    ALIGNED         "aligned"
-    DIVISIBLE       "divisible"
     WORK_GROUP_SIZE "work_group_size"
     SUBGROUP_SIZE   "subgroup_size"
     ARROW           "->"
@@ -153,6 +151,7 @@
 %token <identifier> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
 %token <std::string> ATTR_NAME
+%token <std::string> STRING
 %token <bool> BOOLEAN_CONSTANT
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
@@ -171,7 +170,6 @@
 %nterm <func> func
 %nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_data_type_t>>> parameters
 %nterm <std::pair<param_attrs,tinytc_data_type_t>> parameter
-%nterm <std::int32_t> optional_parameter_align
 %nterm <std::vector<std::function<void(function_node&)>>> function_attributes
 %nterm <std::function<void(function_node&)>> function_attribute
 %nterm <tinytc_attr_t> attribute
@@ -180,6 +178,7 @@
 %nterm <tinytc_attr_t> dictionary_attribute
 %nterm <std::vector<named_attr>> named_attribute_list
 %nterm <named_attr> named_attribute
+%nterm <tinytc_attr_t> attribute_name
 %nterm <tinytc_attr_t> optional_dictionary_attribute
 %nterm <tinytc_data_type_t> data_type
 %nterm <tinytc_data_type_t> boolean_type
@@ -285,8 +284,8 @@ func:
             auto name_it = $parameters.first.begin();
             for (auto &p : func_node->params()) {
                 ctx.val(name_it->id, p, name_it->loc);
-                if (name_it->align != 0) {
-                    func_node->aligned(name_it - $parameters.first.begin(), name_it->align);
+                if (name_it->dict != 0) {
+                    func_node->param_attr(name_it - $parameters.first.begin(), name_it->dict);
                 }
                 ++name_it;
             }
@@ -318,14 +317,9 @@ parameters:
 ;
 
 parameter:
-    LOCAL_IDENTIFIER COLON data_type optional_parameter_align[align] {
-        $$ = std::make_pair(param_attrs{$LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER, $align}, $data_type);
+    LOCAL_IDENTIFIER COLON data_type optional_dictionary_attribute[dict] {
+        $$ = std::make_pair(param_attrs{$LOCAL_IDENTIFIER, @LOCAL_IDENTIFIER, $dict}, $data_type);
     }
-;
-
-optional_parameter_align:
-    %empty { $$ = 0; }
-  | ALIGN LPAREN INTEGER_CONSTANT RPAREN { $$ = $INTEGER_CONSTANT; }
 ;
 
 function_attributes:
@@ -355,10 +349,11 @@ function_attribute:
 ;
 
 attribute:
-    BOOLEAN_CONSTANT { $$ = boolean_attr::get(ctx.cctx().get(), $BOOLEAN_CONSTANT); }
-  | INTEGER_CONSTANT { $$ = integer_attr::get(ctx.cctx().get(), $INTEGER_CONSTANT); }
-  | array_attribute { $$ = $array_attribute; }
+    array_attribute { $$ = $array_attribute; }
+  | BOOLEAN_CONSTANT { $$ = boolean_attr::get(ctx.cctx().get(), $BOOLEAN_CONSTANT); }
   | dictionary_attribute { $$ = $dictionary_attribute; }
+  | INTEGER_CONSTANT { $$ = integer_attr::get(ctx.cctx().get(), $INTEGER_CONSTANT); }
+  | STRING { $$ = string_attr::get(ctx.cctx().get(), $STRING); }
 ;
 
 array_attribute:
@@ -384,11 +379,15 @@ named_attribute_list:
 ;
 
 named_attribute:
-    ATTR_NAME EQUALS attribute {
-        auto name = string_attr::get(ctx.cctx().get(), $ATTR_NAME);
-        $$ = named_attr{name, $attribute};
+    attribute_name EQUALS attribute {
+        $$ = named_attr{$attribute_name, $attribute};
     }
 ;
+
+attribute_name:
+    ALIGN  { $$ = string_attr::get(ctx.cctx().get(), "align"); }
+  | ATTR_NAME { $$ = string_attr::get(ctx.cctx().get(), $ATTR_NAME); }
+  | STRING { $$ = string_attr::get(ctx.cctx().get(), $STRING); }
 
 optional_dictionary_attribute:
     %empty { $$ = nullptr; }

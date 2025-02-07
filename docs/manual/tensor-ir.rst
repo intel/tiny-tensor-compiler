@@ -93,13 +93,20 @@ Attributes
 
 .. code:: abnf
 
-    attribute                   = boolean-attribute / integer-attribute / array-attribute / dictionary-attribute
-    boolean-attribute           = boolean-constant
-    integer-attribute           = integer-constant
+    attribute                   = array-attribute /
+                                  boolean-attribute /
+                                  dictionary-attribute /
+                                  integer-attribute /
+                                  string-attribute
     array-attribute             = "[" [attribute *(", " attribute)] "]"
+    boolean-attribute           = boolean-constant
     dictionary-attribute        = "{" [named-attribute *("," named-attribute)] "}"
     named-attribute             = attribute-name "=" attribute
-    attribute-name              = "unroll"
+    attribute-name              = "align" /
+                                  "unroll" /
+                                  string-attribute
+    integer-attribute           = integer-constant
+    string-attribute            = %x22 *(%x20-21 / %x23-7E) %x22
 
 Attributes add information about an operation, for example to assert properties or to direct the compiler.
 
@@ -456,7 +463,7 @@ Instructions may return zero, one, or multiple values, and follow the following 
 
 That is, on the left-hand side we have list of values that are produced by the instruction followed by an equals sign,
 or an empty string, if the instruction does not produce values.
-On the right-hand side, after the equals sign or empty string, the name of the instruction is written, e.g. "arith", optionally followed by instruction modifiers, e.g. "arith.add".
+On the right-hand side, after the equals sign or empty string, the name of the instruction is written, e.g. "ger", optionally followed by instruction modifiers, e.g. "ger.atomic".
 Then, a list of operands follows that is usually comma-seperated but might also be printed in a custom format
 (e.g. for "load", "store", "subview", etc.).
 If the instruction produces values, then the types of the returned values must be annotated after a colon.
@@ -1183,9 +1190,9 @@ The following named attributes may be passed in the attribute dictionary:
     * - Name
       - Type
       - Description
-    * - unroll-factor
-      - integer-attribute
-      - An integer factor hinting the desired loop unrolling.
+    * - unroll
+      - boolean-attribute
+      - true: request to unroll loop, false: request to not unroll loop
 
 Fuse
 ....

@@ -28,19 +28,6 @@ auto tinytc_inst::context() const -> tinytc_compiler_context_t {
     return nullptr;
 }
 
-auto tinytc_inst::get_attr(tinytc_attr_t name) const -> tinytc_attr_t {
-    if (auto da = tinytc::dyn_cast<tinytc::dictionary_attr>(attr_); da) {
-        return da->find(name);
-    }
-    return nullptr;
-}
-auto tinytc_inst::get_attr(std::string_view name) const -> tinytc_attr_t {
-    if (auto da = tinytc::dyn_cast<tinytc::dictionary_attr>(attr_); da) {
-        return da->find(name);
-    }
-    return nullptr;
-}
-
 void tinytc_inst::subs(tinytc_value_t old_value, tinytc_value_t new_value, bool recursive) {
     for (auto op = op_begin_; op != op_end_; ++op) {
         if (op->get() == old_value) {

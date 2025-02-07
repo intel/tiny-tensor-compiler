@@ -39,7 +39,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                       std::int32_t m_block_size, std::int32_t num_m_blocks, bool m_check,
                       value n_block, std::int32_t n_block_size, std::int32_t num_n_blocks,
                       bool n_check, array_view<std::int32_t> K_block_sizes, data_type a_ty,
-                      data_type b_ty, data_type c_ty, location const &loc) {
+                      data_type b_ty, data_type c_ty, attr for_attributes, location const &loc) {
     auto ctx = m_block->context();
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
@@ -124,18 +124,15 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                                std::vector<tinytc_data_type_t> const &c_acc_tys,
                                bool check_k = false) -> std::vector<value> {
         auto c_step = bb.add(make_constant(k_block_size, index_ty, loc));
-        auto return_values =
-            bb.for_loop(index_ty, K0, K1, c_step, c_acc, c_acc_tys,
-                        [&](region_builder &bb, array_view<value> p) {
-                            const auto k = p[0];
-                            auto c_acc_iter = array_view<value>(p.begin() + 1, p.end());
-                            auto c_next =
-                                compute_c_step(bb, k_block_size, k, c_acc_iter, c_acc_tys, check_k);
-                            bb.add(make_yield(c_next, loc));
-                        });
-        auto it = bb.get_insertion_point();
-        prev(it);
-        // CHECK_STATUS(tinytc_inst_set_loop_unroll_factor(it, 1));
+        auto return_values = bb.for_loop(
+            index_ty, K0, K1, c_step, c_acc, c_acc_tys,
+            [&](region_builder &bb, array_view<value> p) {
+                const auto k = p[0];
+                auto c_acc_iter = array_view<value>(p.begin() + 1, p.end());
+                auto c_next = compute_c_step(bb, k_block_size, k, c_acc_iter, c_acc_tys, check_k);
+                bb.add(make_yield(c_next, loc));
+            },
+            for_attributes);
         return return_values;
     };
 
@@ -436,12 +433,13 @@ void linalg_generator::operator()(gemm_inst &in) {
                 }
                 tile_loop_by_sgs(bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
                                  [&](region_builder &bb, value m_block, bool m_check, value) {
-                                     gemm_microkernel(
-                                         bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
-                                         &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
-                                         num_blocks0, m_check, n_block, *const_trip_count,
-                                         num_blocks1, false, K_block_sizes, at->element_data_ty(),
-                                         bt->element_data_ty(), ct->element_data_ty(), in.loc());
+                                     gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
+                                                      &in.alpha(), &in.A(), &in.B(), &in.beta(),
+                                                      &in.C(), K, m_block, block_size0, num_blocks0,
+                                                      m_check, n_block, *const_trip_count,
+                                                      num_blocks1, false, K_block_sizes,
+                                                      at->element_data_ty(), bt->element_data_ty(),
+                                                      ct->element_data_ty(), nullptr, in.loc());
                                  });
             });
     } else {
@@ -457,7 +455,8 @@ void linalg_generator::operator()(gemm_inst &in) {
                                          &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
                                          num_blocks0, m_check, n_block, block_size1, num_blocks1,
                                          n_check, K_block_sizes, at->element_data_ty(),
-                                         bt->element_data_ty(), ct->element_data_ty(), in.loc());
+                                         bt->element_data_ty(), ct->element_data_ty(), no_unroll,
+                                         in.loc());
                     },
                     no_unroll);
             },

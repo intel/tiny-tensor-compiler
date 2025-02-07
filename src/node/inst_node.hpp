@@ -126,9 +126,6 @@ struct tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> 
     inline auto attr() const noexcept -> tinytc_attr_t { return attr_; }
     inline void attr(tinytc_attr_t attr) noexcept { attr_ = attr; }
 
-    auto get_attr(tinytc_attr_t name) const -> tinytc_attr_t;
-    auto get_attr(std::string_view name) const -> tinytc_attr_t;
-
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 

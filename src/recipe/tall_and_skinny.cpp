@@ -168,15 +168,18 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto B_ty = get_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc());
                 auto C_ty = get_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
-                if (alignA > 0) {
-                    f.set_alignment(1, alignA);
+
+                auto alignments = std::array<std::pair<std::int32_t, std::int32_t>, 3u>{
+                    {{1, alignA}, {2, alignB}, {4, alignC}}};
+                auto align_attr = named_attr{get_string_attr(ctx_, "align"), nullptr};
+                for (auto &[param_no, alignment] : alignments) {
+                    if (alignment > 0) {
+                        align_attr.attr = get_integer_attr(ctx_, alignment);
+                        f.set_parameter_attr(param_no,
+                                             get_dictionary_attr_with_sorted(ctx_, align_attr));
+                    }
                 }
-                if (alignB > 0) {
-                    f.set_alignment(2, alignB);
-                }
-                if (alignC > 0) {
-                    f.set_alignment(4, alignC);
-                }
+
                 auto fn_body = f.get_body();
                 auto params = std::array<value, 5u>{};
                 fn_body.get_parameters(params);

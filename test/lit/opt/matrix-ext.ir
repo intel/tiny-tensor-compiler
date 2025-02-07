@@ -46,9 +46,9 @@ func @if(%A: memref<f16x64x64>) subgroup_size(16) {
 ; CHECK: matrix_ext(%6) = 0
 }
 
-func @for1(%A: memref<f16x32x16> aligned(64),
-          %B: memref<f16x32x8> aligned(64),
-          %C: memref<f32x32x8> aligned(64)) subgroup_size(16) {
+func @for1(%A: memref<f16x32x16> {align=64},
+          %B: memref<f16x32x8> {align=64},
+          %C: memref<f32x32x8> {align=64}) subgroup_size(16) {
     %z = constant 0 : index
     %0 = constant 0x0p+0 : coopmatrix<f32x16x8,matrix_acc>
     %1 = constant 0 : index
@@ -70,9 +70,9 @@ func @for1(%A: memref<f16x32x16> aligned(64),
 ; CHECK: matrix_ext(%9) = 1
 }
 
-func @for2(%A: memref<f16x16x16> aligned(64),
-          %B: memref<f16x16x8> aligned(64),
-          %C: memref<f32x16x8> aligned(64)) subgroup_size(16) {
+func @for2(%A: memref<f16x16x16> {align=64},
+          %B: memref<f16x16x8> {align=64},
+          %C: memref<f32x16x8> {align=64}) subgroup_size(16) {
     %z = constant 0 : index
     %0 = constant 0x0p+0 : coopmatrix<f32x16x8,matrix_acc>
     %1 = constant 0 : index

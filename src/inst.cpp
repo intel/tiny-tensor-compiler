@@ -764,10 +764,10 @@ tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_li
     });
 }
 
-tinytc_status_t tinytc_inst_set_attribute(tinytc_inst_t instr, tinytc_attr_t attr) {
+tinytc_status_t tinytc_inst_set_attr(tinytc_inst_t instr, tinytc_attr_t a) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
-    return exception_to_status_code([&] { instr->attr(attr); });
+    return exception_to_status_code([&] { instr->attr(a); });
 }
 }

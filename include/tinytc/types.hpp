@@ -113,6 +113,7 @@ enum class status {
     ir_invalid_alignment = tinytc_status_ir_invalid_alignment,
     ir_value_still_has_uses = tinytc_status_ir_value_still_has_uses,
     ir_expected_array_attribute = tinytc_status_ir_expected_array_attribute,
+    ir_expected_boolean_attribute = tinytc_status_ir_expected_boolean_attribute,
     ir_expected_dictionary_attribute = tinytc_status_ir_expected_dictionary_attribute,
     ir_expected_integer_attribute = tinytc_status_ir_expected_integer_attribute,
     ir_expected_string_attribute = tinytc_status_ir_expected_string_attribute,

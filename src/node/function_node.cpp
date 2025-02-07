@@ -17,22 +17,22 @@ tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t
     body_.set_params(std::move(params));
 }
 
-void tinytc_func::aligned(std::int32_t arg_no, std::int32_t alignment) {
-    if (arg_no < 0 || arg_no >= num_params()) {
+void tinytc_func::param_attr(std::int32_t param_no, tinytc_attr_t a) {
+    if (param_no < 0 || param_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
-    if (static_cast<std::int64_t>(align_.size()) != num_params()) {
-        align_.resize(num_params(), 0);
+    if (static_cast<std::int64_t>(param_attr_.size()) != num_params()) {
+        param_attr_.resize(num_params(), nullptr);
     }
-    align_[arg_no] = alignment;
+    param_attr_[param_no] = a;
 }
-auto tinytc_func::aligned(std::int32_t arg_no) const -> std::int32_t {
-    if (arg_no < 0 || arg_no >= num_params()) {
+auto tinytc_func::param_attr(std::int32_t param_no) const -> tinytc_attr_t {
+    if (param_no < 0 || param_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
-    if (align_.empty()) {
-        return 0;
+    if (param_attr_.empty()) {
+        return nullptr;
     }
-    return align_[arg_no];
+    return param_attr_[param_no];
 }
 

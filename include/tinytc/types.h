@@ -107,10 +107,11 @@ typedef enum {
     tinytc_status_ir_invalid_alignment = 0x138,             ///< Invalid alignment
     tinytc_status_ir_value_still_has_uses = 0x139,          ///< Value still has uses
     tinytc_status_ir_expected_array_attribute = 0x140,      ///< Expected array attribute
-    tinytc_status_ir_expected_dictionary_attribute = 0x141, ///< Expected dictionary attribute
-    tinytc_status_ir_expected_integer_attribute = 0x142,    ///< Expected integer attribute
-    tinytc_status_ir_expected_string_attribute = 0x143,     ///< Expected string attribute
-    tinytc_status_ir_duplicate_key_in_dictionary = 0x144,   ///< Duplicate key
+    tinytc_status_ir_expected_boolean_attribute = 0x141,    ///< Expected boolean attribute
+    tinytc_status_ir_expected_dictionary_attribute = 0x142, ///< Expected dictionary attribute
+    tinytc_status_ir_expected_integer_attribute = 0x143,    ///< Expected integer attribute
+    tinytc_status_ir_expected_string_attribute = 0x144,     ///< Expected string attribute
+    tinytc_status_ir_duplicate_key_in_dictionary = 0x145,   ///< Duplicate key
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

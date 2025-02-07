@@ -1157,13 +1157,13 @@ void inst_converter::operator()(for_inst const &in) {
 
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
     auto loop_control = [&]() -> LoopControl {
-        auto unroll = in.get_attr("unroll");
+        auto unroll = get_attr(in.attr(), "unroll");
         if (unroll) {
             auto ba = dyn_cast<boolean_attr>(unroll);
             if (ba) {
                 return ba->value() ? LoopControl::Unroll : LoopControl::DontUnroll;
             }
-            throw status::ir_expected_boolean;
+            throw status::ir_expected_boolean_attribute;
         }
         return LoopControl::None;
     }();

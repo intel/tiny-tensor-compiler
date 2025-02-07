@@ -256,6 +256,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "A value shall be erased that still has uses";
     case tinytc_status_ir_expected_array_attribute:
         return "Expected array attribute";
+    case tinytc_status_ir_expected_boolean_attribute:
+        return "Expected boolean attribute";
     case tinytc_status_ir_expected_dictionary_attribute:
         return "Expected dictionary attribute";
     case tinytc_status_ir_expected_integer_attribute:

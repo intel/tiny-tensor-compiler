@@ -6,6 +6,7 @@
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
@@ -201,14 +202,18 @@ alignment_propagation_pass::alignment_propagation_pass(const_tinytc_core_info_t 
 void alignment_propagation_pass::run_on_function(function_node &fn) {
     auto visitor =
         alignment_propagation_helper{gcd_analysis{}.run_on_function(fn), default_alignment_};
-    for (std::int32_t arg_no = fn.num_params() - 1; arg_no >= 0; --arg_no) {
-        auto const &ty = *fn.params()[arg_no].ty();
-        if (fn.aligned(arg_no) == 0 && (isa<memref_data_type>(ty) || isa<group_data_type>(ty))) {
-            fn.aligned(arg_no, default_alignment_);
+    auto known_alignment = [&](std::int32_t arg_no) -> std::uint32_t {
+        if (auto align = get_attr(fn.param_attr(arg_no), "align"); align) {
+            auto ia = dyn_cast<integer_attr>(align);
+            if (ia) {
+                return ia->value();
+            }
+            throw status::ir_expected_integer_attribute;
         }
-    }
+        return default_alignment_;
+    };
     for (std::int32_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
-        visitor.known_alignment(fn.params()[arg_no], fn.aligned(arg_no));
+        visitor.known_alignment(fn.params()[arg_no], known_alignment(arg_no));
     }
 
     walk<walk_order::pre_order>(fn, [&visitor](inst_node &in) { visit(visitor, in); });

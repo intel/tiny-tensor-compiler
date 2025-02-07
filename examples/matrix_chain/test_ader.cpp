@@ -76,11 +76,6 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
 
         auto f = make_func("ader_kernel", param_types);
-        if (alignment_ > 0) {
-            for (std::int32_t i = 1; i < 2 * (static_cast<std::int32_t>(dim) + 1); ++i) {
-                f.set_alignment(1 + i, static_cast<std::int32_t>(alignment_));
-            }
-        }
         auto fn_body = f.get_body();
 
         std::array<value, 2 * dim + 3> params;

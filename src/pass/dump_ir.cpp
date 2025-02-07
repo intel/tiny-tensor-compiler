@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
+#include "support/fnv1a.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
@@ -29,16 +30,39 @@ void dump_ir_pass::operator()(array_attr const &a) {
 }
 void dump_ir_pass::operator()(boolean_attr const &a) { *os_ << (a.value() ? "true" : "false"); }
 void dump_ir_pass::operator()(dictionary_attr const &a) {
+    auto const is_keyword = [](std::string_view str) {
+        switch (fnv1a(str)) {
+        case "align"_fnv1a:
+        case "unroll"_fnv1a:
+            return true;
+        default:
+            return false;
+        }
+    };
+    auto const dump_name = [&](attr a) {
+        if (auto s = dyn_cast<string_attr>(a); s) {
+            if (is_keyword(s->str())) {
+                *os_ << s->str();
+            } else {
+                this->operator()(*s);
+            }
+        } else {
+            throw status::ir_expected_string_attribute;
+        }
+    };
     *os_ << "{";
-    do_with_infix(a.begin(), a.end(), [&](auto const &a) {
-        visit(*this, *a.name);
-        *os_ << " = ";
-        visit(*this, *a.attr);
-    });
+    do_with_infix(
+        a.begin(), a.end(),
+        [&](auto const &a) {
+            dump_name(a.name);
+            *os_ << "=";
+            visit(*this, *a.attr);
+        },
+        ", ");
     *os_ << "}";
 }
 void dump_ir_pass::operator()(integer_attr const &a) { *os_ << a.value(); }
-void dump_ir_pass::operator()(string_attr const &a) { *os_ << a.str(); }
+void dump_ir_pass::operator()(string_attr const &a) { *os_ << "\"" << a.str() << "\""; }
 
 /* Data type nodes */
 void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
@@ -547,9 +571,9 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
             dump_val(a);
             *os_ << ": ";
             visit(*this, *a.ty());
-            const auto aligned = fn.aligned(arg_no);
-            if (aligned > 0) {
-                *os_ << " aligned(" << aligned << ")";
+            if (auto pa = fn.param_attr(arg_no); pa) {
+                *os_ << " ";
+                visit(*this, *pa);
             }
         },
         infix);

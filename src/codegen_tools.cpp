@@ -4,6 +4,7 @@
 #include "codegen_tools.hpp"
 #include "compiler_context.hpp"
 #include "error.hpp"
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
@@ -274,6 +275,19 @@ auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst cons
         throw compilation_error(loc, status::ir_must_have_yield);
     }
     return y;
+}
+
+auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t {
+    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
+        return da->find(name);
+    }
+    return nullptr;
+}
+auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t {
+    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
+        return da->find(name);
+    }
+    return nullptr;
 }
 
 auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag {

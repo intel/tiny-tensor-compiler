@@ -1106,14 +1106,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
                                                      tinytc_value_t *result_list);
 
 /**
- * @brief Set instruction attribute (typically a dictionary attribute)
+ * @brief Set instruction attributes
  *
  * @param instr [inout] inst object
- * @param attr [in] attribute object
+ * @param a [in] attribute object (dictionary attribute)
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_set_attribute(tinytc_inst_t instr, tinytc_attr_t attr);
+TINYTC_EXPORT tinytc_status_t tinytc_inst_set_attr(tinytc_inst_t instr, tinytc_attr_t a);
 
 ////////////////////////////
 ////////// Region //////////
@@ -1280,16 +1280,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_set_subgroup_size(tinytc_func_t fun, i
 TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_region_t *body);
 
 /**
- * @brief Set alignment of parameter (can only be applied to memref)
+ * @brief Set parameter attributes
  *
  * @param fun [in] function object
- * @param arg_no [in] argument number (0 to num_arguments-1)
- * @param alignment [in] alignment in bytes (must be a power of two)
+ * @param param_no [in] paramater number (0 to num_parameters-1)
+ * @param a [in] attribute dictionary
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_func_set_alignment(tinytc_func_t fun, int32_t arg_no,
-                                                        int32_t alignment);
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, int32_t param_no,
+                                                             tinytc_attr_t a);
 
 /**
  * @brief Delete function object

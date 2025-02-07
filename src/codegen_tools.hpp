@@ -51,6 +51,8 @@ auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const *;
 auto get_memref_type(tinytc_value const &v) -> memref_data_type const *;
 auto get_scalar_type(tinytc_value const &v) -> scalar_type;
 auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst const *;
+auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t;
+auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t;
 
 template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::int64_t> {
     auto result = std::vector<std::int64_t>{};
