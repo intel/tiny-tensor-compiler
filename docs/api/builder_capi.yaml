@@ -54,6 +54,15 @@ Builder C-API:
       - const_tinytc_prog_t
       - const_tinytc_region_t
       - const_tinytc_value_t
+  Attribute:
+    function:
+      - tinytc_array_attr_get
+      - tinytc_boolean_attr_get
+      - tinytc_dictionary_attr_get
+      - tinytc_dictionary_attr_get_with_sorted
+      - tinytc_dictionary_attr_sort
+      - tinytc_integer_attr_get
+      - tinytc_string_attr_get
   Data Type:
     function:
       - tinytc_boolean_type_get

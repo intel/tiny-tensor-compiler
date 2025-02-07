@@ -19,7 +19,6 @@
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
-#include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"

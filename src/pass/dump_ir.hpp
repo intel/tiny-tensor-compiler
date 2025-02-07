@@ -4,7 +4,7 @@
 #ifndef DUMP_IR_20230330_HPP
 #define DUMP_IR_20230330_HPP
 
-#include "node/attr_node.hpp"
+#include "node/attr_node.hpp" // IWYU pragma: keep
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"

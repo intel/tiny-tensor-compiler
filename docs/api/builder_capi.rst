@@ -70,15 +70,21 @@ Common
 
 * Structures
 
-  * :ref:`tinytc_position`
+  * :ref:`tinytc_named_attr`
 
   * :ref:`tinytc_location`
 
+  * :ref:`tinytc_position`
+
 * Typedefs
+
+  * :ref:`tinytc_attr_t`
 
   * :ref:`tinytc_data_type_t`
 
   * :ref:`tinytc_func_t`
+
+  * :ref:`tinytc_named_attr_t`
 
   * :ref:`tinytc_location_t`
 
@@ -93,6 +99,8 @@ Common
   * :ref:`tinytc_region_t`
 
   * :ref:`tinytc_value_t`
+
+  * :ref:`const_tinytc_attr_t`
 
   * :ref:`const_tinytc_data_type_t`
 
@@ -300,12 +308,12 @@ tinytc_work_group_operation_to_string
 Common Structures
 -----------------
 
-.. _tinytc_position:
+.. _tinytc_named_attr:
 
-tinytc_position
-...............
+tinytc_named_attr
+.................
 
-.. doxygenstruct:: tinytc_position
+.. doxygenstruct:: tinytc_named_attr
 
 .. _tinytc_location:
 
@@ -314,8 +322,22 @@ tinytc_location
 
 .. doxygenstruct:: tinytc_location
 
+.. _tinytc_position:
+
+tinytc_position
+...............
+
+.. doxygenstruct:: tinytc_position
+
 Common Typedefs
 ---------------
+
+.. _tinytc_attr_t:
+
+tinytc_attr_t
+.............
+
+.. doxygentypedef:: tinytc_attr_t
 
 .. _tinytc_data_type_t:
 
@@ -330,6 +352,13 @@ tinytc_func_t
 .............
 
 .. doxygentypedef:: tinytc_func_t
+
+.. _tinytc_named_attr_t:
+
+tinytc_named_attr_t
+...................
+
+.. doxygentypedef:: tinytc_named_attr_t
 
 .. _tinytc_location_t:
 
@@ -380,6 +409,13 @@ tinytc_value_t
 
 .. doxygentypedef:: tinytc_value_t
 
+.. _const_tinytc_attr_t:
+
+const_tinytc_attr_t
+...................
+
+.. doxygentypedef:: const_tinytc_attr_t
+
 .. _const_tinytc_data_type_t:
 
 const_tinytc_data_type_t
@@ -421,6 +457,77 @@ const_tinytc_value_t
 ....................
 
 .. doxygentypedef:: const_tinytc_value_t
+
+Attribute
+=========
+
+* Functions
+
+  * :ref:`tinytc_array_attr_get`
+
+  * :ref:`tinytc_boolean_attr_get`
+
+  * :ref:`tinytc_dictionary_attr_get`
+
+  * :ref:`tinytc_dictionary_attr_get_with_sorted`
+
+  * :ref:`tinytc_dictionary_attr_sort`
+
+  * :ref:`tinytc_integer_attr_get`
+
+  * :ref:`tinytc_string_attr_get`
+
+Attribute Functions
+-------------------
+
+.. _tinytc_array_attr_get:
+
+tinytc_array_attr_get
+.....................
+
+.. doxygenfunction:: tinytc_array_attr_get
+
+.. _tinytc_boolean_attr_get:
+
+tinytc_boolean_attr_get
+.......................
+
+.. doxygenfunction:: tinytc_boolean_attr_get
+
+.. _tinytc_dictionary_attr_get:
+
+tinytc_dictionary_attr_get
+..........................
+
+.. doxygenfunction:: tinytc_dictionary_attr_get
+
+.. _tinytc_dictionary_attr_get_with_sorted:
+
+tinytc_dictionary_attr_get_with_sorted
+......................................
+
+.. doxygenfunction:: tinytc_dictionary_attr_get_with_sorted
+
+.. _tinytc_dictionary_attr_sort:
+
+tinytc_dictionary_attr_sort
+...........................
+
+.. doxygenfunction:: tinytc_dictionary_attr_sort
+
+.. _tinytc_integer_attr_get:
+
+tinytc_integer_attr_get
+.......................
+
+.. doxygenfunction:: tinytc_integer_attr_get
+
+.. _tinytc_string_attr_get:
+
+tinytc_string_attr_get
+......................
+
+.. doxygenfunction:: tinytc_string_attr_get
 
 Data Type
 =========
@@ -619,8 +726,6 @@ Instruction
   * :ref:`tinytc_inst_get_values`
 
   * :ref:`tinytc_inst_destroy`
-
-  * :ref:`tinytc_inst_set_loop_unroll_factor`
 
 Instruction Functions
 ---------------------
@@ -897,13 +1002,6 @@ tinytc_inst_destroy
 ...................
 
 .. doxygenfunction:: tinytc_inst_destroy
-
-.. _tinytc_inst_set_loop_unroll_factor:
-
-tinytc_inst_set_loop_unroll_factor
-..................................
-
-.. doxygenfunction:: tinytc_inst_set_loop_unroll_factor
 
 Program
 =======

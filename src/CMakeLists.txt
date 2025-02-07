@@ -23,6 +23,7 @@ set(SOURCES
     analysis/equal.cpp
     analysis/matrix_ext.cpp
     analysis/stack.cpp
+    attribute.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp

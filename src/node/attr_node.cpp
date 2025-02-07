@@ -9,6 +9,7 @@
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 
 #include <algorithm>
+#include <memory>
 #include <utility>
 
 namespace tinytc {

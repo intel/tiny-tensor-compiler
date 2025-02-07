@@ -32,14 +32,22 @@ Builder C++-API:
     class:
       - tinytc::builder_error
     typedef:
-      - tinytc::named_attr
       - tinytc::location
       - tinytc::position
     variable:
       - tinytc::dynamic
   Attribute:
+    function:
+      - get_array_attr
+      - get_boolean_attr
+      - get_dictionary_attr
+      - get_dictionary_attr_with_sorted
+      - get_integer_attr
+      - get_string_attr
+      - sort_items
     typedef:
       - tinytc::attr
+      - tinytc::named_attr
   Data Type:
     function:
       - tinytc::get_boolean

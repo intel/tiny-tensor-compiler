@@ -861,6 +861,108 @@ inline auto make_compiler_context() -> compiler_context {
 
 //! Alias for tinytc_attr_t
 using attr = tinytc_attr_t;
+//! Alias for tinytc_named_attr_t
+using named_attr = tinytc_named_attr_t;
+
+/**
+ * @brief Get array attribute
+ *
+ * @param ctx compiler context
+ * @param array attribute array
+ *
+ * @return Attribute
+ */
+inline attr get_array_attr(compiler_context const &ctx, array_view<attr> array) {
+    attr a;
+    CHECK_STATUS(tinytc_array_attr_get(&a, ctx.get(), array.size(), array.data()));
+    return a;
+}
+
+/**
+ * @brief Get boolean attribute
+ *
+ * @param ctx compiler context
+ * @param value boolean value
+ *
+ * @return Attribute
+ */
+inline attr get_boolean_attr(compiler_context const &ctx, bool value) {
+    attr a;
+    CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx.get(), value));
+    return a;
+}
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * Each name must only appear once.
+ *
+ * @param ctx compiler context
+ * @param items named items array
+ *
+ * @return Attribute
+ */
+inline attr get_dictionary_attr(compiler_context const &ctx, mutable_array_view<named_attr> items) {
+    attr a;
+    CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx.get(), items.size(), items.data()));
+    return a;
+}
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * The list of items must be sorted by name and each name must only appear once.
+ *
+ * @param ctx compiler context
+ * @param items named items array
+ *
+ * @return Attribute
+ */
+inline attr get_dictionary_attr_with_sorted(compiler_context const &ctx,
+                                            array_view<named_attr> items) {
+    attr a;
+    CHECK_STATUS(tinytc_dictionary_attr_get_with_sorted(&a, ctx.get(), items.size(), items.data()));
+    return a;
+}
+
+/**
+ * @brief Sort list of items
+ *
+ * Each name must only appear once.
+ *
+ * @param items named items array
+ */
+inline void sort_items(mutable_array_view<named_attr> items) {
+    CHECK_STATUS(tinytc_dictionary_attr_sort(items.size(), items.data()));
+}
+
+/**
+ * @brief Get integer attribute
+ *
+ * @param ctx compiler context
+ * @param value integer value
+ *
+ * @return Attribute
+ */
+inline attr get_integer_attr(compiler_context const &ctx, std::int64_t value) {
+    attr a;
+    CHECK_STATUS(tinytc_integer_attr_get(&a, ctx.get(), value));
+    return a;
+}
+
+/**
+ * @brief Get string attribute
+ *
+ * @param ctx compiler context
+ * @param str string
+ *
+ * @return Attribute
+ */
+inline attr get_string_attr(compiler_context const &ctx, std::string_view str) {
+    attr a;
+    CHECK_STATUS(tinytc_string_attr_get(&a, ctx.get(), str.size(), str.data()));
+    return a;
+}
 
 ////////////////////////////
 ///////// Data type ////////

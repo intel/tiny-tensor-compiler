@@ -70,9 +70,9 @@ Common
 
 * Typedefs
 
-  * :ref:`tinytc::position`
-
   * :ref:`tinytc::location`
+
+  * :ref:`tinytc::position`
 
 * Variables
 
@@ -272,19 +272,19 @@ builder_error
 Common Typedefs
 ---------------
 
-.. _tinytc::position:
-
-position
-........
-
-.. doxygentypedef:: tinytc::position
-
 .. _tinytc::location:
 
 location
 ........
 
 .. doxygentypedef:: tinytc::location
+
+.. _tinytc::position:
+
+position
+........
+
+.. doxygentypedef:: tinytc::position
 
 Common Variables
 ----------------
@@ -295,6 +295,100 @@ dynamic
 .......
 
 .. doxygenvariable:: tinytc::dynamic
+
+Attribute
+=========
+
+* Functions
+
+  * :ref:`get_array_attr`
+
+  * :ref:`get_boolean_attr`
+
+  * :ref:`get_dictionary_attr`
+
+  * :ref:`get_dictionary_attr_with_sorted`
+
+  * :ref:`get_integer_attr`
+
+  * :ref:`get_string_attr`
+
+  * :ref:`sort_items`
+
+* Typedefs
+
+  * :ref:`tinytc::attr`
+
+  * :ref:`tinytc::named_attr`
+
+Attribute Functions
+-------------------
+
+.. _get_array_attr:
+
+get_array_attr
+..............
+
+.. doxygenfunction:: get_array_attr
+
+.. _get_boolean_attr:
+
+get_boolean_attr
+................
+
+.. doxygenfunction:: get_boolean_attr
+
+.. _get_dictionary_attr:
+
+get_dictionary_attr
+...................
+
+.. doxygenfunction:: get_dictionary_attr
+
+.. _get_dictionary_attr_with_sorted:
+
+get_dictionary_attr_with_sorted
+...............................
+
+.. doxygenfunction:: get_dictionary_attr_with_sorted
+
+.. _get_integer_attr:
+
+get_integer_attr
+................
+
+.. doxygenfunction:: get_integer_attr
+
+.. _get_string_attr:
+
+get_string_attr
+...............
+
+.. doxygenfunction:: get_string_attr
+
+.. _sort_items:
+
+sort_items
+..........
+
+.. doxygenfunction:: sort_items
+
+Attribute Typedefs
+------------------
+
+.. _tinytc::attr:
+
+attr
+....
+
+.. doxygentypedef:: tinytc::attr
+
+.. _tinytc::named_attr:
+
+named_attr
+..........
+
+.. doxygentypedef:: tinytc::named_attr
 
 Data Type
 =========

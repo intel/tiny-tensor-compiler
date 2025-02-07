@@ -77,6 +77,108 @@ TINYTC_EXPORT uint16_t tinytc_f32_to_f16_as_ui16(float x);
 TINYTC_EXPORT float tinytc_f16_as_ui16_to_f32(uint16_t x);
 
 ////////////////////////////
+///////// Attribute ////////
+////////////////////////////
+
+/**
+ * @brief Get array attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param array_size [in] number of elements in array, must be 0 if array == nullptr
+ * @param array [in][range(0, array_size)] attribute array
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_array_attr_get(tinytc_attr_t *attr,
+                                                    tinytc_compiler_context_t ctx,
+                                                    uint32_t array_size,
+                                                    const tinytc_attr_t *array);
+
+/**
+ * @brief Get boolean attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param value [in] value of attribute
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_boolean_attr_get(tinytc_attr_t *attr,
+                                                      tinytc_compiler_context_t ctx,
+                                                      tinytc_bool_t value);
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * Each name must only appear once.
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_get(tinytc_attr_t *attr,
+                                                         tinytc_compiler_context_t ctx,
+                                                         uint32_t items_size,
+                                                         tinytc_named_attr_t *items);
+
+/**
+ * @brief Get dictionary attribute with pre-sorted items
+ *
+ * The list of items must be sorted by name and each name must only appear once.
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t
+tinytc_dictionary_attr_get_with_sorted(tinytc_attr_t *attr, tinytc_compiler_context_t ctx,
+                                       uint32_t items_size, const tinytc_named_attr_t *items);
+
+/**
+ * @brief Sort items array by name
+ *
+ * @param items_size [in] number of elements in items array, must be 0 if items == nullptr
+ * @param items [in][range(0, items_size)] array of items
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_sort(uint32_t items_size,
+                                                          tinytc_named_attr_t *items);
+
+/**
+ * @brief Get integer attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param value [in] value of attribute
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_integer_attr_get(tinytc_attr_t *attr,
+                                                      tinytc_compiler_context_t ctx, int64_t value);
+
+/**
+ * @brief Get string attribute
+ *
+ * @param attr [out] pointer to the attribute object
+ * @param ctx [inout] compiler context
+ * @param str_length [in] number of characters (not including a null terminator)
+ * @param str [in] string; not necessarily null-terminated
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
+                                                     tinytc_compiler_context_t ctx,
+                                                     uint32_t str_length, char const *str);
+
+////////////////////////////
 //////// Scalar type ///////
 ////////////////////////////
 
