@@ -124,16 +124,13 @@
     OFFSET          "offset"
     STRIDED         "strided"
     AXPBY           "axpby"
-    ARITH           "arith"
     BARRIER         "barrier"
     GEMM            "gemm"
     GEMV            "gemv"
     GER             "ger"
     HADAMARD        "hadamard"
     ALLOCA          "alloca"
-    BUILTIN         "builtin"
     CAST            "cast"
-    CMP             "cmp"
     CONSTANT        "constant"
     COOPERATIVE_MATRIX_LOAD "cooperative_matrix_load"
     COOPERATIVE_MATRIX_MUL_ADD "cooperative_matrix_mul_add"
@@ -152,7 +149,6 @@
     SUBVIEW         "subview"
     STORE           "store"
     SUM             "sum"
-    WORK_GROUP      "work_group"
     YIELD           "yield"
 ;
 %token <identifier> LOCAL_IDENTIFIER
@@ -165,7 +161,7 @@
 %token <scalar_type> FLOATING_TYPE
 %token <arithmetic> ARITHMETIC
 %token <arithmetic_unary> ARITHMETIC_UNARY
-%token <builtin> BUILTIN_TYPE
+%token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
 %token <work_group_operation> WORK_GROUP_OPERATION
 %token <matrix_use> MATRIX_USE
@@ -819,7 +815,7 @@ alloca_inst:
 ;
 
 arith_inst:
-    ARITH ARITHMETIC var[a] COMMA var[b] COLON data_type[ty] {
+    ARITHMETIC var[a] COMMA var[b] COLON data_type[ty] {
         try {
             $$ = inst {
                 std::make_unique<arith_inst>($ARITHMETIC, std::move($a), std::move($b), std::move($ty),
@@ -834,7 +830,7 @@ arith_inst:
 ;
 
 arith_unary_inst:
-    ARITH ARITHMETIC_UNARY var[a] COLON data_type[ty] {
+    ARITHMETIC_UNARY var[a] COLON data_type[ty] {
         try {
             $$ = inst {
                 std::make_unique<arith_unary_inst>($ARITHMETIC_UNARY, std::move($a), std::move($ty),
@@ -849,8 +845,8 @@ arith_unary_inst:
 ;
 
 builtin_inst:
-    BUILTIN BUILTIN_TYPE COLON data_type[ty] {
-        $$ = inst{std::make_unique<builtin_inst>($BUILTIN_TYPE, $ty, @builtin_inst).release()};
+    BUILTIN COLON data_type[ty] {
+        $$ = inst{std::make_unique<builtin_inst>($BUILTIN, $ty, @builtin_inst).release()};
     }
 ;
 
@@ -866,7 +862,7 @@ cast_inst:
 ;
 
 compare_inst:
-    CMP CMP_CONDITION var[a] COMMA var[b] COLON boolean_type {
+    CMP_CONDITION var[a] COMMA var[b] COLON boolean_type {
         try {
             $$ = inst {
                 std::make_unique<compare_inst>($CMP_CONDITION, std::move($a), std::move($b),
@@ -1255,7 +1251,7 @@ slice_size:
 ;
 
 work_group_inst:
-    WORK_GROUP WORK_GROUP_OPERATION[operation] var[a] COLON data_type[ty] {
+    WORK_GROUP_OPERATION[operation] var[a] COLON data_type[ty] {
         try {
             $$ = inst {
                 std::make_unique<work_group_inst>($operation, std::move($a), std::move($ty),

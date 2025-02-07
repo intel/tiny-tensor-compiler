@@ -831,19 +831,19 @@ Arithmetic (binary)
 
 .. code:: abnf
 
-    arith-binary-type       =  ".add" /
-                               ".sub" /
-                               ".mul" /
-                               ".div" /
-                               ".rem" /
-                               ".min" /
-                               ".max" /
-                               ".shl" /
-                               ".shr" /
-                               ".and" /
-                               ".or"  /
-                               ".xor"
-    value-instruction       =/ "arith" arith-binary-type local-identifier "," local-identifier
+    arith-binary-type       =  "arith.add" /
+                               "arith.sub" /
+                               "arith.mul" /
+                               "arith.div" /
+                               "arith.rem" /
+                               "arith.min" /
+                               "arith.max" /
+                               "arith.shl" /
+                               "arith.shr" /
+                               "arith.and" /
+                               "arith.or"  /
+                               "arith.xor"
+    value-instruction       =/ arith-binary-type local-identifier "," local-identifier
                                ":" (boolean-type / scalar-type / coopmatrix-type)
 
 Overview
@@ -856,30 +856,35 @@ Arithmetic on cooperative matrices is done component-wise.
 The following table shows the operations' description and the types that are allowed for the operation.
 The backslash "\\" is used to exclude types from the list of allowed types.
 
-==== ============================= ======================================================
-Op   Allowed type                  Description
-==== ============================= ======================================================
-.add scalar-type / coopmatrix-type Sum of operands
-.sub scalar-type / coopmatrix-type Difference of operands
-.mul scalar-type / coopmatrix-type Product of operands
-.div scalar-type / coopmatrix-type Quotient of operands
-.rem scalar-type \\ complex-type   Remainder from the division of operands
-.shl integer-type                  Left shift first operand by second operand
-.shr integer-type                  Arithmetic right shift first operand by second operand
-.and boolean-type / integer-type   Bitwise and
-.or  boolean-type / integer-type   Bitwise or
-.xor boolean-type / integer-type   Bitwise xor
-.min scalar-type \\ complex-type   Minimum of operands
-.max scalar-type \\ complex-type   Maximum of operands
-==== ============================= ======================================================
+=== ============================= ======================================================
+Op  Allowed type                  Description
+=== ============================= ======================================================
+add scalar-type / coopmatrix-type Sum of operands
+sub scalar-type / coopmatrix-type Difference of operands
+mul scalar-type / coopmatrix-type Product of operands
+div scalar-type / coopmatrix-type Quotient of operands
+rem scalar-type \\ complex-type   Remainder from the division of operands
+shl integer-type                  Left shift first operand by second operand
+shr integer-type                  Arithmetic right shift first operand by second operand
+and boolean-type / integer-type   Bitwise and
+or  boolean-type / integer-type   Bitwise or
+xor boolean-type / integer-type   Bitwise xor
+min scalar-type \\ complex-type   Minimum of operands
+max scalar-type \\ complex-type   Maximum of operands
+=== ============================= ======================================================
 
 Arithmetic (unary)
 ..................
 
 .. code:: abnf
 
-    arith-unary-type        =  ".abs" / ".neg"  / ".not" / ".conj" / ".im" / ".re"
-    value-instruction       =/ "arith" arith-unary-type local-identifier
+    arith-unary-type        =  "arith.abs" /
+                               "arith.neg" /
+                               "arith.not" /
+                               "arith.conj" /
+                               "arith.im" /
+                               "arith.re"
+    value-instruction       =/ arith-unary-type local-identifier
                                ":" (scalar-type / coopmatrix-type)
 
 Overview
@@ -893,16 +898,16 @@ for ".neg" and ".conj".
 
 The following table shows the operations' description and the types that are allowed for the operation.
 
-===== ============================= =============================
-Op    Allowed type                  Description
-===== ============================= =============================
-.abs  scalar-type                   Compute absolute value
-.neg  scalar-type / coopmatrix-type Negation
-.not  boolean-type / integer-type   Bitwise not
-.conj complex-type                  Complex conjugate
-.im   complex-type                  Extract imaginary part
-.re   complex-type                  Extract real part
-===== ============================= =============================
+==== ============================= =============================
+Op   Allowed type                  Description
+==== ============================= =============================
+abs  scalar-type                   Compute absolute value
+neg  scalar-type / coopmatrix-type Negation
+not  boolean-type / integer-type   Bitwise not
+conj complex-type                  Complex conjugate
+im   complex-type                  Extract imaginary part
+re   complex-type                  Extract real part
+==== ============================= =============================
 
 Barrier
 .......
@@ -937,11 +942,11 @@ Builtin (mixed)
 
 .. code:: abnf
 
-    mixed-builtin-type      =  ".group_id"  /
-                               ".group_size"  /
-                               ".num_subgroups"  /
-                               ".subgroup_size"
-    value-instruction       =/ "builtin" mixed-builtin-type ":" integer-type
+    mixed-builtin-type      =  "builtin.group_id"  /
+                               "builtin.group_size"  /
+                               "builtin.num_subgroups"  /
+                               "builtin.subgroup_size"
+    value-instruction       =/ mixed-builtin-type ":" integer-type
 
 Overview
 ~~~~~~~~
@@ -949,14 +954,14 @@ Overview
 Returns a builtin value.
 The following table shows the builtins' description and the types that are returned.
 
-============== ===== ====================================================================
-Builtin        Type  Description
-============== ===== ====================================================================
-.group_id      index Returns the group id, an integer inbetween 0 and the group size - 1
-.group_size    index Returns the group size
-.num_subgroups i32   Returns the number of subgroups the work-group is divided in 
-.subgroup_size i32   Returns the subgroup size
-============== ===== ====================================================================
+============= ===== ====================================================================
+Builtin       Type  Description
+============= ===== ====================================================================
+group_id      index Returns the group id, an integer inbetween 0 and the group size - 1
+group_size    index Returns the group size
+num_subgroups i32   Returns the number of subgroups the work-group is divided in 
+subgroup_size i32   Returns the subgroup size
+============= ===== ====================================================================
 
 Cast
 ....
@@ -995,8 +1000,13 @@ Comparison
 
 .. code:: abnf
 
-    value-instruction       =/ "cmp" (".eq" / ".ne" / ".gt" / ".ge" / ".lt" / ".le")
-                               local-identifier "," local-identifier ":" "bool"
+    cmp-type                =  "cmp.eq" /
+                               "cmp.ne" /
+                               "cmp.gt" /
+                               "cmp.ge" /
+                               "cmp.lt" /
+                               "cmp.le"
+    value-instruction       =/ cmp-type local-identifier "," local-identifier ":" "bool"
 
 Overview
 ~~~~~~~~
@@ -1010,12 +1020,12 @@ The backslash "\\" is used to exclude types from the list of allowed types.
 ==== =========================== =====================
 Cond Allowed type Description
 ==== =========================== =====================
-.eq  scalar-type                 Equal
-.ne  scalar-type                 Not equal
-.gt  scalar-type \\ complex-type Greater than
-.ge  scalar-type \\ complex-type Greater than or equal
-.lt  scalar-type \\ complex-type Less than
-.le  scalar-type \\ complex-type Less than or equal
+eq   scalar-type                 Equal
+ne   scalar-type                 Not equal
+gt   scalar-type \\ complex-type Greater than
+ge   scalar-type \\ complex-type Greater than or equal
+lt   scalar-type \\ complex-type Less than
+le   scalar-type \\ complex-type Less than or equal
 ==== =========================== =====================
 
 Constant
@@ -1507,8 +1517,8 @@ Work group collectives
 
 .. code:: abnf
 
-    value-instruction           =/ "work_group" work-group-op local-identifier ":" scalar-type
-    work-group-op               =  ".reduce_add"
+    work-group-op               =  "work_group.reduce_add"
+    value-instruction           =/ work-group-op local-identifier ":" scalar-type
 
 Overview
 ~~~~~~~~
@@ -1518,7 +1528,7 @@ Collective operations across a work-group.
 ============= ================================================================
 Work group op Description
 ============= ================================================================
-.reduce_add   Compute work group sum of value
+reduce_add    Compute work group sum of value
 ============= ================================================================
 
 Operands
@@ -1571,9 +1581,9 @@ Builtin (SPMD)
 
 .. code:: abnf
 
-    spmd-builtin-type       =  ".subgroup_id"  /
-                               ".subgroup_local_id"
-    value-instruction       =/ "builtin" spmd-builtin-type ":" integer-type
+    spmd-builtin-type       =  "builtin.subgroup_id"  /
+                               "builtin.subgroup_local_id"
+    value-instruction       =/ spmd-builtin-type ":" integer-type
 
 Overview
 ~~~~~~~~
@@ -1581,12 +1591,12 @@ Overview
 Returns a builtin value.
 The following table shows the builtins' description and the types that are returned.
 
-=================== ===== =================================================================================
-Builtin             Type  Description
-=================== ===== =================================================================================
-.subgroup_id        i32   Returns the subgroup id; integer from 0 to num_subgroups - 1.
-.subgroup_local_id  i32   Returns the work-item id within the subgroup; integer from 0 to subgroup_size - 1
-=================== ===== =================================================================================
+================== ===== =================================================================================
+Builtin            Type  Description
+================== ===== =================================================================================
+subgroup_id        i32   Returns the subgroup id; integer from 0 to num_subgroups - 1.
+subgroup_local_id  i32   Returns the work-item id within the subgroup; integer from 0 to subgroup_size - 1
+================== ===== =================================================================================
 
 Cooperative matrix load
 .......................

@@ -158,16 +158,13 @@ lex:
 
         // instructions
         "axpby"              { adv_loc(); return parser::make_AXPBY(loc_); }
-        "arith"              { adv_loc(); return parser::make_ARITH(loc_); }
         "barrier"            { adv_loc(); return parser::make_BARRIER(loc_); }
-        "builtin"            { adv_loc(); return parser::make_BUILTIN(loc_); }
         "gemm"               { adv_loc(); return parser::make_GEMM(loc_); }
         "gemv"               { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"                { adv_loc(); return parser::make_GER(loc_); }
         "hadamard"           { adv_loc(); return parser::make_HADAMARD(loc_); }
         "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
         "cast"               { adv_loc(); return parser::make_CAST(loc_); }
-        "cmp"                { adv_loc(); return parser::make_CMP(loc_); }
         "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
         "cooperative_matrix_load"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
         "cooperative_matrix_mul_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
@@ -186,50 +183,48 @@ lex:
         "subview"            { adv_loc(); return parser::make_SUBVIEW(loc_); }
         "store"              { adv_loc(); return parser::make_STORE(loc_); }
         "sum"                { adv_loc(); return parser::make_SUM(loc_); }
-        "work_group"         { adv_loc(); return parser::make_WORK_GROUP(loc_); }
         "yield"              { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
-        ".add"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::add, loc_); }
-        ".sub"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::sub, loc_); }
-        ".mul"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::mul, loc_); }
-        ".div"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::div, loc_); }
-        ".rem"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::rem, loc_); }
-        ".shl"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shl, loc_); }
-        ".shr"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shr, loc_); }
-        ".and"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::and_, loc_); }
-        ".or"               { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
-        ".xor"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
-        ".min"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::min, loc_); }
-        ".max"              { adv_loc(); return parser::make_ARITHMETIC(arithmetic::max, loc_); }
+        "arith.add"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::add, loc_); }
+        "arith.sub"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::sub, loc_); }
+        "arith.mul"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::mul, loc_); }
+        "arith.div"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::div, loc_); }
+        "arith.rem"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::rem, loc_); }
+        "arith.shl"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shl, loc_); }
+        "arith.shr"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shr, loc_); }
+        "arith.and"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::and_, loc_); }
+        "arith.or"           { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
+        "arith.xor"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
+        "arith.min"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::min, loc_); }
+        "arith.max"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::max, loc_); }
 
         // unary op
-        ".abs"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
-        ".neg"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
-        ".not"              { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
-        ".conj"             { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
-        ".im"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
-        ".re"               { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re,
-       loc_); }
+        "arith.abs"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
+        "arith.neg"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
+        "arith.not"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
+        "arith.conj"         { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
+        "arith.im"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
+        "arith.re"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
 
         // builtin
-        ".group_id"          { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_id, loc_); }
-        ".group_size"        { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::group_size, loc_); }
-        ".num_subgroups"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::num_subgroups, loc_); }
-        ".subgroup_size"     { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_size, loc_); }
-        ".subgroup_id"       { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_id, loc_); }
-        ".subgroup_local_id" { adv_loc(); return parser::make_BUILTIN_TYPE(builtin::subgroup_local_id, loc_); }
+        "builtin.group_id"          { adv_loc(); return parser::make_BUILTIN(builtin::group_id, loc_); }
+        "builtin.group_size"        { adv_loc(); return parser::make_BUILTIN(builtin::group_size, loc_); }
+        "builtin.num_subgroups"     { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups, loc_); }
+        "builtin.subgroup_size"     { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_size, loc_); }
+        "builtin.subgroup_id"       { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id, loc_); }
+        "builtin.subgroup_local_id" { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_local_id, loc_); }
 
         // comparison condition
-        ".eq"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
-        ".ne"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
-        ".gt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
-        ".ge"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
-        ".lt"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
-        ".le"               { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
+        "cmp.eq"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
+        "cmp.ne"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
+        "cmp.gt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
+        "cmp.ge"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
+        "cmp.lt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
+        "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
         // work group operation
-        ".reduce_add"       {
+        "work_group.reduce_add" {
             adv_loc();
             return parser::make_WORK_GROUP_OPERATION(work_group_operation::reduce_add, loc_);
         }
