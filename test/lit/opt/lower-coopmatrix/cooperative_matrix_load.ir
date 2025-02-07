@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-opt -plower-coopmatrix < %s | filecheck %s
 
-func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
+func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
     parallel {
         %0 = cooperative_matrix_load.n %A[%x,%y] : coopmatrix<i32x16x3,matrix_a>
     }
@@ -20,7 +20,7 @@ func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_
 ; CHECK-NEXT: %9 = load %3[%8], align 4 : i32
 }
 
-func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
+func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
     parallel {
         %0 = cooperative_matrix_load.n.rows_checked %A[%x,%y] : coopmatrix<i32x32x2,matrix_a>
     }
@@ -67,7 +67,7 @@ func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT: }
 }
 
-func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
+func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
     parallel {
         %0 = cooperative_matrix_load.n.cols_checked %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
     }
@@ -104,7 +104,7 @@ func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT:  }
 }
 
-func @coopmatrix_a_load_t(%A: memref<i32x64x48>, %x: index, %y: index) subgroup_size(16) {
+func @coopmatrix_a_load_t(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
     parallel {
         %0 = cooperative_matrix_load.t %A[%x,%y] : coopmatrix<i32x16x2,matrix_a>
     }

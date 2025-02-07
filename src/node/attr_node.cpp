@@ -143,4 +143,17 @@ auto string_attr::get(tinytc_compiler_context_t ctx, std::string_view str) -> ti
 string_attr::string_attr(tinytc_compiler_context_t ctx, std::string str)
     : tinytc_attr(AK::string, ctx), str_{std::move(str)} {}
 
+auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t {
+    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
+        return da->find(name);
+    }
+    return nullptr;
+}
+auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t {
+    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
+        return da->find(name);
+    }
+    return nullptr;
+}
+
 } // namespace tinytc

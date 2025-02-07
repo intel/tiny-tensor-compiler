@@ -25,7 +25,7 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
     auto Bt =
         get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
 
-    auto f = make_func(name, {alphat, At, betat, Bt});
+    auto f = make_func(name, {alphat, At, betat, Bt}, get_void(ctx));
     auto fn_body = f.get_body();
     auto params = std::array<value, 4u>{};
     fn_body.get_parameters(params);

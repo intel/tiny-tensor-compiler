@@ -87,8 +87,6 @@ lex:
         // keywords
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
         "align"             { adv_loc(); return parser::make_ALIGN(loc_); }
-        "work_group_size"   { adv_loc(); return parser::make_WORK_GROUP_SIZE(loc_); }
-        "subgroup_size"     { adv_loc(); return parser::make_SUBGROUP_SIZE(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }
         "?"                 { adv_loc(); return parser::make_DYNAMIC(loc_); }
         ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
@@ -117,7 +115,8 @@ lex:
         }
 
         // attributes
-        "unroll"  {
+        "attributes"        { return parser::make_ATTRIBUTES(loc_); }
+        "subgroup_size" | "unroll" | "work_group_size" {
             adv_loc(); return parser::make_ATTR_NAME(std::string(b, YYCURSOR), loc_);
         }
 

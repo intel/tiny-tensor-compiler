@@ -69,7 +69,7 @@ func @for2() {
 ; CHECK-NEXT:                 %[[#]] = OpSNegate %[[#I64]] %[[#PHI2_2]]
 }
 
-func @for3() subgroup_size(16) {
+func @for3() attributes{subgroup_size=16} {
   %from = constant 2 : i16
   %to = constant 6 : i16
   %m_init = constant 1 : coopmatrix<i16x16x4,matrix_acc>

@@ -75,7 +75,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         param_types[1 + 2 * dim + 0] = dQ_[0].type(element_ty);
         param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
 
-        auto f = make_func("ader_kernel", param_types);
+        auto f = make_func("ader_kernel", param_types, get_void(ctx));
         auto fn_body = f.get_body();
 
         std::array<value, 2 * dim + 3> params;

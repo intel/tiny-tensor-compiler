@@ -20,7 +20,8 @@ TEST_CASE(RUNTIME_NAME " store block2d f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 
     const std::string code = R"TinyTL(
-func @store_block2d(%A: memref<f16x128x128> align(64)) subgroup_size(16) work_group_size(16,1) {
+func @store_block2d(%A: memref<f16x128x128> {align=128})
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
     parallel {
         %0 = constant 42.0 : coopmatrix<f16x16x8,matrix_acc>
         %1 = constant 32 : index
@@ -71,9 +72,9 @@ TEST_CASE(RUNTIME_NAME " load block2d f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 
     const std::string code = R"TinyTL(
-func @load_block2d(%A: memref<f16x128x128> align(64),
-                   %B: memref<f16x128x128> align(64))
-                   subgroup_size(16) work_group_size(16,1) {
+func @load_block2d(%A: memref<f16x128x128> {align=128},
+                   %B: memref<f16x128x128> {align=128})
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
     parallel {
         %0 = constant 4 : index
         %1 = constant 8 : index
@@ -124,10 +125,10 @@ TEST_CASE(RUNTIME_NAME " matmul dpas f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 
     const std::string code = R"TinyTL(
-func @matmul_dpas(%A: memref<f16x64x64> align(64),
-                  %B: memref<f16x64x64> align(64),
-                  %C: memref<f32x64x64> align(64))
-                  subgroup_size(16) work_group_size(16,1) {
+func @matmul_dpas(%A: memref<f16x64x64> {align=64},
+                  %B: memref<f16x64x64> {align=64},
+                  %C: memref<f32x64x64> {align=64})
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
     parallel {
         %0 = constant 0 : index
         %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>

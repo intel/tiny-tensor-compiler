@@ -544,6 +544,8 @@ Data Type
 
   * :ref:`tinytc_scalar_type_get`
 
+  * :ref:`tinytc_void_type_get`
+
 Data Type Functions
 -------------------
 
@@ -582,6 +584,13 @@ tinytc_scalar_type_get
 
 .. doxygenfunction:: tinytc_scalar_type_get
 
+.. _tinytc_void_type_get:
+
+tinytc_void_type_get
+....................
+
+.. doxygenfunction:: tinytc_void_type_get
+
 Function
 ========
 
@@ -593,11 +602,9 @@ Function
 
   * :ref:`tinytc_func_get_body`
 
-  * :ref:`tinytc_func_set_alignment`
+  * :ref:`tinytc_func_set_attr`
 
-  * :ref:`tinytc_func_set_subgroup_size`
-
-  * :ref:`tinytc_func_set_work_group_size`
+  * :ref:`tinytc_func_set_parameter_attr`
 
 Function Functions
 ------------------
@@ -623,26 +630,19 @@ tinytc_func_get_body
 
 .. doxygenfunction:: tinytc_func_get_body
 
-.. _tinytc_func_set_alignment:
+.. _tinytc_func_set_attr:
 
-tinytc_func_set_alignment
-.........................
+tinytc_func_set_attr
+....................
 
-.. doxygenfunction:: tinytc_func_set_alignment
+.. doxygenfunction:: tinytc_func_set_attr
 
-.. _tinytc_func_set_subgroup_size:
+.. _tinytc_func_set_parameter_attr:
 
-tinytc_func_set_subgroup_size
-.............................
+tinytc_func_set_parameter_attr
+..............................
 
-.. doxygenfunction:: tinytc_func_set_subgroup_size
-
-.. _tinytc_func_set_work_group_size:
-
-tinytc_func_set_work_group_size
-...............................
-
-.. doxygenfunction:: tinytc_func_set_work_group_size
+.. doxygenfunction:: tinytc_func_set_parameter_attr
 
 Instruction
 ===========
@@ -726,6 +726,8 @@ Instruction
   * :ref:`tinytc_inst_get_values`
 
   * :ref:`tinytc_inst_destroy`
+
+  * :ref:`tinytc_inst_set_attr`
 
 Instruction Functions
 ---------------------
@@ -1002,6 +1004,13 @@ tinytc_inst_destroy
 ...................
 
 .. doxygenfunction:: tinytc_inst_destroy
+
+.. _tinytc_inst_set_attr:
+
+tinytc_inst_set_attr
+....................
+
+.. doxygenfunction:: tinytc_inst_set_attr
 
 Program
 =======

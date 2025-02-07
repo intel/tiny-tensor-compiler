@@ -97,7 +97,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                        {1, ldB, strideB}, address_space::global, my_loc());
                 auto C_ty = get_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
                                        address_space::global, my_loc());
-                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, get_void(ctx_), my_loc());
                 auto fn_body = f.get_body();
                 auto params = std::array<value, 5u>{};
                 fn_body.get_parameters(params);

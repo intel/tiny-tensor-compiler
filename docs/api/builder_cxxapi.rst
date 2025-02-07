@@ -405,6 +405,8 @@ Data Type
 
   * :ref:`tinytc::get_scalar`
 
+  * :ref:`tinytc::get_void`
+
 * Structures
 
   * :ref:`tinytc::to_scalar_type`
@@ -454,6 +456,13 @@ get_scalar
 ..........
 
 .. doxygenfunction:: tinytc::get_scalar
+
+.. _tinytc::get_void:
+
+get_void
+........
+
+.. doxygenfunction:: tinytc::get_void
 
 Data Type Structures
 --------------------

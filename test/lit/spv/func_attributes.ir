@@ -12,11 +12,11 @@
 ; CHECK: OpExecutionMode %[[#ATTR2]] SubgroupSize 16
 ; CHECK: OpExecutionMode %[[#ATTR3]] SubgroupSize 32
 
-func @attr1() work_group_size(128, 4) {
+func @attr1() attributes{work_group_size=[128, 4]} {
 }
 
-func @attr2() work_group_size(128, 4) subgroup_size(16) {
+func @attr2() attributes{work_group_size=[128, 4], subgroup_size=16} {
 }
 
-func @attr3() subgroup_size(32) {
+func @attr3() attributes{subgroup_size=32} {
 }

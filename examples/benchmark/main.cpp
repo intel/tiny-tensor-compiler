@@ -92,7 +92,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto f = make_func("gemm",
                            {get_group(A_ty, 0, my_loc()), get_group(B_ty, 0, my_loc()),
                             get_group(C_ty, 0, my_loc())},
-                           my_loc());
+                           get_void(ctx), my_loc());
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
                 ctx, named_attr{get_string_attr(ctx, "align"), get_integer_attr(ctx, alignment)});

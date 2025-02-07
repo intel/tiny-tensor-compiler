@@ -76,7 +76,7 @@ func @tcomplex(%a: c32) {
 ; CHECK-NEXT: %[[#]] = OpCompositeExtract %[[#F32]] %[[#]] 0
 }
 
-func @tfloatcoopmatrix() subgroup_size(16) {
+func @tfloatcoopmatrix() attributes{subgroup_size=16} {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = arith.neg %0 : coopmatrix<f32x16x4,matrix_a>
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}

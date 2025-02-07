@@ -266,6 +266,8 @@ char const *tinytc_error_string(tinytc_status_t status) {
         return "Expected string attribute";
     case tinytc_status_ir_duplicate_key_in_dictionary:
         return "Duplicate key detected in list of named attributes passed to dictionary";
+    case tinytc_status_ir_unexpected_array_attribute_size:
+        return "Unexpected size in array attribute";
     // SPIR-V
     case tinytc_status_spirv_forbidden_forward_declaration:
         return "Forward declaration of id is forbidden";

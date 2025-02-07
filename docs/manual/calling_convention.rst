@@ -79,7 +79,7 @@ The required alignment depends on the core info and may be queried with
 :ref:`tinytc_core_info_get_default_alignment`.
 Using :ref:`tinytc_core_info_set_default_alignment` the alignment requirements may be overriden.
 The alignment requirement may also be overriden per memref using the
-:ref:`"aligned" attribute <tensor language functions>`.
+:ref:`"align" attribute <tensor language functions>`.
 When the core info object is created using :ref:`tinytc_cl_core_info_create` the default alignment
 is queried from `CL_DEVICE_MEM_BASE_ADDR_ALIGN <https://registry.khronos.org/OpenCL/specs/3.0-unified/html/OpenCL_API.html#platform-querying-devices>`_.
 

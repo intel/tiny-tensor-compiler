@@ -55,6 +55,7 @@ Builder C++-API:
       - tinytc::get_group
       - tinytc::get_memref
       - tinytc::get_scalar
+      - tinytc::get_void
     struct:
       - tinytc::to_scalar_type
     typedef:

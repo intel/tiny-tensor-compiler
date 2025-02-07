@@ -90,4 +90,12 @@ tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt, tinytc_data_t
                                         get_optional(loc));
     });
 }
+
+tinytc_status_t tinytc_void_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx) {
+    if (dt == nullptr || ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+
+    return exception_to_status_code([&] { *dt = void_data_type::get(ctx); });
+}
 }

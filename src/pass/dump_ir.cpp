@@ -33,7 +33,9 @@ void dump_ir_pass::operator()(dictionary_attr const &a) {
     auto const is_keyword = [](std::string_view str) {
         switch (fnv1a(str)) {
         case "align"_fnv1a:
+        case "subgroup_size"_fnv1a:
         case "unroll"_fnv1a:
+        case "work_group_size"_fnv1a:
             return true;
         default:
             return false;
@@ -577,15 +579,12 @@ void dump_ir_pass::run_on_function(function_node const &fn) {
             }
         },
         infix);
-    *os_ << ") ";
-    auto const sgs = fn.subgroup_size();
-    auto const wgs = fn.work_group_size();
-    if (sgs != 0) {
-        *os_ << "subgroup_size(" << sgs << ") ";
+    *os_ << ")";
+    if (fn.attr()) {
+        *os_ << " attributes";
+        visit(*this, *fn.attr());
     }
-    if (wgs[0] != 0 && wgs[1] != 0) {
-        *os_ << "work_group_size(" << wgs[0] << "," << wgs[1] << ") ";
-    }
+    *os_ << " ";
     dump_region(fn.body());
     *os_ << std::endl;
 }

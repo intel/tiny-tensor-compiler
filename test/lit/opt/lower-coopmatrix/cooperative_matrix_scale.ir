@@ -4,7 +4,7 @@
 ; RUN: %tinytc-opt -plower-coopmatrix < %s | filecheck %s
 
 
-func @scale() subgroup_size(16) {
+func @scale() attributes{subgroup_size=16} {
     parallel {
         %0 = constant 3.14159265358979323846 : f32
         %1 = constant 13.36901521971920820459 : coopmatrix<f32x16x4,matrix_acc>

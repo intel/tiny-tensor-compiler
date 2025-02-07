@@ -22,6 +22,21 @@
 
 namespace tinytc {
 
+auto get_core_config_and_tiling(function_node const &fn, const_tinytc_core_info_t info)
+    -> std::pair<core_config, local_tiling> {
+    const auto get_core_config = [&]() -> core_config {
+        try {
+            return info->get_core_config(fn.subgroup_size());
+        } catch (std::out_of_range const &e) {
+            throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
+        }
+    };
+    core_config core_cfg = get_core_config();
+    const auto wgs = fn.work_group_size();
+    local_tiling tiling = {wgs[0] / core_cfg.subgroup_size, wgs[1]};
+    return {core_cfg, tiling};
+}
+
 void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                       value sg_id, sgs_loop_body_builder const &body, attr for_attributes) {
     auto ity = loop_trip_count->ty();
@@ -275,19 +290,6 @@ auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst cons
         throw compilation_error(loc, status::ir_must_have_yield);
     }
     return y;
-}
-
-auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t {
-    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
-        return da->find(name);
-    }
-    return nullptr;
-}
-auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t {
-    if (auto da = dyn_cast<dictionary_attr>(dict); da) {
-        return da->find(name);
-    }
-    return nullptr;
 }
 
 auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag {

@@ -604,17 +604,7 @@ lower_linalg_pass::lower_linalg_pass(::tinytc_core_info const *info) : info_(std
 }
 
 void lower_linalg_pass::run_on_function(function_node &fn) {
-    auto const subgroup_size = fn.subgroup_size();
-    core_config core_cfg = {};
-    try {
-        core_cfg = info_->get_core_config(subgroup_size);
-    } catch (std::out_of_range const &e) {
-        throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
-    }
-    auto const work_group_size = fn.work_group_size();
-    local_tiling tiling = {};
-    tiling[0] = work_group_size[0] / subgroup_size;
-    tiling[1] = work_group_size[1];
+    auto [core_cfg, tiling] = get_core_config_and_tiling(fn, info_);
 
     walk<walk_order::post_order>(fn, [&](region_node &reg) {
         for (auto it = reg.begin(); it != reg.end(); ++it) {

@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-opt -pdump-matrix-ext < %s | filecheck %s
 
-func @basic(%A: memref<f16x64x64>) subgroup_size(16) {
+func @basic(%A: memref<f16x64x64>) attributes{subgroup_size=16} {
     %z = constant 0 : index
     %0 = cooperative_matrix_load.n %A[%z,%z], align 64 : coopmatrix<f16x16x16,matrix_a>
     %1 = cooperative_matrix_load.n %A[%z,%z], align 64 : coopmatrix<f16x16x8,matrix_b>
@@ -19,7 +19,7 @@ func @basic(%A: memref<f16x64x64>) subgroup_size(16) {
 ; CHECK: matrix_ext(%4) = 0
 }
 
-func @if(%A: memref<f16x64x64>) subgroup_size(16) {
+func @if(%A: memref<f16x64x64>) attributes{subgroup_size=16} {
     %0 = constant true : bool
     %1 = if %0 -> (coopmatrix<f16x16x16,matrix_a>) {
         %2 = constant 42.0 : coopmatrix<f16x16x16,matrix_a>
@@ -48,7 +48,7 @@ func @if(%A: memref<f16x64x64>) subgroup_size(16) {
 
 func @for1(%A: memref<f16x32x16> {align=64},
           %B: memref<f16x32x8> {align=64},
-          %C: memref<f32x32x8> {align=64}) subgroup_size(16) {
+          %C: memref<f32x32x8> {align=64}) attributes{subgroup_size=16} {
     %z = constant 0 : index
     %0 = constant 0x0p+0 : coopmatrix<f32x16x8,matrix_acc>
     %1 = constant 0 : index
@@ -72,7 +72,7 @@ func @for1(%A: memref<f16x32x16> {align=64},
 
 func @for2(%A: memref<f16x16x16> {align=64},
           %B: memref<f16x16x8> {align=64},
-          %C: memref<f32x16x8> {align=64}) subgroup_size(16) {
+          %C: memref<f32x16x8> {align=64}) attributes{subgroup_size=16} {
     %z = constant 0 : index
     %0 = constant 0x0p+0 : coopmatrix<f32x16x8,matrix_acc>
     %1 = constant 0 : index
@@ -100,7 +100,7 @@ func @for2(%A: memref<f16x16x16> {align=64},
 ; CHECK: matrix_ext(%12) = 0
 }
 
-func @unsupported_loads(%A: memref<f16x32x16>, %B: memref<f16x33x16>) subgroup_size(16) {
+func @unsupported_loads(%A: memref<f16x32x16>, %B: memref<f16x33x16>) attributes{subgroup_size=16} {
     %z = constant 0 : index
     %c1 = constant 1 : index
     ; Load not 4 byte aligned

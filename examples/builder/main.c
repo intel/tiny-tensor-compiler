@@ -15,7 +15,7 @@ int main(void) {
     uint32_t num_params;
     tinytc_compiler_context_t ctx;
     tinytc_prog_t program;
-    tinytc_data_type_t element_ty, ty;
+    tinytc_data_type_t void_ty, element_ty, ty;
     tinytc_func_t copy_fun;
     tinytc_region_t copy_body;
     tinytc_inst_t tmp;
@@ -32,9 +32,13 @@ int main(void) {
     int64_t shape[2] = {M, N};
     tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global, NULL);
 
+    // Get void type
+    tinytc_void_type_get(&void_ty, ctx);
+
     // Create function
     tinytc_data_type_t param_types[2] = {ty, ty};
-    tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, NULL);
+    tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, void_ty,
+                       NULL);
     tinytc_prog_add_function(program, copy_fun);
 
     // Get body

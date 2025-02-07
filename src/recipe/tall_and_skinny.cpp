@@ -167,7 +167,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 auto A_ty = get_memref(ty_, {M, K}, {1, ldA}, address_space::global, my_loc());
                 auto B_ty = get_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc());
                 auto C_ty = get_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc());
-                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, my_loc());
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, get_void(ctx_), my_loc());
 
                 auto alignments = std::array<std::pair<std::int32_t, std::int32_t>, 3u>{
                     {{1, alignA}, {2, alignB}, {4, alignC}}};
@@ -189,7 +189,11 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 params[3].set_name("beta");
                 params[4].set_name("C");
                 auto const wgs = tiling.work_group_size(sgs);
-                f.set_work_group_size(wgs[0], wgs[1]);
+                auto const wgs_attr =
+                    named_attr{get_string_attr(ctx_, "work_group_size"),
+                               get_array_attr(ctx_, {get_integer_attr(ctx_, wgs[0]),
+                                                     get_integer_attr(ctx_, wgs[1])})};
+                f.set_attr(get_dictionary_attr_with_sorted(ctx_, wgs_attr));
 
                 auto bb = region_builder{fn_body};
                 body(bb, params[0], params[1], params[2], is_beta_nonzero, params[3], params[4]);

@@ -124,6 +124,9 @@ class string_attr : public tinytc_attr {
     std::string str_;
 };
 
+auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t;
+auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t;
+
 } // namespace tinytc
 
 #endif // ATTR_NODE_20250205_HPP

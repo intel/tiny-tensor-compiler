@@ -273,6 +273,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt,
                                                          tinytc_data_type_t scalar_ty, int64_t rows,
                                                          int64_t cols, tinytc_matrix_use_t use,
                                                          const tinytc_location_t *loc);
+/**
+ * @brief Get void data type
+ *
+ * @param dt [out] pointer to the data type object created
+ * @param ctx [inout] compiler context
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_void_type_get(tinytc_data_type_t *dt,
+                                                   tinytc_compiler_context_t ctx);
 
 ////////////////////////////
 /////////// Value //////////
@@ -1239,6 +1249,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
  * @param num_params [in] number of parameters
  * @param param_type_list [in][range(0,num_params)] parameter data types; can be nullptr if
  * num_params is 0
+ * @param ty [in] result type (must be void for host-callable function)
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
@@ -1246,38 +1257,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
 TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length,
                                                  char const *name, uint32_t num_params,
                                                  const tinytc_data_type_t *param_type_list,
+                                                 tinytc_data_type_t ty,
                                                  const tinytc_location_t *loc);
 
 /**
- * @brief Set work-group size
+ * @brief Set function attributes
  *
  * @param fun [inout] function object
- * @param x [in] number of rows in parallel grid; must be a multiple of the subgroup size
- * @param y [in] number of columns in parallel grid
+ * @param a [in] attribute dictionary
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_func_set_work_group_size(tinytc_func_t fun, int32_t x,
-                                                              int32_t y);
-/**
- * @brief Set subgroup size
- *
- * @param fun [inout] function object
- * @param sgs [in] subgroup size; the supported values need to be queried from the compute device
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_func_set_subgroup_size(tinytc_func_t fun, int32_t sgs);
-
-/**
- * @brief Get function body
- *
- * @param fun [in] function object
- * @param body [out] pointer to body region
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_region_t *body);
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_attr(tinytc_func_t fun, tinytc_attr_t a);
 
 /**
  * @brief Set parameter attributes
@@ -1290,6 +1281,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_reg
  */
 TINYTC_EXPORT tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, int32_t param_no,
                                                              tinytc_attr_t a);
+
+/**
+ * @brief Get function body
+ *
+ * @param fun [in] function object
+ * @param body [out] pointer to body region
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_func_get_body(tinytc_func_t fun, tinytc_region_t *body);
 
 /**
  * @brief Delete function object

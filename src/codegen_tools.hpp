@@ -4,6 +4,9 @@
 #ifndef CODEGEN_TOOLS_20240229_HPP
 #define CODEGEN_TOOLS_20240229_HPP
 
+#include "device_info.hpp"
+#include "node/function_node.hpp"
+#include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -19,9 +22,8 @@ class coopmatrix_data_type;
 class memref_data_type;
 class yield_inst;
 
-// tools for OpenCL codegen
-
-short bits(scalar_type ty);
+auto get_core_config_and_tiling(function_node const &fn, const_tinytc_core_info_t info)
+    -> std::pair<core_config, local_tiling>;
 
 using sgs_loop_body_builder = std::function<void(region_builder &, value, bool, value)>;
 using uniform_loop_body_builder = std::function<void(region_builder &, value, value)>;
@@ -51,8 +53,6 @@ auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const *;
 auto get_memref_type(tinytc_value const &v) -> memref_data_type const *;
 auto get_scalar_type(tinytc_value const &v) -> scalar_type;
 auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst const *;
-auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t;
-auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t;
 
 template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::int64_t> {
     auto result = std::vector<std::int64_t>{};

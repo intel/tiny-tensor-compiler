@@ -42,6 +42,15 @@ auto dyn_cast(From *obj) -> To * {
     return nullptr;
 }
 
+template <typename To, typename From, typename F>
+requires(std::is_base_of_v<std::decay_t<From>, std::decay_t<To>>)
+auto dyn_cast_or_throw(From *obj, F &&make_exception) -> To * {
+    if (auto c = dyn_cast<To, From>(obj); c) {
+        return c;
+    }
+    throw make_exception();
+}
+
 } // namespace tinytc
 
 #endif // CASTING_20240903_HPP

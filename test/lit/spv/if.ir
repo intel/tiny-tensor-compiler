@@ -81,7 +81,7 @@ func @if2(%0: i32) {
 ; CHECK-NEXT:                    %[[#]] = OpNot %[[#I32]] %[[#PHI2]]
 }
 
-func @if3() subgroup_size(16) {
+func @if3() attributes{subgroup_size=16} {
     %c1 = constant true : bool
     %y, %x = if %c1 -> (bool,coopmatrix<f32x16x4,matrix_a>) {
         %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>

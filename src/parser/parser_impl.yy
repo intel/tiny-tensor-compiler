@@ -99,9 +99,8 @@
     LSQBR           "["
     RSQBR           "]"
     FUNC            "func"
+    ATTRIBUTES      "attributes"
     ALIGN           "align"
-    WORK_GROUP_SIZE "work_group_size"
-    SUBGROUP_SIZE   "subgroup_size"
     ARROW           "->"
     DYNAMIC         "?"
     NOTRANS         ".n"
@@ -170,8 +169,7 @@
 %nterm <func> func
 %nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_data_type_t>>> parameters
 %nterm <std::pair<param_attrs,tinytc_data_type_t>> parameter
-%nterm <std::vector<std::function<void(function_node&)>>> function_attributes
-%nterm <std::function<void(function_node&)>> function_attribute
+%nterm <tinytc_attr_t> function_attributes
 %nterm <tinytc_attr_t> attribute
 %nterm <tinytc_attr_t> array_attribute
 %nterm <std::vector<tinytc_attr_t>> attribute_list
@@ -275,11 +273,9 @@ func:
         loc.end = @RPAREN.end;
         try {
             ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
-            auto func_node =
-                std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second, loc);
-            for (auto &attr : $function_attributes) {
-                attr(*func_node);
-            }
+            auto func_node = std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second,
+                                                             get_void(ctx.cctx()), loc);
+            func_node->attr($function_attributes);
             ctx.push_scope();
             auto name_it = $parameters.first.begin();
             for (auto &p : func_node->params()) {
@@ -324,28 +320,7 @@ parameter:
 
 function_attributes:
     %empty {}
-  | function_attributes function_attribute { $$ = std::move($1); $$.emplace_back(std::move($function_attribute)); }
-;
-
-function_attribute:
-    WORK_GROUP_SIZE LPAREN INTEGER_CONSTANT[m] COMMA INTEGER_CONSTANT[n] RPAREN {
-        if ($m <= 0) {
-            throw parser::syntax_error(@m, "Must be a non-negative number");
-        }
-        if ($n <= 0) {
-            throw parser::syntax_error(@n, "Must be a non-negative number");
-        }
-        auto const wgs = std::array<std::int32_t, 2>{static_cast<std::int32_t>($m),
-                                                     static_cast<std::int32_t>($n)};
-        $$ = [=](function_node &f) { f.work_group_size(wgs); };
-    }
-  | SUBGROUP_SIZE LPAREN INTEGER_CONSTANT RPAREN {
-        if ($INTEGER_CONSTANT <= 0) {
-            throw parser::syntax_error(@INTEGER_CONSTANT, "Must be a non-negative number");
-        }
-        auto const sgs = static_cast<std::int32_t>($INTEGER_CONSTANT);
-        $$ = [=](function_node &f) { f.subgroup_size(sgs); };
-    }
+  | ATTRIBUTES dictionary_attribute { $$ = $dictionary_attribute; }
 ;
 
 attribute:

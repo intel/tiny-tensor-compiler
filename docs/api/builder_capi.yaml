@@ -70,14 +70,14 @@ Builder C-API:
       - tinytc_group_type_get
       - tinytc_memref_type_get
       - tinytc_scalar_type_get
+      - tinytc_void_type_get
   Function:
     function:
       - tinytc_func_create
       - tinytc_func_destroy
       - tinytc_func_get_body
+      - tinytc_func_set_attr
       - tinytc_func_set_parameter_attr
-      - tinytc_func_set_subgroup_size
-      - tinytc_func_set_work_group_size
   Instruction:
     function:
       - tinytc_alloca_inst_create

@@ -103,7 +103,9 @@ Attributes
     dictionary-attribute        = "{" [named-attribute *("," named-attribute)] "}"
     named-attribute             = attribute-name "=" attribute
     attribute-name              = "align" /
+                                  "subgroup_size" /
                                   "unroll" /
+                                  "work_group_size" /
                                   string-attribute
     integer-attribute           = integer-constant
     string-attribute            = %x22 *(%x20-21 / %x23-7E) %x22
@@ -117,20 +119,30 @@ Functions
 
 .. code:: abnf
 
-    function-definition         = "func" global-identifier "(" [argument-list] ")" *function-attribute region
+    function-definition         = "func" global-identifier "(" [argument-list] ")"
+                                  ["attributes" dictionary-attribute] region
     argument-list               = argument *("," argument)
-    argument                    = local-identifier ":" type *argument-attribute
-    argument-attribute          = aligned-attribute / divisible-attribute
-    aligned-attribute           = "aligned" "(" 1*DIGIT ")"
-    divisible-attribute         = "divisible" "(" integer-list [";" integer-list] ")"
-    integer-list                = 1*DIGIT *("," 1*DIGIT)
-    function-attribute          = work-group-size-attribute / subgroup-size-attribute
-    work-group-size-attribute   = "work_group_size" "(" 1*DIGIT "," 1*DIGIT ")"
-    subgroup-size-attribute     = "subgroup_size" "(" 1*DIGIT ")"
+    argument                    = local-identifier ":" type [dictionary-attribute]
 
 Defines a function that is callable from the host.
 
-Function attributes are optional and automatically determined if omitted.
+Attributes
+----------
+
+Subgroup size and work-group size are determined automatically by the compiler, but can be overriden
+using the function's attribute dictionary:
+
+.. list-table::
+
+    * - Name
+      - Type
+      - Description
+    * - subgroup_size
+      - integer-attribute
+      - Subgroup size; valid values depend on the target device (typically 16 or 32)
+    * - work_group_size
+      - array-attribute with 2 integer-attribute entries
+      - Two dimensional work-group size in number of work-items
 
 The work-group size attribute defines the size of the local work group.
 Due to the focus on matrix operations, the work-group size is always two-dimensional,
@@ -142,24 +154,29 @@ the subgroup sizes supported by the device.
 The product of the work-group size modes must be smaller or equal than the maximum
 work-group size of device.
 
-The work-group is divided into full subgroups, therefore the work-group size
-is always a multiple of the subgroup size.
-The subgroup size attribute enforces a particular subgroup device supported by
+The subgroup size attribute enforces a particular subgroup size that must be supported by
 the device.
 
-Parameters can be decorated with attributes.
-When a parameter is decorated with an attribute, the user must ensure that the function argument
-satisfies the properties specified by the attribute definition.
-The "aligned" attribute specifies a minimum alignment of a memref's base pointer and the "divisible"
-attribute asserts the divisors of a dynamic tensor shape.
-The attribute specification w.r.t. parameter type is given in the
-documentation of the :ref:`memref type <memref attributes>` and the :ref:`group type <group attributes>`.
+Parameter attributes
+--------------------
+
+Parameters with memref or group type accept the following named attributes:
+
+.. list-table::
+
+    * - Name
+      - Type
+      - Description
+    * - align
+      - integer-attribute
+      - Minimum pointer alignment
+
+Cf. the documentation of the :ref:`memref type <memref attributes>` and the :ref:`group type <group attributes>`.
 
 Restrictions
 ------------
 
 * Arguments must not have coopmatrix type.
-* The "aligned" and "divisible" attributes must only be applied to parameters of memref or group type.
 
 Regions
 =======

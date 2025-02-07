@@ -66,7 +66,7 @@ func @tcomplex(%a: c32) {
 ; CHECK:      %[[#]] = OpFConvert %[[#C64]] %[[#]]
 }
 
-func @tfloatcoopmatrix() subgroup_size(16) {
+func @tfloatcoopmatrix() attributes{subgroup_size=16} {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = cast %0  : coopmatrix<i8x16x4,matrix_a>
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}

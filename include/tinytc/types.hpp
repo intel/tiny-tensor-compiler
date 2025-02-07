@@ -118,6 +118,7 @@ enum class status {
     ir_expected_integer_attribute = tinytc_status_ir_expected_integer_attribute,
     ir_expected_string_attribute = tinytc_status_ir_expected_string_attribute,
     ir_duplicate_key_in_dictionary = tinytc_status_ir_duplicate_key_in_dictionary,
+    ir_unexpected_array_attribute_size = tinytc_status_ir_unexpected_array_attribute_size,
     spirv_forbidden_forward_declaration = tinytc_status_spirv_forbidden_forward_declaration,
     spirv_undefined_value = tinytc_status_spirv_undefined_value,
     spirv_missing_dope_vector = tinytc_status_spirv_missing_dope_vector,

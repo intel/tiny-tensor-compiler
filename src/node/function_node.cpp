@@ -3,6 +3,8 @@
 
 #include "node/function_node.hpp"
 #include "error.hpp"
+#include "node/attr_node.hpp"
+#include "support/casting.hpp"
 #include "tinytc/types.hpp"
 
 #include <utility>
@@ -10,8 +12,8 @@
 using namespace tinytc;
 
 tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
-                         tinytc_location const &lc)
-    : name_(std::move(name)), work_group_size_{0, 0}, subgroup_size_{0}, loc_{lc} {
+                         tinytc_data_type_t ty, tinytc_location const &lc)
+    : name_(std::move(name)), ty_{ty}, loc_{lc} {
     body_.kind(tinytc::region_kind::collective);
     body_.loc(loc_);
     body_.set_params(std::move(params));
@@ -36,3 +38,31 @@ auto tinytc_func::param_attr(std::int32_t param_no) const -> tinytc_attr_t {
     return param_attr_[param_no];
 }
 
+auto tinytc_func::subgroup_size() const -> std::int32_t {
+    if (auto sgs_attr = get_attr(attr_, "subgroup_size"); sgs_attr) {
+        auto sgs = dyn_cast_or_throw<integer_attr>(sgs_attr, [&] {
+            return compilation_error(loc_, status::ir_expected_integer_attribute);
+        });
+        return sgs->value();
+    }
+    throw compilation_error(loc_, status::internal_compiler_error, "Subgroup size is missing");
+}
+
+auto tinytc_func::work_group_size() const -> std::array<std::int32_t, 2u> {
+    if (auto wgs_attr = get_attr(attr_, "work_group_size"); wgs_attr) {
+        auto wgs_array = dyn_cast_or_throw<array_attr>(
+            wgs_attr, [&] { return compilation_error(loc_, status::ir_expected_array_attribute); });
+        if (wgs_array->size() != 2) {
+            throw compilation_error(loc_, status::ir_unexpected_array_attribute_size,
+                                    "Work group size attribute must have 2 entries");
+        }
+        auto wgs = std::array<std::int32_t, 2u>{};
+        for (std::size_t i = 0; i < 2; ++i) {
+            wgs[i] = dyn_cast_or_throw<integer_attr>(wgs_array->value(i), [&] {
+                         return compilation_error(loc_, status::ir_expected_integer_attribute);
+                     })->value();
+        }
+        return wgs;
+    }
+    throw compilation_error(loc_, status::internal_compiler_error, "Work group size is missing");
+}

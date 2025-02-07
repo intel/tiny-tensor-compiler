@@ -12,6 +12,7 @@
 ### Tiny Tensor Language
 * Clarified execution model
 * Added align attribute
+* Added unroll attribute
 * Added boolean, f16 (half precision), bf16 (bfloat16), c32 (single complex), and c64 (double complex) type
 * Added address space to memref type
 * Added cooperative matrix type
@@ -45,6 +46,7 @@
 * Added SPIR-V support; Tiny Tensor Language to SPIR-V conversion and SPIR-V binary generation
 * Introduced GEMM to cooperative matrix conversion (instead of direct GEMM to OpenCL-C conversion)
 * Added fast cooperative matrix mul add implementation for complex numbers
+* Added attributes
 
 ## [0.3.1] - 2024-05-22
 * Bugfix: Add alias analysis for stack; needed to correctly insert barriers

@@ -1066,6 +1066,19 @@ inline data_type get_coopmatrix(data_type scalar_ty, std::int64_t rows, std::int
     return ct;
 }
 
+/**
+ * @brief Get a void data type
+ *
+ * @param ctx Context
+ *
+ * @return Data type
+ */
+inline data_type get_void(compiler_context const &ctx) {
+    tinytc_data_type_t vt;
+    CHECK_STATUS(tinytc_void_type_get(&vt, ctx.get()));
+    return vt;
+}
+
 ////////////////////////////
 /////////// Value //////////
 ////////////////////////////
@@ -2211,19 +2224,13 @@ class func : public unique_handle<tinytc_func_t> {
   public:
     using unique_handle::unique_handle;
 
-    void set_work_group_size(std::int32_t x, std::int32_t y) {
-        CHECK_STATUS(tinytc_func_set_work_group_size(obj_, x, y));
-    }
-
-    void set_subgroup_size(std::int32_t sgs) {
-        CHECK_STATUS(tinytc_func_set_subgroup_size(obj_, sgs));
-    }
-
     auto get_body() -> region {
         tinytc_region_t body;
         CHECK_STATUS(tinytc_func_get_body(obj_, &body));
         return region{body};
     }
+
+    void set_attr(attr a) { CHECK_STATUS(tinytc_func_set_attr(obj_, a)); }
 
     void set_parameter_attr(std::int32_t arg_no, attr a) {
         CHECK_STATUS(tinytc_func_set_parameter_attr(obj_, arg_no, a));
@@ -2235,11 +2242,12 @@ class func : public unique_handle<tinytc_func_t> {
  *
  * @param name Function name
  * @param param_type_list List of parameter types
+ * @param ty Result type (must be void for host-callable function)
  * @param loc Source code location
  *
  * @return Function
  */
-inline func make_func(std::string_view name, array_view<data_type> param_type_list,
+inline func make_func(std::string_view name, array_view<data_type> param_type_list, data_type ty,
                       location const &loc = {}) {
     tinytc_func_t fun;
     auto len = param_type_list.size();
@@ -2247,7 +2255,8 @@ inline func make_func(std::string_view name, array_view<data_type> param_type_li
         throw std::out_of_range("param list too long");
     }
     CHECK_STATUS_LOC(
-        tinytc_func_create(&fun, name.size(), name.data(), len, param_type_list.data(), &loc), loc);
+        tinytc_func_create(&fun, name.size(), name.data(), len, param_type_list.data(), ty, &loc),
+        loc);
     return func(fun);
 }
 

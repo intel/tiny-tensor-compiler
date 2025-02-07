@@ -21,7 +21,7 @@ int main() {
         auto element_ty = get_scalar(ctx, sty);
         auto ty = get_memref(element_ty, {M, N});
 
-        auto f = make_func("copy", {ty, ty});
+        auto f = make_func("copy", {ty, ty}, get_void(ctx));
 
         auto body = f.get_body();
         std::array<value, 2u> params;

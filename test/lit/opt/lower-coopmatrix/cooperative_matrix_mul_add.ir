@@ -3,7 +3,7 @@
 
 ; RUN: %tinytc-opt -plower-coopmatrix < %s | filecheck %s
 
-func @coopmatrix_mul_add_ff() subgroup_size(16) {
+func @coopmatrix_mul_add_ff() attributes{subgroup_size=16} {
     parallel {
         %a = constant 1.0 : coopmatrix<f32x16x2,matrix_a>
         %b = constant 2.0 : coopmatrix<f32x2x2,matrix_b>
@@ -32,7 +32,7 @@ func @coopmatrix_mul_add_ff() subgroup_size(16) {
 ; CHECK-NEXT: %18 = arith.add %17, %10 : f32
 }
 
-func @coopmatrix_mul_add_cf() subgroup_size(16) {
+func @coopmatrix_mul_add_cf() attributes{subgroup_size=16} {
     parallel {
         %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
         %b = constant 2.0 : coopmatrix<f32x2x4,matrix_b>
@@ -85,7 +85,7 @@ func @coopmatrix_mul_add_cf() subgroup_size(16) {
 ; CHECK-NEXT: %42 = arith.add %41, %22 : c32
 }
 
-func @coopmatrix_mul_add_cc() subgroup_size(16) {
+func @coopmatrix_mul_add_cc() attributes{subgroup_size=16} {
     parallel {
         %a = constant [1.0, 0.0] : coopmatrix<c32x16x2,matrix_a>
         %b = constant [2.0, 0.0] : coopmatrix<c32x2x4,matrix_b>
@@ -188,7 +188,7 @@ func @coopmatrix_mul_add_cc() subgroup_size(16) {
 ; CHECK-NEXT: %92 = arith.add %80, %91 : c32
 }
 
-func @coopmatrix_mul_add_ii_mixed() subgroup_size(16) {
+func @coopmatrix_mul_add_ii_mixed() attributes{subgroup_size=16} {
     parallel {
         %a = constant 1 : coopmatrix<i16x16x2,matrix_a>
         %b = constant 2 : coopmatrix<i32x2x4,matrix_b>

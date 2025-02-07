@@ -174,7 +174,7 @@ func @tfloatcomplex(%a: f32, %b: c32) {
 ; CHECK-NEXT:      %[[#]] = OpFMul %[[#C32]] %[[#]] %[[#A2_2]]
 }
 
-func @tfloatcoopmatrix() subgroup_size(16) {
+func @tfloatcoopmatrix() attributes{subgroup_size=16} {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %1 = constant 2.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = arith.add %0, %1 : coopmatrix<f32x16x4,matrix_a>

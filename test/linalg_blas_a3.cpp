@@ -85,7 +85,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
     auto Ct =
         get_memref(ct, layoutC.static_shape(), layoutC.static_stride(), address_space::global);
 
-    auto f = make_func(name, {alphat, At, Bt, betat, Ct});
+    auto f = make_func(name, {alphat, At, Bt, betat, Ct}, get_void(ctx));
     auto fn_body = f.get_body();
     auto params = std::array<value, 5u>{};
     fn_body.get_parameters(params);
@@ -100,7 +100,6 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
     make_op(bb, params);
 
     p.add_function(std::move(f));
-    p.dump();
 
     return p;
 }
