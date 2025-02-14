@@ -26,20 +26,46 @@ void dump_gcd_pass::run_on_function(function_node const &fn) {
     dump_ir.init_slot_tracker(fn);
     auto gcd = gcd_analysis{}.run_on_function(fn);
 
+    auto const dump_range = [&](auto begin, auto end) {
+        *os_ << "[";
+        for (auto it = begin; it != end; ++it) {
+            if (it != begin) {
+                *os_ << ",";
+            }
+            *os_ << *it;
+        }
+        *os_ << "]";
+    };
+    auto const dump_gcd = [&](value_node const &v) {
+        auto g = gcd.get_if(v);
+        if (g) {
+            *os_ << "  gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = " << *g << std::endl;
+        }
+        auto tg = gcd.get_tensor_if(v);
+        if (tg) {
+            *os_ << "  shape_gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = ";
+            dump_range(tg->shape_begin(), tg->shape_end());
+            *os_ << std::endl << "  stride_gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = ";
+            dump_range(tg->stride_begin(), tg->stride_end());
+            *os_ << std::endl;
+        }
+    };
+
     *os_ << "GCD in @" << fn.name() << std::endl;
+    for (auto &p : fn.params()) {
+        dump_gcd(p);
+    }
     walk<walk_order::pre_order>(fn, [&](inst_node const &i) {
         if (i.num_results() > 0 || i.num_child_regions() > 0) {
             *os_ << "> ";
             visit(dump_ir, i);
             *os_ << std::endl;
-            auto const dump_gcd = [&](value_node const &v) {
-                auto g = gcd.get_if(v);
-                if (g) {
-                    *os_ << "  gcd(";
-                    dump_ir.dump_val(v);
-                    *os_ << ") = " << *g << std::endl;
-                }
-            };
             for (auto &res : i.results()) {
                 dump_gcd(res);
             }

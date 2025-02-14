@@ -116,7 +116,7 @@ lex:
 
         // attributes
         "attributes"        { return parser::make_ATTRIBUTES(loc_); }
-        "subgroup_size" | "unroll" | "work_group_size" {
+        "shape_gcd" | "stride_gcd" | "subgroup_size" | "unroll" | "work_group_size" {
             adv_loc(); return parser::make_ATTR_NAME(std::string(b, YYCURSOR), loc_);
         }
 

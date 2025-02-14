@@ -74,7 +74,8 @@ class alignment_propagation_helper {
 
   private:
     auto compute_max_alignment(tinytc_value const &operand,
-                               std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t;
+                               std::vector<std::int64_t> const &offset_gcds,
+                               std::int32_t check_stride = -1) const -> std::int32_t;
     template <typename T> auto get_gcds(T &&val_range) -> std::vector<std::int64_t> {
         auto result = std::vector<std::int64_t>{};
         result.reserve(val_range.size());
@@ -90,15 +91,28 @@ class alignment_propagation_helper {
 };
 
 auto alignment_propagation_helper::compute_max_alignment(
-    tinytc_value const &operand,
-    std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t {
-    const auto op_align = known_alignment(operand);
+    tinytc_value const &operand, std::vector<std::int64_t> const &offset_gcds,
+    std::int32_t check_stride) const -> std::int32_t {
+    auto max_align = known_alignment(operand);
     const auto ot = get_memref_type(operand);
 
-    const auto &stride = ot->stride();
+    auto tgcd = gcd_.get_tensor_if(operand);
+    const auto &stride = tgcd ? tgcd->stride() : ot->stride();
     const auto sty_size = size(ot->element_ty());
 
-    for (std::int32_t align = op_align; align > ot->element_alignment(); align /= 2) {
+    if (check_stride >= 0) {
+        std::int32_t stride_in_bytes = stride[check_stride] * sty_size;
+        std::int32_t max_align_due_to_stride = sty_size;
+        for (std::int32_t align = sty_size; align <= max_align; align *= 2) {
+            if (stride_in_bytes % align != 0) {
+                break;
+            }
+            max_align_due_to_stride = align;
+        }
+        max_align = std::min(max_align, max_align_due_to_stride);
+    }
+
+    for (std::int32_t align = max_align; align > ot->element_alignment(); align /= 2) {
         if (is_aligned(offset_gcds, stride, align / sty_size)) {
             return align;
         }
@@ -131,14 +145,15 @@ void alignment_propagation_helper::operator()(fuse_inst &in) {
 }
 void alignment_propagation_helper::operator()(cooperative_matrix_load_inst &in) {
     auto index_list = std::array<const_tinytc_value_t, 2u>{&in.pos0(), &in.pos1()};
-    const auto align = compute_max_alignment(in.operand(), get_gcds(index_list));
+    const auto align = compute_max_alignment(in.operand(), get_gcds(index_list), 1);
+
     if (in.align() == 0 && align != 0) {
         in.align(align);
     }
 }
 void alignment_propagation_helper::operator()(cooperative_matrix_store_inst &in) {
     auto index_list = std::array<const_tinytc_value_t, 2u>{&in.pos0(), &in.pos1()};
-    const auto align = compute_max_alignment(in.operand(), get_gcds(index_list));
+    const auto align = compute_max_alignment(in.operand(), get_gcds(index_list), 1);
     if (in.align() == 0 && align != 0) {
         in.align(align);
     }

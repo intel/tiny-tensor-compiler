@@ -103,6 +103,8 @@ Attributes
     dictionary-attribute        = "{" [named-attribute *("," named-attribute)] "}"
     named-attribute             = attribute-name "=" attribute
     attribute-name              = "align" /
+                                  "shape_gcd" /
+                                  "stride_gcd" /
                                   "subgroup_size" /
                                   "unroll" /
                                   "work_group_size" /
@@ -369,23 +371,26 @@ Stride modes might be dynamic as well, indicated by a question mark.
 
 .. _memref attributes:
 
-Aligned attribute
-.................
+Align attribute
+...............
 
-The *aligned(X)* gives the alignment X of the memref's base pointer in bytes.
+The *align=X* attribute gives the alignment X of the memref's base pointer in bytes.
 That is, for the pointer P pointing to the first element of the memref we must have :math:`P = 0 \pmod{X}`.
 
 **Restriction:** The alignment must be a multiple of the size of the memref's element type.
 
 
-Divisible attribute
-...................
+Greatest common divisor (GCD) attributes
+........................................
 
-The *divisible(d_1,...,d_k; D_1,...,D_m)* attribute asserts that :math:`s_i = 0 \pmod{d_i}, i=1,\dots,k`,
-where k is smaller or equal than the order of the tensor n.
+The *shape_gcd=[d_1,...,d_k]* attribute asserts that :math:`s_i = 0 \pmod{d_i}, i=1,\dots,k`, where k is
+smaller or equal than the order of the tensor n and :math:`s_i` is the i-th entry of the shape vector.
+The divisors are understood to be the greatest common divisors for the set of shapes that the kernel is used for.
+For example, if we know that :math:`d_1` is always a multiple of 4 then we can set *shape_gcd=[4]*.
 
-The divisibility information for the stride (D) can be omitted or partially given.
-Omitted divisibility is inferred from the divisibility of the shape, assuming the canonical stride computation.
+The greatest common divisors of the stride are inferred from the greatest common divisors of the shape,
+assuming the canonical stride computation.
+The GCDs of the stride can be partially or fully overriden using the *stride_gcd=[D_1,...,D_m]* attribute.
 Formally, we define :math:`\hat{D}_0=1` and
 
 .. math::

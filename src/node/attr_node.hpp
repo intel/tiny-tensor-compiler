@@ -4,11 +4,13 @@
 #ifndef ATTR_NODE_20250205_HPP
 #define ATTR_NODE_20250205_HPP
 
+#include "support/casting.hpp"
 #include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <concepts>
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -126,6 +128,22 @@ class string_attr : public tinytc_attr {
 
 auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t;
 auto get_attr(tinytc_attr_t dict, std::string_view name) -> tinytc_attr_t;
+
+template <std::integral T> auto get_array_attr_as(tinytc_attr_t a) -> std::vector<T> {
+    auto aa = dyn_cast<array_attr>(a);
+    if (!aa) {
+        throw status::ir_expected_array_attribute;
+    }
+    auto result = std::vector<T>{};
+    result.reserve(aa->size());
+    for (auto const &va : *aa) {
+        auto val = dyn_cast_or_throw<integer_attr>(va, [&] {
+                       return status::ir_expected_integer_attribute;
+                   })->value();
+        result.emplace_back(static_cast<T>(val));
+    }
+    return result;
+}
 
 } // namespace tinytc
 

@@ -33,6 +33,8 @@ void dump_ir_pass::operator()(dictionary_attr const &a) {
     auto const is_keyword = [](std::string_view str) {
         switch (fnv1a(str)) {
         case "align"_fnv1a:
+        case "shape_gcd"_fnv1a:
+        case "stride_gcd"_fnv1a:
         case "subgroup_size"_fnv1a:
         case "unroll"_fnv1a:
         case "work_group_size"_fnv1a:

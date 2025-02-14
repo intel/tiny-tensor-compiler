@@ -102,6 +102,7 @@ class dump_ir_pass {
             a(it - begin, *it);
         }
     }
+
     inline auto indent() { return std::string(2 * lvl_, ' '); }
     std::ostream *os_;
     int lvl_limit_;
