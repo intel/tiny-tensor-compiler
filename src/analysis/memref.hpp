@@ -24,9 +24,11 @@ class memref_info {
     inline auto shape_gcd_begin() const { return shape_gcd_.begin(); }
     inline auto shape_gcd_end() const { return shape_gcd_.end(); }
     inline auto shape_gcd() const -> std::vector<std::int64_t> const & { return shape_gcd_; }
+    inline auto shape_gcd(std::size_t i) const -> std::int64_t { return shape_gcd_[i]; }
     inline auto stride_gcd_begin() const { return stride_gcd_.begin(); }
     inline auto stride_gcd_end() const { return stride_gcd_.end(); }
     inline auto stride_gcd() const -> std::vector<std::int64_t> const & { return stride_gcd_; }
+    inline auto stride_gcd(std::size_t i) const -> std::int64_t { return stride_gcd_[i]; }
 
     auto compute_max_alignment(std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t;
 

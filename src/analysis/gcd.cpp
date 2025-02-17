@@ -50,11 +50,16 @@ class gcd_helper {
 void gcd_helper::operator()(inst_node const &) {}
 void gcd_helper::operator()(arith_inst const &in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
+        const auto ga = gcd_.get(in.a());
+        const auto gb = gcd_.get(in.b());
         switch (in.operation()) {
         case arithmetic::add:
-            return std::gcd(gcd_.get(in.a()), gcd_.get(in.b()));
+            return std::gcd(ga, gb);
         case arithmetic::mul:
-            return gcd_.get(in.a()) * gcd_.get(in.b());
+            return ga * gb;
+        case arithmetic::div: {
+            return ga % gb == 0 ? ga / gb : 1;
+        }
         default:
             break;
         }

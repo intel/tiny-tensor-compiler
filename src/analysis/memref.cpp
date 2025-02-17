@@ -1,6 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "analysis/gcd.hpp"
 #include "analysis/memref.hpp"
 #include "codegen_tools.hpp"
 #include "error.hpp"
@@ -74,7 +75,8 @@ void memref_analysis_result::set(::tinytc_value const &a, memref_info g) {
 
 class memref_helper {
   public:
-    memref_helper(std::int32_t default_alignment) : default_alignment_{default_alignment} {}
+    memref_helper(std::int32_t default_alignment, gcd_analysis_result const &gcd)
+        : default_alignment_{default_alignment}, gcd_{&gcd} {}
 
     void operator()(inst_node const &in);
     void operator()(alloca_inst const &in);
@@ -89,6 +91,7 @@ class memref_helper {
 
   private:
     std::int32_t default_alignment_;
+    gcd_analysis_result const *gcd_;
     memref_analysis_result mr_;
 };
 
@@ -110,64 +113,126 @@ void memref_helper::operator()(alloca_inst const &in) {
     }
 }
 void memref_helper::operator()(expand_inst const &in) {
-    // @todo
-    // known_alignment(in.result(0), known_alignment(in.operand()));
+    if (auto mi = mr_.get_if(in.operand()); mi) {
+        const auto mt = get_memref_type(in.operand());
+        const auto alignment = mi->alignment();
+        const auto sty_size = mi->sty_size();
+        auto shape_gcd = std::vector<std::int64_t>{};
+        auto stride_gcd = std::vector<std::int64_t>{};
+
+        auto static_shape = in.static_expand_shape();
+        auto dyn_shape = in.expand_shape();
+
+        shape_gcd.reserve(mt->dim() + static_shape.size() - 1);
+        stride_gcd.reserve(mt->dim() + static_shape.size() - 1);
+
+        for (std::int64_t i = 0; i < in.expanded_mode(); ++i) {
+            shape_gcd.push_back(mi->shape_gcd(i));
+            stride_gcd.push_back(mi->stride_gcd(i));
+        }
+
+        auto get_shape = [&, j = std::size_t{0}](std::int64_t s) mutable {
+            if (is_dynamic_value(s)) {
+                return gcd_->get(dyn_shape[j++]);
+            }
+            return s;
+        };
+        stride_gcd.push_back(mi->stride_gcd(in.expanded_mode()));
+        shape_gcd.push_back(get_shape(static_shape[0]));
+        for (std::size_t j = 1; j < static_shape.size(); ++j) {
+            stride_gcd.push_back(stride_gcd.back() * shape_gcd.back());
+            shape_gcd.push_back(get_shape(static_shape[j]));
+        }
+
+        for (std::int64_t i = in.expanded_mode() + 1; i < mt->dim(); ++i) {
+            shape_gcd.push_back(mi->shape_gcd(i));
+            stride_gcd.push_back(mi->stride_gcd(i));
+        }
+
+        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+    }
 }
 void memref_helper::operator()(fuse_inst const &in) {
-    // @todo
-    // known_alignment(in.result(0), known_alignment(in.operand()));
+    if (auto mi = mr_.get_if(in.operand()); mi) {
+        const auto mt = get_memref_type(in.operand());
+        const auto alignment = mi->alignment();
+        const auto sty_size = mi->sty_size();
+        auto shape_gcd = std::vector<std::int64_t>{};
+        auto stride_gcd = std::vector<std::int64_t>{};
+
+        shape_gcd.reserve(mt->dim());
+        stride_gcd.reserve(mt->dim());
+
+        std::int64_t i = 0;
+        for (; i < in.from(); ++i) {
+            shape_gcd.push_back(mi->shape_gcd(i));
+            stride_gcd.push_back(mi->stride_gcd(i));
+        }
+        std::int64_t prod = mi->shape_gcd(i++);
+        for (; i <= in.to(); ++i) {
+            prod *= mi->shape_gcd(i);
+        }
+        shape_gcd.push_back(prod);
+        stride_gcd.push_back(mi->stride_gcd(in.from()));
+        for (i = in.to() + 1; i < mt->dim(); ++i) {
+            shape_gcd.push_back(mi->shape_gcd(i));
+            stride_gcd.push_back(mi->stride_gcd(i));
+        }
+
+        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+    }
 }
-//}
+
 void memref_helper::operator()(load_inst const &in) {
-    // @todo
-    // if (isa<group_data_type>(*in.operand().ty())) {
-    // known_alignment(in.result(0), known_alignment(in.operand()));
-    // return;
-    //}
-    // const auto align = compute_max_alignment(in.operand(), get_gcds(in.index_list()));
-    // if (in.align() == 0 && align != 0) {
-    // in.align(align);
-    //}
+    if (auto mi = mr_.get_if(in.operand()); mi && isa<group_data_type>(*in.operand().ty())) {
+        mr_.set(in.result(0), *mi);
+    }
 }
 void memref_helper::operator()(subview_inst const &in) {
-    // @todo
-    // auto offset_gcds = std::vector<std::int64_t>{};
-    // std::int64_t dim = in.static_offsets().size();
-    // offset_gcds.reserve(dim);
-    // std::int64_t ri = 0;
-    // for (std::int64_t i = 0; i < dim; ++i) {
-    // auto stat_off = in.static_offsets()[i];
-    // if (is_dynamic_value(stat_off)) {
-    // offset_gcds.emplace_back(gcd_.get(in.offsets()[ri++]));
-    //++ri;
-    //} else {
-    // offset_gcds.emplace_back(stat_off);
-    //}
-    //}
+    if (auto mi = mr_.get_if(in.operand()); mi) {
+        const auto mt = get_memref_type(in.operand());
+        const auto sty_size = mi->sty_size();
 
-    // const auto align = compute_max_alignment(in.operand(), offset_gcds);
-    // if (align != 0) {
-    // known_alignment(in.result(0), align);
-    //}
+        auto offset_gcds = std::vector<std::int64_t>{};
+        auto shape_gcd = std::vector<std::int64_t>{};
+        auto stride_gcd = std::vector<std::int64_t>{};
+
+        int j = 0;
+        offset_gcds.reserve(mt->dim());
+        shape_gcd.reserve(mt->dim());
+        stride_gcd.reserve(mt->dim());
+        auto dyn_offsets = in.offsets();
+        auto dyn_sizes = in.sizes();
+        for (std::int64_t i = 0, joffset = 0, jsize = 0; i < mt->dim(); ++i) {
+            const std::int64_t offset = in.static_offsets()[i];
+
+            auto const offset_gcd = [&]() -> std::int64_t {
+                if (is_dynamic_value(offset)) {
+                    return gcd_->get(dyn_offsets[joffset++]);
+                }
+                return offset;
+            };
+            offset_gcds.push_back(offset_gcd());
+
+            const std::int64_t size = in.static_sizes()[i];
+            if (size > 0 || is_dynamic_value(size)) {
+                auto const size_inst = [&]() -> std::int64_t {
+                    if (is_dynamic_value(size)) {
+                        return gcd_->get(dyn_sizes[jsize++]);
+                    }
+                    return size;
+                };
+                shape_gcd.emplace_back(size_inst());
+                stride_gcd.emplace_back(mi->stride_gcd(j));
+            }
+            ++j;
+        }
+
+        const auto alignment = mi->compute_max_alignment(offset_gcds);
+
+        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+    }
 }
-// void memref_helper::operator()(store_inst &in) {
-// const auto align = compute_max_alignment(in.operand(), get_int_constants(in.index_list()));
-// if (in.align() == 0 && align != 0) {
-// in.align(align);
-//}
-//}
-
-// auto memref_helper::known_alignment(value_node const &val) const -> std::int32_t {
-// if (auto it = known_alignment_.find(&val); it != known_alignment_.end()) {
-// return it->second;
-//}
-// return 0;
-//}
-// void memref_helper::known_alignment(value_node const &val, std::int32_t align) {
-// if (align != 0) {
-// known_alignment_[&val] = align;
-//}
-//}
 
 void memref_helper::set_from_attributes(function_node const &fn) {
     auto known_memref_info = [&](memref_data_type const *mr, tinytc_attr_t dict) -> memref_info {
@@ -188,7 +253,10 @@ void memref_helper::set_from_attributes(function_node const &fn) {
             }
             return std::vector<std::int64_t>{};
         }();
-        if (shape_gcd.size() < static_cast<std::size_t>(mr->dim())) {
+        auto const dim = static_cast<std::size_t>(mr->dim());
+        if (shape_gcd.size() > dim) {
+            shape_gcd.resize(dim);
+        } else if (shape_gcd.size() < dim) {
             std::size_t i = shape_gcd.size();
             shape_gcd.resize(mr->dim());
             for (; i < shape_gcd.size(); ++i) {
@@ -203,7 +271,9 @@ void memref_helper::set_from_attributes(function_node const &fn) {
             }
             return std::vector<std::int64_t>{};
         }();
-        if (stride_gcd.size() < static_cast<std::size_t>(mr->dim())) {
+        if (stride_gcd.size() > dim) {
+            stride_gcd.resize(dim);
+        } else if (stride_gcd.size() < dim) {
             std::size_t i = stride_gcd.size();
             stride_gcd.resize(mr->dim());
             for (; i < stride_gcd.size(); ++i) {
@@ -227,7 +297,8 @@ void memref_helper::set_from_attributes(function_node const &fn) {
 }
 
 auto memref_analysis::run_on_function(function_node const &fn) -> memref_analysis_result {
-    auto visitor = memref_helper{default_alignment_};
+    auto gcd = gcd_analysis{}.run_on_function(fn);
+    auto visitor = memref_helper{default_alignment_, gcd};
 
     visitor.set_from_attributes(fn);
     walk<walk_order::pre_order>(fn, [&visitor](inst_node const &i) { visit(visitor, i); });

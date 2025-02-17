@@ -386,23 +386,12 @@ Greatest common divisor (GCD) attributes
 The *shape_gcd=[d_1,...,d_k]* attribute asserts that :math:`s_i = 0 \pmod{d_i}, i=1,\dots,k`, where k is
 smaller or equal than the order of the tensor n and :math:`s_i` is the i-th entry of the shape vector.
 The divisors are understood to be the greatest common divisors for the set of shapes that the kernel is used for.
-For example, if we know that :math:`d_1` is always a multiple of 4 then we can set *shape_gcd=[4]*.
+For example, if we know that :math:`s_1` is always a multiple of 4 then we can set *shape_gcd=[4]*.
 
-The greatest common divisors of the stride are inferred from the greatest common divisors of the shape,
-assuming the canonical stride computation.
-The GCDs of the stride can be partially or fully overriden using the *stride_gcd=[D_1,...,D_m]* attribute.
-Formally, we define :math:`\hat{D}_0=1` and
-
-.. math::
-
-    j=1,\dots,n: \widehat{D}_j = \left\{\begin{array}{rcl}
-        D_{j} & \text{ if } & 1 \leq j \leq m, \\
-        \widehat{D}_{j-1}d_{j-1} & \text{ if } & m < j \leq k+1, \\
-        \widehat{D}_{j-1} & \text{ else.}
-    \end{array}\right.
-
-and assert that :math:`S_j = 0 \pmod{\widehat{D}_j}, j=1,\dots,n`.
-
+The *stride_gcd=[D_1,...,D_m]* attribute asserts that :math:`S_i = 0 \pmod{D_i}, i=1,\dots,m`, where m is
+smaller or equal than the order of the tensor n and :math:`S_i` is the i-th entry of the stride vector.
+The divisors are understood to be the greatest common divisors for the set of strides that the kernel is used for.
+For example, if we know that :math:`S_2` is always a multiple of 4 then we can set *stride_gcd=[1,4]*.
 
 Group type
 ----------

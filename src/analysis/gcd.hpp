@@ -39,9 +39,10 @@ class gcd_analysis_result {
  * "%x = constant C": P(%x) := set of prime factors of |C|
  *
  * For multiplication and addition formulae we define
- * "%z = arith.add %x, %y": P(%z) := intersection(P(%x),P(%y))
- * "%z = arith.sub %x, %y": P(%z) := intersection(P(%x),P(%y))
- * "%z = arith.mul %x, %y": P(%z) := union(P(%x),P(%y))
+ * "%z = arith.add %x, %y": P(%z) := P(%x) ∩ P(%y)
+ * "%z = arith.sub %x, %y": P(%z) := P(%x) ∩ P(%y)
+ * "%z = arith.mul %x, %y": P(%z) := P(%x) ∪ P(%y)
+ * "%z = arith.div %x, %y": P(%z) := P(%x) ∖ P(%y) if P(%y) ⊆ P(%x) else {1}
  *
  * If nothing is known about %x we let
  * P(%x) := {1}
@@ -56,6 +57,7 @@ class gcd_analysis_result {
  * "%z = arith.add %x, %y": p(%z) := gcd(p(%x),p(%y))
  * "%z = arith.sub %x, %y": p(%z) := gcd(p(%x),p(%y))
  * "%z = arith.mul %x, %y": p(%z) := p(%x) * p(%y)
+ * "%z = arith.div %x, %y": p(%z) := p(%x) / p(%y) if p(%x) % p(%y) == 0 else 1
  * "%x = unknown":          p(%x) := 1
  *
  * where gcd is the greatest common divisor.

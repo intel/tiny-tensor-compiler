@@ -1,114 +1,77 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-opt -pmemref-info < %s | filecheck %s
-func @load1(%0: memref<i16x64x64> {"alignment"=64}, %x: index, %y: index) {
-    %c0 = constant 0 : index
-    %c4 = constant 4 : index
-    %1 = load %0[%c0,%c0] : i16
-    %2 = load %0[%c0,%y] : i16
-    %3 = load %0[%c4,%y] : i16
-    %4 = load %0[%x,%y] : i16
-    %c32 = constant 32 : index
-    %5 = arith.div %x, %c32 : index
-    %6 = arith.mul %c32, %5 : index
-    %7 = load %0[%x,%c0] : i16
-    %8 = load %0[%6,%c0] : i16
-; CHECK-LABEL: func @load1({{.*}}
-; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
-; CHECK:       %2 = load %0[%c0,%y], align 64 : i16
-; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
-; CHECK:       %4 = load %0[%x,%y] : i16
-; CHECK:       %7 = load %0[%x,%c0] : i16
-; CHECK:       %8 = load %0[%6,%c0], align 64 : i16
-}
-func @load2(%0: memref<i16x64x64,strided<1,72>> {alignment=64}, %x: index, %y: index) {
-    %c0 = constant 0 : index
-    %c4 = constant 4 : index
-    %1 = load %0[%c0,%c0] : i16
-    %2 = load %0[%c0,%y] : i16
-    %3 = load %0[%c4,%y] : i16
-    %4 = load %0[%x,%y] : i16
-; CHECK-LABEL: func @load2({{.*}}
-; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
-; CHECK:       %2 = load %0[%c0,%y], align 16 : i16
-; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
-; CHECK:       %4 = load %0[%x,%y] : i16
-}
-func @load3(%0: memref<i16x64x64,strided<1,?>> {alignment=64}, %x: index, %y: index) {
-    %c0 = constant 0 : index
-    %c4 = constant 4 : index
-    %1 = load %0[%c0,%c0] : i16
-    %2 = load %0[%c0,%y] : i16
-    %3 = load %0[%c4,%c4] : i16
-    %4 = load %0[%x,%y] : i16
-; CHECK-LABEL: func @load3({{.*}}
-; CHECK:       %1 = load %0[%c0,%c0], align 64 : i16
-; CHECK:       %2 = load %0[%c0,%y] : i16
-; CHECK:       %3 = load %0[%c4,%c4], align 8 : i16
-; CHECK:       %4 = load %0[%x,%y] : i16
-}
-func @store1(%0: memref<i16x64x64> {alignment=64}, %x: index, %y: index) {
-    %cst = constant 42 : i16
-    %c0 = constant 0 : index
-    %c4 = constant 4 : index
-    store %cst, %0[%c0,%c0]
-    store %cst, %0[%c0,%y]
-    store %cst, %0[%c4,%y]
-    store %cst, %0[%x,%y]
-; CHECK-LABEL: func @store1({{.*}}
-; CHECK:       store %cst, %0[%c0,%c0], align 64
-; CHECK:       store %cst, %0[%c0,%y], align 64
-; CHECK:       store %cst, %0[%c4,%y], align 8
-; CHECK:       store %cst, %0[%x,%y]
+; RUN: %tinytc-opt -pset-stack-ptr -pdump-memref-info < %s | filecheck %s
+func @alloca() {
+    %0 = alloca : memref<f16x16x23,local>
+; CHECK-LABEL: Memref info @alloca
+; CHECK:       alignment(%0) = 128
+; CHECK:       shape_gcd(%0) = [16,23]
+; CHECK:       stride_gcd(%0) = [1,16]
 }
 
-func @expand(%a: memref<i8x64> {alignment=64}) {
-    %z = constant 0 : index
+func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd=[1,16]}) {
+    %c4 = constant 4 : index
+    %c16 = constant 16 : index
     %0 = expand %a[0->8x8] : memref<i8x8x8>
-    %1 = load %0[%z,%z] : i8
-; CHECK-LABEL: func @expand({{.*}}
-; CHECK:       %1 = load %0[%z,%z], align 64 : i8 
+    %1 = size %b[0] : index
+    %2 = arith.div %1, %c16 : index
+    %3 = arith.mul %2, %c16 : index
+    %4 = arith.div %3, %c4 : index
+    %5 = expand %b[0->4x%4] : memref<i8x4x?x?,strided<1,4,?>>
+; CHECK-LABEL: Memref info @expand
+; CHECK:       alignment(%0) = 128
+; CHECK:       shape_gcd(%0) = [4,4,3]
+; CHECK:       stride_gcd(%0) = [1,4,16]
 }
 
-func @fuse(%a: memref<i8x8x8> {alignment=128}) {
-    %z = constant 0 : index
+func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_gcd=[1,4,16]}) {
     %0 = fuse %a[0,1] : memref<i8x64>
-    %1 = load %0[%z] : i8
-; CHECK-LABEL: func @fuse({{.*}}
-; CHECK:       %1 = load %0[%z], align 128 : i8 
+    %1 = fuse %b[0,1] : memref<i8x?x?>
+; CHECK-LABEL: Memref info @fuse
+; CHECK:       alignment(%0) = 128
+; CHECK:       shape_gcd(%0) = [64]
+; CHECK:       stride_gcd(%0) = [1]
+; CHECK:       alignment(%1) = 128
+; CHECK:       shape_gcd(%1) = [16,42]
+; CHECK:       stride_gcd(%1) = [1,16]
 }
 
-func @subview(%a: memref<i16x8x8> {alignment=32}, %x: index) {
-    %cst = constant 42 : i16
+func @load(%a: group<memref<i8x?>> {shape_gcd=[4]}) {
+    %gid = builtin.group_id : index
+    %0 = load %a[%gid] : memref<i8x?>
+; CHECK-LABEL: Memref info @load
+; CHECK:       alignment(%0) = 128
+; CHECK:       shape_gcd(%0) = [4]
+; CHECK:       stride_gcd(%0) = [1]
+}
+
+func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
+    %c16 = constant 16 : index
+    %c128 = constant 128 : index
     %0 = subview %a[0:8,0:8] : memref<i16x8x8>
     %1 = subview %a[4:8,0:8] : memref<i16x8x8>
     %2 = subview %a[4:8,5:8] : memref<i16x8x8>
     %3 = subview %a[%x,0] : memref<i16x8>
     %4 = subview %a[0,%x] : memref<i16x8>
-    %z = constant 0 : index
-    store %cst, %0[%z,%z]
-    store %cst, %1[%z,%z]
-    store %cst, %2[%z,%z]
-    store %cst, %3[%z]
-    store %cst, %4[%z]
-; CHECK-LABEL: func @subview({{.*}}
-; CHECK:       store %cst, %0[%z,%z], align 32
-; CHECK:       store %cst, %1[%z,%z], align 8
-; CHECK:       store %cst, %2[%z,%z], align 8
-; CHECK:       store %cst, %3[%z]
-; CHECK:       store %cst, %4[%z], align 16
-}
-
-func @subview_indirect(%a: memref<i16x8x8> {alignment=32}, %x: index) {
-    %cst = constant 42 : i16
-    %c16 = constant 16 : index
-    %c128 = constant 128 : index
-    %0 = arith.mul %c16, %x : index
-    %1 = arith.add %0, %c128 : index
-    %2 = subview %a[%1:8,0:8] : memref<i16x8x8>
-    %z = constant 0 : index
-    store %cst, %2[%z,%z]
-; CHECK-LABEL: func @subview_indirect({{.*}}
-; CHECK:       store %cst, %2[%z,%z], align 32
+    %5 = arith.mul %c16, %x : index
+    %6 = arith.add %5, %c128 : index
+    %7 = subview %a[%6:8,0:8] : memref<i16x8x8>
+    %8 = subview %b[%x:%5] : memref<i16x?>
+; CHECK-LABEL: Memref info @subview
+; CHECK:       alignment(%0) = 128
+; CHECK:       shape_gcd(%0) = [8,8]
+; CHECK:       stride_gcd(%0) = [1,8]
+; CHECK:       alignment(%1) = 8
+; CHECK:       shape_gcd(%1) = [8,8]
+; CHECK:       stride_gcd(%1) = [1,8]
+; CHECK:       alignment(%2) = 8
+; CHECK:       shape_gcd(%2) = [8,8]
+; CHECK:       stride_gcd(%2) = [1,8]
+; CHECK:       alignment(%3) = 2
+; CHECK:       alignment(%4) = 16
+; CHECK:       alignment(%7) = 32
+; CHECK:       alignment(%8) = 2
+; CHECK:       shape_gcd(%8) = [16]
+; CHECK:       stride_gcd(%8) = [1]
 }
