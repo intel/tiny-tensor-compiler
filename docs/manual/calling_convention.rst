@@ -90,25 +90,27 @@ A group argument might require multiple arguments in the OpenCL-C code.
 The rule is that the first argument in the OpenCL kernel is a global pointer to a global pointer to the
 underlying scalar type of the memref.
 Then a global pointer argument follows for every '?' in the memref's shape or stride, ordered from left-to-right.
-If an dynamic offset is given, the offset is the last argument.
+Afterwards, the dynamic group size and the dynamic offset follow if necessary.
 
 
 .. code::
 
-   func @group_example1(%a: group<memref<i16x5x6>) {}
-   func @group_example2(%a: group<memref<i32x5x?x6>>) {}
-   func @group_example3(%a: group<memref<f32x?>, offset: ?>) {}
+   func @group_example1(%a: group<memref<i16x5x6>x42) {}
+   func @group_example2(%a: group<memref<i32x5x?x6>x?>) {}
+   func @group_example3(%a: group<memref<f32x?>x?, offset: ?>) {}
+   func @group_example4(%a: group<memref<f32x42>x42, offset: ?>) {}
 
 leads to
 
 .. code:: c
 
    kernel void group_example1(global short*global* a) {}
-   kernel void group_example2(global int*global* a, global long* a_shape1, global long* a_stride2) {}
-   kernel void group_example3(global float*global* a, global long* a_shape0, long a_offset) {}
+   kernel void group_example2(global int*global* a, global long* a_shape1, global long* a_stride2, long a_size) {}
+   kernel void group_example3(global float*global* a, global long* a_shape0, long a_size, long a_offset) {}
+   kernel void group_example4(global float*global* a, long a_offset) {}
 
-Note that `a_shape_0`, `a_shape1`, and `a_stride2` must contain at least as many values as the group size.
-That is, if a is accessed with `load %a[%id] : group<memref<i32x5x?x6>>`, then
+Note that `a_shape_0`, `a_shape1`, and `a_stride2` must contain at least as many values as the group size (`a_size`).
+That is, if a is accessed with `load %a[%id] : memref<i32x5x?x6>`, then
 `*(a_shape0 + id)`, `*(a_shape1 + id)`, and `*(a_stride2 + id)` must not lead to out-of-bounds memory access.
 
 **Memory alignment:** The memrefs the group points to are subject to the same alignment requirements as a

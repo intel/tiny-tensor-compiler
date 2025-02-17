@@ -69,13 +69,13 @@ tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_data_type_
 }
 
 tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_data_type_t memref_ty,
-                                      int64_t offset, const tinytc_location_t *loc) {
+                                      int64_t size, int64_t offset, const tinytc_location_t *loc) {
     if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
     return exception_to_status_code(
-        [&] { *dt = group_data_type::get(memref_ty, offset, get_optional(loc)); });
+        [&] { *dt = group_data_type::get(memref_ty, size, offset, get_optional(loc)); });
 }
 
 tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt, tinytc_data_type_t scalar_ty,

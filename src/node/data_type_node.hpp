@@ -85,17 +85,20 @@ class coopmatrix_data_type : public data_type_node {
 class group_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::group; }
-    static auto get(tinytc_data_type_t ty, std::int64_t offset, location const &lc = {})
-        -> tinytc_data_type_t;
+    static auto get(tinytc_data_type_t ty, std::int64_t size, std::int64_t offset,
+                    location const &lc = {}) -> tinytc_data_type_t;
 
     inline auto ty() const -> tinytc_data_type_t { return ty_; }
+    inline auto size() const -> std::int64_t { return size_; }
     inline auto offset() const -> std::int64_t { return offset_; }
 
   protected:
-    group_data_type(tinytc_data_type_t memref_ty, std::int64_t offset = 0, location const &lc = {});
+    group_data_type(tinytc_data_type_t memref_ty, std::int64_t size, std::int64_t offset = 0,
+                    location const &lc = {});
 
   private:
     tinytc_data_type_t ty_;
+    std::int64_t size_;
     std::int64_t offset_;
 };
 

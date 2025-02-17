@@ -1035,14 +1035,16 @@ inline data_type get_memref(data_type scalar_ty, array_view<std::int64_t> shape,
  * @brief Get a group data type
  *
  * @param memref_ty Memref data type
+ * @param size Size parameter
  * @param offset Offset parameter
  * @param loc Source code location
  *
  * @return Data type
  */
-inline data_type get_group(data_type memref_ty, std::int64_t offset = 0, location const &loc = {}) {
+inline data_type get_group(data_type memref_ty, std::int64_t size, std::int64_t offset = 0,
+                           location const &loc = {}) {
     tinytc_data_type_t gt;
-    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, offset, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, size, offset, &loc), loc);
     return gt;
 }
 

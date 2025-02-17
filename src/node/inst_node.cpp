@@ -1087,8 +1087,13 @@ size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t t
         throw compilation_error(loc(), status::ir_expected_index);
     }
 
-    auto m = get_memref_type(loc(), operand());
-    bool const range_ok = 0 <= mode_ && mode_ < m->dim();
+    const bool range_ok =
+        visit(overloaded{[&](group_data_type &) -> bool { return 0 <= mode_ && mode_ < 1; },
+                         [&](memref_data_type &m) -> bool { return 0 <= mode_ && mode_ < m.dim(); },
+                         [&](auto &) -> bool {
+                             throw compilation_error(loc(), status::ir_expected_memref_or_group);
+                         }},
+              *operand().ty());
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }

@@ -247,14 +247,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
  *
  * @param dt [out] pointer to the data type object created
  * @param memref_ty [in] memref data type object
- * @param offset [in][optional] offset parameter; pass 0 for default
+ * @param size [in] group size; may be TINYTC_DYNAMIC
+ * @param offset [in][optional] offset parameter; pass 0 for default; may be TINYTC_DYNAMIC
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
-                                                    tinytc_data_type_t memref_ty, int64_t offset,
-                                                    const tinytc_location_t *loc);
+                                                    tinytc_data_type_t memref_ty, int64_t size,
+                                                    int64_t offset, const tinytc_location_t *loc);
 /**
  * @brief Get coopmatrix data type
  *

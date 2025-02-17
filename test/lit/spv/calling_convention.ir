@@ -25,26 +25,46 @@
 ; CHECK: %[[#PTR_PTR_C64]] = OpTypePointer CrossWorkgroup %[[#PTR_C64]]
 
 func @cc1(%0: memref<f32x?x?>, %1: memref<i16x?x5x?,strided<1,20,100>>) {
-; CHECK:      %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_F32]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I16]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_F32]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I16]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpLabel
 }
 
-func @cc2(%0: group<memref<c32x8x?x9>>) {
-; CHECK:      %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_PTR_C32]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+func @cc2(%0: group<memref<c32x8x?x9>x8>) {
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_PTR_C32]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#]] = OpLabel
+}
+func @cc3(%0: group<memref<c64x?>x42, offset: ?>) {
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_PTR_C64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpLabel
 }
 
-func @cc3(%0: group<memref<c64x?>, offset: ?>) {
-; CHECK:      %[[#]] = OpFunction {{.*}}
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_PTR_C64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#PTR_I64]]
-; CHECK-NEXT: %[[#]] = OpFunctionParameter %[[#I64]]
+func @cc4(%0: group<memref<c64x?>x?, offset: 42>) {
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_PTR_C64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpLabel
 }
+
+func @cc5(%0: group<memref<c64x?>x?, offset: ?>) {
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_PTR_C64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#PTR_I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpFunctionParameter %[[#I64]]
+; CHECK-NEXT:  %[[#]] = OpLabel
+}
+

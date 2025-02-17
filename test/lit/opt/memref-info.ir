@@ -37,7 +37,7 @@ func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_
 ; CHECK:       stride_gcd(%1) = [1,16]
 }
 
-func @load(%a: group<memref<i8x?>> {shape_gcd=[4]}) {
+func @load(%a: group<memref<i8x?>x?> {shape_gcd=[4]}) {
     %gid = builtin.group_id : index
     %0 = load %a[%gid] : memref<i8x?>
 ; CHECK-LABEL: GCD in @load

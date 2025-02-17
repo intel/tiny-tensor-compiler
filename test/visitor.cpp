@@ -21,8 +21,8 @@ TEST_CASE("is_equal") {
     CHECK(is_equal(*a, *a));
     CHECK(!is_equal(*a, *b));
     CHECK(!is_equal(*a, *c));
-    CHECK(is_equal(*get_group(a), *get_group(a)));
-    CHECK(!is_equal(*get_group(a), *get_group(b)));
-    CHECK(!is_equal(*get_group(a), *get_group(c)));
-    CHECK(!is_equal(*get_group(a), *a));
+    CHECK(is_equal(*get_group(a, dynamic), *get_group(a, dynamic)));
+    CHECK(!is_equal(*get_group(a, dynamic), *get_group(b, dynamic)));
+    CHECK(!is_equal(*get_group(a, dynamic), *get_group(c, dynamic)));
+    CHECK(!is_equal(*get_group(a, dynamic), *a));
 }

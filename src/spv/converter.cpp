@@ -462,9 +462,9 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
                            auto pointer_ty =
                                unique_.spv_pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
                                                       alignment(scalar_type::i64));
-                           return &(dope_vec_[&v] =
-                                        dope_vector{pointer_ty, mt->shape(), mt->stride(),
-                                                    spv_index_ty, g.offset()});
+                           return &(dope_vec_[&v] = dope_vector{
+                                        pointer_ty, mt->shape(), mt->stride(), spv_index_ty,
+                                        g.size(), spv_index_ty, g.offset()});
                        } else {
                            throw compilation_error(v.loc(), status::ir_expected_memref);
                        }
@@ -1317,7 +1317,15 @@ void inst_converter::operator()(size_inst const &in) {
     if (!dv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    declare(in.result(0), dv->shape(in.mode()));
+
+    const auto shape = ::tinytc::visit(
+        overloaded{[&](group_data_type const &) -> spv_inst * { return dv->size(); },
+                   [&](memref_data_type const &) -> spv_inst * { return dv->shape(in.mode()); },
+                   [&](auto const &) -> spv_inst * {
+                       throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+                   }},
+        *in.operand().ty());
+    declare(in.result(0), shape);
 }
 
 void inst_converter::operator()(subgroup_broadcast_inst const &in) {
@@ -1532,6 +1540,9 @@ void inst_converter::run_on_function(function_node const &fn) {
                 for (std::int64_t i = 0; i < dv->num_dynamic(); ++i) {
                     params.emplace_back(dv->ty());
                 }
+                if (is_dynamic_value(dv->static_size())) {
+                    params.emplace_back(dv->size_ty());
+                }
                 if (is_dynamic_value(dv->static_offset())) {
                     params.emplace_back(dv->offset_ty());
                 }
@@ -1556,6 +1567,9 @@ void inst_converter::run_on_function(function_node const &fn) {
             }
             for (std::int64_t i = 0; i < dv->dim(); ++i) {
                 dv->stride(i, make_dope_par(dv->ty(), dv->static_stride(i)));
+            }
+            if (dv->size_ty()) {
+                dv->size(make_dope_par(dv->size_ty(), dv->static_size()));
             }
             if (dv->offset_ty()) {
                 dv->offset(make_dope_par(dv->offset_ty(), dv->static_offset()));

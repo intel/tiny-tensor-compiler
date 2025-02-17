@@ -232,9 +232,26 @@ void gcd_helper::operator()(load_inst const &in) {
     }
 }
 void gcd_helper::operator()(size_inst const &in) {
-    if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
-        gcd_.set(in.result(0), mi->shape_gcd(in.mode()));
-    }
+    const auto size =
+        visit(overloaded{[&](group_data_type const &g) -> std::int64_t {
+                             return !is_dynamic_value(g.size()) ? g.size() : 1;
+                         },
+                         [&](memref_data_type const &m) -> std::int64_t {
+                             const auto s_i = m.shape(in.mode());
+                             if (is_dynamic_value(s_i)) {
+                                 if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
+                                     return mi->shape_gcd(in.mode());
+                                 }
+                                 return 1;
+                             }
+                             return s_i;
+                         },
+                         [&](auto const &) -> std::int64_t {
+                             throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+                         }},
+              *in.operand().ty());
+
+    gcd_.set(in.result(0), size);
 }
 void gcd_helper::operator()(subgroup_broadcast_inst const &in) {
     auto g = gcd_.get_if(in.a());

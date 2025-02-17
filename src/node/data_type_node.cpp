@@ -57,23 +57,27 @@ auto coopmatrix_data_type::component_ty() const -> scalar_type {
     return dyn_cast<scalar_data_type>(ty_)->ty();
 }
 
-auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t offset, location const &lc)
-    -> tinytc_data_type_t {
-    const auto hash = fnv1a_combine(memref_ty, offset);
+auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t size, std::int64_t offset,
+                          location const &lc) -> tinytc_data_type_t {
+    const auto hash = fnv1a_combine(memref_ty, size, offset);
     const auto is_equal = [&](tinytc_data_type_t ty) {
         const auto gt = dyn_cast<group_data_type>(ty);
-        return gt && memref_ty == gt->ty() && offset == gt->offset();
+        return gt && memref_ty == gt->ty() && size == gt->size() && offset == gt->offset();
     };
-    const auto make = [&]() { return new group_data_type(memref_ty, offset, lc); };
+    const auto make = [&]() { return new group_data_type(memref_ty, size, offset, lc); };
 
     auto &tys = memref_ty->context()->cache()->group_tys;
     return tys.get(hash, std::move(is_equal), std::move(make));
 }
 
-group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t offset, location const &lc)
-    : data_type_node(DTK::group, ty->context()), ty_(std::move(ty)), offset_(offset) {
+group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t size, std::int64_t offset,
+                                 location const &lc)
+    : data_type_node(DTK::group, ty->context()), ty_(std::move(ty)), size_(size), offset_(offset) {
     if (!isa<memref_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_memref);
+    }
+    if (size < 0 && !is_dynamic_value(size)) {
+        throw compilation_error(lc, status::ir_invalid_shape);
     }
     if (offset < 0 && !is_dynamic_value(offset)) {
         throw compilation_error(lc, status::ir_invalid_offset);

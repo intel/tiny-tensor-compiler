@@ -12,11 +12,11 @@
 namespace tinytc::spv {
 
 dope_vector::dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
-                         std::vector<std::int64_t> static_stride, spv_inst *offset_ty,
-                         std::int64_t static_offset)
+                         std::vector<std::int64_t> static_stride, spv_inst *size_ty,
+                         std::int64_t static_size, spv_inst *offset_ty, std::int64_t static_offset)
     : ty_(ty), static_shape_(std::move(static_shape)), static_stride_(std::move(static_stride)),
-      shape_(dim(), nullptr), stride_(dim(), nullptr), offset_ty_(offset_ty),
-      static_offset_(static_offset) {
+      shape_(dim(), nullptr), stride_(dim(), nullptr), size_ty_(size_ty), offset_ty_(offset_ty),
+      static_size_(static_size), static_offset_(static_offset) {
     if (static_shape_.size() != static_stride_.size()) {
         throw status::internal_compiler_error;
     }

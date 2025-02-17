@@ -443,8 +443,8 @@ constant_or_dynamic:
 ;
 
 group_type:
-    GROUP LCHEV memref_type group_offset RCHEV {
-        $$ = get_group(std::move($memref_type), $group_offset, @group_type);
+    GROUP LCHEV memref_type TIMES constant_or_dynamic[group_size] group_offset RCHEV {
+        $$ = get_group(std::move($memref_type), $group_size, $group_offset, @group_type);
     }
 ;
 

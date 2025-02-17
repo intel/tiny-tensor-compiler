@@ -89,10 +89,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto A_ty = make_memref(element_ty, tA, M, K, A_stride, my_loc());
         auto B_ty = make_memref(element_ty, tB, K, N, B_stride, my_loc());
         auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride, my_loc());
-        auto f = make_func("gemm",
-                           {get_group(A_ty, 0, my_loc()), get_group(B_ty, 0, my_loc()),
-                            get_group(C_ty, 0, my_loc())},
-                           get_void(ctx), my_loc());
+        auto f =
+            make_func("gemm",
+                      {get_group(A_ty, dynamic, 0, my_loc()), get_group(B_ty, dynamic, 0, my_loc()),
+                       get_group(C_ty, dynamic, 0, my_loc())},
+                      get_void(ctx), my_loc());
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
                 ctx, named_attr{get_string_attr(ctx, "align"), get_integer_attr(ctx, alignment)});
@@ -242,7 +243,7 @@ template <typename T> void test(queue q, args &a) {
                 auto kernel = make_kernel(bundle, "gemm");
                 auto exe_range = get_execution_range(kernel, howmany);
                 q.submit([&](handler &h) {
-                     h.set_args(AA, BB, CC);
+                     h.set_args(AA, howmany, BB, howmany, CC, howmany);
                      h.parallel_for(exe_range, kernel);
                  }).wait();
                 if (a.internal_repetitions == 1 && a.verify) {
@@ -250,7 +251,7 @@ template <typename T> void test(queue q, args &a) {
                 }
                 min_exec_time_ns = bench([&]() {
                     q.submit([&](handler &h) {
-                         h.set_args(AA, BB, CC);
+                         h.set_args(AA, howmany, BB, howmany, CC, howmany);
                          h.parallel_for(exe_range, kernel);
                      }).wait();
                 });

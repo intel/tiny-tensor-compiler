@@ -404,18 +404,21 @@ Group type
 
 .. code:: abnf
 
-    group-type                  = "group<" memref-type ["," "offset" ":" constant-or-dynamic] ">"
+    group-type                  = "group<" memref-type "x" constant-or-dynamic ["," "offset" ":" constant-or-dynamic] ">"
 
 The group type collects unstructured pointers to memref's with potentially different dynamic mode sizes.
 The C-analogy of a group is a pointer-to-a-pointer.
-For example, the C-analogue of a ``group<memref<f32x16x16>>`` is a ``float**``.
+For example, the C-analogue of a ``group<memref<f32x16x16>x?>`` is a ``float**``.
+
+The group shape is always one-dimensional and may be queried using the
+:ref:`size instruction <size instruction>`.
 
 The optional offset parameter is used to offset each pointer by the given number of elements.
 Given the C-analogue ``float** group``, loading element ``i`` with offset ``off`` gives the
 pointer ``float* tmp = group[i] + off``.
 The default offset is 0.
 
-Dynamic values ('?') may appear in the memref-type and in the offset.
+Dynamic values ('?') may appear in the memref-type, in the group shape, and in the offset.
 These values are stored in the dope vector;
 the calling convention for groups is implementation-defined.
 
@@ -1345,8 +1348,10 @@ Examples:
 
 #. ``load %0[] : f32 ; %0: memref<f32>``
 #. ``load %0[5, %1] : f32 ; %0: memref<f32x10x?>``
-#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>>``
-#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>, offset: ?>``
+#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>x?>``
+#. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>x?, offset: ?>``
+
+.. _size instruction:
 
 Size
 ....
@@ -1362,15 +1367,17 @@ The size instruction returns the i-th entry of the tensor's shape, where "i" is 
 constant in square brackets.
 "i" must be in bounds, i.e. :math:`0 \leq i < \text{order}(tensor)`.
 
+For group types, the group size is returned and "i" must be 0.
+
 Operands
 ~~~~~~~~~
 
-======= ================ ===========
-Op.-No. Type             Description
-======= ================ ===========
-1       memref-type      tensor
-2       integer-constant mode index
-======= ================ ===========
+======= ======================== ===========
+Op.-No. Type                     Description
+======= ======================== ===========
+1       memref-type / group-type tensor
+2       integer-constant         mode index
+======= ======================== ===========
 
 Subview
 .......
@@ -1808,7 +1815,7 @@ where B and C are constant matrices and A and D are matrix batches.
 .. code::
 
     func @fused_kernel(%alpha: f32,
-                         %A: group<memref<f32x16x8>>,
+                         %A: group<memref<f32x16x8>x?>,
                          %B: memref<f32x8x8>,
                          %C: memref<f32x8x16>,
                          %D: memref<f32x16x16x?>) {

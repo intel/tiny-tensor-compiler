@@ -15,7 +15,8 @@ class dope_vector {
   public:
     dope_vector() = default;
     dope_vector(spv_inst *ty, std::vector<std::int64_t> static_shape,
-                std::vector<std::int64_t> static_stride, spv_inst *offset_ty = nullptr,
+                std::vector<std::int64_t> static_stride, spv_inst *size_ty = nullptr,
+                std::int64_t static_size = 0, spv_inst *offset_ty = nullptr,
                 std::int64_t static_offset = 0);
 
     inline auto dim() const -> std::int64_t { return static_shape_.size(); }
@@ -26,6 +27,11 @@ class dope_vector {
     inline auto stride(std::int64_t i) const -> spv_inst * { return stride_[i]; }
     inline void shape(std::int64_t i, spv_inst *s) { shape_[i] = s; }
     inline void stride(std::int64_t i, spv_inst *s) { stride_[i] = s; }
+
+    inline auto size_ty() const -> spv_inst * { return size_ty_; }
+    inline auto static_size() const -> std::int64_t { return static_size_; }
+    inline auto size() -> spv_inst * { return size_; }
+    inline void size(spv_inst *size) { size_ = size; }
 
     inline auto offset_ty() const -> spv_inst * { return offset_ty_; }
     inline auto static_offset() const -> std::int64_t { return static_offset_; }
@@ -38,8 +44,9 @@ class dope_vector {
     spv_inst *ty_ = nullptr;
     std::vector<std::int64_t> static_shape_, static_stride_;
     std::vector<spv_inst *> shape_, stride_;
-    spv_inst *offset_ty_ = nullptr;
-    std::int64_t static_offset_;
+    spv_inst *size_ty_ = nullptr, *offset_ty_ = nullptr;
+    std::int64_t static_size_, static_offset_;
+    spv_inst *size_ = nullptr;
     spv_inst *offset_ = nullptr;
 };
 

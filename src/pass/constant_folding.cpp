@@ -298,14 +298,18 @@ auto constant_folding::operator()(cooperative_matrix_scale_inst &in) -> fold_res
 }
 
 auto constant_folding::operator()(size_inst &in) -> fold_result {
-    auto ct = get_memref_type(in.operand());
+    auto mode_size = visit(
+        overloaded{[&](group_data_type const &g) -> std::int64_t { return g.size(); },
+                   [&](memref_data_type const &m) -> std::int64_t { return m.shape(in.mode()); },
+                   [&](auto const &) -> std::int64_t {
+                       throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+                   }},
+        *in.operand().ty());
 
-    auto mode_size = ct->shape(in.mode());
     if (!is_dynamic_value(mode_size)) {
         return make_constant(
             mode_size, scalar_data_type::get(in.operand().context(), scalar_type::index), in.loc());
     }
-
     return tinytc_value_t{};
 }
 

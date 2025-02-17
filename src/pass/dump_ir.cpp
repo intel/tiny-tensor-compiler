@@ -77,8 +77,20 @@ void dump_ir_pass::operator()(coopmatrix_data_type const &ct) {
     *os_ << "x" << ct.rows() << "x" << ct.cols() << "," << to_string(ct.use()) << ">";
 }
 void dump_ir_pass::operator()(group_data_type const &g) {
+    auto const val = [&](std::int64_t v) -> std::ostream & {
+        if (is_dynamic_value(v)) {
+            return *os_ << "?";
+        }
+        return *os_ << v;
+    };
     *os_ << "group<";
     visit(*this, *g.ty());
+    *os_ << "x";
+    val(g.size());
+    if (g.offset() != 0) {
+        *os_ << ", offset: ";
+        val(g.offset());
+    }
     *os_ << ">";
 }
 void dump_ir_pass::operator()(memref_data_type const &d) {
