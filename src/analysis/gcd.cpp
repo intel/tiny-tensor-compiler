@@ -71,6 +71,7 @@ class gcd_helper {
     void operator()(for_inst const &in);
     void operator()(fuse_inst const &in);
     void operator()(load_inst const &in);
+    void operator()(size_inst const &in);
     void operator()(subgroup_broadcast_inst const &in);
     void operator()(subview_inst const &in);
 
@@ -228,6 +229,11 @@ void gcd_helper::operator()(load_inst const &in) {
     if (auto mi = gcd_.get_memref_if(in.operand());
         mi && isa<group_data_type>(*in.operand().ty())) {
         gcd_.set_memref(in.result(0), *mi);
+    }
+}
+void gcd_helper::operator()(size_inst const &in) {
+    if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
+        gcd_.set(in.result(0), mi->shape_gcd(in.mode()));
     }
 }
 void gcd_helper::operator()(subgroup_broadcast_inst const &in) {

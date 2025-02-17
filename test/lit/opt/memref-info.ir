@@ -12,20 +12,17 @@ func @alloca() {
 
 func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd=[1,16]}) {
     %c4 = constant 4 : index
-    %c16 = constant 16 : index
     %0 = expand %a[0->8x8] : memref<i8x8x8>
     %1 = size %b[0] : index
-    %2 = arith.div %1, %c16 : index
-    %3 = arith.mul %2, %c16 : index
-    %4 = arith.div %3, %c4 : index
-    %5 = expand %b[0->4x%4] : memref<i8x4x?x?,strided<1,4,?>>
+    %2 = arith.div %1, %c4 : index
+    %3 = expand %b[0->4x%2] : memref<i8x4x?x?,strided<1,4,?>>
 ; CHECK-LABEL: GCD in @expand
 ; CHECK:       offset_gcd(%0) = 128
 ; CHECK:       shape_gcd(%0) = [8,8]
 ; CHECK:       stride_gcd(%0) = [1,8]
-; CHECK:       offset_gcd(%5) = 128
-; CHECK:       shape_gcd(%5) = [4,4,3]
-; CHECK:       stride_gcd(%5) = [1,4,16]
+; CHECK:       offset_gcd(%3) = 128
+; CHECK:       shape_gcd(%3) = [4,4,3]
+; CHECK:       stride_gcd(%3) = [1,4,16]
 }
 
 func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_gcd=[1,4,16]}) {
