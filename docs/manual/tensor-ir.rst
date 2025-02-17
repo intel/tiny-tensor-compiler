@@ -172,6 +172,12 @@ Parameters with memref or group type accept the following named attributes:
     * - alignment
       - integer-attribute
       - Minimum pointer alignment
+    * - shape_gcd
+      - array-attribute of integer-attribute
+      - Greatest common divisors of shape
+    * - stride_gcd
+      - array-attribute of integer-attribute
+      - Greatest common divisors of stride
 
 Cf. the documentation of the :ref:`memref type <memref attributes>` and the :ref:`group type <group attributes>`.
 
@@ -371,8 +377,8 @@ Stride modes might be dynamic as well, indicated by a question mark.
 
 .. _memref attributes:
 
-Align attribute
-...............
+Alignment attribute
+...................
 
 The *alignment=X* attribute gives the alignment X of the memref's base pointer in bytes.
 That is, for the pointer P pointing to the first element of the memref we must have :math:`P = 0 \pmod{X}`.
