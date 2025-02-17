@@ -22,7 +22,6 @@ set(SOURCES
     analysis/gcd.cpp
     analysis/equal.cpp
     analysis/matrix_ext.cpp
-    analysis/memref.cpp
     analysis/stack.cpp
     attribute.cpp
     binary.cpp
@@ -59,7 +58,6 @@ set(SOURCES
     pass/dump_gcd.cpp
     pass/dump_ir.cpp
     pass/dump_matrix_ext.cpp
-    pass/dump_memref_info.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
     pass/lower_coopmatrix.cpp

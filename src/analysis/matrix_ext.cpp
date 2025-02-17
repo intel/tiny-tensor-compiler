@@ -3,7 +3,6 @@
 
 #include "analysis/matrix_ext.hpp"
 #include "analysis/gcd.hpp"
-#include "analysis/memref.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
@@ -19,6 +18,7 @@
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
@@ -38,9 +38,8 @@ class matrix_ext_helper {
   public:
     matrix_ext_helper(::tinytc_core_info const &info,
                       std::unordered_set<const_tinytc_value_t> &mext,
-                      std::queue<const_tinytc_inst_t> &q, gcd_analysis_result const &gcd,
-                      memref_analysis_result const &mr)
-        : info_{&info}, mext_{&mext}, q_{&q}, gcd_{&gcd}, mr_{&mr} {}
+                      std::queue<const_tinytc_inst_t> &q, gcd_analysis_result const &gcd)
+        : info_{&info}, mext_{&mext}, q_{&q}, gcd_{&gcd} {}
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
@@ -61,7 +60,6 @@ class matrix_ext_helper {
     std::unordered_set<const_tinytc_value_t> *mext_;
     std::queue<const_tinytc_inst_t> *q_;
     gcd_analysis_result const *gcd_;
-    memref_analysis_result const *mr_;
 };
 
 auto matrix_ext_helper::have(value_node const &val) -> bool { return mext_->contains(&val); }
@@ -113,7 +111,7 @@ void matrix_ext_helper::operator()(cast_inst const &in) {
 }
 auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node const &pos0)
     -> bool {
-    if (auto mi = mr_->get_if(operand); mi) {
+    if (auto mi = gcd_->get_memref_if(operand); mi) {
         auto const mt = get_memref_type(operand);
         const auto sty_size = size(mt->element_ty());
         auto const &block_io = info_->matrix().block_io();
@@ -243,9 +241,8 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
         });
     }
 
-    auto gcd = gcd_analysis{}.run_on_function(fn);
-    auto mr = memref_analysis{info.alignment()}.run_on_function(fn);
-    auto helper = matrix_ext_helper{info, mext, q, gcd, mr};
+    auto gcd = gcd_analysis{info.alignment()}.run_on_function(fn);
+    auto helper = matrix_ext_helper{info, mext, q, gcd};
 
     // kill all values from mext that cannot be mapped to the matrix extension
     while (!q.empty()) {

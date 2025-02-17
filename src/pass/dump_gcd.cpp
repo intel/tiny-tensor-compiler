@@ -3,6 +3,7 @@
 
 #include "pass/dump_gcd.hpp"
 #include "analysis/gcd.hpp"
+#include "device_info.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
@@ -19,19 +20,45 @@
 
 namespace tinytc {
 
-dump_gcd_pass::dump_gcd_pass(std::ostream &os) : os_(&os) {}
+dump_gcd_pass::dump_gcd_pass(std::ostream &os, ::tinytc_core_info const *info)
+    : os_(&os), info_{info} {}
 
 void dump_gcd_pass::run_on_function(function_node const &fn) {
     auto dump_ir = dump_ir_pass(*os_, 0);
     dump_ir.init_slot_tracker(fn);
-    auto gcd = gcd_analysis{}.run_on_function(fn);
+    auto gcd = gcd_analysis{info_->alignment()}.run_on_function(fn);
 
+    auto const dump_range = [&](auto begin, auto end) {
+        *os_ << "[";
+        for (auto it = begin; it != end; ++it) {
+            if (it != begin) {
+                *os_ << ",";
+            }
+            *os_ << *it;
+        }
+        *os_ << "]";
+    };
     auto const dump_gcd = [&](value_node const &v) {
         auto g = gcd.get_if(v);
         if (g) {
             *os_ << "  gcd(";
             dump_ir.dump_val(v);
             *os_ << ") = " << *g << std::endl;
+        }
+        auto mi = gcd.get_memref_if(v);
+        if (mi) {
+            *os_ << "  offset_gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = " << mi->offset_gcd() << std::endl;
+            *os_ << "  shape_gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = ";
+            dump_range(mi->shape_gcd_begin(), mi->shape_gcd_end());
+            *os_ << std::endl << "  stride_gcd(";
+            dump_ir.dump_val(v);
+            *os_ << ") = ";
+            dump_range(mi->stride_gcd_begin(), mi->stride_gcd_end());
+            *os_ << std::endl;
         }
     };
 

@@ -10,7 +10,6 @@
 #include "pass/dump_gcd.hpp"
 #include "pass/dump_ir.hpp"
 #include "pass/dump_matrix_ext.hpp"
-#include "pass/dump_memref_info.hpp"
 // IWYU pragma: end_keep
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
