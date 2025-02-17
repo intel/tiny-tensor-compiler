@@ -8,7 +8,6 @@ Builder C++-API:
       - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
-      - tinytc::load_flag
       - tinytc::matrix_use
       - tinytc::scalar_type
       - tinytc::store_flag
@@ -22,7 +21,6 @@ Builder C++-API:
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
-      - tinytc::to_string(load_flag)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
@@ -83,12 +81,10 @@ Builder C++-API:
       - tinytc::make_constant(std::int64_t,data_type,location const&)
       - tinytc::make_constant_one
       - tinytc::make_constant_zero
-      - tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&)
-      - tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&)
+      - tinytc::make_cooperative_matrix_load
       - tinytc::make_cooperative_matrix_mul_add
       - tinytc::make_cooperative_matrix_scale
-      - tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&)
-      - tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&)
+      - tinytc::make_cooperative_matrix_store
       - tinytc::make_expand
       - tinytc::make_for
       - tinytc::make_foreach
@@ -98,12 +94,10 @@ Builder C++-API:
       - tinytc::make_ger
       - tinytc::make_hadamard
       - tinytc::make_if
-      - tinytc::make_load(value,array_view<value>,tinytc_data_type_t,location const&)
-      - tinytc::make_load(load_flag,value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
+      - tinytc::make_load
       - tinytc::make_parallel
       - tinytc::make_size
-      - tinytc::make_store(store_flag,value,value,array_view<value>,location const&)
-      - tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
+      - tinytc::make_store
       - tinytc::make_subgroup_broadcast
       - tinytc::make_subview
       - tinytc::make_sum

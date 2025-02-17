@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/matrix_ext.hpp"
+#include "analysis/gcd.hpp"
+#include "analysis/memref.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
@@ -17,7 +19,6 @@
 #include "support/util.hpp"
 #include "support/visit.hpp"
 #include "support/walk.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <cstdint>
@@ -37,8 +38,9 @@ class matrix_ext_helper {
   public:
     matrix_ext_helper(::tinytc_core_info const &info,
                       std::unordered_set<const_tinytc_value_t> &mext,
-                      std::queue<const_tinytc_inst_t> &q)
-        : info_{&info}, mext_{&mext}, q_{&q} {}
+                      std::queue<const_tinytc_inst_t> &q, gcd_analysis_result const &gcd,
+                      memref_analysis_result const &mr)
+        : info_{&info}, mext_{&mext}, q_{&q}, gcd_{&gcd}, mr_{&mr} {}
     void operator()(inst_node const &in);
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
@@ -53,11 +55,13 @@ class matrix_ext_helper {
   private:
     auto have(value_node const &val) -> bool;
     void kill(value_node const &val);
-    auto check_2d_block_io(value_node const &operand, std::int32_t alignment) -> bool;
+    auto check_2d_block_io(value_node const &operand, value_node const &pos0) -> bool;
 
     ::const_tinytc_core_info_t info_;
     std::unordered_set<const_tinytc_value_t> *mext_;
     std::queue<const_tinytc_inst_t> *q_;
+    gcd_analysis_result const *gcd_;
+    memref_analysis_result const *mr_;
 };
 
 auto matrix_ext_helper::have(value_node const &val) -> bool { return mext_->contains(&val); }
@@ -107,24 +111,30 @@ void matrix_ext_helper::operator()(cast_inst const &in) {
         kill(in.result(0));
     }
 }
-auto matrix_ext_helper::check_2d_block_io(value_node const &operand, std::int32_t alignment)
+auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node const &pos0)
     -> bool {
-    auto const &block_io = info_->matrix().block_io();
-    auto ot = get_memref_type(operand);
-    const auto element_size = static_cast<std::int32_t>(size(ot->element_ty()));
+    if (auto mi = mr_->get_if(operand); mi) {
+        auto const mt = get_memref_type(operand);
+        auto const &block_io = info_->matrix().block_io();
+        const auto sty_size = mi->sty_size();
 
-    const bool base_address_alignment_ok = alignment >= block_io.base_address_alignment;
-    const bool stride_ok = ot->stride(0) == 1 &&
-                           (ot->stride(1) * element_size) >= block_io.min_stride &&
-                           (ot->stride(1) * element_size) <= block_io.max_stride &&
-                           (ot->stride(1) * element_size) % block_io.stride_alignment == 0;
-    const bool addrspace_ok = ot->addrspace() == address_space::global;
+        const bool addrspace_ok = mt->addrspace() == address_space::global;
+        const bool base_address_alignment_ok =
+            mi->alignment() % block_io.base_address_alignment == 0;
+        const bool pos0_alignment_ok = (gcd_->get(pos0) * sty_size) % block_io.pos0_alignment == 0;
+        const bool stride_ok =
+            mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % block_io.stride_alignment == 0;
+        const bool width_ok = (mi->shape_gcd()[0] * sty_size) % block_io.width_alignment == 0;
 
-    return base_address_alignment_ok && stride_ok && addrspace_ok;
+        return addrspace_ok && base_address_alignment_ok && pos0_alignment_ok && stride_ok &&
+               width_ok;
+    }
+    return false;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
     const bool transpose_ok = in.t() == transpose::N;
-    if (!transpose_ok || !check_2d_block_io(in.operand(), in.align())) {
+    const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
+    if (!transpose_ok || !block_io_ok) {
         kill(in.result(0));
     }
 }
@@ -154,10 +164,10 @@ void matrix_ext_helper::operator()(cooperative_matrix_scale_inst const &in) {
     }
 }
 void matrix_ext_helper::operator()(cooperative_matrix_store_inst const &in) {
-    auto vt = get_coopmatrix_type(in.val());
     const bool store_flag_ok = in.flag() == store_flag::regular;
-    const bool use_ok = vt->use() == matrix_use::acc;
-    if (!store_flag_ok || !use_ok || !check_2d_block_io(in.operand(), in.align())) {
+    const bool use_ok = get_coopmatrix_type(in.val())->use() == matrix_use::acc;
+    const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
+    if (!store_flag_ok || !use_ok || !block_io_ok) {
         kill(in.val());
     }
 }
@@ -233,7 +243,9 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
         });
     }
 
-    auto helper = matrix_ext_helper{info, mext, q};
+    auto gcd = gcd_analysis{}.run_on_function(fn);
+    auto mr = memref_analysis{info.alignment()}.run_on_function(fn);
+    auto helper = matrix_ext_helper{info, mext, q, gcd, mr};
 
     // kill all values from mext that cannot be mapped to the matrix extension
     while (!q.empty()) {

@@ -4,7 +4,6 @@
 #include "codegen_tools.hpp"
 #include "compiler_context.hpp"
 #include "error.hpp"
-#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
@@ -16,6 +15,8 @@
 #include "support/visit.hpp"
 #include "tinytc/types.h"
 
+#include <array>
+#include <stdexcept>
 #include <type_traits>
 #include <utility>
 #include <variant>
@@ -157,8 +158,8 @@ auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arith
     return bb.add(
         make_arith(operation, a, b, scalar_data_type::get(at->context(), result_ty), loc));
 }
-auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
-                                      location const &loc) -> value {
+auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
+    -> value {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     if (at == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);

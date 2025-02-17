@@ -27,10 +27,9 @@ enum opencl_ext_t {
     opencl_ext_cl_intel_required_subgroup_size = 0x10,
     opencl_ext_cl_intel_subgroups_long = 0x20,
     opencl_ext_cl_intel_subgroups_short = 0x40,
-    opencl_ext_cl_intel_spirv_subgroups = 0x80,
-    opencl_ext_cl_khr_int64_base_atomics = 0x100,
-    opencl_ext_cl_khr_int64_extended_atomics = 0x200,
-    opencl_ext_cl_ext_float_atomics = 0x400,
+    opencl_ext_cl_khr_int64_base_atomics = 0x80,
+    opencl_ext_cl_khr_int64_extended_atomics = 0x100,
+    opencl_ext_cl_ext_float_atomics = 0x200,
 };
 //! Type for combination of core feature flags
 using opencl_exts_t = std::uint32_t;
@@ -47,8 +46,8 @@ template <typename T> auto device_info(cl_device_id device, cl_device_info param
 }
 
 template <>
-inline auto device_info<std::string>(cl_device_id device,
-                                     cl_device_info param_name) -> std::string {
+inline auto device_info<std::string>(cl_device_id device, cl_device_info param_name)
+    -> std::string {
     std::string str;
     std::size_t str_len;
     CL_CHECK_STATUS(clGetDeviceInfo(device, param_name, 0, nullptr, &str_len));

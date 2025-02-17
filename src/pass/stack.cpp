@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <functional>
 #include <list>
+#include <string>
 
 namespace tinytc {
 

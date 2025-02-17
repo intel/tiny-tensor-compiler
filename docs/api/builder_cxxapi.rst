@@ -22,8 +22,6 @@ Common
 
   * :ref:`tinytc::cmp_condition`
 
-  * :ref:`tinytc::load_flag`
-
   * :ref:`tinytc::matrix_use`
 
   * :ref:`tinytc::scalar_type`
@@ -49,8 +47,6 @@ Common
   * :ref:`tinytc::to_string(checked_flag)`
 
   * :ref:`tinytc::to_string(cmp_condition)`
-
-  * :ref:`tinytc::to_string(load_flag)`
 
   * :ref:`tinytc::to_string(matrix_use)`
 
@@ -115,13 +111,6 @@ cmp_condition
 .............
 
 .. doxygenenum:: tinytc::cmp_condition
-
-.. _tinytc::load_flag:
-
-load_flag
-.........
-
-.. doxygenenum:: tinytc::load_flag
 
 .. _tinytc::matrix_use:
 
@@ -209,13 +198,6 @@ to_string(cmp_condition)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
-
-.. _tinytc::to_string(load_flag):
-
-to_string(load_flag)
-....................
-
-.. doxygenfunction:: tinytc::to_string(load_flag)
 
 .. _tinytc::to_string(matrix_use):
 
@@ -558,17 +540,13 @@ Instruction
 
   * :ref:`tinytc::make_constant_zero`
 
-  * :ref:`tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&)`
-
-  * :ref:`tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&)`
+  * :ref:`tinytc::make_cooperative_matrix_load`
 
   * :ref:`tinytc::make_cooperative_matrix_mul_add`
 
   * :ref:`tinytc::make_cooperative_matrix_scale`
 
-  * :ref:`tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&)`
-
-  * :ref:`tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&)`
+  * :ref:`tinytc::make_cooperative_matrix_store`
 
   * :ref:`tinytc::make_expand`
 
@@ -588,17 +566,13 @@ Instruction
 
   * :ref:`tinytc::make_if`
 
-  * :ref:`tinytc::make_load(value,array_view\<value\>,tinytc_data_type_t,location const&)`
-
-  * :ref:`tinytc::make_load(load_flag,value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&)`
+  * :ref:`tinytc::make_load`
 
   * :ref:`tinytc::make_parallel`
 
   * :ref:`tinytc::make_size`
 
-  * :ref:`tinytc::make_store(store_flag,value,value,array_view\<value\>,location const&)`
-
-  * :ref:`tinytc::make_store(store_flag,value,value,array_view\<value\>,std::int32_t,location const&)`
+  * :ref:`tinytc::make_store`
 
   * :ref:`tinytc::make_subgroup_broadcast`
 
@@ -715,19 +689,12 @@ make_constant_zero
 
 .. doxygenfunction:: tinytc::make_constant_zero
 
-.. _tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&):
+.. _tinytc::make_cooperative_matrix_load:
 
-make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&)
-................................................................................................
+make_cooperative_matrix_load
+............................
 
-.. doxygenfunction:: tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,data_type,location const&)
-
-.. _tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&):
-
-make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&)
-.............................................................................................................
-
-.. doxygenfunction:: tinytc::make_cooperative_matrix_load(transpose,checked_flag,value,value,value,std::int32_t,data_type,location const&)
+.. doxygenfunction:: tinytc::make_cooperative_matrix_load
 
 .. _tinytc::make_cooperative_matrix_mul_add:
 
@@ -743,19 +710,12 @@ make_cooperative_matrix_scale
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_scale
 
-.. _tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&):
+.. _tinytc::make_cooperative_matrix_store:
 
-make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&)
-..............................................................................................
+make_cooperative_matrix_store
+.............................
 
-.. doxygenfunction:: tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,location const&)
-
-.. _tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&):
-
-make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&)
-...........................................................................................................
-
-.. doxygenfunction:: tinytc::make_cooperative_matrix_store(checked_flag,store_flag,value,value,value,value,std::int32_t,location const&)
+.. doxygenfunction:: tinytc::make_cooperative_matrix_store
 
 .. _tinytc::make_expand:
 
@@ -820,19 +780,12 @@ make_if
 
 .. doxygenfunction:: tinytc::make_if
 
-.. _tinytc::make_load(value,array_view\<value\>,tinytc_data_type_t,location const&):
+.. _tinytc::make_load:
 
-make_load(value,array_view<value>,tinytc_data_type_t,location const&)
-.....................................................................
+make_load
+.........
 
-.. doxygenfunction:: tinytc::make_load(value,array_view<value>,tinytc_data_type_t,location const&)
-
-.. _tinytc::make_load(load_flag,value,array_view\<value\>,std::int32_t,tinytc_data_type_t,location const&):
-
-make_load(load_flag,value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
-............................................................................................
-
-.. doxygenfunction:: tinytc::make_load(load_flag,value,array_view<value>,std::int32_t,tinytc_data_type_t,location const&)
+.. doxygenfunction:: tinytc::make_load
 
 .. _tinytc::make_parallel:
 
@@ -848,19 +801,12 @@ make_size
 
 .. doxygenfunction:: tinytc::make_size
 
-.. _tinytc::make_store(store_flag,value,value,array_view\<value\>,location const&):
+.. _tinytc::make_store:
 
-make_store(store_flag,value,value,array_view<value>,location const&)
-....................................................................
+make_store
+..........
 
-.. doxygenfunction:: tinytc::make_store(store_flag,value,value,array_view<value>,location const&)
-
-.. _tinytc::make_store(store_flag,value,value,array_view\<value\>,std::int32_t,location const&):
-
-make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
-.................................................................................
-
-.. doxygenfunction:: tinytc::make_store(store_flag,value,value,array_view<value>,std::int32_t,location const&)
+.. doxygenfunction:: tinytc::make_store
 
 .. _tinytc::make_subgroup_broadcast:
 

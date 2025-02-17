@@ -34,9 +34,7 @@
 #include <complex>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
 #include <memory>
-#include <optional>
 #include <ranges>
 #include <stdexcept>
 #include <string>
@@ -47,8 +45,8 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p,
-                           tinytc_core_info const &info) -> ::tinytc::spv_mod {
+auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
+    -> ::tinytc::spv_mod {
     auto m = ::tinytc::spv_mod{
         std::make_unique<tinytc_spv_mod>(p.share_context(), info.core_features()).release()};
 
@@ -330,8 +328,8 @@ auto inst_converter::make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *sp
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
-                                      bool conj_b) -> spv_inst * {
+auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b)
+    -> spv_inst * {
     const auto is_imag_zero = [&](spv_inst *a) -> bool {
         // We capture the case here if "a" stems from a non-complex -> complex cast
         if (auto ci = dyn_cast<OpCompositeInsert>(a); ci) {
@@ -363,8 +361,8 @@ auto inst_converter::make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
 
 auto inst_converter::make_conditional_execution(
     spv_inst *returned_element_ty, spv_inst *condition,
-    std::function<std::vector<spv_inst *>()> conditional_code,
-    location const &loc) -> std::vector<spv_inst *> {
+    std::function<std::vector<spv_inst *>()> conditional_code, location const &loc)
+    -> std::vector<spv_inst *> {
     auto then_label = std::make_unique<OpLabel>();
     auto merge_label = std::make_unique<OpLabel>();
 
@@ -476,8 +474,7 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
 }
 
 void inst_converter::make_store(store_flag flag, scalar_type sty, address_space as,
-                                spv_inst *pointer, spv_inst *value, std::int32_t align,
-                                location const &loc) {
+                                spv_inst *pointer, spv_inst *value, location const &loc) {
     auto const split_re_im = [&]() -> std::array<std::array<spv_inst *, 2u>, 2u> {
         auto component_sty = component_type(sty);
         auto float_ty = unique_.spv_ty(component_sty);
@@ -497,42 +494,6 @@ void inst_converter::make_store(store_flag flag, scalar_type sty, address_space 
     case store_flag::regular:
         mod_->add<OpStore>(pointer, value);
         break;
-    case store_flag::block: {
-        const auto storage_cls = address_space_to_storage_class(as);
-        if (core_cfg_.block_read_write_supported && align >= 16 && size(sty) >= 2 &&
-            size(sty) <= 8) {
-            auto const cast_write = [&](scalar_type int_sty) {
-                auto int_ty = unique_.spv_ty(int_sty);
-                auto ival = mod_->add<OpBitcast>(int_ty, value);
-                auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, align);
-                auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, pointer);
-                mod_->add<OpSubgroupBlockWriteINTEL>(int_ptr, ival);
-            };
-            switch (sty) {
-            case scalar_type::bf16:
-            case scalar_type::f16:
-                cast_write(scalar_type::i16);
-                break;
-            case scalar_type::f32:
-                cast_write(scalar_type::i32);
-                break;
-            case scalar_type::c32:
-            case scalar_type::f64:
-                cast_write(scalar_type::i64);
-                break;
-            default:
-                mod_->add<OpSubgroupBlockWriteINTEL>(pointer, value);
-                break;
-            }
-        } else {
-            auto offset = load_builtin(BuiltIn::SubgroupLocalInvocationId);
-            auto pointer_ty = unique_.spv_pointer_ty(storage_cls, unique_.spv_ty(sty), align);
-            auto sub_pointer = mod_->add<OpInBoundsPtrAccessChain>(pointer_ty, pointer, offset,
-                                                                   std::vector<spv_inst *>{});
-            mod_->add<OpStore>(sub_pointer, value);
-        }
-        break;
-    }
     case store_flag::atomic: {
         auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
         auto semantics = unique_.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
@@ -1304,10 +1265,6 @@ void inst_converter::operator()(load_inst const &in) {
 
     if (auto group_ty = dyn_cast<group_data_type>(in.operand().ty()); group_ty) {
         auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
-        if (in.flag() == load_flag::block) {
-            auto sgid = load_builtin(BuiltIn::SubgroupLocalInvocationId);
-            offset = mod_->add<OpIAdd>(spv_index_ty, offset, sgid);
-        }
         auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
                                                            offset, std::vector<spv_inst *>{});
         declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer));
@@ -1347,42 +1304,7 @@ void inst_converter::operator()(load_inst const &in) {
             return mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()), offset,
                                                        std::vector<spv_inst *>{});
         };
-        if (in.flag() == load_flag::block) {
-            const std::int32_t align = std::max(in.align(), memref_ty->element_alignment());
-            const auto sty_size = size(memref_ty->element_ty());
-            if (core_cfg_.block_read_write_supported && align >= 4 && sty_size >= 2 &&
-                sty_size <= 8) {
-                auto const make_block_load = [&]() -> spv_inst * {
-                    auto const cast_load_cast = [&](scalar_type int_sty) {
-                        auto int_ty = unique_.spv_ty(int_sty);
-                        const auto storage_cls =
-                            address_space_to_storage_class(memref_ty->addrspace());
-                        auto int_ptr_ty = unique_.spv_pointer_ty(storage_cls, int_ty, align);
-                        auto int_ptr = mod_->add<OpBitcast>(int_ptr_ty, pointer());
-                        auto value = mod_->add<OpSubgroupBlockReadINTEL>(int_ty, int_ptr);
-                        return mod_->add<OpBitcast>(spv_result_ty, value);
-                    };
-                    switch (memref_ty->element_ty()) {
-                    case scalar_type::bf16:
-                    case scalar_type::f16:
-                        return cast_load_cast(scalar_type::i16);
-                    case scalar_type::f32:
-                        return cast_load_cast(scalar_type::i32);
-                    case scalar_type::c32:
-                    case scalar_type::f64:
-                        return cast_load_cast(scalar_type::i64);
-                    default:
-                        return mod_->add<OpSubgroupBlockReadINTEL>(spv_result_ty, pointer());
-                    }
-                };
-                declare(in.result(0), make_block_load());
-            } else {
-                auto sgid = load_builtin(BuiltIn::SubgroupLocalInvocationId);
-                declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer(sgid)));
-            }
-        } else {
-            declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer()));
-        }
+        declare(in.result(0), mod_->add<OpLoad>(spv_result_ty, pointer()));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
     }
@@ -1433,9 +1355,8 @@ void inst_converter::operator()(store_inst const &in) {
                                                        std::vector<spv_inst *>{});
         };
 
-        const std::int32_t alignment = std::max(in.align(), memref_ty->element_alignment());
         make_store(in.flag(), memref_ty->element_ty(), memref_ty->addrspace(), pointer(),
-                   val(in.val()), alignment, in.loc());
+                   val(in.val()), in.loc());
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref);
     }
@@ -1563,8 +1484,8 @@ void inst_converter::run_on_region(region_node const &reg) {
     }
 }
 
-auto inst_converter::run_on_region_with_yield(region_node const &reg,
-                                              std::int64_t num_results) -> std::vector<spv_inst *> {
+auto inst_converter::run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
+    -> std::vector<spv_inst *> {
     yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
     run_on_region(reg);
     auto yielded_vals = std::move(yielded_vals_.top());

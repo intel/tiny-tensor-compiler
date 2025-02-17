@@ -51,8 +51,6 @@ void set_spirv_features(tinytc_core_info_t info, cl_device_id device) {
     set_feature(tinytc_spirv_feature_groups, ocl_version.major >= 2 && max_num_subgroups != 0);
     set_feature(tinytc_spirv_feature_subgroup_dispatch,
                 ocl_version.major >= 2 && max_num_subgroups != 0);
-    set_feature(tinytc_spirv_feature_subgroup_buffer_block_io,
-                ocl_exts & opencl_ext_cl_intel_spirv_subgroups);
     set_feature(tinytc_spirv_feature_int64_atomics,
                 ocl_exts & (opencl_ext_cl_khr_int64_base_atomics |
                             opencl_ext_cl_khr_int64_extended_atomics));

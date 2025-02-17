@@ -11,6 +11,7 @@
 #include "node/value_node.hpp"
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
+#include "support/ilist_base.hpp"
 #include "support/util.hpp"
 #include "support/visit.hpp"
 

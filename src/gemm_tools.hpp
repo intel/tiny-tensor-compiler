@@ -30,8 +30,8 @@ constexpr static std::array<std::int32_t, 4u> standard_K_block_sizes = {1, 2, 4,
 auto max_register_block_gemm(std::int32_t A_size, std::int32_t B_size, std::int32_t C_size,
                              std::int32_t subgroup_size, std::int32_t register_space,
                              std::int32_t C_blocks = 1,
-                             std::pair<std::int32_t, std::int32_t> max_fill_fraction = {
-                                 1, 2}) -> std::pair<std::int32_t, std::int32_t>;
+                             std::pair<std::int32_t, std::int32_t> max_fill_fraction = {1, 2})
+    -> std::pair<std::int32_t, std::int32_t>;
 
 auto compute_m_block_size(std::int32_t subgroup_size, std::int32_t max_block_size,
                           std::int32_t num_tiles, std::int64_t size) -> std::int32_t;

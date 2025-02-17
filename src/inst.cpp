@@ -133,22 +133,10 @@ char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
     return "unknown";
 }
 
-char const *tinytc_load_flag_to_string(tinytc_load_flag_t flag) {
-    switch (flag) {
-    case tinytc_load_flag_regular:
-        return "";
-    case tinytc_load_flag_block:
-        return "block";
-    }
-    return "unknown";
-}
-
 char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
     switch (flag) {
     case tinytc_store_flag_regular:
         return "";
-    case tinytc_store_flag_block:
-        return "block";
     case tinytc_store_flag_atomic:
         return "atomic";
     case tinytc_store_flag_atomic_add:
@@ -359,18 +347,16 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
     });
 }
 
-tinytc_status_t
-tinytc_cooperative_matrix_load_inst_create(tinytc_inst_t *instr, tinytc_transpose_t trans,
-                                           tinytc_checked_flag_t flag, tinytc_value_t op,
-                                           tinytc_value_t p0, tinytc_value_t p1, int32_t align,
-                                           tinytc_data_type_t to_ty, const tinytc_location_t *loc) {
+tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
+    tinytc_inst_t *instr, tinytc_transpose_t trans, tinytc_checked_flag_t flag, tinytc_value_t op,
+    tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc) {
     if (instr == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr || to_ty == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cooperative_matrix_load_inst>(
-                     enum_cast<transpose>(trans), enum_cast<checked_flag>(flag), op, p0, p1, align,
-                     to_ty, get_optional(loc))
+        *instr = std::make_unique<cooperative_matrix_load_inst>(enum_cast<transpose>(trans),
+                                                                enum_cast<checked_flag>(flag), op,
+                                                                p0, p1, to_ty, get_optional(loc))
                      .release();
     });
 }
@@ -402,18 +388,19 @@ tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(tinytc_inst_t *instr
     });
 }
 
-tinytc_status_t
-tinytc_cooperative_matrix_store_inst_create(tinytc_inst_t *instr, tinytc_checked_flag_t cflag,
-                                            tinytc_store_flag_t sflag, tinytc_value_t val,
-                                            tinytc_value_t op, tinytc_value_t p0, tinytc_value_t p1,
-                                            int32_t align, const tinytc_location_t *loc) {
+tinytc_status_t tinytc_cooperative_matrix_store_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_checked_flag_t cflag,
+                                                            tinytc_store_flag_t sflag,
+                                                            tinytc_value_t val, tinytc_value_t op,
+                                                            tinytc_value_t p0, tinytc_value_t p1,
+                                                            const tinytc_location_t *loc) {
     if (instr == nullptr || val == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<cooperative_matrix_store_inst>(
-                     enum_cast<checked_flag>(cflag), enum_cast<store_flag>(sflag), val, op, p0, p1,
-                     align, get_optional(loc))
+        *instr = std::make_unique<cooperative_matrix_store_inst>(enum_cast<checked_flag>(cflag),
+                                                                 enum_cast<store_flag>(sflag), val,
+                                                                 op, p0, p1, get_optional(loc))
                      .release();
     });
 }
@@ -481,16 +468,14 @@ tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
     });
 }
 
-tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_load_flag_t flag,
-                                        tinytc_value_t a, uint32_t index_list_size,
-                                        const tinytc_value_t *index_list, int32_t align,
+tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
+                                        uint32_t index_list_size, const tinytc_value_t *index_list,
                                         tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<load_inst>(enum_cast<load_flag>(flag), a,
-                                             array_view{index_list, index_list_size}, align, ty,
+        *instr = std::make_unique<load_inst>(a, array_view{index_list, index_list_size}, ty,
                                              get_optional(loc))
                      .release();
     });
@@ -605,15 +590,15 @@ tinytc_subview_inst_create(tinytc_inst_t *instr, tinytc_value_t a, uint32_t stat
 tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr, tinytc_store_flag_t flag,
                                          tinytc_value_t val, tinytc_value_t a,
                                          uint32_t index_list_size, const tinytc_value_t *index_list,
-                                         int32_t align, const tinytc_location_t *loc) {
+                                         const tinytc_location_t *loc) {
     if (instr == nullptr || (index_list_size > 0 && index_list == nullptr)) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<store_inst>(enum_cast<store_flag>(flag), val, a,
-                                              array_view{index_list, index_list_size}, align,
-                                              get_optional(loc))
-                     .release();
+        *instr =
+            std::make_unique<store_inst>(enum_cast<store_flag>(flag), val, a,
+                                         array_view{index_list, index_list_size}, get_optional(loc))
+                .release();
     });
 }
 

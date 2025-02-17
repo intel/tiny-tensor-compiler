@@ -10,8 +10,8 @@
 #include "pass/dump_gcd.hpp"
 #include "pass/dump_ir.hpp"
 #include "pass/dump_matrix_ext.hpp"
+#include "pass/dump_memref_info.hpp"
 // IWYU pragma: end_keep
-#include "pass/alignment_propagation.hpp"
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
 #include "pass/convert_to_spirv.hpp"
@@ -64,7 +64,6 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
         // (later on they are maybe "in use" due to the lifetime_stop instruction)
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);
-        run_function_pass(alignment_propagation_pass{info}, *prg);
     }
 
     run_function_pass(insert_lifetime_stop_pass{}, *prg);
@@ -77,7 +76,6 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
     if (opt_level >= 1) {
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);
-        run_function_pass(alignment_propagation_pass{info}, *prg);
     }
     run_function_pass(lower_coopmatrix_pass{info}, *prg);
 

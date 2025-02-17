@@ -9,13 +9,14 @@
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 
 #include <algorithm>
+#include <compare>
 #include <memory>
 #include <utility>
 
 namespace tinytc {
 
-auto array_attr::get(tinytc_compiler_context_t ctx,
-                     array_view<tinytc_attr_t> values) -> tinytc_attr_t {
+auto array_attr::get(tinytc_compiler_context_t ctx, array_view<tinytc_attr_t> values)
+    -> tinytc_attr_t {
     const auto hash = fnv1a_combine(values);
     const auto is_equal = [&](tinytc_attr_t a) {
         const auto aa = dyn_cast<array_attr>(a);
@@ -39,8 +40,8 @@ auto boolean_attr::get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr
 boolean_attr::boolean_attr(tinytc_compiler_context_t ctx, bool value)
     : tinytc_attr(AK::boolean, ctx), value_{value} {}
 
-auto dictionary_attr::get(tinytc_compiler_context_t ctx,
-                          array_view<named_attr> sorted_attrs) -> tinytc_attr_t {
+auto dictionary_attr::get(tinytc_compiler_context_t ctx, array_view<named_attr> sorted_attrs)
+    -> tinytc_attr_t {
     const auto hash = [&] {
         auto h = fnv1a0();
         for (auto const &na : sorted_attrs) {

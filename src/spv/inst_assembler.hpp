@@ -10,9 +10,13 @@
 #include <cstdint>
 #include <cstring>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 namespace tinytc::spv {
+
+enum class BuiltIn;
+enum class LinkageType;
 
 template <typename WordT> class word_stream {
   public:

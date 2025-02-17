@@ -60,8 +60,8 @@ class inst_converter {
     void operator()(yield_inst const &in);
 
     void run_on_region(tinytc_region const &reg);
-    auto run_on_region_with_yield(region_node const &reg,
-                                  std::int64_t num_results) -> std::vector<spv_inst *>;
+    auto run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
+        -> std::vector<spv_inst *>;
     void run_on_function(tinytc_func const &fn);
 
     inline auto unique() -> uniquifier & { return unique_; }
@@ -76,16 +76,16 @@ class inst_converter {
                         location const &loc) -> spv_inst *;
     auto make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty, spv_inst *a,
                    location const &loc) -> spv_inst *;
-    auto make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b,
-                          bool conj_b = false) -> spv_inst *;
+    auto make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b = false)
+        -> spv_inst *;
     auto make_conditional_execution(spv_inst *returned_element_ty, spv_inst *condition,
                                     std::function<std::vector<spv_inst *>()> conditional_code,
                                     location const &loc) -> std::vector<spv_inst *>;
-    auto make_constant(scalar_type sty, spv_inst *spv_ty,
-                       constant_inst::value_type const &val) -> spv_inst *;
+    auto make_constant(scalar_type sty, spv_inst *spv_ty, constant_inst::value_type const &val)
+        -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
     void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
-                    spv_inst *value, std::int32_t align, location const &loc);
+                    spv_inst *value, location const &loc);
 
     tinytc_spv_mod_t mod_;
     tinytc_core_info const *info_;

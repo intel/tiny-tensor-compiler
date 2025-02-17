@@ -102,7 +102,7 @@ Attributes
     boolean-attribute           = boolean-constant
     dictionary-attribute        = "{" [named-attribute *("," named-attribute)] "}"
     named-attribute             = attribute-name "=" attribute
-    attribute-name              = "align" /
+    attribute-name              = "alignment" /
                                   "shape_gcd" /
                                   "stride_gcd" /
                                   "subgroup_size" /
@@ -169,7 +169,7 @@ Parameters with memref or group type accept the following named attributes:
     * - Name
       - Type
       - Description
-    * - align
+    * - alignment
       - integer-attribute
       - Minimum pointer alignment
 
@@ -374,7 +374,7 @@ Stride modes might be dynamic as well, indicated by a question mark.
 Align attribute
 ...............
 
-The *align=X* attribute gives the alignment X of the memref's base pointer in bytes.
+The *alignment=X* attribute gives the alignment X of the memref's base pointer in bytes.
 That is, for the pointer P pointing to the first element of the memref we must have :math:`P = 0 \pmod{X}`.
 
 **Restriction:** The alignment must be a multiple of the size of the memref's element type.
@@ -1321,10 +1321,9 @@ Load
 
 .. code:: abnf
 
-    value-instruction           =/ "load" [load-flag] local-identifier "[" [local-identifier-list] "]"
-                                          ["," "align" 1*DIGIT] ":" scalar-or-memref-type
+    value-instruction           =/ "load" local-identifier "[" [local-identifier-list] "]"
+                                          ":" scalar-or-memref-type
     scalar-or-memref-type       =  scalar-type / memref-type
-    load-flag                   = ".block"
 
 Overview
 ~~~~~~~~
@@ -1332,27 +1331,6 @@ Overview
 Load the element given by the index list from a memref or group.
 The number of indices must match the order of the memref
 and a single index must be given for a group.
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the accessed location does not have the required minimum alignment at run-time.
-
-When the block flag is set then the subgroup local id is implicitly added to the first entry
-in the local identifier list. That is, when given the location %0[%1,%2,...,%N], each work-item in a subgroup
-reads from the location %0[%1+%s,%2,...,%N], where %s = builtin.subgroup_local_id : i32.
-The stride of the memref's first mode must be 1.
-The location must be dynamically uniform, meaning that all operands must be dynamically uniform.
-Moreover, block loads may only appear in SPMD regions.
-
-When the block flag is set then the work-items in a subgroup load their values from
-consecutive memory locations.
-Starting from the memory location M given by the second operand and the index list
-(e.g. %0[%1,%2,...,%N]), the work-item loads from the memory location
-:math:`M + \text{subgroup_local_id}`, where the offset is given in number of elements.
-Note that the stride of the memref type is ignored, the block load always loads from
-consecutive memorey locations.
-The location must be dynamically uniform, meaning that all operands must be dynamically uniform.
-Moreover, block loads may only appear in SPMD regions.
 
 Operands
 ~~~~~~~~~
@@ -1374,14 +1352,6 @@ Examples:
 #. ``load %0[5, %1] : f32 ; %0: memref<f32x10x?>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>, offset: ?>``
-
-Restrictions
-~~~~~~~~~~~~
-
-When the .block flag is set then the following restrictions apply:
-
-* The instruction must only appear in SPMD regions.
-* All operands must be dynamically uniform.
 
 Size
 ....
@@ -1485,8 +1455,8 @@ Store
 .. code:: abnf
 
     instruction     =/ "store" [store-flag] local-identifier ","
-                               local-identifier "[" [local-identifier-list] "]" ["," "align" 1*DIGIT]
-    store-flag      = ".block" / ".atomic" / ".atomic_add"
+                               local-identifier "[" [local-identifier-list] "]"
+    store-flag      = ".atomic" / ".atomic_add"
 
 Overview
 ~~~~~~~~
@@ -1505,21 +1475,6 @@ for the the real and imaginary separately.
 *Note:* Store should only be used in SPMD regions as otherwise the same memory location is written
 from all work-items.
 
-When the block flag is set then the work-items in a subgroup stores their values to
-consecutive memory locations.
-Starting from the memory location M given by the second operand and the index list
-(e.g. %0[%1,%2,...,%N]), the work-item write to the memory location
-:math:`M + \text{subgroup_local_id}`, where the offset is given in number of elements.
-Note that the stride of the memref type is ignored, the block store always writes to
-consecutive memorey locations.
-The location must be dynamically uniform,
-meaning that all but the first operand must be dynamically uniform.
-Moreover, block stores may only appear in SPMD regions.
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the accessed location does not have the required minimum alignment at run-time.
-
 Operands
 ~~~~~~~~
 
@@ -1535,11 +1490,6 @@ Restrictions
 ~~~~~~~~~~~~
 
 * :math:`\text{type}(value) = \text{element_type}(tensor)`
-
-When the .block flag is set the following additional restrictions apply:
-
-* The instruction must only appear in SPMD regions.
-* All but the first operand must be dynamically uniform.
 
 Work group collectives
 ......................
@@ -1634,7 +1584,7 @@ Cooperative matrix load
 
     value-instruction           =/ "cooperative_matrix_load" transpose [checked-flag]
                                    local-identifier "[" local-identifier "," local-identifier "]"
-                                   ["," "align" 1*DIGIT] ":" coopmatrix-type
+                                   ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"
 
 Overview
@@ -1669,10 +1619,6 @@ Flag            Description
 .n.both_checked .n.rows_checked.n and .n.cols_checked
 .t.both_checked .t.rows_checked.t and .t.cols_checked
 =============== ===================================================================
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the memref plus the 2d-offset does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~
@@ -1770,7 +1716,6 @@ Cooperative matrix store
 
     instruction     =/ "cooperative_matrix_store" [checked-flag] [store-flag] local-identifier ","
                        local-identifier "[" local-identifier "," local-identifier "]"
-                       ["," "align" 1*DIGIT]
 
 Overview
 ~~~~~~~~
@@ -1801,10 +1746,6 @@ When the atomic_add flag is set, the coopmatrix is added to the memref atomicall
 
 When storing a complex value the update may be pseudo-atomic, meaning that an atomic store is used
 for the the real and imaginary separately.
-
-The optional "align" attribute may be passed to set the known minimum alignment of the access
-(power-of-two, in bytes).
-It is undefined behaviour if the memref plus the 2d-offset does not have the required minimum alignment at run-time.
 
 Operands
 ~~~~~~~~

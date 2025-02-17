@@ -32,7 +32,6 @@ void set_spirv_features(tinytc_core_info_t info, ze_device_handle_t device) {
     set_feature(tinytc_spirv_feature_float64, has_f64);
     set_feature(tinytc_spirv_feature_groups, true);
     set_feature(tinytc_spirv_feature_subgroup_dispatch, true);
-    set_feature(tinytc_spirv_feature_subgroup_buffer_block_io, true);
     set_feature(tinytc_spirv_feature_int64_atomics,
                 module_props.flags & ZE_DEVICE_MODULE_FLAG_INT64_ATOMICS);
     if (has_f16) {

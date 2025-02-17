@@ -85,8 +85,8 @@ class coopmatrix_data_type : public data_type_node {
 class group_data_type : public data_type_node {
   public:
     inline static bool classof(data_type_node const &d) { return d.type_id() == DTK::group; }
-    static auto get(tinytc_data_type_t ty, std::int64_t offset,
-                    location const &lc = {}) -> tinytc_data_type_t;
+    static auto get(tinytc_data_type_t ty, std::int64_t offset, location const &lc = {})
+        -> tinytc_data_type_t;
 
     inline auto ty() const -> tinytc_data_type_t { return ty_; }
     inline auto offset() const -> std::int64_t { return offset_; }
@@ -105,8 +105,8 @@ class memref_data_type : public data_type_node {
     static auto canonical_stride(array_view<std::int64_t> shape) -> std::vector<std::int64_t>;
     static auto get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
                     array_view<std::int64_t> stride,
-                    address_space addrspace = address_space::global,
-                    location const &lc = {}) -> tinytc_data_type_t;
+                    address_space addrspace = address_space::global, location const &lc = {})
+        -> tinytc_data_type_t;
 
     scalar_type element_ty() const;
     inline tinytc_data_type_t element_data_ty() const { return element_ty_; }

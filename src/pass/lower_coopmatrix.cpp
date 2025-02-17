@@ -16,7 +16,6 @@
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -30,6 +29,7 @@
 #include <memory>
 #include <sstream>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -76,8 +76,8 @@ class coopmatrix_code_generator {
             }
         }
     }
-    auto vals(location const &loc, tinytc_value const &v,
-              std::int64_t expected_size) -> std::vector<value> &;
+    auto vals(location const &loc, tinytc_value const &v, std::int64_t expected_size)
+        -> std::vector<value> &;
     template <typename Range>
     auto vals_copy_expand(location const &loc, Range range) -> std::vector<value> {
         auto expanded_vals = std::vector<value>{};
@@ -207,7 +207,6 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
     auto i32_ty = scalar_data_type::get(ctx, scalar_type::i32);
-    auto ot = get_memref_type(in.operand());
     auto rt = get_coopmatrix_type(in.result(0));
 
     const auto checked = normalize_checked_flag(in.checked(), rt->use());
@@ -217,15 +216,6 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
     const int omode = trans == transpose::T ? 1 : 0;
     const bool check_m = checked == checked_flag::both || checked == checked_flag::rows;
     const bool check_k = checked == checked_flag::both || checked == checked_flag::cols;
-    const auto sty_size = size(ot->element_ty());
-    const std::int32_t align = std::max(in.align(), ot->element_alignment());
-    auto const get_flag = [&](bool needs_check) {
-        if (!needs_check && core_cfg_.block_read_write_supported && ot->stride(omode) == 1 &&
-            align >= 4 && sty_size >= 2 && sty_size <= 8) {
-            return load_flag::block;
-        }
-        return load_flag::regular;
-    };
 
     auto tmp = bb_.add(make_builtin(builtin::subgroup_local_id, i32_ty, in.loc()));
     auto subgroup_local_id = bb_.add(make_cast(tmp, index_ty, in.loc()));
@@ -236,7 +226,6 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
     const std::int64_t num_blocks = rt->num_blocks(core_cfg_.subgroup_size);
     for (std::int64_t block = 0; block < num_blocks; ++block) {
         const bool needs_mask = shape[0] < (block + 1) * core_cfg_.subgroup_size;
-        const auto flag = get_flag(check_m || needs_mask);
         auto check_gen = check_condition_generator(&in.operand(), pos);
         auto fibre =
             get_matrix_fibre(bb_, &in.operand(), pos, omode, shape, subgroup_local_id, in.loc());
@@ -246,7 +235,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_load_inst &in) {
             for (std::int64_t k = 0; k < shape[1]; ++k) {
                 auto cst_k = bb_.add(make_constant(k, index_ty, in.loc()));
                 auto const load_val = [&](auto &bb) {
-                    return bb.add(make_load(flag, fibre, {cst_k}, align, rt->ty(), in.loc()));
+                    return bb.add(make_load(fibre, {cst_k}, rt->ty(), in.loc()));
                 };
                 if (check_k) {
                     auto cond = check_gen(bb, cst_k, 1 - omode, in.loc());
@@ -408,7 +397,6 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
     auto i32_ty = scalar_data_type::get(ctx, scalar_type::i32);
-    auto ot = get_memref_type(in.operand());
     auto vt = get_coopmatrix_type(in.val());
 
     int omode = vt->distributed_mode();
@@ -420,15 +408,6 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
 
     const bool check_m = checked == checked_flag::both || checked == checked_flag::rows;
     const bool check_k = checked == checked_flag::both || checked == checked_flag::cols;
-    const auto sty_size = size(ot->element_ty());
-    const std::int32_t align = std::max(in.align(), ot->element_alignment());
-    auto const get_flag = [&](store_flag flag, bool needs_check, std::int32_t align) {
-        if (!needs_check && core_cfg_.block_read_write_supported && flag == store_flag::regular &&
-            ot->stride(omode) == 1 && align >= 16 && sty_size >= 2 && sty_size <= 8) {
-            return store_flag::block;
-        }
-        return flag;
-    };
 
     auto tmp = bb_.add(make_builtin(builtin::subgroup_local_id, i32_ty, in.loc()));
     auto subgroup_local_id = bb_.add(make_cast(tmp, index_ty, in.loc()));
@@ -436,17 +415,15 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_store_inst &in) {
     auto pos = std::array<value, 2u>{&in.pos0(), &in.pos1()};
     for (std::int64_t block = 0; block < num_blocks; ++block) {
         const bool needs_mask = shape[0] < (block + 1) * core_cfg_.subgroup_size;
-        const auto flag = get_flag(in.flag(), check_m || needs_mask, align);
         auto check_gen = check_condition_generator(&in.operand(), pos);
-        auto work_item_offset = flag != store_flag::block ? subgroup_local_id : nullptr;
         auto fibre =
-            get_matrix_fibre(bb_, &in.operand(), pos, omode, shape, work_item_offset, in.loc());
+            get_matrix_fibre(bb_, &in.operand(), pos, omode, shape, subgroup_local_id, in.loc());
         auto const store_block = [&](auto &bb) {
             for (std::int64_t k = 0; k < shape[1]; ++k) {
                 auto cst_k = bb_.add(make_constant(k, index_ty, in.loc()));
                 auto const store_val = [&](auto &bb) {
-                    return bb.add(make_store(flag, lowered_vals[k + block * shape[1]], fibre,
-                                             {cst_k}, align, in.loc()));
+                    return bb.add(make_store(in.flag(), lowered_vals[k + block * shape[1]], fibre,
+                                             {cst_k}, in.loc()));
                 };
                 if (check_k) {
                     auto cond = check_gen(bb, cst_k, 1, in.loc());

@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <functional>
 #include <optional>
+#include <utility>
 #include <vector>
 
 namespace tinytc {
@@ -38,8 +39,8 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
 
 auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
                                 value a, value b, location const &loc) -> value;
-auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b,
-                                      location const &loc) -> value;
+auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
+    -> value;
 
 auto get_atomic_store_flag(value beta) -> std::optional<store_flag>;
 void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,

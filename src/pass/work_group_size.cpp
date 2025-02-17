@@ -12,11 +12,14 @@
 #include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <array>
+#include <cstdint>
 #include <functional>
 #include <stdexcept>
+#include <string>
 #include <unordered_set>
 #include <utility>
 #include <vector>

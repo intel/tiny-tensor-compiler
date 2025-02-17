@@ -1,8 +1,8 @@
 ; Copyright (C) 2024 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-; RUN: %tinytc-opt -palignment-propagation < %s | filecheck %s
-func @load1(%0: memref<i16x64x64> {"align"=64}, %x: index, %y: index) {
+; RUN: %tinytc-opt -pmemref-info < %s | filecheck %s
+func @load1(%0: memref<i16x64x64> {"alignment"=64}, %x: index, %y: index) {
     %c0 = constant 0 : index
     %c4 = constant 4 : index
     %1 = load %0[%c0,%c0] : i16
@@ -22,7 +22,7 @@ func @load1(%0: memref<i16x64x64> {"align"=64}, %x: index, %y: index) {
 ; CHECK:       %7 = load %0[%x,%c0] : i16
 ; CHECK:       %8 = load %0[%6,%c0], align 64 : i16
 }
-func @load2(%0: memref<i16x64x64,strided<1,72>> {align=64}, %x: index, %y: index) {
+func @load2(%0: memref<i16x64x64,strided<1,72>> {alignment=64}, %x: index, %y: index) {
     %c0 = constant 0 : index
     %c4 = constant 4 : index
     %1 = load %0[%c0,%c0] : i16
@@ -35,7 +35,7 @@ func @load2(%0: memref<i16x64x64,strided<1,72>> {align=64}, %x: index, %y: index
 ; CHECK:       %3 = load %0[%c4,%y], align 8 : i16
 ; CHECK:       %4 = load %0[%x,%y] : i16
 }
-func @load3(%0: memref<i16x64x64,strided<1,?>> {align=64}, %x: index, %y: index) {
+func @load3(%0: memref<i16x64x64,strided<1,?>> {alignment=64}, %x: index, %y: index) {
     %c0 = constant 0 : index
     %c4 = constant 4 : index
     %1 = load %0[%c0,%c0] : i16
@@ -48,7 +48,7 @@ func @load3(%0: memref<i16x64x64,strided<1,?>> {align=64}, %x: index, %y: index)
 ; CHECK:       %3 = load %0[%c4,%c4], align 8 : i16
 ; CHECK:       %4 = load %0[%x,%y] : i16
 }
-func @store1(%0: memref<i16x64x64> {align=64}, %x: index, %y: index) {
+func @store1(%0: memref<i16x64x64> {alignment=64}, %x: index, %y: index) {
     %cst = constant 42 : i16
     %c0 = constant 0 : index
     %c4 = constant 4 : index
@@ -63,7 +63,7 @@ func @store1(%0: memref<i16x64x64> {align=64}, %x: index, %y: index) {
 ; CHECK:       store %cst, %0[%x,%y]
 }
 
-func @expand(%a: memref<i8x64> {align=64}) {
+func @expand(%a: memref<i8x64> {alignment=64}) {
     %z = constant 0 : index
     %0 = expand %a[0->8x8] : memref<i8x8x8>
     %1 = load %0[%z,%z] : i8
@@ -71,7 +71,7 @@ func @expand(%a: memref<i8x64> {align=64}) {
 ; CHECK:       %1 = load %0[%z,%z], align 64 : i8 
 }
 
-func @fuse(%a: memref<i8x8x8> {align=128}) {
+func @fuse(%a: memref<i8x8x8> {alignment=128}) {
     %z = constant 0 : index
     %0 = fuse %a[0,1] : memref<i8x64>
     %1 = load %0[%z] : i8
@@ -79,7 +79,7 @@ func @fuse(%a: memref<i8x8x8> {align=128}) {
 ; CHECK:       %1 = load %0[%z], align 128 : i8 
 }
 
-func @subview(%a: memref<i16x8x8> {align=32}, %x: index) {
+func @subview(%a: memref<i16x8x8> {alignment=32}, %x: index) {
     %cst = constant 42 : i16
     %0 = subview %a[0:8,0:8] : memref<i16x8x8>
     %1 = subview %a[4:8,0:8] : memref<i16x8x8>
@@ -100,7 +100,7 @@ func @subview(%a: memref<i16x8x8> {align=32}, %x: index) {
 ; CHECK:       store %cst, %4[%z], align 16
 }
 
-func @subview_indirect(%a: memref<i16x8x8> {align=32}, %x: index) {
+func @subview_indirect(%a: memref<i16x8x8> {alignment=32}, %x: index) {
     %cst = constant 42 : i16
     %c16 = constant 16 : index
     %c128 = constant 128 : index

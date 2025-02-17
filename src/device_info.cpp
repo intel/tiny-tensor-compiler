@@ -40,10 +40,7 @@ auto core_info_generic::get_core_config(std::int32_t subgroup_size) const -> tin
         subgroup_sizes_.end()) {
         throw std::out_of_range("Requested subgroup size not available");
     }
-    const bool block_read_write_supported =
-        have_spirv_feature(spirv_feature::subgroup_buffer_block_io);
-    return core_config{subgroup_size, max_work_group_size_, register_space_,
-                       block_read_write_supported, &matrix_};
+    return core_config{subgroup_size, max_work_group_size_, register_space_, &matrix_};
 }
 auto core_info_generic::matrix() const -> matrix_ext_info const & { return matrix_; }
 
@@ -60,11 +57,12 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
 
-        const auto block_info = matrix_ext_block_io_info{.address_alignment = 4,
-                                                         .base_address_alignment = 64,
+        const auto block_info = matrix_ext_block_io_info{.base_address_alignment = 64,
                                                          .min_stride = 64,
                                                          .max_stride = (1 << 24) - 1,
-                                                         .stride_alignment = 8};
+                                                         .pos0_alignment = 4,
+                                                         .stride_alignment = 8,
+                                                         .width_alignment = 4};
         matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
         // matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
     }
@@ -118,12 +116,8 @@ auto core_info_intel::get_core_config(std::int32_t subgroup_size) const -> core_
         throw std::out_of_range("Requested subgroup size not available");
     }
 
-    const bool block_read_write_supported =
-        have_spirv_feature(spirv_feature::subgroup_buffer_block_io) &&
-        !(subgroup_size == 32 && register_size_ == 32);
-
     return core_config{subgroup_size, max_work_group_size(subgroup_size), register_space(),
-                       block_read_write_supported, &matrix_};
+                       &matrix_};
 }
 
 auto core_info_intel::matrix() const -> matrix_ext_info const & { return matrix_; }
@@ -162,7 +156,6 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::int64_atomics, true);
             (*info)->set_spirv_feature(spirv_feature::groups, true);
             (*info)->set_spirv_feature(spirv_feature::subgroup_dispatch, true);
-            (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_local, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_global, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_local, true);
@@ -180,7 +173,6 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::int64_atomics, true);
             (*info)->set_spirv_feature(spirv_feature::groups, true);
             (*info)->set_spirv_feature(spirv_feature::subgroup_dispatch, true);
-            (*info)->set_spirv_feature(spirv_feature::subgroup_buffer_block_io, true);
             (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_local, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float16_add_global, false);
             (*info)->set_spirv_feature(spirv_feature::atomic_float32_add_local, true);
@@ -296,15 +288,14 @@ tinytc_status_t tinytc_core_info_have_spirv_feature(const_tinytc_core_info_t inf
 }
 
 tinytc_status_t tinytc_core_info_get_default_alignment(const_tinytc_core_info_t info,
-                                                       uint32_t *alignment) {
+                                                       int32_t *alignment) {
     if (info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { *alignment = info->alignment(); });
 }
 
-tinytc_status_t tinytc_core_info_set_default_alignment(tinytc_core_info_t info,
-                                                       uint32_t alignment) {
+tinytc_status_t tinytc_core_info_set_default_alignment(tinytc_core_info_t info, int32_t alignment) {
     if (info == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -342,8 +333,6 @@ char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f) {
         return "groups";
     case tinytc_spirv_feature_subgroup_dispatch:
         return "subgroup_dispatch";
-    case tinytc_spirv_feature_subgroup_buffer_block_io:
-        return "subgroup_buffer_block_io";
     case tinytc_spirv_feature_atomic_float16_add_local:
         return "atomic_float16_add_local";
     case tinytc_spirv_feature_atomic_float16_add_global:

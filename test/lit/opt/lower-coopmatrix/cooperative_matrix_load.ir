@@ -13,11 +13,11 @@ func @coopmatrix_a_load_n(%A: memref<i32x64x48>, %x: index, %y: index) attribute
 ; CHECK-NEXT: %2 = arith.add %x, %1 : index
 ; CHECK-NEXT: %3 = subview %A[%2,%y:3] : memref<i32x3,strided<64>>
 ; CHECK-NEXT: %4 = constant 0 : index
-; CHECK-NEXT: %5 = load %3[%4], align 4 : i32
+; CHECK-NEXT: %5 = load %3[%4] : i32
 ; CHECK-NEXT: %6 = constant 1 : index
-; CHECK-NEXT: %7 = load %3[%6], align 4 : i32
+; CHECK-NEXT: %7 = load %3[%6] : i32
 ; CHECK-NEXT: %8 = constant 2 : index
-; CHECK-NEXT: %9 = load %3[%8], align 4 : i32
+; CHECK-NEXT: %9 = load %3[%8] : i32
 }
 
 func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: index) attributes{subgroup_size=16} {
@@ -38,8 +38,8 @@ func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT: %10 = constant 0 : index
 ; CHECK-NEXT: %11 = constant 1 : index
 ; CHECK-NEXT: %12,%13 = if %9 -> (i32,i32) {
-; CHECK-NEXT:   %14 = load %3[%10], align 4 : i32
-; CHECK-NEXT:   %15 = load %3[%11], align 4 : i32
+; CHECK-NEXT:   %14 = load %3[%10] : i32
+; CHECK-NEXT:   %15 = load %3[%11] : i32
 ; CHECK-NEXT:   yield (%14, %15)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %16 = constant 0 : i32
@@ -58,8 +58,8 @@ func @coopmatrix_a_load_n_rows_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT: %27 = constant 0 : index
 ; CHECK-NEXT: %28 = constant 1 : index
 ; CHECK-NEXT: %29,%30 = if %26 -> (i32,i32) {
-; CHECK-NEXT:   %31 = load %20[%27], align 4 : i32
-; CHECK-NEXT:   %32 = load %20[%28], align 4 : i32
+; CHECK-NEXT:   %31 = load %20[%27] : i32
+; CHECK-NEXT:   %32 = load %20[%28] : i32
 ; CHECK-NEXT:   yield (%31, %32)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %33 = constant 0 : i32
@@ -84,7 +84,7 @@ func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT:  %9 = cmp.lt %4, %6 : bool
 ; CHECK-NEXT:  %10 = arith.and %8, %9 : bool
 ; CHECK-NEXT:  %11 = if %10 -> (i32) {
-; CHECK-NEXT:    %12 = load %3[%4], align 4 : i32
+; CHECK-NEXT:    %12 = load %3[%4] : i32
 ; CHECK-NEXT:    yield (%12)
 ; CHECK-NEXT:  } else {
 ; CHECK-NEXT:    %13 = constant 0 : i32
@@ -96,7 +96,7 @@ func @coopmatrix_a_load_n_cols_checked(%A: memref<i32x64x48>, %x: index, %y: ind
 ; CHECK-NEXT:  %17 = cmp.lt %14, %6 : bool
 ; CHECK-NEXT:  %18 = arith.and %16, %17 : bool
 ; CHECK-NEXT:  %19 = if %18 -> (i32) {
-; CHECK-NEXT:    %20 = load %3[%14], align 4 : i32
+; CHECK-NEXT:    %20 = load %3[%14] : i32
 ; CHECK-NEXT:    yield (%20)
 ; CHECK-NEXT:  } else {
 ; CHECK-NEXT:    %21 = constant 0 : i32
@@ -114,7 +114,7 @@ func @coopmatrix_a_load_t(%A: memref<i32x64x48>, %x: index, %y: index) attribute
 ; CHECK-NEXT:  %2 = arith.add %y, %1 : index
 ; CHECK-NEXT:  %3 = subview %A[%x:2,%2] : memref<i32x2>
 ; CHECK-NEXT:  %4 = constant 0 : index
-; CHECK-NEXT:  %5 = load %3[%4], align 4 : i32
+; CHECK-NEXT:  %5 = load %3[%4] : i32
 ; CHECK-NEXT:  %6 = constant 1 : index
-; CHECK-NEXT:  %7 = load %3[%6], align 4 : i32
+; CHECK-NEXT:  %7 = load %3[%6] : i32
 }

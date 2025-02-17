@@ -5,11 +5,11 @@
 %language "c++"
 
 %code requires {
-    #include "node/function_node.hpp"
     #include "node/inst_node.hpp"
     #include "tinytc/tinytc.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
+    #include <cstddef>
     #include <cstdint>
     #include <functional>
     #include <memory>
@@ -38,6 +38,7 @@
     #include "compiler_context.hpp"
     #include "error.hpp"
     #include "node/attr_node.hpp"
+    #include "node/function_node.hpp"
     #include "node/program_node.hpp"
     #include "node/region_node.hpp"
     #include "node/value_node.hpp"
@@ -47,11 +48,8 @@
     #include "support/util.hpp"
     #include "support/visit.hpp"
 
-    #include <array>
     #include <complex>
     #include <cstdint>
-    #include <cstdlib>
-    #include <exception>
     #include <initializer_list>
     #include <sstream>
     #include <utility>
@@ -100,14 +98,12 @@
     RSQBR           "]"
     FUNC            "func"
     ATTRIBUTES      "attributes"
-    ALIGN           "align"
     ARROW           "->"
     DYNAMIC         "?"
     NOTRANS         ".n"
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
-    BLOCK           ".block"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -228,7 +224,6 @@
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
 %nterm <inst> cooperative_matrix_load_inst
-%nterm <std::int32_t> optional_align
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_scale_inst
 %nterm <inst> cooperative_matrix_store_inst
@@ -238,7 +233,6 @@
 %nterm <std::vector<int_or_val>> expand_shape
 %nterm <inst> fuse_inst
 %nterm <inst> load_inst
-%nterm <load_flag> load_flag
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
 %nterm <inst> subgroup_broadcast_inst
@@ -360,8 +354,7 @@ named_attribute:
 ;
 
 attribute_name:
-    ALIGN  { $$ = string_attr::get(ctx.cctx().get(), "align"); }
-  | ATTR_NAME { $$ = string_attr::get(ctx.cctx().get(), $ATTR_NAME); }
+    ATTR_NAME { $$ = string_attr::get(ctx.cctx().get(), $ATTR_NAME); }
   | STRING { $$ = string_attr::get(ctx.cctx().get(), $STRING); }
 
 optional_dictionary_attribute:
@@ -894,11 +887,11 @@ constant_inst:
 ;
 
 cooperative_matrix_load_inst:
-    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR optional_align COLON data_type[result_ty]  {
+    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_load_inst>(
-                    $transpose, $checked, std::move($op), std::move($p0), std::move($p1), $optional_align,
+                    $transpose, $checked, std::move($op), std::move($p0), std::move($p1),
                     std::move($result_ty), @cooperative_matrix_load_inst)
                     .release()
             };
@@ -907,11 +900,6 @@ cooperative_matrix_load_inst:
             YYERROR;
         }
     }
-;
-
-optional_align:
-    %empty { $$ = 0; }
-  | COMMA ALIGN INTEGER_CONSTANT { $$ = $INTEGER_CONSTANT; }
 ;
 
 checked:
@@ -951,12 +939,12 @@ cooperative_matrix_scale_inst:
 ;
 
 cooperative_matrix_store_inst:
-    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR optional_align {
+    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
         try {
             $$ = inst {
                 std::make_unique<cooperative_matrix_store_inst>(
                     $checked, $store_flag, std::move($val), std::move($op), std::move($p0), std::move($p1),
-                    $optional_align, @cooperative_matrix_store_inst)
+                    @cooperative_matrix_store_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1026,11 +1014,11 @@ fuse_inst:
 ;
 
 load_inst:
-    LOAD load_flag var LSQBR optional_value_list RSQBR optional_align COLON data_type {
+    LOAD var LSQBR optional_value_list RSQBR COLON data_type {
         try {
             $$ = inst {
-                std::make_unique<load_inst>($load_flag, std::move($var), std::move($optional_value_list),
-                                            $optional_align, std::move($data_type), @load_inst)
+                std::make_unique<load_inst>(std::move($var), std::move($optional_value_list),
+                                            std::move($data_type), @load_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1040,17 +1028,12 @@ load_inst:
     }
 ;
 
-load_flag:
-    %empty { $$ = load_flag::regular; }
-  | BLOCK  { $$ = load_flag::block; }
-;
-
 store_inst:
-    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR optional_align {
+    STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
         try {
             $$ = inst {
                 std::make_unique<store_inst>($store_flag, std::move($a), std::move($b),
-                                             std::move($optional_value_list), $optional_align, @store_inst)
+                                             std::move($optional_value_list), @store_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1062,7 +1045,6 @@ store_inst:
 
 store_flag:
     %empty { $$ = store_flag::regular; }
-  | BLOCK  { $$ = store_flag::block; }
   | ATOMIC { $$ = store_flag::atomic; }
   | ATOMIC_ADD { $$ = store_flag::atomic_add; }
 ;

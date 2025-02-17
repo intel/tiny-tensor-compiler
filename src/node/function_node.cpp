@@ -7,6 +7,7 @@
 #include "support/casting.hpp"
 #include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <utility>
 
 using namespace tinytc;

@@ -163,16 +163,6 @@ void capex::operator()(OpMemoryModel const &in) {
         unique_->capability(cap);
     }
 }
-void capex::operator()(OpSubgroupBlockReadINTEL const &) {
-    unique_->capability(Capability::SubgroupBufferBlockIOINTEL);
-    unique_->extension("SPV_INTEL_subgroups");
-    required_features_[tinytc_spirv_feature_subgroup_buffer_block_io] = true;
-}
-void capex::operator()(OpSubgroupBlockWriteINTEL const &) {
-    unique_->capability(Capability::SubgroupBufferBlockIOINTEL);
-    unique_->extension("SPV_INTEL_subgroups");
-    required_features_[tinytc_spirv_feature_subgroup_buffer_block_io] = true;
-}
 void capex::operator()(OpTypeFloat const &in) {
     switch (in.op0()) {
     case 16:

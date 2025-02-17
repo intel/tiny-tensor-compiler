@@ -36,8 +36,8 @@ class matrix_ext_type {
     auto K_block_sizes(std::int32_t M, std::int32_t N) const -> std::vector<std::int32_t>;
 
     auto have_acc(scalar_type acc) const -> bool;
-    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
-                   matrix_use use) const -> bool;
+    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
+        -> bool;
 
   private:
     scalar_type a_, b_;
@@ -46,11 +46,12 @@ class matrix_ext_type {
 };
 
 struct matrix_ext_block_io_info {
-    std::int32_t address_alignment;
     std::int32_t base_address_alignment;
     std::int32_t min_stride;
     std::int32_t max_stride;
+    std::int32_t pos0_alignment;
     std::int32_t stride_alignment;
+    std::int32_t width_alignment;
 };
 
 class matrix_ext_info {
@@ -61,13 +62,13 @@ class matrix_ext_info {
         : required_sgs_{required_subgroup_size}, block_io_{block_io}, types_(std::move(types)),
           diy_(use_khr_matrix_ext) {}
 
-    auto get_precision(scalar_type a, scalar_type b,
-                       scalar_type acc) const -> matrix_ext_type const *;
+    auto get_precision(scalar_type a, scalar_type b, scalar_type acc) const
+        -> matrix_ext_type const *;
     auto have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d, std::int64_t M,
                    std::int64_t N, std::int64_t K) const -> bool;
     auto have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool;
-    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
-                   matrix_use use) const -> bool;
+    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
+        -> bool;
     auto have_type(const coopmatrix_data_type *ty) const -> bool;
 
     inline auto required_subgroup_size() const -> std::int32_t { return required_sgs_; }

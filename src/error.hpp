@@ -11,7 +11,6 @@
 
 #include <array>
 #include <cstddef>
-#include <exception>
 #include <new>
 #include <sstream>
 #include <stdexcept>
@@ -57,8 +56,8 @@ class internal_compiler_error : public std::exception {
 };
 
 template <typename F>
-auto exception_to_status_code(F &&f,
-                              tinytc_compiler_context_t context = nullptr) -> tinytc_status_t {
+auto exception_to_status_code(F &&f, tinytc_compiler_context_t context = nullptr)
+    -> tinytc_status_t {
     try {
         f();
     } catch (internal_compiler_error const &e) {

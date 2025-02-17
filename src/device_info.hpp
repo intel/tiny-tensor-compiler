@@ -23,7 +23,6 @@ class core_config {
     std::int32_t subgroup_size;       ///< Smallest unit of execution
     std::int32_t max_work_group_size; ///< Maximum size of local work group in number of works items
     std::int32_t register_space;      ///< Size of register file in bytes
-    bool block_read_write_supported;  ///< True if block reads / block writes are suppported
     matrix_ext_info const *matrix;
 };
 
@@ -47,8 +46,8 @@ struct tinytc_core_info : tinytc::reference_counted {
     virtual void set_spirv_feature(tinytc::spirv_feature f, bool available) = 0;
     virtual auto have_spirv_feature(tinytc::spirv_feature f) const -> bool = 0;
     virtual auto matrix() const -> tinytc::matrix_ext_info const & = 0;
-    virtual auto alignment() const -> std::uint32_t = 0;
-    virtual void alignment(std::uint32_t alignment) = 0;
+    virtual auto alignment() const -> std::int32_t = 0;
+    virtual void alignment(std::int32_t alignment) = 0;
 };
 
 namespace tinytc {
@@ -61,12 +60,12 @@ class core_info_common : public ::tinytc_core_info {
     inline auto have_spirv_feature(spirv_feature f) const -> bool override {
         return spv_feature_[static_cast<int>(f)];
     }
-    inline auto alignment() const -> std::uint32_t override { return alignment_; }
-    inline void alignment(std::uint32_t alignment) override { alignment_ = alignment; }
+    inline auto alignment() const -> std::int32_t override { return alignment_; }
+    inline void alignment(std::int32_t alignment) override { alignment_ = alignment; }
 
   private:
     std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> spv_feature_ = {};
-    std::uint32_t alignment_ = 128;
+    std::int32_t alignment_ = 128;
 };
 
 class core_info_generic : public core_info_common {

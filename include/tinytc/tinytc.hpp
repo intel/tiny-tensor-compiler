@@ -1192,17 +1192,6 @@ inline char const *to_string(cmp_condition cond) {
 }
 
 /**
- * @brief Convert Load flag to string
- *
- * @param flag Load flag
- *
- * @return C-string
- */
-inline char const *to_string(load_flag flag) {
-    return ::tinytc_load_flag_to_string(static_cast<tinytc_load_flag_t>(flag));
-}
-
-/**
  * @brief Convert matrix use to string
  *
  * @param u Matrix use
@@ -1360,8 +1349,8 @@ class region : public handle<tinytc_region_t> {
      *
      * @return Iterator pointing to the newly inserted instruction
      */
-    inline auto insert(tinytc_inst_iterator_t iterator,
-                       inst instruction) -> tinytc_inst_iterator_t {
+    inline auto insert(tinytc_inst_iterator_t iterator, inst instruction)
+        -> tinytc_inst_iterator_t {
         auto it = iterator;
         CHECK_STATUS(tinytc_region_insert(obj_, &it, instruction.release()));
         return it;
@@ -1602,31 +1591,6 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
- * @param align minimum alignment; can be 0
- * @param to_ty result type
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, value op, value p0,
-                                         value p1, std::int32_t align, data_type to_ty,
-                                         location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_load_inst_create(
-                         &instr, static_cast<tinytc_transpose_t>(trans),
-                         static_cast<tinytc_checked_flag_t>(flag), op, p0, p1, align, to_ty, &loc),
-                     loc);
-    return inst(instr);
-}
-
-/**
- * @brief Create cooperative matrix load instruction
- *
- * @param trans transpose operation applied on load
- * @param flag out-of-bounds checks type
- * @param op %op
- * @param p0 %p0
- * @param p1 %p1
  * @param to_ty result type
  * @param loc Source code location
  *
@@ -1634,8 +1598,12 @@ inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, val
  */
 inline inst make_cooperative_matrix_load(transpose trans, checked_flag flag, value op, value p0,
                                          value p1, data_type to_ty, location const &loc = {}) {
-    return make_cooperative_matrix_load(trans, flag, std::move(op), std::move(p0), std::move(p1), 0,
-                                        to_ty, loc);
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_load_inst_create(
+                         &instr, static_cast<tinytc_transpose_t>(trans),
+                         static_cast<tinytc_checked_flag_t>(flag), op, p0, p1, to_ty, &loc),
+                     loc);
+    return inst(instr);
 }
 
 /**
@@ -1683,39 +1651,18 @@ inline inst make_cooperative_matrix_scale(value a, value b, data_type ty,
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
- * @param align minimum alignment; can be 0
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_cooperative_matrix_store(checked_flag cflag, store_flag sflag, value val, value op,
-                                          value p0, value p1, std::int32_t align,
-                                          location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_store_inst_create(
-                         &instr, static_cast<tinytc_checked_flag_t>(cflag),
-                         static_cast<tinytc_store_flag_t>(sflag), val, op, p0, p1, align, &loc),
-                     loc);
-    return inst(instr);
-}
-
-/**
- * @brief Create cooperative matrix store instruction
- *
- * @param cflag out-of-bounds checks type
- * @param sflag store flag
- * @param val %val
- * @param op %op
- * @param p0 %p0
- * @param p1 %p1
  * @param loc Source code location
  *
  * @return Instruction
  */
 inline inst make_cooperative_matrix_store(checked_flag cflag, store_flag sflag, value val, value op,
                                           value p0, value p1, location const &loc = {}) {
-    return make_cooperative_matrix_store(cflag, sflag, std::move(val), std::move(op), std::move(p0),
-                                         std::move(p1), 0, loc);
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_store_inst_create(
+                         &instr, static_cast<tinytc_checked_flag_t>(cflag),
+                         static_cast<tinytc_store_flag_t>(sflag), val, op, p0, p1, &loc),
+                     loc);
+    return inst(instr);
 }
 
 /**
@@ -1806,32 +1753,6 @@ inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
 /**
  * @brief Make load instruction
  *
- * @param flag Load flag
- * @param a Operand
- * @param index_list Vector of indices
- * @param align minimum alignment; can be 0
- * @param ty Result type
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_load(load_flag flag, value a, array_view<value> index_list, std::int32_t align,
-                      tinytc_data_type_t ty, location const &loc = {}) {
-    tinytc_inst_t instr;
-    auto len = index_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("index list too long");
-    }
-    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
-    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, static_cast<tinytc_load_flag_t>(flag), a, len,
-                                             il, align, ty, &loc),
-                     loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make load instruction
- *
  * @param a Operand
  * @param index_list Vector of indices
  * @param ty Result type
@@ -1841,7 +1762,14 @@ inline inst make_load(load_flag flag, value a, array_view<value> index_list, std
  */
 inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t ty,
                       location const &loc = {}) {
-    return make_load(load_flag::regular, std::move(a), std::move(index_list), 0, ty, loc);
+    tinytc_inst_t instr;
+    auto len = index_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("index list too long");
+    }
+    const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
+    CHECK_STATUS_LOC(tinytc_load_inst_create(&instr, a, len, il, ty, &loc), loc);
+    return inst(instr);
 }
 
 /**
@@ -2028,13 +1956,12 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
  * @param val Value that is stored
  * @param a Target memref
  * @param index_list Vector of indices
- * @param align minimum alignment; can be 0
  * @param loc Source code location
  *
  * @return Instruction
  */
 inline inst make_store(store_flag flag, value val, value a, array_view<value> index_list,
-                       std::int32_t align, location const &loc = {}) {
+                       location const &loc = {}) {
     tinytc_inst_t instr;
     auto len = index_list.size();
     if (len > std::numeric_limits<std::uint32_t>::max()) {
@@ -2042,25 +1969,9 @@ inline inst make_store(store_flag flag, value val, value a, array_view<value> in
     }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(index_list.data());
     CHECK_STATUS_LOC(tinytc_store_inst_create(&instr, static_cast<tinytc_store_flag_t>(flag), val,
-                                              a, len, il, align, &loc),
+                                              a, len, il, &loc),
                      loc);
     return inst(instr);
-}
-
-/**
- * @brief Make store instruction
- *
- * @param flag store flag
- * @param val Value that is stored
- * @param a Target memref
- * @param index_list Vector of indices
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_store(store_flag flag, value val, value a, array_view<value> index_list,
-                       location const &loc = {}) {
-    return make_store(flag, std::move(val), std::move(a), std::move(index_list), 0, loc);
 }
 
 /**
@@ -2510,8 +2421,8 @@ class region_builder {
     template <typename F>
     auto for_loop(data_type loop_var_ty, value from, value to, value step,
                   array_view<value> initial_value_list, array_view<data_type> return_type_list,
-                  F &&f, attr attributes = nullptr,
-                  location const &loc = {}) -> std::vector<value> {
+                  F &&f, attr attributes = nullptr, location const &loc = {})
+        -> std::vector<value> {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, initial_value_list,
                                      return_type_list, loc);
         fi.set_attr(attributes);
@@ -2595,8 +2506,8 @@ class region_builder {
      */
     template <typename F, typename G>
     auto ifelse(value condition, F &&then, G &&otherwise,
-                array_view<data_type> return_type_list = {},
-                location const &loc = {}) -> std::vector<value> {
+                array_view<data_type> return_type_list = {}, location const &loc = {})
+        -> std::vector<value> {
         auto ii = ::tinytc::make_if(std::move(condition), return_type_list, loc);
         std::array<region, 2u> regs = {};
         ii.get_regions(regs);
@@ -2716,8 +2627,8 @@ class core_info : public shared_handle<tinytc_core_info_t> {
      *
      * @return alignment in bytes
      */
-    auto get_default_alignment() const -> std::uint32_t {
-        std::uint32_t alignment;
+    auto get_default_alignment() const -> std::int32_t {
+        std::int32_t alignment;
         CHECK_STATUS(tinytc_core_info_get_default_alignment(obj_, &alignment));
         return alignment;
     }
@@ -2727,7 +2638,7 @@ class core_info : public shared_handle<tinytc_core_info_t> {
      *
      * @param alignment alignment in bytes
      */
-    void set_default_alignment(std::uint32_t alignment) {
+    void set_default_alignment(std::int32_t alignment) {
         CHECK_STATUS(tinytc_core_info_set_default_alignment(obj_, alignment));
     }
 };
@@ -2787,8 +2698,8 @@ inline auto make_core_info_intel_from_name(char const *name) -> core_info {
  * @return Core info
  */
 inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
-                                 std::int32_t num_threads_per_eu,
-                                 array_view<std::int32_t> sgs) -> core_info {
+                                 std::int32_t num_threads_per_eu, array_view<std::int32_t> sgs)
+    -> core_info {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
                                                num_threads_per_eu, sgs.size(), sgs.data()));
@@ -2918,8 +2829,8 @@ class binary : public shared_handle<tinytc_binary_t> {
  * @return Binary
  */
 inline auto make_binary(compiler_context const &ctx, bundle_format format, std::size_t data_size,
-                        std::uint8_t const *data,
-                        tinytc_core_feature_flags_t core_features) -> binary {
+                        std::uint8_t const *data, tinytc_core_feature_flags_t core_features)
+    -> binary {
     tinytc_binary_t bin;
     CHECK_STATUS(tinytc_binary_create(&bin, ctx.get(), static_cast<tinytc_bundle_format_t>(format),
                                       data_size, data, core_features));

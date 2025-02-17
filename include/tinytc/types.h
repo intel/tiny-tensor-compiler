@@ -365,18 +365,11 @@ typedef enum {
     tinytc_checked_flag_both = 0x3  ///< Check for out-of-bound rows and cols
 } tinytc_checked_flag_t;
 
-//! Load flag
-typedef enum {
-    tinytc_load_flag_regular = 0, ///< Regular load
-    tinytc_load_flag_block = 1,   ///< Block load
-} tinytc_load_flag_t;
-
 //! Store flag
 typedef enum {
-    tinytc_store_flag_regular = 0,   ///< Non-atomic non-block store
-    tinytc_store_flag_block = 1,     ///< Block store
-    tinytc_store_flag_atomic = 2,    ///< Atomic store
-    tinytc_store_flag_atomic_add = 3 ///< Atomic fetch add
+    tinytc_store_flag_regular = 0,   ///< Non-atomic store
+    tinytc_store_flag_atomic = 1,    ///< Atomic store
+    tinytc_store_flag_atomic_add = 2 ///< Atomic fetch add
 } tinytc_store_flag_t;
 
 //! Matrix use
@@ -393,16 +386,15 @@ typedef enum {
     tinytc_spirv_feature_int64_atomics = 2,              ///< i64 atomics support
     tinytc_spirv_feature_groups = 3,                     ///< work group collectives
     tinytc_spirv_feature_subgroup_dispatch = 4,          ///< subgroup support
-    tinytc_spirv_feature_subgroup_buffer_block_io = 5,   ///< subgroup block read/write support
-    tinytc_spirv_feature_atomic_float16_add_local = 6,   ///< f16 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float16_add_global = 7,  ///< f16 atomic add on global pointer
-    tinytc_spirv_feature_atomic_float32_add_local = 8,   ///< f32 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float32_add_global = 9,  ///< f32 atomic add on global pointer
-    tinytc_spirv_feature_atomic_float64_add_local = 10,  ///< f64 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float64_add_global = 11, ///< f64 atomic add on global pointer
-    tinytc_spirv_feature_bfloat16_conversion = 12,       ///< bf16 -> f32 and f32 -> bf16 conversion
+    tinytc_spirv_feature_atomic_float16_add_local = 5,   ///< f16 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float16_add_global = 6,  ///< f16 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float32_add_local = 7,   ///< f32 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float32_add_global = 8,  ///< f32 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float64_add_local = 9,   ///< f64 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float64_add_global = 10, ///< f64 atomic add on global pointer
+    tinytc_spirv_feature_bfloat16_conversion = 11,       ///< bf16 -> f32 and f32 -> bf16 conversion
 } tinytc_spirv_feature_t;
-#define TINYTC_NUMBER_OF_SPIRV_FEATURES 13 // @todo Keep up to date with tinytc_spirv_feature_t
+#define TINYTC_NUMBER_OF_SPIRV_FEATURES 12 // @todo Keep up to date with tinytc_spirv_feature_t
 
 //! Core features that may be optionally enabled
 typedef enum {

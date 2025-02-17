@@ -86,14 +86,12 @@ lex:
 
         // keywords
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
-        "align"             { adv_loc(); return parser::make_ALIGN(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }
         "?"                 { adv_loc(); return parser::make_DYNAMIC(loc_); }
         ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
         ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
         ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
-        ".block"            { adv_loc(); return parser::make_BLOCK(loc_); }
         "init"              { adv_loc(); return parser::make_INIT(loc_); }
         "local"             { adv_loc(); return parser::make_LOCAL(loc_); }
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
@@ -116,7 +114,7 @@ lex:
 
         // attributes
         "attributes"        { return parser::make_ATTRIBUTES(loc_); }
-        "shape_gcd" | "stride_gcd" | "subgroup_size" | "unroll" | "work_group_size" {
+        "alignment" | "shape_gcd" | "stride_gcd" | "subgroup_size" | "unroll" | "work_group_size" {
             adv_loc(); return parser::make_ATTR_NAME(std::string(b, YYCURSOR), loc_);
         }
 

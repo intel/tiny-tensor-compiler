@@ -3,7 +3,6 @@
 
 #include "node/inst_node.hpp"
 #include "error.hpp"
-#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
@@ -69,7 +68,9 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::expand:
     case tinytc::IK::fuse:
     case tinytc::IK::if_:
+    case tinytc::IK::load:
     case tinytc::IK::size:
+    case tinytc::IK::store:
     case tinytc::IK::subview:
     case tinytc::IK::work_group:
     case tinytc::IK::yield:
@@ -83,10 +84,6 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::cooperative_matrix_store:
     case tinytc::IK::subgroup_broadcast:
         return tinytc::inst_execution_kind::spmd;
-    case tinytc::IK::load:
-        return tinytc::dyn_cast<const tinytc::load_inst>(this)->kind();
-    case tinytc::IK::store:
-        return tinytc::dyn_cast<const tinytc::store_inst>(this)->kind();
     case tinytc::IK::builtin:
         return tinytc::dyn_cast<const tinytc::builtin_inst>(this)->kind();
     };
@@ -148,12 +145,6 @@ void check_memref_mode(memref_data_type *rt, std::int64_t ri, memref_data_type *
                        location const &loc) {
     check_memref_shape(rt, ri, ot, oi, loc);
     check_memref_stride(rt, ri, ot, oi, loc);
-}
-
-void check_align(location const &loc, std::int32_t align) {
-    if (align != 0 && !is_positive_power_of_two(align)) {
-        throw compilation_error(loc, status::ir_invalid_alignment);
-    }
 }
 
 auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_data_type_t ty,
@@ -568,10 +559,10 @@ auto constant_inst::is_identity() const -> bool {
 
 cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_flag flag,
                                                            tinytc_value_t op0, tinytc_value_t p0,
-                                                           tinytc_value_t p1, std::int32_t align,
+                                                           tinytc_value_t p1,
                                                            tinytc_data_type_t to_ty,
                                                            location const &lc)
-    : standard_inst{IK::cooperative_matrix_load}, t_(t), flag_(flag), align_(align) {
+    : standard_inst{IK::cooperative_matrix_load}, t_(t), flag_(flag) {
     op(op_operand, op0);
     op(op_pos0, p0);
     op(op_pos1, p1);
@@ -592,7 +583,6 @@ cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_
 
     check_index_ty(lc, pos0());
     check_index_ty(lc, pos1());
-    check_align(lc, align_);
 
     result(0) = value_node{to_ty, this, lc};
 }
@@ -683,9 +673,8 @@ cooperative_matrix_scale_inst::cooperative_matrix_scale_inst(tinytc_value_t a0, 
 cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag, store_flag sflag,
                                                              tinytc_value_t val0,
                                                              tinytc_value_t op0, tinytc_value_t p0,
-                                                             tinytc_value_t p1, std::int32_t align,
-                                                             location const &lc)
-    : standard_inst{IK::cooperative_matrix_store}, cflag_(cflag), sflag_(sflag), align_(align) {
+                                                             tinytc_value_t p1, location const &lc)
+    : standard_inst{IK::cooperative_matrix_store}, cflag_(cflag), sflag_(sflag) {
     op(op_val, val0);
     op(op_operand, op0);
     op(op_pos0, p0);
@@ -703,7 +692,6 @@ cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag,
 
     check_index_ty(lc, pos0());
     check_index_ty(lc, pos1());
-    check_align(lc, align_);
 }
 
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
@@ -893,16 +881,14 @@ fuse_inst::fuse_inst(tinytc_value_t op0, std::int64_t from, std::int64_t to, tin
     result(0) = value_node{ty, this, lc};
 }
 
-load_inst::load_inst(load_flag flag, tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
-                     std::int32_t align, tinytc_data_type_t ty, location const &lc)
-    : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())}, flag_{flag},
-      align_{align} {
+load_inst::load_inst(tinytc_value_t op0, array_view<tinytc_value_t> index_list0,
+                     tinytc_data_type_t ty, location const &lc)
+    : standard_inst{IK::load, static_cast<std::int64_t>(1 + index_list0.size())} {
     op(0, op0);
     for (std::size_t i = 0; i < index_list0.size(); ++i) {
         check_index_ty(lc, *index_list0[i]);
         op(1 + i, index_list0[i]);
     }
-    check_align(lc, align_);
     loc(lc);
 
     visit(overloaded{
@@ -928,10 +914,6 @@ load_inst::load_inst(load_flag flag, tinytc_value_t op0, array_view<tinytc_value
               },
               [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
           *operand().ty());
-}
-
-auto load_inst::kind() const -> tinytc::inst_execution_kind {
-    return flag_ == load_flag::block ? inst_execution_kind::spmd : inst_execution_kind::mixed;
 }
 
 gemm_inst::gemm_inst(transpose tA, transpose tB, tinytc_value_t alpha0, tinytc_value_t A0,
@@ -1194,10 +1176,8 @@ subview_inst::subview_inst(tinytc_value_t op0, array_view<std::int64_t> static_o
 }
 
 store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
-                       array_view<tinytc_value_t> index_list0, std::int32_t align,
-                       location const &lc)
-    : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())}, flag_{flag},
-      align_{align} {
+                       array_view<tinytc_value_t> index_list0, location const &lc)
+    : standard_inst{IK::store, static_cast<std::int64_t>(2 + index_list0.size())}, flag_{flag} {
     op(op_val, val0);
     op(op_operand, op0);
     {
@@ -1207,7 +1187,6 @@ store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
             op(++i, val);
         }
     }
-    check_align(lc, align_);
     loc(lc);
 
     auto v = get_scalar_type(loc(), val());
@@ -1220,10 +1199,6 @@ store_inst::store_inst(store_flag flag, tinytc_value_t val0, tinytc_value_t op0,
     if (o->dim() != static_cast<std::int64_t>(index_list0.size())) {
         throw compilation_error(loc(), {&operand()}, status::ir_invalid_number_of_indices);
     }
-}
-
-auto store_inst::kind() const -> tinytc::inst_execution_kind {
-    return flag_ == store_flag::block ? inst_execution_kind::spmd : inst_execution_kind::mixed;
 }
 
 sum_inst::sum_inst(transpose tA, tinytc_value_t alpha0, tinytc_value_t A0, tinytc_value_t beta0,

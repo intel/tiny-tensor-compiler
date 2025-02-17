@@ -332,16 +332,9 @@ enum class checked_flag {
     both = tinytc_checked_flag_both  ///< Check for out-of-bound rows and cols
 };
 
-//! Load flag
-enum class load_flag {
-    regular = tinytc_load_flag_regular, ///< Regular load
-    block = tinytc_load_flag_block      ///< Block load
-};
-
 //! Store flag
 enum class store_flag {
     regular = tinytc_store_flag_regular,      ///< Non-atomic non-block store
-    block = tinytc_store_flag_block,          ///< Block store
     atomic = tinytc_store_flag_atomic,        ///< Atomic store
     atomic_add = tinytc_store_flag_atomic_add ///< Atomic fetch add
 };
@@ -360,7 +353,6 @@ enum class spirv_feature {
     int64_atomics = tinytc_spirv_feature_int64_atomics,
     groups = tinytc_spirv_feature_groups,
     subgroup_dispatch = tinytc_spirv_feature_subgroup_dispatch,
-    subgroup_buffer_block_io = tinytc_spirv_feature_subgroup_buffer_block_io,
     atomic_float16_add_local = tinytc_spirv_feature_atomic_float16_add_local,
     atomic_float16_add_global = tinytc_spirv_feature_atomic_float16_add_global,
     atomic_float32_add_local = tinytc_spirv_feature_atomic_float32_add_local,

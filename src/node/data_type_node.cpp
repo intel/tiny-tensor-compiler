@@ -24,8 +24,8 @@ auto boolean_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t
 }
 
 auto coopmatrix_data_type::get(tinytc_data_type_t component_ty, std::int64_t rows,
-                               std::int64_t cols, matrix_use use,
-                               location const &lc) -> tinytc_data_type_t {
+                               std::int64_t cols, matrix_use use, location const &lc)
+    -> tinytc_data_type_t {
     const auto hash = fnv1a_combine(component_ty, rows, cols, use);
     const auto is_equal = [&](tinytc_data_type_t ty) {
         const auto ct = dyn_cast<coopmatrix_data_type>(ty);
@@ -57,8 +57,8 @@ auto coopmatrix_data_type::component_ty() const -> scalar_type {
     return dyn_cast<scalar_data_type>(ty_)->ty();
 }
 
-auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t offset,
-                          location const &lc) -> tinytc_data_type_t {
+auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t offset, location const &lc)
+    -> tinytc_data_type_t {
     const auto hash = fnv1a_combine(memref_ty, offset);
     const auto is_equal = [&](tinytc_data_type_t ty) {
         const auto gt = dyn_cast<group_data_type>(ty);

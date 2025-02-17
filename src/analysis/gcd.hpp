@@ -5,31 +5,13 @@
 #define GCD_20241203_HPP
 
 #include "node/function_node.hpp"
-#include "support/util.hpp"
 #include "tinytc/types.h"
 
 #include <cstdint>
 #include <optional>
 #include <unordered_map>
-#include <vector>
 
 namespace tinytc {
-
-class tensor_gcd {
-  public:
-    tensor_gcd() = default;
-    tensor_gcd(std::vector<std::int64_t> shape_gcd, std::vector<std::int64_t> stride_gcd);
-
-    inline auto shape_begin() const { return shape_gcd_.begin(); }
-    inline auto shape_end() const { return shape_gcd_.end(); }
-    inline auto shape() const -> std::vector<std::int64_t> const & { return shape_gcd_; }
-    inline auto stride_begin() const { return stride_gcd_.begin(); }
-    inline auto stride_end() const { return stride_gcd_.end(); }
-    inline auto stride() const -> std::vector<std::int64_t> const & { return stride_gcd_; }
-
-  private:
-    std::vector<std::int64_t> shape_gcd_, stride_gcd_;
-};
 
 class gcd_analysis_result {
   public:
@@ -37,14 +19,10 @@ class gcd_analysis_result {
     auto get(::tinytc_value const &a) const -> std::int64_t;
     auto get_if(::const_tinytc_value_t a) const -> std::optional<std::int64_t>;
     auto get_if(::tinytc_value const &a) const -> std::optional<std::int64_t>;
-    auto get_tensor_if(::const_tinytc_value_t a) const -> tensor_gcd const *;
-    auto get_tensor_if(::tinytc_value const &a) const -> tensor_gcd const *;
     void set(::tinytc_value const &a, std::int64_t g);
-    void set_tensor(::tinytc_value const &a, tensor_gcd g);
 
   private:
     std::unordered_map<::tinytc_value const *, std::int64_t> gcd_;
-    std::unordered_map<::tinytc_value const *, tensor_gcd> tensor_gcd_;
 };
 
 /**

@@ -14,10 +14,10 @@ func @coopmatrix_a_store_n(%A: memref<i32x64x48>, %x: index, %y: index) attribut
 ; CHECK-NEXT: %3 = arith.add %x, %2 : index
 ; CHECK-NEXT: %4 = subview %A[%3,%y:3] : memref<i32x3,strided<64>>
 ; CHECK-NEXT: %5 = constant 0 : index
-; CHECK-NEXT: store %0, %4[%5], align 4
+; CHECK-NEXT: store %0, %4[%5]
 ; CHECK-NEXT: %6 = constant 1 : index
-; CHECK-NEXT: store %0, %4[%6], align 4
+; CHECK-NEXT: store %0, %4[%6]
 ; CHECK-NEXT: %7 = constant 2 : index
-; CHECK-NEXT: store %0, %4[%7], align 4
+; CHECK-NEXT: store %0, %4[%7]
 }
 

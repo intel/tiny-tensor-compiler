@@ -59,7 +59,7 @@ auto inst_cloner::operator()(constant_inst &in) -> std::unique_ptr<tinytc_inst> 
 auto inst_cloner::operator()(cooperative_matrix_load_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cooperative_matrix_load_inst>(in.t(), in.checked(), subs(&in.operand()),
                                                           subs(&in.pos0()), subs(&in.pos1()),
-                                                          in.align(), in.result(0).ty(), in.loc());
+                                                          in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(cooperative_matrix_mul_add_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cooperative_matrix_mul_add_inst>(
@@ -72,7 +72,7 @@ auto inst_cloner::operator()(cooperative_matrix_scale_inst &in) -> std::unique_p
 auto inst_cloner::operator()(cooperative_matrix_store_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cooperative_matrix_store_inst>(in.checked(), in.flag(), subs(&in.val()),
                                                            subs(&in.operand()), subs(&in.pos0()),
-                                                           subs(&in.pos1()), in.align(), in.loc());
+                                                           subs(&in.pos1()), in.loc());
 }
 auto inst_cloner::operator()(expand_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<expand_inst>(
@@ -88,8 +88,7 @@ auto inst_cloner::operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_i
     return std::make_unique<lifetime_stop_inst>(subs(&in.object()), in.loc());
 }
 auto inst_cloner::operator()(load_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<load_inst>(in.flag(), subs(&in.operand()),
-                                       subs_value_range(in.index_list()), in.align(),
+    return std::make_unique<load_inst>(subs(&in.operand()), subs_value_range(in.index_list()),
                                        in.result(0).ty(), in.loc());
 }
 auto inst_cloner::operator()(gemm_inst &in) -> std::unique_ptr<tinytc_inst> {
@@ -156,7 +155,7 @@ auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
 
 auto inst_cloner::operator()(store_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<store_inst>(in.flag(), subs(&in.val()), subs(&in.operand()),
-                                        subs_value_range(in.index_list()), in.align(), in.loc());
+                                        subs_value_range(in.index_list()), in.loc());
 }
 
 auto inst_cloner::operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst> {

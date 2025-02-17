@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
+#include "support/casting.hpp"
 #include "support/fnv1a.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
@@ -9,7 +10,6 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <array>
 #include <complex>
 #include <cstddef>
 #include <cstdint>
@@ -32,7 +32,7 @@ void dump_ir_pass::operator()(boolean_attr const &a) { *os_ << (a.value() ? "tru
 void dump_ir_pass::operator()(dictionary_attr const &a) {
     auto const is_keyword = [](std::string_view str) {
         switch (fnv1a(str)) {
-        case "align"_fnv1a:
+        case "alignment"_fnv1a:
         case "shape_gcd"_fnv1a:
         case "stride_gcd"_fnv1a:
         case "subgroup_size"_fnv1a:
@@ -250,11 +250,7 @@ void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     dump_val(c.pos0());
     *os_ << ",";
     dump_val(c.pos1());
-    *os_ << "]";
-    if (c.align() != 0) {
-        *os_ << ", align " << c.align();
-    }
-    *os_ << " : ";
+    *os_ << "] : ";
     visit(*this, *c.result(0).ty());
 }
 
@@ -297,9 +293,6 @@ void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
     *os_ << ",";
     dump_val(c.pos1());
     *os_ << "]";
-    if (c.align() != 0) {
-        *os_ << ", align " << c.align();
-    }
 }
 
 void dump_ir_pass::operator()(expand_inst const &e) {
@@ -339,11 +332,7 @@ void dump_ir_pass::operator()(load_inst const &e) {
     *os_ << "[";
     do_with_infix(e.index_list().begin(), e.index_list().end(),
                   [this](auto const &i) { dump_val(i); });
-    *os_ << "]";
-    if (e.align() != 0) {
-        *os_ << ", align " << e.align();
-    }
-    *os_ << " : ";
+    *os_ << "] : ";
     visit(*this, *e.result(0).ty());
 }
 
@@ -519,9 +508,6 @@ void dump_ir_pass::operator()(store_inst const &e) {
     do_with_infix(e.index_list().begin(), e.index_list().end(),
                   [this](auto const &i) { dump_val(i); });
     *os_ << "]";
-    if (e.align() != 0) {
-        *os_ << ", align " << e.align();
-    }
 }
 
 void dump_ir_pass::operator()(sum_inst const &a) {
