@@ -16,11 +16,10 @@ namespace tinytc {
 class memref_info {
   public:
     memref_info() = default;
-    memref_info(std::int32_t alignment, std::int32_t sty_size, std::vector<std::int64_t> shape_gcd,
+    memref_info(std::int64_t offset_gcd, std::vector<std::int64_t> shape_gcd,
                 std::vector<std::int64_t> stride_gcd);
 
-    inline auto alignment() const { return alignment_; }
-    inline auto sty_size() const { return sty_size_; }
+    inline auto offset_gcd() const { return offset_gcd_; }
     inline auto shape_gcd_begin() const { return shape_gcd_.begin(); }
     inline auto shape_gcd_end() const { return shape_gcd_.end(); }
     inline auto shape_gcd() const -> std::vector<std::int64_t> const & { return shape_gcd_; }
@@ -30,10 +29,8 @@ class memref_info {
     inline auto stride_gcd() const -> std::vector<std::int64_t> const & { return stride_gcd_; }
     inline auto stride_gcd(std::size_t i) const -> std::int64_t { return stride_gcd_[i]; }
 
-    auto compute_max_alignment(std::vector<std::int64_t> const &offset_gcds) const -> std::int32_t;
-
   private:
-    std::int32_t alignment_, sty_size_;
+    std::int64_t offset_gcd_;
     std::vector<std::int64_t> shape_gcd_, stride_gcd_;
 };
 

@@ -5,7 +5,7 @@
 func @alloca() {
     %0 = alloca : memref<f16x16x23,local>
 ; CHECK-LABEL: Memref info @alloca
-; CHECK:       alignment(%0) = 128
+; CHECK:       offset_gcd(%0) = 64
 ; CHECK:       shape_gcd(%0) = [16,23]
 ; CHECK:       stride_gcd(%0) = [1,16]
 }
@@ -20,19 +20,22 @@ func @expand(%a: memref<i8x64>, %b: memref<i8x?x?> {shape_gcd=[16,3], stride_gcd
     %4 = arith.div %3, %c4 : index
     %5 = expand %b[0->4x%4] : memref<i8x4x?x?,strided<1,4,?>>
 ; CHECK-LABEL: Memref info @expand
-; CHECK:       alignment(%0) = 128
-; CHECK:       shape_gcd(%0) = [4,4,3]
-; CHECK:       stride_gcd(%0) = [1,4,16]
+; CHECK:       offset_gcd(%0) = 128
+; CHECK:       shape_gcd(%0) = [8,8]
+; CHECK:       stride_gcd(%0) = [1,8]
+; CHECK:       offset_gcd(%5) = 128
+; CHECK:       shape_gcd(%5) = [4,4,3]
+; CHECK:       stride_gcd(%5) = [1,4,16]
 }
 
 func @fuse(%a: memref<i8x8x8>, %b: memref<i8x?x?x?> {shape_gcd=[4,4,42], stride_gcd=[1,4,16]}) {
     %0 = fuse %a[0,1] : memref<i8x64>
     %1 = fuse %b[0,1] : memref<i8x?x?>
 ; CHECK-LABEL: Memref info @fuse
-; CHECK:       alignment(%0) = 128
+; CHECK:       offset_gcd(%0) = 128
 ; CHECK:       shape_gcd(%0) = [64]
 ; CHECK:       stride_gcd(%0) = [1]
-; CHECK:       alignment(%1) = 128
+; CHECK:       offset_gcd(%1) = 128
 ; CHECK:       shape_gcd(%1) = [16,42]
 ; CHECK:       stride_gcd(%1) = [1,16]
 }
@@ -41,13 +44,14 @@ func @load(%a: group<memref<i8x?>> {shape_gcd=[4]}) {
     %gid = builtin.group_id : index
     %0 = load %a[%gid] : memref<i8x?>
 ; CHECK-LABEL: Memref info @load
-; CHECK:       alignment(%0) = 128
+; CHECK:       offset_gcd(%0) = 128
 ; CHECK:       shape_gcd(%0) = [4]
 ; CHECK:       stride_gcd(%0) = [1]
 }
 
 func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
     %c16 = constant 16 : index
+    %c96 = constant 96 : index
     %c128 = constant 128 : index
     %0 = subview %a[0:8,0:8] : memref<i16x8x8>
     %1 = subview %a[4:8,0:8] : memref<i16x8x8>
@@ -57,21 +61,22 @@ func @subview(%a: memref<i16x8x8>, %b: memref<i16x?>, %x: index) {
     %5 = arith.mul %c16, %x : index
     %6 = arith.add %5, %c128 : index
     %7 = subview %a[%6:8,0:8] : memref<i16x8x8>
-    %8 = subview %b[%x:%5] : memref<i16x?>
+    %8 = arith.mul %c96, %x : index
+    %9 = subview %b[%8:%5] : memref<i16x?>
 ; CHECK-LABEL: Memref info @subview
-; CHECK:       alignment(%0) = 128
+; CHECK:       offset_gcd(%0) = 64
 ; CHECK:       shape_gcd(%0) = [8,8]
 ; CHECK:       stride_gcd(%0) = [1,8]
-; CHECK:       alignment(%1) = 8
+; CHECK:       offset_gcd(%1) = 4
 ; CHECK:       shape_gcd(%1) = [8,8]
 ; CHECK:       stride_gcd(%1) = [1,8]
-; CHECK:       alignment(%2) = 8
+; CHECK:       offset_gcd(%2) = 4
 ; CHECK:       shape_gcd(%2) = [8,8]
 ; CHECK:       stride_gcd(%2) = [1,8]
-; CHECK:       alignment(%3) = 2
-; CHECK:       alignment(%4) = 16
-; CHECK:       alignment(%7) = 32
-; CHECK:       alignment(%8) = 2
-; CHECK:       shape_gcd(%8) = [16]
-; CHECK:       stride_gcd(%8) = [1]
+; CHECK:       offset_gcd(%3) = 1
+; CHECK:       offset_gcd(%4) = 8
+; CHECK:       offset_gcd(%7) = 16
+; CHECK:       offset_gcd(%9) = 32
+; CHECK:       shape_gcd(%9) = [16]
+; CHECK:       stride_gcd(%9) = [1]
 }

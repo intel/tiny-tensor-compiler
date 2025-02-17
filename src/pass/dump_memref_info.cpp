@@ -40,9 +40,9 @@ void dump_memref_info_pass::run_on_function(function_node const &fn) {
     auto const dump_memref_info = [&](value_node const &v) {
         auto m = mr.get_if(v);
         if (m) {
-            *os_ << "  alignment(";
+            *os_ << "  offset_gcd(";
             dump_ir.dump_val(v);
-            *os_ << ") = " << m->alignment() << std::endl;
+            *os_ << ") = " << m->offset_gcd() << std::endl;
             *os_ << "  shape_gcd(";
             dump_ir.dump_val(v);
             *os_ << ") = ";

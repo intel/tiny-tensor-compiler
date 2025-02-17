@@ -1375,7 +1375,6 @@ void inst_converter::operator()(subview_inst const &in) {
             throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
         }
 
-        int j = 0;
         shape_out.reserve(mt->dim());
         stride_out.reserve(mt->dim());
         auto dyn_offsets = in.offsets();
@@ -1390,7 +1389,7 @@ void inst_converter::operator()(subview_inst const &in) {
                 }
                 return unique_.constant(offset);
             };
-            auto tmp = mod_->add<OpIMul>(spv_index_ty, offset_inst(), dv->stride(j));
+            auto tmp = mod_->add<OpIMul>(spv_index_ty, offset_inst(), dv->stride(i));
             offset_acc = mod_->add<OpIAdd>(spv_index_ty, offset_acc, tmp);
 
             const std::int64_t size = in.static_sizes()[i];
@@ -1402,9 +1401,8 @@ void inst_converter::operator()(subview_inst const &in) {
                     return unique_.constant(size);
                 };
                 shape_out.emplace_back(size_inst());
-                stride_out.emplace_back(dv->stride(j));
+                stride_out.emplace_back(dv->stride(i));
             }
-            ++j;
         }
         return offset_acc;
     };

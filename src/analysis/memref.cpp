@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "analysis/gcd.hpp"
 #include "analysis/memref.hpp"
+#include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
 #include "error.hpp"
 #include "node/attr_node.hpp"
@@ -18,47 +18,15 @@
 
 #include <cstdlib> // IWYU pragma: keep
 #include <functional>
+#include <numeric>
 #include <utility>
 
 namespace tinytc {
 
-auto is_aligned(std::vector<std::int64_t> const &offset_gcds,
-                std::vector<std::int64_t> const &stride_gcds, std::int32_t alignment) -> bool {
-    if (offset_gcds.size() != stride_gcds.size()) {
-        throw internal_compiler_error{};
-    }
-
-    auto const check = [&alignment](std::int64_t a, std::int64_t b) {
-        return ((a * b) % alignment) == 0;
-    };
-
-    auto oit = offset_gcds.begin();
-    auto sit = stride_gcds.begin();
-
-    for (; oit != offset_gcds.end() && sit != stride_gcds.end(); ++oit, ++sit) {
-        if (!check(*oit, *sit)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-memref_info::memref_info(std::int32_t alignment, std::int32_t sty_size,
-                         std::vector<std::int64_t> shape_gcd, std::vector<std::int64_t> stride_gcd)
-    : alignment_(alignment), sty_size_(sty_size), shape_gcd_(std::move(shape_gcd)),
+memref_info::memref_info(std::int64_t offset_gcd, std::vector<std::int64_t> shape_gcd,
+                         std::vector<std::int64_t> stride_gcd)
+    : offset_gcd_(offset_gcd), shape_gcd_(std::move(shape_gcd)),
       stride_gcd_(std::move(stride_gcd)) {}
-
-auto memref_info::compute_max_alignment(std::vector<std::int64_t> const &offset_gcds) const
-    -> std::int32_t {
-    auto max_alignment = alignment();
-
-    for (std::int32_t alignment = max_alignment; alignment > sty_size(); alignment /= 2) {
-        if (is_aligned(offset_gcds, stride_gcd(), alignment / sty_size())) {
-            return alignment;
-        }
-    }
-    return sty_size();
-}
 
 auto memref_analysis_result::get_if(::const_tinytc_value_t a) const -> memref_info const * {
     if (auto it = memref_info_.find(a); it != memref_info_.end()) {
@@ -109,14 +77,13 @@ void memref_helper::operator()(alloca_inst const &in) {
         }
         // alloca shape/stride must be static, therefore we can set shape_gcd/stride_gcd to
         // shape/stride
-        mr_.set(in.result(0), memref_info(i, size(rt->element_ty()), rt->shape(), rt->stride()));
+        mr_.set(in.result(0), memref_info(i / size(rt->element_ty()), rt->shape(), rt->stride()));
     }
 }
 void memref_helper::operator()(expand_inst const &in) {
     if (auto mi = mr_.get_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
-        const auto alignment = mi->alignment();
-        const auto sty_size = mi->sty_size();
+        const auto offset_gcd = mi->offset_gcd();
         auto shape_gcd = std::vector<std::int64_t>{};
         auto stride_gcd = std::vector<std::int64_t>{};
 
@@ -149,14 +116,13 @@ void memref_helper::operator()(expand_inst const &in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+        mr_.set(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
 void memref_helper::operator()(fuse_inst const &in) {
     if (auto mi = mr_.get_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
-        const auto alignment = mi->alignment();
-        const auto sty_size = mi->sty_size();
+        const auto offset_gcd = mi->offset_gcd();
         auto shape_gcd = std::vector<std::int64_t>{};
         auto stride_gcd = std::vector<std::int64_t>{};
 
@@ -179,7 +145,7 @@ void memref_helper::operator()(fuse_inst const &in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+        mr_.set(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
 
@@ -191,46 +157,40 @@ void memref_helper::operator()(load_inst const &in) {
 void memref_helper::operator()(subview_inst const &in) {
     if (auto mi = mr_.get_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
-        const auto sty_size = mi->sty_size();
 
-        auto offset_gcds = std::vector<std::int64_t>{};
         auto shape_gcd = std::vector<std::int64_t>{};
         auto stride_gcd = std::vector<std::int64_t>{};
 
-        int j = 0;
-        offset_gcds.reserve(mt->dim());
         shape_gcd.reserve(mt->dim());
         stride_gcd.reserve(mt->dim());
         auto dyn_offsets = in.offsets();
         auto dyn_sizes = in.sizes();
+        std::int64_t offset_gcd = mi->offset_gcd();
         for (std::int64_t i = 0, joffset = 0, jsize = 0; i < mt->dim(); ++i) {
             const std::int64_t offset = in.static_offsets()[i];
 
-            auto const offset_gcd = [&]() -> std::int64_t {
+            auto const get_offset = [&]() -> std::int64_t {
                 if (is_dynamic_value(offset)) {
                     return gcd_->get(dyn_offsets[joffset++]);
                 }
                 return offset;
             };
-            offset_gcds.push_back(offset_gcd());
+            offset_gcd = std::gcd(offset_gcd, get_offset() * mi->stride_gcd(i));
 
             const std::int64_t size = in.static_sizes()[i];
             if (size > 0 || is_dynamic_value(size)) {
-                auto const size_inst = [&]() -> std::int64_t {
+                auto const get_size = [&]() -> std::int64_t {
                     if (is_dynamic_value(size)) {
                         return gcd_->get(dyn_sizes[jsize++]);
                     }
                     return size;
                 };
-                shape_gcd.emplace_back(size_inst());
-                stride_gcd.emplace_back(mi->stride_gcd(j));
+                shape_gcd.emplace_back(get_size());
+                stride_gcd.emplace_back(mi->stride_gcd(i));
             }
-            ++j;
         }
 
-        const auto alignment = mi->compute_max_alignment(offset_gcds);
-
-        mr_.set(in.result(0), memref_info(alignment, sty_size, shape_gcd, stride_gcd));
+        mr_.set(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
 
@@ -282,7 +242,7 @@ void memref_helper::set_from_attributes(function_node const &fn) {
             }
         }
 
-        return memref_info(alignment, size(mr->element_ty()), std::move(shape_gcd),
+        return memref_info(alignment / size(mr->element_ty()), std::move(shape_gcd),
                            std::move(stride_gcd));
     };
     for (std::int32_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {

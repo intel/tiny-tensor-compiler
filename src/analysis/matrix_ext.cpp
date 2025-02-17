@@ -115,12 +115,12 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
     -> bool {
     if (auto mi = mr_->get_if(operand); mi) {
         auto const mt = get_memref_type(operand);
+        const auto sty_size = size(mt->element_ty());
         auto const &block_io = info_->matrix().block_io();
-        const auto sty_size = mi->sty_size();
 
         const bool addrspace_ok = mt->addrspace() == address_space::global;
         const bool base_address_alignment_ok =
-            mi->alignment() % block_io.base_address_alignment == 0;
+            (mi->offset_gcd() * sty_size) % block_io.base_address_alignment == 0;
         const bool pos0_alignment_ok = (gcd_->get(pos0) * sty_size) % block_io.pos0_alignment == 0;
         const bool stride_ok =
             mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % block_io.stride_alignment == 0;
