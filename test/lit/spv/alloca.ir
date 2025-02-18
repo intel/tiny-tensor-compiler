@@ -4,14 +4,14 @@
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
 ; CHECK:                         OpEntryPoint Kernel %[[#]] "alloca" %[[#STACK_VAR:]]
-; CHECK:                         OpDecorate %[[#STACK_PTR_TY:]] Alignment 16
+; CHECK:                         OpDecorate %[[#STACK_VAR]] Alignment 128
 ; CHECK:                         OpDecorate %[[#I8_PTR:]] Alignment 1
 ; CHECK:                         OpDecorate %[[#F32_PTR:]] Alignment 4
 ; CHECK:                         OpDecorate %[[#I16_PTR:]] Alignment 2
 ; CHECK:             %[[#I8:]] = OpTypeInt 8 0
-; CHECK:     %[[#STACK_SIZE:]] = OpConstant %[[#]] 264
+; CHECK:     %[[#STACK_SIZE:]] = OpConstant %[[#]] 384
 ; CHECK: %[[#STACK_ARRAY_TY:]] = OpTypeArray %[[#I8]] %[[#STACK_SIZE]]
-; CHECK:    %[[#STACK_PTR_TY]] = OpTypePointer Workgroup %[[#STACK_ARRAY_TY]]
+; CHECK:   %[[#STACK_PTR_TY:]] = OpTypePointer Workgroup %[[#STACK_ARRAY_TY]]
 ; CHECK:       %[[#STACK_VAR]] = OpVariable %[[#STACK_PTR_TY]] Workgroup
 ; CHECK:            %[[#I64:]] = OpTypeInt 64 0
 ; CHECK:         %[[#I64_C0:]] = OpConstant %[[#I64]] 0
@@ -23,23 +23,28 @@
 ; CHECK:         %[[#I64_C6:]] = OpConstant %[[#I64]] 6
 ; CHECK:            %[[#I16:]] = OpTypeInt 16 0
 ; CHECK:         %[[#I16_PTR]] = OpTypePointer Workgroup %[[I16]]
+; CHECK:       %[[#I64_C320:]] = OpConstant %[[#I64]] 320
 
 func @alloca() {
     %c0 = constant 0 : index
     %0 = alloca : memref<i8x5,local>
     %1 = alloca : memref<f32x16x4,local>
     %2 = alloca : memref<i16,local>
-    %3 = load %0[%c0] : i8
-    %4 = load %1[%c0,%c0] : f32
-    %5 = load %2[] : i16
-    %6 = size %1[1] : index
-    %7 = arith.not %6 : index
-; CHECK:                    %[[#]] = OpFunction {{.*}}
-; CHECK:       %[[#STACK_PTR_I8:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C0]]
-; CHECK-NEXT:               %[[#]] = OpBitcast %[[#I8_PTR]] %[[#STACK_PTR_I8]]
-; CHECK-NEXT: %[[#STACK_PTR_F32:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C8]]
-; CHECK-NEXT:               %[[#]] = OpBitcast %[[#F32_PTR]] %[[#STACK_PTR_F32]]
-; CHECK-NEXT: %[[#STACK_PTR_I16:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C6]]
-; CHECK-NEXT:               %[[#]] = OpBitcast %[[#I16_PTR]] %[[#STACK_PTR_I16]]
-; CHECK:                    %[[#]] = OpNot %[[#I64]] %[[I64_C4]]
+    %3 = alloca {alignment=64} : memref<i16x32,local>
+    %4 = load %0[%c0] : i8
+    %5 = load %1[%c0,%c0] : f32
+    %6 = load %2[] : i16
+    %7 = load %3[%c0] : i16
+    %8 = size %1[1] : index
+    %9 = arith.not %8 : index
+; CHECK:                      %[[#]] = OpFunction {{.*}}
+; CHECK:         %[[#STACK_PTR_I8:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C0]]
+; CHECK-NEXT:                 %[[#]] = OpBitcast %[[#I8_PTR]] %[[#STACK_PTR_I8]]
+; CHECK-NEXT:   %[[#STACK_PTR_F32:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C8]]
+; CHECK-NEXT:                 %[[#]] = OpBitcast %[[#F32_PTR]] %[[#STACK_PTR_F32]]
+; CHECK-NEXT:   %[[#STACK_PTR_I16:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C6]]
+; CHECK-NEXT:                 %[[#]] = OpBitcast %[[#I16_PTR]] %[[#STACK_PTR_I16]]
+; CHECK-NEXT: %[[#STACK_PTR_I16_2:]] = OpInBoundsAccessChain %[[#I8_PTR]] %[[#STACK_VAR]] %[[#I64_C320]]
+; CHECK-NEXT:                 %[[#]] = OpBitcast %[[#I16_PTR]] %[[#STACK_PTR_I16_2]]
+; CHECK:                      %[[#]] = OpNot %[[#I64]] %[[I64_C4]]
 }

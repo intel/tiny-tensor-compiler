@@ -1517,11 +1517,12 @@ void inst_converter::run_on_function(function_node const &fn) {
         if (high_water_mark > 0) {
             auto stack_element_ty = unique_.spv_ty(scalar_type::i8);
             auto stack_array_ty = unique_.spv_array_ty(stack_element_ty, high_water_mark);
-            auto stack_ptr_ty =
-                unique_.spv_pointer_ty(StorageClass::Workgroup, stack_array_ty,
-                                       alignment(scalar_type::f64, vector_size::v2));
+            auto stack_ptr_ty = unique_.spv_pointer_ty(StorageClass::Workgroup, stack_array_ty, 0);
             stack_ = mod_->add_to<OpVariable>(section::type_const_var, stack_ptr_ty,
                                               StorageClass::Workgroup);
+            const std::int32_t alignment = info_->alignment();
+            mod_->add_to<OpDecorate>(section::decoration, stack_, Decoration::Alignment,
+                                     DecorationAttr{alignment});
             vars_used_by_function_.emplace_back(stack_);
         } else {
             stack_ = nullptr;

@@ -3,6 +3,7 @@
 
 #include "pass/stack.hpp"
 #include "error.hpp"
+#include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
@@ -32,7 +33,15 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                       if (t == nullptr) {
                           throw compilation_error(a.loc(), status::ir_expected_memref);
                       }
-                      const auto align = t->element_alignment();
+                      const auto alignment = [&]() -> std::int32_t {
+                          if (auto aa = get_attr(a.attr(), "alignment"); aa) {
+                              auto val = dyn_cast_or_throw<integer_attr>(aa, [&] {
+                                             return status::ir_expected_integer_attribute;
+                                         })->value();
+                              return val;
+                          }
+                          return t->element_alignment();
+                      }();
                       auto size = t->size_in_bytes();
                       std::int64_t stack_ptr = 0;
                       auto it = allocs.begin();
@@ -40,7 +49,7 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                           if (it->start - stack_ptr >= size) {
                               break;
                           }
-                          stack_ptr = (1 + (it->stop - 1) / align) * align;
+                          stack_ptr = (1 + (it->stop - 1) / alignment) * alignment;
                       }
                       allocs.insert(it, allocation{a.result(), stack_ptr, stack_ptr + size});
                       a.stack_ptr(stack_ptr);

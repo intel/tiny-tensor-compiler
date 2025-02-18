@@ -768,11 +768,12 @@ valued_inst:
 ;
 
 alloca_inst:
-    ALLOCA COLON memref_type {
+    ALLOCA optional_dictionary_attribute[dict] COLON memref_type {
         try {
             $$ = inst {
                 std::make_unique<alloca_inst>(std::move($memref_type), @alloca_inst).release()
             };
+            $$->attr($dict);
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;

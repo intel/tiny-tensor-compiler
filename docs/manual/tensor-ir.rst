@@ -498,12 +498,26 @@ Alloca
 
 .. code:: abnf
 
-    value-instruction   = "alloca" ":" memref-type
+    value-instruction   = "alloca" [dictionary-attribute] ":" memref-type
 
 Overview
 ~~~~~~~~
 
 The alloca instruction allocates temporary memory that is freed automatically at the end of the block that contains the alloca.
+
+Attributes
+~~~~~~~~~~
+
+Alloca accepts the following named attributes:
+
+.. list-table::
+
+    * - Name
+      - Type
+      - Description
+    * - alignment
+      - integer-attribute
+      - Base pointer alignment; must not be larger than the :ref:`default alignment <tinytc_core_info_get_default_alignment>`.
 
 Restrictions
 ~~~~~~~~~~~~
