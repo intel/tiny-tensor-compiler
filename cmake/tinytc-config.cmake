@@ -10,10 +10,6 @@ function(load_dependencies type)
     if ("${type}" STREQUAL "shared")
         set(is_shared ON)
     endif ()
-    if (NOT DEFINED clir_SHARED_LIBS)
-        set(clir_SHARED_LIBS ${is_shared})
-    endif ()
-    find_dependency(clir REQUIRED)
 endfunction()
 
 @SHARED_STATIC_TEMPLATE@
