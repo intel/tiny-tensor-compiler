@@ -3,6 +3,7 @@
 
 #include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
+#include "error.hpp"
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"

@@ -27,7 +27,7 @@ In the :ref:`tensor language <tensor language>` we can implement the kernel as f
 
     func @fused_kernel(%K: memref<f32x56x56>,
                        %P: memref<f32x56x9x?>,
-                       %A: group<memref<f32x9x9>>,
+                       %A: group<memref<f32x9x9>x?>,
                        %Q: memref<f32x56x9x?>) {
         %gid = builtin.group_id : index                   ; Get our index e
 
@@ -55,10 +55,10 @@ we get
 .. code-block::
    :emphasize-lines: 4, 13, 15
 
-   func @fused_kernel(%K: memref<f32x56x56>,
-                   %P: memref<f32x56x9x?>,
-                   %A: group<memref<f32x9x9>>,
-                   %Q: memref<f32x56x9x?>) subgroup_size(32) work_group_size(64,1) {
+    func @fused_kernel(%K: memref<f32x56x56>,
+                       %P: memref<f32x56x9x?>,
+                       %A: group<memref<f32x9x9>x?>,
+                       %Q: memref<f32x56x9x?>) attributes{subgroup_size=32, work_group_size=[64,1]} {
       %gid = builtin.group_id : index
       %p = subview %P[0:56,0:9,%gid] : memref<f32x56x9>
       %a = load %A[%gid] : memref<f32x9x9>
@@ -70,7 +70,7 @@ we get
       barrier.local
       gemm.n.n %c1, %tmp, %a, %c1, %q
       lifetime_stop %tmp
-    } 
+    }
 
 We observe that
 
@@ -112,7 +112,7 @@ When using SYCL, we can run the kernel using the following pseudo-code:
         auto exe_range = tinytc::get_execution_range(kernel, howmany);
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
             q.submit([&](sycl::handler &h) {
-                h.set_args(K, P, howmany, A, Q, howmany);
+                h.set_args(K, P, howmany, A, howmany, Q, howmany);
                 h.parallel_for(exec_range, kernel);
             }).wait();
         }

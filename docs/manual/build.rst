@@ -8,12 +8,14 @@ Building and linking
 Dependencies
 ============
 
-- `CMake <https://www.cmake.org>`_ >= 3.23
-- `Intel oneAPI Base Toolkit <https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html>`_
-- OpenCL
-- Level Zero
-- `re2c <http://re2c.org>`_ >= 3.0
-- `bison <https://www.gnu.org/software/bison/>`_ >= 3.8.2
+- Mandatory
+    - `CMake <https://www.cmake.org>`_ >= 3.23
+    - `re2c <http://re2c.org>`_ >= 3.0
+    - `bison <https://www.gnu.org/software/bison/>`_ >= 3.8.2
+- Optional
+    - `OpenCL ICD loader <https://github.com/KhronosGroup/OpenCL-ICD-Loader>`_ [OpenCL, SYCL]
+    - `Level Zero Loader <https://github.com/oneapi-src/level-zero>`_ [Level Zero, SYCL]
+    - `Intel oneAPI Base Toolkit <https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html>`_ [SYCL]
 
 Build from source using oneAPI
 ==============================
