@@ -21,12 +21,14 @@ namespace tinytc::test {
 
 auto gemm_mnk(transpose tA, transpose tB, tensor_layout const &A, tensor_layout const &B,
               tensor_layout const &C) -> std::array<std::int64_t, 3u>;
-auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B,
-             tensor_layout const &C) -> std::array<std::int64_t, 2u>;
-auto ger_mn(tensor_layout const &A, tensor_layout const &B,
-            tensor_layout const &C) -> std::array<std::int64_t, 2u>;
-auto hadamard_m(tensor_layout const &A, tensor_layout const &B,
-                tensor_layout const &C) -> std::int64_t;
+auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u>;
+auto ger_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u>;
+auto hadamard_m(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::int64_t;
+auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u>;
 
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        tensor_layout const &layoutC, scalar_type alpha_ty, scalar_type A_ty,
@@ -187,11 +189,22 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
             });
     }
     void reference_impl(AlphaT alpha, AT const *A, BT const *B, BetaT beta, CT *C) {
-        const auto M = hadamard_m(lA_, lB_, lC_);
-        for (std::int64_t m = 0; m < M; ++m) {
-            auto ab = A[lA_.linear_index({m})] * B[lB_.linear_index({m})];
-            auto &c = C[lC_.linear_index({m})];
-            c = alpha * ab + beta * c;
+        if (lC().dim() == 2) {
+            const auto [M, N] = hadamard_mn(lA_, lB_, lC_);
+            for (std::int64_t n = 0; n < N; ++n) {
+                for (std::int64_t m = 0; m < M; ++m) {
+                    auto ab = A[lA_.linear_index({m, n})] * B[lB_.linear_index({m, n})];
+                    auto &c = C[lC_.linear_index({m, n})];
+                    c = alpha * ab + beta * c;
+                }
+            }
+        } else {
+            const auto M = hadamard_m(lA_, lB_, lC_);
+            for (std::int64_t m = 0; m < M; ++m) {
+                auto ab = A[lA_.linear_index({m})] * B[lB_.linear_index({m})];
+                auto &c = C[lC_.linear_index({m})];
+                c = alpha * ab + beta * c;
+            }
         }
     }
 

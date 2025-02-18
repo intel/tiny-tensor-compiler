@@ -55,7 +55,7 @@ struct blas_shape {
      * GEMM      : MxN
      * GEMV      : M
      * GER       : MxN
-     * Hadamard  : M
+     * Hadamard  : M or MxN
      * Sum (1d)  : M
      */
     std::array<std::int64_t, 2u> shape;

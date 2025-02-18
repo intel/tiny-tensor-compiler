@@ -770,14 +770,20 @@ Hadamard product
 Overview
 ~~~~~~~~
 
-Computes the Hadamard product of two tensors.
+Computes the Hadamard product of two vectors or two matrices.
 That is, in index notation we have
 
 .. math::
 
     c_{i} := \alpha a_{i} b_{i} + \beta c_{i}
 
-If the atomic flag is set, c is updated atomically.
+for vectors and
+
+.. math::
+
+    C_{ij} := \alpha A_{ij} B_{ij} + \beta C_{ij}
+
+for matrices. If the atomic flag is set, c/C is updated atomically.
 
 Operands
 ~~~~~~~~
@@ -786,16 +792,16 @@ Operands
 Op.-No. Type        Description
 ======= =========== ==============
 1       scalar-type :math:`\alpha` 
-2       memref-type a
-3       memref-type b
+2       memref-type a/A
+3       memref-type b/B
 4       scalar-type :math:`\beta`
-5       memref-type c
+5       memref-type c/C
 ======= =========== ==============
 
 Restrictions
 ~~~~~~~~~~~~
 
-* :math:`\text{order}(a) = \text{order}(b) = \text{order}(c) = 1`
+* :math:`\text{order}(a) = \text{order}(b) = \text{order}(c) = o` with :math:`o\in\{1,2\}`
 * :math:`\text{shape}(a) = \text{shape}(b) = \text{shape}(c)`
 * :math:`\text{type}(\alpha) \preceq \text{promote}(\text{element_type}(A), \text{element_type}(b)) \preceq \text{element_type}(C)`
 * :math:`\text{type}(\beta) \preceq \text{element_type}(C)`

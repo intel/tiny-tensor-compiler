@@ -214,6 +214,17 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard packed alpha=1 beta=0", T, TEST_PRECI
     test::test_blas_a3<runtime_class>(op, 1, 0);
 }
 
+TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard 2d packed alpha=1 beta=0", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{10, 32, 45};
+    auto NN = std::vector<std::int64_t>{5, 16, 42};
+
+    std::int64_t M, N;
+    DOCTEST_TENSOR2_TEST(MM, NN);
+
+    auto op = test::hadamard<T, T, T, T, T>({{M, N}}, {{M, N}}, {{M, N}});
+    test::test_blas_a3<runtime_class>(op, 1, 0);
+}
+
 TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
 

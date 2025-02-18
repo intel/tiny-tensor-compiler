@@ -25,8 +25,8 @@ auto gemm_mnk(transpose tA, transpose tB, tensor_layout const &A, tensor_layout 
     return {M, N, K};
 }
 
-auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B,
-             tensor_layout const &C) -> std::array<std::int64_t, 2u> {
+auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u> {
     if (A.dim() != 2 || B.dim() != 1 || C.dim() != 1) {
         throw std::runtime_error("expected vectors and matrix");
     }
@@ -39,8 +39,8 @@ auto gemv_mk(transpose tA, tensor_layout const &A, tensor_layout const &B,
     return {M, K};
 }
 
-auto ger_mn(tensor_layout const &A, tensor_layout const &B,
-            tensor_layout const &C) -> std::array<std::int64_t, 2u> {
+auto ger_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u> {
     if (A.dim() != 1 || B.dim() != 1 || C.dim() != 2) {
         throw std::runtime_error("expected vectors and matrix");
     }
@@ -52,8 +52,8 @@ auto ger_mn(tensor_layout const &A, tensor_layout const &B,
     return {M, N};
 }
 
-auto hadamard_m(tensor_layout const &A, tensor_layout const &B,
-                tensor_layout const &C) -> std::int64_t {
+auto hadamard_m(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::int64_t {
     if (A.dim() != 1 || B.dim() != 1 || C.dim() != 1) {
         throw std::runtime_error("expected vectors");
     }
@@ -62,6 +62,19 @@ auto hadamard_m(tensor_layout const &A, tensor_layout const &B,
         throw std::runtime_error("incompatible hadamard");
     }
     return M;
+}
+
+auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout const &C)
+    -> std::array<std::int64_t, 2u> {
+    if (A.dim() != 2 || B.dim() != 2 || C.dim() != 2) {
+        throw std::runtime_error("expected matrices");
+    }
+    const auto M = C.shape(0);
+    const auto N = C.shape(1);
+    if (M != A.shape(0) || N != A.shape(1) || M != B.shape(0) || N != B.shape(1)) {
+        throw std::runtime_error("incompatible hadamard");
+    }
+    return {M, N};
 }
 
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,

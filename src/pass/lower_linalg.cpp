@@ -253,9 +253,9 @@ class linalg_generator {
         throw compilation_error(in.loc(), status::not_implemented);
     }
     void operator()(axpby_inst &in);
-    void operator()(ger_inst &in);
     void operator()(gemm_inst &in);
     void operator()(gemv_inst &in);
+    void operator()(ger_inst &in);
     void operator()(hadamard_inst &in);
     void operator()(sum_inst &in);
 
@@ -331,27 +331,6 @@ void linalg_generator::operator()(axpby_inst &in) {
             },
             in.loc());
     }
-}
-
-void linalg_generator::operator()(ger_inst &in) {
-    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
-    auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
-    auto c_shape1 = bb_.add(make_size(&in.C(), 1, index_ty, in.loc()));
-    bb_.foreach_loop(
-        index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
-        [&](region_builder &bb, auto loop_vars) {
-            auto at = get_memref_type(in.A());
-            auto bt = get_memref_type(in.B());
-            auto ct = get_memref_type(in.C());
-            auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
-            auto b = bb.add(make_load(&in.B(), {loop_vars[1]}, bt->element_data_ty(), in.loc()));
-            auto ab =
-                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
-            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
-                        {loop_vars[0], loop_vars[1]}, in.loc());
-        },
-        in.loc());
 }
 
 void linalg_generator::operator()(gemm_inst &in) {
@@ -500,22 +479,50 @@ void linalg_generator::operator()(gemv_inst &in) {
         in.loc());
 }
 
-void linalg_generator::operator()(hadamard_inst &in) {
+void linalg_generator::operator()(ger_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
     auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape1 = bb_.add(make_size(&in.C(), 1, index_ty, in.loc()));
     bb_.foreach_loop(
-        index_ty, {c0.get()}, {c_shape0.get()},
+        index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
             auto ct = get_memref_type(in.C());
             auto a = bb.add(make_load(&in.A(), {loop_vars[0]}, at->element_data_ty(), in.loc()));
-            auto b = bb.add(make_load(&in.B(), {loop_vars[0]}, bt->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), {loop_vars[1]}, bt->element_data_ty(), in.loc()));
             auto ab =
                 mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
-            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), {loop_vars[0]},
-                        in.loc());
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
+                        {loop_vars[0], loop_vars[1]}, in.loc());
+        },
+        in.loc());
+}
+
+void linalg_generator::operator()(hadamard_inst &in) {
+    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto at = get_memref_type(in.A());
+    auto bt = get_memref_type(in.B());
+    auto ct = get_memref_type(in.C());
+
+    auto lb = std::vector<value>(ct->dim());
+    auto ub = std::vector<value>(ct->dim());
+
+    auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
+    for (std::int64_t i = 0; i < ct->dim(); ++i) {
+        lb[i] = c0;
+        ub[i] = bb_.add(make_size(&in.C(), i, index_ty, in.loc()));
+    }
+
+    bb_.foreach_loop(
+        index_ty, lb, ub,
+        [&](region_builder &bb, auto loop_vars) {
+            auto a = bb.add(make_load(&in.A(), loop_vars, at->element_data_ty(), in.loc()));
+            auto b = bb.add(make_load(&in.B(), loop_vars, bt->element_data_ty(), in.loc()));
+            auto ab =
+                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
+            blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), loop_vars, in.loc());
         },
         in.loc());
 }

@@ -1025,25 +1025,41 @@ hadamard_inst::hadamard_inst(tinytc_value_t alpha0, tinytc_value_t A0, tinytc_va
     auto b = get_memref_type(loc(), B());
     auto c = get_memref_type(loc(), C());
 
-    if (a->dim() != 1) {
-        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_1);
+    if (a->dim() != 1 && a->dim() != 2) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_memref_order_1_or_2);
     }
-    if (b->dim() != 1) {
-        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_1);
+    if (b->dim() != 1 && b->dim() != 2) {
+        throw compilation_error(loc(), {&B()}, status::ir_expected_memref_order_1_or_2);
     }
-    if (c->dim() != 1) {
-        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_1);
+    if (c->dim() != 1 && c->dim() != 2) {
+        throw compilation_error(loc(), {&C()}, status::ir_expected_memref_order_1_or_2);
+    }
+    if (c->dim() != a->dim() || c->dim() != b->dim()) {
+        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes);
     }
 
     auto M = c->shape(0);
-    if (a->shape(0) != M || b->shape(0) != M) {
-        std::ostringstream oss;
-        oss << "Got ";
-        oss << "a=" << a->shape(0) << ", ";
-        oss << "b=" << b->shape(0) << ", ";
-        oss << "c=" << c->shape(0);
-        throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
-                                oss.str());
+    if (c->dim() == 1) {
+        if (a->shape(0) != M || b->shape(0) != M) {
+            std::ostringstream oss;
+            oss << "Got ";
+            oss << "a=" << a->shape(0) << ", ";
+            oss << "b=" << b->shape(0) << ", ";
+            oss << "c=" << c->shape(0);
+            throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                    oss.str());
+        }
+    } else if (c->dim() == 2) {
+        auto N = c->shape(1);
+        if (a->shape(0) != M || a->shape(1) != N || b->shape(0) != M || b->shape(1) != N) {
+            std::ostringstream oss;
+            oss << "Got ";
+            oss << "A=" << a->shape(0) << "x" << a->shape(1) << ", ";
+            oss << "B=" << b->shape(0) << "x" << b->shape(1) << ", ";
+            oss << "C=" << c->shape(0) << "x" << c->shape(1);
+            throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_incompatible_shapes,
+                                    oss.str());
+        }
     }
 }
 
