@@ -29,6 +29,23 @@
 
 namespace tinytc {
 
+void push_dependent_instructions(std::queue<const_tinytc_inst_t> &q, value_node const &val) {
+    if (val.defining_inst()) {
+        q.push(val.defining_inst());
+    }
+    for (auto const &use : val.uses()) {
+        auto in = use.owner();
+        if (isa<yield_inst>(*in)) {
+            in = in->parent()->defining_inst();
+            if (in) {
+                q.push(in);
+            }
+        } else {
+            q.push(in);
+        }
+    }
+}
+
 auto matrix_ext_analysis_result::get(::const_tinytc_value_t a) const -> bool {
     return mext_.find(a) != mext_.end();
 }
@@ -66,20 +83,7 @@ auto matrix_ext_helper::have(value_node const &val) -> bool { return mext_->cont
 
 void matrix_ext_helper::kill(value_node const &val) {
     if (auto it = mext_->find(&val); it != mext_->end()) {
-        if (val.defining_inst()) {
-            q_->push(val.defining_inst());
-        }
-        for (auto const &use : val.uses()) {
-            auto in = use.owner();
-            if (isa<yield_inst>(*in)) {
-                in = in->parent()->defining_inst();
-                if (in) {
-                    q_->push(in);
-                }
-            } else {
-                q_->push(in);
-            }
-        }
+        push_dependent_instructions(*q_, val);
         mext_->erase(it);
     }
 }
@@ -218,12 +222,11 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
     // Insert all coopmatrix values that could be mapped to matrix extension
     for (auto const &in0 : fn.body()) {
         walk<walk_order::pre_order>(in0, [&](inst_node const &in) {
-            bool has_at_least_one = false;
             auto const add_if = [&](value_node const &v) {
                 if (auto rt = dyn_cast<coopmatrix_data_type>(v.ty()); rt) {
                     if (info.matrix().have_type(rt)) {
                         mext.insert(&v);
-                        has_at_least_one = true;
+                        push_dependent_instructions(q, v);
                     }
                 }
             };
@@ -234,9 +237,6 @@ auto matrix_ext_analysis::run_on_function(function_node const &fn, ::tinytc_core
                 for (auto const &p : subreg.params()) {
                     add_if(p);
                 }
-            }
-            if (has_at_least_one) {
-                q.push(&in);
             }
         });
     }

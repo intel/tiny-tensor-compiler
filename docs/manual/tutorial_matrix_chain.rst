@@ -113,7 +113,7 @@ When using SYCL, we can run the kernel using the following pseudo-code:
         for (int timestep = 0; timestep < num_timesteps; ++timestep) {
             q.submit([&](sycl::handler &h) {
                 h.set_args(K, P, howmany, A, howmany, Q, howmany);
-                h.parallel_for(exec_range, kernel);
+                h.parallel_for(exe_range, kernel);
             }).wait();
         }
     } catch (tinytc::status const& st) {
