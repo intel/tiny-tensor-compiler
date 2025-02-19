@@ -132,10 +132,9 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
     return false;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
-    const bool addrspace_ok = get_memref_type(in.operand())->addrspace() == address_space::global;
     const bool transpose_ok = in.t() == transpose::N;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
-    if (!addrspace_ok || !transpose_ok || !block_io_ok) {
+    if (!transpose_ok || !block_io_ok) {
         kill(in.result(0));
     }
 }

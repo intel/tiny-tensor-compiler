@@ -44,6 +44,7 @@ class coopmatrix_diy {
     constexpr static std::int32_t channel_size = 4;
     constexpr static std::int32_t sdepth = 8;
     constexpr static std::int32_t rcount = 8;
+    constexpr static std::int32_t load_batch_size = 4;
     constexpr static std::int32_t store_batch_size = 1;
 
     coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique);
@@ -71,9 +72,11 @@ class coopmatrix_diy {
         lsc_sfid sfid;
 
         inline auto byte_offset(std::int32_t row_block, std::int32_t col_block,
-                                std::int32_t row = 0, std::int32_t col = 0) const -> std::int32_t {
+                                std::int32_t array_idx = 0, std::int32_t row = 0,
+                                std::int32_t col = 0) const -> std::int32_t {
             const auto block_size = array_length * rows * cols;
-            return (row + col * rows + (col_block + col_blocks * row_block) * block_size) *
+            return (row + col * rows + array_idx * rows * cols +
+                    (col_block + col_blocks * row_block) * block_size) *
                    element_size;
         }
     };
@@ -92,6 +95,8 @@ class coopmatrix_diy {
     auto make_tmp(char const *prefix = "") -> std::string;
     auto max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t;
     auto load_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
+    auto load_fun_asm_block2d(block_config const &cfg) -> std::string;
+    auto load_fun_asm_generic(block_config const &cfg, scalar_type sty) -> std::string;
     auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
                   address_space addrspace) -> spv_inst *;
     auto store_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
