@@ -6,6 +6,7 @@
 
 #include "support/fnv1a.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstddef>
@@ -34,6 +35,8 @@ class dope_vector;
 class spv_inst;
 class uniquifier;
 
+enum class lsc_sfid { ugm, slm };
+
 class coopmatrix_diy {
   public:
     constexpr static std::int32_t grf_size = 64;
@@ -41,6 +44,7 @@ class coopmatrix_diy {
     constexpr static std::int32_t channel_size = 4;
     constexpr static std::int32_t sdepth = 8;
     constexpr static std::int32_t rcount = 8;
+    constexpr static std::int32_t store_batch_size = 1;
 
     coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique);
 
@@ -64,11 +68,13 @@ class coopmatrix_diy {
         std::int32_t row_blocks;
         std::int32_t col_blocks;
         bool vnni;
+        lsc_sfid sfid;
 
-        inline auto byte_offset(std::int32_t row_block, std::int32_t col_block) const
-            -> std::int32_t {
-            const auto block_size = element_size * array_length * rows * cols;
-            return (col_block + col_blocks * row_block) * block_size;
+        inline auto byte_offset(std::int32_t row_block, std::int32_t col_block,
+                                std::int32_t row = 0, std::int32_t col = 0) const -> std::int32_t {
+            const auto block_size = array_length * rows * cols;
+            return (row + col * rows + (col_block + col_blocks * row_block) * block_size) *
+                   element_size;
         }
     };
     struct gemm_hash {
@@ -85,10 +91,14 @@ class coopmatrix_diy {
 
     auto make_tmp(char const *prefix = "") -> std::string;
     auto max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t;
-    auto load_config(coopmatrix_data_type const *ct) -> block_config;
-    auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty) -> spv_inst *;
-    auto store_config(coopmatrix_data_type const *ct) -> block_config;
-    auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
+    auto load_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
+    auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
+                  address_space addrspace) -> spv_inst *;
+    auto store_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
+    auto store_fun_asm_block2d(block_config const &cfg) -> std::string;
+    auto store_fun_asm_generic(block_config const &cfg, scalar_type sty) -> std::string;
+    auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
+                   address_space addrspace) -> spv_inst *;
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt) -> spv_inst *;
     auto cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
@@ -101,7 +111,7 @@ class coopmatrix_diy {
 
     using arith_key = std::tuple<arithmetic, scalar_type, std::int32_t>;
     using cast_key = std::tuple<scalar_type, scalar_type, std::int32_t>;
-    using load_store_key = std::pair<coopmatrix_data_type const *, spv_inst *>;
+    using load_store_key = std::tuple<coopmatrix_data_type const *, spv_inst *, address_space>;
     using mul_add_key = std::array<coopmatrix_data_type const *, 4u>;
     using scale_key = std::pair<scalar_type, std::int32_t>;
     std::unordered_map<arith_key, spv_inst *, tuple_hash<arith_key>> arith_funs_;

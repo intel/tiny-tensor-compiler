@@ -120,7 +120,6 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
         const auto sty_size = size(mt->element_ty());
         auto const &block_io = info_->matrix().block_io();
 
-        const bool addrspace_ok = mt->addrspace() == address_space::global;
         const bool base_address_alignment_ok =
             (mi->offset_gcd() * sty_size) % block_io.base_address_alignment == 0;
         const bool pos0_alignment_ok = (gcd_->get(pos0) * sty_size) % block_io.pos0_alignment == 0;
@@ -128,15 +127,15 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
             mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % block_io.stride_alignment == 0;
         const bool width_ok = (mi->shape_gcd()[0] * sty_size) % block_io.width_alignment == 0;
 
-        return addrspace_ok && base_address_alignment_ok && pos0_alignment_ok && stride_ok &&
-               width_ok;
+        return base_address_alignment_ok && pos0_alignment_ok && stride_ok && width_ok;
     }
     return false;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
+    const bool addrspace_ok = get_memref_type(in.operand())->addrspace() == address_space::global;
     const bool transpose_ok = in.t() == transpose::N;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
-    if (!transpose_ok || !block_io_ok) {
+    if (!addrspace_ok || !transpose_ok || !block_io_ok) {
         kill(in.result(0));
     }
 }

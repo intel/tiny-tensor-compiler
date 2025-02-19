@@ -64,6 +64,35 @@ auto visa_type(scalar_type sty) -> char const * {
     }
 }
 
+auto lsc_vector_size_d32(std::int32_t bytes) {
+    if (bytes % 4 != 0) {
+        throw status::internal_compiler_error;
+    }
+    auto const vector_size = bytes / 4;
+    switch (vector_size) {
+    case 1:
+    case 2:
+    case 4:
+    case 8:
+    case 16:
+    case 32:
+    case 64:
+        return vector_size;
+    default:
+        throw status::internal_compiler_error;
+    }
+}
+auto to_string(lsc_sfid sfid) -> char const * {
+    switch (sfid) {
+    case lsc_sfid::ugm:
+        return "ugm";
+    case lsc_sfid::slm:
+        return "slm";
+    default:
+        throw status::internal_compiler_error;
+    }
+}
+
 coopmatrix_diy::coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique)
     : mod_{&m}, unique_{&unique} {}
 
@@ -79,7 +108,8 @@ auto coopmatrix_diy::max_rows_in_block(coopmatrix_data_type const *ct) const -> 
     return exec_size;
 }
 
-auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct) -> block_config {
+auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, address_space addrspace)
+    -> block_config {
     auto cfg = block_config{};
     cfg.element_size = size(ct->component_ty());
     cfg.array_length = 1;
@@ -88,6 +118,7 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct) -> block_config
     cfg.row_blocks = 1;
     cfg.col_blocks = 1;
     cfg.vnni = ct->use() == matrix_use::a;
+    cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
 
     const auto max_rows = max_rows_in_block(ct);
     if (cfg.rows > max_rows) {
@@ -105,13 +136,13 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct) -> block_config
     return cfg;
 }
 
-auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty)
-    -> spv_inst * {
-    const auto key = load_store_key{result_ty, spv_operand_ty};
+auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
+                              address_space addrspace) -> spv_inst * {
+    const auto key = load_store_key{result_ty, spv_operand_ty, addrspace};
     return lookup(load_funs_, key, [&](load_store_key const &key) {
-        const auto [result_ty, spv_operand_ty] = key;
+        const auto [result_ty, spv_operand_ty, addrspace] = key;
 
-        const auto cfg = load_config(result_ty);
+        const auto cfg = load_config(result_ty, addrspace);
 
         const std::uint32_t num_dst =
             std::min(31, cfg.element_size * cfg.array_length * cfg.rows * cfg.cols / grf_size);
@@ -137,9 +168,9 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
              << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp
              << ",0>\n"
              << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0>\n"
+             << "add (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
+             << "add (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
+             << "add (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n"
              << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
              << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
              << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
@@ -177,7 +208,8 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
     });
 }
 
-auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct) -> block_config {
+auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space addrspace)
+    -> block_config {
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
@@ -188,6 +220,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct) -> block_confi
     cfg.row_blocks = 1;
     cfg.col_blocks = 1;
     cfg.vnni = false;
+    cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
 
     if (cfg.cols > max_cols_in_block) {
         cfg.col_blocks = cfg.cols / max_cols_in_block;
@@ -203,63 +236,142 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct) -> block_confi
     return cfg;
 }
 
-auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty)
-    -> spv_inst * {
-    const auto key = load_store_key{val_ty, spv_operand_ty};
-    return lookup(store_funs_, key, [&](load_store_key const &key) {
-        const auto [val_ty, spv_operand_ty] = key;
+auto coopmatrix_diy::store_fun_asm_block2d(block_config const &cfg) -> std::string {
+    const std::uint32_t num_src1 = std::min(31, cfg.element_size * cfg.rows * cfg.cols / grf_size);
+    const std::uint32_t desc = [&] {
+        const std::uint32_t data_size = cfg.element_size == 4 ? 2 : 1;
+        std::uint32_t d = 7;
+        d |= data_size << 9;
+        d |= 1 << 25;
+        return d;
+    }();
+    const std::uint32_t block_size =
+        ((cfg.array_length - 1) << 16) | ((cfg.cols - 1) << 8) | (cfg.rows - 1);
+    auto temp = make_tmp("temp");
+    auto tempq = make_tmp("tempq");
+    auto oasm = std::ostringstream{};
+    oasm << "{\n"
+         << ".decl " << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
+         << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp
+         << ", 0>\n"
+         << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
+         << "add (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n"
+         << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
+         << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
+         << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
 
-        const auto cfg = store_config(val_ty);
-
-        const std::uint32_t num_src1 =
-            std::min(31, cfg.element_size * cfg.rows * cfg.cols / grf_size);
-        const std::uint32_t desc = [&] {
-            const std::uint32_t data_size = cfg.element_size == 4 ? 2 : 1;
-            std::uint32_t d = 7;
-            d |= data_size << 9;
-            d |= 1 << 25;
-            return d;
-        }();
-        const std::uint32_t block_size =
-            ((cfg.array_length - 1) << 16) | ((cfg.cols - 1) << 8) | (cfg.rows - 1);
-        auto temp = make_tmp("temp");
-        auto tempq = make_tmp("tempq");
-        auto oasm = std::ostringstream{};
-        oasm << "{\n"
-             << ".decl " << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
-             << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp
-             << ", 0>\n"
-             << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
-             << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
-
-        for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
-            for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
-                oasm << "raw_sends.15.1." << num_src1 << ".0 (M1, 1) 0x0:ud 0x" << std::hex << desc
-                     << ":ud " << temp << ".0 $0." << std::dec << cfg.byte_offset(m, n)
-                     << " %null.0\n";
-                if (n + 1 < cfg.col_blocks) {
-                    oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
-                         << cfg.cols << ":ud\n";
-                }
-                // oasm << "lsc_store_block2d.ugm (M1,1) flat[$1,$2,$3,$4,$5,$6] $0." <<
-                // cfg.byte_offset(m)
-                //<< ":d" << cfg.element_size * 8 << "." << cfg.array_length << "x" << cfg.rows
-                //<< "x"
-                //<< cfg.cols << "nn" << "\n";
-            }
-            if (m + 1 < cfg.row_blocks) {
-                oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
-                     << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
-                oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> " << cfg.rows
+    for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
+        for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
+            oasm << "raw_sends.15.1." << num_src1 << ".0 (M1, 1) 0x0:ud 0x" << std::hex << desc
+                 << ":ud " << temp << ".0 $0." << std::dec << cfg.byte_offset(m, n) << " %null.0\n";
+            if (n + 1 < cfg.col_blocks) {
+                oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> " << cfg.cols
                      << ":ud\n";
             }
+            // oasm << "lsc_store_block2d.ugm (M1,1) flat[$1,$2,$3,$4,$5,$6] $0." <<
+            // cfg.byte_offset(m)
+            //<< ":d" << cfg.element_size * 8 << "." << cfg.array_length << "x" << cfg.rows
+            //<< "x"
+            //<< cfg.cols << "nn" << "\n";
         }
-        oasm << "}\n";
+        if (m + 1 < cfg.row_blocks) {
+            oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
+                 << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
+            oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> " << cfg.rows
+                 << ":ud\n";
+        }
+    }
+    oasm << "}\n";
+
+    return std::move(oasm).str();
+}
+
+auto coopmatrix_diy::store_fun_asm_generic(block_config const &cfg, scalar_type sty)
+    -> std::string {
+    const auto addrsize = cfg.sfid == lsc_sfid::slm ? "a32" : "a64";
+    const auto sfid = to_string(cfg.sfid);
+    const auto vector_size = lsc_vector_size_d32(cfg.rows * cfg.row_blocks * cfg.element_size);
+
+    auto oasm = std::ostringstream{};
+    oasm << "{\n";
+
+    const auto make_pointer = [&] {
+        auto pointer = make_tmp("pointer");
+        if (cfg.sfid == lsc_sfid::slm) {
+            oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n";
+        } else {
+            oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx32\n";
+        }
+        return pointer;
+    };
+    const auto make_temp = [&] {
+        const auto temp = make_tmp("temp");
+        oasm << ".decl " << temp << " v_type=G type=" << visa_type(sty)
+             << " num_elts=" << cfg.rows * cfg.row_blocks << " align=wordx32\n";
+        return temp;
+    };
+
+    auto pointers = std::array<std::string, store_batch_size>{};
+    auto temps = std::array<std::string, store_batch_size>{};
+    for (auto &p : pointers) {
+        p = make_pointer();
+    }
+    for (auto &t : temps) {
+        t = make_temp();
+    }
+
+    const auto offset = make_tmp("offset");
+    oasm << ".decl " << offset << " v_type=G type=ud num_elts=1 align=dword\n";
+    oasm << "   mov (M1,1) " << pointers[0] << "(0,0)<1> $1(0,0)<0;1,0>\n";
+    oasm << "   mul (M1,1) " << offset << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size << ":d\n";
+    oasm << "   add (M1,1) " << pointers[0] << "(0,0)<1> " << pointers[0] << "(0,0)<0;1,0> "
+         << offset << "(0,0)<0;1,0>\n";
+    oasm << "   mul (M1,1) " << offset << "(0,0)<1> $6(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
+    oasm << "   add (M1,1) " << pointers[0] << "(0,0)<1> " << pointers[0] << "(0,0)<0;1,0> "
+         << offset << "(0,0)<0;1,0>\n";
+
+    std::int32_t tmp_no = 0;
+    for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
+        for (std::int32_t c = 0; c < cfg.cols; ++c) {
+            for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
+                for (std::int32_t r = 0; r < cfg.rows; r += exec_size) {
+                    const auto src_offset = cfg.byte_offset(m, n, r, c);
+                    const auto src_brow = src_offset / grf_size;
+                    const auto src_bcol = src_offset % grf_size / cfg.element_size;
+                    const auto dst_offset = (r + m * cfg.rows) * cfg.element_size;
+                    const auto dst_brow = dst_offset / grf_size;
+                    const auto dst_bcol = dst_offset % grf_size / cfg.element_size;
+                    oasm << "   mov (M1," << exec_size << ") " << temps[tmp_no] << "(" << dst_brow
+                         << "," << dst_bcol << ")<1> $0(" << src_brow << "," << src_bcol
+                         << ")<1;1,0>\n";
+                }
+            }
+            oasm << "   lsc_store." << sfid << " (M1,1) flat[" << pointers[tmp_no]
+                 << "]:" << addrsize << " " << temps[tmp_no] << ":d32x" << vector_size << "t\n";
+            if (n + 1 < cfg.col_blocks || c + 1 < cfg.cols) {
+                const auto next_tmp_no = (tmp_no + 1) % store_batch_size;
+                oasm << "   add (M1,1) " << pointers[next_tmp_no] << "(0,0)<1> " << pointers[tmp_no]
+                     << "(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
+                tmp_no = next_tmp_no;
+            }
+        }
+    }
+    oasm << "}\n";
+
+    return std::move(oasm).str();
+}
+
+auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
+                               address_space addrspace) -> spv_inst * {
+    const auto key = load_store_key{val_ty, spv_operand_ty, addrspace};
+    return lookup(store_funs_, key, [&](load_store_key const &key) {
+        const auto [val_ty, spv_operand_ty, addrspace] = key;
+
+        const auto cfg = store_config(val_ty, addrspace);
+        auto code = cfg.sfid == lsc_sfid::slm ? store_fun_asm_generic(cfg, val_ty->component_ty())
+                                              : store_fun_asm_block2d(cfg);
 
         auto spv_void_ty = unique_->void_ty();
         auto spv_val_ty = unique_->spv_ty(val_ty);
@@ -268,7 +380,7 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
             spv_void_ty, array_view<spv_inst *>{spv_val_ty, spv_operand_ty, spv_i32_ty, spv_i32_ty,
                                                 spv_i32_ty, spv_i32_ty, spv_i32_ty});
         auto asmop = mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
-                                              unique_->asm_target(), std::move(oasm).str(),
+                                              unique_->asm_target(), code,
                                               "rw,rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
         mod_->add_to<OpDecorate>(section::decoration, asmop, Decoration::SideEffectsINTEL);
         return asmop;
@@ -584,20 +696,22 @@ auto coopmatrix_diy::load(cooperative_matrix_load_inst const &in, dope_vector co
     auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.result(0));
     auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
-    auto fun = load_fun(ct, spv_operand_ty);
+    auto fun = load_fun(ct, spv_operand_ty, ot->addrspace());
 
     auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
-    auto c1 = unique_->constant(std::int32_t{1});
     auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));
-    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.shape(0), csize);
-    auto width = mod_->add<OpISub>(spv_i32_ty, width_in_bytes, c1);
-    auto height = mod_->add<OpISub>(spv_i32_ty, odv.shape(1), c1);
-    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.stride(1), csize);
-    auto stride = mod_->add<OpISub>(spv_i32_ty, stride_in_bytes, c1);
+    auto shape0_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(0));
+    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, shape0_i32, csize);
+    auto height = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(1));
+    auto stride1_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.stride(1));
+    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, stride1_i32, csize);
+    auto pos0_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos0);
+    auto pos1_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos1);
 
     auto spv_result_ty = unique_->spv_ty(in.result(0).ty());
-    return mod_->add<OpAsmCallINTEL>(
-        spv_result_ty, fun, array_view<spv_inst *>{pointer, width, height, stride, pos0, pos1});
+    return mod_->add<OpAsmCallINTEL>(spv_result_ty, fun,
+                                     array_view<spv_inst *>{pointer, width_in_bytes, height,
+                                                            stride_in_bytes, pos0_i32, pos1_i32});
 }
 
 auto coopmatrix_diy::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b,
@@ -631,20 +745,22 @@ void coopmatrix_diy::store(cooperative_matrix_store_inst const &in, dope_vector 
     auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.val());
     auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
-    auto fun = store_fun(ct, spv_operand_ty);
+    auto fun = store_fun(ct, spv_operand_ty, ot->addrspace());
 
     auto spv_void_ty = unique_->void_ty();
     auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
-    auto c1 = unique_->constant(std::int32_t{1});
     auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));
-    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.shape(0), csize);
-    auto width = mod_->add<OpISub>(spv_i32_ty, width_in_bytes, c1);
-    auto height = mod_->add<OpISub>(spv_i32_ty, odv.shape(1), c1);
-    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, odv.stride(1), csize);
-    auto stride = mod_->add<OpISub>(spv_i32_ty, stride_in_bytes, c1);
+    auto shape0_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(0));
+    auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, shape0_i32, csize);
+    auto height = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(1));
+    auto stride1_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.stride(1));
+    auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, stride1_i32, csize);
+    auto pos0_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos0);
+    auto pos1_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos1);
 
-    mod_->add<OpAsmCallINTEL>(
-        spv_void_ty, fun, array_view<spv_inst *>{val, pointer, width, height, stride, pos0, pos1});
+    mod_->add<OpAsmCallINTEL>(spv_void_ty, fun,
+                              array_view<spv_inst *>{val, pointer, width_in_bytes, height,
+                                                     stride_in_bytes, pos0_i32, pos1_i32});
 }
 
 } // namespace tinytc::spv
