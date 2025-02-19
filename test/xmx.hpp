@@ -187,4 +187,75 @@ func @matmul_dpas(%A: memref<f16x64x64> {alignment=64},
     gpu_rt->free_buffer(C);
 }
 
+TEST_CASE(RUNTIME_NAME " load and store block2d on local memory f16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @load_store_block2d_slm(%A: memref<f16x128x128> {alignment=128},
+                             %B: memref<f16x128x128> {alignment=128})
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    %tmp = alloca {alignment=64} : memref<f16x32x32,local>
+    parallel {
+        %0 = constant 4 : index
+        %1 = constant 8 : index
+        %2 = cooperative_matrix_load.n %A[%0,%1] : coopmatrix<f16x16x8,matrix_acc>
+        %3 = constant 16 : index
+        %4 = constant 8 : index
+        cooperative_matrix_store %2, %tmp[%3,%4]
+        %6 = cooperative_matrix_load.n %tmp[%3,%4] : coopmatrix<f16x16x8,matrix_acc>
+        cooperative_matrix_store %6, %B[%0,%1]
+
+        %7 = constant 64 : index
+        %8 = constant 32 : index
+        %9 = cooperative_matrix_load.n %A[%7,%8] : coopmatrix<f16x32x32,matrix_acc>
+        %c0 = constant 0 : index
+        cooperative_matrix_store %9, %tmp[%c0,%c0]
+        %10 = cooperative_matrix_load.n %tmp[%c0,%c0] : coopmatrix<f16x32x32,matrix_acc>
+        cooperative_matrix_store %10, %B[%7,%8]
+    }
+})TinyTL";
+
+    constexpr auto poison = half(-1293.0f);
+    auto A_host = std::vector<half>(128 * 128, poison);
+    auto B_host = std::vector<half>(128 * 128, poison);
+    for (std::size_t j = 8; j < 16; ++j) {
+        for (std::size_t i = 4; i < 20; ++i) {
+            A_host[i + j * 128] = half(static_cast<float>(i + j * 128));
+        }
+    }
+    for (std::size_t j = 32; j < 64; ++j) {
+        for (std::size_t i = 64; i < 96; ++i) {
+            A_host[i + j * 128] = half(static_cast<float>(i + j * 128));
+        }
+    }
+
+    auto A = gpu_rt->create_buffer(128 * 128 * sizeof(half));
+    auto B = gpu_rt->create_buffer(128 * 128 * sizeof(half));
+    gpu_rt->memcpy_h2d(A, A_host.data(), A_host.size() * sizeof(half));
+    gpu_rt->memcpy_h2d(B, B_host.data(), B_host.size() * sizeof(half));
+
+    auto ctx = make_compiler_context();
+    ctx.set_error_reporter(
+        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
+        nullptr);
+    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx));
+    auto kernel = gpu_rt->get_kernel(bundle, "load_store_block2d_slm");
+
+    gpu_rt->set_mem_arg(kernel, 0, A, auto_mem_type_v<runtime_class::mem_t>);
+    gpu_rt->set_mem_arg(kernel, 1, B, auto_mem_type_v<runtime_class::mem_t>);
+    gpu_rt->submit(kernel);
+    gpu_rt->synchronize();
+
+    gpu_rt->memcpy_d2h(B_host.data(), B, B_host.size() * sizeof(half));
+
+    for (std::size_t j = 0; j < 128; ++j) {
+        for (std::size_t i = 0; i < 128; ++i) {
+            REQUIRE(A_host[i + j * 128] == B_host[i + j * 128]);
+        }
+    }
+
+    gpu_rt->free_buffer(A);
+    gpu_rt->free_buffer(B);
+}
+
 #endif // XMX_20250120_HPP
