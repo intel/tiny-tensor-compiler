@@ -73,6 +73,7 @@ set(SOURCES
     recipe/tall_and_skinny.cpp
     region.cpp
     scalar_type.cpp
+    spv/block2d_diy.cpp
     spv/capex_util.cpp
     spv/converter.cpp
     spv/coopmatrix_diy.cpp
@@ -86,6 +87,7 @@ set(SOURCES
     spv/pass/dump_asm.cpp
     spv/pass/capex.cpp
     spv/uniquifier.cpp
+    support/temp_counter.cpp
     tiling.cpp
     value.cpp
     support/walk.cpp

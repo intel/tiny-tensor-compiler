@@ -1,0 +1,46 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef BLOCK2D_DIY_20250219_HPP
+#define BLOCK2D_DIY_20250219_HPP
+
+#include <cstdint>
+#include <string>
+
+namespace tinytc {
+class temp_counter;
+enum class scalar_type;
+} // namespace tinytc
+
+namespace tinytc::spv {
+
+enum class lsc_sfid { ugm, slm };
+
+struct block_config {
+    std::int32_t element_size;
+    std::int32_t array_length;
+    std::int32_t rows;
+    std::int32_t cols;
+    std::int32_t row_blocks;
+    std::int32_t col_blocks;
+    bool vnni;
+    lsc_sfid sfid;
+
+    auto byte_offset(std::int32_t row_block, std::int32_t col_block, std::int32_t array_idx = 0,
+                     std::int32_t row = 0, std::int32_t col = 0) const -> std::int32_t;
+};
+
+auto visa_type(scalar_type sty) -> char const *;
+auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t;
+auto to_string(lsc_sfid sfid) -> char const *;
+
+auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
+    -> std::string;
+auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
+    -> std::string;
+
+} // namespace tinytc::spv
+
+#endif // BLOCK2D_DIY_20250219_HPP
