@@ -8,7 +8,9 @@
 
 #include <algorithm>
 #include <array>
+#include <cstddef>
 #include <sstream>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -30,31 +32,13 @@ auto block_config::byte_offset(std::int32_t row, std::int32_t col, std::int32_t 
     offset = row + offset * rows;
     return offset * element_size;
 }
-auto block_config::total_rows() const -> std::int32_t { return array_length * rows * row_blocks; }
-
-auto visa_type(scalar_type sty) -> char const * {
-    switch (sty) {
-    case scalar_type::i8:
-        return "b";
-    case scalar_type::i16:
-        return "w";
-    case scalar_type::i32:
-        return "d";
-    case scalar_type::i64:
-    case scalar_type::index:
-        return "q";
-    case scalar_type::f16:
-        return "hf";
-    case scalar_type::bf16:
-        return "bf";
-    case scalar_type::f32:
-        return "f";
-    case scalar_type::f64:
-        return "df";
-    default:
-        throw status::internal_compiler_error;
-    }
+auto block_config::origin(std::int32_t row, std::int32_t col, std::int32_t array_idx,
+                          std::int32_t col_block, std::int32_t row_block) const
+    -> std::array<std::int32_t, 2u> {
+    const auto offset = byte_offset(row, col, array_idx, col_block, row_block);
+    return region_origin(element_size, offset);
 }
+auto block_config::total_rows() const -> std::int32_t { return array_length * rows * row_blocks; }
 
 auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t {
     if (bytes % 4 != 0) {
@@ -74,13 +58,39 @@ auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t {
         throw status::internal_compiler_error;
     }
 }
-
+auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
+    -> std::array<std::int32_t, 2u> {
+    return {byte_offset / xe::grf_size, byte_offset % xe::grf_size / element_size};
+}
 auto to_string(lsc_sfid sfid) -> char const * {
     switch (sfid) {
     case lsc_sfid::ugm:
         return "ugm";
     case lsc_sfid::slm:
         return "slm";
+    default:
+        throw status::internal_compiler_error;
+    }
+}
+auto visa_type(scalar_type sty) -> char const * {
+    switch (sty) {
+    case scalar_type::i8:
+        return "b";
+    case scalar_type::i16:
+        return "w";
+    case scalar_type::i32:
+        return "d";
+    case scalar_type::i64:
+    case scalar_type::index:
+        return "q";
+    case scalar_type::f16:
+        return "hf";
+    case scalar_type::bf16:
+        return "bf";
+    case scalar_type::f32:
+        return "f";
+    case scalar_type::f64:
+        return "df";
     default:
         throw status::internal_compiler_error;
     }
@@ -190,6 +200,10 @@ struct block2d_emulated_helper {
     block2d_emulated_helper(std::ostream &oasm, block_config const &cfg, scalar_type sty,
                             std::size_t io_batch_size, temp_counter &make_tmp);
     void header();
+    auto dst_op(std::int32_t row, std::int32_t col, std::int32_t array_idx, std::int32_t col_block,
+                std::int32_t row_block) -> std::string;
+    auto temp_op(std::string_view temp, std::int32_t row, std::int32_t array_idx,
+                 std::int32_t row_block) -> std::string;
     template <typename F> void walk(F &&io);
 
     std::ostream &oasm;
@@ -231,16 +245,31 @@ void block2d_emulated_helper::header() {
          << offset << "(0,0)<0;1,0>\n";
 }
 
+auto block2d_emulated_helper::dst_op(std::int32_t row, std::int32_t col, std::int32_t array_idx,
+                                     std::int32_t col_block, std::int32_t row_block)
+    -> std::string {
+    const auto [dst_R, dst_C] = cfg.origin(row, col, array_idx, col_block, row_block);
+    return (std::ostringstream{} << "$0(" << dst_R << "," << dst_C << ")").str();
+}
+auto block2d_emulated_helper::temp_op(std::string_view temp, std::int32_t row,
+                                      std::int32_t array_idx, std::int32_t row_block)
+    -> std::string {
+    const auto src_offset =
+        (row + array_idx * cfg.rows + row_block * cfg.rows * cfg.array_length) * cfg.element_size;
+    const auto [src_R, src_C] = region_origin(cfg.element_size, src_offset);
+    return (std::ostringstream{} << temp << "(" << src_R << "," << src_C << ")").str();
+}
+
 template <typename F> void block2d_emulated_helper::walk(F &&io) {
-    std::int32_t tmp_no = 0;
+    std::int32_t pointer_no = 0;
     for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
         for (std::int32_t c = 0; c < cfg.cols; ++c) {
-            io(n, c, pointers[tmp_no], temps[tmp_no]);
+            io(n, c, pointers[pointer_no], temps[pointer_no]);
             if (n + 1 < cfg.col_blocks || c + 1 < cfg.cols) {
-                const auto next_tmp_no = (tmp_no + 1) % pointers.size();
-                oasm << "   add (M1,1) " << pointers[next_tmp_no] << "(0,0)<1> " << pointers[tmp_no]
-                     << "(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
-                tmp_no = next_tmp_no;
+                const auto next_pointer_no = (pointer_no + 1) % pointers.size();
+                oasm << "   add (M1,1) " << pointers[next_pointer_no] << "(0,0)<1> "
+                     << pointers[pointer_no] << "(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
+                pointer_no = next_pointer_no;
             }
         }
     }
@@ -259,21 +288,27 @@ auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counte
     oasm << "{\n";
     h.header();
 
+    const auto ops_per_chan = xe::channel_size / cfg.element_size;
     h.walk([&](std::int32_t n, std::int32_t c, std::string_view pointer, std::string_view temp) {
         oasm << "   lsc_load." << sfid << " (M1,1) " << temp << ":d32x" << vector_size << "t flat["
              << pointer << "]:" << addrsize << "\n";
         for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
             for (std::int32_t a = 0; a < cfg.array_length; ++a) {
                 for (std::int32_t r = 0; r < cfg.rows; r += xe::exec_size) {
-                    const auto src_offset =
-                        (r + a * cfg.rows + m * cfg.rows * cfg.array_length) * cfg.element_size;
-                    const auto src_brow = src_offset / xe::grf_size;
-                    const auto src_bcol = src_offset % xe::grf_size / cfg.element_size;
-                    const auto dst_offset = cfg.byte_offset(r, c, a, n, m);
-                    const auto dst_brow = dst_offset / xe::grf_size;
-                    const auto dst_bcol = dst_offset % xe::grf_size / cfg.element_size;
-                    oasm << "   mov (M1," << xe::exec_size << ") $0(" << dst_brow << "," << dst_bcol
-                         << ")<1> " << temp << "(" << src_brow << "," << src_bcol << ")<1;1,0>\n";
+                    if (cfg.vnni) {
+                        const auto es = xe::exec_size / ops_per_chan;
+                        const auto cmod = c % ops_per_chan;
+                        const auto cbase = c - cmod;
+                        for (std::int32_t o = 0; o < ops_per_chan; ++o) {
+                            oasm << "   mov (M1," << es << ") "
+                                 << h.dst_op(r + cmod, cbase + o, a, n, m) << "<" << ops_per_chan
+                                 << "> " << h.temp_op(temp, r + o * es, a, m) << "<1;1,0>\n";
+                        }
+
+                    } else {
+                        oasm << "   mov (M1," << xe::exec_size << ") " << h.dst_op(r, c, a, n, m)
+                             << "<1> " << h.temp_op(temp, r, a, m) << "<1;1,0>\n";
+                    }
                 }
             }
         }
@@ -297,15 +332,11 @@ auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_count
 
     h.walk([&](std::int32_t n, std::int32_t c, std::string_view pointer, std::string_view temp) {
         for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
-            for (std::int32_t r = 0; r < cfg.rows; r += xe::exec_size) {
-                const auto src_offset = cfg.byte_offset(r, c, 0, n, m);
-                const auto src_brow = src_offset / xe::grf_size;
-                const auto src_bcol = src_offset % xe::grf_size / cfg.element_size;
-                const auto dst_offset = (r + m * cfg.rows) * cfg.element_size;
-                const auto dst_brow = dst_offset / xe::grf_size;
-                const auto dst_bcol = dst_offset % xe::grf_size / cfg.element_size;
-                oasm << "   mov (M1," << xe::exec_size << ") " << temp << "(" << dst_brow << ","
-                     << dst_bcol << ")<1> $0(" << src_brow << "," << src_bcol << ")<1;1,0>\n";
+            for (std::int32_t a = 0; a < cfg.array_length; ++a) {
+                for (std::int32_t r = 0; r < cfg.rows; r += xe::exec_size) {
+                    oasm << "   mov (M1," << xe::exec_size << ") " << h.temp_op(temp, r, a, m)
+                         << "<1> " << h.dst_op(r, c, a, n, m) << "<1;1,0>\n";
+                }
             }
         }
         oasm << "   lsc_store." << sfid << " (M1,1) flat[" << pointer << "]:" << addrsize << " "
