@@ -24,6 +24,7 @@ struct block_config {
     std::int32_t cols;
     std::int32_t row_blocks;
     std::int32_t col_blocks;
+    bool transpose;
     bool vnni;
     lsc_sfid sfid;
 
@@ -49,6 +50,9 @@ auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counte
     -> std::string;
 auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
     -> std::string;
+
+auto load_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string;
+auto store_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string;
 
 } // namespace tinytc::spv
 

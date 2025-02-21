@@ -46,16 +46,19 @@ auto precision(scalar_type sty) -> char const * {
 coopmatrix_diy::coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique)
     : mod_{&m}, unique_{&unique} {}
 
-auto coopmatrix_diy::max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t {
-    if (ct->use() == matrix_use::b) {
-        std::int32_t ops_per_chan = xe::channel_size / size(ct->component_ty());
+auto coopmatrix_diy::max_rows_in_block(matrix_use use, std::int32_t element_size) const
+    -> std::int32_t {
+    if (use == matrix_use::b) {
+        std::int32_t ops_per_chan = xe::channel_size / element_size;
         return ops_per_chan * xe::sdepth;
     }
     return xe::exec_size;
 }
 
-auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, address_space addrspace)
-    -> block_config {
+auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans,
+                                 address_space addrspace) -> block_config {
+    constexpr std::int32_t max_cols_in_block = 32;
+
     auto cfg = block_config{};
     cfg.element_size = size(ct->component_ty());
     cfg.array_length = 1;
@@ -63,35 +66,49 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, address_space a
     cfg.cols = ct->cols();
     cfg.row_blocks = 1;
     cfg.col_blocks = 1;
+    cfg.transpose = trans == transpose::T;
     cfg.vnni = ct->use() == matrix_use::a;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
 
-    const auto max_rows = max_rows_in_block(ct);
-    if (cfg.rows > max_rows) {
-        const std::int32_t num_blocks = cfg.rows / max_rows;
-        const std::int32_t max_array_length = 64 / (max_rows * cfg.element_size);
-        if (num_blocks > max_array_length) {
-            cfg.array_length = max_array_length;
-            cfg.row_blocks = num_blocks / max_array_length;
-        } else {
-            cfg.array_length = num_blocks;
-        }
+    if (cfg.cols > max_cols_in_block) {
+        cfg.col_blocks = cfg.cols / max_cols_in_block;
+        cfg.cols = max_cols_in_block;
+    }
+
+    if (cfg.transpose && cfg.vnni) {
+        // transpose + vnni message is the same as transpose message on d32
+        cfg.rows /= 4 / cfg.element_size;
+        cfg.element_size = 4;
+        cfg.vnni = false;
+        const auto max_rows = xe::exec_size / 2;
+        cfg.row_blocks = cfg.rows / max_rows;
         cfg.rows = max_rows;
+    } else {
+        const auto max_rows = max_rows_in_block(ct->use(), cfg.element_size);
+        if (cfg.rows > max_rows) {
+            const std::int32_t num_blocks = cfg.rows / max_rows;
+            std::int32_t max_array_length = 64 / (max_rows * cfg.element_size);
+            if (num_blocks > max_array_length) {
+                cfg.array_length = max_array_length;
+                cfg.row_blocks = num_blocks / max_array_length;
+            } else {
+                cfg.array_length = num_blocks;
+            }
+            cfg.rows = max_rows;
+        }
     }
 
     return cfg;
 }
 
 auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
-                              address_space addrspace) -> spv_inst * {
-    const auto key = load_store_key{result_ty, spv_operand_ty, addrspace};
-    return lookup(load_funs_, key, [&](load_store_key const &key) {
-        const auto [result_ty, spv_operand_ty, addrspace] = key;
+                              transpose trans, address_space addrspace) -> spv_inst * {
+    const auto key = load_key{result_ty, spv_operand_ty, trans, addrspace};
+    return lookup(load_funs_, key, [&](load_key const &key) {
+        const auto [result_ty, spv_operand_ty, trans, addrspace] = key;
 
-        const auto cfg = load_config(result_ty, addrspace);
-        auto code = cfg.sfid == lsc_sfid::slm
-                        ? load_block2d_emulated(cfg, result_ty->component_ty(), tmp_)
-                        : load_block2d_native(cfg, tmp_);
+        const auto cfg = load_config(result_ty, trans, addrspace);
+        auto code = load_block2d(cfg, result_ty->component_ty(), tmp_);
 
         auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
         auto spv_result_ty = unique_->spv_ty(result_ty);
@@ -115,6 +132,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     cfg.cols = ct->cols();
     cfg.row_blocks = 1;
     cfg.col_blocks = 1;
+    cfg.transpose = false;
     cfg.vnni = false;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
 
@@ -123,7 +141,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
         cfg.cols = max_cols_in_block;
     }
 
-    const auto max_rows = max_rows_in_block(ct);
+    const auto max_rows = max_rows_in_block(ct->use(), cfg.element_size);
     if (cfg.rows > max_rows) {
         cfg.row_blocks = cfg.rows / max_rows;
         cfg.rows = max_rows;
@@ -134,14 +152,12 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
 
 auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
                                address_space addrspace) -> spv_inst * {
-    const auto key = load_store_key{val_ty, spv_operand_ty, addrspace};
-    return lookup(store_funs_, key, [&](load_store_key const &key) {
+    const auto key = store_key{val_ty, spv_operand_ty, addrspace};
+    return lookup(store_funs_, key, [&](store_key const &key) {
         const auto [val_ty, spv_operand_ty, addrspace] = key;
 
         const auto cfg = store_config(val_ty, addrspace);
-        auto code = cfg.sfid == lsc_sfid::slm
-                        ? store_block2d_emulated(cfg, val_ty->component_ty(), tmp_)
-                        : store_block2d_native(cfg, tmp_);
+        auto code = store_block2d(cfg, val_ty->component_ty(), tmp_);
 
         auto spv_void_ty = unique_->void_ty();
         auto spv_val_ty = unique_->spv_ty(val_ty);
@@ -178,6 +194,46 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                  << " num_elts=" << ct->rows() * ct->cols() << " align=wordx32\n";
         }
 
+        /** The GRF layout must follow the layout described in the following.
+         *
+         * Let CM, CN, CK be the size of the coopmatrices, where
+         * CM = ct->rows() = at->rows(),
+         * CN = ct->cols() = bt->cols(),
+         * CK = at->cols() = bt->rows(),
+         * and let M, N, K be the size expected by DPAS, where
+         * M = xe::exec_size,
+         * N = xe::rcount
+         * K = ops_per_chan * xe::sdepth
+         * Let BM:=CM/M, BN:=CN/N, BK:=CK/K be the number of blocks in the respective mode.
+         *
+         * The blocks are laid out in the GRF as following
+         *
+         * A[m,k,bk,bm] = m + k * M + bk * M * K + bm * M * K * BK
+         * B[k,n,bn,bk] = k + n * K + bn * K * N + bk * K * N * BN
+         * C[m,n,bn,bm] = m + n * M + bn * M * N + bm * M * N * BN
+         *
+         * where m \in [M], n \in [N], k \in [K], bm \in [BM], bn \in [BN], bk \in [BK].
+         *
+         * The mapping of m,n,k,bm,bn,bk to memory address is given by
+         *
+         * MA[m,k,bk,bm] = m'  + bm'  * M + (k'  + bk'  * K) * A_stride1
+         * MB[k,n,bn,bk] = k'' + bk'' * K + (n'' + bn'' * N) * B_stride1
+         * MC[m,n,bn,bm] = m   + bm   * M + (n   + bn   * N) * C_stride1
+         *
+         * where
+         *
+         * (m',k')   = { (m%ops_per_chan + k*ops_per_chan, floor(m/ops_per_chan))     if A
+         * transposed { (floor(m/ops_per_chan) + k*(M/ops_per_chan), m%ops_per_chan) else (bm',bk')
+         * = { (bk,bm) if A transposed { (bm,bk) else
+         *
+         * and
+         *
+         * (k'',n'')   = { (n,k) if B transposed
+         *               { (k,n) else
+         * (bk'',bn'') = { (bn,bk) if B transposed
+         *               { (bk,bn) else
+         *
+         */
         const auto precision_src1 = precision(at->component_ty());
         const auto precision_src2 = precision(bt->component_ty());
         for (std::int32_t k = 0; k < at->cols(); k += K) {
@@ -466,7 +522,7 @@ auto coopmatrix_diy::load(cooperative_matrix_load_inst const &in, dope_vector co
     auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.result(0));
     auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
-    auto fun = load_fun(ct, spv_operand_ty, ot->addrspace());
+    auto fun = load_fun(ct, spv_operand_ty, in.t(), ot->addrspace());
 
     auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
     auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));

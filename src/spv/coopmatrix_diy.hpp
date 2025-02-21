@@ -62,9 +62,10 @@ class coopmatrix_diy {
         }
     };
 
-    auto max_rows_in_block(coopmatrix_data_type const *ct) const -> std::int32_t;
-    auto load_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
-    auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
+    auto max_rows_in_block(matrix_use use, std::int32_t element_size) const -> std::int32_t;
+    auto load_config(coopmatrix_data_type const *ct, transpose trans, address_space addrspace)
+        -> block_config;
+    auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty, transpose trans,
                   address_space addrspace) -> spv_inst *;
     auto store_config(coopmatrix_data_type const *ct, address_space addrspace) -> block_config;
     auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
@@ -81,13 +82,14 @@ class coopmatrix_diy {
 
     using arith_key = std::tuple<arithmetic, scalar_type, std::int32_t>;
     using cast_key = std::tuple<scalar_type, scalar_type, std::int32_t>;
-    using load_store_key = std::tuple<coopmatrix_data_type const *, spv_inst *, address_space>;
+    using load_key = std::tuple<coopmatrix_data_type const *, spv_inst *, transpose, address_space>;
+    using store_key = std::tuple<coopmatrix_data_type const *, spv_inst *, address_space>;
     using mul_add_key = std::array<coopmatrix_data_type const *, 4u>;
     using scale_key = std::pair<scalar_type, std::int32_t>;
     std::unordered_map<arith_key, spv_inst *, tuple_hash<arith_key>> arith_funs_;
     std::unordered_map<cast_key, spv_inst *, tuple_hash<cast_key>> cast_funs_;
-    std::unordered_map<load_store_key, spv_inst *, tuple_hash<load_store_key>> load_funs_,
-        store_funs_;
+    std::unordered_map<load_key, spv_inst *, tuple_hash<load_key>> load_funs_;
+    std::unordered_map<store_key, spv_inst *, tuple_hash<store_key>> store_funs_;
     std::unordered_map<mul_add_key, spv_inst *, gemm_hash> mul_add_funs_;
     std::unordered_map<scale_key, spv_inst *, tuple_hash<scale_key>> scale_funs_;
     temp_counter tmp_;

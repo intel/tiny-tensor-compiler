@@ -135,8 +135,10 @@ template <typename F> void block2d_native_helper::walk(F &&io) {
             }
         }
         if (m + 1 < cfg.row_blocks) {
-            oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
-                 << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
+            if (cfg.col_blocks > 1) {
+                oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
+                     << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
+            }
             oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> " << cfg.rows
                  << ":ud\n";
         }
@@ -151,6 +153,9 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
         if (cfg.vnni) {
             d |= 1 << 7;
         }
+        if (cfg.transpose) {
+            d |= 1 << 15;
+        }
         d |= data_size << 9;
         d |= num_dst << 20;
         d |= 1 << 25;
@@ -163,9 +168,14 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
     oasm << "{\n";
     h.header();
     h.walk([&](std::int32_t m, std::int32_t n) {
+        const auto offset = [&] {
+            if (cfg.transpose) {
+                return cfg.byte_offset(0, 0, 0, m, n);
+            }
+            return cfg.byte_offset(0, 0, 0, n, m);
+        }();
         oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x" << std::hex
-             << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec
-             << cfg.byte_offset(0, 0, 0, n, m) << "\n";
+             << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec << offset << "\n";
     });
     oasm << "}\n";
 
@@ -187,9 +197,9 @@ auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> st
     oasm << "{\n";
     h.header();
     h.walk([&](std::int32_t m, std::int32_t n) {
+        const auto offset = cfg.byte_offset(0, 0, 0, n, m);
         oasm << "raw_sends.15.1." << num_src1 << ".0 (M1, 1) 0x0:ud 0x" << std::hex << desc
-             << ":ud " << h.temp << ".0 $0." << std::dec << cfg.byte_offset(0, 0, 0, n, m)
-             << " %null.0\n";
+             << ":ud " << h.temp << ".0 $0." << std::dec << offset << " %null.0\n";
     });
     oasm << "}\n";
 
@@ -345,6 +355,20 @@ auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_count
     oasm << "}\n";
 
     return std::move(oasm).str();
+}
+
+auto load_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string {
+    const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
+    const bool transpose_ok =
+        !cfg.transpose || (cfg.element_size == 4 && cfg.rows == xe::exec_size / 2);
+    return ugm_ok && transpose_ok ? load_block2d_native(cfg, make_tmp)
+                                  : load_block2d_emulated(cfg, sty, make_tmp);
+}
+auto store_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
+    -> std::string {
+    const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
+    return ugm_ok ? store_block2d_native(cfg, make_tmp)
+                  : store_block2d_emulated(cfg, sty, make_tmp);
 }
 
 } // namespace tinytc::spv

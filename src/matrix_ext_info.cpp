@@ -63,15 +63,15 @@ auto matrix_ext_type::N_block_sizes(std::int32_t M) const -> std::vector<std::in
         return mnk.M == M ? std::make_optional(mnk.N) : std::nullopt;
     });
 }
-auto matrix_ext_type::K_block_sizes(std::int32_t M,
-                                    std::int32_t N) const -> std::vector<std::int32_t> {
+auto matrix_ext_type::K_block_sizes(std::int32_t M, std::int32_t N) const
+    -> std::vector<std::int32_t> {
     return block_sizes(mnk_, [&M, N](gemm_mnk const &mnk) -> std::optional<std::int32_t> {
         return mnk.M == M && mnk.N == N ? std::make_optional(mnk.K) : std::nullopt;
     });
 }
 
-auto matrix_ext_info::get_precision(scalar_type a, scalar_type b,
-                                    scalar_type acc) const -> matrix_ext_type const * {
+auto matrix_ext_info::get_precision(scalar_type a, scalar_type b, scalar_type acc) const
+    -> matrix_ext_type const * {
     for (auto const &type : types_) {
         if (type.a() == a && type.b() == b && type.have_acc(acc)) {
             return &type;

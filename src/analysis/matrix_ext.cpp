@@ -132,9 +132,8 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
     return false;
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
-    const bool transpose_ok = in.t() == transpose::N;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
-    if (!transpose_ok || !block_io_ok) {
+    if (!block_io_ok) {
         kill(in.result(0));
     }
 }
