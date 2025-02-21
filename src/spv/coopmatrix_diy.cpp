@@ -57,8 +57,6 @@ auto coopmatrix_diy::max_rows_in_block(matrix_use use, std::int32_t element_size
 
 auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans,
                                  address_space addrspace) -> block_config {
-    constexpr std::int32_t max_cols_in_block = 32;
-
     auto cfg = block_config{};
     cfg.element_size = size(ct->component_ty());
     cfg.array_length = 1;
@@ -69,21 +67,30 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
     cfg.transpose = trans == transpose::T;
     cfg.vnni = ct->use() == matrix_use::a;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
+    cfg.pos0_shr = 0;
 
-    if (cfg.cols > max_cols_in_block) {
-        cfg.col_blocks = cfg.cols / max_cols_in_block;
-        cfg.cols = max_cols_in_block;
-    }
+    auto const adjust_cols = [&cfg](std::int32_t max_cols_in_block) {
+        if (cfg.cols > max_cols_in_block) {
+            cfg.col_blocks = cfg.cols / max_cols_in_block;
+            cfg.cols = max_cols_in_block;
+        }
+    };
 
+    // transpose + vnni message is the same as transpose message on d32
     if (cfg.transpose && cfg.vnni) {
-        // transpose + vnni message is the same as transpose message on d32
-        cfg.rows /= 4 / cfg.element_size;
+        adjust_cols(xe::exec_size);
+
+        const auto ops_per_chan = 4 / cfg.element_size;
+        cfg.rows /= ops_per_chan;
         cfg.element_size = 4;
+        cfg.pos0_shr = ilog2(ops_per_chan);
         cfg.vnni = false;
         const auto max_rows = xe::exec_size / 2;
         cfg.row_blocks = cfg.rows / max_rows;
         cfg.rows = max_rows;
     } else {
+        adjust_cols(32);
+
         const auto max_rows = max_rows_in_block(ct->use(), cfg.element_size);
         if (cfg.rows > max_rows) {
             const std::int32_t num_blocks = cfg.rows / max_rows;
@@ -135,6 +142,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     cfg.transpose = false;
     cfg.vnni = false;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
+    cfg.pos0_shr = 0;
 
     if (cfg.cols > max_cols_in_block) {
         cfg.col_blocks = cfg.cols / max_cols_in_block;

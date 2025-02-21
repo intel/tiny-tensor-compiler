@@ -75,8 +75,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                                     array_view<tinytc_data_type_t> const &c_acc_tys,
                                     bool check_k = false) {
         value pos_a[2] = {m_block, k};
+        int amode = 0;
         if (tA == transpose::T) {
             std::swap(pos_a[0], pos_a[1]);
+            amode = 1 - amode;
         }
         auto coopmatrix_a_ty = get_coopmatrix(a_ty, m_block_size, k_block_size, matrix_use::a, loc);
         const auto my_check_a = check_k ? add_check(check_a, checked_flag::cols) : check_a;
@@ -86,14 +88,16 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             a.emplace_back(bb.add(make_cooperative_matrix_load(tA, my_check_a, A, pos_a[0],
                                                                pos_a[1], coopmatrix_a_ty)));
             if (i + 1 < num_m_blocks) {
-                pos_a[0] =
-                    bb.add(make_arith(arithmetic::add, pos_a[0], c_m_block_size, index_ty, loc));
+                pos_a[amode] = bb.add(
+                    make_arith(arithmetic::add, pos_a[amode], c_m_block_size, index_ty, loc));
             }
         }
 
         value pos_b[2] = {k, n_block};
+        int bmode = 1;
         if (tB == transpose::T) {
             std::swap(pos_b[0], pos_b[1]);
+            bmode = 1 - bmode;
         }
         auto coopmatrix_b_ty = get_coopmatrix(b_ty, k_block_size, n_block_size, matrix_use::b, loc);
         const auto my_check_b = check_k ? add_check(check_b, checked_flag::rows) : check_b;
@@ -103,8 +107,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             b.emplace_back(bb.add(make_cooperative_matrix_load(tB, my_check_b, B, pos_b[0],
                                                                pos_b[1], coopmatrix_b_ty)));
             if (i + 1 < num_n_blocks) {
-                pos_b[1] =
-                    bb.add(make_arith(arithmetic::add, pos_b[1], c_n_block_size, index_ty, loc));
+                pos_b[bmode] = bb.add(
+                    make_arith(arithmetic::add, pos_b[bmode], c_n_block_size, index_ty, loc));
             }
         }
 

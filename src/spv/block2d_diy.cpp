@@ -119,28 +119,40 @@ void block2d_native_helper::header() {
          << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
          << "add (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
          << "add (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
-         << "add (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n"
-         << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n"
-         << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
+         << "add (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n";
+    if (cfg.pos0_shr) {
+        oasm << "shr (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0> " << cfg.pos0_shr << ":d\n";
+    } else {
+        oasm << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n";
+    }
+    oasm << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
          << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
 }
 
 template <typename F> void block2d_native_helper::walk(F &&io) {
+    auto pos0_C = 5;
+    auto pos1_C = 6;
+    auto pos0_inc = cfg.rows;
+    auto pos1_inc = cfg.cols;
+    if (cfg.transpose) {
+        std::swap(pos0_C, pos1_C);
+        std::swap(pos0_inc, pos1_inc);
+    }
     for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
         for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
             io(m, n);
             if (n + 1 < cfg.col_blocks) {
-                oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> " << cfg.cols
-                     << ":ud\n";
+                oasm << "add (M1,1) " << temp << "(0," << pos1_C << ")<1> " << temp << "(0,"
+                     << pos1_C << ")<0;1,0> " << pos1_inc << ":ud\n";
             }
         }
         if (m + 1 < cfg.row_blocks) {
             if (cfg.col_blocks > 1) {
-                oasm << "add (M1,1) " << temp << "(0,6)<1> " << temp << "(0,6)<0;1,0> "
-                     << -(cfg.col_blocks - 1) * cfg.cols << ":ud\n";
+                oasm << "add (M1,1) " << temp << "(0," << pos1_C << ")<1> " << temp << "(0,"
+                     << pos1_C << ")<0;1,0> " << -(cfg.col_blocks - 1) * pos1_inc << ":ud\n";
             }
-            oasm << "add (M1,1) " << temp << "(0,5)<1> " << temp << "(0,5)<0;1,0> " << cfg.rows
-                 << ":ud\n";
+            oasm << "add (M1,1) " << temp << "(0," << pos0_C << ")<1> " << temp << "(0," << pos0_C
+                 << ")<0;1,0> " << pos0_inc << ":ud\n";
         }
     }
 }
@@ -168,12 +180,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
     oasm << "{\n";
     h.header();
     h.walk([&](std::int32_t m, std::int32_t n) {
-        const auto offset = [&] {
-            if (cfg.transpose) {
-                return cfg.byte_offset(0, 0, 0, m, n);
-            }
-            return cfg.byte_offset(0, 0, 0, n, m);
-        }();
+        const auto offset = cfg.byte_offset(0, 0, 0, n, m);
         oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x" << std::hex
              << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec << offset << "\n";
     });
