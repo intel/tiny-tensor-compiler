@@ -146,16 +146,10 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 }
 
 template <typename T> void test(queue q, args &a) {
-    auto const fill = [](T *ptr, std::size_t n) {
-        for (std::size_t i = 0; i < n; ++i) {
-            ptr[i] = i % 101;
-        }
-    };
     auto total_reals = 1024 * 1024 * 1024 / sizeof(T);
     T *A_host = new T[total_reals];
     T *B_host = new T[total_reals];
     T *C_host = new T[total_reals];
-    T *C_ref_host = new T[total_reals];
     auto const alloc_device = [&a, &q](std::size_t num_bytes) {
         if (a.alignment == 0) {
             return malloc_device<T>(num_bytes, q);
@@ -163,27 +157,29 @@ template <typename T> void test(queue q, args &a) {
             return aligned_alloc_device<T>(a.alignment, num_bytes, q);
         }
     };
-    T *C_ref = alloc_device(total_reals);
     T *A = alloc_device(total_reals);
     T *B = alloc_device(total_reals);
     T *C = alloc_device(total_reals);
-    fill(A_host, total_reals);
-    fill(B_host, total_reals);
-    q.copy(A_host, A, total_reals).wait();
-    q.copy(B_host, B, total_reals).wait();
 
-    auto const check = [&](std::int64_t M, std::int64_t N, std::size_t howmany) {
-        q.copy(C_ref, C_ref_host, total_reals).wait();
+    auto const check = [&](std::int64_t M, std::int64_t N, std::int64_t K, std::int64_t howmany) {
         q.copy(C, C_host, total_reals).wait();
         std::size_t num_err = 0;
-        for (std::size_t i = 0; i < M * N * howmany; ++i) {
-            const auto err = examples::compute_error(C_host[i], C_ref_host[i]);
-            if (err > 10.0 * std::numeric_limits<decltype(err)>::epsilon()) {
-                if (num_err < 10) {
-                    std::cout << i << " " << err << " " << C_host[i] << " " << C_ref_host[i]
-                              << std::endl;
+        const auto error_bound = examples::test_gemm_error_bound<T>(K);
+        for (std::int64_t b = 0; b < howmany; ++b) {
+            auto C_host_b = C_host + b * M * N;
+            for (std::int64_t j = 0; j < N; ++j) {
+                for (std::int64_t i = 0; i < M; ++i) {
+                    const auto relerr = examples::test_gemm_rel_error<T>(C_host_b, i, j, M);
+                    if (relerr > error_bound) {
+                        if (num_err < 10) {
+                            std::cout
+                                << "C_{" << i << "," << j << "," << b << "}=" << C_host_b[i + j * M]
+                                << ", relative_error=" << relerr << ", error_bound=" << error_bound
+                                << std::endl;
+                        }
+                        ++num_err;
+                    }
                 }
-                ++num_err;
             }
         }
         if (num_err > 10) {
@@ -198,29 +194,13 @@ template <typename T> void test(queue q, args &a) {
         auto max_reals = std::max(std::max(na, nb), nc);
         auto howmany = total_reals / max_reals;
 
-        if (a.verify && a.internal_repetitions == 1) {
-            const bool trans_a = a.trans_a;
-            const bool trans_b = a.trans_b;
-            q.submit([&](auto &h) {
-                h.parallel_for(range{howmany, 32}, [=](id<2> it) {
-                    auto batch = it[0];
-                    auto m = it[1];
-                    auto a = A + batch * na;
-                    auto b = B + batch * nb;
-                    auto c_ref = C_ref + batch * nc;
-                    for (std::int64_t mb = m; mb < c.m; mb += 32) {
-                        for (std::int64_t n = 0; n < c.n; ++n) {
-                            auto c_acc = T(0.0);
-                            for (std::int64_t k = 0; k < c.k; ++k) {
-                                c_acc += a[trans_a ? k + mb * c.k : mb + k * c.m] *
-                                         b[trans_b ? n + k * c.n : k + n * c.k];
-                            }
-                            c_ref[mb + n * c.m] = c_acc;
-                        }
-                    }
-                });
-            });
+        for (std::size_t i = 0; i < howmany; ++i) {
+            examples::test_gemm_matrix<T, matrix_use::a>(A_host + i * na, c.m, c.k, a.trans_a);
+            examples::test_gemm_matrix<T, matrix_use::b>(B_host + i * nb, c.k, c.n, a.trans_b);
         }
+        q.copy(A_host, A, total_reals).wait();
+        q.copy(B_host, B, total_reals).wait();
+        q.memset(C, 0, total_reals * sizeof(T)).wait();
 
         T const **AA = malloc_shared<T const *>(howmany, q);
         T const **BB = malloc_shared<T const *>(howmany, q);
@@ -247,7 +227,7 @@ template <typename T> void test(queue q, args &a) {
                      h.parallel_for(exe_range, kernel);
                  }).wait();
                 if (a.internal_repetitions == 1 && a.verify) {
-                    check(c.m, c.n, howmany);
+                    check(c.m, c.n, c.k, howmany);
                 }
                 min_exec_time_ns = bench([&]() {
                     q.submit([&](handler &h) {
@@ -291,11 +271,9 @@ template <typename T> void test(queue q, args &a) {
     free(A, q);
     free(B, q);
     free(C, q);
-    free(C_ref, q);
     delete[] A_host;
     delete[] B_host;
     delete[] C_host;
-    delete[] C_ref_host;
 };
 
 int main(int argc, char **argv) {

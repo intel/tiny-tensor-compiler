@@ -83,15 +83,17 @@ template <typename T> auto compute_error(T x, T x_ref) {
 // Increment values in bf16 epsilons
 constexpr double test_gemm_smallest_eps = 0.0078125;
 
-template <typename T, matrix_use Use> void test_gemm_matrix(T *data, std::size_t M, std::size_t N) {
+template <typename T, matrix_use Use>
+void test_gemm_matrix(T *data, std::size_t M, std::size_t N, bool transposed = false) {
     for (std::size_t j = 0; j < N; ++j) {
         for (std::size_t i = 0; i < M; ++i) {
+            const auto idx = transposed ? j + i * N : i + j * M;
             if constexpr (Use == matrix_use::a) {
-                data[i + j * M] = (1.0 + i * test_gemm_smallest_eps) * (j + 1) / N;
+                data[idx] = (1.0 + i * test_gemm_smallest_eps) * (j + 1) / N;
             } else if constexpr (Use == matrix_use::b) {
-                data[i + j * M] = 1.0 / ((i + 1) * (1 + j * test_gemm_smallest_eps));
+                data[idx] = 1.0 / ((i + 1) * (1 + j * test_gemm_smallest_eps));
             } else {
-                data[i + j * M] = 0;
+                data[idx] = 0;
             }
         }
     }
