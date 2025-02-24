@@ -97,6 +97,7 @@ Builder C-API:
       - tinytc_cooperative_matrix_mul_add_inst_create
       - tinytc_cooperative_matrix_scale_inst_create
       - tinytc_cooperative_matrix_store_inst_create
+      - tinytc_cumsum_inst_create
       - tinytc_expand_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create

@@ -550,6 +550,8 @@ Instruction
 
   * :ref:`tinytc::make_cooperative_matrix_store`
 
+  * :ref:`tinytc::make_cumsum`
+
   * :ref:`tinytc::make_expand`
 
   * :ref:`tinytc::make_for`
@@ -729,6 +731,13 @@ make_cooperative_matrix_store
 .............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_store
+
+.. _tinytc::make_cumsum:
+
+make_cumsum
+...........
+
+.. doxygenfunction:: tinytc::make_cumsum
 
 .. _tinytc::make_expand:
 

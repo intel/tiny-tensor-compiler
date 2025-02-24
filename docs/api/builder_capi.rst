@@ -676,6 +676,8 @@ Instruction
 
   * :ref:`tinytc_cooperative_matrix_store_inst_create`
 
+  * :ref:`tinytc_cumsum_inst_create`
+
   * :ref:`tinytc_expand_inst_create`
 
   * :ref:`tinytc_for_inst_create`
@@ -854,6 +856,13 @@ tinytc_cooperative_matrix_store_inst_create
 ...........................................
 
 .. doxygenfunction:: tinytc_cooperative_matrix_store_inst_create
+
+.. _tinytc_cumsum_inst_create:
+
+tinytc_cumsum_inst_create
+.........................
+
+.. doxygenfunction:: tinytc_cumsum_inst_create
 
 .. _tinytc_expand_inst_create:
 

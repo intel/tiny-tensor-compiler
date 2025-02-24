@@ -74,6 +74,10 @@ auto inst_cloner::operator()(cooperative_matrix_store_inst &in) -> std::unique_p
                                                            subs(&in.operand()), subs(&in.pos0()),
                                                            subs(&in.pos1()), in.loc());
 }
+auto inst_cloner::operator()(cumsum_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<cumsum_inst>(subs(&in.alpha()), subs(&in.A()), in.mode(),
+                                         subs(&in.beta()), subs(&in.B()), in.atomic(), in.loc());
+}
 auto inst_cloner::operator()(expand_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<expand_inst>(
         subs(&in.operand()), in.expanded_mode(), in.static_expand_shape(),

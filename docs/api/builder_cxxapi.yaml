@@ -86,6 +86,7 @@ Builder C++-API:
       - tinytc::make_cooperative_matrix_mul_add
       - tinytc::make_cooperative_matrix_scale
       - tinytc::make_cooperative_matrix_store
+      - tinytc::make_cumsum
       - tinytc::make_expand
       - tinytc::make_for
       - tinytc::make_foreach

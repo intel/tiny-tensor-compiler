@@ -453,6 +453,20 @@ tinytc_status_t tinytc_builtin_inst_create(tinytc_inst_t *instr, tinytc_builtin_
     });
 }
 
+tinytc_status_t tinytc_cumsum_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                          tinytc_value_t alpha, tinytc_value_t A, int64_t mode,
+                                          tinytc_value_t beta, tinytc_value_t B,
+                                          const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<cumsum_inst>(alpha, A, mode, beta, B, bool(atomic), get_optional(loc))
+                .release();
+    });
+}
+
 tinytc_status_t tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                           int64_t expanded_mode, uint32_t static_expand_shape_size,
                                           const int64_t *static_expand_shape,

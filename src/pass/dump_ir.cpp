@@ -307,6 +307,21 @@ void dump_ir_pass::operator()(cooperative_matrix_store_inst const &c) {
     *os_ << "]";
 }
 
+void dump_ir_pass::operator()(cumsum_inst const &in) {
+    *os_ << "cumsum";
+    if (in.atomic()) {
+        *os_ << ".atomic";
+    }
+    *os_ << ' ';
+    dump_val(in.alpha());
+    *os_ << ", ";
+    dump_val(in.A());
+    *os_ << ", " << in.mode() << ", ";
+    dump_val(in.beta());
+    *os_ << ", ";
+    dump_val(in.B());
+}
+
 void dump_ir_pass::operator()(expand_inst const &e) {
     dump_val(e.result(0));
     *os_ << " = expand ";

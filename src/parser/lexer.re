@@ -152,6 +152,7 @@ lex:
         // instructions
         "axpby"              { adv_loc(); return parser::make_AXPBY(loc_); }
         "barrier"            { adv_loc(); return parser::make_BARRIER(loc_); }
+        "cumsum"             { adv_loc(); return parser::make_CUMSUM(loc_); }
         "gemm"               { adv_loc(); return parser::make_GEMM(loc_); }
         "gemv"               { adv_loc(); return parser::make_GEMV(loc_); }
         "ger"                { adv_loc(); return parser::make_GER(loc_); }

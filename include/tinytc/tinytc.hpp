@@ -1718,6 +1718,26 @@ inline inst make_axpby(transpose tA, bool atomic, value alpha, value A, value be
 }
 
 /**
+ * @brief Make cumsum instruction
+ *
+ * @param atomic true for atomic updates of B
+ * @param alpha @f$\alpha@f$
+ * @param A A
+ * @param mode n (summation mode)
+ * @param beta @f$\beta@f$
+ * @param B B
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cumsum(bool atomic, value alpha, value A, std::int64_t mode, value beta, value B,
+                        location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cumsum_inst_create(&instr, atomic, alpha, A, mode, beta, B, &loc), loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make expand instruction
  *
  * @param a Operand

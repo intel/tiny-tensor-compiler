@@ -113,6 +113,7 @@ typedef enum {
     tinytc_status_ir_expected_string_attribute = 0x144,     ///< Expected string attribute
     tinytc_status_ir_duplicate_key_in_dictionary = 0x145,   ///< Duplicate key
     tinytc_status_ir_unexpected_array_attribute_size = 0x146, ///< Unexpected array size
+    tinytc_status_ir_expected_non_scalar_memref = 0x147,      ///< Expected memref of dimension >= 1
     // SPIR-V errors
     tinytc_status_spirv_forbidden_forward_declaration =
         0x1000,                                       ///< Forward declaration of id is forbidden

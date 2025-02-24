@@ -64,6 +64,7 @@ enum class IK {
     // blas a2
     blas_a2,
     axpby_blas_a2,
+    cumsum_blas_a2,
     sum_blas_a2,
     last_blas_a2,
     // blas a3
@@ -79,17 +80,16 @@ enum class IK {
     foreach_loop,
     last_loop
 };
-using inst_nodes =
-    type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
-              class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
-              class constant_inst, class cooperative_matrix_load_inst,
-              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
-              class cooperative_matrix_store_inst, class expand_inst, class fuse_inst,
-              class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
-              class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
-              class if_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
-              class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
-              class subview_inst, class store_inst, class sum_inst, class yield_inst>;
+using inst_nodes = type_list<
+    class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
+    class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
+    class constant_inst, class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
+    class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst, class cumsum_inst,
+    class expand_inst, class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
+    class gemv_inst, class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
+    class if_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
+    class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
+    class subview_inst, class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -550,6 +550,18 @@ class cooperative_matrix_store_inst : public standard_inst<4, 0, 0> {
   private:
     checked_flag cflag_;
     store_flag sflag_;
+};
+
+class cumsum_inst : public blas_a2_inst {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::cumsum_blas_a2; }
+    cumsum_inst(tinytc_value_t alpha, tinytc_value_t A, std::int64_t mode, tinytc_value_t beta,
+                tinytc_value_t B, bool atomic = false, location const &lc = {});
+
+    inline std::int64_t mode() const { return mode_; }
+
+  private:
+    std::int64_t mode_;
 };
 
 class expand_inst : public standard_inst<dynamic, 1> {

@@ -696,6 +696,30 @@ cooperative_matrix_store_inst::cooperative_matrix_store_inst(checked_flag cflag,
     check_index_ty(lc, pos1());
 }
 
+cumsum_inst::cumsum_inst(tinytc_value_t alpha0, tinytc_value_t A0, std::int64_t mode,
+                         tinytc_value_t beta0, tinytc_value_t B0, bool atomic, location const &lc)
+    : blas_a2_inst(IK::cumsum_blas_a2, std::move(alpha0), std::move(A0), std::move(beta0),
+                   std::move(B0), atomic, lc),
+      mode_(mode) {
+    auto a = get_memref_type(loc(), A());
+    auto b = get_memref_type(loc(), B());
+
+    if (a->dim() < 1) {
+        throw compilation_error(loc(), {&A()}, status::ir_expected_non_scalar_memref);
+    }
+
+    bool shape_equal = a->dim() == b->dim();
+    if (shape_equal) {
+        for (std::int64_t i = 0; i < a->dim(); ++i) {
+            shape_equal = shape_equal && a->shape(i) == b->shape(i);
+        }
+    }
+
+    if (!shape_equal) {
+        throw compilation_error(loc(), {&A(), &B()}, status::ir_incompatible_shapes);
+    }
+}
+
 expand_inst::expand_inst(tinytc_value_t op0, std::int64_t expanded_mode,
                          array_view<std::int64_t> static_expand_shape0,
                          array_view<tinytc_value_t> expand_shape0, tinytc_data_type_t ty,

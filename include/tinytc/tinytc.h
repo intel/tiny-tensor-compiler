@@ -665,6 +665,30 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
                                                        const tinytc_location_t *loc);
 
 /**
+ * @brief Create cumsum instruction
+ *
+ * @code
+ * cumsum.<atomic> %alpha, %A, mode, %beta, %B
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param atomic [in] true for atomic updates of B
+ * @param alpha [in] @f$\alpha@f$
+ * @param A [in] A
+ * @param mode [in] n (summation mode)
+ * @param beta [in] @f$\beta@f$
+ * @param B [in] B
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cumsum_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                                        tinytc_value_t alpha, tinytc_value_t A,
+                                                        int64_t mode, tinytc_value_t beta,
+                                                        tinytc_value_t B,
+                                                        const tinytc_location_t *loc);
+
+/**
  * @brief Create expand instruction
  *
  * @code %value = expand %a[%mode -> %expand_shape] : ty @endcode

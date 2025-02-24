@@ -117,6 +117,7 @@
     STRIDED         "strided"
     AXPBY           "axpby"
     BARRIER         "barrier"
+    CUMSUM          "cumsum"
     GEMM            "gemm"
     GEMV            "gemv"
     GER             "ger"
@@ -197,6 +198,7 @@
 %nterm <inst> barrier_inst
 %nterm <std::int32_t> optional_global_attr
 %nterm <std::int32_t> optional_local_attr
+%nterm <inst> cumsum_inst
 %nterm <inst> gemm_inst
 %nterm <inst> gemv_inst
 %nterm <inst> ger_inst
@@ -481,6 +483,7 @@ instruction:
     axpby_inst      { $$ = std::move($1); }
   | barrier_inst    { $$ = std::move($1); }
   | cooperative_matrix_store_inst { $$ = std::move($1); }
+  | cumsum_inst     { $$ = std::move($1); }
   | gemm_inst       { $$ = std::move($1); }
   | gemv_inst       { $$ = std::move($1); }
   | ger_inst        { $$ = std::move($1); }
@@ -499,8 +502,8 @@ axpby_inst:
     AXPBY transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
-                std::make_unique<axpby_inst>($ta, std::move($alpha), std::move($a),
-                                             std::move($beta), std::move($b), $atomic, @axpby_inst)
+                std::make_unique<axpby_inst>($ta, std::move($alpha), std::move($a), std::move($beta),
+                                             std::move($b), $atomic, @axpby_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -550,6 +553,21 @@ optional_global_attr:
 optional_local_attr:
     %empty { $$ = 0; }
   | LOCAL_ATTR { $$ = tinytc_address_space_local; }
+;
+
+cumsum_inst:
+    CUMSUM atomic var[alpha] COMMA var[a] COMMA INTEGER_CONSTANT[mode] COMMA var[beta] COMMA var[b] {
+        try {
+            $$ = inst {
+                std::make_unique<cumsum_inst>(std::move($alpha), std::move($a), $mode, std::move($beta),
+                                              std::move($b), $atomic, @cumsum_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
 ;
 
 gemm_inst:

@@ -577,6 +577,58 @@ Restrictions
 * :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
+Cumulative sum
+..............
+
+.. code:: abnf
+
+    instruction     =/ "cumsum" [".atomic"] local-identifier "," local-identifier "," integer-constant ","
+                                local-identifier "," local-identifier
+
+Overview
+~~~~~~~~
+
+Computes the n-mode cumulative sum
+
+.. math::
+
+    B := \alpha A \times_{n} L_{s_n} + \beta B,
+
+where :math:`L_{s_n}` is the lower triangular matrix of ones of size :math:`s_n\times s_n` and
+:math:`s_n` is the n-th entry of the shape vector of A.
+In index notation, we have equivalently
+
+.. math::
+
+    B_{i_1\dots i_{n-1}ji_{n+1}\dots i_M}
+        := \alpha \sum_{i_n=1}^{j}A_{i_1\dots i_{n-1}i_ni_{n+1}\dots i_M}
+           + \beta B_{i_1\dots i_{n-1}ji_{n+1}\dots i_M},
+
+If the atomic flag is set, B is updated atomically.
+
+
+Operands
+~~~~~~~~
+
+======= ================ ==================
+Op.-No. Type             Description
+======= ================ ==================
+1       scalar-type      :math:`\alpha` 
+2       memref-type      A
+3       integer-constant n (summation mode)
+4       scalar-type      :math:`\beta`
+5       memref-type      B
+======= ================ ==================
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{order}(A) \geq 1`
+* :math:`\text{shape}(A) = \text{shape}(B)`
+* :math:`\text{type}(\alpha) \preceq \text{element_type}(A) \preceq \text{element_type}(B)`
+* :math:`\text{type}(\beta) \preceq \text{element_type}(B)`
+* If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
+
 Foreach
 .......
 
