@@ -24,6 +24,8 @@ Common
 
   * :ref:`tinytc_cmp_condition_t`
 
+  * :ref:`tinytc_group_operation_t`
+
   * :ref:`tinytc_matrix_use_t`
 
   * :ref:`tinytc_scalar_type_t`
@@ -31,8 +33,6 @@ Common
   * :ref:`tinytc_store_flag_t`
 
   * :ref:`tinytc_transpose_t`
-
-  * :ref:`tinytc_work_group_operation_t`
 
 * Definitions
 
@@ -52,6 +52,8 @@ Common
 
   * :ref:`tinytc_cmp_condition_to_string`
 
+  * :ref:`tinytc_group_operation_to_string`
+
   * :ref:`tinytc_matrix_use_to_string`
 
   * :ref:`tinytc_scalar_type_size`
@@ -62,8 +64,6 @@ Common
 
   * :ref:`tinytc_transpose_to_string`
 
-  * :ref:`tinytc_work_group_operation_to_string`
-
 * Structures
 
   * :ref:`tinytc_named_attr`
@@ -73,6 +73,8 @@ Common
   * :ref:`tinytc_position`
 
 * Typedefs
+
+  * :ref:`tinytc_address_spaces_t`
 
   * :ref:`tinytc_attr_t`
 
@@ -155,6 +157,13 @@ tinytc_cmp_condition_t
 
 .. doxygenenum:: tinytc_cmp_condition_t
 
+.. _tinytc_group_operation_t:
+
+tinytc_group_operation_t
+........................
+
+.. doxygenenum:: tinytc_group_operation_t
+
 .. _tinytc_matrix_use_t:
 
 tinytc_matrix_use_t
@@ -182,13 +191,6 @@ tinytc_transpose_t
 ..................
 
 .. doxygenenum:: tinytc_transpose_t
-
-.. _tinytc_work_group_operation_t:
-
-tinytc_work_group_operation_t
-.............................
-
-.. doxygenenum:: tinytc_work_group_operation_t
 
 Common Definitions
 ------------------
@@ -245,6 +247,13 @@ tinytc_cmp_condition_to_string
 
 .. doxygenfunction:: tinytc_cmp_condition_to_string
 
+.. _tinytc_group_operation_to_string:
+
+tinytc_group_operation_to_string
+................................
+
+.. doxygenfunction:: tinytc_group_operation_to_string
+
 .. _tinytc_matrix_use_to_string:
 
 tinytc_matrix_use_to_string
@@ -280,13 +289,6 @@ tinytc_transpose_to_string
 
 .. doxygenfunction:: tinytc_transpose_to_string
 
-.. _tinytc_work_group_operation_to_string:
-
-tinytc_work_group_operation_to_string
-.....................................
-
-.. doxygenfunction:: tinytc_work_group_operation_to_string
-
 Common Structures
 -----------------
 
@@ -313,6 +315,13 @@ tinytc_position
 
 Common Typedefs
 ---------------
+
+.. _tinytc_address_spaces_t:
+
+tinytc_address_spaces_t
+.......................
+
+.. doxygentypedef:: tinytc_address_spaces_t
 
 .. _tinytc_attr_t:
 
@@ -639,6 +648,8 @@ Instruction
 
   * :ref:`tinytc_arith_unary_inst_create`
 
+  * :ref:`tinytc_barrier_inst_create`
+
   * :ref:`tinytc_builtin_inst_create`
 
   * :ref:`tinytc_cast_inst_create`
@@ -689,15 +700,19 @@ Instruction
 
   * :ref:`tinytc_size_inst_create`
 
+  * :ref:`tinytc_subgroup_add_inst_create`
+
   * :ref:`tinytc_subgroup_broadcast_inst_create`
+
+  * :ref:`tinytc_subgroup_max_inst_create`
+
+  * :ref:`tinytc_subgroup_min_inst_create`
 
   * :ref:`tinytc_store_inst_create`
 
   * :ref:`tinytc_subview_inst_create`
 
   * :ref:`tinytc_sum_inst_create`
-
-  * :ref:`tinytc_work_group_inst_create`
 
   * :ref:`tinytc_yield_inst_create`
 
@@ -741,6 +756,13 @@ tinytc_arith_unary_inst_create
 ..............................
 
 .. doxygenfunction:: tinytc_arith_unary_inst_create
+
+.. _tinytc_barrier_inst_create:
+
+tinytc_barrier_inst_create
+..........................
+
+.. doxygenfunction:: tinytc_barrier_inst_create
 
 .. _tinytc_builtin_inst_create:
 
@@ -917,12 +939,33 @@ tinytc_size_inst_create
 
 .. doxygenfunction:: tinytc_size_inst_create
 
+.. _tinytc_subgroup_add_inst_create:
+
+tinytc_subgroup_add_inst_create
+...............................
+
+.. doxygenfunction:: tinytc_subgroup_add_inst_create
+
 .. _tinytc_subgroup_broadcast_inst_create:
 
 tinytc_subgroup_broadcast_inst_create
 .....................................
 
 .. doxygenfunction:: tinytc_subgroup_broadcast_inst_create
+
+.. _tinytc_subgroup_max_inst_create:
+
+tinytc_subgroup_max_inst_create
+...............................
+
+.. doxygenfunction:: tinytc_subgroup_max_inst_create
+
+.. _tinytc_subgroup_min_inst_create:
+
+tinytc_subgroup_min_inst_create
+...............................
+
+.. doxygenfunction:: tinytc_subgroup_min_inst_create
 
 .. _tinytc_store_inst_create:
 
@@ -944,13 +987,6 @@ tinytc_sum_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_sum_inst_create
-
-.. _tinytc_work_group_inst_create:
-
-tinytc_work_group_inst_create
-.............................
-
-.. doxygenfunction:: tinytc_work_group_inst_create
 
 .. _tinytc_yield_inst_create:
 

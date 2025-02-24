@@ -54,10 +54,12 @@ enum class IK {
     if_,
     parallel,
     size,
+    subgroup_add,
     subgroup_broadcast,
+    subgroup_max,
+    subgroup_min,
     subview,
     store,
-    work_group,
     yield,
     // blas a2
     blas_a2,
@@ -77,15 +79,17 @@ enum class IK {
     foreach_loop,
     last_loop
 };
-using inst_nodes = type_list<
-    class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
-    class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
-    class constant_inst, class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
-    class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst, class expand_inst,
-    class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
-    class ger_inst, class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
-    class parallel_inst, class size_inst, class subgroup_broadcast_inst, class subview_inst,
-    class store_inst, class sum_inst, class work_group_inst, class yield_inst>;
+using inst_nodes =
+    type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
+              class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
+              class constant_inst, class cooperative_matrix_load_inst,
+              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
+              class cooperative_matrix_store_inst, class expand_inst, class fuse_inst,
+              class load_inst, class lifetime_stop_inst, class gemm_inst, class gemv_inst,
+              class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
+              class if_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
+              class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
+              class subview_inst, class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -394,19 +398,19 @@ class arith_unary_inst : public standard_inst<1, 1> {
 class barrier_inst : public standard_inst<0, 0> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::barrier; }
-    inline barrier_inst(std::int32_t fence_flags, location const &lc = {})
+    inline barrier_inst(tinytc_address_spaces_t fence_flags, location const &lc = {})
         : standard_inst{IK::barrier}, fence_flags_(fence_flags) {
         loc(lc);
     }
 
-    inline auto fence_flags() const -> std::int32_t { return fence_flags_; }
-    inline auto fence_flags(std::int32_t fence_flags) { fence_flags_ = fence_flags; }
+    inline auto fence_flags() const -> tinytc_address_spaces_t { return fence_flags_; }
+    inline auto fence_flags(tinytc_address_spaces_t fence_flags) { fence_flags_ = fence_flags; }
     inline auto has_fence(address_space as) const {
-        return (fence_flags_ & static_cast<std::int32_t>(as)) > 0;
+        return (fence_flags_ & static_cast<tinytc_address_spaces_t>(as)) > 0;
     }
 
   private:
-    std::int32_t fence_flags_;
+    tinytc_address_spaces_t fence_flags_;
 };
 
 class builtin_inst : public standard_inst<0, 1> {
@@ -738,6 +742,20 @@ class size_inst : public standard_inst<1, 1> {
     std::int64_t mode_;
 };
 
+class subgroup_add_inst : public standard_inst<1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_add; }
+    subgroup_add_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
+                      location const &lc = {});
+
+    inline auto operation() const -> group_operation { return operation_; }
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+
+  private:
+    group_operation operation_;
+};
+
 class subgroup_broadcast_inst : public standard_inst<2, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_broadcast; }
@@ -748,6 +766,34 @@ class subgroup_broadcast_inst : public standard_inst<2, 1> {
     inline auto a() const -> tinytc_value const & { return op(0); }
     inline auto idx() -> tinytc_value & { return op(1); }
     inline auto idx() const -> tinytc_value const & { return op(1); }
+};
+
+class subgroup_max_inst : public standard_inst<1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_max; }
+    subgroup_max_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
+                      location const &lc = {});
+
+    inline auto operation() const -> group_operation { return operation_; }
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+
+  private:
+    group_operation operation_;
+};
+
+class subgroup_min_inst : public standard_inst<1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_min; }
+    subgroup_min_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
+                      location const &lc = {});
+
+    inline auto operation() const -> group_operation { return operation_; }
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+
+  private:
+    group_operation operation_;
 };
 
 class subview_inst : public standard_inst<dynamic, 1> {
@@ -805,20 +851,6 @@ class sum_inst : public blas_a2_inst {
 
   private:
     transpose tA_;
-};
-
-class work_group_inst : public standard_inst<1, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::work_group; }
-    work_group_inst(work_group_operation operation, tinytc_value_t operand, tinytc_data_type_t ty,
-                    location const &lc = {});
-
-    inline auto operation() const -> work_group_operation { return operation_; }
-    inline auto operand() -> tinytc_value & { return op(0); }
-    inline auto operand() const -> tinytc_value const & { return op(0); }
-
-  private:
-    work_group_operation operation_;
 };
 
 class yield_inst : public standard_inst<dynamic, 0> {

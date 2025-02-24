@@ -226,12 +226,22 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard 2d packed alpha=1 beta=0", T, TEST_PR
 }
 
 TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d", T, TEST_PRECISIONS) {
-    auto MM = std::vector<std::int64_t>{18, 16, 32};
+    auto MM = std::vector<std::int64_t>{18, 16, 32, 123};
 
     std::int64_t M;
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::sum<T, T, T, T>(transpose::N, {{M}}, {{}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d work_group_size=[128,1]", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{123, 435};
+
+    std::int64_t M;
+    DOCTEST_TENSOR1_TEST(MM);
+
+    auto op = test::sum<T, T, T, T>(transpose::N, {{M}}, {{}}, 128);
     test::test_blas_a2<runtime_class>(op, 1, 0);
 }
 

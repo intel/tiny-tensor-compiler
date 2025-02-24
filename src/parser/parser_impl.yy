@@ -156,7 +156,9 @@
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
-%token <work_group_operation> WORK_GROUP_OPERATION
+%token <group_operation> SUBGROUP_ADD
+%token <group_operation> SUBGROUP_MAX
+%token <group_operation> SUBGROUP_MIN
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
 
@@ -235,7 +237,10 @@
 %nterm <inst> load_inst
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
+%nterm <inst> subgroup_add_inst
 %nterm <inst> subgroup_broadcast_inst
+%nterm <inst> subgroup_max_inst
+%nterm <inst> subgroup_min_inst
 %nterm <inst> store_inst
 %nterm <store_flag> store_flag
 %nterm <inst> subview_inst
@@ -243,7 +248,6 @@
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
 %nterm <std::pair<int_or_val,int_or_val>> slice
 %nterm <int_or_val> slice_size
-%nterm <inst> work_group_inst
 
 %%
 prog:
@@ -762,9 +766,11 @@ valued_inst:
   | if_inst                 { $$ = std::move($1); }
   | load_inst               { $$ = std::move($1); }
   | size_inst               { $$ = std::move($1); }
+  | subgroup_add_inst       { $$ = std::move($1); }
   | subgroup_broadcast_inst { $$ = std::move($1); }
+  | subgroup_max_inst       { $$ = std::move($1); }
+  | subgroup_min_inst       { $$ = std::move($1); }
   | subview_inst            { $$ = std::move($1); }
-  | work_group_inst         { $$ = std::move($1); }
 ;
 
 alloca_inst:
@@ -1123,12 +1129,57 @@ size_inst:
     }
 ;
 
+subgroup_add_inst:
+    SUBGROUP_ADD var[a] COLON scalar_type {
+        try {
+            $$ = inst {
+                std::make_unique<subgroup_add_inst>($SUBGROUP_ADD, std::move($a), $scalar_type,
+                                                    @subgroup_add_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
 subgroup_broadcast_inst:
     SUBGROUP_BROADCAST var[a] COMMA var[idx] COLON scalar_type {
         try {
             $$ = inst {
                 std::make_unique<subgroup_broadcast_inst>(std::move($a), std::move($idx), $scalar_type,
                                                           @subgroup_broadcast_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+subgroup_max_inst:
+    SUBGROUP_MAX var[a] COLON scalar_type {
+        try {
+            $$ = inst {
+                std::make_unique<subgroup_max_inst>($SUBGROUP_MAX, std::move($a), $scalar_type,
+                                                    @subgroup_max_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+subgroup_min_inst:
+    SUBGROUP_MIN var[a] COLON scalar_type {
+        try {
+            $$ = inst {
+                std::make_unique<subgroup_min_inst>($SUBGROUP_MIN, std::move($a), $scalar_type,
+                                                    @subgroup_min_inst)
                     .release()
             };
         } catch (compilation_error const &e) {
@@ -1204,21 +1255,6 @@ slice:
 slice_size:
     %empty { $$ = {}; }
   | COLON integer_constant_or_identifier { $$ = $2; }
-;
-
-work_group_inst:
-    WORK_GROUP_OPERATION[operation] var[a] COLON data_type[ty] {
-        try {
-            $$ = inst {
-                std::make_unique<work_group_inst>($operation, std::move($a), std::move($ty),
-                                                  @work_group_inst)
-                    .release()
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
 ;
 
 %%

@@ -26,6 +26,7 @@
 #include <array>
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <optional>
 #include <stdexcept>
 #include <tuple>
@@ -532,6 +533,17 @@ void linalg_generator::operator()(hadamard_inst &in) {
 }
 
 void linalg_generator::operator()(sum_inst &in) {
+    auto at = get_memref_type(in.A());
+    auto bt = get_memref_type(in.B());
+
+    const auto num_tiles = tiling_.m_tiles() * tiling_.n_tiles();
+    value subgroup_sum = nullptr;
+    if (bt->dim() == 0 && num_tiles > 1) {
+        auto subgroup_sum_ty =
+            get_memref(bt->element_data_ty(), {num_tiles}, {}, address_space::local, in.loc());
+        subgroup_sum = bb_.add(make_alloca(subgroup_sum_ty, in.loc()));
+    }
+
     auto parallel = make_parallel(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
@@ -541,8 +553,6 @@ void linalg_generator::operator()(sum_inst &in) {
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
-    auto at = get_memref_type(in.A());
-    auto bt = get_memref_type(in.B());
     if (bt->dim() == 0) {
         auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
         auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, in.loc()));
@@ -552,12 +562,10 @@ void linalg_generator::operator()(sum_inst &in) {
         auto from_index = bb.add(make_cast(from1, index_ty, in.loc()));
 
         auto c_zero = bb.add(make_constant_zero(i32_ty, in.loc()));
-        auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, bool_ty, in.loc()));
-
         auto c_trip_count =
             instant_constant_fold_add(bb, make_size(&in.A(), 0, index_ty, in.loc()));
-        auto c_step = bb.add(make_constant(
-            core_cfg_.subgroup_size * tiling_.m_tiles() * tiling_.n_tiles(), index_ty, in.loc()));
+        auto c_step =
+            bb.add(make_constant(core_cfg_.subgroup_size * num_tiles, index_ty, in.loc()));
         auto c_init = bb.add(make_constant_zero(bt->element_data_ty(), in.loc()));
 
         auto acc = bb.for_loop(
@@ -568,14 +576,67 @@ void linalg_generator::operator()(sum_inst &in) {
                                                       args[1], a, in.loc());
                 bb.add(make_yield({sum}, in.loc()));
             });
-        auto sum = bb.add(
-            make_work_group(work_group_operation::reduce_add, acc[0], acc[0]->ty(), in.loc()));
-        bb.if_condition(
-            is_from_0,
-            [&](region_builder &bb) {
-                blas_update(bb, in.atomic(), &in.alpha(), sum, &in.beta(), &in.B(), {}, in.loc());
-            },
-            in.loc());
+        auto acc_reduced = bb.add(
+            make_subgroup_add(group_operation::reduce, acc[0], bt->element_data_ty(), in.loc()));
+
+        if (num_tiles > 1) {
+            auto is_sglid_0 = bb.add(make_cmp(cmp_condition::eq, m, c_zero, bool_ty, in.loc()));
+            bb.if_condition(
+                is_sglid_0,
+                [&](region_builder &bb) {
+                    auto sgid_index = bb.add(make_cast(sgid, index_ty, in.loc()));
+                    bb.add(make_store(store_flag::regular, acc_reduced, subgroup_sum, {sgid_index},
+                                      in.loc()));
+                },
+                in.loc());
+            bb.add(
+                make_barrier(static_cast<tinytc_address_spaces_t>(address_space::local), in.loc()));
+            // auto sum = bb.add(
+            // make_work_group(work_group_operation::reduce_add, acc[0], acc[0]->ty(), in.loc()));
+            auto is_lid_0 = bb.add(make_cmp(cmp_condition::eq, sgid, c_zero, bool_ty, in.loc()));
+            bb.if_condition(
+                is_lid_0,
+                [&](region_builder &bb) {
+                    // auto m_index = bb.add(make_cast(m, index_ty, in.loc()));
+                    // auto acc = make_load();
+
+                    // for (std::int32_t i = 0; i < num_tiles; i += core_cfg_.subgroup_size) {
+                    // bb.add(make_load(store_flag::regular, acc_reduced, subgroup_sum, {m_index},
+                    // in.loc()));
+                    //}
+                    auto c_num_tiles = bb.add(make_constant(num_tiles, i32_ty, in.loc()));
+                    auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
+                    auto acc = bb.for_loop(
+                        i32_ty, m, c_num_tiles, c_sgs, {c_init}, {bt->element_data_ty()},
+                        [&](region_builder &bb, array_view<value> args) {
+                            auto lv_index = bb.add(make_cast(args[0], index_ty, in.loc()));
+                            auto a = bb.add(make_load(subgroup_sum, {lv_index},
+                                                      bt->element_data_ty(), in.loc()));
+                            auto sum = mixed_precision_arithmetic(
+                                bb, bt->element_ty(), arithmetic::add, args[1], a, in.loc());
+                            bb.add(make_yield({sum}, in.loc()));
+                        });
+                    acc_reduced = bb.add(make_subgroup_add(group_operation::reduce, acc[0],
+                                                           bt->element_data_ty(), in.loc()));
+                    bb.if_condition(
+                        is_sglid_0,
+                        [&](region_builder &bb) {
+                            blas_update(bb, in.atomic(), &in.alpha(), acc_reduced, &in.beta(),
+                                        &in.B(), {}, in.loc());
+                        },
+                        in.loc());
+                },
+                in.loc());
+        } else {
+            auto is_from_0 = bb.add(make_cmp(cmp_condition::eq, from1, c_zero, bool_ty, in.loc()));
+            bb.if_condition(
+                is_from_0,
+                [&](region_builder &bb) {
+                    blas_update(bb, in.atomic(), &in.alpha(), acc_reduced, &in.beta(), &in.B(), {},
+                                in.loc());
+                },
+                in.loc());
+        }
     } else if (bt->dim() == 1) {
         auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
         auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
@@ -606,6 +667,10 @@ void linalg_generator::operator()(sum_inst &in) {
     }
 
     bb_.add(std::move(parallel));
+
+    if (subgroup_sum) {
+        bb_.add(inst{std::make_unique<lifetime_stop_inst>(subgroup_sum).release()});
+    }
 }
 
 lower_linalg_pass::lower_linalg_pass(::tinytc_core_info const *info) : info_(std::move(info)) {

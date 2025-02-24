@@ -216,11 +216,16 @@ lex:
         "cmp.lt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
         "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
-        // work group operation
-        "work_group.reduce_add" {
-            adv_loc();
-            return parser::make_WORK_GROUP_OPERATION(work_group_operation::reduce_add, loc_);
-        }
+        // subgroup op
+        "subgroup_add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::exclusive_scan, loc_); }
+        "subgroup_add.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::inclusive_scan, loc_); }
+        "subgroup_add.reduce"         { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::reduce, loc_); }
+        "subgroup_max.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::exclusive_scan, loc_); }
+        "subgroup_max.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::inclusive_scan, loc_); }
+        "subgroup_max.reduce"         { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::reduce, loc_); }
+        "subgroup_min.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::exclusive_scan, loc_); }
+        "subgroup_min.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::inclusive_scan, loc_); }
+        "subgroup_min.reduce"         { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::reduce, loc_); }
 
         // other strings
         string              { adv_loc(); return parser::make_STRING(std::string(b+1, YYCURSOR-1), loc_); }

@@ -185,8 +185,8 @@ auto uniquifier::spv_function_ty(spv_inst *return_ty, array_view<spv_inst *> par
         ->second;
 }
 
-auto uniquifier::spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
-                                std::int32_t alignment) -> spv_inst * {
+auto uniquifier::spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment)
+    -> spv_inst * {
     auto key = std::make_tuple(cls, pointee_ty, alignment);
     return lookup(
         spv_pointer_tys_, key, [&](std::tuple<StorageClass, spv_inst *, std::int32_t> const &key) {

@@ -22,6 +22,8 @@ Common
 
   * :ref:`tinytc::cmp_condition`
 
+  * :ref:`tinytc::group_operation`
+
   * :ref:`tinytc::matrix_use`
 
   * :ref:`tinytc::scalar_type`
@@ -29,8 +31,6 @@ Common
   * :ref:`tinytc::store_flag`
 
   * :ref:`tinytc::transpose`
-
-  * :ref:`tinytc::work_group_operation`
 
 * Functions
 
@@ -48,6 +48,8 @@ Common
 
   * :ref:`tinytc::to_string(cmp_condition)`
 
+  * :ref:`tinytc::to_string(group_operation)`
+
   * :ref:`tinytc::to_string(matrix_use)`
 
   * :ref:`tinytc::to_string(scalar_type)`
@@ -55,8 +57,6 @@ Common
   * :ref:`tinytc::to_string(store_flag)`
 
   * :ref:`tinytc::to_string(transpose)`
-
-  * :ref:`tinytc::to_string(work_group_operation)`
 
   * :ref:`tinytc::size`
 
@@ -112,6 +112,13 @@ cmp_condition
 
 .. doxygenenum:: tinytc::cmp_condition
 
+.. _tinytc::group_operation:
+
+group_operation
+...............
+
+.. doxygenenum:: tinytc::group_operation
+
 .. _tinytc::matrix_use:
 
 matrix_use
@@ -139,13 +146,6 @@ transpose
 .........
 
 .. doxygenenum:: tinytc::transpose
-
-.. _tinytc::work_group_operation:
-
-work_group_operation
-....................
-
-.. doxygenenum:: tinytc::work_group_operation
 
 Common Functions
 ----------------
@@ -199,6 +199,13 @@ to_string(cmp_condition)
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
 
+.. _tinytc::to_string(group_operation):
+
+to_string(group_operation)
+..........................
+
+.. doxygenfunction:: tinytc::to_string(group_operation)
+
 .. _tinytc::to_string(matrix_use):
 
 to_string(matrix_use)
@@ -226,13 +233,6 @@ to_string(transpose)
 ....................
 
 .. doxygenfunction:: tinytc::to_string(transpose)
-
-.. _tinytc::to_string(work_group_operation):
-
-to_string(work_group_operation)
-...............................
-
-.. doxygenfunction:: tinytc::to_string(work_group_operation)
 
 .. _tinytc::size:
 
@@ -520,6 +520,8 @@ Instruction
 
   * :ref:`tinytc::make_arith(arithmetic_unary,value,data_type,location const&)`
 
+  * :ref:`tinytc::make_barrier`
+
   * :ref:`tinytc::make_builtin`
 
   * :ref:`tinytc::make_cast`
@@ -574,13 +576,17 @@ Instruction
 
   * :ref:`tinytc::make_store`
 
+  * :ref:`tinytc::make_subgroup_add`
+
   * :ref:`tinytc::make_subgroup_broadcast`
+
+  * :ref:`tinytc::make_subgroup_max`
+
+  * :ref:`tinytc::make_subgroup_min`
 
   * :ref:`tinytc::make_subview`
 
   * :ref:`tinytc::make_sum`
-
-  * :ref:`tinytc::make_work_group`
 
   * :ref:`tinytc::make_yield`
 
@@ -618,6 +624,13 @@ make_arith(arithmetic_unary,value,data_type,location const&)
 ............................................................
 
 .. doxygenfunction:: tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
+
+.. _tinytc::make_barrier:
+
+make_barrier
+............
+
+.. doxygenfunction:: tinytc::make_barrier
 
 .. _tinytc::make_builtin:
 
@@ -808,12 +821,33 @@ make_store
 
 .. doxygenfunction:: tinytc::make_store
 
+.. _tinytc::make_subgroup_add:
+
+make_subgroup_add
+.................
+
+.. doxygenfunction:: tinytc::make_subgroup_add
+
 .. _tinytc::make_subgroup_broadcast:
 
 make_subgroup_broadcast
 .......................
 
 .. doxygenfunction:: tinytc::make_subgroup_broadcast
+
+.. _tinytc::make_subgroup_max:
+
+make_subgroup_max
+.................
+
+.. doxygenfunction:: tinytc::make_subgroup_max
+
+.. _tinytc::make_subgroup_min:
+
+make_subgroup_min
+.................
+
+.. doxygenfunction:: tinytc::make_subgroup_min
 
 .. _tinytc::make_subview:
 
@@ -828,13 +862,6 @@ make_sum
 ........
 
 .. doxygenfunction:: tinytc::make_sum
-
-.. _tinytc::make_work_group:
-
-make_work_group
-...............
-
-.. doxygenfunction:: tinytc::make_work_group
 
 .. _tinytc::make_yield:
 

@@ -71,6 +71,10 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
     run_function_pass(work_group_size_pass{info}, *prg);
 
     run_function_pass(lower_linalg_pass{info}, *prg);
+    // Run set stack ptr again as lower linalg may introduce allocas for the duration of the
+    // linalg op. Lower linalg is expected to insert lifetime_stop instructions, after it is done
+    // so we do not need to run the lifetime stop pass again.
+    run_function_pass(set_stack_ptr_pass{}, *prg);
     run_function_pass(lower_foreach_pass{info}, *prg);
     if (opt_level >= 1) {
         run_function_pass(cpp, *prg);

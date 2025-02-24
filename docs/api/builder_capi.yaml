@@ -9,11 +9,11 @@ Builder C-API:
       - tinytc_builtin_t
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
+      - tinytc_group_operation_t
       - tinytc_matrix_use_t
       - tinytc_scalar_type_t
       - tinytc_store_flag_t
       - tinytc_transpose_t
-      - tinytc_work_group_operation_t
     define:
       - TINYTC_DYNAMIC
     function:
@@ -23,17 +23,18 @@ Builder C-API:
       - tinytc_builtin_to_string
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
+      - tinytc_group_operation_to_string
       - tinytc_matrix_use_to_string
       - tinytc_scalar_type_size
       - tinytc_scalar_type_to_string
       - tinytc_store_flag_to_string
       - tinytc_transpose_to_string
-      - tinytc_work_group_operation_to_string
     struct:
       - tinytc_named_attr
       - tinytc_location
       - tinytc_position
     typedef:
+      - tinytc_address_spaces_t
       - tinytc_attr_t
       - tinytc_data_type_t
       - tinytc_func_t
@@ -82,6 +83,7 @@ Builder C-API:
       - tinytc_axpby_inst_create
       - tinytc_arith_inst_create
       - tinytc_arith_unary_inst_create
+      - tinytc_barrier_inst_create
       - tinytc_builtin_inst_create
       - tinytc_cast_inst_create
       - tinytc_cmp_inst_create
@@ -107,11 +109,13 @@ Builder C-API:
       - tinytc_load_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
+      - tinytc_subgroup_add_inst_create
       - tinytc_subgroup_broadcast_inst_create
+      - tinytc_subgroup_max_inst_create
+      - tinytc_subgroup_min_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create
       - tinytc_sum_inst_create
-      - tinytc_work_group_inst_create
       - tinytc_yield_inst_create
       - tinytc_inst_get_parent_region
       - tinytc_inst_get_regions

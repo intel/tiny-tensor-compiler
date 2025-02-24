@@ -47,8 +47,8 @@ class uniquifier {
     auto opencl_ext() -> spv_inst *;
     auto spv_array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
     auto spv_function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst *;
-    auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty,
-                        std::int32_t alignment) -> spv_inst *;
+    auto spv_pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment)
+        -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto spv_ty(scalar_type sty) -> spv_inst *;
     auto spv_vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst *;
@@ -57,8 +57,8 @@ class uniquifier {
 
   private:
     struct array_key_hash {
-        inline auto
-        operator()(std::pair<spv_inst *, std::int32_t> const &key) const -> std::size_t {
+        inline auto operator()(std::pair<spv_inst *, std::int32_t> const &key) const
+            -> std::size_t {
             return fnv1a_combine(key.first, key.second);
         }
     };

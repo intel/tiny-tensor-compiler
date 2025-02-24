@@ -142,9 +142,24 @@ auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.result(0).ty(), in.loc());
 }
 
+auto inst_cloner::operator()(subgroup_add_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<subgroup_add_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
+                                               in.loc());
+}
+
 auto inst_cloner::operator()(subgroup_broadcast_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<subgroup_broadcast_inst>(subs(&in.a()), subs(&in.idx()),
                                                      in.result(0).ty(), in.loc());
+}
+
+auto inst_cloner::operator()(subgroup_max_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<subgroup_max_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
+                                               in.loc());
+}
+
+auto inst_cloner::operator()(subgroup_min_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<subgroup_min_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
+                                               in.loc());
 }
 
 auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
@@ -161,11 +176,6 @@ auto inst_cloner::operator()(store_inst &in) -> std::unique_ptr<tinytc_inst> {
 auto inst_cloner::operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<sum_inst>(in.tA(), subs(&in.alpha()), subs(&in.A()), subs(&in.beta()),
                                       subs(&in.B()), in.atomic(), in.loc());
-}
-
-auto inst_cloner::operator()(work_group_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<work_group_inst>(in.operation(), subs(&in.operand()), in.result(0).ty(),
-                                             in.loc());
 }
 
 auto inst_cloner::operator()(yield_inst &in) -> std::unique_ptr<tinytc_inst> {

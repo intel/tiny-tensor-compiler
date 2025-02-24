@@ -18,7 +18,8 @@ namespace tinytc::test {
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
                        scalar_type B_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op) -> prog;
+                       std::function<void(region_builder &, array_view<value>)> make_op,
+                       std::int32_t work_group_size = 0) -> prog;
 
 template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby {
   public:
@@ -85,8 +86,10 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
     using B_type = BT;
     static constexpr char const *kernel_name = "sum";
 
-    sum(transpose tA, tensor_layout layoutA, tensor_layout layoutB)
-        : tA_(tA), lA_{std::move(layoutA)}, lB_{std::move(layoutB)} {}
+    sum(transpose tA, tensor_layout layoutA, tensor_layout layoutB,
+        std::int32_t work_group_size = 0)
+        : tA_(tA), lA_{std::move(layoutA)}, lB_{std::move(layoutB)},
+          work_group_size_{work_group_size} {}
 
     auto lA() const -> tensor_layout const & { return lA_; }
     auto lB() const -> tensor_layout const & { return lB_; }
@@ -97,7 +100,8 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
             [&](region_builder &bb, array_view<value> params) {
                 bb.add(make_sum(tA_, false, params[0], params[1], params[2], params[3]));
-            });
+            },
+            work_group_size_);
     }
     void reference_impl(AlphaT alpha, AT const *A, BetaT beta, BT *B) {
         if (lA_.dim() == 1 && lB_.dim() == 0) {
@@ -130,6 +134,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
   private:
     transpose tA_;
     tensor_layout lA_, lB_;
+    std::int32_t work_group_size_;
 };
 
 } // namespace tinytc::test

@@ -1194,6 +1194,17 @@ inline char const *to_string(cmp_condition cond) {
 }
 
 /**
+ * @brief Convert subgroup operation to string
+ *
+ * @param op Operation type
+ *
+ * @return C-string
+ */
+inline char const *to_string(group_operation op) {
+    return ::tinytc_group_operation_to_string(static_cast<::tinytc_group_operation_t>(op));
+}
+
+/**
  * @brief Convert matrix use to string
  *
  * @param u Matrix use
@@ -1224,17 +1235,6 @@ inline char const *to_string(store_flag flag) {
  */
 inline char const *to_string(transpose t) {
     return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
-}
-
-/**
- * @brief Convert work group operation to string
- *
- * @param op Operation
- *
- * @return C-string
- */
-inline char const *to_string(work_group_operation op) {
-    return ::tinytc_work_group_operation_to_string(static_cast<tinytc_work_group_operation_t>(op));
 }
 
 namespace internal {
@@ -1428,6 +1428,20 @@ inline inst make_arith(arithmetic_unary op, value a, data_type ty, location cons
     CHECK_STATUS_LOC(tinytc_arith_unary_inst_create(
                          &instr, static_cast<tinytc_arithmetic_unary_t>(op), a, ty, &loc),
                      loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make barrier instruction
+ *
+ * @param fence_flags address space(s) of memory fence; set to 0 for no fence
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_barrier(tinytc_address_spaces_t fence_flags, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_barrier_inst_create(&instr, fence_flags, &loc), loc);
     return inst(instr);
 }
 
@@ -1892,6 +1906,24 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
 }
 
 /**
+ * @brief Make subgroup add instruction
+ *
+ * @param op Group operation
+ * @param a Operand
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_add(group_operation op, value a, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_add_inst_create(
+                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
  * @brief Make subgroup broadcast instruction
  *
  * @param a Operand
@@ -1904,6 +1936,43 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
 inline inst make_subgroup_broadcast(value a, value idx, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_subgroup_broadcast_inst_create(&instr, a, idx, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make subgroup max instruction
+ *
+ * @param op Group operation
+ * @param a Operand
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_max(group_operation op, value a, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_max_inst_create(
+                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ *
+ * @brief Make subgroup min instruction
+ *
+ * @param op Group operation
+ * @param a Operand
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_subgroup_min(group_operation op, value a, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_subgroup_min_inst_create(
+                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
+                     loc);
     return inst(instr);
 }
 
@@ -2080,26 +2149,6 @@ inline inst make_if(value condition, array_view<data_type> return_type_list = {}
     }
     CHECK_STATUS_LOC(tinytc_if_inst_create(&instr, condition, len, return_type_list.data(), &loc),
                      loc);
-    return inst(instr);
-}
-
-/**
- * @brief Make work group instruction
- *
- * @param operation Work group operation
- * @param operand Operand
- * @param ty Return type
- * @param loc Location
- *
- * @return
- */
-inline inst make_work_group(work_group_operation operation, value operand, data_type ty,
-                            location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(
-        tinytc_work_group_inst_create(&instr, static_cast<tinytc_work_group_operation_t>(operation),
-                                      operand, ty, &loc),
-        loc);
     return inst(instr);
 }
 

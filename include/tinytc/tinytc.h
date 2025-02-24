@@ -351,14 +351,14 @@ TINYTC_EXPORT char const *tinytc_builtin_to_string(tinytc_builtin_t b);
 TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
+//! Convert subgroup op to string
+TINYTC_EXPORT char const *tinytc_group_operation_to_string(tinytc_group_operation_t op);
 //! Convert matrix use to string
 TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
 //! Convert store flag to string
 TINYTC_EXPORT char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag);
 //! Convert transpose to string
 TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
-//! Convert work group operation to string
-TINYTC_EXPORT char const *tinytc_work_group_operation_to_string(tinytc_work_group_operation_t op);
 
 /**
  * @brief Create arithmetic instruction (binary)
@@ -398,6 +398,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_arith_unary_inst_create(tinytc_inst_t *inst
                                                              tinytc_data_type_t ty,
                                                              const tinytc_location_t *loc);
 
+/**
+ * @brief Create barrier instruction
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param fence_flags [in] address space(s) of memory fence; set to 0 for no fence
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_barrier_inst_create(tinytc_inst_t *instr,
+                                                         tinytc_address_spaces_t fence_flags,
+                                                         const tinytc_location_t *loc);
 /**
  * @brief Create builtin instruction
  *
@@ -847,6 +859,25 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
                                                       const tinytc_location_t *loc);
 
 /**
+ * @brief Create subgroup add instruction
+ *
+ * @code %value = subgroup_add.group_operation %a : ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param operation [in] group operation type
+ * @param a [in] operand
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_add_inst_create(tinytc_inst_t *instr,
+                                                              tinytc_group_operation_t operation,
+                                                              tinytc_value_t a,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc);
+
+/**
  * @brief Create subgroup broadcast instruction
  *
  * @code %value = subgroup_broadcast %a, %idx : ty @endcode
@@ -864,6 +895,44 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_
                                                                     tinytc_value_t idx,
                                                                     tinytc_data_type_t ty,
                                                                     const tinytc_location_t *loc);
+
+/**
+ * @brief Create subgroup max instruction
+ *
+ * @code %value = subgroup_max.group_operation %a : ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param operation [in] group operation type
+ * @param a [in] operand
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_max_inst_create(tinytc_inst_t *instr,
+                                                              tinytc_group_operation_t operation,
+                                                              tinytc_value_t a,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc);
+
+/**
+ * @brief Create subgroup min instruction
+ *
+ * @code %value = subgroup_min.group_operation %a : ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param operation [in] group operation type
+ * @param a [in] operand
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_min_inst_create(tinytc_inst_t *instr,
+                                                              tinytc_group_operation_t operation,
+                                                              tinytc_value_t a,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc);
 
 /**
  * @brief Create subview instruction
@@ -1011,27 +1080,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_if_inst_create(tinytc_inst_t *instr, tinytc
                                                     uint32_t return_type_list_size,
                                                     const tinytc_data_type_t *return_type_list,
                                                     const tinytc_location_t *loc);
-
-/**
- * @brief Create work group instruction
- *
- * @code
- * %value = work_group work_group_op %operand : ty
- * @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param operation [in] Work group operation
- * @param operand [in] operand
- * @param ty [in] result type
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_work_group_inst_create(tinytc_inst_t *instr,
-                                                            tinytc_work_group_operation_t operation,
-                                                            tinytc_value_t operand,
-                                                            tinytc_data_type_t ty,
-                                                            const tinytc_location_t *loc);
 
 /**
  * @brief Create yield instruction

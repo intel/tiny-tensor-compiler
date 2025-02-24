@@ -17,6 +17,7 @@
 #include "spv/uniquifier.hpp"
 #include "spv/xe_constants.hpp"
 #include "support/casting.hpp"
+#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"

@@ -1513,39 +1513,6 @@ Restrictions
 
 * :math:`\text{type}(value) = \text{element_type}(tensor)`
 
-Work group collectives
-......................
-
-.. code:: abnf
-
-    work-group-op               =  "work_group.reduce_add"
-    value-instruction           =/ work-group-op local-identifier ":" scalar-type
-
-Overview
-~~~~~~~~
-
-Collective operations across a work-group.
-
-============= ================================================================
-Work group op Description
-============= ================================================================
-reduce_add    Compute work group sum of value
-============= ================================================================
-
-Operands
-~~~~~~~~
-
-======= ================ ===========
-Op.-No. Type             Description
-======= ================ ===========
-1       scalar-type      value
-======= ================ ===========
-
-Restrictions
-~~~~~~~~~~~~
-
-The work group collective must be encountered by all work-items.
-
 Yield
 .....
 
@@ -1787,7 +1754,6 @@ Restrictions
 * :math:`\text{component_type}(A) = \text{element_type}(B)`
 * All arguments **must** be dynamically uniform.
 
-
 Subgroup broadcast
 ..................
 
@@ -1816,6 +1782,86 @@ Restrictions
 ~~~~~~~~~~~~
 
 * The second operand **must** be dynamically uniform.
+
+Subgroup add
+............
+
+.. code:: abnf
+
+    subgroup-add-type       = "subgroup_add.exclusive_scan" /
+                              "subgroup_add.inclusive_scan" /
+                              "subgroup_add.reduce" /
+    value-instruction       =/ subgroup-add-type local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Computes the :ref:`subgroup operation` with :math:`\diamond:=+` and :math:`I:=0`.
+
+Subgroup max
+............
+
+.. code:: abnf
+
+    subgroup-max-type       = "subgroup_max.exclusive_scan" /
+                              "subgroup_max.inclusive_scan" /
+                              "subgroup_max.reduce" /
+    value-instruction       =/ subgroup-max-type local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Computes the :ref:`subgroup operation` with :math:`\diamond:=\max` and identity as given in the following table:
+
+============= ==============================================
+Identity      Value
+============= ==============================================
+integer-type  Smallest integer representable by integer type
+floating-type :math:`-\infty`
+complex type  Forbidden
+============= ==============================================
+
+Subgroup min
+............
+
+.. code:: abnf
+
+    subgroup-min-type       = "subgroup_min.exclusive_scan" /
+                              "subgroup_min.inclusive_scan" /
+                              "subgroup_min.reduce" /
+    value-instruction       =/ subgroup-min-type local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Computes the :ref:`subgroup operation` with :math:`\diamond:=\min` and identity as given in the following table:
+
+============= =============================================
+Identity      Value
+============= =============================================
+integer-type  Largest integer representable by integer type
+floating-type :math:`+\infty`
+complex type  Forbidden
+============= =============================================
+
+.. _subgroup operation:
+
+Subgroup operation
+..................
+
+Let :math:`[x_0,x_1,\dots,x_{n-1}]` be the input vector contributed by a subgroup of size *n*.
+(The work-item with subgroup local id *i* contributes :math:`x_i`.)
+Let :math:`\diamond` be the binary operator and *I* the identity.
+We define the output vector of size *n* for the group operations in the following table:
+
+============== =============================================================================================
+Operation type Result
+============== =============================================================================================
+exclusive_scan :math:`[I, x_0, (x_0 \diamond x_1), \dots, x_0 \diamond x_1 \diamond \dots \diamond x_{n-2}]`
+inclusive_scan :math:`[x_0, (x_0 \diamond x_1), \dots, x_0 \diamond x_1 \diamond \dots \diamond x_{n-1}]`
+reduce         :math:`[s,s,\dots,s] \text{ with } s := x_0 \diamond \dots \diamond x_{n-1}`
+============== =============================================================================================
+
 
 Sample code
 ===========

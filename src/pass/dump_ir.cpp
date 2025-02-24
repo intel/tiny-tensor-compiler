@@ -466,12 +466,36 @@ void dump_ir_pass::operator()(size_inst const &s) {
     visit(*this, *s.result(0).ty());
 }
 
+void dump_ir_pass::operator()(subgroup_add_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = subgroup_add." << to_string(in.operation()) << " ";
+    dump_val(in.a());
+    *os_ << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
 void dump_ir_pass::operator()(subgroup_broadcast_inst const &in) {
     dump_val(in.result(0));
     *os_ << " = subgroup_broadcast ";
     dump_val(in.a());
     *os_ << ", ";
     dump_val(in.idx());
+    *os_ << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
+void dump_ir_pass::operator()(subgroup_max_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = subgroup_max." << to_string(in.operation()) << " ";
+    dump_val(in.a());
+    *os_ << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
+void dump_ir_pass::operator()(subgroup_min_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = subgroup_min." << to_string(in.operation()) << " ";
+    dump_val(in.a());
     *os_ << " : ";
     visit(*this, *in.result(0).ty());
 }
@@ -526,14 +550,6 @@ void dump_ir_pass::operator()(sum_inst const &a) {
     *os_ << "sum";
     *os_ << "." << to_string(a.tA());
     dump_blas_a2(static_cast<blas_a2_inst const &>(a));
-}
-
-void dump_ir_pass::operator()(work_group_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = work_group." << to_string(in.operation()) << " ";
-    dump_val(in.operand());
-    *os_ << " : ";
-    visit(*this, *in.result(0).ty());
 }
 
 void dump_ir_pass::operator()(yield_inst const &y) {

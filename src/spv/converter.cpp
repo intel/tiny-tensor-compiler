@@ -118,6 +118,18 @@ auto inst_converter::val(value_node const &v) -> spv_inst * {
     throw compilation_error(v.loc(), status::spirv_undefined_value);
 }
 
+auto inst_converter::convert_group_operation(group_operation op) const -> GroupOperation {
+    switch (op) {
+    case group_operation::exclusive_scan:
+        return GroupOperation::ExclusiveScan;
+    case group_operation::inclusive_scan:
+        return GroupOperation::InclusiveScan;
+    case group_operation::reduce:
+        return GroupOperation::Reduce;
+    }
+    throw status::internal_compiler_error;
+}
+
 auto inst_converter::make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a,
                                     spv_inst *b, location const &loc) -> spv_inst * {
     auto const make_int = [&](arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
@@ -1328,12 +1340,110 @@ void inst_converter::operator()(size_inst const &in) {
     declare(in.result(0), shape);
 }
 
+void inst_converter::operator()(subgroup_add_inst const &in) {
+    auto const make = [&](scalar_type sty, GroupOperation group_op, spv_inst *spv_ty,
+                          spv_inst *operand) -> spv_inst * {
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpGroupIAdd>(spv_ty, scope, group_op, operand);
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
+            auto resultf = mod_->add<OpGroupFAdd>(float_ty, scope, group_op, operandf);
+            return mod_->add<OpConvertFToBF16INTEL>(spv_ty, resultf);
+        }
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return mod_->add<OpGroupFAdd>(spv_ty, scope, group_op, operand);
+        }
+    };
+
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto sty = get_scalar_type(in.a());
+    auto group_op = convert_group_operation(in.operation());
+    declare(in.result(0), make(sty, group_op, spv_ty, val(in.a())));
+}
+
 void inst_converter::operator()(subgroup_broadcast_inst const &in) {
     auto broadcast_scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
     auto spv_ty = unique_.spv_ty(in.result(0).ty());
     auto av = val(in.a());
     auto idxv = val(in.idx());
     declare(in.result(0), mod_->add<OpGroupBroadcast>(spv_ty, broadcast_scope, av, idxv));
+}
+
+void inst_converter::operator()(subgroup_max_inst const &in) {
+    auto const make = [&](scalar_type sty, GroupOperation group_op, spv_inst *spv_ty,
+                          spv_inst *operand) -> spv_inst * {
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpGroupSMax>(spv_ty, scope, group_op, operand);
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
+            auto resultf = mod_->add<OpGroupFMax>(float_ty, scope, group_op, operandf);
+            return mod_->add<OpConvertFToBF16INTEL>(spv_ty, resultf);
+        }
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod_->add<OpGroupFMax>(spv_ty, scope, group_op, operand);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            throw compilation_error(in.loc(), status::ir_complex_unsupported);
+        }
+    };
+
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto sty = get_scalar_type(in.a());
+    auto group_op = convert_group_operation(in.operation());
+    declare(in.result(0), make(sty, group_op, spv_ty, val(in.a())));
+}
+
+void inst_converter::operator()(subgroup_min_inst const &in) {
+    auto const make = [&](scalar_type sty, GroupOperation group_op, spv_inst *spv_ty,
+                          spv_inst *operand) -> spv_inst * {
+        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod_->add<OpGroupSMin>(spv_ty, scope, group_op, operand);
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
+            auto resultf = mod_->add<OpGroupFMin>(float_ty, scope, group_op, operandf);
+            return mod_->add<OpConvertFToBF16INTEL>(spv_ty, resultf);
+        }
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod_->add<OpGroupFMin>(spv_ty, scope, group_op, operand);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            throw compilation_error(in.loc(), status::ir_complex_unsupported);
+        }
+    };
+
+    auto spv_ty = unique_.spv_ty(in.result(0).ty());
+    auto sty = get_scalar_type(in.a());
+    auto group_op = convert_group_operation(in.operation());
+    declare(in.result(0), make(sty, group_op, spv_ty, val(in.a())));
 }
 
 void inst_converter::operator()(store_inst const &in) {
@@ -1431,41 +1541,6 @@ void inst_converter::operator()(subview_inst const &in) {
     for (std::int64_t i = 0; i < rdv->dim(); ++i) {
         rdv->stride(i, stride_out[i]);
     }
-}
-
-void inst_converter::operator()(work_group_inst const &in) {
-    auto const make = [&](scalar_type sty, work_group_operation operation, spv_inst *spv_ty,
-                          spv_inst *operand) -> spv_inst * {
-        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Workgroup));
-        if (operation == work_group_operation::reduce_add) {
-            switch (sty) {
-            case scalar_type::i8:
-            case scalar_type::i16:
-            case scalar_type::i32:
-            case scalar_type::i64:
-            case scalar_type::index:
-                return mod_->add<OpGroupIAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
-            case scalar_type::bf16: {
-                auto float_ty = unique_.spv_ty(scalar_type::f32);
-                auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
-                auto reduced =
-                    mod_->add<OpGroupFAdd>(float_ty, scope, GroupOperation::Reduce, operandf);
-                return mod_->add<OpConvertFToBF16INTEL>(spv_ty, reduced);
-            }
-            case scalar_type::f16:
-            case scalar_type::f32:
-            case scalar_type::f64:
-            case scalar_type::c32:
-            case scalar_type::c64:
-                return mod_->add<OpGroupFAdd>(spv_ty, scope, GroupOperation::Reduce, operand);
-            }
-        }
-        throw compilation_error(in.loc(), status::not_implemented);
-    };
-
-    auto spv_ty = unique_.spv_ty(in.result(0).ty());
-    auto sty = get_scalar_type(in.operand());
-    declare(in.result(0), make(sty, in.operation(), spv_ty, val(in.operand())));
 }
 
 void inst_converter::operator()(yield_inst const &in) {

@@ -8,11 +8,11 @@ Builder C++-API:
       - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
+      - tinytc::group_operation
       - tinytc::matrix_use
       - tinytc::scalar_type
       - tinytc::store_flag
       - tinytc::transpose
-      - tinytc::work_group_operation
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
@@ -21,11 +21,11 @@ Builder C++-API:
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(group_operation)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)
-      - tinytc::to_string(work_group_operation)
       - tinytc::size
     class:
       - tinytc::builder_error
@@ -71,6 +71,7 @@ Builder C++-API:
       - tinytc::make_axpby
       - tinytc::make_arith(arithmetic,value,value,data_type,location const&)
       - tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
+      - tinytc::make_barrier
       - tinytc::make_builtin
       - tinytc::make_cast
       - tinytc::make_cmp
@@ -98,10 +99,12 @@ Builder C++-API:
       - tinytc::make_parallel
       - tinytc::make_size
       - tinytc::make_store
+      - tinytc::make_subgroup_add
       - tinytc::make_subgroup_broadcast
+      - tinytc::make_subgroup_max
+      - tinytc::make_subgroup_min
       - tinytc::make_subview
       - tinytc::make_sum
-      - tinytc::make_work_group
       - tinytc::make_yield
     class:
       - tinytc::inst

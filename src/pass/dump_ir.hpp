@@ -64,11 +64,13 @@ class dump_ir_pass {
     void operator()(if_inst const &in);
     void operator()(parallel_inst const &p);
     void operator()(size_inst const &s);
+    void operator()(subgroup_add_inst const &in);
     void operator()(subgroup_broadcast_inst const &in);
+    void operator()(subgroup_max_inst const &in);
+    void operator()(subgroup_min_inst const &in);
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);
     void operator()(sum_inst const &s);
-    void operator()(work_group_inst const &in);
     void operator()(yield_inst const &y);
 
     void run_on_function(function_node const &fn);

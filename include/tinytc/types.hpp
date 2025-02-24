@@ -309,14 +309,19 @@ enum class cmp_condition {
     lt = tinytc_cmp_condition_lt, ///< less than
     le = tinytc_cmp_condition_le  ///< less or equal than
 };
+
+//! Group operation
+enum class group_operation {
+    exclusive_scan = tinytc_group_operation_exclusive_scan, ///< Exclusive scan
+    inclusive_scan = tinytc_group_operation_inclusive_scan, ///< Inclusive scan
+    reduce = tinytc_group_operation_reduce                  ///< Reduction
+};
+
 //! Transpose
 enum class transpose {
     N = tinytc_transpose_N, ///< no transpose
     T = tinytc_transpose_T  ///< transpose
 };
-
-//! Work group collectives
-enum class work_group_operation { reduce_add = tinytc_work_group_operation_reduce_add };
 
 //! Address space
 enum class address_space {

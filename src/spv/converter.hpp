@@ -10,6 +10,7 @@
 #include "spv/coopmatrix_diy.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
+#include "spv/enums.hpp"
 #include "spv/uniquifier.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -22,8 +23,6 @@
 #include <vector>
 
 namespace tinytc::spv {
-
-enum class BuiltIn;
 
 auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
 
@@ -53,10 +52,12 @@ class inst_converter {
     void operator()(load_inst const &in);
     void operator()(parallel_inst const &in);
     void operator()(size_inst const &in);
+    void operator()(subgroup_add_inst const &in);
     void operator()(subgroup_broadcast_inst const &in);
+    void operator()(subgroup_max_inst const &in);
+    void operator()(subgroup_min_inst const &in);
     void operator()(store_inst const &in);
     void operator()(subview_inst const &in);
-    void operator()(work_group_inst const &in);
     void operator()(yield_inst const &in);
 
     void run_on_region(tinytc_region const &reg);
@@ -72,6 +73,7 @@ class inst_converter {
     auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
+    auto convert_group_operation(group_operation op) const -> GroupOperation;
     auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
                         location const &loc) -> spv_inst *;
     auto make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty, spv_inst *a,

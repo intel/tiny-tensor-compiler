@@ -10,7 +10,8 @@ namespace tinytc::test {
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
                        scalar_type B_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op) -> prog {
+                       std::function<void(region_builder &, array_view<value>)> make_op,
+                       std::int32_t work_group_size) -> prog {
     auto ctx = make_compiler_context();
 
     auto const alphat = get_scalar(ctx, alpha_ty);
@@ -26,6 +27,14 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
         get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
 
     auto f = make_func(name, {alphat, At, betat, Bt}, get_void(ctx));
+    if (work_group_size) {
+        auto const wgs_attr =
+            named_attr{get_string_attr(ctx, "work_group_size"),
+                       get_array_attr(ctx, {get_integer_attr(ctx, work_group_size),
+                                            get_integer_attr(ctx, 1)})};
+        f.set_attr(get_dictionary_attr_with_sorted(ctx, wgs_attr));
+    }
+
     auto fn_body = f.get_body();
     auto params = std::array<value, 4u>{};
     fn_body.get_parameters(params);

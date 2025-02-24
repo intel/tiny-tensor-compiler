@@ -333,22 +333,27 @@ typedef enum {
     tinytc_cmp_condition_le = 5  ///< less or equal than
 } tinytc_cmp_condition_t;
 
+//! Subgroup operation
+typedef enum {
+    tinytc_group_operation_exclusive_scan = 0, ///< Exclusive scan
+    tinytc_group_operation_inclusive_scan = 1, ///< Inclusive scan
+    tinytc_group_operation_reduce = 2          ///< Reduction
+} tinytc_group_operation_t;
+
 //! Transpose
 typedef enum {
     tinytc_transpose_N = 0, ///< No transpose
     tinytc_transpose_T = 1  ///< Transpose
 } tinytc_transpose_t;
 
-//! Work group collectives
-typedef enum {
-    tinytc_work_group_operation_reduce_add = 0 ///< Reduction (add)
-} tinytc_work_group_operation_t;
-
 //! Address space
 typedef enum {
     tinytc_address_space_global = 0x1, ///< Global memory
     tinytc_address_space_local = 0x2   ///< Local memory, returned by alloca
 } tinytc_address_space_t;
+
+//! Type for combination of address spaces
+typedef uint32_t tinytc_address_spaces_t;
 
 /**
  * @brief Checked flag
