@@ -467,6 +467,14 @@ void dump_ir_pass::operator()(if_inst const &in) {
     }
 }
 
+void dump_ir_pass::operator()(math_unary_inst const &in) {
+    dump_val(in.result(0));
+    *os_ << " = math." << to_string(in.operation()) << " ";
+    dump_val(in.a());
+    *os_ << " : ";
+    visit(*this, *in.result(0).ty());
+}
+
 void dump_ir_pass::operator()(parallel_inst const &p) {
     *os_ << "parallel ";
     dump_region(p.body());

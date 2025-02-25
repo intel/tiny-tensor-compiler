@@ -10,6 +10,7 @@ Builder C-API:
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
       - tinytc_group_operation_t
+      - tinytc_math_unary_t
       - tinytc_matrix_use_t
       - tinytc_scalar_type_t
       - tinytc_store_flag_t
@@ -24,6 +25,7 @@ Builder C-API:
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_group_operation_to_string
+      - tinytc_math_unary_to_string
       - tinytc_matrix_use_to_string
       - tinytc_scalar_type_size
       - tinytc_scalar_type_to_string
@@ -108,6 +110,7 @@ Builder C-API:
       - tinytc_hadamard_inst_create
       - tinytc_if_inst_create
       - tinytc_load_inst_create
+      - tinytc_math_unary_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
       - tinytc_subgroup_add_inst_create

@@ -24,6 +24,8 @@ Common
 
   * :ref:`tinytc::group_operation`
 
+  * :ref:`tinytc::math_unary`
+
   * :ref:`tinytc::matrix_use`
 
   * :ref:`tinytc::scalar_type`
@@ -49,6 +51,8 @@ Common
   * :ref:`tinytc::to_string(cmp_condition)`
 
   * :ref:`tinytc::to_string(group_operation)`
+
+  * :ref:`tinytc::to_string(math_unary)`
 
   * :ref:`tinytc::to_string(matrix_use)`
 
@@ -118,6 +122,13 @@ group_operation
 ...............
 
 .. doxygenenum:: tinytc::group_operation
+
+.. _tinytc::math_unary:
+
+math_unary
+..........
+
+.. doxygenenum:: tinytc::math_unary
 
 .. _tinytc::matrix_use:
 
@@ -205,6 +216,13 @@ to_string(group_operation)
 ..........................
 
 .. doxygenfunction:: tinytc::to_string(group_operation)
+
+.. _tinytc::to_string(math_unary):
+
+to_string(math_unary)
+.....................
+
+.. doxygenfunction:: tinytc::to_string(math_unary)
 
 .. _tinytc::to_string(matrix_use):
 
@@ -572,6 +590,8 @@ Instruction
 
   * :ref:`tinytc::make_load`
 
+  * :ref:`tinytc::make_math(math_unary,value,data_type,location const&)`
+
   * :ref:`tinytc::make_parallel`
 
   * :ref:`tinytc::make_size`
@@ -808,6 +828,13 @@ make_load
 .........
 
 .. doxygenfunction:: tinytc::make_load
+
+.. _tinytc::make_math(math_unary,value,data_type,location const&):
+
+make_math(math_unary,value,data_type,location const&)
+.....................................................
+
+.. doxygenfunction:: tinytc::make_math(math_unary,value,data_type,location const&)
 
 .. _tinytc::make_parallel:
 

@@ -26,6 +26,8 @@ Common
 
   * :ref:`tinytc_group_operation_t`
 
+  * :ref:`tinytc_math_unary_t`
+
   * :ref:`tinytc_matrix_use_t`
 
   * :ref:`tinytc_scalar_type_t`
@@ -53,6 +55,8 @@ Common
   * :ref:`tinytc_cmp_condition_to_string`
 
   * :ref:`tinytc_group_operation_to_string`
+
+  * :ref:`tinytc_math_unary_to_string`
 
   * :ref:`tinytc_matrix_use_to_string`
 
@@ -164,6 +168,13 @@ tinytc_group_operation_t
 
 .. doxygenenum:: tinytc_group_operation_t
 
+.. _tinytc_math_unary_t:
+
+tinytc_math_unary_t
+...................
+
+.. doxygenenum:: tinytc_math_unary_t
+
 .. _tinytc_matrix_use_t:
 
 tinytc_matrix_use_t
@@ -253,6 +264,13 @@ tinytc_group_operation_to_string
 ................................
 
 .. doxygenfunction:: tinytc_group_operation_to_string
+
+.. _tinytc_math_unary_to_string:
+
+tinytc_math_unary_to_string
+...........................
+
+.. doxygenfunction:: tinytc_math_unary_to_string
 
 .. _tinytc_matrix_use_to_string:
 
@@ -698,6 +716,8 @@ Instruction
 
   * :ref:`tinytc_load_inst_create`
 
+  * :ref:`tinytc_math_unary_inst_create`
+
   * :ref:`tinytc_parallel_inst_create`
 
   * :ref:`tinytc_size_inst_create`
@@ -933,6 +953,13 @@ tinytc_load_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_load_inst_create
+
+.. _tinytc_math_unary_inst_create:
+
+tinytc_math_unary_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_math_unary_inst_create
 
 .. _tinytc_parallel_inst_create:
 

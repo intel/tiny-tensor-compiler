@@ -37,6 +37,7 @@ class constant_folding {
     auto operator()(cooperative_matrix_scale_inst &) -> fold_result;
     auto operator()(cast_inst &) -> fold_result;
     auto operator()(compare_inst &) -> fold_result;
+    auto operator()(math_unary_inst &) -> fold_result;
     auto operator()(size_inst &in) -> fold_result;
     auto operator()(subgroup_broadcast_inst &in) -> fold_result;
 
@@ -495,6 +496,48 @@ auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_res
         return make_constant(value_cast<std::complex<double>>(A), to_ty, loc);
     };
     return {};
+};
+
+struct compute_math_unary_op {
+    math_unary operation;
+    data_type ty;
+    location const &loc;
+
+    template <typename T>
+    requires(std::is_integral_v<T>)
+    auto operator()(T) -> fold_result {
+        throw compilation_error(loc, status::ir_int_unsupported);
+    }
+
+    template <typename T>
+    requires(is_floating_point_or_lp_float_v<T>)
+    auto operator()(T a) -> fold_result {
+        T val = {};
+        switch (operation) {
+        case math_unary::exp:
+        case math_unary::native_exp:
+            val = exp(a);
+            break;
+        default:
+            throw compilation_error(loc, status::ir_fp_unsupported);
+        }
+        return make_constant(val, ty, loc);
+    }
+
+    template <typename T, typename U>
+    requires(is_complex_v<T>)
+    auto operator()(U const &a) -> fold_result {
+        T val = {};
+        switch (operation) {
+        case math_unary::exp:
+        case math_unary::native_exp:
+            val = exp(a);
+            break;
+        default:
+            throw compilation_error(loc, status::ir_complex_unsupported);
+        }
+        return make_constant(val, ty, loc);
+    }
 };
 
 } // namespace tinytc

@@ -71,6 +71,7 @@ if(SPIRVTools_FOUND)
         lit/spv/fuse.ir
         lit/spv/if.ir
         lit/spv/load.ir
+        lit/spv/math_unary.ir
         lit/spv/size.ir
         lit/spv/store.ir
         lit/spv/subgroup_broadcast.ir

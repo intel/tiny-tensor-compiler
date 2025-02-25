@@ -334,6 +334,12 @@ typedef enum {
     tinytc_cmp_condition_le = 5  ///< less or equal than
 } tinytc_cmp_condition_t;
 
+//! Math operations (unary)
+typedef enum {
+    tinytc_math_unary_exp = 0,        ///< Exponential
+    tinytc_math_unary_native_exp = 1, ///< Native exponential
+} tinytc_math_unary_t;
+
 //! Subgroup operation
 typedef enum {
     tinytc_group_operation_exclusive_scan = 0, ///< Exclusive scan

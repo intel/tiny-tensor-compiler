@@ -133,6 +133,16 @@ char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
     return "unknown";
 }
 
+char const *tinytc_math_unary_to_string(tinytc_math_unary_t op) {
+    switch (op) {
+    case tinytc_math_unary_exp:
+        return "exp";
+    case tinytc_math_unary_native_exp:
+        return "native_exp";
+    }
+    return "unknown";
+}
+
 char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
     switch (flag) {
     case tinytc_store_flag_regular:
@@ -561,6 +571,19 @@ tinytc_status_t tinytc_hadamard_inst_create(tinytc_inst_t *instr, tinytc_bool_t 
     return exception_to_status_code([&] {
         *instr =
             std::make_unique<hadamard_inst>(alpha, A, B, beta, C, bool(atomic), get_optional(loc))
+                .release();
+    });
+}
+
+tinytc_status_t tinytc_math_unary_inst_create(tinytc_inst_t *instr, tinytc_math_unary_t op,
+                                              tinytc_value_t a, tinytc_data_type_t ty,
+                                              const tinytc_location_t *loc) {
+    if (instr == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<math_unary_inst>(enum_cast<math_unary>(op), a, ty, get_optional(loc))
                 .release();
     });
 }

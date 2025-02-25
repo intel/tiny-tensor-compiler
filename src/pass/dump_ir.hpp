@@ -63,6 +63,7 @@ class dump_ir_pass {
     void operator()(foreach_inst const &p);
     void operator()(hadamard_inst const &g);
     void operator()(if_inst const &in);
+    void operator()(math_unary_inst const &in);
     void operator()(parallel_inst const &p);
     void operator()(size_inst const &s);
     void operator()(subgroup_add_inst const &in);

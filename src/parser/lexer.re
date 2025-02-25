@@ -217,6 +217,10 @@ lex:
         "cmp.lt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
         "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
+        // math op
+        "math.exp"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::exp, loc_); }
+        "math.native_exp"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp, loc_); }
+
         // subgroup op
         "subgroup_add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::exclusive_scan, loc_); }
         "subgroup_add.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::inclusive_scan, loc_); }

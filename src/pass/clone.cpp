@@ -138,6 +138,11 @@ auto inst_cloner::operator()(if_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<if_inst>(subs(&in.condition()), return_types, in.loc());
 }
 
+auto inst_cloner::operator()(math_unary_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<math_unary_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
+                                             in.loc());
+}
+
 auto inst_cloner::operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<parallel_inst>(in.loc());
 }

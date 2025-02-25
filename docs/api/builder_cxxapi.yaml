@@ -9,6 +9,7 @@ Builder C++-API:
       - tinytc::builtin
       - tinytc::cmp_condition
       - tinytc::group_operation
+      - tinytc::math_unary
       - tinytc::matrix_use
       - tinytc::scalar_type
       - tinytc::store_flag
@@ -22,6 +23,7 @@ Builder C++-API:
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(group_operation)
+      - tinytc::to_string(math_unary)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
@@ -97,6 +99,7 @@ Builder C++-API:
       - tinytc::make_hadamard
       - tinytc::make_if
       - tinytc::make_load
+      - tinytc::make_math(math_unary,value,data_type,location const&)
       - tinytc::make_parallel
       - tinytc::make_size
       - tinytc::make_store

@@ -50,6 +50,7 @@ class inst_converter {
     void operator()(if_inst const &in);
     void operator()(lifetime_stop_inst const &in);
     void operator()(load_inst const &in);
+    void operator()(math_unary_inst const &in);
     void operator()(parallel_inst const &in);
     void operator()(size_inst const &in);
     void operator()(subgroup_add_inst const &in);

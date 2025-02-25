@@ -52,6 +52,7 @@ enum class IK {
     load,
     lifetime_stop,
     if_,
+    math_unary_,
     parallel,
     size,
     subgroup_add,
@@ -80,16 +81,18 @@ enum class IK {
     foreach_loop,
     last_loop
 };
-using inst_nodes = type_list<
-    class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
-    class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
-    class constant_inst, class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
-    class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst, class cumsum_inst,
-    class expand_inst, class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
-    class gemv_inst, class ger_inst, class for_inst, class foreach_inst, class hadamard_inst,
-    class if_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
-    class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
-    class subview_inst, class store_inst, class sum_inst, class yield_inst>;
+using inst_nodes =
+    type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
+              class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
+              class constant_inst, class cooperative_matrix_load_inst,
+              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
+              class cooperative_matrix_store_inst, class cumsum_inst, class expand_inst,
+              class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
+              class gemv_inst, class ger_inst, class for_inst, class foreach_inst,
+              class hadamard_inst, class if_inst, class math_unary_inst, class parallel_inst,
+              class size_inst, class subgroup_add_inst, class subgroup_broadcast_inst,
+              class subgroup_max_inst, class subgroup_min_inst, class subview_inst,
+              class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -730,6 +733,20 @@ class if_inst : public standard_inst<1, dynamic, 2> {
         return child_region(child_region_otherwise);
     }
     inline bool is_otherwise_empty() const { return otherwise().insts().empty(); }
+};
+
+class math_unary_inst : public standard_inst<1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::math_unary_; }
+    math_unary_inst(math_unary op, tinytc_value_t a, tinytc_data_type_t ty,
+                    location const &lc = {});
+
+    inline auto operation() const -> math_unary { return operation_; }
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+
+  private:
+    math_unary operation_;
 };
 
 class parallel_inst : public standard_inst<0, 0, 1> {

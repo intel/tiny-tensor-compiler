@@ -318,6 +318,12 @@ enum class group_operation {
     reduce = tinytc_group_operation_reduce                  ///< Reduction
 };
 
+//! Math operations (unary)
+enum class math_unary {
+    exp = tinytc_math_unary_exp,               ///< Exponential
+    native_exp = tinytc_math_unary_native_exp, ///< Native exponential
+};
+
 //! Transpose
 enum class transpose {
     N = tinytc_transpose_N, ///< no transpose

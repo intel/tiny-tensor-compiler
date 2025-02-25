@@ -70,6 +70,7 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::fuse:
     case tinytc::IK::if_:
     case tinytc::IK::load:
+    case tinytc::IK::math_unary_:
     case tinytc::IK::size:
     case tinytc::IK::store:
     case tinytc::IK::subview:
@@ -1111,6 +1112,22 @@ if_inst::if_inst(tinytc_value_t condition, array_view<tinytc_data_type_t> return
             throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
         result(i) = value_node{return_types[i], this, lc};
+    }
+}
+
+math_unary_inst::math_unary_inst(math_unary operation, tinytc_value_t a0, tinytc_data_type_t ty,
+                                 location const &lc)
+    : standard_inst{IK::math_unary_}, operation_(operation) {
+    op(0, a0);
+    loc(lc);
+
+    result(0) = value_node{ty, this, lc};
+
+    // Check if inst is supported for combination of a type and result type
+    auto a_ty = get_scalar_type(loc(), a());
+
+    if (is_integer_type(a_ty->ty())) {
+        throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
     }
 }
 

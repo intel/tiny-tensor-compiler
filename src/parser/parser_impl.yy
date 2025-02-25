@@ -160,6 +160,7 @@
 %token <group_operation> SUBGROUP_ADD
 %token <group_operation> SUBGROUP_MAX
 %token <group_operation> SUBGROUP_MIN
+%token <math_unary> MATH_UNARY
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
 
@@ -237,6 +238,7 @@
 %nterm <std::vector<int_or_val>> expand_shape
 %nterm <inst> fuse_inst
 %nterm <inst> load_inst
+%nterm <inst> math_unary_inst
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
 %nterm <inst> subgroup_add_inst
@@ -783,6 +785,7 @@ valued_inst:
   | fuse_inst               { $$ = std::move($1); }
   | if_inst                 { $$ = std::move($1); }
   | load_inst               { $$ = std::move($1); }
+  | math_unary_inst         { $$ = std::move($1); }
   | size_inst               { $$ = std::move($1); }
   | subgroup_add_inst       { $$ = std::move($1); }
   | subgroup_broadcast_inst { $$ = std::move($1); }
@@ -1115,6 +1118,21 @@ return_type_list:
     data_type { $$.push_back($data_type); }
   | return_type_list COMMA data_type {
         $$ = std::move($1); $$.push_back($data_type);
+    }
+;
+
+math_unary_inst:
+    MATH_UNARY var[a] COLON data_type[ty] {
+        try {
+            $$ = inst {
+                std::make_unique<math_unary_inst>($MATH_UNARY, std::move($a), std::move($ty),
+                                                  @math_unary_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
     }
 ;
 

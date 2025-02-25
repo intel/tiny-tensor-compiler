@@ -1423,6 +1423,30 @@ Examples:
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>x?>``
 #. ``load %0[%1] : memref<f32x42> ; %0: group<memref<f32x42>x?, offset: ?>``
 
+Math (unary)
+............
+
+.. code:: abnf
+
+    math-unary-type         =  "math.exp" /
+                               "math.native_exp"
+    value-instruction       =/ math-unary-type local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Unary math operation on scalars.
+The operand must have the same type as the returned value.
+
+The following table shows the operations' description and the types that are allowed for the operation.
+
+=========== ============================= ==============================================================
+Op          Allowed type                  Description
+=========== ============================= ==============================================================
+exp         floating-type / complex-type  Compute exponential function
+native_exp  floating-type / complex-type  Compute exponential function with implementation-defined error
+=========== ============================= ==============================================================
+
 .. _size instruction:
 
 Size

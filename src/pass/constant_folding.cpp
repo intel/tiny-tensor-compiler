@@ -297,6 +297,24 @@ auto constant_folding::operator()(cooperative_matrix_scale_inst &in) -> fold_res
     return tinytc_value_t{};
 }
 
+auto constant_folding::operator()(math_unary_inst &in) -> fold_result {
+    auto &op_a = in.a();
+
+    constant_inst *a_const = dyn_cast<constant_inst>(op_a.defining_inst());
+    if (a_const == nullptr) {
+        return tinytc_value_t{};
+    }
+
+    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    if (at == nullptr) {
+        return tinytc_value_t{};
+    }
+
+    auto computer = compute_math_unary_op{in.operation(), op_a.ty(), in.loc()};
+    auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+    return std::visit(std::move(dispatcher), a_const->value());
+}
+
 auto constant_folding::operator()(size_inst &in) -> fold_result {
     auto mode_size = visit(
         overloaded{[&](group_data_type const &g) -> std::int64_t { return g.size(); },

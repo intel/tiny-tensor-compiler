@@ -353,6 +353,8 @@ TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t fl
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
 //! Convert subgroup op to string
 TINYTC_EXPORT char const *tinytc_group_operation_to_string(tinytc_group_operation_t op);
+//! Convert math operation type to string (unary)
+TINYTC_EXPORT char const *tinytc_math_unary_to_string(tinytc_math_unary_t op);
 //! Convert matrix use to string
 TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
 //! Convert store flag to string
@@ -849,6 +851,24 @@ TINYTC_EXPORT tinytc_status_t tinytc_ger_inst_create(tinytc_inst_t *instr, tinyt
 TINYTC_EXPORT tinytc_status_t tinytc_hadamard_inst_create(
     tinytc_inst_t *instr, tinytc_bool_t atomic, tinytc_value_t alpha, tinytc_value_t A,
     tinytc_value_t B, tinytc_value_t beta, tinytc_value_t C, const tinytc_location_t *loc);
+
+/**
+ * @brief Create math instruction (unary)
+ *
+ * @code %value = math.<op> %a : ty @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param op [in] unary math operation type
+ * @param a [in] operand
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_math_unary_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_math_unary_t op,
+                                                            tinytc_value_t a, tinytc_data_type_t ty,
+                                                            const tinytc_location_t *loc);
 
 /**
  * @brief Create parallel region

@@ -1322,6 +1322,82 @@ void inst_converter::operator()(load_inst const &in) {
     }
 }
 
+void inst_converter::operator()(math_unary_inst const &in) {
+    auto const make_float = [&](math_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+        switch (op) {
+        case math_unary::exp:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::exp),
+                                        std::vector<IdRef>{a});
+        case math_unary::native_exp:
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
+                                        static_cast<std::int32_t>(OpenCLEntrypoint::native_exp),
+                                        std::vector<IdRef>{a});
+        default:
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+    };
+    auto const make_complex = [&](math_unary op, scalar_type sty, spv_inst *ty,
+                                  spv_inst *a) -> spv_inst * {
+        auto spv_float_ty = unique_.spv_ty(component_type(sty));
+        auto const make_complex_exp = [&](auto exp_ep, auto cos_ep, auto sin_ep) {
+            auto a0 =
+                mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{0});
+            auto a1 =
+                mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
+            auto e =
+                mod_->add<OpExtInst>(spv_float_ty, unique_.opencl_ext(),
+                                     static_cast<std::int32_t>(exp_ep), std::vector<IdRef>{a0});
+            auto c =
+                mod_->add<OpExtInst>(spv_float_ty, unique_.opencl_ext(),
+                                     static_cast<std::int32_t>(cos_ep), std::vector<IdRef>{a1});
+            auto s =
+                mod_->add<OpExtInst>(spv_float_ty, unique_.opencl_ext(),
+                                     static_cast<std::int32_t>(sin_ep), std::vector<IdRef>{a1});
+            auto r = mod_->add<OpFMul>(spv_float_ty, e, c);
+            auto i = mod_->add<OpFMul>(spv_float_ty, e, s);
+            auto dummy = mod_->add<OpUndef>(ty);
+            auto result =
+                mod_->add<OpCompositeInsert>(ty, r, dummy, std::vector<LiteralInteger>{0});
+            return mod_->add<OpCompositeInsert>(ty, i, result, std::vector<LiteralInteger>{1});
+        };
+        switch (op) {
+        case math_unary::exp:
+            return make_complex_exp(OpenCLEntrypoint::exp, OpenCLEntrypoint::cos,
+                                    OpenCLEntrypoint::sin);
+        case math_unary::native_exp:
+            return make_complex_exp(OpenCLEntrypoint::native_exp, OpenCLEntrypoint::native_cos,
+                                    OpenCLEntrypoint::native_sin);
+        default:
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+    };
+    auto const make = [&](scalar_type sty, math_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+        switch (sty) {
+        case scalar_type::bf16: {
+            auto float_ty = unique_.spv_ty(scalar_type::f32);
+            auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
+            auto op_af = make_float(op, float_ty, af);
+            return mod_->add<OpConvertFToBF16INTEL>(ty, op_af);
+        }
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return make_float(op, ty, a);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return make_complex(op, sty, ty, a);
+        default:
+            throw compilation_error(in.loc(), status::internal_compiler_error);
+        }
+    };
+
+    auto sty = get_scalar_type(in.a());
+    auto ty = unique_.spv_ty(in.result(0).ty());
+    auto av = val(in.a());
+    declare(in.result(0), make(sty, in.operation(), ty, av));
+}
+
 void inst_converter::operator()(parallel_inst const &in) { run_on_region(in.body()); }
 
 void inst_converter::operator()(size_inst const &in) {

@@ -1214,6 +1214,17 @@ inline char const *to_string(group_operation op) {
 }
 
 /**
+ * @brief Convert math operation type to string (unary)
+ *
+ * @param op Math operation type
+ *
+ * @return C-string
+ */
+inline char const *to_string(math_unary op) {
+    return ::tinytc_math_unary_to_string(static_cast<::tinytc_math_unary_t>(op));
+}
+
+/**
  * @brief Convert matrix use to string
  *
  * @param u Matrix use
@@ -1902,6 +1913,24 @@ inline inst make_hadamard(bool atomic, value alpha, value A, value B, value beta
                           location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(tinytc_hadamard_inst_create(&instr, atomic, alpha, A, B, beta, C, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Make math instruction (unary)
+ *
+ * @param op Math operation type
+ * @param a Operand
+ * @param ty Result type
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_math(math_unary op, value a, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_math_unary_inst_create(&instr, static_cast<tinytc_math_unary_t>(op), a, ty, &loc),
+        loc);
     return inst(instr);
 }
 
