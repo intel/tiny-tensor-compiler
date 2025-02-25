@@ -67,6 +67,38 @@ template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::
 
 auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag;
 
+class work_group_op {
+  public:
+    work_group_op(std::int32_t num_tiles, std::int32_t subgroup_size, data_type ty);
+
+    void setup(region_builder &bb, location const &loc);
+    void teardown(region_builder &bb);
+
+    inline auto num_tiles() const -> std::int32_t { return num_tiles_; }
+    inline auto subgroup_size() const -> std::int32_t { return subgroup_size_; }
+    inline auto ty() const -> data_type { return ty_; }
+
+  protected:
+    std::int32_t num_tiles_, subgroup_size_;
+    data_type ty_;
+    value tmp_;
+};
+
+class work_group_reduce : public work_group_op {
+  public:
+    using work_group_op::work_group_op;
+
+    auto make(region_builder &bb, value a, location const &loc) -> value;
+};
+
+class work_group_inclusive_scan : public work_group_op {
+  public:
+    using work_group_op::work_group_op;
+
+    auto make(region_builder &bb, value a, bool compute_sum, location const &loc)
+        -> std::pair<value, value>;
+};
+
 } // namespace tinytc
 
 #endif // CODEGEN_TOOLS_20240229_HPP

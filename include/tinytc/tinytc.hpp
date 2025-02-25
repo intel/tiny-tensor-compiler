@@ -687,6 +687,15 @@ template <typename T> class array_view_base {
     operator std::vector<std::remove_const_t<T>>() const {
         return std::vector<std::remove_const_t<T>>(data_, data_ + size_);
     }
+    //! Equals operator
+    auto operator==(array_view_base<T> const &other) const -> bool {
+        bool eq = true;
+        for (std::size_t i = 0; i < size_; ++i) {
+            eq = eq && data_[i] == other.data_[i];
+        }
+        return eq;
+    }
+    auto operator!=(array_view_base<T> const &other) const -> bool { return !(*this == other); }
 
   private:
     T *data_ = nullptr;

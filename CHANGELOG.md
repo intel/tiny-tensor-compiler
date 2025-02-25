@@ -22,6 +22,7 @@
 * For-loops can yield values
 * Removed immediate operands in favour of constant instruction
 * Instructions annotate the return type instead of operand types
+* Added cumulative sum instruction
 
 ### Core API
 * Introduced compiler_context class for compilations flags and control of error reporting

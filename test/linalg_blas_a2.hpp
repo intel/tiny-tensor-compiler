@@ -78,6 +78,77 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby
     tensor_layout lA_, lB_;
 };
 
+template <typename AlphaT, typename AT, typename BetaT, typename BT> class cumsum {
+  public:
+    using alpha_type = AlphaT;
+    using A_type = AT;
+    using beta_type = BetaT;
+    using B_type = BT;
+    static constexpr char const *kernel_name = "cumsum";
+
+    cumsum(tensor_layout layoutA, std::int64_t mode, tensor_layout layoutB,
+           std::int32_t work_group_size = 0)
+        : lA_{std::move(layoutA)}, mode_{mode}, lB_{std::move(layoutB)},
+          work_group_size_{work_group_size} {}
+
+    auto lA() const -> tensor_layout const & { return lA_; }
+    auto lB() const -> tensor_layout const & { return lB_; }
+
+    auto make_prog() const -> prog {
+        return make_blas_a2_prog(
+            kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
+            to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
+            [&](region_builder &bb, array_view<value> params) {
+                bb.add(make_cumsum(false, params[0], params[1], mode_, params[2], params[3]));
+            },
+            work_group_size_);
+    }
+    void reference_impl(AlphaT alpha, AT const *A, BetaT beta, BT *B) {
+        if (lA_.dim() != lB_.dim() || lB_.dim() == 0) {
+            throw std::runtime_error("unsupported cumsum dimension combination");
+        }
+        for (std::int64_t i = 0; i < lB_.dim(); ++i) {
+            if (lA_.shape(i) != lB_.shape(i)) {
+                throw std::runtime_error("incompatible cumsum");
+            }
+        }
+
+        auto J = lB_.shape(mode_);
+        auto const inner_loop = [&](std::vector<std::int64_t> &index) {
+            AT prefix = AT{0};
+            for (std::int64_t j = 0; j < J; ++j) {
+                index[mode_] = j;
+                prefix += A[lA_.linear_index(index)];
+                auto &b = B[lB_.linear_index(index)];
+                b = alpha * prefix + beta * b;
+            }
+        };
+
+        auto index = std::vector<std::int64_t>(lB_.dim(), 0);
+        if (lB_.dim() == 1) {
+            inner_loop(index);
+        } else {
+            auto reduced_shape = std::vector<std::int64_t>{lB_.shape()};
+            reduced_shape.erase(reduced_shape.begin() + mode_);
+            nd_foreach(reduced_shape, [&](array_view<std::int64_t> reduced_index) {
+                for (std::int64_t i = 0; i < mode_; ++i) {
+                    index[i] = reduced_index[i];
+                }
+                for (std::int64_t i = mode_ + 1; i < lB_.dim(); ++i) {
+                    index[i] = reduced_index[i - 1];
+                }
+                inner_loop(index);
+            });
+        }
+    }
+
+  private:
+    tensor_layout lA_;
+    std::int64_t mode_;
+    tensor_layout lB_;
+    std::int32_t work_group_size_;
+};
+
 template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
   public:
     using alpha_type = AlphaT;
@@ -127,7 +198,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
                 b = alpha * a_acc + beta * b;
             }
         } else {
-            throw std::runtime_error("invald sum dimension combination");
+            throw std::runtime_error("unsupported sum dimension combination");
         }
     }
 

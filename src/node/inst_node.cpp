@@ -50,6 +50,7 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::parallel:
     case tinytc::IK::blas_a2:
     case tinytc::IK::axpby_blas_a2:
+    case tinytc::IK::cumsum_blas_a2:
     case tinytc::IK::sum_blas_a2:
     case tinytc::IK::last_blas_a2:
     case tinytc::IK::blas_a3:
@@ -706,6 +707,9 @@ cumsum_inst::cumsum_inst(tinytc_value_t alpha0, tinytc_value_t A0, std::int64_t 
 
     if (a->dim() < 1) {
         throw compilation_error(loc(), {&A()}, status::ir_expected_non_scalar_memref);
+    }
+    if (mode_ >= a->dim()) {
+        throw compilation_error(loc(), {&A()}, status::ir_out_of_bounds);
     }
 
     bool shape_equal = a->dim() == b->dim();

@@ -50,5 +50,43 @@ auto tensor_layout::linear_index(array_view<std::int64_t> idx) const -> std::int
     return l;
 }
 
+nd_iterator::nd_iterator(std::vector<std::int64_t> it, array_view<std::int64_t> shape)
+    : it_{std::move(it)}, shape_{shape} {}
+
+auto nd_iterator::operator*() const -> value_type { return it_; }
+auto nd_iterator::operator++() -> nd_iterator & {
+    if (it_.size() > 0) {
+        ++it_[0];
+        std::size_t i = 0;
+        while (it_[i] >= shape_[i] && i < shape_.size() - 1) {
+            it_[i++] = 0;
+            ++it_[i];
+        }
+    }
+    return *this;
+}
+auto nd_iterator::operator++(int) -> nd_iterator {
+    nd_iterator tmp = *this;
+    ++(*this);
+    return tmp;
+}
+auto nd_iterator::operator==(nd_iterator const &other) const -> bool {
+    return it_ == other.it_ && shape_ == other.shape_;
+}
+auto nd_iterator::operator!=(nd_iterator const &other) const -> bool {
+    return it_ != other.it_ || shape_ != other.shape_;
+}
+
+auto nd_iterator::begin(array_view<std::int64_t> shape) -> nd_iterator {
+    return nd_iterator(std::vector<std::int64_t>(shape.size(), 0), shape);
+}
+auto nd_iterator::end(array_view<std::int64_t> shape) -> nd_iterator {
+    auto it = std::vector<std::int64_t>(shape.size(), 0);
+    if (it.size() > 0) {
+        it.back() = shape.back();
+    }
+    return nd_iterator(std::move(it), shape);
+}
+
 } // namespace tinytc::test
 

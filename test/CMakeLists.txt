@@ -75,7 +75,6 @@ if(SPIRVTools_FOUND)
         lit/spv/store.ir
         lit/spv/subgroup_broadcast.ir
         lit/spv/subview.ir
-        lit/spv/work_group.ir
         lit/spv/unique_function_type.ir
     )
     foreach(SOURCE IN LISTS SPIRV_VAL_SOURCES)

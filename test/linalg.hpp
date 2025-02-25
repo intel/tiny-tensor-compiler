@@ -53,6 +53,51 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d trans", T, TEST_PRECISIONS) {
     test::test_blas_a2<runtime_class>(op, 1, 0);
 }
 
+TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 1d", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{18, 16, 32, 123};
+
+    std::int64_t M;
+    DOCTEST_TENSOR1_TEST(MM);
+
+    auto op = test::cumsum<T, T, T, T>({{M}}, 0, {{M}});
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 1d work_group_size=[128,1]", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{123, 435};
+
+    std::int64_t M;
+    DOCTEST_TENSOR1_TEST(MM);
+
+    auto op = test::cumsum<T, T, T, T>({{M}}, 0, {{M}}, 128);
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 2d work_group_size=[64,1]", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{17, 76};
+    auto NN = std::vector<std::int64_t>{5, 135};
+    auto modes = std::vector<std::int64_t>{0, 1};
+
+    std::int64_t M, N, K;
+    DOCTEST_TENSOR3_TEST(MM, NN, modes);
+
+    auto op = test::cumsum<T, T, T, T>({{M, N}}, K, {{M, N}}, 64);
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
+TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 3d work_group_size=[64,1]", T, TEST_PRECISIONS) {
+    auto MM = std::vector<std::int64_t>{65};
+    auto NN = std::vector<std::int64_t>{65};
+    auto KK = std::vector<std::int64_t>{65};
+    auto modes = std::vector<std::int64_t>{0, 1, 2};
+
+    std::int64_t M, N, K, howmany;
+    DOCTEST_TENSOR4_TEST(MM, NN, KK, modes);
+
+    auto op = test::cumsum<T, T, T, T>({{M, N, K}}, howmany, {{M, N, K}}, 64);
+    test::test_blas_a2<runtime_class>(op, 1, 0);
+}
+
 TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto KK = std::vector<std::int64_t>{56};
     auto MM = std::vector<std::int64_t>{20, 32, 53};

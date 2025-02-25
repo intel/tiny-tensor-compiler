@@ -298,4 +298,127 @@ auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag {
                         std::underlying_type_t<checked_flag>(new_flag)};
 }
 
+work_group_op::work_group_op(std::int32_t num_tiles, std::int32_t subgroup_size, data_type ty)
+    : num_tiles_{num_tiles}, subgroup_size_{subgroup_size}, ty_{ty}, tmp_{nullptr} {}
+
+void work_group_op::setup(region_builder &bb, location const &loc) {
+    if (num_tiles_ > 1) {
+        auto tmp_ty = get_memref(ty_, {num_tiles_}, {}, address_space::local, loc);
+        tmp_ = bb.add(make_alloca(tmp_ty, loc));
+    }
+}
+
+void work_group_op::teardown(region_builder &bb) {
+    if (tmp_) {
+        bb.add(inst{std::make_unique<lifetime_stop_inst>(tmp_).release()});
+    }
+}
+
+auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -> value {
+    auto a_reduced = bb.add(make_subgroup_add(group_operation::reduce, a, ty_, loc));
+
+    if (num_tiles_ > 1) {
+        auto ctx = compiler_context{a->context(), true};
+        auto bool_ty = get_boolean(ctx);
+        auto i32_ty = get_scalar(ctx, scalar_type::i32);
+        auto index_ty = get_scalar(ctx, scalar_type::index);
+
+        auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, loc));
+        auto sglid = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, loc));
+        auto c_zero = bb.add(make_constant_zero(i32_ty, loc));
+        auto is_sglid_0 = bb.add(make_cmp(cmp_condition::eq, sglid, c_zero, bool_ty, loc));
+        bb.if_condition(
+            is_sglid_0,
+            [&](region_builder &bb) {
+                auto sgid_index = bb.add(make_cast(sgid, index_ty, loc));
+                bb.add(make_store(store_flag::regular, a_reduced, tmp_, {sgid_index}, loc));
+            },
+            loc);
+        bb.add(make_barrier(static_cast<tinytc_address_spaces_t>(address_space::local), loc));
+
+        auto is_lid_0 = bb.add(make_cmp(cmp_condition::eq, sgid, c_zero, bool_ty, loc));
+        bb.if_condition(
+            is_lid_0,
+            [&](region_builder &bb) {
+                auto c_num_tiles = bb.add(make_constant(num_tiles_, i32_ty, loc));
+                auto c_sgs = bb.add(make_constant(subgroup_size_, i32_ty, loc));
+                auto c_init = bb.add(make_constant_zero(ty_, loc));
+                auto acc = bb.for_loop(
+                    i32_ty, sglid, c_num_tiles, c_sgs, {c_init}, {ty_},
+                    [&](region_builder &bb, array_view<value> args) {
+                        auto lv_index = bb.add(make_cast(args[0], index_ty, loc));
+                        auto a_sg_reduced = bb.add(make_load(tmp_, {lv_index}, ty_, loc));
+                        auto sum =
+                            bb.add(make_arith(arithmetic::add, args[1], a_sg_reduced, ty_, loc));
+                        bb.add(make_yield({sum}, loc));
+                    });
+                a_reduced = bb.add(make_subgroup_add(group_operation::reduce, acc[0], ty_, loc));
+                return a_reduced;
+            },
+            loc);
+    }
+    return a_reduced;
+}
+
+auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_sum,
+                                     location const &loc) -> std::pair<value, value> {
+    auto a_scan = bb.add(make_subgroup_add(group_operation::inclusive_scan, a, ty_, loc));
+
+    auto ctx = compiler_context{a->context(), true};
+    auto i32_ty = get_scalar(ctx, scalar_type::i32);
+
+    if (num_tiles_ > 1) {
+        auto bool_ty = get_boolean(ctx);
+        auto index_ty = get_scalar(ctx, scalar_type::index);
+
+        auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, loc));
+        auto sglid = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, loc));
+
+        auto c_sgs_1 = bb.add(make_constant(subgroup_size_ - 1, i32_ty, loc));
+        auto is_last_sglid = bb.add(make_cmp(cmp_condition::eq, sglid, c_sgs_1, bool_ty, loc));
+        bb.if_condition(
+            is_last_sglid,
+            [&](region_builder &bb) {
+                auto sgid_index = bb.add(make_cast(sgid, index_ty, loc));
+                bb.add(make_store(store_flag::regular, a_scan, tmp_, {sgid_index}, loc));
+            },
+            loc);
+        bb.add(make_barrier(static_cast<tinytc_address_spaces_t>(address_space::local), loc));
+
+        auto c_zero = bb.add(make_constant_zero(i32_ty, loc));
+        a_scan = bb.for_loop(i32_ty, c_zero, sgid, nullptr, {a_scan}, {ty_},
+                             [&](region_builder &bb, array_view<value> args) {
+                                 auto lv_index = bb.add(make_cast(args[0], index_ty, loc));
+                                 auto prefix = bb.add(make_load(tmp_, {lv_index}, ty_, loc));
+                                 auto scan =
+                                     bb.add(make_arith(arithmetic::add, args[1], prefix, ty_, loc));
+                                 bb.add(make_yield({scan}, loc));
+                             })[0];
+
+        if (compute_sum) {
+            auto c_num_tiles_1 = bb.add(make_constant(num_tiles_ - 1, i32_ty, loc));
+            auto c_num_tiles_1_index = bb.add(make_cast(c_num_tiles_1, index_ty, loc));
+            auto is_last_sgid =
+                bb.add(make_cmp(cmp_condition::eq, sgid, c_num_tiles_1, bool_ty, loc));
+            auto is_last_work_item =
+                bb.add(make_arith(arithmetic::and_, is_last_sglid, is_last_sgid, bool_ty, loc));
+            bb.if_condition(
+                is_last_work_item,
+                [&](region_builder &bb) {
+                    bb.add(
+                        make_store(store_flag::regular, a_scan, tmp_, {c_num_tiles_1_index}, loc));
+                },
+                loc);
+            bb.add(make_barrier(static_cast<tinytc_address_spaces_t>(address_space::local), loc));
+            auto sum = bb.add(make_load(tmp_, {c_num_tiles_1_index}, ty_, loc));
+            return {a_scan, sum};
+        }
+    } else if (compute_sum) {
+        auto c_sgs_1 = bb.add(make_constant(subgroup_size_ - 1, i32_ty, loc));
+        auto sum = bb.add(make_subgroup_broadcast(a_scan, c_sgs_1, ty_, loc));
+        return {a_scan, sum};
+    }
+    return {a_scan, nullptr};
+}
+
 } // namespace tinytc

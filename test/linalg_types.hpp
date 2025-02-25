@@ -80,6 +80,35 @@ inline auto make_index_2d(transpose t, std::int64_t m, std::int64_t n) {
     return idx;
 };
 
+class nd_iterator {
+  public:
+    using value_type = array_view<std::int64_t>;
+    using difference_type = std::ptrdiff_t;
+
+    static auto begin(array_view<std::int64_t> shape) -> nd_iterator;
+    static auto end(array_view<std::int64_t> shape) -> nd_iterator;
+
+    nd_iterator(std::vector<std::int64_t> it, array_view<std::int64_t> shape);
+
+    auto operator*() const -> value_type;
+    auto operator++() -> nd_iterator &;
+    auto operator++(int) -> nd_iterator;
+    auto operator==(nd_iterator const &other) const -> bool;
+    auto operator!=(nd_iterator const &other) const -> bool;
+
+  private:
+    std::vector<std::int64_t> it_;
+    array_view<std::int64_t> shape_;
+};
+
+template <typename F> void nd_foreach(array_view<std::int64_t> shape, F &&fun) {
+    auto begin = nd_iterator::begin(shape);
+    auto end = nd_iterator::end(shape);
+    for (; begin != end; ++begin) {
+        fun(*begin);
+    }
+}
+
 } // namespace tinytc::test
 
 #endif // LINALG_TYPES_20241023_HPP
