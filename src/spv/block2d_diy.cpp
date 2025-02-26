@@ -225,41 +225,42 @@ struct block2d_emulated_helper {
 
     std::ostream &oasm;
     block_config const &cfg;
+    char const *visa_ty_;
     std::vector<std::string> temps, pointers;
-    std::string offset;
+    std::string base_pointer, tempq;
 };
 
 block2d_emulated_helper::block2d_emulated_helper(std::ostream &oasm, block_config const &cfg,
                                                  scalar_type sty, std::size_t io_batch_size,
                                                  temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), temps(io_batch_size), pointers(io_batch_size),
-      offset{make_tmp("offset")} {
-    std::generate(temps.begin(), temps.end(), [&]() {
-        const auto temp = make_tmp("temp");
-        oasm << ".decl " << temp << " v_type=G type=" << visa_type(sty)
-             << " num_elts=" << cfg.total_rows() << " align=wordx32\n";
-        return temp;
-    });
-    std::generate(pointers.begin(), pointers.end(), [&]() {
-        auto pointer = make_tmp("pointer");
-        if (cfg.sfid == lsc_sfid::slm) {
-            oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n";
-        } else {
-            oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx32\n";
-        }
-        return pointer;
-    });
+    : oasm(oasm), cfg(cfg), visa_ty_(visa_type(sty)), temps(io_batch_size), pointers(io_batch_size),
+      base_pointer{make_tmp("base_pointer")}, tempq{make_tmp("tempq")} {
+    std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
+    std::generate(pointers.begin(), pointers.end(), [&]() { return make_tmp("pointer"); });
 }
 
 void block2d_emulated_helper::header() {
-    oasm << ".decl " << offset << " v_type=G type=ud num_elts=1 align=dword\n";
-    oasm << "   mov (M1,1) " << pointers[0] << "(0,0)<1> $1(0,0)<0;1,0>\n";
-    oasm << "   mul (M1,1) " << offset << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size << ":d\n";
-    oasm << "   add (M1,1) " << pointers[0] << "(0,0)<1> " << pointers[0] << "(0,0)<0;1,0> "
-         << offset << "(0,0)<0;1,0>\n";
-    oasm << "   mul (M1,1) " << offset << "(0,0)<1> $6(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
-    oasm << "   add (M1,1) " << pointers[0] << "(0,0)<1> " << pointers[0] << "(0,0)<0;1,0> "
-         << offset << "(0,0)<0;1,0>\n";
+    std::for_each(temps.begin(), temps.end(), [&](auto const &temp) {
+        oasm << ".decl " << temp << " v_type=G type=" << visa_ty_
+             << " num_elts=" << cfg.total_rows() << " align=wordx32\n";
+    });
+    std::for_each(pointers.begin(), pointers.end(), [&](auto const &pointer) {
+        if (cfg.sfid == lsc_sfid::slm) {
+            oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n ";
+        } else {
+            oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx32\n";
+        }
+    });
+    oasm << ".decl " << base_pointer << " v_type=G type=q num_elts=1 align=qword\n";
+    oasm << ".decl " << tempq << " v_type=G type=q num_elts=1 align=qword\n";
+    oasm << "   mov (M1,1) " << base_pointer << "(0,0)<1> $1(0,0)<1;1,0>\n";
+    oasm << "   mul (M1,1) " << tempq << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size << ":d\n";
+    oasm << "   add (M1,1) " << base_pointer << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0> "
+         << tempq << "(0,0)<0;1,0>\n";
+    oasm << "   mul (M1,1) " << tempq << "(0,1)<1> $6(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
+    oasm << "   add (M1,1) " << base_pointer << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0> "
+         << tempq << "(0,0)<0;1,0>\n";
+    oasm << "   mov (M1,1) " << pointers[0] << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0>\n";
 }
 
 auto block2d_emulated_helper::dst_op(std::int32_t row, std::int32_t col, std::int32_t array_idx,
@@ -321,7 +322,6 @@ auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counte
                                  << h.dst_op(r + cmod, cbase + o, a, n, m) << "<" << ops_per_chan
                                  << "> " << h.temp_op(temp, r + o * es, a, m) << "<1;1,0>\n";
                         }
-
                     } else {
                         oasm << "   mov (M1," << xe::exec_size << ") " << h.dst_op(r, c, a, n, m)
                              << "<1> " << h.temp_op(temp, r, a, m) << "<1;1,0>\n";
