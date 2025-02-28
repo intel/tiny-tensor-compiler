@@ -24,7 +24,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 0d", T, TEST_PRECISIONS) {
 TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 1d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::axpby<T, T, T, T>(transpose::N, {{M}}, {{M}});
@@ -35,7 +35,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
     auto NN = std::vector<std::int64_t>{5, 17};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::axpby<T, T, T, T>(transpose::N, {{M, N}}, {{M, N}});
@@ -46,7 +46,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d trans", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
     auto NN = std::vector<std::int64_t>{5, 17};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::axpby<T, T, T, T>(transpose::T, {{N, M}}, {{M, N}});
@@ -56,7 +56,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " axpby 2d trans", T, TEST_PRECISIONS) {
 TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 1d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32, 123};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::cumsum<T, T, T, T>({{M}}, 0, {{M}});
@@ -66,7 +66,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 1d", T, TEST_PRECISIONS) {
 TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 1d work_group_size=[128,1]", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{123, 435};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::cumsum<T, T, T, T>({{M}}, 0, {{M}}, 128);
@@ -78,7 +78,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 2d work_group_size=[64,1]", T, TEST_PRE
     auto NN = std::vector<std::int64_t>{5, 135};
     auto modes = std::vector<std::int64_t>{0, 1};
 
-    std::int64_t M, N, K;
+    std::int64_t M = {}, N = {}, K = {};
     DOCTEST_TENSOR3_TEST(MM, NN, modes);
 
     auto op = test::cumsum<T, T, T, T>({{M, N}}, K, {{M, N}}, 64);
@@ -91,7 +91,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " cumsum 3d work_group_size=[64,1]", T, TEST_PRE
     auto KK = std::vector<std::int64_t>{65};
     auto modes = std::vector<std::int64_t>{0, 1, 2};
 
-    std::int64_t M, N, K, howmany;
+    std::int64_t M = {}, N = {}, K = {}, howmany = {};
     DOCTEST_TENSOR4_TEST(MM, NN, KK, modes);
 
     auto op = test::cumsum<T, T, T, T>({{M, N, K}}, howmany, {{M, N, K}}, 64);
@@ -103,7 +103,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed alpha=1 beta=0", T, TEST_PRECISION
     auto MM = std::vector<std::int64_t>{20, 32, 53};
     auto NN = std::vector<std::int64_t>{5, 16, 23};
 
-    std::int64_t M, N, K;
+    std::int64_t M = {}, N = {}, K = {};
     DOCTEST_TENSOR3_TEST(MM, NN, KK);
 
     auto op = test::gemm<T, T, T, T, T>(transpose::N, transpose::N, {{M, K}}, {{K, N}}, {{M, N}});
@@ -176,7 +176,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed complex alpha=1 beta=0", T, TEST_P
     auto MM = std::vector<std::uint32_t>{21, 42};
     auto NN = std::vector<std::uint32_t>{7, 11};
 
-    std::int64_t M, N, K;
+    std::int64_t M = {}, N = {}, K = {};
     DOCTEST_TENSOR3_TEST(MM, NN, KK);
 
     using CT = std::complex<T>;
@@ -200,7 +200,7 @@ TEST_CASE(RUNTIME_NAME " gemm packed mixed precision") {
     auto MM = std::vector<std::uint32_t>{21, 42};
     auto NN = std::vector<std::uint32_t>{7, 11};
 
-    std::int64_t M, N, K;
+    std::int64_t M = {}, N = {}, K = {};
     DOCTEST_TENSOR3_TEST(MM, NN, KK);
 
     auto op = test::gemm<std::int16_t, std::int16_t, std::int16_t, float, float>(
@@ -212,7 +212,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemv packed alpha=1 beta=0", T, TEST_PRECISION
     auto NN = std::vector<std::uint32_t>{21};
     auto MM = std::vector<std::uint32_t>{16, 23};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::gemv<T, T, T, T, T>(transpose::N, {{M, N}}, {{N}}, {{M}});
@@ -230,7 +230,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemv packed complex alpha=1 beta=0", T, TEST_P
     auto NN = std::vector<std::uint32_t>{5};
     auto MM = std::vector<std::uint32_t>{8, 37};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     using CT = std::complex<T>;
@@ -242,7 +242,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " ger packed alpha=1 beta=0", T, TEST_PRECISIONS
     auto MM = std::vector<std::int64_t>{10, 32, 45};
     auto NN = std::vector<std::int64_t>{1, 16, 17, 48};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::ger<T, T, T, T, T>({{M}}, {{N}}, {{M, N}});
@@ -252,7 +252,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " ger packed alpha=1 beta=0", T, TEST_PRECISIONS
 TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard packed alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{10, 32, 45};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::hadamard<T, T, T, T, T>({{M}}, {{M}}, {{M}});
@@ -263,7 +263,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard 2d packed alpha=1 beta=0", T, TEST_PR
     auto MM = std::vector<std::int64_t>{10, 32, 45};
     auto NN = std::vector<std::int64_t>{5, 16, 42};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::hadamard<T, T, T, T, T>({{M, N}}, {{M, N}}, {{M, N}});
@@ -273,7 +273,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " hadamard 2d packed alpha=1 beta=0", T, TEST_PR
 TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32, 123};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::sum<T, T, T, T>(transpose::N, {{M}}, {{}});
@@ -283,7 +283,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d", T, TEST_PRECISIONS) {
 TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 1d work_group_size=[128,1]", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{123, 435};
 
-    std::int64_t M;
+    std::int64_t M = {};
     DOCTEST_TENSOR1_TEST(MM);
 
     auto op = test::sum<T, T, T, T>(transpose::N, {{M}}, {{}}, 128);
@@ -294,7 +294,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 2d", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
     auto NN = std::vector<std::int64_t>{5, 17};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::sum<T, T, T, T>(transpose::N, {{M, N}}, {{M}});
@@ -305,7 +305,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " sum 2d trans", T, TEST_PRECISIONS) {
     auto MM = std::vector<std::int64_t>{18, 16, 32};
     auto NN = std::vector<std::int64_t>{5, 17};
 
-    std::int64_t M, N;
+    std::int64_t M = {}, N = {};
     DOCTEST_TENSOR2_TEST(MM, NN);
 
     auto op = test::sum<T, T, T, T>(transpose::T, {{N, M}}, {{M}});

@@ -1440,6 +1440,7 @@ void inst_converter::operator()(subgroup_add_inst const &in) {
         case scalar_type::c64:
             return mod_->add<OpGroupFAdd>(spv_ty, scope, group_op, operand);
         }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
     auto spv_ty = unique_.spv_ty(in.result(0).ty());
@@ -1481,6 +1482,7 @@ void inst_converter::operator()(subgroup_max_inst const &in) {
         case scalar_type::c64:
             throw compilation_error(in.loc(), status::ir_complex_unsupported);
         }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
     auto spv_ty = unique_.spv_ty(in.result(0).ty());
@@ -1514,6 +1516,7 @@ void inst_converter::operator()(subgroup_min_inst const &in) {
         case scalar_type::c64:
             throw compilation_error(in.loc(), status::ir_complex_unsupported);
         }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
     };
 
     auto spv_ty = unique_.spv_ty(in.result(0).ty());

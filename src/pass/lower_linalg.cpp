@@ -763,10 +763,6 @@ void linalg_generator::operator()(sum_inst &in) {
         bb_.add(std::move(parallel));
         reducer.teardown(bb_);
     } else if (bt->dim() == 1) {
-        auto parallel = make_parallel(in.loc());
-        tinytc_region_t body = &parallel->child_region(0);
-        auto bb = region_builder{body};
-
         auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
         auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
         bb_.foreach_loop(
@@ -792,8 +788,6 @@ void linalg_generator::operator()(sum_inst &in) {
                             {loop_vars[0]}, in.loc());
             },
             in.loc());
-
-        bb_.add(std::move(parallel));
     }
 }
 

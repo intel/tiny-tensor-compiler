@@ -36,6 +36,7 @@ auto matrix_ext_type::have_type(scalar_type sty, std::int64_t rows, std::int64_t
     case matrix_use::acc:
         return have_acc(sty) && find_shape(mnk(), &gemm_mnk::M, &gemm_mnk::N);
     }
+    throw status::internal_compiler_error;
 }
 
 template <typename Get>
