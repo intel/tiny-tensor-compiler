@@ -28,6 +28,7 @@ struct block_config {
     bool vnni;
     lsc_sfid sfid;
     std::int32_t pos0_shr; // Number of bits to shift pos0 to the right (= divide by 2^pos0_shr)
+    bool post_d32_transpose8x8; // Interpret block as 8x8 d32 and transpose
 
     auto block_size_in_bytes() const -> std::int32_t;
     auto block_size_in_num_grf() const -> std::int32_t;

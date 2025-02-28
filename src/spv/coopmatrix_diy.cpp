@@ -69,12 +69,28 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
     cfg.vnni = ct->use() == matrix_use::a;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
+    cfg.post_d32_transpose8x8 = false;
 
+    auto const adjust_rows = [&cfg](std::int32_t max_rows, std::int32_t max_array_length) {
+        if (cfg.rows > max_rows) {
+            const std::int32_t num_blocks = cfg.rows / max_rows;
+            if (num_blocks > max_array_length) {
+                cfg.array_length = max_array_length;
+                cfg.row_blocks = num_blocks / max_array_length;
+            } else {
+                cfg.array_length = num_blocks;
+            }
+            cfg.rows = max_rows;
+        }
+    };
     auto const adjust_cols = [&cfg](std::int32_t max_cols_in_block) {
         if (cfg.cols > max_cols_in_block) {
             cfg.col_blocks = cfg.cols / max_cols_in_block;
             cfg.cols = max_cols_in_block;
         }
+    };
+    auto const max_array_length = [&cfg](std::int32_t max_rows) -> std::int32_t {
+        return 64 / (max_rows * cfg.element_size);
     };
 
     // transpose + vnni message is the same as transpose message on d32
@@ -87,23 +103,23 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
         cfg.pos0_shr = ilog2(ops_per_chan);
         cfg.vnni = false;
         const auto max_rows = xe::exec_size / 2;
-        cfg.row_blocks = cfg.rows / max_rows;
-        cfg.rows = max_rows;
-    } else {
-        adjust_cols(32);
+        adjust_rows(max_rows, 1);
+    } else if (cfg.transpose) {
+        std::swap(cfg.rows, cfg.cols);
+        cfg.vnni = true;
+        cfg.transpose = false;
+        cfg.post_d32_transpose8x8 = true;
 
-        const auto max_rows = max_rows_in_block(ct->use(), cfg.element_size);
-        if (cfg.rows > max_rows) {
-            const std::int32_t num_blocks = cfg.rows / max_rows;
-            std::int32_t max_array_length = 64 / (max_rows * cfg.element_size);
-            if (num_blocks > max_array_length) {
-                cfg.array_length = max_array_length;
-                cfg.row_blocks = num_blocks / max_array_length;
-            } else {
-                cfg.array_length = num_blocks;
-            }
-            cfg.rows = max_rows;
-        }
+        const std::int32_t max_cols = max_rows_in_block(ct->use(), cfg.element_size);
+        const std::int32_t max_rows = 8;
+        adjust_cols(max_cols);
+        adjust_rows(max_rows, max_array_length(max_rows));
+    } else {
+        const std::int32_t max_cols = 32;
+        const std::int32_t max_rows = max_rows_in_block(ct->use(), cfg.element_size);
+
+        adjust_cols(max_cols);
+        adjust_rows(max_rows, max_array_length(max_rows));
     }
 
     return cfg;
@@ -144,6 +160,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     cfg.vnni = false;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
+    cfg.post_d32_transpose8x8 = false;
 
     if (cfg.cols > max_cols_in_block) {
         cfg.col_blocks = cfg.cols / max_cols_in_block;

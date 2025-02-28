@@ -187,6 +187,70 @@ func @matmul_dpas(%A: memref<f16x64x64> {alignment=64},
     gpu_rt->free_buffer(C);
 }
 
+TEST_CASE(RUNTIME_NAME " matmul B transposed dpas f16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @matmul_dpas(%A: memref<f16x64x64>,
+                  %B: memref<f16x64x64>,
+                  %C: memref<f32x64x64>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        %0 = constant 0 : index
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x16x16,matrix_a>
+        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x16x8,matrix_b>
+        %3 = constant 0.0 : coopmatrix<f32x16x8,matrix_acc>
+        %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x16x8,matrix_acc>
+        cooperative_matrix_store %4, %C[%0,%0]
+    }
+})TinyTL";
+
+    constexpr auto poison = half(-1293.0f);
+    auto A_host = std::vector<half>(64 * 64, half(0.0f));
+    auto B_host = std::vector<half>(64 * 64, half(0.0f));
+    auto C_host = std::vector<float>(64 * 64, poison);
+    for (std::size_t i = 0; i < 64; ++i) {
+        A_host[i + i * 64] = half(1.0f);
+    }
+    for (std::size_t j = 0; j < 64; ++j) {
+        for (std::size_t i = 0; i < 64; ++i) {
+            B_host[i + j * 64] = half(static_cast<float>(i + j * 64));
+        }
+    }
+
+    auto A = gpu_rt->create_buffer(A_host.size() * sizeof(half));
+    auto B = gpu_rt->create_buffer(B_host.size() * sizeof(half));
+    auto C = gpu_rt->create_buffer(C_host.size() * sizeof(float));
+    gpu_rt->memcpy_h2d(A, A_host.data(), A_host.size() * sizeof(half));
+    gpu_rt->memcpy_h2d(B, B_host.data(), B_host.size() * sizeof(half));
+    gpu_rt->memcpy_h2d(C, C_host.data(), C_host.size() * sizeof(float));
+
+    auto ctx = make_compiler_context();
+    ctx.set_error_reporter(
+        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
+        nullptr);
+    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx));
+    auto kernel = gpu_rt->get_kernel(bundle, "matmul_dpas");
+
+    gpu_rt->set_mem_arg(kernel, 0, A, auto_mem_type_v<runtime_class::mem_t>);
+    gpu_rt->set_mem_arg(kernel, 1, B, auto_mem_type_v<runtime_class::mem_t>);
+    gpu_rt->set_mem_arg(kernel, 2, C, auto_mem_type_v<runtime_class::mem_t>);
+    gpu_rt->submit(kernel);
+    gpu_rt->synchronize();
+
+    gpu_rt->memcpy_d2h(C_host.data(), C, C_host.size() * sizeof(float));
+
+    for (std::size_t j = 0; j < 8; ++j) {
+        for (std::size_t i = 0; i < 16; ++i) {
+            REQUIRE(C_host[i + j * 64] == B_host[j + i * 64]);
+        }
+    }
+
+    gpu_rt->free_buffer(A);
+    gpu_rt->free_buffer(B);
+    gpu_rt->free_buffer(C);
+}
+
 TEST_CASE(RUNTIME_NAME " load and store block2d on local memory f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 

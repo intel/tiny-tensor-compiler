@@ -96,6 +96,47 @@ auto visa_type(scalar_type sty) -> char const * {
     }
 }
 
+auto make_d32_transpose8x8(std::ostream &oasm, char const *matrix, std::size_t offset,
+                           temp_counter &make_tmp) {
+    auto dst_d = make_tmp("dst_d");
+    auto dst_q = make_tmp("dst_q");
+    oasm << ".decl " << dst_d << " v_type=G type=d num_elts=64 align=wordx32 alias=<" << matrix
+         << "," << offset << ">\n";
+    oasm << ".decl " << dst_q << " v_type=G type=q num_elts=32 align=wordx32 alias=<" << matrix
+         << "," << offset << ">\n";
+    // 2x2 transpose
+    for (std::int32_t r = 0; r < 4; ++r) {
+        auto ttmp = make_tmp("ttmp_d");
+        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=4 align=wordx32\n";
+        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_d << "(" << r << ",1)<2;1,0>\n";
+        oasm << "mov (M1,4) " << dst_d << "(" << r << ",1)<2> " << dst_d << "(" << r
+             << ",8)<2;1,0>\n";
+        oasm << "mov (M1,4) " << dst_d << "(" << r << ",8)<2> " << ttmp << "(0,0)<1;1,0>\n";
+    }
+    // 4x4 transpose
+    for (std::int32_t r = 0; r < 4; r += 2) {
+        auto ttmp = make_tmp("ttmp_q");
+        oasm << ".decl " << ttmp << " v_type=G type=q num_elts=4 align=wordx32\n";
+        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_q << "(" << r << ",1)<2;1,0>\n";
+        oasm << "mov (M1,4) " << dst_q << "(" << r << ",1)<2> " << dst_q << "(" << r + 1
+             << ",0)<2;1,0>\n";
+        oasm << "mov (M1,4) " << dst_q << "(" << r + 1 << ",0)<2> " << ttmp << "(0,0)<1;1,0>\n";
+    }
+    // 8x8 transpose
+    for (std::int32_t r = 0; r < 4; ++r) {
+        auto ttmp = make_tmp("ttmp_d");
+        const auto R = r / 2;
+        const auto C = (r % 2) * 8;
+        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=4 align=wordx32\n";
+        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_d << "(" << R << "," << C + 4
+             << ")<1;1,0>\n";
+        oasm << "mov (M1,4) " << dst_d << "(" << R << "," << C + 4 << ")<1> " << dst_d << "("
+             << R + 2 << "," << C << ")<1;1,0>\n";
+        oasm << "mov (M1,4) " << dst_d << "(" << R + 2 << "," << C << ")<1> " << ttmp
+             << "(0,0)<1;1,0>\n";
+    }
+}
+
 struct block2d_native_helper {
     block2d_native_helper(std::ostream &oasm, block_config const &cfg, temp_counter &make_tmp);
     void header();
@@ -183,6 +224,12 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
         const auto offset = cfg.byte_offset(0, 0, 0, n, m);
         oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x" << std::hex
              << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec << offset << "\n";
+
+        if (cfg.post_d32_transpose8x8) {
+            for (std::int32_t array_idx = 0; array_idx < cfg.array_length; ++array_idx) {
+                make_d32_transpose8x8(oasm, "$0", cfg.byte_offset(0, 0, array_idx, n, m), make_tmp);
+            }
+        }
     });
     oasm << "}\n";
 
@@ -367,7 +414,7 @@ auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_count
 auto load_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string {
     const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
     const bool transpose_ok =
-        !cfg.transpose || (cfg.element_size == 4 && cfg.rows == xe::exec_size / 2);
+        !cfg.transpose || (cfg.element_size == 4 && cfg.rows <= xe::exec_size / 2);
     return ugm_ok && transpose_ok ? load_block2d_native(cfg, make_tmp)
                                   : load_block2d_emulated(cfg, sty, make_tmp);
 }
