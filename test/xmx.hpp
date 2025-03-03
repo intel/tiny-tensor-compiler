@@ -16,10 +16,18 @@
 using runtime_class = RUNTIME_CLASS;
 using namespace tinytc;
 
+template <typename T> struct poison {
+    constexpr static T value = -1293.f;
+};
+template <> struct poison<std::int8_t> {
+    constexpr static std::int8_t value = -42;
+};
+template <typename T> constexpr T poison_v = poison<T>::value;
+
 template <typename T> class test_matrix {
   public:
     using value_type = T;
-    constexpr static T poison = -1293.f;
+    constexpr static T poison = poison_v<T>;
 
     test_matrix(std::int64_t rows, std::int64_t cols, T initial_value = poison)
         : rows_{rows}, cols_{cols}, data_(rows * cols, initial_value) {}
@@ -311,6 +319,95 @@ func @load_store_block2d_slm(%A: memref<f16x128x128> {alignment=128},
     for (std::int64_t j = 0; j < N; ++j) {
         for (std::int64_t i = 0; i < N; ++i) {
             REQUIRE(A(i, j) == B(i, j));
+        }
+    }
+}
+
+TEST_CASE(RUNTIME_NAME " load block2d i32") {
+    const std::string code = R"TinyTL(
+func @load_block2d(%A: memref<i32x128x128>,
+                   %B: memref<i32x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        %0 = constant 4 : index
+        %1 = constant 8 : index
+        %2 = cooperative_matrix_load.n %A[%0,%1] : coopmatrix<i32x32x16,matrix_acc>
+        cooperative_matrix_store %2, %B[%0,%1]
+    }
+})TinyTL";
+
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<std::int32_t>(N, N);
+        for (std::int64_t j = 8; j < 24; ++j) {
+            for (std::int64_t i = 4; i < 36; ++i) {
+                A(i, j) = i + j * A.rows();
+            }
+        }
+        return A;
+    }();
+    auto B = test_matrix<std::int32_t>(N, N);
+
+    run_custom_test_case(code, "load_block2d", A, B);
+
+    for (std::int64_t j = 0; j < A.cols(); ++j) {
+        for (std::int64_t i = 0; i < A.rows(); ++i) {
+            REQUIRE(A(i, j) == B(i, j));
+        }
+    }
+}
+
+TEST_CASE(RUNTIME_NAME " matmul dpas i8") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @matmul_dpas(%A: memref<i8x64x64>,
+                  %B: memref<i8x64x64>,
+                  %C: memref<i32x64x64>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        %0 = constant 0 : index
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i8x32x32,matrix_a>
+        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<i8x32x16,matrix_b>
+        %3 = constant 0 : coopmatrix<i32x32x16,matrix_acc>
+        %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<i32x32x16,matrix_acc>
+        cooperative_matrix_store %4, %C[%0,%0]
+    }
+})TinyTL";
+
+    constexpr std::int64_t N = 64;
+    constexpr std::int64_t K = 32;
+
+    const auto A = [] {
+        auto A = test_matrix<std::int8_t>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                A(i, j) = i + j;
+                // A(i, j) = i == j ? 1 : 0;
+            }
+        }
+        return A;
+    }();
+    const auto B = [] {
+        auto B = test_matrix<std::int8_t>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                B(i, j) = i - j;
+                // B(i, j) = i == j ? 1 : 0;
+            }
+        }
+        return B;
+    }();
+    auto C = test_matrix<std::int32_t>(N, N);
+
+    run_custom_test_case(code, "matmul_dpas", A, B, C);
+
+    for (std::int64_t j = 0; j < 16; ++j) {
+        for (std::int64_t i = 0; i < 32; ++i) {
+            std::int32_t ref =
+                (i - j) * (K - 1) * K / 2 - i * j * K + (K - 1) * K * (2 * K - 1) / 6;
+            REQUIRE(C(i, j) == ref);
         }
     }
 }

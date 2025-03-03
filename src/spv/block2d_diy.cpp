@@ -4,6 +4,7 @@
 #include "spv/block2d_diy.hpp"
 #include "spv/xe_constants.hpp"
 #include "support/temp_counter.hpp"
+#include "support/util.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
@@ -40,6 +41,12 @@ auto block_config::origin(std::int32_t row, std::int32_t col, std::int32_t array
 }
 auto block_config::total_rows() const -> std::int32_t { return array_length * rows * row_blocks; }
 
+auto lsc_data_size(std::int32_t element_size) -> std::int32_t {
+    if (!is_positive_power_of_two(element_size) || element_size > 8) {
+        throw status::internal_compiler_error;
+    }
+    return ilog2(element_size);
+}
 auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t {
     if (bytes % 4 != 0) {
         throw status::internal_compiler_error;
@@ -201,7 +208,7 @@ template <typename F> void block2d_native_helper::walk(F &&io) {
 auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const std::uint32_t num_dst = std::min(31, cfg.block_size_in_num_grf());
     const std::uint32_t desc = [&] {
-        const std::uint32_t data_size = cfg.element_size == 4 ? 2 : 1;
+        const std::uint32_t data_size = lsc_data_size(cfg.element_size);
         std::uint32_t d = 3;
         if (cfg.vnni) {
             d |= 1 << 7;
@@ -238,7 +245,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
 auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const std::uint32_t num_src1 = std::min(31, cfg.block_size_in_num_grf());
     const std::uint32_t desc = [&] {
-        const std::uint32_t data_size = cfg.element_size == 4 ? 2 : 1;
+        const std::uint32_t data_size = lsc_data_size(cfg.element_size);
         std::uint32_t d = 7;
         d |= data_size << 9;
         d |= 1 << 25;

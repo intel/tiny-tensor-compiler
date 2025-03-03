@@ -39,6 +39,7 @@ struct block_config {
     auto total_rows() const -> std::int32_t;
 };
 
+auto lsc_data_size(std::int32_t element_size) -> std::int32_t;
 auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t;
 auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
     -> std::array<std::int32_t, 2u>;
