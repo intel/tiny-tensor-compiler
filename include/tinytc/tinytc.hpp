@@ -340,7 +340,7 @@ template <typename T, typename F16f> class lp_float {
     }
     //! not equal
     TINYTC_LPFLOAT_CONSTEXPR auto operator!=(lp_float const &rhs) const -> bool {
-        return operator float() == static_cast<float>(rhs);
+        return operator float() != static_cast<float>(rhs);
     }
     //! greater than
     TINYTC_LPFLOAT_CONSTEXPR auto operator>(lp_float const &rhs) const -> bool {

@@ -267,18 +267,23 @@ func @load_store_block2d_slm(%A: memref<f16x128x128> {alignment=128},
         %0 = constant 4 : index
         %1 = constant 8 : index
         %2 = cooperative_matrix_load.n %A[%0,%1] : coopmatrix<f16x16x8,matrix_acc>
+        barrier.global
         %3 = constant 16 : index
         %4 = constant 8 : index
         cooperative_matrix_store %2, %tmp[%3,%4]
+        barrier.local
         %6 = cooperative_matrix_load.n %tmp[%3,%4] : coopmatrix<f16x16x8,matrix_acc>
         cooperative_matrix_store %6, %B[%0,%1]
 
         %7 = constant 64 : index
         %8 = constant 32 : index
         %9 = cooperative_matrix_load.n %A[%7,%8] : coopmatrix<f16x32x32,matrix_acc>
+        barrier.global
         %c0 = constant 0 : index
         cooperative_matrix_store %9, %tmp[%c0,%c0]
+        barrier.local
         %10 = cooperative_matrix_load.n %tmp[%c0,%c0] : coopmatrix<f16x32x32,matrix_acc>
+        barrier.local
         cooperative_matrix_store %10, %B[%7,%8]
     }
 })TinyTL";
