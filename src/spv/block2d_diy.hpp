@@ -18,6 +18,7 @@ namespace tinytc::spv {
 enum class lsc_sfid { ugm, slm };
 
 struct block_config {
+    scalar_type sty;
     std::int32_t element_size;
     std::int32_t array_length;
     std::int32_t rows;
@@ -49,13 +50,11 @@ auto visa_type(scalar_type sty) -> char const *;
 auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
-auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
-    -> std::string;
-auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
-    -> std::string;
+auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto store_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
-auto load_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string;
-auto store_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string;
+auto load_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
 } // namespace tinytc::spv
 

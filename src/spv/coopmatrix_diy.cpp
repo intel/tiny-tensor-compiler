@@ -59,6 +59,7 @@ auto coopmatrix_diy::max_rows_in_block(matrix_use use, std::int32_t element_size
 auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans,
                                  address_space addrspace) -> block_config {
     auto cfg = block_config{};
+    cfg.sty = ct->component_ty();
     cfg.element_size = size(ct->component_ty());
     cfg.array_length = 1;
     cfg.rows = ct->rows();
@@ -99,6 +100,7 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
 
         const auto ops_per_chan = 4 / cfg.element_size;
         cfg.rows /= ops_per_chan;
+        cfg.sty = scalar_type::i32;
         cfg.element_size = 4;
         cfg.pos0_shr = ilog2(ops_per_chan);
         cfg.vnni = false;
@@ -132,7 +134,7 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
         const auto [result_ty, spv_operand_ty, trans, addrspace] = key;
 
         const auto cfg = load_config(result_ty, trans, addrspace);
-        auto code = load_block2d(cfg, result_ty->component_ty(), tmp_);
+        auto code = load_block2d(cfg, tmp_);
 
         auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
         auto spv_result_ty = unique_->spv_ty(result_ty);
@@ -150,6 +152,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
+    cfg.sty = ct->component_ty();
     cfg.element_size = size(ct->component_ty());
     cfg.array_length = 1;
     cfg.rows = ct->rows();
@@ -183,7 +186,7 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
         const auto [val_ty, spv_operand_ty, addrspace] = key;
 
         const auto cfg = store_config(val_ty, addrspace);
-        auto code = store_block2d(cfg, val_ty->component_ty(), tmp_);
+        auto code = store_block2d(cfg, tmp_);
 
         auto spv_void_ty = unique_->void_ty();
         auto spv_val_ty = unique_->spv_ty(val_ty);
@@ -219,6 +222,14 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
             oasm << ".decl " << temp << " v_type=G type=" << visa_type(ct->component_ty())
                  << " num_elts=" << ct->rows() * ct->cols() << " align=wordx32\n";
         }
+        const auto mat_A = tmp_("matrix_A");
+        const auto mat_B = tmp_("matrix_B");
+        oasm << ".decl " << mat_A
+             << " v_type=G type=d num_elts=" << at->rows() * at->cols() / ops_per_chan
+             << " align=wordx32 alias=<$1,0>\n";
+        oasm << ".decl " << mat_B
+             << " v_type=G type=d num_elts=" << bt->rows() * bt->cols() / ops_per_chan
+             << " align=wordx32 alias=<$2,0>\n";
 
         /** The GRF layout must follow the layout described in the following.
          *
@@ -278,8 +289,8 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                     const auto roffset = (m * rt->cols() + n * xe::exec_size) * rsize;
                     oasm << "dpas." << precision_src1 << "." << precision_src2 << "." << xe::sdepth
                          << "." << xe::rcount << " (M1," << xe::exec_size << ") " << dst << "."
-                         << roffset << " " << src0 << "." << coffset << " $1." << aoffset << " $2("
-                         << brow << ",0)\n";
+                         << roffset << " " << src0 << "." << coffset << " " << mat_A << "."
+                         << aoffset << " " << mat_B << "(" << brow << ",0)\n";
                 }
             }
         }

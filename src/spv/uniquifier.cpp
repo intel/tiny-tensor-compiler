@@ -256,21 +256,15 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                     throw status::internal_compiler_error;
                 },
                 [&](coopmatrix_data_type const &ty) -> spv_inst * {
+                    auto scalar_ty = spv_ty(ty.component_ty());
                     if (!matrix_->use_khr_matrix_ext()) {
-                        const auto sty = [](scalar_type sty, matrix_use use) {
-                            if (use == matrix_use::acc) {
-                                return sty;
-                            }
-                            return scalar_type::i32;
-                        }(ty.component_ty(), ty.use());
-                        const std::int64_t bytes = size(ty.component_ty()) * ty.rows() * ty.cols();
-                        const auto bytes_multiple_of =
-                            size(sty) * matrix_->required_subgroup_size();
-                        if (bytes % bytes_multiple_of != 0) {
+                        const std::int64_t num_elements = ty.rows() * ty.cols();
+                        const auto num_elements_multiple_of = matrix_->required_subgroup_size();
+                        if (num_elements % num_elements_multiple_of != 0) {
                             throw status::internal_compiler_error;
                         }
 
-                        return spv_vec_ty(spv_ty(sty), bytes / bytes_multiple_of);
+                        return spv_vec_ty(scalar_ty, num_elements / num_elements_multiple_of);
                     }
 
                     auto spv_use = [](matrix_use use) {
@@ -284,7 +278,6 @@ auto uniquifier::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
                         }
                         throw status::internal_compiler_error;
                     };
-                    auto scalar_ty = spv_ty(ty.component_ty());
                     auto scope = constant(static_cast<std::int32_t>(Scope::Subgroup));
                     auto rows = constant(static_cast<std::int32_t>(ty.cols()));
                     auto cols = constant(static_cast<std::int32_t>(ty.rows()));

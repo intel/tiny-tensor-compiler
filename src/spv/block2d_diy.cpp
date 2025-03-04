@@ -268,8 +268,8 @@ auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> st
 }
 
 struct block2d_emulated_helper {
-    block2d_emulated_helper(std::ostream &oasm, block_config const &cfg, scalar_type sty,
-                            std::size_t io_batch_size, temp_counter &make_tmp);
+    block2d_emulated_helper(std::ostream &oasm, block_config const &cfg, std::size_t io_batch_size,
+                            temp_counter &make_tmp);
     void header();
     auto dst_op(std::int32_t row, std::int32_t col, std::int32_t array_idx, std::int32_t col_block,
                 std::int32_t row_block) -> std::string;
@@ -279,33 +279,35 @@ struct block2d_emulated_helper {
 
     std::ostream &oasm;
     block_config const &cfg;
-    char const *visa_ty_;
     std::vector<std::string> temps, pointers;
-    std::string base_pointer, tempq;
+    std::string base_pointer, tempq, dst;
 };
 
 block2d_emulated_helper::block2d_emulated_helper(std::ostream &oasm, block_config const &cfg,
-                                                 scalar_type sty, std::size_t io_batch_size,
-                                                 temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), visa_ty_(visa_type(sty)), temps(io_batch_size), pointers(io_batch_size),
-      base_pointer{make_tmp("base_pointer")}, tempq{make_tmp("tempq")} {
+                                                 std::size_t io_batch_size, temp_counter &make_tmp)
+    : oasm(oasm), cfg(cfg), temps(io_batch_size), pointers(io_batch_size),
+      base_pointer{make_tmp("base_pointer")}, tempq{make_tmp("tempq")}, dst{make_tmp("dst")} {
     std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
     std::generate(pointers.begin(), pointers.end(), [&]() { return make_tmp("pointer"); });
 }
 
 void block2d_emulated_helper::header() {
+    char const *visa_ty = visa_type(cfg.sty);
     std::for_each(temps.begin(), temps.end(), [&](auto const &temp) {
-        oasm << ".decl " << temp << " v_type=G type=" << visa_ty_
-             << " num_elts=" << cfg.total_rows() << " align=wordx32\n";
+        oasm << ".decl " << temp << " v_type=G type=" << visa_ty << " num_elts=" << cfg.total_rows()
+             << " align=wordx32\n";
     });
     std::for_each(pointers.begin(), pointers.end(), [&](auto const &pointer) {
         if (cfg.sfid == lsc_sfid::slm) {
-            oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n ";
+            oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n";
         } else {
             oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx32\n";
         }
     });
-    oasm << ".decl " << base_pointer << " v_type=G type=q num_elts=1 align=qword\n";
+    oasm << ".decl " << dst << " v_type=G type=" << visa_ty
+         << " num_elts=" << cfg.total_rows() * cfg.cols * cfg.col_blocks
+         << " align=wordx32 alias=<$0,0>\n";
+    oasm << ".decl " << base_pointer << " v_type=G type=uq num_elts=1 align=qword\n";
     oasm << ".decl " << tempq << " v_type=G type=q num_elts=1 align=qword\n";
     oasm << "   mov (M1,1) " << base_pointer << "(0,0)<1> $1(0,0)<1;1,0>\n";
     oasm << "   mul (M1,1) " << tempq << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size << ":d\n";
@@ -321,7 +323,7 @@ auto block2d_emulated_helper::dst_op(std::int32_t row, std::int32_t col, std::in
                                      std::int32_t col_block, std::int32_t row_block)
     -> std::string {
     const auto [dst_R, dst_C] = cfg.origin(row, col, array_idx, col_block, row_block);
-    return (std::ostringstream{} << "$0(" << dst_R << "," << dst_C << ")").str();
+    return (std::ostringstream{} << dst << "(" << dst_R << "," << dst_C << ")").str();
 }
 auto block2d_emulated_helper::temp_op(std::string_view temp, std::int32_t row,
                                       std::int32_t array_idx, std::int32_t row_block)
@@ -347,18 +349,19 @@ template <typename F> void block2d_emulated_helper::walk(F &&io) {
     }
 }
 
-auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
-    -> std::string {
+auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const auto addrsize = cfg.sfid == lsc_sfid::slm ? "a32" : "a64";
     const auto sfid = to_string(cfg.sfid);
     const auto total_rows = cfg.array_length * cfg.rows * cfg.row_blocks;
     const auto vector_size = lsc_vector_size_d32(total_rows * cfg.element_size);
 
     auto oasm = std::ostringstream{};
-    auto h = block2d_emulated_helper(oasm, cfg, sty, xe::load_batch_size, make_tmp);
+    auto h = block2d_emulated_helper(oasm, cfg, xe::load_batch_size, make_tmp);
 
     oasm << "{\n";
     h.header();
+
+    const std::int32_t row_step_size = std::min(cfg.rows, xe::exec_size);
 
     const auto ops_per_chan = xe::channel_size / cfg.element_size;
     h.walk([&](std::int32_t n, std::int32_t c, std::string_view pointer, std::string_view temp) {
@@ -366,9 +369,9 @@ auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counte
              << pointer << "]:" << addrsize << "\n";
         for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
             for (std::int32_t a = 0; a < cfg.array_length; ++a) {
-                for (std::int32_t r = 0; r < cfg.rows; r += xe::exec_size) {
+                for (std::int32_t r = 0; r < cfg.rows; r += row_step_size) {
                     if (cfg.vnni) {
-                        const auto es = xe::exec_size / ops_per_chan;
+                        const auto es = row_step_size / ops_per_chan;
                         const auto cmod = c % ops_per_chan;
                         const auto cbase = c - cmod;
                         for (std::int32_t o = 0; o < ops_per_chan; ++o) {
@@ -377,26 +380,34 @@ auto load_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counte
                                  << "> " << h.temp_op(temp, r + o * es, a, m) << "<1;1,0>\n";
                         }
                     } else {
-                        oasm << "   mov (M1," << xe::exec_size << ") " << h.dst_op(r, c, a, n, m)
+                        oasm << "   mov (M1," << row_step_size << ") " << h.dst_op(r, c, a, n, m)
                              << "<1> " << h.temp_op(temp, r, a, m) << "<1;1,0>\n";
                     }
                 }
             }
         }
     });
+    if (cfg.transpose || cfg.post_d32_transpose8x8) {
+        for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
+            for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
+                for (std::int32_t a = 0; a < cfg.array_length; ++a) {
+                    make_d32_transpose8x8(oasm, "$0", cfg.byte_offset(0, 0, a, n, m), make_tmp);
+                }
+            }
+        }
+    }
     oasm << "}\n";
 
     return std::move(oasm).str();
 }
 
-auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
-    -> std::string {
+auto store_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const auto addrsize = cfg.sfid == lsc_sfid::slm ? "a32" : "a64";
     const auto sfid = to_string(cfg.sfid);
     const auto vector_size = lsc_vector_size_d32(cfg.rows * cfg.row_blocks * cfg.element_size);
 
     auto oasm = std::ostringstream{};
-    auto h = block2d_emulated_helper(oasm, cfg, sty, xe::store_batch_size, make_tmp);
+    auto h = block2d_emulated_helper(oasm, cfg, xe::store_batch_size, make_tmp);
 
     oasm << "{\n";
     h.header();
@@ -418,18 +429,16 @@ auto store_block2d_emulated(block_config const &cfg, scalar_type sty, temp_count
     return std::move(oasm).str();
 }
 
-auto load_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp) -> std::string {
+auto load_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
     const bool transpose_ok =
         !cfg.transpose || (cfg.element_size == 4 && cfg.rows <= xe::exec_size / 2);
     return ugm_ok && transpose_ok ? load_block2d_native(cfg, make_tmp)
-                                  : load_block2d_emulated(cfg, sty, make_tmp);
+                                  : load_block2d_emulated(cfg, make_tmp);
 }
-auto store_block2d(block_config const &cfg, scalar_type sty, temp_counter &make_tmp)
-    -> std::string {
+auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
-    return ugm_ok ? store_block2d_native(cfg, make_tmp)
-                  : store_block2d_emulated(cfg, sty, make_tmp);
+    return ugm_ok ? store_block2d_native(cfg, make_tmp) : store_block2d_emulated(cfg, make_tmp);
 }
 
 } // namespace tinytc::spv

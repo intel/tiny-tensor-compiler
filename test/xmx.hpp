@@ -323,6 +323,108 @@ func @load_store_block2d_slm(%A: memref<f16x128x128> {alignment=128},
     }
 }
 
+TEST_CASE(RUNTIME_NAME " load block2d on local memory with vnni f16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @dpas_slm(%B: memref<f16x128x128>,
+               %C: memref<f32x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    %0 = constant 0 : index
+    %A = alloca {alignment=128} : memref<f16x32x32,local>
+    %n = constant 32 : index
+    %N = constant 128 : index
+    foreach (%i,%j)=(%0,%0),(%n,%n) {
+        %1 = arith.mul %j, %n : index
+        %2 = arith.add %i, %1 : index
+        %3 = cast %2 : f16
+        store %3, %A[%i,%j]
+    }
+    parallel {
+        barrier.local
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %3 = constant 0.0 : coopmatrix<f16x32x32,matrix_acc>
+        %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %4, %C[%0,%0]
+
+        %5 = constant 64 : index
+        %6 = cooperative_matrix_load.t %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %7 = cooperative_matrix_mul_add %6, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %7, %C[%5,%0]
+    }
+})TinyTL";
+
+    constexpr std::int64_t n = 32;
+    constexpr std::int64_t N = 128;
+
+    const auto B = [] {
+        auto B = test_matrix<half>(N, N, half{0.0f});
+        for (std::int64_t i = 0; i < N; ++i) {
+            B(i, i) = half{1.0f};
+        }
+        return B;
+    }();
+    auto C = test_matrix<float>(N, N);
+
+    run_custom_test_case(code, "dpas_slm", B, C);
+
+    for (std::int64_t j = 0; j < n; ++j) {
+        for (std::int64_t i = 0; i < n; ++i) {
+            REQUIRE(C(i, j) == static_cast<float>(i + j * n));
+            // REQUIRE(C(i + 64, j) == static_cast<float>(j + i * n));
+        }
+    }
+}
+
+TEST_CASE(RUNTIME_NAME " load block2d on local memory with transpose f16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @dpas_slm(%A: memref<f16x128x128>,
+               %C: memref<f32x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    %0 = constant 0 : index
+    %B = alloca {alignment=128} : memref<f16x32x32,local>
+    %n = constant 32 : index
+    %N = constant 128 : index
+    foreach (%i,%j)=(%0,%0),(%n,%n) {
+        %1 = arith.mul %j, %n : index
+        %2 = arith.add %i, %1 : index
+        %3 = cast %2 : f16
+        store %3, %B[%i,%j]
+    }
+    parallel {
+        barrier.local
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %3 = constant 0.0 : coopmatrix<f16x32x32,matrix_acc>
+        %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %4, %C[%0,%0]
+    }
+})TinyTL";
+
+    constexpr std::int64_t n = 32;
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<half>(N, N, half{0.0f});
+        for (std::int64_t i = 0; i < N; ++i) {
+            A(i, i) = half{1.0f};
+        }
+        return A;
+    }();
+    auto C = test_matrix<float>(N, N);
+
+    run_custom_test_case(code, "dpas_slm", A, C);
+
+    for (std::int64_t j = 0; j < n; ++j) {
+        for (std::int64_t i = 0; i < n; ++i) {
+            REQUIRE(C(i, j) == static_cast<float>(j + i * n));
+        }
+    }
+}
+
 TEST_CASE(RUNTIME_NAME " load block2d i32") {
     const std::string code = R"TinyTL(
 func @load_block2d(%A: memref<i32x128x128>,
