@@ -26,8 +26,14 @@ auto block_config::block_size_in_num_grf() const -> std::int32_t {
 auto block_config::byte_offset(std::int32_t row, std::int32_t col, std::int32_t array_idx,
                                std::int32_t col_block, std::int32_t row_block) const
     -> std::int32_t {
-    std::int32_t offset = row_block;
-    offset = col_block + offset * col_blocks;
+    std::int32_t offset = 0;
+    if (transpose) {
+        offset = col_block;
+        offset = row_block + offset * row_blocks;
+    } else {
+        offset = row_block;
+        offset = col_block + offset * col_blocks;
+    }
     offset = array_idx + offset * array_length;
     offset = col + offset * cols;
     offset = row + offset * rows;
@@ -103,44 +109,79 @@ auto visa_type(scalar_type sty) -> char const * {
     }
 }
 
+/**
+ * This routine generates transpose code for 8x8 matrices of d32 type. Multiple 8x8 matrices may be
+ * packed side-by-side. E.g. for num_8x8_blocks=2 the GRF layout, say starting at reg r93,
+ * is expected to be
+ *
+ *  r93: a_11 ... a_18 b_11 ... b_18
+ *  ...: ...      ...  ...      ...
+ * r100: a_81 ... a_88 b_81 ... b_88
+ *
+ * The transposition is done in-place and we should get
+ *
+ *  r93: a_11 ... a_81 b_11 ... b_81
+ *  ...: ...      ...  ...      ...
+ * r100: a_18 ... a_88 b_18 ... b_88
+ *
+ * This routine can also be called for 16x8 half types or 32x8 i8 types.
+ * Then, the routine generates transpose + VNNI transform.
+ *
+ */
 auto make_d32_transpose8x8(std::ostream &oasm, char const *matrix, std::size_t offset,
-                           temp_counter &make_tmp) {
+                           temp_counter &make_tmp, std::int32_t num_8x8_blocks = 1) {
+    constexpr std::int32_t element_size = 4;
+    const std::int32_t stride = 8 * element_size * num_8x8_blocks;
+    const std::int32_t num_elements = 8 * stride / element_size;
+
     auto dst_d = make_tmp("dst_d");
     auto dst_q = make_tmp("dst_q");
-    oasm << ".decl " << dst_d << " v_type=G type=d num_elts=64 align=wordx32 alias=<" << matrix
-         << "," << offset << ">\n";
-    oasm << ".decl " << dst_q << " v_type=G type=q num_elts=32 align=wordx32 alias=<" << matrix
-         << "," << offset << ">\n";
+    oasm << ".decl " << dst_d << " v_type=G type=d num_elts=" << num_elements
+         << " align=wordx32 alias=<" << matrix << "," << offset << ">\n";
+    oasm << ".decl " << dst_q << " v_type=G type=q num_elts=" << num_elements / 2
+         << " align=wordx32 alias=<" << matrix << "," << offset << ">\n";
+
     // 2x2 transpose
+    const std::int32_t exec_size = 4 * num_8x8_blocks;
     for (std::int32_t r = 0; r < 4; ++r) {
         auto ttmp = make_tmp("ttmp_d");
-        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=4 align=wordx32\n";
-        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_d << "(" << r << ",1)<2;1,0>\n";
-        oasm << "mov (M1,4) " << dst_d << "(" << r << ",1)<2> " << dst_d << "(" << r
-             << ",8)<2;1,0>\n";
-        oasm << "mov (M1,4) " << dst_d << "(" << r << ",8)<2> " << ttmp << "(0,0)<1;1,0>\n";
+        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=" << exec_size << " align=wordx32\n";
+        auto [R1, C1] = region_origin(element_size, 2 * r * stride + element_size);
+        auto [R2, C2] = region_origin(element_size, 2 * r * stride + stride);
+        oasm << "mov (M1," << exec_size << ") " << ttmp << "(0,0)<1> " << dst_d << "(" << R1 << ","
+             << C1 << ")<2;1,0>\n";
+        oasm << "mov (M1," << exec_size << ") " << dst_d << "(" << R1 << "," << C1 << ")<2> "
+             << dst_d << "(" << R2 << "," << C2 << ")<2;1,0>\n";
+        oasm << "mov (M1," << exec_size << ") " << dst_d << "(" << R2 << "," << C2 << ")<2> "
+             << ttmp << "(0,0)<1;1,0>\n";
     }
     // 4x4 transpose
     for (std::int32_t r = 0; r < 4; r += 2) {
         auto ttmp = make_tmp("ttmp_q");
-        oasm << ".decl " << ttmp << " v_type=G type=q num_elts=4 align=wordx32\n";
-        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_q << "(" << r << ",1)<2;1,0>\n";
-        oasm << "mov (M1,4) " << dst_q << "(" << r << ",1)<2> " << dst_q << "(" << r + 1
-             << ",0)<2;1,0>\n";
-        oasm << "mov (M1,4) " << dst_q << "(" << r + 1 << ",0)<2> " << ttmp << "(0,0)<1;1,0>\n";
+        oasm << ".decl " << ttmp << " v_type=G type=q num_elts=" << exec_size << " align=wordx32\n";
+        auto [R1, C1] = region_origin(2 * element_size, 2 * r * stride + 2 * element_size);
+        auto [R2, C2] = region_origin(2 * element_size, 2 * (r + 1) * stride);
+        oasm << "mov (M1," << exec_size << ") " << ttmp << "(0,0)<1> " << dst_q << "(" << R1 << ","
+             << C1 << ")<2;1,0>\n";
+        oasm << "mov (M1," << exec_size << ") " << dst_q << "(" << R1 << "," << C1 << ")<2> "
+             << dst_q << "(" << R2 << "," << C2 << ")<2;1,0>\n";
+        oasm << "mov (M1," << exec_size << ") " << dst_q << "(" << R2 << "," << C2 << ")<2> "
+             << ttmp << "(0,0)<1;1,0>\n";
     }
     // 8x8 transpose
     for (std::int32_t r = 0; r < 4; ++r) {
         auto ttmp = make_tmp("ttmp_d");
-        const auto R = r / 2;
-        const auto C = (r % 2) * 8;
-        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=4 align=wordx32\n";
-        oasm << "mov (M1,4) " << ttmp << "(0,0)<1> " << dst_d << "(" << R << "," << C + 4
-             << ")<1;1,0>\n";
-        oasm << "mov (M1,4) " << dst_d << "(" << R << "," << C + 4 << ")<1> " << dst_d << "("
-             << R + 2 << "," << C << ")<1;1,0>\n";
-        oasm << "mov (M1,4) " << dst_d << "(" << R + 2 << "," << C << ")<1> " << ttmp
-             << "(0,0)<1;1,0>\n";
+        auto [R1, C1] = region_origin(element_size, r * stride + 4 * element_size);
+        auto [R2, C2] = region_origin(element_size, (r + 4) * stride);
+        oasm << ".decl " << ttmp << " v_type=G type=d num_elts=" << exec_size << " align=wordx32\n";
+        oasm << "mov (M1," << exec_size << ") " << ttmp << "(0,0)<1> " << dst_d << "(" << R1 << ","
+             << C1 << ")<8;4,1>\n";
+        for (std::int32_t b = 0; b < 8 * num_8x8_blocks; b += 8) {
+            oasm << "mov (M1,4) " << dst_d << "(" << R1 << "," << C1 + b << ")<1> " << dst_d << "("
+                 << R2 << "," << C2 + b << ")<1;1,0>\n";
+            oasm << "mov (M1,4) " << dst_d << "(" << R2 << "," << C2 + b << ")<1> " << ttmp << "(0,"
+                 << b / 2 << ")<1;1,0>\n";
+        }
     }
 }
 
@@ -178,14 +219,10 @@ void block2d_native_helper::header() {
 }
 
 template <typename F> void block2d_native_helper::walk(F &&io) {
-    auto pos0_C = 5;
-    auto pos1_C = 6;
-    auto pos0_inc = cfg.rows;
-    auto pos1_inc = cfg.cols;
-    if (cfg.transpose) {
-        std::swap(pos0_C, pos1_C);
-        std::swap(pos0_inc, pos1_inc);
-    }
+    const auto pos0_C = 5;
+    const auto pos1_C = 6;
+    const auto pos0_inc = cfg.rows;
+    const auto pos1_inc = cfg.cols;
     for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
         for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
             io(m, n);
@@ -213,7 +250,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
         if (cfg.vnni) {
             d |= 1 << 7;
         }
-        if (cfg.transpose) {
+        if (cfg.transpose && !cfg.vnni) {
             d |= 1 << 15;
         }
         d |= data_size << 9;
@@ -232,7 +269,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
         oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x" << std::hex
              << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec << offset << "\n";
 
-        if (cfg.post_d32_transpose8x8) {
+        if (cfg.vnni && cfg.transpose) {
             for (std::int32_t array_idx = 0; array_idx < cfg.array_length; ++array_idx) {
                 make_d32_transpose8x8(oasm, "$0", cfg.byte_offset(0, 0, array_idx, n, m), make_tmp);
             }
@@ -352,8 +389,7 @@ template <typename F> void block2d_emulated_helper::walk(F &&io) {
 auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const auto addrsize = cfg.sfid == lsc_sfid::slm ? "a32" : "a64";
     const auto sfid = to_string(cfg.sfid);
-    const auto total_rows = cfg.array_length * cfg.rows * cfg.row_blocks;
-    const auto vector_size = lsc_vector_size_d32(total_rows * cfg.element_size);
+    const auto vector_size = lsc_vector_size_d32(cfg.total_rows() * cfg.element_size);
 
     auto oasm = std::ostringstream{};
     auto h = block2d_emulated_helper(oasm, cfg, xe::load_batch_size, make_tmp);
@@ -362,7 +398,6 @@ auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> s
     h.header();
 
     const std::int32_t row_step_size = std::min(cfg.rows, xe::exec_size);
-
     const auto ops_per_chan = xe::channel_size / cfg.element_size;
     h.walk([&](std::int32_t n, std::int32_t c, std::string_view pointer, std::string_view temp) {
         oasm << "   lsc_load." << sfid << " (M1,1) " << temp << ":d32x" << vector_size << "t flat["
@@ -380,18 +415,28 @@ auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> s
                                  << "> " << h.temp_op(temp, r + o * es, a, m) << "<1;1,0>\n";
                         }
                     } else {
-                        oasm << "   mov (M1," << row_step_size << ") " << h.dst_op(r, c, a, n, m)
-                             << "<1> " << h.temp_op(temp, r, a, m) << "<1;1,0>\n";
+                        if (cfg.transpose) {
+                            const auto spread_factor = cfg.cols / 8;
+                            const auto C = c % 8 * spread_factor + c / 8;
+                            oasm << "   mov (M1," << row_step_size << ") "
+                                 << h.dst_op(r, C, a, n, m) << "<1> " << h.temp_op(temp, r, a, m)
+                                 << "<1;1,0>\n";
+                        } else {
+                            oasm << "   mov (M1," << row_step_size << ") "
+                                 << h.dst_op(r, c, a, n, m) << "<1> " << h.temp_op(temp, r, a, m)
+                                 << "<1;1,0>\n";
+                        }
                     }
                 }
             }
         }
     });
-    if (cfg.transpose || cfg.post_d32_transpose8x8) {
+    if (cfg.transpose) {
         for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
             for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
                 for (std::int32_t a = 0; a < cfg.array_length; ++a) {
-                    make_d32_transpose8x8(oasm, "$0", cfg.byte_offset(0, 0, a, n, m), make_tmp);
+                    make_d32_transpose8x8(oasm, "$0", cfg.byte_offset(0, 0, a, n, m), make_tmp,
+                                          cfg.cols / (8 * ops_per_chan));
                 }
             }
         }

@@ -70,7 +70,6 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
     cfg.vnni = ct->use() == matrix_use::a;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
-    cfg.post_d32_transpose8x8 = false;
 
     auto const adjust_rows = [&cfg](std::int32_t max_rows, std::int32_t max_array_length) {
         if (cfg.rows > max_rows) {
@@ -96,7 +95,7 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
 
     // transpose + vnni message is the same as transpose message on d32
     if (cfg.transpose && cfg.vnni) {
-        adjust_cols(xe::exec_size);
+        std::swap(cfg.rows, cfg.cols);
 
         const auto ops_per_chan = 4 / cfg.element_size;
         cfg.rows /= ops_per_chan;
@@ -104,13 +103,16 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
         cfg.element_size = 4;
         cfg.pos0_shr = ilog2(ops_per_chan);
         cfg.vnni = false;
+
+        adjust_cols(xe::exec_size);
+
         const auto max_rows = xe::exec_size / 2;
         adjust_rows(max_rows, 1);
     } else if (cfg.transpose) {
         std::swap(cfg.rows, cfg.cols);
+        // Enable VNNI as transpose loads for B matrix are missing, so we use VNNI + mov-based 8x8
+        // transpose
         cfg.vnni = true;
-        cfg.transpose = false;
-        cfg.post_d32_transpose8x8 = true;
 
         const std::int32_t max_cols = max_rows_in_block(ct->use(), cfg.element_size);
         const std::int32_t max_rows = 8;
@@ -163,7 +165,6 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     cfg.vnni = false;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
-    cfg.post_d32_transpose8x8 = false;
 
     if (cfg.cols > max_cols_in_block) {
         cfg.col_blocks = cfg.cols / max_cols_in_block;

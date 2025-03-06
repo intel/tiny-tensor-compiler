@@ -216,21 +216,51 @@ func @matmul_dpas(%A: memref<f16x64x64> {alignment=64},
     }
 }
 
-TEST_CASE(RUNTIME_NAME " matmul B transposed dpas f16") {
+TEST_CASE(RUNTIME_NAME " matmul transposed dpas f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 
     const std::string code = R"TinyTL(
 func @matmul_dpas(%A: memref<f16x64x64>,
                   %B: memref<f16x32x64>,
-                  %C: memref<f32x64x64>)
+                  %C: memref<f32x64x128>)
     attributes{subgroup_size=16,work_group_size=[16,1]} {
     parallel {
         %0 = constant 0 : index
-        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
-        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x16,matrix_a>
+        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x16x32,matrix_b>
         %3 = constant 0.0 : coopmatrix<f32x32x32,matrix_acc>
         %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
         cooperative_matrix_store %4, %C[%0,%0]
+
+        %5 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %6 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x16,matrix_b>
+        %7 = constant 0.0 : coopmatrix<f32x32x16,matrix_acc>
+        %8 = cooperative_matrix_mul_add %5, %6, %7 : coopmatrix<f32x32x16,matrix_acc>
+        %c32 = constant 32 : index
+        cooperative_matrix_store %8, %C[%0,%c32]
+
+        %9 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %10 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %11 = constant 0.0 : coopmatrix<f32x32x32,matrix_acc>
+        %12 = cooperative_matrix_mul_add %9, %10, %11 : coopmatrix<f32x32x32,matrix_acc>
+        %c64 = constant 64 : index
+        cooperative_matrix_store %12, %C[%0,%c64]
+
+        %13 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x16,matrix_a>
+        %14 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x16x32,matrix_b>
+        %15 = cooperative_matrix_mul_add %13, %14, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %15, %C[%c32,%0]
+
+        %16 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x16x32,matrix_a>
+        %17 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %18 = constant 0.0 : coopmatrix<f32x16x32,matrix_acc>
+        %19 = cooperative_matrix_mul_add %16, %17, %18 : coopmatrix<f32x16x32,matrix_acc>
+        cooperative_matrix_store %19, %C[%c32,%c32]
+
+        %20 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %21 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %22 = cooperative_matrix_mul_add %20, %21, %11 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %22, %C[%c32,%c64]
     }
 })TinyTL";
 
@@ -252,15 +282,23 @@ func @matmul_dpas(%A: memref<f16x64x64>,
         }
         return B;
     }();
-    auto C = test_matrix<float>(M, N);
+    auto C = test_matrix<float>(M, 128);
 
     run_custom_test_case(code, "matmul_dpas", A, B, C);
 
-    for (std::int64_t j = 0; j < 32; ++j) {
-        for (std::int64_t i = 0; i < 32; ++i) {
-            REQUIRE(C(i, j) == B(j, i));
+    auto const check = [&](std::int64_t i0, std::int64_t i1, std::int64_t j0, std::int64_t j1) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            for (std::int64_t i = i0; i < i1; ++i) {
+                REQUIRE(C(i, j) == B(j - j0, i - i0));
+            }
         }
-    }
+    };
+    check(0, 16, 0, 32);
+    check(0, 32, 32, 48);
+    check(0, 32, 64, 96);
+    check(32, 64, 0, 16);
+    check(32, 48, 32, 64);
+    check(32, 64, 64, 96);
 }
 
 TEST_CASE(RUNTIME_NAME " load and store block2d on local memory f16") {
@@ -342,16 +380,23 @@ func @dpas_slm(%B: memref<f16x128x128>,
     }
     parallel {
         barrier.local
-        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
-        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
-        %3 = constant 0.0 : coopmatrix<f16x32x32,matrix_acc>
+        %1 = cooperative_matrix_load.t %A[%0,%0] : coopmatrix<f16x32x16,matrix_a>
+        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f16x16x32,matrix_b>
+        %3 = constant 0.0 : coopmatrix<f32x32x32,matrix_acc>
         %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
         cooperative_matrix_store %4, %C[%0,%0]
 
-        %5 = constant 64 : index
-        %6 = cooperative_matrix_load.t %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
-        %7 = cooperative_matrix_mul_add %6, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
-        cooperative_matrix_store %7, %C[%5,%0]
+        %5 = cooperative_matrix_load.t %A[%0,%0] : coopmatrix<f16x16x32,matrix_a>
+        %6 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %7 = constant 0.0 : coopmatrix<f32x16x32,matrix_acc>
+        %8 = cooperative_matrix_mul_add %5, %6, %7 : coopmatrix<f32x16x32,matrix_acc>
+        %c32 = constant 32 : index
+        cooperative_matrix_store %8, %C[%c32,%0]
+
+        %9 = cooperative_matrix_load.t %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %10 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %11 = cooperative_matrix_mul_add %9, %10, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %11, %C[%c32,%c32]
     }
 })TinyTL";
 
@@ -369,12 +414,16 @@ func @dpas_slm(%B: memref<f16x128x128>,
 
     run_custom_test_case(code, "dpas_slm", B, C);
 
-    for (std::int64_t j = 0; j < n; ++j) {
-        for (std::int64_t i = 0; i < n; ++i) {
-            REQUIRE(C(i, j) == static_cast<float>(i + j * n));
-            // REQUIRE(C(i + 64, j) == static_cast<float>(j + i * n));
+    auto const check = [&](std::int64_t i0, std::int64_t i1, std::int64_t j0, std::int64_t j1) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            for (std::int64_t i = i0; i < i1; ++i) {
+                REQUIRE(C(i, j) == static_cast<float>(j - j0 + (i - i0) * n));
+            }
         }
-    }
+    };
+    check(0, 32, 0, 16);
+    check(32, 48, 0, 32);
+    check(32, 64, 32, 64);
 }
 
 TEST_CASE(RUNTIME_NAME " load block2d on local memory with transpose f16") {
@@ -396,11 +445,23 @@ func @dpas_slm(%A: memref<f16x128x128>,
     }
     parallel {
         barrier.local
-        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
-        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
-        %3 = constant 0.0 : coopmatrix<f16x32x32,matrix_acc>
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x16,matrix_a>
+        %2 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x16x32,matrix_b>
+        %3 = constant 0.0 : coopmatrix<f32x32x32,matrix_acc>
         %4 = cooperative_matrix_mul_add %1, %2, %3 : coopmatrix<f32x32x32,matrix_acc>
         cooperative_matrix_store %4, %C[%0,%0]
+
+        %5 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %6 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x16,matrix_b>
+        %7 = constant 0.0 : coopmatrix<f32x32x16,matrix_acc>
+        %8 = cooperative_matrix_mul_add %5, %6, %7 : coopmatrix<f32x32x16,matrix_acc>
+        %c32 = constant 32 : index
+        cooperative_matrix_store %8, %C[%c32,%0]
+
+        %9 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %10 = cooperative_matrix_load.t %B[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %11 = cooperative_matrix_mul_add %9, %10, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %11, %C[%c32,%c32]
     }
 })TinyTL";
 
@@ -418,11 +479,16 @@ func @dpas_slm(%A: memref<f16x128x128>,
 
     run_custom_test_case(code, "dpas_slm", A, C);
 
-    for (std::int64_t j = 0; j < n; ++j) {
-        for (std::int64_t i = 0; i < n; ++i) {
-            REQUIRE(C(i, j) == static_cast<float>(j + i * n));
+    auto const check = [&](std::int64_t i0, std::int64_t i1, std::int64_t j0, std::int64_t j1) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            for (std::int64_t i = i0; i < i1; ++i) {
+                REQUIRE(C(i, j) == static_cast<float>(j - j0 + (i - i0) * n));
+            }
         }
-    }
+    };
+    check(0, 16, 0, 32);
+    check(32, 64, 0, 16);
+    check(32, 64, 32, 64);
 }
 
 TEST_CASE(RUNTIME_NAME " load block2d i32") {
