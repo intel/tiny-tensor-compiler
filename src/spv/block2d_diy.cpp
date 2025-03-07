@@ -317,13 +317,14 @@ struct block2d_emulated_helper {
     std::ostream &oasm;
     block_config const &cfg;
     std::vector<std::string> temps, pointers;
-    std::string base_pointer, tempq, dst;
+    std::string offset_x, offset_y, total_offset, dst;
 };
 
 block2d_emulated_helper::block2d_emulated_helper(std::ostream &oasm, block_config const &cfg,
                                                  std::size_t io_batch_size, temp_counter &make_tmp)
     : oasm(oasm), cfg(cfg), temps(io_batch_size), pointers(io_batch_size),
-      base_pointer{make_tmp("base_pointer")}, tempq{make_tmp("tempq")}, dst{make_tmp("dst")} {
+      offset_x{make_tmp("offset_x")}, offset_y{make_tmp("offset_y")},
+      total_offset{make_tmp("total_offset")}, dst{make_tmp("dst")} {
     std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
     std::generate(pointers.begin(), pointers.end(), [&]() { return make_tmp("pointer"); });
 }
@@ -338,22 +339,22 @@ void block2d_emulated_helper::header() {
         if (cfg.sfid == lsc_sfid::slm) {
             oasm << ".decl " << pointer << " v_type=G type=ud num_elts=1 align=wordx32\n";
         } else {
-            oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx32\n";
+            oasm << ".decl " << pointer << " v_type=G type=uq num_elts=1 align=wordx64\n";
         }
     });
     oasm << ".decl " << dst << " v_type=G type=" << visa_ty
          << " num_elts=" << cfg.total_rows() * cfg.cols * cfg.col_blocks
          << " align=wordx32 alias=<$0,0>\n";
-    oasm << ".decl " << base_pointer << " v_type=G type=uq num_elts=1 align=qword\n";
-    oasm << ".decl " << tempq << " v_type=G type=q num_elts=1 align=qword\n";
-    oasm << "   mov (M1,1) " << base_pointer << "(0,0)<1> $1(0,0)<1;1,0>\n";
-    oasm << "   mul (M1,1) " << tempq << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size << ":d\n";
-    oasm << "   add (M1,1) " << base_pointer << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0> "
-         << tempq << "(0,0)<0;1,0>\n";
-    oasm << "   mul (M1,1) " << tempq << "(0,1)<1> $6(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
-    oasm << "   add (M1,1) " << base_pointer << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0> "
-         << tempq << "(0,0)<0;1,0>\n";
-    oasm << "   mov (M1,1) " << pointers[0] << "(0,0)<1> " << base_pointer << "(0,0)<0;1,0>\n";
+    oasm << ".decl " << offset_x << " v_type=G type=d num_elts=1 align=qword\n";
+    oasm << ".decl " << offset_y << " v_type=G type=d num_elts=1 align=qword\n";
+    oasm << ".decl " << total_offset << " v_type=G type=d num_elts=1 align=qword\n";
+    oasm << "   mul (M1,1) " << offset_x << "(0,0)<1> $5(0,0)<0;1,0> " << cfg.element_size
+         << ":w\n";
+    oasm << "   mul (M1,1) " << offset_y << "(0,0)<1> $6(0,0)<0;1,0> $4(0,0)<0;1,0>\n";
+    oasm << "   add (M1,1) " << total_offset << "(0,0)<1> " << offset_x << "(0,0)<0;1,0> "
+         << offset_y << "(0,0)<0;1,0>\n";
+    oasm << "   add (M1,1) " << pointers[0] << "(0,0)<1> $1(0,0)<0;1,0> " << total_offset
+         << "(0,0)<0;1,0>\n";
 }
 
 auto block2d_emulated_helper::dst_op(std::int32_t row, std::int32_t col, std::int32_t array_idx,
