@@ -440,8 +440,10 @@ typedef uint32_t tinytc_core_feature_flags_t;
  */
 typedef enum {
     tinytc_intel_gpu_architecture_tgl = 0x03000000, ///< Tiger Lake
-    tinytc_intel_gpu_architecture_pvc = 0x030f0007  ///< Ponte Vecchio
+    tinytc_intel_gpu_architecture_pvc = 0x030f0000, ///< Ponte Vecchio
+    tinytc_intel_gpu_architecture_bmg = 0x05004000  ///< BMG
 } tinytc_intel_gpu_architecture_t;
+#define TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS 0xfff
 
 //! Target binary format
 typedef enum {

@@ -53,7 +53,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     std::sort(subgroup_sizes_.begin(), subgroup_sizes_.end());
 
     register_size_ = 32;
-    if (ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
+    if (is_arch(tinytc_intel_gpu_architecture_pvc)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
 
@@ -65,15 +65,27 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                                          .width_alignment = 4};
         matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
         // matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
+    } else if (is_arch(tinytc_intel_gpu_architecture_bmg)) {
+        register_size_ = 64;
+        set_spirv_feature(spirv_feature::bfloat16_conversion, true);
+
+        const auto block_info = matrix_ext_block_io_info{.base_address_alignment = 64,
+                                                         .min_stride = 64,
+                                                         .max_stride = (1 << 24) - 1,
+                                                         .pos0_alignment = 4,
+                                                         .stride_alignment = 16,
+                                                         .width_alignment = 4};
+        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
     }
 }
 
 auto core_info_intel::num_reg_small_grf() const -> std::int32_t { return 128; }
 
 auto core_info_intel::num_reg_large_grf() const -> std::int32_t {
-    return ip_version_ >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)
-               ? 256
-               : num_reg_small_grf();
+    if (is_arch(tinytc_intel_gpu_architecture_pvc) || is_arch(tinytc_intel_gpu_architecture_bmg)) {
+        return 256;
+    }
+    return num_reg_small_grf();
 }
 
 auto core_info_intel::num_reg() const -> std::int32_t {
@@ -165,6 +177,7 @@ tinytc_status_t tinytc_core_info_intel_create_from_arch(tinytc_core_info_t *info
             (*info)->set_spirv_feature(spirv_feature::bfloat16_conversion, false);
             break;
         case tinytc_intel_gpu_architecture_pvc:
+        case tinytc_intel_gpu_architecture_bmg:
             *info = std::make_unique<core_info_intel>(static_cast<std::uint32_t>(arch), 8, 8,
                                                       std::vector<std::int32_t>{16, 32})
                         .release();
@@ -202,6 +215,10 @@ tinytc_status_t tinytc_core_info_intel_create_from_name(tinytc_core_info_t *info
         case "pvc"_fnv1a:
             CHECK_STATUS(
                 tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_pvc));
+            break;
+        case "bmg"_fnv1a:
+            CHECK_STATUS(
+                tinytc_core_info_intel_create_from_arch(info, tinytc_intel_gpu_architecture_bmg));
             break;
         default:
             *info = nullptr;
