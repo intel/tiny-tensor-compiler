@@ -309,7 +309,7 @@ void linalg_generator::operator()(axpby_inst &in) {
         bb_.add(std::move(parallel));
     } else if (bt->dim() == 1) {
         auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
+        auto c_shape0 = instant_constant_fold_add(bb_, make_size(&in.B(), 0, index_ty, in.loc()));
         bb_.foreach_loop(
             index_ty, {c0.get()}, {c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
@@ -321,8 +321,8 @@ void linalg_generator::operator()(axpby_inst &in) {
             in.loc());
     } else if (bt->dim() == 2) {
         auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
-        auto c_shape1 = bb_.add(make_size(&in.B(), 1, index_ty, in.loc()));
+        auto c_shape0 = instant_constant_fold_add(bb_, make_size(&in.B(), 0, index_ty, in.loc()));
+        auto c_shape1 = instant_constant_fold_add(bb_, make_size(&in.B(), 1, index_ty, in.loc()));
         bb_.foreach_loop(
             index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
             [&](region_builder &bb, auto loop_vars) {
@@ -477,7 +477,8 @@ void linalg_generator::operator()(cumsum_inst &in) {
         ub.reserve(bt->dim() - 1);
         for (std::int64_t i = 0; i < bt->dim(); ++i) {
             if (i != in.mode()) {
-                ub.emplace_back(bb_.add(make_size(&in.B(), i, index_ty, loc)));
+                ub.emplace_back(
+                    instant_constant_fold_add(bb_, make_size(&in.B(), i, index_ty, loc)));
             }
         }
 
@@ -629,7 +630,7 @@ void linalg_generator::operator()(gemm_inst &in) {
 void linalg_generator::operator()(gemv_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape0 = instant_constant_fold_add(bb_, make_size(&in.C(), 0, index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
     bb_.foreach_loop(
         index_ty, {c0.get()}, {c_shape0.get()},
@@ -663,8 +664,8 @@ void linalg_generator::operator()(gemv_inst &in) {
 void linalg_generator::operator()(ger_inst &in) {
     auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-    auto c_shape0 = bb_.add(make_size(&in.C(), 0, index_ty, in.loc()));
-    auto c_shape1 = bb_.add(make_size(&in.C(), 1, index_ty, in.loc()));
+    auto c_shape0 = instant_constant_fold_add(bb_, make_size(&in.C(), 0, index_ty, in.loc()));
+    auto c_shape1 = instant_constant_fold_add(bb_, make_size(&in.C(), 1, index_ty, in.loc()));
     bb_.foreach_loop(
         index_ty, {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
         [&](region_builder &bb, auto loop_vars) {
@@ -693,7 +694,7 @@ void linalg_generator::operator()(hadamard_inst &in) {
     auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
     for (std::int64_t i = 0; i < ct->dim(); ++i) {
         lb[i] = c0;
-        ub[i] = bb_.add(make_size(&in.C(), i, index_ty, in.loc()));
+        ub[i] = instant_constant_fold_add(bb_, make_size(&in.C(), i, index_ty, in.loc()));
     }
 
     bb_.foreach_loop(
@@ -764,7 +765,7 @@ void linalg_generator::operator()(sum_inst &in) {
         reducer.teardown(bb_);
     } else if (bt->dim() == 1) {
         auto c0 = bb_.add(make_constant(0, index_ty, in.loc()));
-        auto c_shape0 = bb_.add(make_size(&in.B(), 0, index_ty, in.loc()));
+        auto c_shape0 = instant_constant_fold_add(bb_, make_size(&in.B(), 0, index_ty, in.loc()));
         bb_.foreach_loop(
             index_ty, array_view<value>{c0.get()}, array_view<value>{c_shape0.get()},
             [&](region_builder &bb, auto loop_vars) {
