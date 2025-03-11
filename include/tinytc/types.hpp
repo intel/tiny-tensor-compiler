@@ -320,8 +320,14 @@ enum class group_operation {
 
 //! Math operations (unary)
 enum class math_unary {
-    exp = tinytc_math_unary_exp,               ///< Exponential
-    native_exp = tinytc_math_unary_native_exp, ///< Native exponential
+    cos = tinytc_math_unary_cos,                 ///< Cosine
+    sin = tinytc_math_unary_sin,                 ///< Sine
+    exp = tinytc_math_unary_exp,                 ///< Base-e exponential
+    exp2 = tinytc_math_unary_exp2,               ///< Base-2 exponential
+    native_cos = tinytc_math_unary_native_cos,   ///< Native cosine
+    native_sin = tinytc_math_unary_native_sin,   ///< Native sine
+    native_exp = tinytc_math_unary_native_exp,   ///< Native base-e exponential
+    native_exp2 = tinytc_math_unary_native_exp2, ///< Native base-2 exponential
 };
 
 //! Transpose

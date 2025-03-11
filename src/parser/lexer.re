@@ -218,8 +218,14 @@ lex:
         "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
         // math op
+        "math.cos"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::cos, loc_); }
+        "math.sin"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::sin, loc_); }
         "math.exp"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::exp, loc_); }
+        "math.exp2"         { adv_loc(); return parser::make_MATH_UNARY(math_unary::exp2, loc_); }
+        "math.native_cos"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_cos, loc_); }
+        "math.native_sin"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_sin, loc_); }
         "math.native_exp"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp, loc_); }
+        "math.native_exp2"  { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp2, loc_); }
 
         // subgroup op
         "subgroup_add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::exclusive_scan, loc_); }

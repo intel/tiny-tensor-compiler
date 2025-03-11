@@ -1126,8 +1126,22 @@ math_unary_inst::math_unary_inst(math_unary operation, tinytc_value_t a0, tinytc
     // Check if inst is supported for combination of a type and result type
     auto a_ty = get_scalar_type(loc(), a());
 
+    const auto complex_supported = [](math_unary op) {
+        switch (op) {
+        case math_unary::exp:
+        case math_unary::exp2:
+        case math_unary::native_exp:
+        case math_unary::native_exp2:
+            return true;
+        default:
+            return false;
+        }
+    }(operation_);
+
     if (is_integer_type(a_ty->ty())) {
         throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
+    } else if (is_complex_type(a_ty->ty()) && !complex_supported) {
+        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
     }
 }
 

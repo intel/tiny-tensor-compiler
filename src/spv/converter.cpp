@@ -1324,27 +1324,43 @@ void inst_converter::operator()(load_inst const &in) {
 
 void inst_converter::operator()(math_unary_inst const &in) {
     auto const make_float = [&](math_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+        auto const make_ext_inst = [&](OpenCLEntrypoint ep) {
+            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(), static_cast<std::int32_t>(ep),
+                                        std::vector<IdRef>{a});
+        };
         switch (op) {
+        case math_unary::cos:
+            return make_ext_inst(OpenCLEntrypoint::cos);
+        case math_unary::sin:
+            return make_ext_inst(OpenCLEntrypoint::sin);
         case math_unary::exp:
-            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                        static_cast<std::int32_t>(OpenCLEntrypoint::exp),
-                                        std::vector<IdRef>{a});
+            return make_ext_inst(OpenCLEntrypoint::exp);
+        case math_unary::exp2:
+            return make_ext_inst(OpenCLEntrypoint::exp2);
+        case math_unary::native_cos:
+            return make_ext_inst(OpenCLEntrypoint::native_cos);
+        case math_unary::native_sin:
+            return make_ext_inst(OpenCLEntrypoint::native_sin);
         case math_unary::native_exp:
-            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                        static_cast<std::int32_t>(OpenCLEntrypoint::native_exp),
-                                        std::vector<IdRef>{a});
+            return make_ext_inst(OpenCLEntrypoint::native_exp);
+        case math_unary::native_exp2:
+            return make_ext_inst(OpenCLEntrypoint::native_exp2);
         default:
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
     };
-    auto const make_complex = [&](math_unary op, scalar_type sty, spv_inst *ty,
-                                  spv_inst *a) -> spv_inst * {
+    auto const make_complex = [&](math_unary op, scalar_type sty, spv_inst *ty, spv_inst *a,
+                                  LiteralContextDependentNumber log2) -> spv_inst * {
         auto spv_float_ty = unique_.spv_ty(component_type(sty));
-        auto const make_complex_exp = [&](auto exp_ep, auto cos_ep, auto sin_ep) {
+        auto const make_complex_exp = [&](auto exp_ep, auto cos_ep, auto sin_ep,
+                                          spv_inst *im_scale = nullptr) {
             auto a0 =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{0});
-            auto a1 =
+            spv_inst *a1 =
                 mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
+            if (im_scale) {
+                a1 = mod_->add<OpFMul>(spv_float_ty, a1, im_scale);
+            }
             auto e =
                 mod_->add<OpExtInst>(spv_float_ty, unique_.opencl_ext(),
                                      static_cast<std::int32_t>(exp_ep), std::vector<IdRef>{a0});
@@ -1365,9 +1381,15 @@ void inst_converter::operator()(math_unary_inst const &in) {
         case math_unary::exp:
             return make_complex_exp(OpenCLEntrypoint::exp, OpenCLEntrypoint::cos,
                                     OpenCLEntrypoint::sin);
+        case math_unary::exp2:
+            return make_complex_exp(OpenCLEntrypoint::exp2, OpenCLEntrypoint::cos,
+                                    OpenCLEntrypoint::sin, unique_.constant(log2));
         case math_unary::native_exp:
             return make_complex_exp(OpenCLEntrypoint::native_exp, OpenCLEntrypoint::native_cos,
                                     OpenCLEntrypoint::native_sin);
+        case math_unary::native_exp2:
+            return make_complex_exp(OpenCLEntrypoint::native_exp2, OpenCLEntrypoint::native_cos,
+                                    OpenCLEntrypoint::native_sin, unique_.constant(log2));
         default:
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
@@ -1385,8 +1407,9 @@ void inst_converter::operator()(math_unary_inst const &in) {
         case scalar_type::f64:
             return make_float(op, ty, a);
         case scalar_type::c32:
+            return make_complex(op, sty, ty, a, std::log(2.0f));
         case scalar_type::c64:
-            return make_complex(op, sty, ty, a);
+            return make_complex(op, sty, ty, a, std::log(2.0));
         default:
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }

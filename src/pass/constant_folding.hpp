@@ -514,9 +514,21 @@ struct compute_math_unary_op {
     auto operator()(T a) -> fold_result {
         T val = {};
         switch (operation) {
+        case math_unary::cos:
+        case math_unary::native_cos:
+            val = std::cos(a);
+            break;
+        case math_unary::sin:
+        case math_unary::native_sin:
+            val = std::sin(a);
+            break;
         case math_unary::exp:
         case math_unary::native_exp:
-            val = exp(a);
+            val = std::exp(a);
+            break;
+        case math_unary::exp2:
+        case math_unary::native_exp2:
+            val = std::exp2(a);
             break;
         default:
             throw compilation_error(loc, status::ir_fp_unsupported);
@@ -531,7 +543,11 @@ struct compute_math_unary_op {
         switch (operation) {
         case math_unary::exp:
         case math_unary::native_exp:
-            val = exp(a);
+            val = std::exp(a);
+            break;
+        case math_unary::exp2:
+        case math_unary::native_exp2:
+            val = std::pow(T{std::complex<double>{2.0, 0.0}}, a);
             break;
         default:
             throw compilation_error(loc, status::ir_complex_unsupported);

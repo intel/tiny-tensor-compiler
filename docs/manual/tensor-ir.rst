@@ -1429,7 +1429,9 @@ Math (unary)
 .. code:: abnf
 
     math-unary-type         =  "math.exp" /
-                               "math.native_exp"
+                               "math.exp2" /
+                               "math.native_exp" /
+                               "math.native_exp2"
     value-instruction       =/ math-unary-type local-identifier ":" scalar-type
 
 Overview
@@ -1440,12 +1442,18 @@ The operand must have the same type as the returned value.
 
 The following table shows the operations' description and the types that are allowed for the operation.
 
-=========== ============================= ==============================================================
+=========== ============================= =====================================================================
 Op          Allowed type                  Description
-=========== ============================= ==============================================================
-exp         floating-type / complex-type  Compute exponential function
-native_exp  floating-type / complex-type  Compute exponential function with implementation-defined error
-=========== ============================= ==============================================================
+=========== ============================= =====================================================================
+cos         floating-type                 Compute cosine function
+sin         floating-type                 Compute sine function
+exp         floating-type / complex-type  Compute base-e exponential function
+exp2        floating-type / complex-type  Compute base-2 exponential function
+native_cos  floating-type                 Compute cosine function with implementation-defined error
+native_sin  floating-type                 Compute sine function with implementation-defined error
+native_exp  floating-type / complex-type  Compute base-e exponential function with implementation-defined error
+native_exp2 floating-type / complex-type  Compute base-2 exponential function with implementation-defined error
+=========== ============================= =====================================================================
 
 .. _size instruction:
 

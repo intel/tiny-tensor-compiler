@@ -135,10 +135,22 @@ char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond) {
 
 char const *tinytc_math_unary_to_string(tinytc_math_unary_t op) {
     switch (op) {
+    case tinytc_math_unary_cos:
+        return "cos";
+    case tinytc_math_unary_sin:
+        return "sin";
     case tinytc_math_unary_exp:
         return "exp";
+    case tinytc_math_unary_exp2:
+        return "exp2";
+    case tinytc_math_unary_native_cos:
+        return "native_cos";
+    case tinytc_math_unary_native_sin:
+        return "native_sin";
     case tinytc_math_unary_native_exp:
         return "native_exp";
+    case tinytc_math_unary_native_exp2:
+        return "native_exp2";
     }
     return "unknown";
 }

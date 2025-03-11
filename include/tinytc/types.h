@@ -336,8 +336,14 @@ typedef enum {
 
 //! Math operations (unary)
 typedef enum {
-    tinytc_math_unary_exp = 0,        ///< Exponential
-    tinytc_math_unary_native_exp = 1, ///< Native exponential
+    tinytc_math_unary_cos = 0,         ///< Cosine
+    tinytc_math_unary_sin = 1,         ///< Sine
+    tinytc_math_unary_exp = 2,         ///< Base-e exponential
+    tinytc_math_unary_exp2 = 3,        ///< Base-2 exponential
+    tinytc_math_unary_native_cos = 4,  ///< Native cosine
+    tinytc_math_unary_native_sin = 5,  ///< Native sine
+    tinytc_math_unary_native_exp = 6,  ///< Native base-e exponential
+    tinytc_math_unary_native_exp2 = 7, ///< Native base-2 exponential
 } tinytc_math_unary_t;
 
 //! Subgroup operation
