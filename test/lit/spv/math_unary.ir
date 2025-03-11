@@ -7,17 +7,31 @@
 ; CHECK: %[[#EXT:]] = OpExtInstImport "OpenCL.std"
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#C32:]] = OpTypeVector %[[#F32]] 2
+; CHECK: %[[#FLOG2:]] = OpConstant %[[#F32]]
 
 func @tfloat(%a: f32) {
     %0 = math.exp %a : f32
     %1 = math.native_exp %a : f32
+    %2 = math.exp2 %a : f32
+    %3 = math.native_exp2 %a : f32
+    %4 = math.cos %a : f32
+    %5 = math.native_cos %a : f32
+    %6 = math.sin %a : f32
+    %7 = math.native_sin %a : f32
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] exp %[[#]]
 ; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_exp %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] exp2 %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_exp2 %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] cos %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_cos %[[#]]
+; CHECK:      OpExtInst %[[#F32]] %[[#EXT]] sin %[[#]]
+; CHECK-NEXT: OpExtInst %[[#F32]] %[[#EXT]] native_sin %[[#]]
 }
 
 func @tcomplex(%a: c32) {
     %0 = math.exp %a : c32
+    %1 = math.exp2 %a : c32
 ; CHECK-LABEL:       %[[#]] = OpFunction {{.*}}
 ; CHECK:          %[[#A2:]] = OpFunctionParameter %[[#C32]]
 ; CHECK:        %[[#A2_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
@@ -30,4 +44,15 @@ func @tcomplex(%a: c32) {
 ; CHECK-NEXT: %[[#DUMMY2:]] = OpUndef %[[#C32]]
 ; CHECK-NEXT:     %[[#B2:]] = OpCompositeInsert %[[#C32]] %[[#R2]] %[[#DUMMY2]] 0
 ; CHECK-NEXT:        %[[#]] = OpCompositeInsert %[[#C32]] %[[#I2]] %[[#B2]] 1
+; CHECK:        %[[#A3_0:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 0
+; CHECK-NEXT:   %[[#A3_1:]] = OpCompositeExtract %[[#F32]] %[[#A2]] 1
+; CHECK-NEXT: %[[#A3_1_S:]] = OpFMul %[[#F32]] %[[#A3_1]] %[[#FLOG2]]
+; CHECK-NEXT:     %[[#E3:]] = OpExtInst %[[#F32]] %[[#EXT]] exp2 %[[#A3_0]]
+; CHECK-NEXT:     %[[#C3:]] = OpExtInst %[[#F32]] %[[#EXT]] cos %[[#A3_1_S]]
+; CHECK-NEXT:     %[[#S3:]] = OpExtInst %[[#F32]] %[[#EXT]] sin %[[#A3_1_S]]
+; CHECK-NEXT:     %[[#R3:]] = OpFMul %[[#F32]] %[[#E3]] %[[#C3]]
+; CHECK-NEXT:     %[[#I3:]] = OpFMul %[[#F32]] %[[#E3]] %[[#S3]]
+; CHECK-NEXT: %[[#DUMMY3:]] = OpUndef %[[#C32]]
+; CHECK-NEXT:     %[[#B3:]] = OpCompositeInsert %[[#C32]] %[[#R3]] %[[#DUMMY3]] 0
+; CHECK-NEXT:        %[[#]] = OpCompositeInsert %[[#C32]] %[[#I3]] %[[#B3]] 1
 }
