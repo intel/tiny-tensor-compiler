@@ -190,54 +190,63 @@ struct block2d_native_helper {
     void header();
     template <typename F> void walk(F &&io);
 
+    inline auto temp(std::int32_t m, std::int32_t n) -> std::string const & {
+        return temps[n + m * cfg.col_blocks];
+    }
+
     std::ostream &oasm;
     block_config const &cfg;
-    std::string temp, tempq;
+    std::vector<std::string> temps;
+    std::string tempq;
 };
 
 block2d_native_helper::block2d_native_helper(std::ostream &oasm, block_config const &cfg,
                                              temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), temp{make_tmp("temp")}, tempq{make_tmp("tempq")} {}
+    : oasm(oasm), cfg(cfg), temps(cfg.row_blocks * cfg.col_blocks), tempq{make_tmp("tempq")} {
+    std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
+}
 
 void block2d_native_helper::header() {
     const std::uint32_t block_size =
         ((cfg.array_length - 1) << 16) | ((cfg.cols - 1) << 8) | (cfg.rows - 1);
-    oasm << ".decl " << temp << " v_type=G type=ud num_elts=8 align=wordx32\n"
-         << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << temp
+    const auto &tmp0 = temp(0, 0);
+    oasm << ".decl " << tmp0 << " v_type=G type=ud num_elts=8 align=wordx32\n"
+         << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << tmp0
          << ",0>\n"
          << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
-         << "add (M1,1) " << temp << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
-         << "add (M1,1) " << temp << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
-         << "add (M1,1) " << temp << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n";
+         << "add (M1,1) " << tmp0 << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << tmp0 << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << tmp0 << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n";
     if (cfg.pos0_shr) {
-        oasm << "shr (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0> " << cfg.pos0_shr << ":d\n";
+        oasm << "shr (M1,1) " << tmp0 << "(0,5)<1> $5(0,0)<0;1,0> " << cfg.pos0_shr << ":d\n";
     } else {
-        oasm << "mov (M1,1) " << temp << "(0,5)<1> $5(0,0)<0;1,0>\n";
+        oasm << "mov (M1,1) " << tmp0 << "(0,5)<1> $5(0,0)<0;1,0>\n";
     }
-    oasm << "mov (M1,1) " << temp << "(0,6)<1> $6(0,0)<0;1,0>\n"
-         << "mov (M1,1) " << temp << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
+    oasm << "mov (M1,1) " << tmp0 << "(0,6)<1> $6(0,0)<0;1,0>\n"
+         << "mov (M1,1) " << tmp0 << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
+    for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
+        for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
+            const auto &tmp = temp(m, n);
+            if (m > 0 || n > 0) {
+                oasm << ".decl " << tmp << " v_type=G type=ud num_elts=8 align=wordx32\n";
+                oasm << "mov (M1,8) " << tmp << "(0,0)<1> " << tmp0 << "(0,0)<1;1,0>\n";
+            }
+            if (m > 0) {
+                oasm << "add (M1,1) " << tmp << "(0,5)<1> " << tmp << "(0,5)<0;1,0> 0x"
+                     << m * cfg.rows * cfg.array_length << ":ud\n";
+            }
+            if (n > 0) {
+                oasm << "add (M1,1) " << tmp << "(0,6)<1> " << tmp << "(0,6)<0;1,0> 0x"
+                     << n * cfg.cols << ":ud\n";
+            }
+        }
+    }
 }
 
 template <typename F> void block2d_native_helper::walk(F &&io) {
-    const auto pos0_C = 5;
-    const auto pos1_C = 6;
-    const auto pos0_inc = cfg.rows;
-    const auto pos1_inc = cfg.cols;
     for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
         for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
             io(m, n);
-            if (n + 1 < cfg.col_blocks) {
-                oasm << "add (M1,1) " << temp << "(0," << pos1_C << ")<1> " << temp << "(0,"
-                     << pos1_C << ")<0;1,0> " << pos1_inc << ":ud\n";
-            }
-        }
-        if (m + 1 < cfg.row_blocks) {
-            if (cfg.col_blocks > 1) {
-                oasm << "add (M1,1) " << temp << "(0," << pos1_C << ")<1> " << temp << "(0,"
-                     << pos1_C << ")<0;1,0> " << -(cfg.col_blocks - 1) * pos1_inc << ":ud\n";
-            }
-            oasm << "add (M1,1) " << temp << "(0," << pos0_C << ")<1> " << temp << "(0," << pos0_C
-                 << ")<0;1,0> " << pos0_inc << ":ud\n";
         }
     }
 }
@@ -267,7 +276,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
     h.walk([&](std::int32_t m, std::int32_t n) {
         const auto offset = cfg.byte_offset(0, 0, 0, n, m);
         oasm << std::dec << "raw_sends.15.1.0." << num_dst << " (M1, 1) 0x0:ud 0x" << std::hex
-             << desc << ":ud " << h.temp << ".0 %null.0 $0." << std::dec << offset << "\n";
+             << desc << ":ud " << h.temp(m, n) << ".0 %null.0 $0." << std::dec << offset << "\n";
 
         if (cfg.vnni && cfg.transpose) {
             for (std::int32_t array_idx = 0; array_idx < cfg.array_length; ++array_idx) {
@@ -297,7 +306,7 @@ auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> st
     h.walk([&](std::int32_t m, std::int32_t n) {
         const auto offset = cfg.byte_offset(0, 0, 0, n, m);
         oasm << "raw_sends.15.1." << num_src1 << ".0 (M1, 1) 0x0:ud 0x" << std::hex << desc
-             << ":ud " << h.temp << ".0 $0." << std::dec << offset << " %null.0\n";
+             << ":ud " << h.temp(m, n) << ".0 $0." << std::dec << offset << " %null.0\n";
     });
     oasm << "}\n";
 
@@ -322,8 +331,8 @@ struct block2d_emulated_helper {
 
 block2d_emulated_helper::block2d_emulated_helper(std::ostream &oasm, block_config const &cfg,
                                                  std::size_t io_batch_size, temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), temps(io_batch_size), pointers(io_batch_size),
-      offset_x{make_tmp("offset_x")}, offset_y{make_tmp("offset_y")},
+    : oasm(oasm), cfg(cfg), temps(io_batch_size),
+      pointers(io_batch_size), offset_x{make_tmp("offset_x")}, offset_y{make_tmp("offset_y")},
       total_offset{make_tmp("total_offset")}, dst{make_tmp("dst")} {
     std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
     std::generate(pointers.begin(), pointers.end(), [&]() { return make_tmp("pointer"); });
@@ -488,4 +497,3 @@ auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::stri
 }
 
 } // namespace tinytc::spv
-
