@@ -1751,6 +1751,51 @@ Restrictions
 * :math:`\text{promote}(\text{component_type}(A), \text{component_type}(B)) \preceq \text{component_type}(C)`
 * Cast of :math:`\text{component_type}(C)` to :math:`\text{component_type}(D)` must be allowed
 
+Cooperative matrix prefetch
+...........................
+
+.. code:: abnf
+
+    instruction     =/ "cooperative_matrix_prefetch" integer-constant ","
+                        local-identifier "[" local-identifier "," local-identifier "]" ","
+                        integer-constant "," integer-constant
+
+Overview
+~~~~~~~~
+
+Cooperatively prefetch memory into device cache.
+The cache level is given by the first non-negative integer constant, where "0" is the cache closest the core
+and core distance increases with increasing cache level.
+The prefetch instruction is ignored if the cache level does not exist in the target device.
+The position in square brackets gives the starting row and column index.
+The last two positive integer constants give the size of the memory region to fetch (in rows by columns).
+The following memory locations are prefetched:
+
+.. math::
+
+    \{\forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2]\}
+
+Prefetch is an optimization hint and may be disregarded by the compiler.
+
+Operands
+~~~~~~~~
+
+======= ================ ===========
+Op.-No. Type             Description
+======= ================ ===========
+1       integer-constant Cache-level
+2       memref-type      M
+3       index            x
+4       index            y
+5       integer-constant X
+6       integer-constant Y
+======= ================ ===========
+
+Restrictions
+~~~~~~~~~~~~
+
+* All arguments **must** be dynamically uniform.
+
 Cooperative matrix scale
 ........................
 

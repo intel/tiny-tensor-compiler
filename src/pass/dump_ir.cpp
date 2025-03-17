@@ -278,6 +278,21 @@ void dump_ir_pass::operator()(cooperative_matrix_mul_add_inst const &c) {
     visit(*this, *c.result(0).ty());
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst const &c) {
+    *os_ << "cooperative_matrix_prefetch ";
+    *os_ << c.cache_level();
+    *os_ << ", ";
+    dump_val(c.operand());
+    *os_ << "[";
+    dump_val(c.pos0());
+    *os_ << ",";
+    dump_val(c.pos1());
+    *os_ << "], ";
+    *os_ << c.rows();
+    *os_ << ", ";
+    *os_ << c.cols();
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_scale_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cooperative_matrix_scale ";

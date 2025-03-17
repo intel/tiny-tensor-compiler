@@ -186,7 +186,8 @@ auto make_d32_transpose8x8(std::ostream &oasm, char const *matrix, std::size_t o
 }
 
 struct block2d_native_helper {
-    block2d_native_helper(std::ostream &oasm, block_config const &cfg, temp_counter &make_tmp);
+    block2d_native_helper(std::ostream &oasm, block_config const &cfg, temp_counter &make_tmp,
+                          std::int32_t first_address_operand);
     void header();
     template <typename F> void walk(F &&io);
 
@@ -198,11 +199,14 @@ struct block2d_native_helper {
     block_config const &cfg;
     std::vector<std::string> temps;
     std::string tempq;
+    std::int32_t first_;
 };
 
 block2d_native_helper::block2d_native_helper(std::ostream &oasm, block_config const &cfg,
-                                             temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), temps(cfg.row_blocks * cfg.col_blocks), tempq{make_tmp("tempq")} {
+                                             temp_counter &make_tmp,
+                                             std::int32_t first_address_operand)
+    : oasm(oasm), cfg(cfg), temps(cfg.row_blocks * cfg.col_blocks), tempq{make_tmp("tempq")},
+      first_{first_address_operand} {
     std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
 }
 
@@ -213,16 +217,17 @@ void block2d_native_helper::header() {
     oasm << ".decl " << tmp0 << " v_type=G type=ud num_elts=8 align=wordx32\n"
          << ".decl " << tempq << " v_type=G type=uq num_elts=4 align=wordx32 alias=<" << tmp0
          << ",0>\n"
-         << "mov (M1,1) " << tempq << "(0,0)<1> $1(0,0)<0;1,0>\n"
-         << "add (M1,1) " << tmp0 << "(0,2)<1> $2(0,0)<0;1,0> -1:d\n"
-         << "add (M1,1) " << tmp0 << "(0,3)<1> $3(0,0)<0;1,0> -1:d\n"
-         << "add (M1,1) " << tmp0 << "(0,4)<1> $4(0,0)<0;1,0> -1:d\n";
+         << "mov (M1,1) " << tempq << "(0,0)<1> $" << first_ << "(0,0)<0;1,0>\n"
+         << "add (M1,1) " << tmp0 << "(0,2)<1> $" << first_ + 1 << "(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << tmp0 << "(0,3)<1> $" << first_ + 2 << "(0,0)<0;1,0> -1:d\n"
+         << "add (M1,1) " << tmp0 << "(0,4)<1> $" << first_ + 3 << "(0,0)<0;1,0> -1:d\n";
     if (cfg.pos0_shr) {
-        oasm << "shr (M1,1) " << tmp0 << "(0,5)<1> $5(0,0)<0;1,0> " << cfg.pos0_shr << ":d\n";
+        oasm << "shr (M1,1) " << tmp0 << "(0,5)<1> $" << first_ + 4 << "(0,0)<0;1,0> "
+             << cfg.pos0_shr << ":d\n";
     } else {
-        oasm << "mov (M1,1) " << tmp0 << "(0,5)<1> $5(0,0)<0;1,0>\n";
+        oasm << "mov (M1,1) " << tmp0 << "(0,5)<1> $" << first_ + 4 << "(0,0)<0;1,0>\n";
     }
-    oasm << "mov (M1,1) " << tmp0 << "(0,6)<1> $6(0,0)<0;1,0>\n"
+    oasm << "mov (M1,1) " << tmp0 << "(0,6)<1> $" << first_ + 5 << "(0,0)<0;1,0>\n"
          << "mov (M1,1) " << tmp0 << "(0,7)<1> 0x" << std::hex << block_size << ":ud\n";
     for (std::int32_t m = 0; m < cfg.row_blocks; ++m) {
         for (std::int32_t n = 0; n < cfg.col_blocks; ++n) {
@@ -269,7 +274,7 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
     }();
 
     auto oasm = std::ostringstream{};
-    auto h = block2d_native_helper(oasm, cfg, make_tmp);
+    auto h = block2d_native_helper(oasm, cfg, make_tmp, 1);
 
     oasm << "{\n";
     h.header();
@@ -288,6 +293,30 @@ auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std
 
     return std::move(oasm).str();
 }
+auto prefetch_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string {
+    const std::uint32_t desc = [&] {
+        const std::uint32_t data_size = lsc_data_size(cfg.element_size);
+        const std::uint32_t cache_control = cfg.cache_level == 1 ? 2 : 4;
+        std::uint32_t d = 3;
+        d |= data_size << 9;
+        d |= cache_control << 17;
+        d |= 1 << 25;
+        return d;
+    }();
+
+    auto oasm = std::ostringstream{};
+    auto h = block2d_native_helper(oasm, cfg, make_tmp, 0);
+
+    oasm << "{\n";
+    h.header();
+    h.walk([&](std::int32_t m, std::int32_t n) {
+        oasm << std::dec << "raw_sends.15.1.0.0 (M1, 1) 0x0:ud 0x" << std::hex << desc << ":ud "
+             << h.temp(m, n) << ".0 %null.0 %null.0\n";
+    });
+    oasm << "}\n";
+
+    return std::move(oasm).str();
+}
 auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const std::uint32_t num_src1 = std::min(31, cfg.block_size_in_num_grf());
     const std::uint32_t desc = [&] {
@@ -299,7 +328,7 @@ auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> st
     }();
 
     auto oasm = std::ostringstream{};
-    auto h = block2d_native_helper(oasm, cfg, make_tmp);
+    auto h = block2d_native_helper(oasm, cfg, make_tmp, 1);
 
     oasm << "{\n";
     h.header();
@@ -331,8 +360,8 @@ struct block2d_emulated_helper {
 
 block2d_emulated_helper::block2d_emulated_helper(std::ostream &oasm, block_config const &cfg,
                                                  std::size_t io_batch_size, temp_counter &make_tmp)
-    : oasm(oasm), cfg(cfg), temps(io_batch_size),
-      pointers(io_batch_size), offset_x{make_tmp("offset_x")}, offset_y{make_tmp("offset_y")},
+    : oasm(oasm), cfg(cfg), temps(io_batch_size), pointers(io_batch_size),
+      offset_x{make_tmp("offset_x")}, offset_y{make_tmp("offset_y")},
       total_offset{make_tmp("total_offset")}, dst{make_tmp("dst")} {
     std::generate(temps.begin(), temps.end(), [&]() { return make_tmp("temp"); });
     std::generate(pointers.begin(), pointers.end(), [&]() { return make_tmp("pointer"); });
@@ -490,6 +519,13 @@ auto load_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::strin
         !cfg.transpose || (cfg.element_size == 4 && cfg.rows <= xe::exec_size / 2);
     return ugm_ok && transpose_ok ? load_block2d_native(cfg, make_tmp)
                                   : load_block2d_emulated(cfg, make_tmp);
+}
+auto prefetch_block2d(block_config const &cfg, temp_counter &make_tmp)
+    -> std::optional<std::string> {
+    const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;
+    const bool cache_level_ok = 0 <= cfg.cache_level && cfg.cache_level <= 1;
+    return ugm_ok && cache_level_ok ? std::make_optional(prefetch_block2d_native(cfg, make_tmp))
+                                    : std::nullopt;
 }
 auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string {
     const bool ugm_ok = cfg.sfid == lsc_sfid::ugm;

@@ -49,6 +49,7 @@ class coopmatrix_code_generator {
     bool operator()(constant_inst &in);
     bool operator()(cooperative_matrix_load_inst &in);
     bool operator()(cooperative_matrix_mul_add_inst &in);
+    bool operator()(cooperative_matrix_prefetch_inst &in);
     bool operator()(cooperative_matrix_scale_inst &in);
     bool operator()(cooperative_matrix_store_inst &in);
     bool operator()(for_inst &in);
@@ -372,6 +373,8 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_mul_add_inst &in) 
     declare(in.result(0), std::move(result));
     return true;
 }
+
+bool coopmatrix_code_generator::operator()(cooperative_matrix_prefetch_inst &in) { return false; }
 
 bool coopmatrix_code_generator::operator()(cooperative_matrix_scale_inst &in) {
     if (!needs_coopmatrix_vector_impl(in)) {

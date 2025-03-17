@@ -1662,6 +1662,29 @@ inline inst make_cooperative_matrix_mul_add(value a, value b, value c, data_type
 }
 
 /**
+ * @brief Create cooperative matrix prefetch instruction
+ *
+ * @param cache_level Cache-level; "0" is closest to the core
+ * @param op %op
+ * @param p0 %p0
+ * @param p1 %p1
+ * @param rows Number of rows
+ * @param cols Number of cols
+ * @param loc Source code location
+ *
+ * @return Instruction
+ */
+inline inst make_cooperative_matrix_prefetch(std::int32_t cache_level, value op, value p0, value p1,
+                                             std::int32_t rows, std::int32_t cols,
+                                             location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_prefetch_inst_create(&instr, cache_level, op, p0, p1,
+                                                                    rows, cols, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
  * @brief Create cooperative matrix scale instruction
  *
  * @param a %a

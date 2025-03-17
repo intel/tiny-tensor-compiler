@@ -81,6 +81,7 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
         return tinytc::inst_execution_kind::mixed;
     case tinytc::IK::cooperative_matrix_load:
     case tinytc::IK::cooperative_matrix_mul_add:
+    case tinytc::IK::cooperative_matrix_prefetch:
     case tinytc::IK::cooperative_matrix_scale:
     case tinytc::IK::cooperative_matrix_store:
     case tinytc::IK::subgroup_add:
@@ -650,6 +651,28 @@ cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t 
     }
 
     result(0) = value_node{to_ty, this, lc};
+}
+
+cooperative_matrix_prefetch_inst::cooperative_matrix_prefetch_inst(
+    std::int32_t cache_level, tinytc_value_t op0, tinytc_value_t p0, tinytc_value_t p1,
+    std::int32_t rows, std::int32_t cols, location const &lc)
+    : standard_inst{IK::cooperative_matrix_prefetch}, cache_level_{cache_level}, rows_{rows},
+      cols_{cols} {
+    op(op_operand, op0);
+    op(op_pos0, p0);
+    op(op_pos1, p1);
+    loc(lc);
+
+    auto ot = get_memref_type(loc(), operand());
+    if (ot->dim() != 2) {
+        throw compilation_error(loc(), {&operand()}, status::ir_expected_memref_order_2);
+    }
+    if (rows_ <= 0 || cols_ <= 0) {
+        throw compilation_error(loc(), {}, status::ir_invalid_shape);
+    }
+
+    check_index_ty(lc, pos0());
+    check_index_ty(lc, pos1());
 }
 
 cooperative_matrix_scale_inst::cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0,

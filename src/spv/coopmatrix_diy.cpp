@@ -56,20 +56,22 @@ auto coopmatrix_diy::max_rows_in_block(matrix_use use, std::int32_t element_size
     return xe::exec_size;
 }
 
-auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans,
-                                 address_space addrspace) -> block_config {
+auto coopmatrix_diy::load_config(scalar_type sty, std::int32_t rows, std::int32_t cols,
+                                 matrix_use use, transpose trans, address_space addrspace,
+                                 int32_t cache_level) -> block_config {
     auto cfg = block_config{};
-    cfg.sty = ct->component_ty();
-    cfg.element_size = size(ct->component_ty());
+    cfg.sty = sty;
+    cfg.element_size = size(sty);
     cfg.array_length = 1;
-    cfg.rows = ct->rows();
-    cfg.cols = ct->cols();
+    cfg.rows = rows;
+    cfg.cols = cols;
     cfg.row_blocks = 1;
     cfg.col_blocks = 1;
     cfg.transpose = trans == transpose::T;
-    cfg.vnni = ct->use() == matrix_use::a;
+    cfg.vnni = use == matrix_use::a;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
+    cfg.cache_level = cache_level;
 
     auto const adjust_rows = [&cfg](std::int32_t max_rows, std::int32_t max_array_length) {
         if (cfg.rows > max_rows) {
@@ -114,13 +116,13 @@ auto coopmatrix_diy::load_config(coopmatrix_data_type const *ct, transpose trans
         // transpose
         cfg.vnni = true;
 
-        const std::int32_t max_cols = max_rows_in_block(ct->use(), cfg.element_size);
+        const std::int32_t max_cols = max_rows_in_block(use, cfg.element_size);
         const std::int32_t max_rows = 8;
         adjust_cols(max_cols);
         adjust_rows(max_rows, max_array_length(max_rows));
     } else {
         const std::int32_t max_cols = 32;
-        const std::int32_t max_rows = max_rows_in_block(ct->use(), cfg.element_size);
+        const std::int32_t max_rows = max_rows_in_block(use, cfg.element_size);
 
         adjust_cols(max_cols);
         adjust_rows(max_rows, max_array_length(max_rows));
@@ -135,7 +137,8 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
     return lookup(load_funs_, key, [&](load_key const &key) {
         const auto [result_ty, spv_operand_ty, trans, addrspace] = key;
 
-        const auto cfg = load_config(result_ty, trans, addrspace);
+        const auto cfg = load_config(result_ty->component_ty(), result_ty->rows(),
+                                     result_ty->cols(), result_ty->use(), trans, addrspace);
         auto code = load_block2d(cfg, tmp_);
 
         auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
@@ -146,6 +149,31 @@ auto coopmatrix_diy::load_fun(coopmatrix_data_type const *result_ty, spv_inst *s
         return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_result_ty, fun_ty,
                                         unique_->asm_target(), code,
                                         "=rw,rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
+    });
+}
+
+auto coopmatrix_diy::prefetch_fun(std::int32_t cache_level, scalar_type sty,
+                                  spv_inst *spv_operand_ty, std::int32_t rows, std::int32_t cols,
+                                  address_space addrspace) -> spv_inst * {
+    const auto key = prefetch_key{cache_level, sty, spv_operand_ty, rows, cols, addrspace};
+    return lookup(prefetch_funs_, key, [&](prefetch_key const &key) -> spv_inst * {
+        const auto [cache_level, sty, spv_operand_ty, rows, cols, addrspace] = key;
+
+        const auto cfg =
+            load_config(sty, rows, cols, matrix_use::acc, transpose::N, addrspace, cache_level);
+        auto code = prefetch_block2d(cfg, tmp_);
+
+        if (code) {
+            auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
+            auto spv_void_ty = unique_->void_ty();
+            auto fun_ty = unique_->spv_function_ty(
+                spv_void_ty, array_view<spv_inst *>{spv_operand_ty, spv_i32_ty, spv_i32_ty,
+                                                    spv_i32_ty, spv_i32_ty, spv_i32_ty});
+            return mod_->add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
+                                            unique_->asm_target(), *code,
+                                            "rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
+        }
+        return nullptr;
     });
 }
 
@@ -165,6 +193,7 @@ auto coopmatrix_diy::store_config(coopmatrix_data_type const *ct, address_space 
     cfg.vnni = false;
     cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
+    cfg.cache_level = -1;
 
     if (cfg.cols > max_cols_in_block) {
         cfg.col_blocks = cfg.cols / max_cols_in_block;
@@ -588,6 +617,31 @@ auto coopmatrix_diy::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst
 
     auto fun = mul_add_fun(at, bt, ct, rt);
     return mod_->add<OpAsmCallINTEL>(spv_result_ty, fun, array_view<spv_inst *>{a, b, c});
+}
+
+void coopmatrix_diy::prefetch(cooperative_matrix_prefetch_inst const &in, dope_vector const &odv,
+                              spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
+    auto ot = get_memref_type(in.operand());
+    auto spv_operand_ty = unique_->spv_ty(in.operand().ty());
+    auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), spv_operand_ty, in.rows(),
+                            in.cols(), ot->addrspace());
+
+    if (fun) {
+        auto spv_void_ty = unique_->void_ty();
+        auto spv_i32_ty = unique_->spv_ty(scalar_type::i32);
+        auto csize = unique_->constant(static_cast<std::int32_t>(size(ot->element_ty())));
+        auto shape0_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(0));
+        auto width_in_bytes = mod_->add<OpIMul>(spv_i32_ty, shape0_i32, csize);
+        auto height = mod_->add<OpSConvert>(spv_i32_ty, odv.shape(1));
+        auto stride1_i32 = mod_->add<OpSConvert>(spv_i32_ty, odv.stride(1));
+        auto stride_in_bytes = mod_->add<OpIMul>(spv_i32_ty, stride1_i32, csize);
+        auto pos0_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos0);
+        auto pos1_i32 = mod_->add<OpSConvert>(spv_i32_ty, pos1);
+
+        mod_->add<OpAsmCallINTEL>(spv_void_ty, fun,
+                                  array_view<spv_inst *>{pointer, width_in_bytes, height,
+                                                         stride_in_bytes, pos0_i32, pos1_i32});
+    }
 }
 
 auto coopmatrix_diy::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)

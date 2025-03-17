@@ -28,6 +28,7 @@ class inst_cloner {
     auto operator()(constant_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cooperative_matrix_load_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cooperative_matrix_mul_add_inst &in) -> std::unique_ptr<tinytc_inst>;
+    auto operator()(cooperative_matrix_prefetch_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cooperative_matrix_scale_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cooperative_matrix_store_inst &in) -> std::unique_ptr<tinytc_inst>;
     auto operator()(cumsum_inst &in) -> std::unique_ptr<tinytc_inst>;

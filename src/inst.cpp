@@ -412,6 +412,19 @@ tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(tinytc_inst_t *ins
     });
 }
 
+tinytc_status_t tinytc_cooperative_matrix_prefetch_inst_create(
+    tinytc_inst_t *instr, int32_t cache_level, tinytc_value_t op, tinytc_value_t p0,
+    tinytc_value_t p1, int32_t rows, int32_t cols, const tinytc_location_t *loc) {
+    if (instr == nullptr || op == nullptr || p0 == nullptr || p1 == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr = std::make_unique<cooperative_matrix_prefetch_inst>(cache_level, op, p0, p1, rows,
+                                                                    cols, get_optional(loc))
+                     .release();
+    });
+}
+
 tinytc_status_t tinytc_cooperative_matrix_scale_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                             tinytc_value_t b, tinytc_data_type_t ty,
                                                             const tinytc_location_t *loc) {

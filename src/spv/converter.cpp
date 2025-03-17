@@ -985,6 +985,18 @@ void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
         declare(in.result(0), diy_.mul_add(in, val(in.a()), val(in.b()), val(in.c())));
     }
 }
+void inst_converter::operator()(cooperative_matrix_prefetch_inst const &in) {
+    auto odv = get_dope_vector(in.operand());
+    if (!odv) {
+        throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
+    }
+
+    if (info_->matrix().use_khr_matrix_ext()) {
+        throw compilation_error(in.loc(), status::not_implemented);
+    } else {
+        diy_.prefetch(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1()));
+    }
+}
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     auto spv_result_ty = unique_.spv_ty(in.result(0).ty());
     if (info_->matrix().use_khr_matrix_ext()) {

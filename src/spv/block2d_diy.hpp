@@ -6,6 +6,7 @@
 
 #include <array>
 #include <cstdint>
+#include <optional>
 #include <string>
 
 namespace tinytc {
@@ -29,6 +30,7 @@ struct block_config {
     bool vnni;
     lsc_sfid sfid;
     std::int32_t pos0_shr; // Number of bits to shift pos0 to the right (= divide by 2^pos0_shr)
+    std::int32_t cache_level;
 
     auto block_size_in_bytes() const -> std::int32_t;
     auto block_size_in_num_grf() const -> std::int32_t;
@@ -47,12 +49,15 @@ auto to_string(lsc_sfid sfid) -> char const *;
 auto visa_type(scalar_type sty) -> char const *;
 
 auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto prefetch_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
 auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto store_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
 auto load_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
+auto prefetch_block2d(block_config const &cfg, temp_counter &make_tmp)
+    -> std::optional<std::string>;
 auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
 } // namespace tinytc::spv

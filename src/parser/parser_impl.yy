@@ -125,10 +125,11 @@
     ALLOCA          "alloca"
     CAST            "cast"
     CONSTANT        "constant"
-    COOPERATIVE_MATRIX_LOAD "cooperative_matrix_load"
-    COOPERATIVE_MATRIX_MUL_ADD "cooperative_matrix_mul_add"
-    COOPERATIVE_MATRIX_SCALE "cooperative_matrix_scale"
-    COOPERATIVE_MATRIX_STORE "cooperative_matrix_store"
+    COOPERATIVE_MATRIX_LOAD     "cooperative_matrix_load"
+    COOPERATIVE_MATRIX_MUL_ADD  "cooperative_matrix_mul_add"
+    COOPERATIVE_MATRIX_PREFETCH "cooperative_matrix_prefetch"
+    COOPERATIVE_MATRIX_SCALE    "cooperative_matrix_scale"
+    COOPERATIVE_MATRIX_STORE    "cooperative_matrix_store"
     EXPAND          "expand"
     FUSE            "fuse"
     LOAD            "load"
@@ -230,6 +231,7 @@
 %nterm <inst> constant_inst
 %nterm <inst> cooperative_matrix_load_inst
 %nterm <inst> cooperative_matrix_mul_add_inst
+%nterm <inst> cooperative_matrix_prefetch_inst
 %nterm <inst> cooperative_matrix_scale_inst
 %nterm <inst> cooperative_matrix_store_inst
 %nterm <checked_flag> checked
@@ -484,7 +486,8 @@ instructions:
 instruction:
     axpby_inst      { $$ = std::move($1); }
   | barrier_inst    { $$ = std::move($1); }
-  | cooperative_matrix_store_inst { $$ = std::move($1); }
+  | cooperative_matrix_prefetch_inst { $$ = std::move($1); }
+  | cooperative_matrix_store_inst    { $$ = std::move($1); }
   | cumsum_inst     { $$ = std::move($1); }
   | gemm_inst       { $$ = std::move($1); }
   | gemv_inst       { $$ = std::move($1); }
@@ -942,6 +945,22 @@ cooperative_matrix_mul_add_inst:
                 std::make_unique<cooperative_matrix_mul_add_inst>(std::move($a), std::move($b),
                                                                   std::move($c), std::move($to_ty),
                                                                   @cooperative_matrix_mul_add_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_prefetch_inst:
+    COOPERATIVE_MATRIX_PREFETCH INTEGER_CONSTANT[cache_level] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR COMMA INTEGER_CONSTANT[rows] COMMA INTEGER_CONSTANT[cols] {
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_prefetch_inst>($cache_level, std::move($op),
+                                                                   std::move($p0), std::move($p1), $rows,
+                                                                   $cols, @cooperative_matrix_prefetch_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

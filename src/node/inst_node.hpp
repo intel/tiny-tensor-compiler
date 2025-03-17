@@ -45,6 +45,7 @@ enum class IK {
     constant,
     cooperative_matrix_load,
     cooperative_matrix_mul_add,
+    cooperative_matrix_prefetch,
     cooperative_matrix_scale,
     cooperative_matrix_store,
     expand,
@@ -85,14 +86,14 @@ using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
               class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
               class constant_inst, class cooperative_matrix_load_inst,
-              class cooperative_matrix_mul_add_inst, class cooperative_matrix_scale_inst,
-              class cooperative_matrix_store_inst, class cumsum_inst, class expand_inst,
-              class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
-              class gemv_inst, class ger_inst, class for_inst, class foreach_inst,
-              class hadamard_inst, class if_inst, class math_unary_inst, class parallel_inst,
-              class size_inst, class subgroup_add_inst, class subgroup_broadcast_inst,
-              class subgroup_max_inst, class subgroup_min_inst, class subview_inst,
-              class store_inst, class sum_inst, class yield_inst>;
+              class cooperative_matrix_mul_add_inst, class cooperative_matrix_prefetch_inst,
+              class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst,
+              class cumsum_inst, class expand_inst, class fuse_inst, class load_inst,
+              class lifetime_stop_inst, class gemm_inst, class gemv_inst, class ger_inst,
+              class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
+              class math_unary_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
+              class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
+              class subview_inst, class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -512,6 +513,30 @@ class cooperative_matrix_mul_add_inst : public standard_inst<3, 1, 0> {
     inline auto b() const -> tinytc_value const & { return op(op_b); }
     inline auto c() -> tinytc_value & { return op(op_c); }
     inline auto c() const -> tinytc_value const & { return op(op_c); }
+};
+
+class cooperative_matrix_prefetch_inst : public standard_inst<3, 0, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_prefetch;
+    }
+    enum op_number { op_operand = 0, op_pos0 = 1, op_pos1 = 2 };
+    cooperative_matrix_prefetch_inst(std::int32_t cache_level, tinytc_value_t op0,
+                                     tinytc_value_t p0, tinytc_value_t p1, std::int32_t rows,
+                                     std::int32_t cols, location const &lc = {});
+
+    inline auto cache_level() const -> std::int32_t { return cache_level_; }
+    inline auto operand() -> tinytc_value & { return op(op_operand); }
+    inline auto operand() const -> tinytc_value const & { return op(op_operand); }
+    inline auto pos0() -> tinytc_value & { return op(op_pos0); }
+    inline auto pos0() const -> tinytc_value const & { return op(op_pos0); }
+    inline auto pos1() -> tinytc_value & { return op(op_pos1); }
+    inline auto pos1() const -> tinytc_value const & { return op(op_pos1); }
+    inline auto rows() const -> std::int32_t { return rows_; }
+    inline auto cols() const -> std::int32_t { return cols_; }
+
+  private:
+    std::int32_t cache_level_, rows_, cols_;
 };
 
 class cooperative_matrix_scale_inst : public standard_inst<2, 1, 0> {

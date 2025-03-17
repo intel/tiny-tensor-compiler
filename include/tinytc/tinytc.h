@@ -590,6 +590,27 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(
     tinytc_data_type_t to_ty, const tinytc_location_t *loc);
 
 /**
+ * @brief Create cooperative matrix prefetch instruction
+ *
+ * @code cooperative_matrix_store cache_level, %op[%p0, %p1], rows, cols
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param cache_level [in] Cache-level; "0" is closest to the core
+ * @param op [in] %op
+ * @param p0 [in] %p0
+ * @param p1 [in] %p1
+ * @param rows [in] Number of rows
+ * @param cols [in] Number of cols
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_prefetch_inst_create(
+    tinytc_inst_t *instr, int32_t cache_level, tinytc_value_t op, tinytc_value_t p0,
+    tinytc_value_t p1, int32_t rows, int32_t cols, const tinytc_location_t *loc);
+
+/**
  * @brief Create cooperative matrix scale instruction
  *
  * @code cooperative_matrix_scale %a, %b : ty @endcode
