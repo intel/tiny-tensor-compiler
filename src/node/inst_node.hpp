@@ -513,6 +513,8 @@ class cooperative_matrix_mul_add_inst : public standard_inst<3, 1, 0> {
     inline auto b() const -> tinytc_value const & { return op(op_b); }
     inline auto c() -> tinytc_value & { return op(op_c); }
     inline auto c() const -> tinytc_value const & { return op(op_c); }
+
+    auto is_c_zero() const -> bool;
 };
 
 class cooperative_matrix_prefetch_inst : public standard_inst<3, 0, 0> {

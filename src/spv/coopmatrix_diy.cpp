@@ -233,11 +233,11 @@ auto coopmatrix_diy::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv
 }
 
 auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
-                                 coopmatrix_data_type const *ct, coopmatrix_data_type const *rt)
-    -> spv_inst * {
-    const auto key = mul_add_key{at, bt, ct, rt};
+                                 coopmatrix_data_type const *ct, coopmatrix_data_type const *rt,
+                                 bool is_c_zero) -> spv_inst * {
+    const auto key = mul_add_key{{at, bt, ct, rt}, is_c_zero};
     return lookup(mul_add_funs_, key, [&](mul_add_key const &key) {
-        const auto [at, bt, ct, rt] = key;
+        const auto [at, bt, ct, rt] = key.op_ty;
 
         auto oasm = std::ostringstream{};
 
@@ -304,7 +304,7 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
         const auto precision_src1 = precision(at->component_ty());
         const auto precision_src2 = precision(bt->component_ty());
         for (std::int32_t k = 0; k < at->cols(); k += K) {
-            char const *src0 = k > 0 ? temp.c_str() : "$3";
+            char const *src0 = k > 0 ? temp.c_str() : (!key.is_c_zero ? "$3" : "%null");
             char const *dst = k + K >= at->cols() ? result_placeholder.c_str() : temp.c_str();
             const auto rsize =
                 k + K >= at->cols() ? size(rt->component_ty()) : size(ct->component_ty());
@@ -314,8 +314,9 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                         (k * xe::exec_size + m * at->cols()) * size(at->component_ty());
                     const auto brow =
                         (k * bt->cols() + n * K) * size(bt->component_ty()) / xe::grf_size;
-                    const auto coffset =
-                        (m * ct->cols() + n * xe::exec_size) * size(ct->component_ty());
+                    const auto coffset = !key.is_c_zero ? (m * ct->cols() + n * xe::exec_size) *
+                                                              size(ct->component_ty())
+                                                        : 0;
                     const auto roffset = (m * rt->cols() + n * xe::exec_size) * rsize;
                     oasm << "dpas." << precision_src1 << "." << precision_src2 << "." << xe::sdepth
                          << "." << xe::rcount << " (M1," << xe::exec_size << ") " << dst << "."
@@ -615,7 +616,7 @@ auto coopmatrix_diy::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst
     auto rt = get_coopmatrix_type(in.result(0));
     auto spv_result_ty = unique_->spv_ty(rt);
 
-    auto fun = mul_add_fun(at, bt, ct, rt);
+    auto fun = mul_add_fun(at, bt, ct, rt, in.is_c_zero());
     return mod_->add<OpAsmCallINTEL>(spv_result_ty, fun, array_view<spv_inst *>{a, b, c});
 }
 

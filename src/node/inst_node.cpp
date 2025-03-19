@@ -653,6 +653,17 @@ cooperative_matrix_mul_add_inst::cooperative_matrix_mul_add_inst(tinytc_value_t 
     result(0) = value_node{to_ty, this, lc};
 }
 
+auto cooperative_matrix_mul_add_inst::is_c_zero() const -> bool {
+    if (auto c_def = c().defining_inst(); c_def) {
+        if (auto *c_def_const = dyn_cast<const constant_inst>(c_def); c_def_const) {
+            return std::visit(
+                overloaded{[](bool) { return false; }, [](auto v) { return v == decltype(v){0}; }},
+                c_def_const->value());
+        }
+    }
+    return false;
+}
+
 cooperative_matrix_prefetch_inst::cooperative_matrix_prefetch_inst(
     std::int32_t cache_level, tinytc_value_t op0, tinytc_value_t p0, tinytc_value_t p1,
     std::int32_t rows, std::int32_t cols, location const &lc)

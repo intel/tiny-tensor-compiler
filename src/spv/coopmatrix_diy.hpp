@@ -53,10 +53,18 @@ class coopmatrix_diy {
                spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
 
   private:
-    struct gemm_hash {
-        inline auto operator()(std::array<coopmatrix_data_type const *, 4u> const &key) const
-            -> std::size_t {
-            return fnv1a_combine(key[0], key[1], key[2], key[3]);
+    struct mul_add_key {
+        std::array<coopmatrix_data_type const *, 4u> op_ty;
+        bool is_c_zero;
+
+        auto operator==(mul_add_key const &other) const {
+            return op_ty == other.op_ty && is_c_zero == other.is_c_zero;
+        }
+    };
+    struct mul_add_hash {
+        inline auto operator()(mul_add_key const &key) const -> std::size_t {
+            return fnv1a_combine(key.op_ty[0], key.op_ty[1], key.op_ty[2], key.op_ty[3],
+                                 key.is_c_zero);
         }
     };
     template <typename Tuple> struct tuple_hash {
@@ -77,7 +85,8 @@ class coopmatrix_diy {
     auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
                    address_space addrspace) -> spv_inst *;
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
-                     coopmatrix_data_type const *ct, coopmatrix_data_type const *rt) -> spv_inst *;
+                     coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
+        -> spv_inst *;
     auto cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
         -> spv_inst *;
     auto arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components) -> spv_inst *;
@@ -92,14 +101,13 @@ class coopmatrix_diy {
     using prefetch_key = std::tuple<std::int32_t, scalar_type, spv_inst *, std::int32_t,
                                     std::int32_t, address_space>;
     using store_key = std::tuple<coopmatrix_data_type const *, spv_inst *, address_space>;
-    using mul_add_key = std::array<coopmatrix_data_type const *, 4u>;
     using scale_key = std::pair<scalar_type, std::int32_t>;
     std::unordered_map<arith_key, spv_inst *, tuple_hash<arith_key>> arith_funs_;
     std::unordered_map<cast_key, spv_inst *, tuple_hash<cast_key>> cast_funs_;
     std::unordered_map<load_key, spv_inst *, tuple_hash<load_key>> load_funs_;
     std::unordered_map<prefetch_key, spv_inst *, tuple_hash<prefetch_key>> prefetch_funs_;
     std::unordered_map<store_key, spv_inst *, tuple_hash<store_key>> store_funs_;
-    std::unordered_map<mul_add_key, spv_inst *, gemm_hash> mul_add_funs_;
+    std::unordered_map<mul_add_key, spv_inst *, mul_add_hash> mul_add_funs_;
     std::unordered_map<scale_key, spv_inst *, tuple_hash<scale_key>> scale_funs_;
     temp_counter tmp_;
 };
