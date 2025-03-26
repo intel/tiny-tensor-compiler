@@ -161,7 +161,14 @@ bool coopmatrix_code_generator::operator()(arith_unary_inst &in) {
 }
 bool coopmatrix_code_generator::operator()(cast_inst &in) {
     if (needs_coopmatrix_vector_impl(in)) {
+        auto at = get_coopmatrix_type(in.a());
         auto rt = get_coopmatrix_type(in.result(0));
+        if (at->distributed_mode() != rt->distributed_mode()) {
+            // @todo: implement use conversion
+            throw compilation_error(in.loc(), status::not_implemented,
+                                    "Use conversion matrix_acc -> matrix_b not implemented for "
+                                    "vector coopmatrix code path");
+        }
         auto &av = vals(in.loc(), in.a(), rt->length(core_cfg_.subgroup_size));
         auto results = std::vector<value>{};
         results.reserve(av.size());
