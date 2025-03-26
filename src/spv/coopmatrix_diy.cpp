@@ -314,9 +314,10 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
                         (k * xe::exec_size + m * at->cols()) * size(at->component_ty());
                     const auto brow =
                         (k * bt->cols() + n * K) * size(bt->component_ty()) / xe::grf_size;
-                    const auto coffset = !key.is_c_zero ? (m * ct->cols() + n * xe::exec_size) *
-                                                              size(ct->component_ty())
-                                                        : 0;
+                    const auto coffset =
+                        !key.is_c_zero || k > 0
+                            ? (m * ct->cols() + n * xe::exec_size) * size(ct->component_ty())
+                            : 0;
                     const auto roffset = (m * rt->cols() + n * xe::exec_size) * rsize;
                     oasm << "dpas." << precision_src1 << "." << precision_src2 << "." << xe::sdepth
                          << "." << xe::rcount << " (M1," << xe::exec_size << ") " << dst << "."
