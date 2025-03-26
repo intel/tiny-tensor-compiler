@@ -45,7 +45,7 @@ class level_zero_test_runtime {
     auto get_context() -> context_t;
     auto get_command_list() -> command_list_t;
     auto get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t;
-    auto get_kernel_bundle(tinytc::prog p) -> kernel_bundle_t;
+    auto get_kernel_bundle(tinytc::prog p, tinytc_core_feature_flags_t core_features = 0) -> kernel_bundle_t;
     auto get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t;
     void set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
                  const void *arg_value);

@@ -356,6 +356,7 @@ auto coopmatrix_diy::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type 
         const auto from_width = xe::grf_size / size(from_ty);
         const auto to_visa_ty = visa_type(to_ty);
         const auto from_visa_ty = visa_type(from_ty);
+        const bool need_vnni_transform = to_use == matrix_use::a && from_use != matrix_use::a;
 
         auto const row_stride = [](scalar_type sty, matrix_use use) -> std::int32_t {
             const std::int32_t ops_per_chan = xe::channel_size / size(sty);
@@ -397,8 +398,8 @@ auto coopmatrix_diy::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type 
                     from_m + col * from_stride + from_bm * from_stride * cols;
 
                 const std::int32_t ops_per_chan = xe::channel_size / size(to_ty);
-                const auto cmod = to_use == matrix_use::a ? col % ops_per_chan : 0;
-                const auto cbase = to_use == matrix_use::a ? col - cmod : col;
+                const auto cmod = need_vnni_transform ? col % ops_per_chan : 0;
+                const auto cbase = need_vnni_transform ? col - cmod : col;
                 const std::int32_t to_offset =
                     (to_m + cmod) + cbase * to_stride + to_bm * to_stride * cols;
 
@@ -406,8 +407,7 @@ auto coopmatrix_diy::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type 
                 auto C_from = from_offset % from_width;
                 auto R_to = to_offset / to_width;
                 auto C_to = to_offset % to_width;
-                if (to_use == matrix_use::a) {
-                    // VNNI transform
+                if (need_vnni_transform) {
                     oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << ","
                          << C_to << ")<" << ops_per_chan << "> " << a_tmp << "(" << R_from << ","
                          << C_from << ")<1;1,0>\n";

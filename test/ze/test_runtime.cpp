@@ -68,11 +68,13 @@ auto level_zero_test_runtime::get_command_list() -> command_list_t { return list
 auto level_zero_test_runtime::get_recipe_handler(tinytc::recipe const &rec) -> recipe_handler_t {
     return tinytc::make_recipe_handler(ctx_, dev_, rec);
 }
-auto level_zero_test_runtime::get_kernel_bundle(tinytc::prog p) -> kernel_bundle_t {
-    return ::tinytc::make_kernel_bundle(ctx_, dev_, std::move(p));
+auto level_zero_test_runtime::get_kernel_bundle(tinytc::prog p,
+                                                tinytc_core_feature_flags_t core_features)
+    -> kernel_bundle_t {
+    return ::tinytc::make_kernel_bundle(ctx_, dev_, std::move(p), core_features);
 }
-auto level_zero_test_runtime::get_kernel(kernel_bundle_t const &bundle,
-                                         char const *name) -> kernel_t {
+auto level_zero_test_runtime::get_kernel(kernel_bundle_t const &bundle, char const *name)
+    -> kernel_t {
     return ::tinytc::make_kernel(bundle.get(), name);
 }
 void level_zero_test_runtime::set_arg(kernel_t &kernel, std::uint32_t arg_index,

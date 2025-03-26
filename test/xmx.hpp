@@ -76,7 +76,8 @@ void run_custom_test_case(std::string const &code, char const *kernel_name, T &.
     ctx.set_error_reporter(
         [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
         nullptr);
-    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx));
+    auto bundle = gpu_rt->get_kernel_bundle(parse_string(code, ctx),
+                                            tinytc_core_feature_flag_large_register_file);
     auto kernel = gpu_rt->get_kernel(bundle, kernel_name);
 
     for (std::size_t i = 0; i < buffers.size(); ++i) {
@@ -578,6 +579,129 @@ func @matmul_dpas(%A: memref<i8x64x64>,
             REQUIRE(C(i, j) == ref);
         }
     }
+}
+
+TEST_CASE(RUNTIME_NAME " matrix use cast f16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @use_cast(%A: memref<f16x128x128>,
+               %B: memref<f32x128x128>,
+               %C: memref<f32x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        ; B use conversion
+        %0 = constant 0 : index
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_a>
+        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f32x32x32,matrix_acc>
+        %3 = constant 0.0 : coopmatrix<f32x32x32,matrix_acc>
+        %4 = cast %2 : coopmatrix<f16x32x32,matrix_b>
+        %5 = cooperative_matrix_mul_add %1, %4, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %5, %C[%0,%0]
+
+        ; A use conversion
+        %6 = constant 32 : index
+        %7 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<f32x32x32,matrix_acc>
+        %8 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<f16x32x32,matrix_b>
+        %10 = cast %7 : coopmatrix<f16x32x32,matrix_a>
+        %11 = cooperative_matrix_mul_add %10, %8, %3 : coopmatrix<f32x32x32,matrix_acc>
+        cooperative_matrix_store %11, %C[%6,%0]
+    }
+})TinyTL";
+
+    constexpr std::int64_t n = 32;
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<half>(N, N, half{0.0f});
+        for (std::int64_t i = 0; i < N; ++i) {
+            A(i, i) = half{1.0f};
+        }
+        return A;
+    }();
+    const auto B = [] {
+        auto B = test_matrix<float>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                B(i, j) = static_cast<float>(i + j * n);
+            }
+        }
+        return B;
+    }();
+    auto C = test_matrix<float>(N, N);
+
+    run_custom_test_case(code, "use_cast", A, B, C);
+
+    auto const check = [&](std::int64_t i0, std::int64_t i1, std::int64_t j0, std::int64_t j1) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            for (std::int64_t i = i0; i < i1; ++i) {
+                REQUIRE(C(i, j) == static_cast<float>((i - i0) + (j - j0) * n));
+            }
+        }
+    };
+    check(0, 32, 0, 32);
+    check(32, 64, 0, 32);
+}
+
+TEST_CASE(RUNTIME_NAME " matrix use cast i8") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @use_cast(%A: memref<i8x128x128>,
+               %B: memref<i32x128x128>,
+               %C: memref<i32x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        ; B use conversion
+        %0 = constant 0 : index
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i8x16x32,matrix_a>
+        %2 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<i32x32x8,matrix_acc>
+        %3 = constant 0 : coopmatrix<i32x16x8,matrix_acc>
+        %4 = cast %2 : coopmatrix<i8x32x8,matrix_b>
+        %5 = cooperative_matrix_mul_add %1, %4, %3 : coopmatrix<i32x16x8,matrix_acc>
+        cooperative_matrix_store %5, %C[%0,%0]
+
+        ; A use conversion
+        %6 = constant 32 : index
+        %7 = cooperative_matrix_load.n %B[%0,%0] : coopmatrix<i32x16x32,matrix_acc>
+        %8 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i8x32x8,matrix_b>
+        %10 = cast %7 : coopmatrix<i8x16x32,matrix_a>
+        %11 = cooperative_matrix_mul_add %10, %8, %3 : coopmatrix<i32x16x8,matrix_acc>
+        cooperative_matrix_store %11, %C[%6,%0]
+    }
+})TinyTL";
+
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<std::int8_t>(N, N, std::int8_t{0});
+        for (std::int64_t i = 0; i < N; ++i) {
+            A(i, i) = std::int8_t{1};
+        }
+        return A;
+    }();
+    const auto B = [] {
+        auto B = test_matrix<std::int32_t>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                B(i, j) = static_cast<std::int32_t>(i + j);
+            }
+        }
+        return B;
+    }();
+    auto C = test_matrix<std::int32_t>(N, N);
+
+    run_custom_test_case(code, "use_cast", A, B, C);
+
+    auto const check = [&](std::int64_t i0, std::int64_t i1, std::int64_t j0, std::int64_t j1) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            for (std::int64_t i = i0; i < i1; ++i) {
+                REQUIRE(C(i, j) == static_cast<float>((i - i0) + (j - j0)));
+            }
+        }
+    };
+    check(0, 16, 0, 8);
+    check(32, 48, 0, 8);
 }
 
 #endif // XMX_20250120_HPP
