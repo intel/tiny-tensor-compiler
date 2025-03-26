@@ -109,7 +109,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
                 auto bb = region_builder{fn_body};
 
-                auto gid = bb.add(make_builtin(builtin::group_id, index_ty, my_loc()));
+                auto gid = bb.add(make_builtin(builtin::group_id_x, index_ty, my_loc()));
                 auto at = get_memref(ty_, array_view(A_static_sizes.data(), 2), {1, ldA},
                                      address_space::global, my_loc());
                 auto bt = get_memref(ty_, array_view(B_static_sizes.data(), 2), {1, ldB},

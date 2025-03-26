@@ -66,8 +66,8 @@ auto make_kernel_bundle(context const &ctx, device const &dev, prog prg,
     return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, std::move(prg),
                                               core_features);
 }
-auto make_kernel_bundle(context const &ctx, device const &dev,
-                        binary const &bin) -> kernel_bundle<bundle_state::executable> {
+auto make_kernel_bundle(context const &ctx, device const &dev, binary const &bin)
+    -> kernel_bundle<bundle_state::executable> {
     return dispatch<kernel_bundle_dispatcher>(dev.get_backend(), ctx, dev, bin);
 }
 
@@ -94,8 +94,8 @@ template <> struct kernel_dispatcher<backend::opencl> {
     }
 };
 
-auto make_kernel(kernel_bundle<bundle_state::executable> const &bundle,
-                 char const *name) -> kernel {
+auto make_kernel(kernel_bundle<bundle_state::executable> const &bundle, char const *name)
+    -> kernel {
     return dispatch<kernel_dispatcher>(bundle.get_backend(), bundle, name);
 }
 
@@ -114,7 +114,7 @@ auto get_group_size(kernel const &krnl) -> range<3u> {
 }
 
 auto get_global_size(std::int64_t howmany, range<3u> const &local_size) -> range<3u> {
-    return {howmany * local_size[0], local_size[1], local_size[2]};
+    return {local_size[0], local_size[1], howmany * local_size[2]};
 }
 
 auto get_execution_range(kernel const &krnl, std::int64_t howmany) -> nd_range<3u> {

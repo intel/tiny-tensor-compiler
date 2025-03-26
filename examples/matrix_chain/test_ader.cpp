@@ -98,7 +98,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         auto const c0 = bb.add(make_constant_zero(element_ty));
         auto const c1 = bb.add(make_constant_one(element_ty));
         auto const gid =
-            bb.add(make_builtin(builtin::group_id, get_scalar(ctx, scalar_type::index)));
+            bb.add(make_builtin(builtin::group_id_x, get_scalar(ctx, scalar_type::index)));
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};

@@ -85,16 +85,30 @@ char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op) {
 
 char const *tinytc_builtin_to_string(tinytc_builtin_t b) {
     switch (b) {
-    case tinytc_builtin_group_id:
-        return "group_id";
-    case tinytc_builtin_group_size:
-        return "group_size";
-    case tinytc_builtin_num_subgroups:
-        return "num_subgroups";
+    case tinytc_builtin_group_id_x:
+        return "group_id.x";
+    case tinytc_builtin_group_id_y:
+        return "group_id.y";
+    case tinytc_builtin_group_id_z:
+        return "group_id.z";
+    case tinytc_builtin_num_groups_x:
+        return "num_groups.x";
+    case tinytc_builtin_num_groups_y:
+        return "num_groups.y";
+    case tinytc_builtin_num_groups_z:
+        return "num_groups.z";
+    case tinytc_builtin_num_subgroups_x:
+        return "num_subgroups.x";
+    case tinytc_builtin_num_subgroups_y:
+        return "num_subgroups.y";
     case tinytc_builtin_subgroup_size:
         return "subgroup_size";
-    case tinytc_builtin_subgroup_id:
-        return "subgroup_id";
+    case tinytc_builtin_subgroup_id_x:
+        return "subgroup_id.x";
+    case tinytc_builtin_subgroup_id_y:
+        return "subgroup_id.y";
+    case tinytc_builtin_subgroup_linear_id:
+        return "subgroup_linear_id";
     case tinytc_builtin_subgroup_local_id:
         return "subgroup_local_id";
     }

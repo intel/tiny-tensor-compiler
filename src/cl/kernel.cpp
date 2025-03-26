@@ -132,6 +132,6 @@ void tinytc_cl_get_global_size(int64_t howmany, const size_t *local_size, size_t
     for (size_t i = 0; i < 3; ++i) {
         global_size[i] = local_size[i];
     }
-    global_size[2] *= howmany;
+    global_size[0] *= howmany;
 }
 }

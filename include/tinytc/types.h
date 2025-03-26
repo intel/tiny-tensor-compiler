@@ -316,12 +316,19 @@ typedef enum {
 
 //! Builtin values
 typedef enum {
-    tinytc_builtin_group_id = 0,          ///< group id
-    tinytc_builtin_group_size = 1,        ///< group size
-    tinytc_builtin_num_subgroups = 2,     ///< number of subgroups
-    tinytc_builtin_subgroup_size = 3,     ///< subgroup size
-    tinytc_builtin_subgroup_id = 4,       ///< subgroup id
-    tinytc_builtin_subgroup_local_id = 5, ///< subgroup local id
+    tinytc_builtin_group_id_x = 0,          ///< group_id.x
+    tinytc_builtin_group_id_y = 1,          ///< group_id.y
+    tinytc_builtin_group_id_z = 2,          ///< group_id.z
+    tinytc_builtin_num_groups_x = 3,        ///< num_groups.x
+    tinytc_builtin_num_groups_y = 4,        ///< num_groups.y
+    tinytc_builtin_num_groups_z = 5,        ///< num_groups.z
+    tinytc_builtin_num_subgroups_x = 6,     ///< num_subgroups.x
+    tinytc_builtin_num_subgroups_y = 7,     ///< num_subgroups.y
+    tinytc_builtin_subgroup_size = 8,       ///< subgroup_size
+    tinytc_builtin_subgroup_id_x = 9,       ///< subgroup_id.x
+    tinytc_builtin_subgroup_id_y = 10,      ///< subgroup_id.y
+    tinytc_builtin_subgroup_linear_id = 11, ///< subgroup_linear_id
+    tinytc_builtin_subgroup_local_id = 12   ///< subgroup_local_id
 } tinytc_builtin_t;
 
 //! Compare operation

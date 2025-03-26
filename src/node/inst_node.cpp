@@ -425,15 +425,22 @@ builtin_inst::builtin_inst(builtin btype, tinytc_data_type_t ty, location const 
     }
 
     switch (builtin_type()) {
-    case builtin::group_id:
-    case builtin::group_size:
+    case builtin::group_id_x:
+    case builtin::group_id_y:
+    case builtin::group_id_z:
+    case builtin::num_groups_x:
+    case builtin::num_groups_y:
+    case builtin::num_groups_z:
         if (rt->ty() != scalar_type::index) {
             throw compilation_error(loc(), status::ir_expected_index);
         }
         break;
-    case builtin::num_subgroups:
+    case builtin::num_subgroups_x:
+    case builtin::num_subgroups_y:
     case builtin::subgroup_size:
-    case builtin::subgroup_id:
+    case builtin::subgroup_id_x:
+    case builtin::subgroup_id_y:
+    case builtin::subgroup_linear_id:
     case builtin::subgroup_local_id:
         if (rt->ty() != scalar_type::i32) {
             throw compilation_error(loc(), status::ir_expected_i32);
@@ -446,12 +453,19 @@ builtin_inst::builtin_inst(builtin btype, tinytc_data_type_t ty, location const 
 
 auto builtin_inst::kind() const -> tinytc::inst_execution_kind {
     switch (builtin_type()) {
-    case builtin::group_id:
-    case builtin::group_size:
-    case builtin::num_subgroups:
+    case builtin::group_id_x:
+    case builtin::group_id_y:
+    case builtin::group_id_z:
+    case builtin::num_groups_x:
+    case builtin::num_groups_y:
+    case builtin::num_groups_z:
+    case builtin::num_subgroups_x:
+    case builtin::num_subgroups_y:
     case builtin::subgroup_size:
         return tinytc::inst_execution_kind::mixed;
-    case builtin::subgroup_id:
+    case builtin::subgroup_id_x:
+    case builtin::subgroup_id_y:
+    case builtin::subgroup_linear_id:
     case builtin::subgroup_local_id:
         return tinytc::inst_execution_kind::spmd;
     }

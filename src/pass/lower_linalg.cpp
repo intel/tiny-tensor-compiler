@@ -295,7 +295,7 @@ void linalg_generator::operator()(axpby_inst &in) {
         auto bb = region_builder{body};
 
         auto i32_ty = get_scalar(ctx, scalar_type::i32);
-        auto sg_id = bb.add(make_builtin(builtin::subgroup_id, i32_ty, in.loc()));
+        auto sg_id = bb.add(make_builtin(builtin::subgroup_linear_id, i32_ty, in.loc()));
         auto sg_lid = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, in.loc()));
         auto c0 = bb.add(make_constant(0, i32_ty));
         auto cond0 = bb.add(make_cmp(cmp_condition::eq, sg_id, c0, bool_ty, in.loc()));
@@ -355,7 +355,7 @@ void linalg_generator::operator()(cumsum_inst &in) {
         auto sglid = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, loc));
         auto from_index = [&]() -> value {
             if (scan.num_tiles() > 1) {
-                auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, loc));
+                auto sgid = bb.add(make_builtin(builtin::subgroup_linear_id, i32_ty, loc));
                 auto from0 = bb.add(make_arith(arithmetic::mul, sgid, c_sgs, i32_ty, loc));
                 auto from1 = bb.add(make_arith(arithmetic::add, from0, sglid, i32_ty, loc));
                 return bb.add(make_cast(from1, index_ty, loc));
@@ -444,7 +444,7 @@ void linalg_generator::operator()(cumsum_inst &in) {
         }
 
         auto bb = region_builder{parent_region};
-        auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, loc));
+        auto sgid = bb.add(make_builtin(builtin::subgroup_linear_id, i32_ty, loc));
         auto sgid_index = bb.add(make_cast(sgid, index_ty, loc));
 
         auto shape0 = bb.add(make_size(&in.B(), 0, index_ty, loc));
@@ -528,10 +528,8 @@ void linalg_generator::operator()(gemm_inst &in) {
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
-    auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, in.loc()));
-    auto c_m_tiles = bb.add(make_constant(tiling_.m_tiles(), i32_ty, in.loc()));
-    auto sg_n = bb.add(make_arith(arithmetic::div, sgid, c_m_tiles, i32_ty, in.loc()));
-    auto sg_m = bb.add(make_arith(arithmetic::rem, sgid, c_m_tiles, i32_ty, in.loc()));
+    auto sg_m = bb.add(make_builtin(builtin::subgroup_id_x, i32_ty, in.loc()));
+    auto sg_n = bb.add(make_builtin(builtin::subgroup_id_y, i32_ty, in.loc()));
 
     auto [max_rows, max_cols] = max_register_block_gemm(
         size(at->element_ty()), size(bt->element_ty()), size(acc_type(ct->element_ty())),
@@ -728,7 +726,7 @@ void linalg_generator::operator()(sum_inst &in) {
         auto bb = region_builder{body};
 
         auto c_sgs = bb.add(make_constant(core_cfg_.subgroup_size, i32_ty, in.loc()));
-        auto sgid = bb.add(make_builtin(builtin::subgroup_id, i32_ty, in.loc()));
+        auto sgid = bb.add(make_builtin(builtin::subgroup_linear_id, i32_ty, in.loc()));
         auto m = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, in.loc()));
         auto from0 = bb.add(make_arith(arithmetic::mul, sgid, c_sgs, i32_ty, in.loc()));
         auto from1 = bb.add(make_arith(arithmetic::add, from0, m, i32_ty, in.loc()));

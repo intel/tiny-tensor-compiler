@@ -203,12 +203,19 @@ lex:
         "arith.re"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
 
         // builtin
-        "builtin.group_id"          { adv_loc(); return parser::make_BUILTIN(builtin::group_id, loc_); }
-        "builtin.group_size"        { adv_loc(); return parser::make_BUILTIN(builtin::group_size, loc_); }
-        "builtin.num_subgroups"     { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups, loc_); }
-        "builtin.subgroup_size"     { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_size, loc_); }
-        "builtin.subgroup_id"       { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id, loc_); }
-        "builtin.subgroup_local_id" { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_local_id, loc_); }
+        "builtin.group_id.x"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_x, loc_); }
+        "builtin.group_id.y"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_y, loc_); }
+        "builtin.group_id.z"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_z, loc_); }
+        "builtin.num_groups.x"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_x, loc_); }
+        "builtin.num_groups.y"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_y, loc_); }
+        "builtin.num_groups.z"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_z, loc_); }
+        "builtin.num_subgroups.x"    { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups_x, loc_); }
+        "builtin.num_subgroups.y"    { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups_y, loc_); }
+        "builtin.subgroup_size"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_size, loc_); }
+        "builtin.subgroup_id.x"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id_x, loc_); }
+        "builtin.subgroup_id.y"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id_y, loc_); }
+        "builtin.subgroup_linear_id" { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_linear_id, loc_); }
+        "builtin.subgroup_local_id"  { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_local_id, loc_); }
 
         // comparison condition
         "cmp.eq"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }

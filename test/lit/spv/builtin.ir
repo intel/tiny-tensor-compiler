@@ -3,20 +3,20 @@
 
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
-; CHECK: OpEntryPoint Kernel %[[#]] "tbuiltin" %[[#VAR1:]] %[[#VAR2:]] %[[#VAR3:]] %[[#VAR4:]] %[[#VAR5:]] %[[#VAR6:]]
+; CHECK: OpEntryPoint Kernel %[[#TBUILTIN:]] "tbuiltin" %[[#VAR1:]] %[[#VAR2:]] %[[#VAR3:]] %[[#VAR4:]] %[[#VAR5:]]
+; CHECK: OpExecutionMode %[[#TBUILTIN]] LocalSize 64 16 1
+; CHECK: OpExecutionMode %[[#TBUILTIN]] SubgroupSize 32
 
 ; CHECK: OpDecorate %[[#VAR1]] Constant
-; CHECK: OpDecorate %[[#VAR1]] BuiltIn GlobalInvocationId
+; CHECK: OpDecorate %[[#VAR1]] BuiltIn WorkgroupId
 ; CHECK: OpDecorate %[[#VAR2]] Constant
-; CHECK: OpDecorate %[[#VAR2]] BuiltIn GlobalSize
+; CHECK: OpDecorate %[[#VAR2]] BuiltIn NumWorkgroups
 ; CHECK: OpDecorate %[[#VAR3]] Constant
-; CHECK: OpDecorate %[[#VAR3]] BuiltIn NumSubgroups
+; CHECK: OpDecorate %[[#VAR3]] BuiltIn SubgroupSize
 ; CHECK: OpDecorate %[[#VAR4]] Constant
-; CHECK: OpDecorate %[[#VAR4]] BuiltIn SubgroupSize
+; CHECK: OpDecorate %[[#VAR4]] BuiltIn SubgroupId
 ; CHECK: OpDecorate %[[#VAR5]] Constant
-; CHECK: OpDecorate %[[#VAR5]] BuiltIn SubgroupId
-; CHECK: OpDecorate %[[#VAR6]] Constant
-; CHECK: OpDecorate %[[#VAR6]] BuiltIn SubgroupLocalInvocationId
+; CHECK: OpDecorate %[[#VAR5]] BuiltIn SubgroupLocalInvocationId
 
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
 ; CHECK: %[[#I64V3:]] = OpTypeVector %[[#I64]] 3
@@ -24,27 +24,49 @@
 ; CHECK: %[[#VAR1]] = OpVariable %[[#PTR_TO_I64V3]] Input
 ; CHECK: %[[#VAR2]] = OpVariable %[[#PTR_TO_I64V3]] Input
 ; CHECK: %[[#I32:]] = OpTypeInt 32 0
+; CHECK: %[[#C2_I32:]] = OpConstant %[[#I32]] 2
+; CHECK: %[[#C16_I32:]] = OpConstant %[[#I32]] 16
 ; CHECK: %[[#PTR_TO_I32:]] = OpTypePointer Input %[[#I32]]
 ; CHECK: %[[#VAR3]] = OpVariable %[[#PTR_TO_I32]] Input
 ; CHECK: %[[#VAR4]] = OpVariable %[[#PTR_TO_I32]] Input
 ; CHECK: %[[#VAR5]] = OpVariable %[[#PTR_TO_I32]] Input
-; CHECK: %[[#VAR6]] = OpVariable %[[#PTR_TO_I32]] Input
 
-func @tbuiltin() {
-    %0 = builtin.group_id : index
-    %1 = builtin.group_size : index
-    %2 = builtin.num_subgroups : i32
-    %3 = builtin.subgroup_size : i32
+func @tbuiltin() attributes{subgroup_size=32, work_group_size=[64,16]} {
+    %0 = builtin.group_id.x : index
+    %1 = builtin.group_id.y : index
+    %2 = builtin.group_id.z : index
+    %3 = builtin.num_groups.x : index
+    %4 = builtin.num_groups.y : index
+    %5 = builtin.num_groups.z : index
+    %6 = builtin.num_subgroups.x : i32
+    %t6 = arith.neg %6 : i32
+    %7 = builtin.num_subgroups.y : i32
+    %t7 = arith.neg %7 : i32
+    %9 = builtin.subgroup_size : i32
     parallel {
-        %4 = builtin.subgroup_id : i32
-        %5 = builtin.subgroup_local_id : i32
+        %10 = builtin.subgroup_id.x : i32
+        %11 = builtin.subgroup_id.y : i32
+        %12 = builtin.subgroup_linear_id : i32
+        %13 = builtin.subgroup_local_id : i32
     }
-; CHECK: %[[#VAR1_LOAD:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
-; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD]] 2
-; CHECK: %[[#VAR2_LOAD:]] = OpLoad %[[#I64V3]] %[[#VAR2]] Aligned 32
-; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR2_LOAD]] 2
+; CHECK: %[[#VAR1_LOAD1:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD1]] 0
+; CHECK: %[[#VAR1_LOAD2:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD2]] 1
+; CHECK: %[[#VAR1_LOAD3:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD3]] 2
+; CHECK: %[[#VAR2_LOAD1:]] = OpLoad %[[#I64V3]] %[[#VAR2]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR2_LOAD1]] 0
+; CHECK: %[[#VAR2_LOAD2:]] = OpLoad %[[#I64V3]] %[[#VAR2]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR2_LOAD2]] 1
+; CHECK: %[[#VAR2_LOAD3:]] = OpLoad %[[#I64V3]] %[[#VAR2]] Aligned 32
+; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR2_LOAD3]] 2
+; CHECK: %[[#]] = OpSNegate %[[#I32]] %[[#C2_I32]]
+; CHECK: %[[#]] = OpSNegate %[[#I32]] %[[#C16_I32]]
 ; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR3]] Aligned 4
-; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR4]] Aligned 4
+; CHECK: %[[#VAR4_LOAD1:]] = OpLoad %[[#I32]] %[[#VAR4]] Aligned 4
+; CHECK: %[[#]] = OpSRem %[[#I32]] %[[#VAR4_LOAD1]] %[[#C2_I32]]
+; CHECK: %[[#VAR4_LOAD2:]] = OpLoad %[[#I32]] %[[#VAR4]] Aligned 4
+; CHECK: %[[#]] = OpSDiv %[[#I32]] %[[#VAR4_LOAD2]] %[[#C2_I32]]
 ; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR5]] Aligned 4
-; CHECK: %[[#]] = OpLoad %[[#I32]] %[[#VAR6]] Aligned 4
 }

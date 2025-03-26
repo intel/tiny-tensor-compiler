@@ -293,12 +293,19 @@ enum class arithmetic_unary {
 
 //! Builtin values
 enum class builtin {
-    group_id = tinytc_builtin_group_id,                   ///< group id
-    group_size = tinytc_builtin_group_size,               ///< group size
-    num_subgroups = tinytc_builtin_num_subgroups,         ///< number of subgroups
-    subgroup_size = tinytc_builtin_subgroup_size,         ///< subgroup size
-    subgroup_id = tinytc_builtin_subgroup_id,             ///< subgroup id
-    subgroup_local_id = tinytc_builtin_subgroup_local_id, ///< subgroup local id
+    group_id_x = tinytc_builtin_group_id_x,                 ///< group_id.x
+    group_id_y = tinytc_builtin_group_id_y,                 ///< group_id.y
+    group_id_z = tinytc_builtin_group_id_z,                 ///< group_id.z
+    num_groups_x = tinytc_builtin_num_groups_x,             ///< num_groups.x
+    num_groups_y = tinytc_builtin_num_groups_y,             ///< num_groups.y
+    num_groups_z = tinytc_builtin_num_groups_z,             ///< num_groups.z
+    num_subgroups_x = tinytc_builtin_num_subgroups_x,       ///< num_subgroups.x
+    num_subgroups_y = tinytc_builtin_num_subgroups_y,       ///< num_subgroups.y
+    subgroup_size = tinytc_builtin_subgroup_size,           ///< subgroup_size
+    subgroup_id_x = tinytc_builtin_subgroup_id_x,           ///< subgroup_id.x
+    subgroup_id_y = tinytc_builtin_subgroup_id_y,           ///< subgroup_id.y
+    subgroup_linear_id = tinytc_builtin_subgroup_linear_id, ///< subgroup_linear_id
+    subgroup_local_id = tinytc_builtin_subgroup_local_id    ///< subgroup_local_id
 };
 
 //! Compare operation

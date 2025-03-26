@@ -772,27 +772,52 @@ void inst_converter::operator()(barrier_inst const &in) {
 
 void inst_converter::operator()(builtin_inst const &in) {
     switch (in.builtin_type()) {
-    case builtin::group_id: {
-        auto gid = load_builtin(BuiltIn::GlobalInvocationId);
+    case builtin::group_id_x:
+    case builtin::group_id_y:
+    case builtin::group_id_z: {
+        auto gid = load_builtin(BuiltIn::WorkgroupId);
         auto index_ty = unique_.spv_ty(scalar_type::index);
+        const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
+                                  static_cast<std::int32_t>(builtin::group_id_x);
         declare(in.result(0),
-                mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{2}));
+                mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{mode}));
         break;
     }
-    case builtin::group_size: {
-        auto gs = load_builtin(BuiltIn::GlobalSize);
+    case builtin::num_groups_x:
+    case builtin::num_groups_y:
+    case builtin::num_groups_z: {
+        auto ng = load_builtin(BuiltIn::NumWorkgroups);
         auto index_ty = unique_.spv_ty(scalar_type::index);
+        const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
+                                  static_cast<std::int32_t>(builtin::num_groups_x);
         declare(in.result(0),
-                mod_->add<OpCompositeExtract>(index_ty, gs, std::vector<LiteralInteger>{2}));
+                mod_->add<OpCompositeExtract>(index_ty, ng, std::vector<LiteralInteger>{mode}));
         break;
     }
-    case builtin::num_subgroups:
-        declare(in.result(0), load_builtin(BuiltIn::NumSubgroups));
+    case builtin::num_subgroups_x:
+        declare(in.result(0), unique_.constant(tiling_.m_tiles()));
+        break;
+    case builtin::num_subgroups_y:
+        declare(in.result(0), unique_.constant(tiling_.n_tiles()));
         break;
     case builtin::subgroup_size:
         declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
         break;
-    case builtin::subgroup_id:
+    case builtin::subgroup_id_x: {
+        auto i32_ty = unique_.spv_ty(scalar_type::i32);
+        auto m_tiles = unique_.constant(tiling_.m_tiles());
+        auto sgid = load_builtin(BuiltIn::SubgroupId);
+        declare(in.result(0), mod_->add<OpSRem>(i32_ty, sgid, m_tiles));
+        break;
+    }
+    case builtin::subgroup_id_y: {
+        auto i32_ty = unique_.spv_ty(scalar_type::i32);
+        auto m_tiles = unique_.constant(tiling_.m_tiles());
+        auto sgid = load_builtin(BuiltIn::SubgroupId);
+        declare(in.result(0), mod_->add<OpSDiv>(i32_ty, sgid, m_tiles));
+        break;
+    }
+    case builtin::subgroup_linear_id:
         declare(in.result(0), load_builtin(BuiltIn::SubgroupId));
         break;
     case builtin::subgroup_local_id:
@@ -1742,6 +1767,11 @@ void inst_converter::run_on_function(function_node const &fn) {
     }());
 
     // Function
+    auto const subgroup_size = fn.subgroup_size();
+    auto const work_group_size = fn.work_group_size();
+    tiling_[0] = work_group_size[0] / subgroup_size;
+    tiling_[1] = work_group_size[1];
+
     auto void_ty = unique_.spv_ty(void_data_type::get(mod_->context()));
     auto fun = mod_->add<OpFunction>(void_ty, FunctionControl::None, fun_ty);
     for (auto const &p : fn.params()) {
@@ -1771,17 +1801,18 @@ void inst_converter::run_on_function(function_node const &fn) {
     mod_->add<OpReturn>();
     mod_->add<OpFunctionEnd>();
 
+    tiling_ = {};
+
     // Entry point
     mod_->add_to<OpEntryPoint>(section::entry_point, ExecutionModel::Kernel, fun,
                                std::string{fn.name()}, std::move(vars_used_by_function_));
 
     // Execution mode
-    auto const work_group_size = fn.work_group_size();
     mod_->add_to<OpExecutionMode>(
         section::execution_mode, fun, ExecutionMode::LocalSize,
         ExecutionModeAttr{std::array<std::int32_t, 3u>{work_group_size[0], work_group_size[1], 1}});
     mod_->add_to<OpExecutionMode>(section::execution_mode, fun, ExecutionMode::SubgroupSize,
-                                  ExecutionModeAttr{fn.subgroup_size()});
+                                  ExecutionModeAttr{subgroup_size});
 }
 
 } // namespace tinytc::spv

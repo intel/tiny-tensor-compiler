@@ -12,6 +12,7 @@
 #include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
 #include "spv/uniquifier.hpp"
+#include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -101,6 +102,7 @@ class inst_converter {
     std::vector<spv_inst *> vars_used_by_function_;
     spv_inst *stack_ = nullptr;
     core_config core_cfg_ = {};
+    local_tiling tiling_ = {};
 };
 
 } // namespace tinytc::spv
