@@ -87,8 +87,8 @@ class coopmatrix_diy {
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
         -> spv_inst *;
-    auto cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
-        -> spv_inst *;
+    auto cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty, matrix_use from_use,
+                  std::int32_t rows, std::int32_t cols) -> spv_inst *;
     auto arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components) -> spv_inst *;
     auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
 
@@ -96,7 +96,8 @@ class coopmatrix_diy {
     uniquifier *unique_;
 
     using arith_key = std::tuple<arithmetic, scalar_type, std::int32_t>;
-    using cast_key = std::tuple<scalar_type, scalar_type, std::int32_t>;
+    using cast_key =
+        std::tuple<scalar_type, matrix_use, scalar_type, matrix_use, std::int32_t, std::int32_t>;
     using load_key = std::tuple<coopmatrix_data_type const *, spv_inst *, transpose, address_space>;
     using prefetch_key = std::tuple<std::int32_t, scalar_type, spv_inst *, std::int32_t,
                                     std::int32_t, address_space>;

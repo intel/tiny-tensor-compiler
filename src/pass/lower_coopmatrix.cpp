@@ -374,7 +374,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_mul_add_inst &in) 
     return true;
 }
 
-bool coopmatrix_code_generator::operator()(cooperative_matrix_prefetch_inst &in) { return false; }
+bool coopmatrix_code_generator::operator()(cooperative_matrix_prefetch_inst &) { return false; }
 
 bool coopmatrix_code_generator::operator()(cooperative_matrix_scale_inst &in) {
     if (!needs_coopmatrix_vector_impl(in)) {

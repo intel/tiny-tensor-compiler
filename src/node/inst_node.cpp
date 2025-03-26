@@ -468,7 +468,14 @@ cast_inst::cast_inst(tinytc_value_t a0, tinytc_data_type_t to_ty, location const
         if (!ct) {
             throw compilation_error(loc(), {&a()}, status::ir_expected_coopmatrix);
         }
-        if (ct->rows() != rt->rows() || ct->cols() != rt->cols() || ct->use() != rt->use()) {
+        if (ct->rows() != rt->rows() || ct->cols() != rt->cols()) {
+            throw compilation_error(lc, {&a()}, status::ir_forbidden_cast);
+        }
+        const bool use_matches = ct->use() == rt->use();
+        const bool use_conversion_allowed =
+            ct->use() == matrix_use::acc &&
+            (rt->use() == matrix_use::a || rt->use() == matrix_use::b);
+        if (!use_matches && !use_conversion_allowed) {
             throw compilation_error(lc, {&a()}, status::ir_forbidden_cast);
         }
         if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {

@@ -154,7 +154,7 @@ void matrix_ext_helper::operator()(cooperative_matrix_mul_add_inst const &in) {
         kill(in.result(0));
     }
 }
-void matrix_ext_helper::operator()(cooperative_matrix_prefetch_inst const &in) {}
+void matrix_ext_helper::operator()(cooperative_matrix_prefetch_inst const &) {}
 void matrix_ext_helper::operator()(cooperative_matrix_scale_inst const &in) {
     // Missing: OpMatrixTimesScalar
     // Ok for coopmatrix diy except for complex

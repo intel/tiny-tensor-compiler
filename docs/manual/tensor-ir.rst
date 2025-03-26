@@ -1074,7 +1074,12 @@ Overview
 ~~~~~~~~
 
 Cast scalar values or cooperative matrices to type indicated after the colon.
-The shape and the use the coopmatrix types must match.
+
+The source type must be a coopmatrix type if the destination type is a coopmatrix type,
+and the shapes must match.
+The coopmatrix use must either match, or
+the use of the source type must be matrix_acc and the use of the destination type
+must be matrix_a or matrix_b.
 
 Casts from complex types to non-complex types are forbidden.
 The following table summarizes the casts and the mapping to SPIR-V

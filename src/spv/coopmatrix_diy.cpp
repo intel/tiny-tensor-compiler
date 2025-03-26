@@ -340,12 +340,14 @@ auto coopmatrix_diy::mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data
     });
 }
 
-auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32_t num_components)
+auto coopmatrix_diy::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty,
+                              matrix_use from_use, std::int32_t rows, std::int32_t cols)
     -> spv_inst * {
-    const auto key = cast_key{to_ty, from_ty, num_components};
+    const auto key = cast_key{to_ty, to_use, from_ty, from_use, rows, cols};
     return lookup(cast_funs_, key, [&](cast_key const &key) {
-        auto &[to_ty, from_ty, num_components] = key;
-        const auto num_elements = num_components * xe::exec_size;
+        auto &[to_ty, to_use, from_ty, from_use, rows, cols] = key;
+        const auto num_elements = rows * cols;
+        const std::int32_t num_components = num_elements / xe::exec_size;
 
         auto spv_component_ty = unique_->spv_ty(to_ty);
         auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
@@ -353,6 +355,23 @@ auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32
         const auto from_width = xe::grf_size / size(from_ty);
         const auto to_visa_ty = visa_type(to_ty);
         const auto from_visa_ty = visa_type(from_ty);
+
+        auto const row_stride = [](scalar_type sty, matrix_use use) -> std::int32_t {
+            const std::int32_t ops_per_chan = xe::channel_size / size(sty);
+            const auto M = xe::exec_size;
+            const auto K = ops_per_chan * xe::sdepth;
+            switch (use) {
+            case matrix_use::a:
+            case matrix_use::acc:
+                return M;
+            case matrix_use::b:
+                return K;
+            }
+            throw status::internal_compiler_error;
+        };
+
+        const auto from_stride = row_stride(from_ty, from_use);
+        const auto to_stride = row_stride(to_ty, to_use);
 
         auto oasm = std::ostringstream{};
         const auto a_tmp = tmp_("a_tmp");
@@ -362,13 +381,41 @@ auto coopmatrix_diy::cast_fun(scalar_type to_ty, scalar_type from_ty, std::int32
              << " num_elts=" << num_elements << " align=wordx32 alias=<$1, 0>\n";
         oasm << ".decl " << b_tmp << " v_type=G type=" << to_visa_ty << " num_elts=" << num_elements
              << " align=wordx32 alias=<$0, 0>\n";
-        for (std::int32_t m = 0; m < num_elements; m += xe::exec_size) {
-            auto R_from = m / from_width;
-            auto C_from = m % from_width;
-            auto R_to = m / to_width;
-            auto C_to = m % to_width;
-            oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << "," << C_to
-                 << ")<1> " << a_tmp << "(" << R_from << "," << C_from << ")<1;1,0>\n";
+
+        // A[m,n,bm] = m + n * M + bm * M * cols
+        // B[m,n,bm] = m + n * K + bm * K * cols
+        // C[m,n,bm] = m + n * M + bm * M * cols
+        for (std::int32_t row = 0; row < rows; row += xe::exec_size) {
+            for (std::int32_t col = 0; col < cols; ++col) {
+                const std::int32_t from_m = row % from_stride;
+                const std::int32_t from_bm = row / from_stride;
+                const std::int32_t to_m = row % to_stride;
+                const std::int32_t to_bm = row / to_stride;
+
+                const std::int32_t from_offset =
+                    from_m + col * from_stride + from_bm * from_stride * cols;
+
+                const std::int32_t ops_per_chan = xe::channel_size / size(to_ty);
+                const auto cmod = to_use == matrix_use::a ? col % ops_per_chan : 0;
+                const auto cbase = to_use == matrix_use::a ? col - cmod : col;
+                const std::int32_t to_offset =
+                    (to_m + cmod) + cbase * to_stride + to_bm * to_stride * cols;
+
+                auto R_from = from_offset / from_width;
+                auto C_from = from_offset % from_width;
+                auto R_to = to_offset / to_width;
+                auto C_to = to_offset % to_width;
+                if (to_use == matrix_use::a) {
+                    // VNNI transform
+                    oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << ","
+                         << C_to << ")<" << ops_per_chan << "> " << a_tmp << "(" << R_from << ","
+                         << C_from << ")<1;1,0>\n";
+                } else {
+                    oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << ","
+                         << C_to << ")<1> " << a_tmp << "(" << R_from << "," << C_from
+                         << ")<1;1,0>\n";
+                }
+            }
         }
         oasm << "}\n";
 
@@ -488,12 +535,14 @@ auto coopmatrix_diy::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
 
     const scalar_type to_ty = rt->component_ty();
+    const matrix_use to_use = rt->use();
     const scalar_type from_ty = at->component_ty();
+    const matrix_use from_use = at->use();
     const std::int32_t num_components = rt->rows() * rt->cols() / xe::exec_size;
     auto spv_component_ty = unique_->spv_ty(to_ty);
     auto spv_operation_ty = unique_->spv_vec_ty(spv_component_ty, num_components);
 
-    auto fun = cast_fun(to_ty, from_ty, num_components);
+    auto fun = cast_fun(to_ty, to_use, from_ty, from_use, rt->rows(), rt->cols());
     auto b = mod_->add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a});
     return mod_->add<OpBitcast>(unique_->spv_ty(rt), b);
 }
