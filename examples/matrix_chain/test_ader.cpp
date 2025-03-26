@@ -204,7 +204,7 @@ template <typename T> std::vector<event> test_ader<T>::reference() {
 
 template <typename T> std::vector<event> test_ader<T>::optimized() {
     T dt = 1.01;
-    auto exe_range = get_execution_range(opt_kernel_, howmany_);
+    auto exe_range = get_execution_range(opt_kernel_, sycl::range<3u>{1u, 1u, howmany_});
     return {q_.submit([&](handler &h) {
         h.set_args(dt, A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_,
                    K_[0].get(), K_[1].get(), K_[2].get(), dQ_[0].get(), howmany_, I_opt_.get(),

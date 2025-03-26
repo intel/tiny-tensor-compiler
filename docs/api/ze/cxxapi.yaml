@@ -10,7 +10,6 @@ C++-API <Level Zero C++-API>:
       - tinytc::make_core_info(ze_device_handle_t)
   Kernel:
     function:
-      - tinytc::get_group_count
       - tinytc::get_group_size(ze_kernel_handle_t)
       - tinytc::make_kernel(ze_module_handle_t,char const *)
       - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&)

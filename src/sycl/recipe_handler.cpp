@@ -56,7 +56,9 @@ void sycl_recipe_handler_impl::mem_arg(std::uint32_t arg_index, const void *valu
 }
 
 void sycl_recipe_handler_impl::howmany(std::int64_t num) {
-    execution_range_ = sycl::nd_range{get_global_size(num, local_size()), local_size()};
+    const auto ls = local_size();
+    execution_range_ = sycl::nd_range{
+        get_global_size(sycl::range<3u>(1u, 1u, static_cast<std::size_t>(num)), ls), ls};
 }
 
 auto sycl_recipe_handler_impl::kernel() const -> sycl::kernel const & {
@@ -66,8 +68,8 @@ auto sycl_recipe_handler_impl::local_size() const -> sycl::range<3u> const & {
     return local_size_[active_kernel_];
 }
 
-auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
-                         recipe const &rec) -> sycl_recipe_handler {
+auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, recipe const &rec)
+    -> sycl_recipe_handler {
     tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(ctx, dev, rec).release();
     return sycl_recipe_handler{handler};
@@ -99,8 +101,8 @@ auto sycl_recipe_handler::submit(sycl::queue q, sycl::event const &dep_event) ->
     });
 }
 
-auto sycl_recipe_handler::submit(sycl::queue q,
-                                 std::vector<sycl::event> const &dep_events) -> sycl::event {
+auto sycl_recipe_handler::submit(sycl::queue q, std::vector<sycl::event> const &dep_events)
+    -> sycl::event {
     return q.submit([&](sycl::handler &h) {
         h.depends_on(dep_events);
         parallel_for(h);

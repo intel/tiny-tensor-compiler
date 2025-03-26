@@ -127,8 +127,4 @@ tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
     *z = props.requiredGroupSizeZ;
     return tinytc_ze_convert_status(status);
 }
-
-ze_group_count_t tinytc_ze_get_group_count(int64_t howmany) {
-    return ze_group_count_t{static_cast<uint32_t>(howmany), 1u, 1u};
-}
 }

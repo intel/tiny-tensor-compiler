@@ -50,7 +50,8 @@ void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value,
 }
 
 void cl_recipe_handler::howmany(std::int64_t num) {
-    global_size_ = get_global_size(num, local_size());
+    global_size_ = get_global_size(
+        std::array<std::size_t, 3u>{static_cast<std::size_t>(num), 1u, 1u}, local_size());
 }
 
 auto cl_recipe_handler::kernel() -> cl_kernel { return kernels_[active_kernel_].get(); }

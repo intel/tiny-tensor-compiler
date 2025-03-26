@@ -62,7 +62,8 @@ void sycl_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_index,
     arg_handler_->set_mem_arg(kernel, arg_index, arg_value, static_cast<tinytc_mem_type_t>(type));
 }
 void sycl_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
-    auto exe_range = ::tinytc::get_execution_range(kernel, howmany);
+    auto exe_range = ::tinytc::get_execution_range(
+        kernel, sycl::range<3u>{1u, 1u, static_cast<std::size_t>(howmany)});
     q_.submit([&](sycl::handler &h) { h.parallel_for(exe_range, kernel); });
 }
 void sycl_test_runtime::synchronize() { q_.wait(); }

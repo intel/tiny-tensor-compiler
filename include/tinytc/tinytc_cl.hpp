@@ -88,9 +88,9 @@ template <> struct shared_handle_traits<cl_kernel> {
  *
  * @return cl_program (shared handle)
  */
-inline auto
-make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
-                   tinytc_core_feature_flags_t core_features = 0) -> shared_handle<cl_program> {
+inline auto make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
+                               tinytc_core_feature_flags_t core_features = 0)
+    -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_program(&obj, context, device, prg.get(),
                                                              core_features));
@@ -106,8 +106,8 @@ make_kernel_bundle(cl_context context, cl_device_id device, prog prg,
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device,
-                               binary const &bin) -> shared_handle<cl_program> {
+inline auto make_kernel_bundle(cl_context context, cl_device_id device, binary const &bin)
+    -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin.get()));
     return shared_handle<cl_program>{obj};
@@ -144,15 +144,16 @@ inline auto get_group_size(cl_kernel kernel) -> std::array<std::size_t, 3u> {
 /**
  * @brief Convert group size to opencl global range
  *
- * @param howmany Group size
+ * @param num_groups Number of groups
  * @param local_size Work-group size
  *
  * @return Global size
  */
-inline auto get_global_size(std::int64_t howmany, std::array<std::size_t, 3u> const &local_size)
+inline auto get_global_size(std::array<std::size_t, 3u> const &num_groups,
+                            std::array<std::size_t, 3u> const &local_size)
     -> std::array<std::size_t, 3u> {
     auto global_size = std::array<std::size_t, 3u>{};
-    tinytc_cl_get_global_size(howmany, local_size.data(), global_size.data());
+    tinytc_cl_get_global_size(num_groups.data(), local_size.data(), global_size.data());
     return global_size;
 }
 
@@ -224,8 +225,8 @@ class opencl_recipe_handler : public recipe_handler {
  *
  * @return OpenCL recipe handler
  */
-inline auto make_recipe_handler(cl_context context, cl_device_id device,
-                                recipe const &rec) -> opencl_recipe_handler {
+inline auto make_recipe_handler(cl_context context, cl_device_id device, recipe const &rec)
+    -> opencl_recipe_handler {
     tinytc_recipe_handler_t handler;
     CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec.get()));
     return opencl_recipe_handler{handler};

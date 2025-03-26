@@ -113,13 +113,13 @@ auto get_group_size(kernel const &krnl) -> range<3u> {
     return dispatch<group_size_dispatcher>(krnl.get_backend(), krnl);
 }
 
-auto get_global_size(std::int64_t howmany, range<3u> const &local_size) -> range<3u> {
-    return {local_size[0], local_size[1], howmany * local_size[2]};
+auto get_global_size(sycl::range<3u> const &num_groups, range<3u> const &local_size) -> range<3u> {
+    return num_groups * local_size;
 }
 
-auto get_execution_range(kernel const &krnl, std::int64_t howmany) -> nd_range<3u> {
+auto get_execution_range(kernel const &krnl, sycl::range<3u> const &num_groups) -> nd_range<3u> {
     auto local_size = get_group_size(krnl);
-    return {get_global_size(howmany, local_size), local_size};
+    return {get_global_size(num_groups, local_size), local_size};
 }
 
 } // namespace tinytc

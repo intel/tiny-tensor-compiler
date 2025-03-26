@@ -44,7 +44,7 @@ void ze_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tiny
 }
 
 void ze_recipe_handler::howmany(std::int64_t num) {
-    group_count_ = ::tinytc_ze_get_group_count(num);
+    group_count_ = ze_group_count_t{static_cast<std::uint32_t>(num), 1u, 1u};
 }
 
 auto ze_recipe_handler::kernel() -> ze_kernel_handle_t { return kernels_[active_kernel_].get(); }

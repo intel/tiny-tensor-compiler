@@ -55,8 +55,6 @@ Kernel
 
 * Functions
 
-  * :ref:`tinytc_ze_get_group_count`
-
   * :ref:`tinytc_ze_get_group_size`
 
   * :ref:`tinytc_ze_kernel_create`
@@ -67,13 +65,6 @@ Kernel
 
 Kernel Functions
 ----------------
-
-.. _tinytc_ze_get_group_count:
-
-tinytc_ze_get_group_count
-.........................
-
-.. doxygenfunction:: tinytc_ze_get_group_count
 
 .. _tinytc_ze_get_group_size:
 

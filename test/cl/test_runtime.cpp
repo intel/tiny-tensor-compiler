@@ -99,8 +99,9 @@ void opencl_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_index,
                              static_cast<tinytc_mem_type_t>(type));
 }
 void opencl_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
+    auto ng = std::array<std::size_t, 3u>{static_cast<std::size_t>(howmany), 1, 1};
     auto ls = ::tinytc::get_group_size(kernel.get());
-    auto gs = ::tinytc::get_global_size(howmany, ls);
+    auto gs = ::tinytc::get_global_size(ng, ls);
     CL_CHECK_STATUS(
         clEnqueueNDRangeKernel(q_, kernel.get(), 3u, NULL, gs.data(), ls.data(), 0, NULL, NULL));
 }

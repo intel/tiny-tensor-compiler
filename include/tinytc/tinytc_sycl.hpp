@@ -65,9 +65,9 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  *
  * @return SYCL kernel bundle
  */
-TINYTC_EXPORT auto
-make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                   binary const &bin) -> sycl::kernel_bundle<sycl::bundle_state::executable>;
+TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                      binary const &bin)
+    -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
  * @brief Make SYCL kernel
@@ -92,24 +92,30 @@ TINYTC_EXPORT auto get_group_size(sycl::kernel const &krnl) -> sycl::range<3u>;
 /**
  * @brief Convert group size to SYCL range
  *
- * @param howmany Group size
+ * **Important:** num_groups is in SYCL ZYX order, meaning that the range should contain
+ * {num_groups_z, num_groups_y, num_groups_x}.
+ *
+ * @param num_groups Number of groups
  * @param local_size Work-group size
  *
  * @return Global size
  */
-TINYTC_EXPORT auto get_global_size(std::int64_t howmany,
+TINYTC_EXPORT auto get_global_size(sycl::range<3u> const &num_groups,
                                    sycl::range<3u> const &local_size) -> sycl::range<3u>;
 
 /**
  * @brief Get SYCL nd_range
  *
+ * **Important:** num_groups is in SYCL ZYX order, meaning that the range should contain
+ * {num_groups_z, num_groups_y, num_groups_x}.
+ *
  * @param krnl Kernel
- * @param howmany Group size
+ * @param num_groups Number of groups
  *
  * @return ND range
  */
-TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl,
-                                       std::int64_t howmany) -> sycl::nd_range<3u>;
+TINYTC_EXPORT auto get_execution_range(sycl::kernel const &krnl, sycl::range<3u> const &num_groups)
+    -> sycl::nd_range<3u>;
 
 ////////////////////////////
 ////////// Recipe //////////
@@ -175,8 +181,8 @@ TINYTC_EXPORT auto make_recipe_handler(sycl::context const &ctx, sycl::device co
  *
  * @return SYCL recipe handler
  */
-TINYTC_EXPORT auto make_recipe_handler(sycl::queue const &q,
-                                       recipe const &rec) -> sycl_recipe_handler;
+TINYTC_EXPORT auto make_recipe_handler(sycl::queue const &q, recipe const &rec)
+    -> sycl_recipe_handler;
 
 } // namespace tinytc
 

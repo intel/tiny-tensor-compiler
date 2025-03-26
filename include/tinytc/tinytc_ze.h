@@ -112,15 +112,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_ze_kernel_create(ze_kernel_handle_t *krnl,
 TINYTC_EXPORT tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
                                                        uint32_t *y, uint32_t *z);
 
-/**
- * @brief Convert group size to level zero group count
- *
- * @param howmany group size
- *
- * @return group count
- */
-TINYTC_EXPORT ze_group_count_t tinytc_ze_get_group_count(int64_t howmany);
-
 ////////////////////////////
 ////////// Recipe //////////
 ////////////////////////////

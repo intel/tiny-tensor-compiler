@@ -10,7 +10,6 @@ C-API <Level Zero C-API>:
       - tinytc_ze_get_support_level
   Kernel:
     function:
-      - tinytc_ze_get_group_count
       - tinytc_ze_get_group_size
       - tinytc_ze_kernel_create
       - tinytc_ze_kernel_bundle_create_with_binary

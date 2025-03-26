@@ -86,7 +86,7 @@ void level_zero_test_runtime::set_mem_arg(kernel_t &kernel, std::uint32_t arg_in
     set_arg(kernel, arg_index, sizeof(arg_value), &arg_value);
 }
 void level_zero_test_runtime::submit(kernel_t &kernel, std::int64_t howmany) {
-    auto group_count = ::tinytc::get_group_count(howmany);
+    auto group_count = ze_group_count_t{static_cast<std::uint32_t>(howmany), 1u, 1u};
     ZE_CHECK_STATUS(
         zeCommandListAppendLaunchKernel(list_, kernel.get(), &group_count, nullptr, 0, nullptr));
 }

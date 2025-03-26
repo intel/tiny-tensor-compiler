@@ -23,6 +23,7 @@
 * Removed immediate operands in favour of constant instruction
 * Instructions annotate the return type instead of operand types
 * Added cumulative sum instruction
+* Change 1d group id to 3d group id; introduce 2d subgroup id
 
 ### Core API
 * Introduced compiler_context class for compilations flags and control of error reporting

@@ -131,17 +131,6 @@ inline auto get_group_size(ze_kernel_handle_t kernel) -> std::array<std::uint32_
     return group_size;
 }
 
-/**
- * @brief Convert group size to Level Zero group count
- *
- * @param howmany Group size
- *
- * @return Group count
- */
-inline auto get_group_count(std::int64_t howmany) -> ze_group_count_t {
-    return tinytc_ze_get_group_count(howmany);
-}
-
 ////////////////////////////
 ////////// Recipe //////////
 ////////////////////////////

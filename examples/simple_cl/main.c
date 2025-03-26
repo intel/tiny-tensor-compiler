@@ -147,7 +147,7 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
 
     static const char source_text[] =
         "func @copy(%A: memref<i32x" CHUNK_SIZE_S "x?>, %B: memref<i32x" CHUNK_SIZE_S "x?>) {\n"
-        "    %gid = builtin.group_id : index\n"
+        "    %gid = builtin.group_id.x : index\n"
         "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
         "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
         "    %c0 = constant 0 : i32\n"
@@ -164,9 +164,10 @@ tinytc_status_t custom_kernel(cl_context context, cl_device_id device, cl_comman
     CL_CHECK(clSetKernelArg(kernel, 1, sizeof(howmany), &howmany));
     CL_CHECK(clSetKernelArg(kernel, 2, sizeof(B), &B));
     CL_CHECK(clSetKernelArg(kernel, 3, sizeof(howmany), &howmany));
+    size_t ng[3] = {howmany, 1, 1};
     size_t ls[3], gs[3];
     CHECK(tinytc_cl_get_group_size(kernel, ls));
-    tinytc_cl_get_global_size(howmany, ls, gs);
+    tinytc_cl_get_global_size(ng, ls, gs);
 
     struct timespec start_time, end_time;
     clock_gettime(CLOCK_MONOTONIC, &start_time);

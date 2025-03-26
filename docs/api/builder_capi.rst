@@ -690,6 +690,8 @@ Instruction
 
   * :ref:`tinytc_cooperative_matrix_mul_add_inst_create`
 
+  * :ref:`tinytc_cooperative_matrix_prefetch_inst_create`
+
   * :ref:`tinytc_cooperative_matrix_scale_inst_create`
 
   * :ref:`tinytc_cooperative_matrix_store_inst_create`
@@ -862,6 +864,13 @@ tinytc_cooperative_matrix_mul_add_inst_create
 .............................................
 
 .. doxygenfunction:: tinytc_cooperative_matrix_mul_add_inst_create
+
+.. _tinytc_cooperative_matrix_prefetch_inst_create:
+
+tinytc_cooperative_matrix_prefetch_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_prefetch_inst_create
 
 .. _tinytc_cooperative_matrix_scale_inst_create:
 

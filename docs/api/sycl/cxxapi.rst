@@ -40,7 +40,7 @@ Kernel
 
   * :ref:`tinytc::get_execution_range`
 
-  * :ref:`tinytc::get_global_size(std::int64_t,sycl::range\<3u\> const &)`
+  * :ref:`tinytc::get_global_size(sycl::range\<3u\> const &,sycl::range\<3u\> const &)`
 
   * :ref:`tinytc::get_group_size(sycl::kernel const &)`
 
@@ -60,12 +60,12 @@ get_execution_range
 
 .. doxygenfunction:: tinytc::get_execution_range
 
-.. _tinytc::get_global_size(std::int64_t,sycl::range\<3u\> const &):
+.. _tinytc::get_global_size(sycl::range\<3u\> const &,sycl::range\<3u\> const &):
 
-get_global_size(std::int64_t,sycl::range<3u> const &)
-.....................................................
+get_global_size(sycl::range<3u> const &,sycl::range<3u> const &)
+................................................................
 
-.. doxygenfunction:: tinytc::get_global_size(std::int64_t,sycl::range<3u> const &)
+.. doxygenfunction:: tinytc::get_global_size(sycl::range<3u> const &,sycl::range<3u> const &)
 
 .. _tinytc::get_group_size(sycl::kernel const &):
 

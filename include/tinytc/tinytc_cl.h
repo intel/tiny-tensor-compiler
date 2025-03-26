@@ -102,11 +102,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t 
 /**
  * @brief Convert group size to opencl global range
  *
- * @param howmany group size
+ * @param num_groups [in][range(0,3)] pointer to number of groups of size >= 3
  * @param local_size [in][range(0,3)] pointer to local size array of size >= 3
  * @param global_size [out][range(0,3)] pointer to global size array of size >= 3
  */
-TINYTC_EXPORT void tinytc_cl_get_global_size(int64_t howmany, const size_t *local_size,
+TINYTC_EXPORT void tinytc_cl_get_global_size(const size_t *num_groups, const size_t *local_size,
                                              size_t *global_size);
 
 ////////////////////////////

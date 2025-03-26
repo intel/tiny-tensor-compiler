@@ -221,7 +221,7 @@ template <typename T> void test(queue q, args &a) {
             if (src) {
                 auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src);
                 auto kernel = make_kernel(bundle, "gemm");
-                auto exe_range = get_execution_range(kernel, howmany);
+                auto exe_range = get_execution_range(kernel, sycl::range<3u>{1u, 1u, howmany});
                 q.submit([&](handler &h) {
                      h.set_args(AA, howmany, BB, howmany, CC, howmany);
                      h.parallel_for(exe_range, kernel);

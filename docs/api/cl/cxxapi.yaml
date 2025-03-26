@@ -10,7 +10,7 @@ C++-API <OpenCL C++-API>:
       - tinytc::make_core_info(cl_device_id)
   Kernel:
     function:
-      - tinytc::get_global_size(std::int64_t,std::array<std::size_t, 3u> const &)
+      - tinytc::get_global_size(std::array<std::size_t, 3u> const &,std::array<std::size_t, 3u> const &)
       - tinytc::get_group_size(cl_kernel)
       - tinytc::make_kernel(cl_program,char const*)
       - tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)

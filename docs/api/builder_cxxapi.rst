@@ -564,6 +564,8 @@ Instruction
 
   * :ref:`tinytc::make_cooperative_matrix_mul_add`
 
+  * :ref:`tinytc::make_cooperative_matrix_prefetch`
+
   * :ref:`tinytc::make_cooperative_matrix_scale`
 
   * :ref:`tinytc::make_cooperative_matrix_store`
@@ -737,6 +739,13 @@ make_cooperative_matrix_mul_add
 ...............................
 
 .. doxygenfunction:: tinytc::make_cooperative_matrix_mul_add
+
+.. _tinytc::make_cooperative_matrix_prefetch:
+
+make_cooperative_matrix_prefetch
+................................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_prefetch
 
 .. _tinytc::make_cooperative_matrix_scale:
 
