@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_NAMES_20250131_HPP
-#define GENERATED_NAMES_20250131_HPP
+#ifndef GENERATED_NAMES_20250326_HPP
+#define GENERATED_NAMES_20250326_HPP
 
 namespace tinytc::spv {
 
@@ -115,9 +115,15 @@ enum class StoreCacheControl;
 auto to_string(StoreCacheControl e) -> char const *;
 enum class NamedMaximumNumberOfRegisters;
 auto to_string(NamedMaximumNumberOfRegisters e) -> char const *;
+enum class MatrixMultiplyAccumulateOperands;
+auto to_string(MatrixMultiplyAccumulateOperands e) -> char const *;
 enum class FPEncoding;
 auto to_string(FPEncoding e) -> char const *;
+enum class CooperativeVectorMatrixLayout;
+auto to_string(CooperativeVectorMatrixLayout e) -> char const *;
+enum class ComponentType;
+auto to_string(ComponentType e) -> char const *;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_NAMES_20250131_HPP
+#endif // GENERATED_NAMES_20250326_HPP

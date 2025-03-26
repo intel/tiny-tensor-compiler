@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20250131_HPP
-#define GENERATED_ENUMS_20250131_HPP
+#ifndef GENERATED_ENUMS_20250326_HPP
+#define GENERATED_ENUMS_20250326_HPP
 
 #include <cstdint>
 
@@ -507,6 +507,7 @@ enum class SourceLanguage {
     WGSL = 10,
     Slang = 11,
     Zig = 12,
+    Rust = 13,
 };
 enum class ExecutionModel {
     Vertex = 0,
@@ -1084,12 +1085,19 @@ enum class BuiltIn {
     HitMicroTriangleVertexBarycentricsNV = 5344,
     IncomingRayFlagsKHR = 5351,
     RayGeometryIndexKHR = 5352,
+    HitIsSphereNV = 5359,
+    HitIsLSSNV = 5360,
+    HitSpherePositionNV = 5361,
     WarpsPerSMNV = 5374,
     SMCountNV = 5375,
     WarpIDNV = 5376,
     SMIDNV = 5377,
+    HitLSSPositionsNV = 5396,
     HitKindFrontFacingMicroTriangleNV = 5405,
     HitKindBackFacingMicroTriangleNV = 5406,
+    HitSphereRadiusNV = 5420,
+    HitLSSRadiiNV = 5421,
+    ClusterIDNV = 5436,
     CullMaskKHR = 6021,
 };
 enum class Scope {
@@ -1234,6 +1242,9 @@ enum class Capability {
     ShaderClockKHR = 5055,
     ShaderEnqueueAMDX = 5067,
     QuadControlKHR = 5087,
+    BFloat16TypeKHR = 5116,
+    BFloat16DotProductKHR = 5117,
+    BFloat16CooperativeMatrixKHR = 5118,
     SampleMaskOverrideCoverageNV = 5249,
     GeometryShaderPassthroughNV = 5251,
     ShaderViewportIndexLayerEXT = 5254,
@@ -1279,14 +1290,19 @@ enum class Capability {
     ShaderInvocationReorderNV = 5383,
     BindlessTextureNV = 5390,
     RayQueryPositionFetchKHR = 5391,
+    CooperativeVectorNV = 5394,
     AtomicFloat16VectorNV = 5404,
     RayTracingDisplacementMicromapNV = 5409,
     RawAccessChainsNV = 5414,
+    RayTracingSpheresGeometryNV = 5418,
+    RayTracingLinearSweptSpheresGeometryNV = 5419,
     CooperativeMatrixReductionsNV = 5430,
     CooperativeMatrixConversionsNV = 5431,
     CooperativeMatrixPerElementOperationsNV = 5432,
     CooperativeMatrixTensorAddressingNV = 5433,
     CooperativeMatrixBlockLoadsNV = 5434,
+    CooperativeVectorTrainingNV = 5435,
+    RayTracingClusterAccelerationStructureNV = 5437,
     TensorAddressingNV = 5439,
     SubgroupShuffleINTEL = 5568,
     SubgroupBufferBlockIOINTEL = 5569,
@@ -1351,13 +1367,19 @@ enum class Capability {
     ArithmeticFenceEXT = 6144,
     FPGAClusterAttributesV2INTEL = 6150,
     FPGAKernelAttributesv2INTEL = 6161,
+    TaskSequenceINTEL = 6162,
     FPMaxErrorINTEL = 6169,
     FPGALatencyControlINTEL = 6171,
     FPGAArgumentInterfacesINTEL = 6174,
     GlobalVariableHostAccessINTEL = 6187,
     GlobalVariableFPGADecorationsINTEL = 6189,
     SubgroupBufferPrefetchINTEL = 6220,
+    Subgroup2DBlockIOINTEL = 6228,
+    Subgroup2DBlockTransformINTEL = 6229,
+    Subgroup2DBlockTransposeINTEL = 6230,
+    SubgroupMatrixMultiplyAccumulateINTEL = 6236,
     GroupUniformArithmeticKHR = 6400,
+    TensorFloat32RoundingINTEL = 6425,
     MaskedGatherScatterINTEL = 6427,
     CacheControlsINTEL = 6441,
     RegisterLimitsINTEL = 6460,
@@ -1440,8 +1462,50 @@ enum class StoreCacheControl {
 enum class NamedMaximumNumberOfRegisters {
     AutoINTEL = 0,
 };
-enum class FPEncoding {};
+enum class MatrixMultiplyAccumulateOperands {
+    None = 0x0,
+    MatrixASignedComponentsINTEL = 0x1,
+    MatrixBSignedComponentsINTEL = 0x2,
+    MatrixCBFloat16INTEL = 0x4,
+    MatrixResultBFloat16INTEL = 0x8,
+    MatrixAPackedInt8INTEL = 0x10,
+    MatrixBPackedInt8INTEL = 0x20,
+    MatrixAPackedInt4INTEL = 0x40,
+    MatrixBPackedInt4INTEL = 0x80,
+    MatrixATF32INTEL = 0x100,
+    MatrixBTF32INTEL = 0x200,
+    MatrixAPackedFloat16INTEL = 0x400,
+    MatrixBPackedFloat16INTEL = 0x800,
+    MatrixAPackedBFloat16INTEL = 0x1000,
+    MatrixBPackedBFloat16INTEL = 0x2000,
+};
+enum class FPEncoding {
+    BFloat16KHR = 0,
+};
+enum class CooperativeVectorMatrixLayout {
+    RowMajorNV = 0,
+    ColumnMajorNV = 1,
+    InferencingOptimalNV = 2,
+    TrainingOptimalNV = 3,
+};
+enum class ComponentType {
+    Float16NV = 0,
+    Float32NV = 1,
+    Float64NV = 2,
+    SignedInt8NV = 3,
+    SignedInt16NV = 4,
+    SignedInt32NV = 5,
+    SignedInt64NV = 6,
+    UnsignedInt8NV = 7,
+    UnsignedInt16NV = 8,
+    UnsignedInt32NV = 9,
+    UnsignedInt64NV = 10,
+    SignedInt8PackedNV = 1000491000,
+    UnsignedInt8PackedNV = 1000491001,
+    FloatE4M3NV = 1000491002,
+    FloatE5M2NV = 1000491003,
+};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20250131_HPP
+#endif // GENERATED_ENUMS_20250326_HPP

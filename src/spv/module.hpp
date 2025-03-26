@@ -47,7 +47,7 @@ struct tinytc_spv_mod final : tinytc::reference_counted {
     using const_iterator = tinytc::ilist<tinytc::spv::spv_inst>::const_iterator;
 
     tinytc_spv_mod(tinytc::compiler_context ctx, tinytc_core_feature_flags_t core_features,
-                   std::int32_t major_version = 1, std::int32_t minor_version = 4);
+                   std::int32_t major_version = 1, std::int32_t minor_version = 6);
     ~tinytc_spv_mod();
 
     inline auto context() const -> tinytc_compiler_context_t { return ctx_.get(); }

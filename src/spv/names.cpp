@@ -1009,6 +1009,8 @@ auto to_string(SourceLanguage e) -> char const * {
         return "Slang";
     case SourceLanguage::Zig:
         return "Zig";
+    case SourceLanguage::Rust:
+        return "Rust";
     }
     return "unknown";
 }
@@ -2185,6 +2187,12 @@ auto to_string(BuiltIn e) -> char const * {
         return "IncomingRayFlagsKHR";
     case BuiltIn::RayGeometryIndexKHR:
         return "RayGeometryIndexKHR";
+    case BuiltIn::HitIsSphereNV:
+        return "HitIsSphereNV";
+    case BuiltIn::HitIsLSSNV:
+        return "HitIsLSSNV";
+    case BuiltIn::HitSpherePositionNV:
+        return "HitSpherePositionNV";
     case BuiltIn::WarpsPerSMNV:
         return "WarpsPerSMNV";
     case BuiltIn::SMCountNV:
@@ -2193,10 +2201,18 @@ auto to_string(BuiltIn e) -> char const * {
         return "WarpIDNV";
     case BuiltIn::SMIDNV:
         return "SMIDNV";
+    case BuiltIn::HitLSSPositionsNV:
+        return "HitLSSPositionsNV";
     case BuiltIn::HitKindFrontFacingMicroTriangleNV:
         return "HitKindFrontFacingMicroTriangleNV";
     case BuiltIn::HitKindBackFacingMicroTriangleNV:
         return "HitKindBackFacingMicroTriangleNV";
+    case BuiltIn::HitSphereRadiusNV:
+        return "HitSphereRadiusNV";
+    case BuiltIn::HitLSSRadiiNV:
+        return "HitLSSRadiiNV";
+    case BuiltIn::ClusterIDNV:
+        return "ClusterIDNV";
     case BuiltIn::CullMaskKHR:
         return "CullMaskKHR";
     }
@@ -2489,6 +2505,12 @@ auto to_string(Capability e) -> char const * {
         return "ShaderEnqueueAMDX";
     case Capability::QuadControlKHR:
         return "QuadControlKHR";
+    case Capability::BFloat16TypeKHR:
+        return "BFloat16TypeKHR";
+    case Capability::BFloat16DotProductKHR:
+        return "BFloat16DotProductKHR";
+    case Capability::BFloat16CooperativeMatrixKHR:
+        return "BFloat16CooperativeMatrixKHR";
     case Capability::SampleMaskOverrideCoverageNV:
         return "SampleMaskOverrideCoverageNV";
     case Capability::GeometryShaderPassthroughNV:
@@ -2579,12 +2601,18 @@ auto to_string(Capability e) -> char const * {
         return "BindlessTextureNV";
     case Capability::RayQueryPositionFetchKHR:
         return "RayQueryPositionFetchKHR";
+    case Capability::CooperativeVectorNV:
+        return "CooperativeVectorNV";
     case Capability::AtomicFloat16VectorNV:
         return "AtomicFloat16VectorNV";
     case Capability::RayTracingDisplacementMicromapNV:
         return "RayTracingDisplacementMicromapNV";
     case Capability::RawAccessChainsNV:
         return "RawAccessChainsNV";
+    case Capability::RayTracingSpheresGeometryNV:
+        return "RayTracingSpheresGeometryNV";
+    case Capability::RayTracingLinearSweptSpheresGeometryNV:
+        return "RayTracingLinearSweptSpheresGeometryNV";
     case Capability::CooperativeMatrixReductionsNV:
         return "CooperativeMatrixReductionsNV";
     case Capability::CooperativeMatrixConversionsNV:
@@ -2595,6 +2623,10 @@ auto to_string(Capability e) -> char const * {
         return "CooperativeMatrixTensorAddressingNV";
     case Capability::CooperativeMatrixBlockLoadsNV:
         return "CooperativeMatrixBlockLoadsNV";
+    case Capability::CooperativeVectorTrainingNV:
+        return "CooperativeVectorTrainingNV";
+    case Capability::RayTracingClusterAccelerationStructureNV:
+        return "RayTracingClusterAccelerationStructureNV";
     case Capability::TensorAddressingNV:
         return "TensorAddressingNV";
     case Capability::SubgroupShuffleINTEL:
@@ -2723,6 +2755,8 @@ auto to_string(Capability e) -> char const * {
         return "FPGAClusterAttributesV2INTEL";
     case Capability::FPGAKernelAttributesv2INTEL:
         return "FPGAKernelAttributesv2INTEL";
+    case Capability::TaskSequenceINTEL:
+        return "TaskSequenceINTEL";
     case Capability::FPMaxErrorINTEL:
         return "FPMaxErrorINTEL";
     case Capability::FPGALatencyControlINTEL:
@@ -2735,8 +2769,18 @@ auto to_string(Capability e) -> char const * {
         return "GlobalVariableFPGADecorationsINTEL";
     case Capability::SubgroupBufferPrefetchINTEL:
         return "SubgroupBufferPrefetchINTEL";
+    case Capability::Subgroup2DBlockIOINTEL:
+        return "Subgroup2DBlockIOINTEL";
+    case Capability::Subgroup2DBlockTransformINTEL:
+        return "Subgroup2DBlockTransformINTEL";
+    case Capability::Subgroup2DBlockTransposeINTEL:
+        return "Subgroup2DBlockTransposeINTEL";
+    case Capability::SubgroupMatrixMultiplyAccumulateINTEL:
+        return "SubgroupMatrixMultiplyAccumulateINTEL";
     case Capability::GroupUniformArithmeticKHR:
         return "GroupUniformArithmeticKHR";
+    case Capability::TensorFloat32RoundingINTEL:
+        return "TensorFloat32RoundingINTEL";
     case Capability::MaskedGatherScatterINTEL:
         return "MaskedGatherScatterINTEL";
     case Capability::CacheControlsINTEL:
@@ -2916,8 +2960,94 @@ auto to_string(NamedMaximumNumberOfRegisters e) -> char const * {
     }
     return "unknown";
 }
+auto to_string(MatrixMultiplyAccumulateOperands e) -> char const * {
+    switch (e) {
+    case MatrixMultiplyAccumulateOperands::None:
+        return "None";
+    case MatrixMultiplyAccumulateOperands::MatrixASignedComponentsINTEL:
+        return "MatrixASignedComponentsINTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBSignedComponentsINTEL:
+        return "MatrixBSignedComponentsINTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixCBFloat16INTEL:
+        return "MatrixCBFloat16INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixResultBFloat16INTEL:
+        return "MatrixResultBFloat16INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixAPackedInt8INTEL:
+        return "MatrixAPackedInt8INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBPackedInt8INTEL:
+        return "MatrixBPackedInt8INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixAPackedInt4INTEL:
+        return "MatrixAPackedInt4INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBPackedInt4INTEL:
+        return "MatrixBPackedInt4INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixATF32INTEL:
+        return "MatrixATF32INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBTF32INTEL:
+        return "MatrixBTF32INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixAPackedFloat16INTEL:
+        return "MatrixAPackedFloat16INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBPackedFloat16INTEL:
+        return "MatrixBPackedFloat16INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixAPackedBFloat16INTEL:
+        return "MatrixAPackedBFloat16INTEL";
+    case MatrixMultiplyAccumulateOperands::MatrixBPackedBFloat16INTEL:
+        return "MatrixBPackedBFloat16INTEL";
+    }
+    return "unknown";
+}
 auto to_string(FPEncoding e) -> char const * {
-    switch (e) {}
+    switch (e) {
+    case FPEncoding::BFloat16KHR:
+        return "BFloat16KHR";
+    }
+    return "unknown";
+}
+auto to_string(CooperativeVectorMatrixLayout e) -> char const * {
+    switch (e) {
+    case CooperativeVectorMatrixLayout::RowMajorNV:
+        return "RowMajorNV";
+    case CooperativeVectorMatrixLayout::ColumnMajorNV:
+        return "ColumnMajorNV";
+    case CooperativeVectorMatrixLayout::InferencingOptimalNV:
+        return "InferencingOptimalNV";
+    case CooperativeVectorMatrixLayout::TrainingOptimalNV:
+        return "TrainingOptimalNV";
+    }
+    return "unknown";
+}
+auto to_string(ComponentType e) -> char const * {
+    switch (e) {
+    case ComponentType::Float16NV:
+        return "Float16NV";
+    case ComponentType::Float32NV:
+        return "Float32NV";
+    case ComponentType::Float64NV:
+        return "Float64NV";
+    case ComponentType::SignedInt8NV:
+        return "SignedInt8NV";
+    case ComponentType::SignedInt16NV:
+        return "SignedInt16NV";
+    case ComponentType::SignedInt32NV:
+        return "SignedInt32NV";
+    case ComponentType::SignedInt64NV:
+        return "SignedInt64NV";
+    case ComponentType::UnsignedInt8NV:
+        return "UnsignedInt8NV";
+    case ComponentType::UnsignedInt16NV:
+        return "UnsignedInt16NV";
+    case ComponentType::UnsignedInt32NV:
+        return "UnsignedInt32NV";
+    case ComponentType::UnsignedInt64NV:
+        return "UnsignedInt64NV";
+    case ComponentType::SignedInt8PackedNV:
+        return "SignedInt8PackedNV";
+    case ComponentType::UnsignedInt8PackedNV:
+        return "UnsignedInt8PackedNV";
+    case ComponentType::FloatE4M3NV:
+        return "FloatE4M3NV";
+    case ComponentType::FloatE5M2NV:
+        return "FloatE5M2NV";
+    }
     return "unknown";
 }
 
