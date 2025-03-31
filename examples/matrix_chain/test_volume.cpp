@@ -161,7 +161,8 @@ template <typename T> std::vector<event> test_volume<T>::reference() {
 }
 
 template <typename T> std::vector<event> test_volume<T>::optimized() {
-    auto exe_range = get_execution_range(opt_kernel_, sycl::range<3u>{1u, 1u, howmany_});
+    auto exe_range = get_execution_range(
+        opt_kernel_, sycl::range<3u>{1u, 1u, static_cast<std::size_t>(howmany_)});
     return {q_.submit([&](handler &h) {
         h.set_args(A_[0].get(), howmany_, A_[1].get(), howmany_, A_[2].get(), howmany_, K_[0].get(),
                    K_[1].get(), K_[2].get(), Q_opt_.get(), howmany_, I_.get(), howmany_);
