@@ -1287,17 +1287,17 @@ The final value of the loop-carried values are returned by the for instruction.
 
 Example:
 
-   .. code::
+.. code::
 
-       %from = constant 2 -> i32
-       %to = constant 6 -> i32
-       %f0 = constant 0 -> i64
-       %f1 = constant 1 -> i64
-       %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
-           %fn = arith.add %fn_2, %fn_1 : i64
-           yield (%fn_1, %fn)
-       }
-       ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
+    %from = constant 2 : i32
+    %to = constant 6 : i32
+    %f0 = constant 0 : i64
+    %f1 = constant 1 : i64
+    %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
+        %fn = arith.add %fn_2, %fn_1 : i64
+        yield (%fn_1, %fn)
+    }
+    ; %fn_1 contains the fourth Fibonacci number and %fn the fifth Fibonacci number 
 
 Attributes
 ~~~~~~~~~~
@@ -1695,6 +1695,50 @@ subgroup_id.(x/y)   i32   N/A                    Returns the x or y mode of the 
 subgroup_linear_id  i32   get_sub_group_id       Returns linear subgroup id
 subgroup_local_id   i32   get_sub_group_local_id Returns the local invocation id in the subgroup
 =================== ===== ====================== ====================================================
+
+Cooperative matrix apply
+........................
+
+.. code:: abnf
+
+    value-instruction           =/ "cooperative_matrix_apply"
+                                   "(" local-identifier "," local-identifier "," local-identifier ")"
+                                   "=" local-identifier
+                                   "->" coopmatrix-type region
+
+Overview
+~~~~~~~~
+
+Apply an action on every component of a coopmatrix and update the component with the result of the action.
+The action is described in the *parallel region* of the instruction.
+
+Arguments
+~~~~~~~~~
+
+The first three local identifier introduce SSA values for the row index, column index, and component value.
+The row and columns values have i32 type and the component value has the same component type as the resulting
+coopmatrix type.
+The fourth identifer, after "in", gives the input coopmatrix, and its type must match the result type.
+
+The region must yield exactly one value whose scalar type is identical to the component type of the coopmatrix.
+
+Example:
+
+.. code::
+
+    %0 = ... ; contains a coopmatrix of type coopmatrix<f32x16x16,matrix_acc>
+    %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x16x16,matrix_acc> {
+        %mask = cmp.le %i, %j : bool
+        %exp_v_masked = if %mask -> (f32) {
+            %exp_v = math.native_exp %v : f32
+            yield (%exp_v)
+        } else {
+            %zero = constant 0.0 : f32
+            yield (%zero)
+        }
+        yield (%exp_v_masked)
+    }
+    ; The entries of %1 are given by %1[i,j] = exp(%0[i,j]) if i <= j else 0
 
 Cooperative matrix load
 .......................

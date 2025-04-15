@@ -61,6 +61,7 @@ class matrix_ext_helper {
     void operator()(arith_inst const &in);
     void operator()(arith_unary_inst const &in);
     void operator()(cast_inst const &in);
+    void operator()(cooperative_matrix_apply_inst const &in);
     void operator()(cooperative_matrix_load_inst const &in);
     void operator()(cooperative_matrix_mul_add_inst const &in);
     void operator()(cooperative_matrix_prefetch_inst const &in);
@@ -131,6 +132,13 @@ auto matrix_ext_helper::check_2d_block_io(value_node const &operand, value_node 
         return base_address_alignment_ok && pos0_alignment_ok && stride_ok && width_ok;
     }
     return false;
+}
+void matrix_ext_helper::operator()(cooperative_matrix_apply_inst const &in) {
+    auto rt = get_coopmatrix_type(in.result(0));
+    if (is_complex_type(rt->component_ty()) || !have(in.a()) || !have(in.result(0))) {
+        kill(in.a());
+        kill(in.result(0));
+    }
 }
 void matrix_ext_helper::operator()(cooperative_matrix_load_inst const &in) {
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());

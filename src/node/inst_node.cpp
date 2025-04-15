@@ -79,6 +79,7 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::for_loop:
     case tinytc::IK::last_loop:
         return tinytc::inst_execution_kind::mixed;
+    case tinytc::IK::cooperative_matrix_apply:
     case tinytc::IK::cooperative_matrix_load:
     case tinytc::IK::cooperative_matrix_mul_add:
     case tinytc::IK::cooperative_matrix_prefetch:
@@ -581,6 +582,31 @@ auto constant_inst::is_zero() const -> bool {
 }
 auto constant_inst::is_identity() const -> bool {
     return std::visit([](auto const &v) { return v == decltype(v){1}; }, value_);
+}
+
+cooperative_matrix_apply_inst::cooperative_matrix_apply_inst(tinytc_value_t a0,
+                                                             tinytc_data_type_t to_ty,
+                                                             location const &lc)
+    : standard_inst{IK::cooperative_matrix_apply} {
+    op(0, a0);
+    loc(lc);
+
+    if (a().ty() != to_ty) {
+        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
+    }
+
+    auto at = get_coopmatrix_type(loc(), a());
+
+    auto i32_ty = scalar_data_type::get(at->context(), scalar_type::i32);
+
+    body().loc(lc);
+    body().defining_inst(this);
+    body().set_num_params(3);
+    body().set_param(0, i32_ty);
+    body().set_param(1, i32_ty);
+    body().set_param(2, at->ty());
+
+    result(0) = value_node{to_ty, this, lc};
 }
 
 cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_flag flag,

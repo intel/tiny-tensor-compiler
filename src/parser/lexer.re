@@ -160,6 +160,7 @@ lex:
         "alloca"             { adv_loc(); return parser::make_ALLOCA(loc_); }
         "cast"               { adv_loc(); return parser::make_CAST(loc_); }
         "constant"           { adv_loc(); return parser::make_CONSTANT(loc_); }
+        "cooperative_matrix_apply"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_APPLY(loc_); }
         "cooperative_matrix_load"     { adv_loc(); return parser::make_COOPERATIVE_MATRIX_LOAD(loc_); }
         "cooperative_matrix_mul_add"  { adv_loc(); return parser::make_COOPERATIVE_MATRIX_MUL_ADD(loc_); }
         "cooperative_matrix_prefetch" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_PREFETCH(loc_); }

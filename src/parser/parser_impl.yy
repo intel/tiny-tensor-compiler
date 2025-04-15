@@ -125,6 +125,7 @@
     ALLOCA          "alloca"
     CAST            "cast"
     CONSTANT        "constant"
+    COOPERATIVE_MATRIX_APPLY    "cooperative_matrix_apply"
     COOPERATIVE_MATRIX_LOAD     "cooperative_matrix_load"
     COOPERATIVE_MATRIX_MUL_ADD  "cooperative_matrix_mul_add"
     COOPERATIVE_MATRIX_PREFETCH "cooperative_matrix_prefetch"
@@ -229,6 +230,7 @@
 %nterm <inst> cast_inst
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
+%nterm <inst> cooperative_matrix_apply_inst
 %nterm <inst> cooperative_matrix_load_inst
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_prefetch_inst
@@ -780,9 +782,10 @@ valued_inst:
   | cast_inst               { $$ = std::move($1); }
   | compare_inst            { $$ = std::move($1); }
   | constant_inst           { $$ = std::move($1); }
-  | cooperative_matrix_load_inst { $$ = std::move($1); }
+  | cooperative_matrix_apply_inst   { $$ = std::move($1); }
+  | cooperative_matrix_load_inst    { $$ = std::move($1); }
   | cooperative_matrix_mul_add_inst { $$ = std::move($1); }
-  | cooperative_matrix_scale_inst { $$ = std::move($1); }
+  | cooperative_matrix_scale_inst   { $$ = std::move($1); }
   | expand_inst             { $$ = std::move($1); }
   | for_inst                { $$ = std::move($1); }
   | fuse_inst               { $$ = std::move($1); }
@@ -914,6 +917,34 @@ constant_inst:
             report_error(ctx.cctx(), e);
             YYERROR;
         }
+    }
+;
+
+cooperative_matrix_apply_inst:
+    COOPERATIVE_MATRIX_APPLY
+    LPAREN LOCAL_IDENTIFIER[row] COMMA LOCAL_IDENTIFIER[col] COMMA LOCAL_IDENTIFIER[val] RPAREN
+    EQUALS var ARROW data_type[result_ty] <inst> {
+        try {
+            location loc = @COOPERATIVE_MATRIX_APPLY;
+            loc.end = @result_ty.end;
+            auto inode = std::make_unique<cooperative_matrix_apply_inst>($var, $result_ty, loc);
+            ctx.push_scope();
+            auto &row = inode->row();
+            ctx.val($row, row, @row);
+            auto &col = inode->col();
+            ctx.val($col, col, @col);
+            auto &val = inode->val();
+            ctx.val($val, val, @val);
+            ctx.push_region(&inode->body());
+            $$ = inst{inode.release()};
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }[apply_header] region {
+        ctx.pop_region();
+        ctx.pop_scope();
+        $$ = std::move($apply_header);
     }
 ;
 

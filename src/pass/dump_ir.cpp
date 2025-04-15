@@ -249,6 +249,21 @@ void dump_ir_pass::operator()(constant_inst const &c) {
     visit(*this, *c.result()->ty());
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_apply_inst const &c) {
+    dump_val(c.result(0));
+    *os_ << " = cooperative_matrix_apply (";
+    dump_val(c.row());
+    *os_ << ",";
+    dump_val(c.col());
+    *os_ << ",";
+    dump_val(c.val());
+    *os_ << ") in ";
+    dump_val(c.a());
+    *os_ << " -> ";
+    visit(*this, *c.result(0).ty());
+    dump_region(c.body());
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cooperative_matrix_load";

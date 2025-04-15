@@ -43,6 +43,7 @@ enum class IK {
     cast,
     compare,
     constant,
+    cooperative_matrix_apply,
     cooperative_matrix_load,
     cooperative_matrix_mul_add,
     cooperative_matrix_prefetch,
@@ -85,15 +86,16 @@ enum class IK {
 using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
               class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
-              class constant_inst, class cooperative_matrix_load_inst,
-              class cooperative_matrix_mul_add_inst, class cooperative_matrix_prefetch_inst,
-              class cooperative_matrix_scale_inst, class cooperative_matrix_store_inst,
-              class cumsum_inst, class expand_inst, class fuse_inst, class load_inst,
-              class lifetime_stop_inst, class gemm_inst, class gemv_inst, class ger_inst,
-              class for_inst, class foreach_inst, class hadamard_inst, class if_inst,
-              class math_unary_inst, class parallel_inst, class size_inst, class subgroup_add_inst,
-              class subgroup_broadcast_inst, class subgroup_max_inst, class subgroup_min_inst,
-              class subview_inst, class store_inst, class sum_inst, class yield_inst>;
+              class constant_inst, class cooperative_matrix_apply_inst,
+              class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
+              class cooperative_matrix_prefetch_inst, class cooperative_matrix_scale_inst,
+              class cooperative_matrix_store_inst, class cumsum_inst, class expand_inst,
+              class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
+              class gemv_inst, class ger_inst, class for_inst, class foreach_inst,
+              class hadamard_inst, class if_inst, class math_unary_inst, class parallel_inst,
+              class size_inst, class subgroup_add_inst, class subgroup_broadcast_inst,
+              class subgroup_max_inst, class subgroup_min_inst, class subview_inst,
+              class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -470,6 +472,27 @@ class constant_inst : public standard_inst<0, 1> {
 
   private:
     value_type value_;
+};
+
+class cooperative_matrix_apply_inst : public standard_inst<1, 1, 1> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_apply;
+    }
+    cooperative_matrix_apply_inst(tinytc_value_t a, tinytc_data_type_t to_ty,
+                                  location const &loc = {});
+
+    inline auto a() -> tinytc_value & { return op(0); }
+    inline auto a() const -> tinytc_value const & { return op(0); }
+
+    inline auto body() -> tinytc_region & { return child_region(0); }
+    inline auto body() const -> tinytc_region const & { return child_region(0); }
+    inline auto row() -> tinytc_value & { return body().param(0); }
+    inline auto row() const -> tinytc_value const & { return body().param(0); }
+    inline auto col() -> tinytc_value & { return body().param(1); }
+    inline auto col() const -> tinytc_value const & { return body().param(1); }
+    inline auto val() -> tinytc_value & { return body().param(2); }
+    inline auto val() const -> tinytc_value const & { return body().param(2); }
 };
 
 class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
