@@ -309,5 +309,11 @@ auto uniquifier::spv_vec_ty(spv_inst *component_ty, vector_size length) -> spv_i
 
 auto uniquifier::void_ty() -> spv_inst * { return spv_ty(void_data_type::get(mod_->context())); }
 
+auto uniquifier::load_builtin(BuiltIn b) -> spv_inst * {
+    auto builtin = builtin_var(b);
+    return mod_->add<OpLoad>(builtin_pointee_ty(b), builtin, MemoryAccess::Aligned,
+                             builtin_alignment(b));
+}
+
 } // namespace tinytc::spv
 

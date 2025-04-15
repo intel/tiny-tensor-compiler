@@ -73,7 +73,6 @@ class inst_converter {
   private:
     auto get_last_label() -> spv_inst *;
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
-    auto load_builtin(BuiltIn b) -> spv_inst *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
     auto convert_group_operation(group_operation op) const -> GroupOperation;
@@ -99,7 +98,6 @@ class inst_converter {
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;
-    std::vector<spv_inst *> vars_used_by_function_;
     spv_inst *stack_ = nullptr;
     core_config core_cfg_ = {};
     local_tiling tiling_ = {};

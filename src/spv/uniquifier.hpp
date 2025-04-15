@@ -55,6 +55,9 @@ class uniquifier {
     auto spv_vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst *;
     auto void_ty() -> spv_inst *;
 
+    // util
+    auto load_builtin(BuiltIn b) -> spv_inst *;
+
   private:
     struct array_key_hash {
         inline auto operator()(std::pair<spv_inst *, std::int32_t> const &key) const

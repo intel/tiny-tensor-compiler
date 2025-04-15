@@ -100,16 +100,6 @@ auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     return nullptr;
 }
 
-auto inst_converter::load_builtin(BuiltIn b) -> spv_inst * {
-    auto builtin = unique_.builtin_var(b);
-    if (auto it = std::find(vars_used_by_function_.begin(), vars_used_by_function_.end(), builtin);
-        it == vars_used_by_function_.end()) {
-        vars_used_by_function_.push_back(builtin);
-    }
-    return mod_->add<OpLoad>(unique_.builtin_pointee_ty(b), builtin, MemoryAccess::Aligned,
-                             unique_.builtin_alignment(b));
-}
-
 auto inst_converter::declare(value_node const &v, spv_inst *in) { vals_[&v] = in; }
 auto inst_converter::val(value_node const &v) -> spv_inst * {
     if (auto it = vals_.find(&v); it != vals_.end()) {
@@ -775,7 +765,7 @@ void inst_converter::operator()(builtin_inst const &in) {
     case builtin::group_id_x:
     case builtin::group_id_y:
     case builtin::group_id_z: {
-        auto gid = load_builtin(BuiltIn::WorkgroupId);
+        auto gid = unique_.load_builtin(BuiltIn::WorkgroupId);
         auto index_ty = unique_.spv_ty(scalar_type::index);
         const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
                                   static_cast<std::int32_t>(builtin::group_id_x);
@@ -786,7 +776,7 @@ void inst_converter::operator()(builtin_inst const &in) {
     case builtin::num_groups_x:
     case builtin::num_groups_y:
     case builtin::num_groups_z: {
-        auto ng = load_builtin(BuiltIn::NumWorkgroups);
+        auto ng = unique_.load_builtin(BuiltIn::NumWorkgroups);
         auto index_ty = unique_.spv_ty(scalar_type::index);
         const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
                                   static_cast<std::int32_t>(builtin::num_groups_x);
@@ -801,27 +791,27 @@ void inst_converter::operator()(builtin_inst const &in) {
         declare(in.result(0), unique_.constant(tiling_.n_tiles()));
         break;
     case builtin::subgroup_size:
-        declare(in.result(0), load_builtin(BuiltIn::SubgroupSize));
+        declare(in.result(0), unique_.load_builtin(BuiltIn::SubgroupSize));
         break;
     case builtin::subgroup_id_x: {
         auto i32_ty = unique_.spv_ty(scalar_type::i32);
         auto m_tiles = unique_.constant(tiling_.m_tiles());
-        auto sgid = load_builtin(BuiltIn::SubgroupId);
+        auto sgid = unique_.load_builtin(BuiltIn::SubgroupId);
         declare(in.result(0), mod_->add<OpSRem>(i32_ty, sgid, m_tiles));
         break;
     }
     case builtin::subgroup_id_y: {
         auto i32_ty = unique_.spv_ty(scalar_type::i32);
         auto m_tiles = unique_.constant(tiling_.m_tiles());
-        auto sgid = load_builtin(BuiltIn::SubgroupId);
+        auto sgid = unique_.load_builtin(BuiltIn::SubgroupId);
         declare(in.result(0), mod_->add<OpSDiv>(i32_ty, sgid, m_tiles));
         break;
     }
     case builtin::subgroup_linear_id:
-        declare(in.result(0), load_builtin(BuiltIn::SubgroupId));
+        declare(in.result(0), unique_.load_builtin(BuiltIn::SubgroupId));
         break;
     case builtin::subgroup_local_id:
-        declare(in.result(0), load_builtin(BuiltIn::SubgroupLocalInvocationId));
+        declare(in.result(0), unique_.load_builtin(BuiltIn::SubgroupLocalInvocationId));
         break;
     }
 }
@@ -1725,6 +1715,8 @@ void inst_converter::run_on_function(function_node const &fn) {
         throw compilation_error(fn.loc(), status::unsupported_subgroup_size);
     }
 
+    auto vars_used_by_function = std::vector<spv_inst *>{};
+
     // Stack
     auto const make_stack = [&] {
         const auto high_water_mark = stack_high_water_mark{}.run_on_function(fn);
@@ -1737,7 +1729,7 @@ void inst_converter::run_on_function(function_node const &fn) {
             const std::int32_t alignment = info_->alignment();
             mod_->add_to<OpDecorate>(section::decoration, stack_, Decoration::Alignment,
                                      DecorationAttr{alignment});
-            vars_used_by_function_.emplace_back(stack_);
+            vars_used_by_function.emplace_back(stack_);
         } else {
             stack_ = nullptr;
         }
@@ -1796,8 +1788,21 @@ void inst_converter::run_on_function(function_node const &fn) {
             }
         }
     }
+
     mod_->add<OpLabel>();
+    auto func_begin = --mod_->insts(section::function).end();
     run_on_region(fn.body());
+
+    auto func_end = mod_->insts(section::function).end();
+    for (auto it = func_begin; it != func_end; ++it) {
+        if (auto ld = dyn_cast<OpLoad>(it.get()); ld && isa<OpVariable>(*ld->op0())) {
+            if (std::find(vars_used_by_function.begin(), vars_used_by_function.end(), ld->op0()) ==
+                vars_used_by_function.end()) {
+                vars_used_by_function.push_back(ld->op0());
+            }
+        }
+    }
+
     mod_->add<OpReturn>();
     mod_->add<OpFunctionEnd>();
 
@@ -1805,7 +1810,7 @@ void inst_converter::run_on_function(function_node const &fn) {
 
     // Entry point
     mod_->add_to<OpEntryPoint>(section::entry_point, ExecutionModel::Kernel, fun,
-                               std::string{fn.name()}, std::move(vars_used_by_function_));
+                               std::string{fn.name()}, std::move(vars_used_by_function));
 
     // Execution mode
     mod_->add_to<OpExecutionMode>(
