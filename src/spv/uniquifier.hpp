@@ -91,7 +91,6 @@ class uniquifier {
                        pointer_key_hash>
         spv_pointer_tys_;
     std::unordered_map<const_tinytc_data_type_t, spv_inst *> spv_tys_;
-    std::unordered_map<const_tinytc_data_type_t, spv_inst *> spv_matrix_tys_;
 };
 
 } // namespace tinytc::spv
