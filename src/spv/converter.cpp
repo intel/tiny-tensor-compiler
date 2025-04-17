@@ -236,104 +236,16 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         }
         throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
-    auto const make_int = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
-        switch (op) {
-        case arithmetic_unary::abs:
-            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                        static_cast<std::int32_t>(OpenCLEntrypoint::s_abs),
-                                        std::vector<IdRef>{a});
-        case arithmetic_unary::neg:
-            return mod_->add<OpSNegate>(ty, a);
-        case arithmetic_unary::not_:
-            return mod_->add<OpNot>(ty, a);
-        default:
-            break;
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-    auto const make_float = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
-        switch (op) {
-        case arithmetic_unary::abs:
-            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                        static_cast<std::int32_t>(OpenCLEntrypoint::fabs),
-                                        std::vector<IdRef>{a});
-        case arithmetic_unary::neg:
-            return mod_->add<OpFNegate>(ty, a);
-        default:
-            break;
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-    auto const make_complex = [&](arithmetic_unary op, scalar_type sty, spv_inst *ty,
-                                  spv_inst *a) -> spv_inst * {
-        switch (op) {
-        case arithmetic_unary::abs: {
-            auto spv_a_ty = unique_.scalar_ty(sty);
-            auto a2 = mod_->add<OpFMul>(spv_a_ty, a, a);
-            auto a2_0 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{0});
-            auto a2_1 = mod_->add<OpCompositeExtract>(ty, a2, std::vector<LiteralInteger>{1});
-            auto a2_0p1 = mod_->add<OpFAdd>(ty, a2_0, a2_1);
-            return mod_->add<OpExtInst>(ty, unique_.opencl_ext(),
-                                        static_cast<std::int32_t>(OpenCLEntrypoint::sqrt),
-                                        std::vector<IdRef>{a2_0p1});
-        }
-        case arithmetic_unary::neg:
-            return mod_->add<OpFNegate>(ty, a);
-        case arithmetic_unary::conj: {
-            auto spv_float_ty = unique_.scalar_ty(component_type(sty));
-            auto a_im =
-                mod_->add<OpCompositeExtract>(spv_float_ty, a, std::vector<LiteralInteger>{1});
-            auto neg_a_im = mod_->add<OpFNegate>(spv_float_ty, a_im);
-            return mod_->add<OpCompositeInsert>(ty, neg_a_im, a, std::vector<LiteralInteger>{1});
-        }
-        case arithmetic_unary::im:
-            return mod_->add<OpCompositeExtract>(ty, a, std::vector<LiteralInteger>{1});
-        case arithmetic_unary::re:
-            return mod_->add<OpCompositeExtract>(ty, a, std::vector<LiteralInteger>{0});
-        default:
-            break;
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-    auto const make = [&](scalar_type sty, arithmetic_unary op, spv_inst *ty,
-                          spv_inst *a) -> spv_inst * {
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return make_int(op, ty, a);
-        case scalar_type::bf16: {
-            auto float_ty = unique_.scalar_ty(scalar_type::f32);
-            auto af = mod_->add<OpConvertBF16ToFINTEL>(float_ty, a);
-            auto op_af = make_float(op, float_ty, af);
-            return mod_->add<OpConvertFToBF16INTEL>(ty, op_af);
-        }
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return make_float(op, ty, a);
-        case scalar_type::c32:
-        case scalar_type::c64: {
-            return make_complex(op, sty, ty, a);
-        }
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-
     if (isa<boolean_data_type>(*in.a().ty())) {
         auto ty = unique_.bool_ty();
         auto av = val(in.a());
         declare(in.result(0), make_boolean(in.operation(), ty, av));
     } else if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
-        auto ty = unique_.scalar_ty(st->ty());
         auto av = val(in.a());
-        declare(in.result(0), make(st->ty(), in.operation(), ty, av));
+        declare(in.result(0), make_unary_op(unique_, st->ty(), in.operation(), av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
-        auto ty = matrix_impl_.spv_ty(ct);
         auto av = val(in.a());
-        declare(in.result(0), make(ct->component_ty(), in.operation(), ty, av));
+        declare(in.result(0), matrix_impl_.arith_unary(in, av));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }

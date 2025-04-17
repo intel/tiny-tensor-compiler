@@ -38,6 +38,8 @@ auto make_conditional_execution(uniquifier &unique, spv_inst *return_ty, spv_ins
                                 location const &loc) -> spv_inst *;
 void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_space as,
                 spv_inst *pointer, spv_inst *value, location const &loc);
+auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv_inst *a,
+                   location const &loc) -> spv_inst *;
 
 } // namespace tinytc::spv
 

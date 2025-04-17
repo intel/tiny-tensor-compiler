@@ -14,7 +14,9 @@
 ; CHECK: %[[#I64_C1:]] = OpConstant %[[#I64]] 1
 ; CHECK: %[[#I32_C1:]] = OpConstant %[[#I32]] 1
 ; CHECK: %[[#I16_C6:]] = OpConstant %[[#I16]] 6
+; CHECK: %[[#I16_4:]] = OpTypeVector %[[#I16]] 4
 ; CHECK: %[[#I16_C1:]] = OpConstant %[[#I16]] 1
+; CHECK: %[[#I16_C1_4:]] = OpConstantComposite %[[#I16_4]] %[[#I16_C1]] %[[#I16_C1]] %[[#I16_C1]] %[[#I16_C1]]
 
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 func @for1() {
@@ -83,27 +85,20 @@ func @for3() attributes{subgroup_size=16} {
 ; CHECK-NEXT:                          OpBranch %[[#HEAD_LABEL3:]]
 ; CHECK-NEXT:      %[[#HEAD_LABEL3]] = OpLabel
 ; CHECK-NEXT:       %[[#LOOP_VAR3:]] = OpPhi %[[#I16]] %[[#I16_C2]] %[[#ENTRY_LABEL3]] %[[#LOOP_VAR_UPDATE3:]] %[[#CONT_LABEL3:]]
-; CHECK-NEXT:          %[[#PHI3_1:]] = OpPhi %[[#I16]] %[[#I16_C1]] %[[#ENTRY_LABEL3]] %[[#PHI_UPDATE3_1:]] %[[#CONT_LABEL3]]
-; CHECK-NEXT:          %[[#PHI3_2:]] = OpPhi %[[#I16]] %[[#I16_C1]] %[[#ENTRY_LABEL3]] %[[#PHI_UPDATE3_2:]] %[[#CONT_LABEL3]]
-; CHECK-NEXT:          %[[#PHI3_3:]] = OpPhi %[[#I16]] %[[#I16_C1]] %[[#ENTRY_LABEL3]] %[[#PHI_UPDATE3_3:]] %[[#CONT_LABEL3]]
-; CHECK-NEXT:          %[[#PHI3_4:]] = OpPhi %[[#I16]] %[[#I16_C1]] %[[#ENTRY_LABEL3]] %[[#PHI_UPDATE3_4:]] %[[#CONT_LABEL3]]
+; CHECK-NEXT:            %[[#PHI3:]] = OpPhi %[[#I16_4]] %[[#I16_C1_4]] %[[#ENTRY_LABEL3]] %[[#]] %[[#CONT_LABEL3]]
 ; CHECK-NEXT:    %[[#CONDITION3_1:]] = OpSLessThan %[[#BOOL]] %[[#LOOP_VAR3]] %[[#I16_C6]]
 ; CHECK-NEXT:                          OpLoopMerge %[[#MERGE_LABEL3:]] %[[#CONT_LABEL3:]] None
 ; CHECK-NEXT:                          OpBranchConditional %[[#CONDITION3_1]] %[[#BODY_LABEL3:]] %[[#MERGE_LABEL3]]
 ; CHECK-NEXT:      %[[#BODY_LABEL3]] = OpLabel
-; CHECK-NEXT:   %[[#PHI_UPDATE3_1:]] = OpIAdd %[[#I16]] %[[#PHI3_1]] %[[#I16_C1]]
-; CHECK-NEXT:   %[[#PHI_UPDATE3_2:]] = OpIAdd %[[#I16]] %[[#PHI3_2]] %[[#I16_C1]]
-; CHECK-NEXT:   %[[#PHI_UPDATE3_3:]] = OpIAdd %[[#I16]] %[[#PHI3_3]] %[[#I16_C1]]
-; CHECK-NEXT:   %[[#PHI_UPDATE3_4:]] = OpIAdd %[[#I16]] %[[#PHI3_4]] %[[#I16_C1]]
-; CHECK-NEXT:                          OpBranch %[[#CONT_LABEL3]]
+; CHECK:                               OpBranch %[[#CONT_LABEL3]]
 ; CHECK-NEXT:      %[[#CONT_LABEL3]] = OpLabel
 ; CHECK-NEXT: %[[#LOOP_VAR_UPDATE3]] = OpIAdd %[[#I16]] %[[#LOOP_VAR3]] %[[#I16_C1]]
 ; CHECK-NEXT:                          OpBranch %[[#HEAD_LABEL3]]
 ; CHECK-NEXT:     %[[#MERGE_LABEL3]] = OpLabel
-; CHECK-NEXT:                 %[[#]] = OpSNegate %[[#I16]] %[[#PHI3_1]]
-; CHECK-NEXT:                 %[[#]] = OpSNegate %[[#I16]] %[[#PHI3_2]]
-; CHECK-NEXT:                 %[[#]] = OpSNegate %[[#I16]] %[[#PHI3_3]]
-; CHECK-NEXT:                 %[[#]] = OpSNegate %[[#I16]] %[[#PHI3_4]]
+; CHECK:                      %[[#]] = OpCompositeExtract %[[#I16]] %[[#PHI3]] 0
+; CHECK:                      %[[#]] = OpCompositeExtract %[[#I16]] %[[#PHI3]] 1
+; CHECK:                      %[[#]] = OpCompositeExtract %[[#I16]] %[[#PHI3]] 2
+; CHECK:                      %[[#]] = OpCompositeExtract %[[#I16]] %[[#PHI3]] 3
 }
 
 func @for4() {

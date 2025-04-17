@@ -401,13 +401,31 @@ auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> s
     return result;
 }
 
+auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> spv_inst * {
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto layout = get_layout(rt);
+    auto sty = rt->component_ty();
+    auto ty = spv_ty(sty, layout);
+    auto component_ty = unique_->scalar_ty(sty);
+
+    auto &mod = unique_->mod();
+    spv_inst *result = mod.add<OpUndef>(ty);
+    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(layout.length); ++v) {
+        auto a_v = mod.add<OpCompositeExtract>(component_ty, a, std::vector{v});
+        auto r_v = make_unary_op(*unique_, sty, in.operation(), a_v, in.loc());
+        result = mod.add<OpCompositeInsert>(ty, r_v, result, std::vector{v});
+    }
+
+    return result;
+}
+
 auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto rt = get_coopmatrix_type(in.result(0));
     auto layout = get_layout(rt);
     auto r_ty = rt->component_ty();
     auto ty = spv_ty(r_ty, layout);
-    auto component_ty = unique_->scalar_ty(r_ty);
+    auto component_ty = unique_->scalar_ty(at->component_ty());
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);

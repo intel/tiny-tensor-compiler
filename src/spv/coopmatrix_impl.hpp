@@ -8,6 +8,7 @@
 
 namespace tinytc {
 class arith_inst;
+class arith_unary_inst;
 class cast_inst;
 class constant_inst;
 class cooperative_matrix_load_inst;
@@ -47,6 +48,7 @@ class coopmatrix_impl {
                spv_inst *operand, spv_inst *pos0, spv_inst *pos1);
 
     auto arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
+    auto arith_unary(arith_unary_inst const &in, spv_inst *a) -> spv_inst *;
     auto cast(cast_inst const &in, spv_inst *a) -> spv_inst *;
     auto constant(constant_inst const &in) -> spv_inst *;
 

@@ -510,5 +510,92 @@ void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_sp
     }
 }
 
+auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv_inst *a,
+                   location const &loc) -> spv_inst * {
+    auto &mod = unique.mod();
+    auto const make_int = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+        switch (op) {
+        case arithmetic_unary::abs:
+            return mod.add<OpExtInst>(ty, unique.opencl_ext(),
+                                      static_cast<std::int32_t>(OpenCLEntrypoint::s_abs),
+                                      std::vector<IdRef>{a});
+        case arithmetic_unary::neg:
+            return mod.add<OpSNegate>(ty, a);
+        case arithmetic_unary::not_:
+            return mod.add<OpNot>(ty, a);
+        default:
+            break;
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+    auto const make_float = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+        switch (op) {
+        case arithmetic_unary::abs:
+            return mod.add<OpExtInst>(ty, unique.opencl_ext(),
+                                      static_cast<std::int32_t>(OpenCLEntrypoint::fabs),
+                                      std::vector<IdRef>{a});
+        case arithmetic_unary::neg:
+            return mod.add<OpFNegate>(ty, a);
+        default:
+            break;
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+    auto const make_complex = [&](arithmetic_unary op, scalar_type sty, spv_inst *ty,
+                                  spv_inst *a) -> spv_inst * {
+        auto float_ty = unique.scalar_ty(component_type(sty));
+        switch (op) {
+        case arithmetic_unary::abs: {
+            auto a2 = mod.add<OpFMul>(ty, a, a);
+            auto a2_0 = mod.add<OpCompositeExtract>(float_ty, a2, std::vector<LiteralInteger>{0});
+            auto a2_1 = mod.add<OpCompositeExtract>(float_ty, a2, std::vector<LiteralInteger>{1});
+            auto a2_0p1 = mod.add<OpFAdd>(float_ty, a2_0, a2_1);
+            return mod.add<OpExtInst>(float_ty, unique.opencl_ext(),
+                                      static_cast<std::int32_t>(OpenCLEntrypoint::sqrt),
+                                      std::vector<IdRef>{a2_0p1});
+        }
+        case arithmetic_unary::neg:
+            return mod.add<OpFNegate>(ty, a);
+        case arithmetic_unary::conj: {
+            auto a_im = mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{1});
+            auto neg_a_im = mod.add<OpFNegate>(float_ty, a_im);
+            return mod.add<OpCompositeInsert>(ty, neg_a_im, a, std::vector<LiteralInteger>{1});
+        }
+        case arithmetic_unary::im:
+            return mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{1});
+        case arithmetic_unary::re:
+            return mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{0});
+        default:
+            break;
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+
+    spv_inst *ty = unique.scalar_ty(sty);
+    switch (sty) {
+    case scalar_type::i8:
+    case scalar_type::i16:
+    case scalar_type::i32:
+    case scalar_type::i64:
+    case scalar_type::index:
+        return make_int(op, ty, a);
+    case scalar_type::bf16: {
+        auto float_ty = unique.scalar_ty(scalar_type::f32);
+        auto af = mod.add<OpConvertBF16ToFINTEL>(float_ty, a);
+        auto op_af = make_float(op, float_ty, af);
+        return mod.add<OpConvertFToBF16INTEL>(ty, op_af);
+    }
+    case scalar_type::f16:
+    case scalar_type::f32:
+    case scalar_type::f64:
+        return make_float(op, ty, a);
+    case scalar_type::c32:
+    case scalar_type::c64: {
+        return make_complex(op, sty, ty, a);
+    }
+    }
+    throw compilation_error(loc, status::internal_compiler_error);
+}
+
 } // namespace tinytc::spv
 

@@ -8,8 +8,10 @@
 ; CHECK: %[[#BOOL_TRUE:]] = OpConstantTrue
 ; CHECK: %[[#I32_0:]] = OpConstant %[[#I32]] 0
 ; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_4:]] = OpTypeVector %[[#F32]] 4
 ; CHECK: %[[#CST1:]] = OpConstant %[[#F32]] 0x1p+0
-; CHECK: %[[#CST0:]] = OpConstant %[[#F32]] 0x0p+0
+; CHECK: %[[#CST1_4:]] = OpConstantComposite %[[#F32_4]] %[[#CST1]] %[[#CST1]] %[[#CST1]] %[[#CST1]]
+; CHECK: %[[#CST0_4:]] = OpConstantNull %[[#F32_4]]
 
 func @if0(%0: i32) {
     %c42 = constant 42 : i32
@@ -97,12 +99,9 @@ func @if3() attributes{subgroup_size=16} {
 ; CHECK:      %[[#FALSE_LABEL3:]] = OpLabel
 ; CHECK:                   %[[#]] = OpLabel
 ; CHECK-NEXT:       %[[#PHI3_0:]] = OpPhi %[[#BOOL]] %[[#BOOL_TRUE]] %[[#TRUE_LABEL3]] %[[#BOOL_TRUE]] %[[#FALSE_LABEL3]]
-; CHECK-NEXT:       %[[#PHI3_1:]] = OpPhi %[[#F32]] %[[#CST1]] %[[#TRUE_LABEL3]] %[[#CST0]] %[[#FALSE_LABEL3]]
-; CHECK-NEXT:       %[[#PHI3_2:]] = OpPhi %[[#F32]] %[[#CST1]] %[[#TRUE_LABEL3]] %[[#CST0]] %[[#FALSE_LABEL3]]
-; CHECK-NEXT:       %[[#PHI3_3:]] = OpPhi %[[#F32]] %[[#CST1]] %[[#TRUE_LABEL3]] %[[#CST0]] %[[#FALSE_LABEL3]]
-; CHECK-NEXT:       %[[#PHI3_4:]] = OpPhi %[[#F32]] %[[#CST1]] %[[#TRUE_LABEL3]] %[[#CST0]] %[[#FALSE_LABEL3]]
-; CHECK-NEXT:              %[[#]] = OpFNegate %[[#F32]] %[[#PHI3_1]]
-; CHECK-NEXT:              %[[#]] = OpFNegate %[[#F32]] %[[#PHI3_2]]
-; CHECK-NEXT:              %[[#]] = OpFNegate %[[#F32]] %[[#PHI3_3]]
-; CHECK-NEXT:              %[[#]] = OpFNegate %[[#F32]] %[[#PHI3_4]]
+; CHECK-NEXT:       %[[#PHI3_1:]] = OpPhi %[[#F32_4]] %[[#CST1_4]] %[[#TRUE_LABEL3]] %[[#CST0_4]] %[[#FALSE_LABEL3]]
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 0
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 1
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 2
+; CHECK:                   %[[#]] = OpCompositeExtract %[[#F32]] %[[#PHI3_1]] 3
 }
