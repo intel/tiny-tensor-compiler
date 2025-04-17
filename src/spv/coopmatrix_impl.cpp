@@ -289,11 +289,14 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
         for (std::int64_t nb = 0; nb < rl.cols; nb += nbb) {
             auto c_block = std::array<spv_inst *, nbb>{};
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
-                c_block[n - nb] = mod.add<OpCompositeExtract>(
-                    spv_c_ty, c, std::vector{static_cast<LiteralInteger>(n + m_block * cl.cols)});
+                if (n < rl.cols) {
+                    c_block[n - nb] = mod.add<OpCompositeExtract>(
+                        spv_c_ty, c,
+                        std::vector{static_cast<LiteralInteger>(n + m_block * cl.cols)});
+                }
             }
 
-            for (std::int64_t k = 0; k < bl.rows; ++k) {
+            for (std::int64_t k = 0; k < bl.rows * bl.blocks; ++k) {
                 auto a_mk = mod.add<OpCompositeExtract>(
                     spv_a_ty, a, std::vector{static_cast<LiteralInteger>(k + m_block * al.cols)});
                 for (std::int32_t n = nb; n < nb + nbb; ++n) {
@@ -341,13 +344,15 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             }
 
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
-                auto &c_mn = c_block[n - nb];
-                if (c_ty != r_ty) {
-                    c_mn = make_cast(*unique_, r_ty, c_ty, c_mn, in.loc());
+                if (n < rl.cols) {
+                    auto &c_mn = c_block[n - nb];
+                    if (c_ty != r_ty) {
+                        c_mn = make_cast(*unique_, r_ty, c_ty, c_mn, in.loc());
+                    }
+                    result = mod.add<OpCompositeInsert>(
+                        result_ty, c_mn, result,
+                        std::vector{static_cast<LiteralInteger>(n + m_block * rl.cols)});
                 }
-                result = mod.add<OpCompositeInsert>(
-                    result_ty, c_mn, result,
-                    std::vector{static_cast<LiteralInteger>(n + m_block * rl.cols)});
             }
         }
     }
