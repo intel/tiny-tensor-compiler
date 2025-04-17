@@ -63,8 +63,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                                          .pos0_alignment = 4,
                                                          .stride_alignment = 8,
                                                          .width_alignment = 4};
-        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
-        // matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
+        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
     } else if (is_arch(tinytc_intel_gpu_architecture_bmg)) {
         register_size_ = 64;
         set_spirv_feature(spirv_feature::bfloat16_conversion, true);
@@ -75,7 +74,7 @@ core_info_intel::core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
                                                          .pos0_alignment = 4,
                                                          .stride_alignment = 16,
                                                          .width_alignment = 4};
-        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types_diy, false);
+        matrix_ = matrix_ext_info(16, block_info, pvc_matrix_ext_types);
     }
 }
 

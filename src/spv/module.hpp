@@ -59,8 +59,8 @@ struct tinytc_spv_mod final : tinytc::reference_counted {
     inline auto insts(tinytc::spv::section s) -> tinytc::ilist<tinytc::spv::spv_inst> & {
         return insts_[static_cast<int>(s)];
     }
-    inline auto
-    insts(tinytc::spv::section s) const -> tinytc::ilist<tinytc::spv::spv_inst> const & {
+    inline auto insts(tinytc::spv::section s) const
+        -> tinytc::ilist<tinytc::spv::spv_inst> const & {
         return insts_[static_cast<int>(s)];
     }
     inline auto empty(tinytc::spv::section s) const -> bool {

@@ -16,6 +16,7 @@
 #include "tinytc/types.h"
 
 #include <array>
+#include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>

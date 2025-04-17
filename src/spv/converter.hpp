@@ -7,7 +7,7 @@
 #include "device_info.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
-#include "spv/coopmatrix_diy.hpp"
+#include "spv/coopmatrix_impl.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
@@ -15,13 +15,15 @@
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstdint>
-#include <functional>
 #include <stack>
 #include <unordered_map>
 #include <vector>
+
+namespace tinytc {
+enum class group_operation;
+}
 
 namespace tinytc::spv {
 
@@ -71,30 +73,17 @@ class inst_converter {
     inline auto unique() -> uniquifier & { return unique_; }
 
   private:
-    auto get_last_label() -> spv_inst *;
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
+    auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto convert_group_operation(group_operation op) const -> GroupOperation;
-    auto make_binary_op(scalar_type sty, arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b,
-                        location const &loc) -> spv_inst *;
-    auto make_cast(scalar_type to_ty, scalar_type a_ty, spv_inst *spv_to_ty, spv_inst *a,
-                   location const &loc) -> spv_inst *;
-    auto make_complex_mul(spv_inst *ty, spv_inst *a, spv_inst *b, bool conj_b = false)
-        -> spv_inst *;
-    auto make_conditional_execution(spv_inst *returned_element_ty, spv_inst *condition,
-                                    std::function<std::vector<spv_inst *>()> conditional_code,
-                                    location const &loc) -> std::vector<spv_inst *>;
-    auto make_constant(scalar_type sty, spv_inst *spv_ty, constant_inst::value_type const &val)
-        -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
-    void make_store(store_flag flag, scalar_type sty, address_space as, spv_inst *pointer,
-                    spv_inst *value, location const &loc);
 
     tinytc_spv_mod_t mod_;
     tinytc_core_info const *info_;
     uniquifier unique_;
-    coopmatrix_diy diy_;
+    coopmatrix_impl matrix_impl_;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;
