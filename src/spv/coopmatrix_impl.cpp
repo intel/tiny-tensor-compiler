@@ -144,6 +144,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
     auto shape = std::array<spv_inst *, 2u>{odv.shape(0), odv.shape(1)};
     auto stride = std::array<spv_inst *, 2u>{odv.stride(0), odv.stride(1)};
     if (in.t() == transpose::T) {
+        std::swap(pos0, pos1);
         std::swap(shape[0], shape[1]);
         std::swap(stride[0], stride[1]);
     }

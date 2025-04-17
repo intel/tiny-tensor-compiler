@@ -9,6 +9,7 @@
 #include "support/casting.hpp"
 #include "support/fnv1a.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
+#include "support/util.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
@@ -47,6 +48,9 @@ coopmatrix_data_type::coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t r
     }
     if (rows() < 0 || is_dynamic_value(rows())) {
         throw compilation_error(lc, status::ir_invalid_shape);
+    }
+    if (!is_positive_power_of_two(rows())) {
+        throw compilation_error(lc, status::ir_unsupported_coopmatrix_shape);
     }
     if (cols() < 0 || is_dynamic_value(cols())) {
         throw compilation_error(lc, status::ir_invalid_shape);
