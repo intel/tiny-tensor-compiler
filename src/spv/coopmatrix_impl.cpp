@@ -6,7 +6,7 @@
 #include "converter_aux.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
-#include "spv/defs.hpp"
+#include "scalar_type.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
@@ -17,7 +17,9 @@
 
 #include <algorithm>
 #include <array>
+#include <complex>
 #include <functional>
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -172,9 +174,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
 
                 spv_inst *val =
                     walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
-                block_result =
-                    mod.add<OpCompositeInsert>(result_ty, val, block_result,
-                                               std::vector<LiteralInteger>{walker.component_no()});
+                block_result = insert(layout, result_ty, val, block_result, walker.component_no());
 
                 if (u < layout.cols - 1) {
                     walker.advance_column();
@@ -183,12 +183,12 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
             return block_result;
         };
         auto const ld_block_chk = [&](tinytc_spv_mod &) {
-            auto const ld_block_zero = [&](tinytc_spv_mod &mod) {
+            auto const ld_block_zero = [&](tinytc_spv_mod &) {
                 spv_inst *block_result = result;
                 for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
-                    block_result = mod.add<OpCompositeInsert>(
-                        result_ty, unique_->null_constant(result_component_ty), block_result,
-                        std::vector<LiteralInteger>{walker.component_no(u)});
+                    block_result =
+                        insert(layout, result_ty, unique_->null_constant(result_component_ty),
+                               block_result, walker.component_no(u));
                 }
                 return block_result;
             };
@@ -225,9 +225,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
                 const auto st = [&](tinytc_spv_mod &mod) {
                     auto pointer = mod.add<OpInBoundsPtrAccessChain>(
                         pointer_ty, operand, walker.offset(), std::vector<spv_inst *>{});
-                    auto val_ij = mod.add<OpCompositeExtract>(
-                        result_component_ty, val,
-                        std::vector<LiteralInteger>{walker.component_no()});
+                    auto val_ij = extract(layout, result_component_ty, val, walker.component_no());
 
                     make_store(*unique_, in.flag(), ot->element_ty(), ot->addrspace(), pointer,
                                val_ij, in.loc());
@@ -270,36 +268,41 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
 
     const auto a_ty = at->component_ty();
     const auto b_ty = bt->component_ty();
-    // const auto b_component_ty = component_type(b_ty);
+    const auto b_component_ty = component_type(b_ty);
     const auto c_ty = ct->component_ty();
     const auto r_ty = rt->component_ty();
     const auto spv_a_ty = unique_->scalar_ty(a_ty);
     const auto spv_b_ty = unique_->scalar_ty(b_ty);
-    // const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
+    const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
     const auto spv_c_ty = unique_->scalar_ty(c_ty);
     // const auto spv_r_ty = unique_->scalar_ty(r_ty);
-    // const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
+    const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
 
     auto &mod = unique_->mod();
     auto result_ty = spv_ty(r_ty, rl);
     spv_inst *result = mod.add<OpUndef>(result_ty);
+    spv_inst *imaginary_unit =
+        a_and_b_complex ? make_constant(*unique_, c_ty, std::complex<double>{0.0, 1.0}) : nullptr;
 
     constexpr std::int64_t nbb = 4;
     auto broadcast_scope = unique_->constant(static_cast<std::int32_t>(Scope::Subgroup));
     for (std::int64_t m_block = 0; m_block < rl.blocks; ++m_block) {
         for (std::int64_t nb = 0; nb < rl.cols; nb += nbb) {
             auto c_block = std::array<spv_inst *, nbb>{};
+            auto c_im_block = std::array<spv_inst *, nbb>{};
+            std::fill(std::begin(c_block), std::end(c_block), nullptr);
+            std::fill(std::begin(c_im_block), std::end(c_im_block), nullptr);
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
-                    c_block[n - nb] = mod.add<OpCompositeExtract>(
-                        spv_c_ty, c,
-                        std::vector{static_cast<LiteralInteger>(n + m_block * cl.cols)});
+                    c_block[n - nb] = extract(cl, spv_c_ty, c, n + m_block * cl.cols);
+                    if (a_and_b_complex) {
+                        c_im_block[n - nb] = unique_->null_constant(spv_c_ty);
+                    }
                 }
             }
 
             for (std::int64_t k = 0; k < bl.rows * bl.blocks; ++k) {
-                auto a_mk = mod.add<OpCompositeExtract>(
-                    spv_a_ty, a, std::vector{static_cast<LiteralInteger>(k + m_block * al.cols)});
+                auto a_mk = extract(al, spv_a_ty, a, k + m_block * al.cols);
                 for (std::int32_t n = nb; n < nb + nbb; ++n) {
                     if (n < rl.cols) {
                         /** For matrix B we have L(i,k,j) = i + k*I + j*I*K.
@@ -318,41 +321,55 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                         const auto p = unique_->constant(static_cast<std::int32_t>(L % sgs_));
                         const auto v = static_cast<LiteralInteger>(L / sgs_);
 
-                        spv_inst *b_kn = mod.add<OpCompositeExtract>(spv_b_ty, b, std::vector{v});
+                        spv_inst *b_kn = extract(bl, spv_b_ty, b, v);
                         b_kn = mod.add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b_kn, p);
                         auto &c_mn = c_block[n - nb];
 
-                        auto ab_mn = make_binary_op_mixed_precision(
-                            *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_ty, b_kn, in.loc());
-                        c_mn =
-                            make_binary_op(*unique_, c_ty, arithmetic::add, ab_mn, c_mn, in.loc());
-                        // auto &c = result[nb + n + m_block * N];
+                        if (a_and_b_complex) {
+                            auto &c_im_mn = c_im_block[n - nb];
+                            auto b_kn_re = mod.add<OpCompositeExtract>(
+                                spv_b_component_ty, b_kn, std::vector<LiteralInteger>{0});
+                            auto b_kn_im = mod.add<OpCompositeExtract>(
+                                spv_b_component_ty, b_kn, std::vector<LiteralInteger>{1});
 
-                        // if (a_and_b_complex) {
-                        // auto &c_im = result_im[nb + n + m_block * N];
-                        // auto b_bc_re = mod.add<OpCompositeExtract>(
-                        // spv_b_component_ty, b_bc, std::vector<LiteralInteger>{0});
-                        // auto b_bc_im = mod.add<OpCompositeExtract>(
-                        // spv_b_component_ty, b_bc, std::vector<LiteralInteger>{1});
-                        // c = make_mixed_precision_fma(a_ty, b_component_ty, c_ty, a, b_bc_re,
-                        // c, in.loc()); c_im = make_mixed_precision_fma(a_ty, b_component_ty,
-                        // c_ty, a, b_bc_im, c_im, in.loc());
-                        //} else {
-                        // c = make_mixed_precision_fma(a_ty, b_ty, c_ty, a, b_bc, c, in.loc());
-                        //}
+                            auto ab_mn = make_binary_op_mixed_precision(
+                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_component_ty,
+                                b_kn_re, in.loc());
+                            c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_mn, c_mn,
+                                                  in.loc());
+                            auto ab_im_mn = make_binary_op_mixed_precision(
+                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_component_ty,
+                                b_kn_im, in.loc());
+                            c_im_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_im_mn,
+                                                     c_im_mn, in.loc());
+                        } else {
+                            auto ab_mn = make_binary_op_mixed_precision(
+                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_ty, b_kn, in.loc());
+                            c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_mn, c_mn,
+                                                  in.loc());
+                        }
                     }
                 }
             }
-
+            if (a_and_b_complex) {
+                for (std::int32_t n = nb; n < nb + nbb; ++n) {
+                    if (n < rl.cols) {
+                        auto &c_mn = c_block[n - nb];
+                        auto &c_im_mn = c_im_block[n - nb];
+                        auto c_im_mn_times_i = make_binary_op(*unique_, c_ty, arithmetic::mul,
+                                                              c_im_mn, imaginary_unit, in.loc());
+                        c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, c_mn,
+                                              c_im_mn_times_i, in.loc());
+                    }
+                }
+            }
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
                     auto &c_mn = c_block[n - nb];
                     if (c_ty != r_ty) {
                         c_mn = make_cast(*unique_, r_ty, c_ty, c_mn, in.loc());
                     }
-                    result = mod.add<OpCompositeInsert>(
-                        result_ty, c_mn, result,
-                        std::vector{static_cast<LiteralInteger>(n + m_block * rl.cols)});
+                    result = insert(cl, result_ty, c_mn, result, n + m_block * rl.cols);
                 }
             }
         }
@@ -366,17 +383,18 @@ void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst const &, dope_ve
 auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
     -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto rl = get_layout(rt);
+    auto bl = get_layout(get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, layout);
+    auto ty = spv_ty(sty, rl);
     auto component_ty = unique_->scalar_ty(sty);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
-    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(layout.length); ++v) {
-        auto b_v = mod.add<OpCompositeExtract>(component_ty, b, std::vector{v});
+    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
+        auto b_v = extract(bl, component_ty, b, v);
         auto r_v = make_binary_op(*unique_, sty, arithmetic::mul, a, b_v, in.loc());
-        result = mod.add<OpCompositeInsert>(ty, r_v, result, std::vector{v});
+        result = insert(rl, ty, r_v, result, v);
     }
 
     return result;
@@ -384,36 +402,39 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a
 
 auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto rl = get_layout(rt);
+    auto al = get_layout(get_coopmatrix_type(in.a()));
+    auto bl = get_layout(get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, layout);
+    auto ty = spv_ty(sty, rl);
     auto component_ty = unique_->scalar_ty(sty);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
-    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(layout.length); ++v) {
-        auto a_v = mod.add<OpCompositeExtract>(component_ty, a, std::vector{v});
-        auto b_v = mod.add<OpCompositeExtract>(component_ty, b, std::vector{v});
+    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
+        auto a_v = extract(al, component_ty, a, v);
+        auto b_v = extract(bl, component_ty, b, v);
         auto r_v = make_binary_op(*unique_, sty, in.operation(), a_v, b_v, in.loc());
-        result = mod.add<OpCompositeInsert>(ty, r_v, result, std::vector{v});
+        result = insert(rl, ty, r_v, result, v);
     }
 
     return result;
 }
 
 auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> spv_inst * {
+    auto al = get_layout(get_coopmatrix_type(in.a()));
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto rl = get_layout(rt);
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, layout);
+    auto ty = spv_ty(sty, rl);
     auto component_ty = unique_->scalar_ty(sty);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
-    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(layout.length); ++v) {
-        auto a_v = mod.add<OpCompositeExtract>(component_ty, a, std::vector{v});
+    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
+        auto a_v = extract(al, component_ty, a, v);
         auto r_v = make_unary_op(*unique_, sty, in.operation(), a_v, in.loc());
-        result = mod.add<OpCompositeInsert>(ty, r_v, result, std::vector{v});
+        result = insert(rl, ty, r_v, result, v);
     }
 
     return result;
@@ -421,18 +442,19 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> sp
 
 auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
+    auto al = get_layout(at);
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto rl = get_layout(rt);
     auto r_ty = rt->component_ty();
-    auto ty = spv_ty(r_ty, layout);
+    auto ty = spv_ty(r_ty, rl);
     auto component_ty = unique_->scalar_ty(at->component_ty());
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
-    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(layout.length); ++v) {
-        auto a_v = mod.add<OpCompositeExtract>(component_ty, a, std::vector{v});
+    for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
+        auto a_v = extract(al, component_ty, a, v);
         auto r_v = make_cast(*unique_, r_ty, at->component_ty(), a_v, in.loc());
-        result = mod.add<OpCompositeInsert>(ty, r_v, result, std::vector{v});
+        result = insert(rl, ty, r_v, result, v);
     }
 
     return result;
@@ -440,9 +462,9 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
 
 auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto rl = get_layout(rt);
     auto sty = rt->component_ty();
-    auto spv_result_ty = spv_ty(sty, layout);
+    auto spv_result_ty = spv_ty(sty, rl);
 
     if (in.is_zero()) {
         return unique_->null_constant(spv_result_ty);
@@ -450,7 +472,7 @@ auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
 
     spv_inst *cst = make_constant(*unique_, sty, in.value());
     return unique_->mod().add_to<OpConstantComposite>(section::type_const_var, spv_result_ty,
-                                                      std::vector<spv_inst *>(layout.length, cst));
+                                                      std::vector<spv_inst *>(rl.length, cst));
 }
 
 auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout {
@@ -465,11 +487,30 @@ auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopma
 }
 
 auto coopmatrix_impl::spv_ty(scalar_type sty, coopmatrix_layout const &layout) -> spv_inst * {
-    return unique_->vec_ty(unique_->scalar_ty(sty), layout.length);
+    auto ty = unique_->scalar_ty(sty);
+    if (layout.length == 1) {
+        return ty;
+    }
+    return unique_->vec_ty(ty, layout.length);
 }
 
 auto coopmatrix_impl::spv_ty(coopmatrix_data_type const *ct) -> spv_inst * {
     return spv_ty(ct->component_ty(), get_layout(ct));
+}
+
+auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *mat,
+                              LiteralInteger v) -> spv_inst * {
+    if (layout.length == 1) {
+        return mat;
+    }
+    return unique_->mod().add<OpCompositeExtract>(ty, mat, std::vector{v});
+}
+auto coopmatrix_impl::insert(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *val,
+                             spv_inst *mat, LiteralInteger v) -> spv_inst * {
+    if (layout.length == 1) {
+        return val;
+    }
+    return unique_->mod().add<OpCompositeInsert>(ty, val, mat, std::vector{v});
 }
 
 } // namespace tinytc::spv

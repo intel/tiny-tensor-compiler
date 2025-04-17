@@ -4,6 +4,8 @@
 #ifndef COOPMATRIX_IMPL_20250415_HPP
 #define COOPMATRIX_IMPL_20250415_HPP
 
+#include "spv/defs.hpp"
+
 #include <cstdint>
 
 namespace tinytc {
@@ -23,7 +25,6 @@ enum class scalar_type;
 namespace tinytc::spv {
 
 class dope_vector;
-class spv_inst;
 class uniquifier;
 
 struct coopmatrix_layout {
@@ -57,6 +58,10 @@ class coopmatrix_impl {
   private:
     auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout;
     auto spv_ty(scalar_type sty, coopmatrix_layout const &layout) -> spv_inst *;
+    auto extract(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *mat, LiteralInteger v)
+        -> spv_inst *;
+    auto insert(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *val, spv_inst *mat,
+                LiteralInteger v) -> spv_inst *;
 
     uniquifier *unique_;
     std::int32_t sgs_;
