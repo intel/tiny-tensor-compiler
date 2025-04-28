@@ -140,7 +140,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
 
     auto layout = get_layout(rt);
     auto sty = rt->component_ty();
-    auto result_ty = spv_ty(sty, layout);
+    auto result_ty = spv_ty(layout);
     auto result_component_ty = unique_->scalar_ty(sty);
 
     auto shape = std::array<spv_inst *, 2u>{odv.shape(0), odv.shape(1)};
@@ -174,7 +174,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
 
                 spv_inst *val =
                     walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
-                block_result = insert(layout, result_ty, val, block_result, walker.component_no());
+                block_result = insert(layout, val, block_result, walker.component_no());
 
                 if (u < layout.cols - 1) {
                     walker.advance_column();
@@ -186,9 +186,8 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
             auto const ld_block_zero = [&](tinytc_spv_mod &) {
                 spv_inst *block_result = result;
                 for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
-                    block_result =
-                        insert(layout, result_ty, unique_->null_constant(result_component_ty),
-                               block_result, walker.component_no(u));
+                    block_result = insert(layout, unique_->null_constant(result_component_ty),
+                                          block_result, walker.component_no(u));
                 }
                 return block_result;
             };
@@ -211,8 +210,6 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
     auto pointer_ty = unique_->pointer_ty(ot);
 
     auto layout = get_layout(vt);
-    auto sty = vt->component_ty();
-    auto result_component_ty = unique_->scalar_ty(sty);
 
     auto walker = matrix_walker(*unique_, sgs_, layout, vt->use(), pos0, pos1, odv.shape(0),
                                 odv.shape(1), odv.stride(0), odv.stride(1), in.checked());
@@ -225,7 +222,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
                 const auto st = [&](tinytc_spv_mod &mod) {
                     auto pointer = mod.add<OpInBoundsPtrAccessChain>(
                         pointer_ty, operand, walker.offset(), std::vector<spv_inst *>{});
-                    auto val_ij = extract(layout, result_component_ty, val, walker.component_no());
+                    auto val_ij = extract(layout, val, walker.component_no());
 
                     make_store(*unique_, in.flag(), ot->element_ty(), ot->addrspace(), pointer,
                                val_ij, in.loc());
@@ -271,7 +268,6 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     const auto b_component_ty = component_type(b_ty);
     const auto c_ty = ct->component_ty();
     const auto r_ty = rt->component_ty();
-    const auto spv_a_ty = unique_->scalar_ty(a_ty);
     const auto spv_b_ty = unique_->scalar_ty(b_ty);
     const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
     const auto spv_c_ty = unique_->scalar_ty(c_ty);
@@ -279,7 +275,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
 
     auto &mod = unique_->mod();
-    auto result_ty = spv_ty(r_ty, rl);
+    auto result_ty = spv_ty(rl);
     spv_inst *result = mod.add<OpUndef>(result_ty);
     spv_inst *imaginary_unit =
         a_and_b_complex ? make_constant(*unique_, c_ty, std::complex<double>{0.0, 1.0}) : nullptr;
@@ -294,7 +290,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             std::fill(std::begin(c_im_block), std::end(c_im_block), nullptr);
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
-                    c_block[n - nb] = extract(cl, spv_c_ty, c, n + m_block * cl.cols);
+                    c_block[n - nb] = extract(cl, c, n + m_block * cl.cols);
                     if (a_and_b_complex) {
                         c_im_block[n - nb] = unique_->null_constant(spv_c_ty);
                     }
@@ -302,7 +298,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             }
 
             for (std::int64_t k = 0; k < bl.rows * bl.blocks; ++k) {
-                auto a_mk = extract(al, spv_a_ty, a, k + m_block * al.cols);
+                auto a_mk = extract(al, a, k + m_block * al.cols);
                 for (std::int32_t n = nb; n < nb + nbb; ++n) {
                     if (n < rl.cols) {
                         /** For matrix B we have L(i,k,j) = i + k*I + j*I*K.
@@ -321,7 +317,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                         const auto p = unique_->constant(static_cast<std::int32_t>(L % sgs_));
                         const auto v = static_cast<LiteralInteger>(L / sgs_);
 
-                        spv_inst *b_kn = extract(bl, spv_b_ty, b, v);
+                        spv_inst *b_kn = extract(bl, b, v);
                         b_kn = mod.add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b_kn, p);
                         auto &c_mn = c_block[n - nb];
 
@@ -369,7 +365,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                     if (c_ty != r_ty) {
                         c_mn = make_cast(*unique_, r_ty, c_ty, c_mn, in.loc());
                     }
-                    result = insert(cl, result_ty, c_mn, result, n + m_block * rl.cols);
+                    result = insert(cl, c_mn, result, n + m_block * rl.cols);
                 }
             }
         }
@@ -386,15 +382,14 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a
     auto rl = get_layout(rt);
     auto bl = get_layout(get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, rl);
-    auto component_ty = unique_->scalar_ty(sty);
+    auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
-        auto b_v = extract(bl, component_ty, b, v);
+        auto b_v = extract(bl, b, v);
         auto r_v = make_binary_op(*unique_, sty, arithmetic::mul, a, b_v, in.loc());
-        result = insert(rl, ty, r_v, result, v);
+        result = insert(rl, r_v, result, v);
     }
 
     return result;
@@ -406,16 +401,15 @@ auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> s
     auto al = get_layout(get_coopmatrix_type(in.a()));
     auto bl = get_layout(get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, rl);
-    auto component_ty = unique_->scalar_ty(sty);
+    auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
-        auto a_v = extract(al, component_ty, a, v);
-        auto b_v = extract(bl, component_ty, b, v);
+        auto a_v = extract(al, a, v);
+        auto b_v = extract(bl, b, v);
         auto r_v = make_binary_op(*unique_, sty, in.operation(), a_v, b_v, in.loc());
-        result = insert(rl, ty, r_v, result, v);
+        result = insert(rl, r_v, result, v);
     }
 
     return result;
@@ -426,15 +420,14 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> sp
     auto rt = get_coopmatrix_type(in.result(0));
     auto rl = get_layout(rt);
     auto sty = rt->component_ty();
-    auto ty = spv_ty(sty, rl);
-    auto component_ty = unique_->scalar_ty(sty);
+    auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
-        auto a_v = extract(al, component_ty, a, v);
+        auto a_v = extract(al, a, v);
         auto r_v = make_unary_op(*unique_, sty, in.operation(), a_v, in.loc());
-        result = insert(rl, ty, r_v, result, v);
+        result = insert(rl, r_v, result, v);
     }
 
     return result;
@@ -446,15 +439,14 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
     auto rl = get_layout(rt);
     auto r_ty = rt->component_ty();
-    auto ty = spv_ty(r_ty, rl);
-    auto component_ty = unique_->scalar_ty(at->component_ty());
+    auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
-        auto a_v = extract(al, component_ty, a, v);
+        auto a_v = extract(al, a, v);
         auto r_v = make_cast(*unique_, r_ty, at->component_ty(), a_v, in.loc());
-        result = insert(rl, ty, r_v, result, v);
+        result = insert(rl, r_v, result, v);
     }
 
     return result;
@@ -464,15 +456,32 @@ auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
     auto rl = get_layout(rt);
     auto sty = rt->component_ty();
-    auto spv_result_ty = spv_ty(sty, rl);
+    auto spv_result_ty = spv_ty(rl);
 
     if (in.is_zero()) {
         return unique_->null_constant(spv_result_ty);
     }
+    if (rl.length == 1) {
+        return make_constant(*unique_, sty, in.value());
+    }
 
-    spv_inst *cst = make_constant(*unique_, sty, in.value());
+    auto const init_vector = [&]() {
+        if (is_complex_type(sty)) {
+            const auto c = std::get<std::complex<double>>(in.value());
+            auto cty = component_type(sty);
+            auto re = make_constant(*unique_, cty, c.real());
+            auto im = make_constant(*unique_, cty, c.imag());
+            auto vec = std::vector<spv_inst *>(2 * rl.length);
+            for (std::int64_t v = 0; v < rl.length; ++v) {
+                vec[2 * v] = re;
+                vec[2 * v + 1] = im;
+            }
+            return vec;
+        }
+        return std::vector<spv_inst *>(rl.length, make_constant(*unique_, sty, in.value()));
+    };
     return unique_->mod().add_to<OpConstantComposite>(section::type_const_var, spv_result_ty,
-                                                      std::vector<spv_inst *>(rl.length, cst));
+                                                      init_vector());
 }
 
 auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout {
@@ -482,33 +491,51 @@ auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopma
     l.blocks = ct->shape(0) / l.rows;
     l.length = l.rows * l.cols * l.blocks / sgs_;
     l.shape1 = ct->shape(1);
+    l.sty = ct->component_ty();
 
     return l;
 }
 
-auto coopmatrix_impl::spv_ty(scalar_type sty, coopmatrix_layout const &layout) -> spv_inst * {
-    auto ty = unique_->scalar_ty(sty);
+auto coopmatrix_impl::spv_ty(coopmatrix_layout const &layout) -> spv_inst * {
     if (layout.length == 1) {
-        return ty;
+        return unique_->scalar_ty(layout.sty);
     }
-    return unique_->vec_ty(ty, layout.length);
+    const auto ty = unique_->scalar_ty(component_type(layout.sty));
+    const auto length = static_cast<int>(component_count(layout.sty)) * layout.length;
+    return unique_->vec_ty(ty, length);
 }
 
 auto coopmatrix_impl::spv_ty(coopmatrix_data_type const *ct) -> spv_inst * {
-    return spv_ty(ct->component_ty(), get_layout(ct));
+    return spv_ty(get_layout(ct));
 }
 
-auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *mat,
-                              LiteralInteger v) -> spv_inst * {
+auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v)
+    -> spv_inst * {
     if (layout.length == 1) {
         return mat;
     }
+    const auto ty = unique_->scalar_ty(component_type(layout.sty));
+    if (is_complex_type(layout.sty)) {
+        auto re = unique_->mod().add<OpCompositeExtract>(ty, mat, std::vector{2 * v});
+        auto im = unique_->mod().add<OpCompositeExtract>(ty, mat, std::vector{2 * v + 1});
+        const auto complex_ty = unique_->scalar_ty(layout.sty);
+        return unique_->mod().add<OpCompositeConstruct>(complex_ty,
+                                                        std::vector<spv_inst *>{re, im});
+    }
     return unique_->mod().add<OpCompositeExtract>(ty, mat, std::vector{v});
 }
-auto coopmatrix_impl::insert(coopmatrix_layout const &layout, spv_inst *ty, spv_inst *val,
-                             spv_inst *mat, LiteralInteger v) -> spv_inst * {
+auto coopmatrix_impl::insert(coopmatrix_layout const &layout, spv_inst *val, spv_inst *mat,
+                             LiteralInteger v) -> spv_inst * {
     if (layout.length == 1) {
         return val;
+    }
+    auto ty = spv_ty(layout);
+    if (is_complex_type(layout.sty)) {
+        const auto real_ty = unique_->scalar_ty(component_type(layout.sty));
+        auto re = unique_->mod().add<OpCompositeExtract>(real_ty, val, std::vector{0});
+        auto im = unique_->mod().add<OpCompositeExtract>(real_ty, val, std::vector{1});
+        auto tmp = unique_->mod().add<OpCompositeInsert>(ty, re, mat, std::vector{2 * v});
+        return unique_->mod().add<OpCompositeInsert>(ty, im, tmp, std::vector{2 * v + 1});
     }
     return unique_->mod().add<OpCompositeInsert>(ty, val, mat, std::vector{v});
 }
