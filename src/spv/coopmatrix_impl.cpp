@@ -21,6 +21,7 @@
 #include <functional>
 #include <iterator>
 #include <utility>
+#include <variant>
 #include <vector>
 
 namespace tinytc::spv {
@@ -271,7 +272,6 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     const auto spv_b_ty = unique_->scalar_ty(b_ty);
     const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
     const auto spv_c_ty = unique_->scalar_ty(c_ty);
-    // const auto spv_r_ty = unique_->scalar_ty(r_ty);
     const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
 
     auto &mod = unique_->mod();
@@ -443,8 +443,34 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
+
+    const auto P = rt->use() == matrix_use::b && at->use() == matrix_use::acc
+                       ? std::function([&](LiteralInteger v) -> LiteralInteger {
+                             /**
+                              * Using that M >= S we have
+                              * For matrix_acc we have L_{acc}(i,j,k) = i + j*S + k*S*J
+                              * For matrix_b   we have     L_b(i,k,j) = i + k*S + j*S*K.
+                              *
+                              * We have
+                              * p_b + v_bS = L_b
+                              *
+                              * Recovering i,j,k from L_b we have
+                              * i = L_b%S = p_b
+                              * k = L_b/S%K = v_b%K
+                              * j = L_b/(SK) = v_b/K
+                              *
+                              * Recovering p_{acc}, v_{acc} from
+                              * p_{acc} + v_{acc}S = L_{acc} = p_b + v_b/K*S + v_b%K*S*J
+                              * we have
+                              * p_{acc} = L_{acc}%S = p_b
+                              * v_{acc} = L_{acc}/S = v_b/K + v_b%K*J
+                              */
+                             return v / rl.blocks + v % rl.blocks * al.cols;
+                         })
+                       : std::function([](LiteralInteger v) -> LiteralInteger { return v; });
+
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
-        auto a_v = extract(al, a, v);
+        auto a_v = extract(al, a, P(v));
         auto r_v = make_cast(*unique_, r_ty, at->component_ty(), a_v, in.loc());
         result = insert(rl, r_v, result, v);
     }
