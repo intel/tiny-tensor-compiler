@@ -1,10 +1,11 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef COOPMATRIX_DIY_20241213_HPP
-#define COOPMATRIX_DIY_20241213_HPP
+#ifndef COOPMATRIX_IMPL_DPAS_20250428_HPP
+#define COOPMATRIX_IMPL_DPAS_20250428_HPP
 
 #include "spv/block2d_diy.hpp"
+#include "spv/coopmatrix_impl_block.hpp"
 #include "support/fnv1a.hpp"
 #include "support/temp_counter.hpp"
 #include "tinytc/types.h"
@@ -35,20 +36,20 @@ class dope_vector;
 class spv_inst;
 class uniquifier;
 
-class coopmatrix_diy {
+class coopmatrix_impl_dpas : public coopmatrix_impl_block {
   public:
-    coopmatrix_diy(tinytc_spv_mod &m, uniquifier &unique);
+    using coopmatrix_impl_block::coopmatrix_impl_block;
 
-    auto arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
-    auto cast(cast_inst const &in, spv_inst *a) -> spv_inst *;
-    auto constant(constant_inst const &in) -> spv_inst *;
+    // auto arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
+    // auto cast(cast_inst const &in, spv_inst *a) -> spv_inst *;
+    // auto constant(constant_inst const &in) -> spv_inst *;
     auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *pointer,
               spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
     auto mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b, spv_inst *c)
         -> spv_inst *;
     void prefetch(cooperative_matrix_prefetch_inst const &in, dope_vector const &odv,
                   spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
-    auto scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
+    // auto scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
                spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
 
@@ -87,13 +88,10 @@ class coopmatrix_diy {
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
         -> spv_inst *;
-    auto cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty, matrix_use from_use,
-                  std::int32_t rows, std::int32_t cols) -> spv_inst *;
-    auto arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components) -> spv_inst *;
-    auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
-
-    tinytc_spv_mod *mod_;
-    uniquifier *unique_;
+    // auto cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty, matrix_use from_use,
+    // std::int32_t rows, std::int32_t cols) -> spv_inst *;
+    // auto arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components) -> spv_inst *;
+    // auto scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst *;
 
     using arith_key = std::tuple<arithmetic, scalar_type, std::int32_t>;
     using cast_key =
@@ -115,4 +113,4 @@ class coopmatrix_diy {
 
 } // namespace tinytc::spv
 
-#endif // COOPMATRIX_DIY_20241213_HPP
+#endif // COOPMATRIX_IMPL_DPAS_20250428_HPP

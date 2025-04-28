@@ -16,6 +16,7 @@
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "spv/coopmatrix_impl_block.hpp"
+#include "spv/coopmatrix_impl_dpas.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
@@ -82,7 +83,9 @@ auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
 
 inst_converter::inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info)
     : mod_(&m), info_(&info), unique_(m) {
-    if (info_->have_spirv_feature(spirv_feature::subgroup_buffer_block_io)) {
+    if (info_->matrix().have_dpas()) {
+        matrix_impl_ = std::make_unique<coopmatrix_impl_dpas>(unique_);
+    } else if (info_->have_spirv_feature(spirv_feature::subgroup_buffer_block_io)) {
         matrix_impl_ = std::make_unique<coopmatrix_impl_block>(unique_);
     } else {
         matrix_impl_ = std::make_unique<coopmatrix_impl>(unique_);

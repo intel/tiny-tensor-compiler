@@ -77,9 +77,9 @@ set(SOURCES
     spv/capex_util.cpp
     spv/converter.cpp
     spv/converter_aux.cpp
-    #spv/coopmatrix_diy.cpp
     spv/coopmatrix_impl.cpp
     spv/coopmatrix_impl_block.cpp
+    spv/coopmatrix_impl_dpas.cpp
     spv/dope_vector.cpp
     spv/inst_assembler.cpp
     spv/matrix_walker.cpp

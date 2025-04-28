@@ -73,6 +73,8 @@ class matrix_ext_info {
     inline auto required_subgroup_size() const -> std::int32_t { return required_sgs_; }
     inline auto block_io() const -> matrix_ext_block_io_info const & { return block_io_; }
 
+    inline auto have_dpas() const { return types_.size() > 0; }
+
   private:
     std::int32_t required_sgs_;
     matrix_ext_block_io_info block_io_;
