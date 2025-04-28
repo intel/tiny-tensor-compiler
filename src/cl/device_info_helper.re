@@ -34,6 +34,9 @@ auto get_opencl_extensions(std::size_t str_length, const char *str) -> opencl_ex
             "cl_intel_subgroups_short"        {
                 result |= opencl_ext_cl_intel_subgroups_short; continue;
             }
+            "cl_intel_spirv_subgroups"        {
+                result |= opencl_ext_cl_intel_spirv_subgroups; continue;
+            }
             "cl_khr_int64_base_atomics"       {
                 result |= opencl_ext_cl_khr_int64_base_atomics; continue;
             }

@@ -40,6 +40,8 @@ class capex {
     void operator()(OpGroupIAdd const &in);
     void operator()(OpInBoundsPtrAccessChain const &in);
     void operator()(OpMemoryModel const &in);
+    void operator()(OpSubgroupBlockReadINTEL const &in);
+    void operator()(OpSubgroupBlockWriteINTEL const &in);
     void operator()(OpTypeFloat const &in);
     void operator()(OpTypeInt const &in);
     void operator()(OpTypeVector const &in);

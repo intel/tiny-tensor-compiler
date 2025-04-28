@@ -418,8 +418,9 @@ typedef enum {
     tinytc_spirv_feature_atomic_float64_add_local = 9,   ///< f64 atomic add on local pointer
     tinytc_spirv_feature_atomic_float64_add_global = 10, ///< f64 atomic add on global pointer
     tinytc_spirv_feature_bfloat16_conversion = 11,       ///< bf16 -> f32 and f32 -> bf16 conversion
+    tinytc_spirv_feature_subgroup_buffer_block_io = 12   ///< subgroup block read/write support
 } tinytc_spirv_feature_t;
-#define TINYTC_NUMBER_OF_SPIRV_FEATURES 12 // @todo Keep up to date with tinytc_spirv_feature_t
+#define TINYTC_NUMBER_OF_SPIRV_FEATURES 13 // @todo Keep up to date with tinytc_spirv_feature_t
 
 //! Core features that may be optionally enabled
 typedef enum {

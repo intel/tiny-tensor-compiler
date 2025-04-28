@@ -385,6 +385,7 @@ enum class spirv_feature {
     atomic_float64_add_local = tinytc_spirv_feature_atomic_float64_add_local,
     atomic_float64_add_global = tinytc_spirv_feature_atomic_float64_add_global,
     bfloat16_conversion = tinytc_spirv_feature_bfloat16_conversion,
+    subgroup_buffer_block_io = tinytc_spirv_feature_subgroup_buffer_block_io,
 };
 
 //! @brief Cf. @ref tinytc_core_feature_flag_t

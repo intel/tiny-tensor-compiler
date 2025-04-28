@@ -79,8 +79,10 @@ set(SOURCES
     spv/converter_aux.cpp
     #spv/coopmatrix_diy.cpp
     spv/coopmatrix_impl.cpp
+    spv/coopmatrix_impl_block.cpp
     spv/dope_vector.cpp
     spv/inst_assembler.cpp
+    spv/matrix_walker.cpp
     spv/module.cpp
     spv/names.cpp
     spv/opencl.std.cpp

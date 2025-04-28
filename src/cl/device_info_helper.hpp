@@ -30,6 +30,7 @@ enum opencl_ext_t {
     opencl_ext_cl_khr_int64_base_atomics = 0x80,
     opencl_ext_cl_khr_int64_extended_atomics = 0x100,
     opencl_ext_cl_ext_float_atomics = 0x200,
+    opencl_ext_cl_intel_spirv_subgroups = 0x400,
 };
 //! Type for combination of core feature flags
 using opencl_exts_t = std::uint32_t;
