@@ -29,13 +29,16 @@ namespace tinytc::spv {
 
 auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
+    auto ot = get_memref_type(in.operand());
     auto rt = get_coopmatrix_type(in.result(0));
     auto layout = get_layout(rt);
     auto sty = rt->component_ty();
 
+    const std::int32_t required_alignment = ot->addrspace() == address_space::global ? 4 : 16;
+
     const bool layout_ok = layout.rows >= subgroup_size();
     const bool transpose_ok = in.t() == transpose::N;
-    const bool alignment_ok = is_aligned(4, in.operand(), in.pos0());
+    const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
     const bool sty_ok = !is_complex_type(sty);
@@ -100,13 +103,15 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
 void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
                                   spv_inst *val, spv_inst *operand, spv_inst *pos0,
                                   spv_inst *pos1) {
+    constexpr std::int32_t required_alignment = 16;
+
     auto vt = get_coopmatrix_type(in.val());
     auto layout = get_layout(vt);
     auto sty = vt->component_ty();
 
     const bool layout_ok = layout.rows >= subgroup_size();
     const bool flag_ok = in.flag() == store_flag::regular;
-    const bool alignment_ok = is_aligned(16, in.operand(), in.pos0());
+    const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
     const bool sty_ok = !is_complex_type(sty);
