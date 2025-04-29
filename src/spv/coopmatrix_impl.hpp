@@ -31,8 +31,10 @@ class uniquifier;
 
 class coopmatrix_impl {
   public:
-    coopmatrix_impl(uniquifier &unique);
+    coopmatrix_impl(tinytc_core_info const &info, uniquifier &unique);
     virtual ~coopmatrix_impl() = default;
+
+    inline auto info() const -> tinytc_core_info const & { return *info_; }
 
     inline auto gcd() const -> gcd_analysis_result const & { return gcd_; }
     inline void gcd(gcd_analysis_result g) { gcd_ = std::move(g); }
@@ -59,7 +61,7 @@ class coopmatrix_impl {
     virtual auto spv_ty(coopmatrix_data_type const *ct) -> spv_inst *;
 
   protected:
-    auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout;
+    virtual auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout;
     auto spv_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v) -> spv_inst *;
     auto insert(coopmatrix_layout const &layout, spv_inst *val, spv_inst *mat, LiteralInteger v)
@@ -68,6 +70,7 @@ class coopmatrix_impl {
     inline auto unique() -> uniquifier & { return *unique_; }
 
   private:
+    const_tinytc_core_info_t info_;
     uniquifier *unique_;
     std::int32_t sgs_;
     gcd_analysis_result gcd_;

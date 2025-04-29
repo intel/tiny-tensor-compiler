@@ -17,9 +17,9 @@ class coopmatrix_impl_block : public coopmatrix_impl {
     using coopmatrix_impl::coopmatrix_impl;
 
     auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *operand,
-              spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
+              spv_inst *pos0, spv_inst *pos1) -> spv_inst * override;
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
-               spv_inst *operand, spv_inst *pos0, spv_inst *pos1);
+               spv_inst *operand, spv_inst *pos0, spv_inst *pos1) override;
 
   private:
     auto get_io_sty(scalar_type sty) -> scalar_type;

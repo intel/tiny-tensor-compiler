@@ -27,7 +27,8 @@
 
 namespace tinytc::spv {
 
-coopmatrix_impl::coopmatrix_impl(uniquifier &unique) : unique_{&unique}, sgs_{32} {}
+coopmatrix_impl::coopmatrix_impl(tinytc_core_info const &info, uniquifier &unique)
+    : info_{&info}, unique_{&unique}, sgs_{32} {}
 
 auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
@@ -413,6 +414,7 @@ auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopma
     l.blocks = ct->shape(0) / l.rows;
     l.length = l.rows * l.cols * l.blocks / sgs_;
     l.shape1 = ct->shape(1);
+    l.ops_per_chan = 1;
     l.sty = ct->component_ty();
 
     return l;

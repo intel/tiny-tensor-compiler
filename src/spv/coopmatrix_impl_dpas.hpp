@@ -44,14 +44,17 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     // auto cast(cast_inst const &in, spv_inst *a) -> spv_inst *;
     // auto constant(constant_inst const &in) -> spv_inst *;
     auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv, spv_inst *pointer,
-              spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
+              spv_inst *pos0, spv_inst *pos1) -> spv_inst * override;
     auto mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b, spv_inst *c)
-        -> spv_inst *;
+        -> spv_inst * override;
     void prefetch(cooperative_matrix_prefetch_inst const &in, dope_vector const &odv,
-                  spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
+                  spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) override;
     // auto scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst *;
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
-               spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
+               spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) override;
+
+  protected:
+    auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout override;
 
   private:
     struct mul_add_key {
@@ -88,6 +91,7 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
         -> spv_inst *;
+    auto vnni_transform_fun(coopmatrix_layout const &layout) -> spv_inst *;
     // auto cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty, matrix_use from_use,
     // std::int32_t rows, std::int32_t cols) -> spv_inst *;
     // auto arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components) -> spv_inst *;
@@ -108,6 +112,7 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     std::unordered_map<store_key, spv_inst *, tuple_hash<store_key>> store_funs_;
     std::unordered_map<mul_add_key, spv_inst *, mul_add_hash> mul_add_funs_;
     std::unordered_map<scale_key, spv_inst *, tuple_hash<scale_key>> scale_funs_;
+    std::unordered_map<coopmatrix_layout, spv_inst *> vnni_transform_funs_;
     temp_counter tmp_;
 };
 

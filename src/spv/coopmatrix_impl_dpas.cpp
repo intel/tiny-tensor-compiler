@@ -341,6 +341,40 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
     });
 }
 
+auto coopmatrix_impl_dpas::vnni_transform_fun(coopmatrix_layout const &layout) -> spv_inst * {
+    return lookup(vnni_transform_funs_, layout, [&](coopmatrix_layout const &layout) {
+        const auto width = xe::grf_size / size(layout.sty);
+
+        auto oasm = std::ostringstream{};
+        oasm << "{\n";
+
+        for (std::int64_t block = 0; block < layout.blocks; ++block) {
+            for (std::int32_t col = 0; col < layout.cols; ++col) {
+                const auto cmod = col % layout.ops_per_chan;
+                const auto cbase = col - cmod;
+                const auto src_offset = (col + block * layout.cols) * layout.rows;
+                const auto dst_offset = cmod + (cbase + block * layout.cols) * layout.rows;
+
+                auto R_from = src_offset / width;
+                auto C_from = src_offset % width;
+                auto R_to = dst_offset / width;
+                auto C_to = dst_offset % width;
+
+                // C'_{io%S+j%o,floor(i/(S/o))+floor(j/o)o,k} = C_{i,j,k}
+                oasm << "mov (M1," << layout.rows << ") $0(" << R_to << "," << C_to << ")<"
+                     << layout.ops_per_chan << "> $1(" << R_from << "," << C_from << ")<1;1,0>\n";
+            }
+        }
+        oasm << "}\n";
+
+        auto ty = spv_ty(layout);
+        auto fun_ty = unique().function_ty(ty, array_view<spv_inst *>{ty});
+        return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, ty, fun_ty,
+                                                 unique().asm_target(), std::move(oasm).str(),
+                                                 "=rw,rw");
+    });
+}
+
 /*auto coopmatrix_impl_dpas::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty,
                                     matrix_use from_use, std::int32_t rows, std::int32_t cols)
     -> spv_inst * {
@@ -638,7 +672,15 @@ auto coopmatrix_impl_dpas::constant(constant_inst const &in) -> spv_inst * {
 
 auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                 spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
-    return coopmatrix_impl::load(in, odv, pointer, pos0, pos1);
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto rl = get_layout(rt);
+    auto result = coopmatrix_impl_block::load(in, odv, pointer, pos0, pos1);
+    if (rl.ops_per_chan > 1) {
+        auto fun = vnni_transform_fun(rl);
+        result =
+            unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{result});
+    }
+    return result;
 
     /*auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.result(0));
@@ -662,21 +704,26 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vec
 
 auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a,
                                    spv_inst *b, spv_inst *c) -> spv_inst * {
-    return coopmatrix_impl::mul_add(in, a, b, c);
-
-    /*auto at = get_coopmatrix_type(in.a());
+    auto at = get_coopmatrix_type(in.a());
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result(0));
+    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const bool have_gemm =
+        info().matrix().have_gemm(at->component_ty(), bt->component_ty(), ct->component_ty(),
+                                  rt->component_ty(), rt->rows(), rt->cols(), at->cols());
+    if (!sgs_ok || !have_gemm) {
+        return coopmatrix_impl_block::mul_add(in, a, b, c);
+    }
 
     auto fun = mul_add_fun(at, bt, ct, rt, in.is_c_zero());
-    return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a, b, c});*/
+    return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a, b, c});
 }
 
 void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
                                     dope_vector const &odv, spv_inst *pointer, spv_inst *pos0,
                                     spv_inst *pos1) {
-    coopmatrix_impl::prefetch(in, odv, pointer, pos0, pos1);
+    coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
 
     /*auto ot = get_memref_type(in.operand());
     auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), unique().pointer_ty(ot), in.rows(),
@@ -718,7 +765,7 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
 
 void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
                                  spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
-    coopmatrix_impl::store(in, odv, val, pointer, pos0, pos1);
+    coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
 
     /*auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.val());
@@ -739,6 +786,18 @@ void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_v
     mod.add<OpAsmCallINTEL>(spv_void_ty, fun,
                             array_view<spv_inst *>{val, pointer, width_in_bytes, height,
                                                    stride_in_bytes, pos0_i32, pos1_i32});*/
+}
+
+auto coopmatrix_impl_dpas::get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout {
+    auto layout = coopmatrix_impl_block::get_layout(ct);
+    if (ct->use() == matrix_use::a) {
+        const auto sty_size = static_cast<std::int32_t>(size(ct->component_ty()));
+        const auto ops_per_chan = std::max(1, xe::channel_size / sty_size);
+        if (layout.cols % ops_per_chan == 0) {
+            layout.ops_per_chan = ops_per_chan;
+        }
+    }
+    return layout;
 }
 
 } // namespace tinytc::spv
