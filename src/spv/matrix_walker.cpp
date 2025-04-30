@@ -50,12 +50,18 @@ matrix_walker::matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_la
 void matrix_walker::advance_block() {
     col_ = col0_;
     col_no_ = 0;
+    channel_no_ = 0;
     row_ = unique_.mod().add<OpIAdd>(index_ty_, row_, row_inc_);
     ++block_no_;
 }
 void matrix_walker::advance_column() {
+    channel_no_ = 0;
     col_ = unique_.mod().add<OpIAdd>(index_ty_, col_, col_inc_);
     ++col_no_;
+}
+void matrix_walker::advance_channel() {
+    col_ = unique_.mod().add<OpIAdd>(index_ty_, col_, col_inc_);
+    ++channel_no_;
 }
 
 auto matrix_walker::component_no(std::int32_t col_no) const -> std::int32_t {
@@ -72,10 +78,10 @@ auto matrix_walker::cols_checked() const -> bool {
     return chk_ == checked_flag::both || chk_ == checked_flag::cols;
 }
 auto matrix_walker::needs_mask() const -> bool {
-    return (col_no_ + 1) * col_inc_factor_ > layout_.shape1;
+    return layout_.ops_per_chan * (col_no_ + 1) * col_inc_factor_ > layout_.shape1;
 }
 auto matrix_walker::may_need_mask() const -> bool {
-    return layout_.cols * col_inc_factor_ > layout_.shape1;
+    return layout_.ops_per_chan * layout_.cols * col_inc_factor_ > layout_.shape1;
 }
 
 auto matrix_walker::col_ok() const -> spv_inst * {

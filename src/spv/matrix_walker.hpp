@@ -24,9 +24,11 @@ class matrix_walker {
 
     void advance_block();
     void advance_column();
+    void advance_channel();
 
     auto component_no(std::int32_t col_no) const -> std::int32_t;
     auto component_no() const -> std::int32_t;
+    inline auto channel_no() const -> std::int32_t { return channel_no_; }
     auto offset() const -> spv_inst *;
     auto rows_checked() const -> bool;
     auto cols_checked() const -> bool;
@@ -50,6 +52,7 @@ class matrix_walker {
     spv_inst *col_max_ = nullptr;
     std::int32_t block_no_ = 0;
     std::int32_t col_no_ = 0;
+    std::int32_t channel_no_ = 0;
 };
 
 } // namespace tinytc::spv

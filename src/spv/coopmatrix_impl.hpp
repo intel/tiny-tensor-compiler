@@ -9,6 +9,7 @@
 #include "spv/defs.hpp"
 
 #include <cstdint>
+#include <functional>
 #include <utility>
 
 namespace tinytc {
@@ -62,10 +63,15 @@ class coopmatrix_impl {
 
   protected:
     virtual auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout;
+    auto spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst *;
+    auto spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v) -> spv_inst *;
     auto insert(coopmatrix_layout const &layout, spv_inst *val, spv_inst *mat, LiteralInteger v)
         -> spv_inst *;
+    auto apply_function(coopmatrix_layout const &layout,
+                        std::function<spv_inst *(spv_inst *, spv_inst *)> fun, spv_inst *a,
+                        spv_inst *b = nullptr) -> spv_inst *;
 
     inline auto unique() -> uniquifier & { return *unique_; }
 

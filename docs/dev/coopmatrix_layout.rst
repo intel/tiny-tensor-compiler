@@ -191,7 +191,7 @@ Matrix A
 ========
 
 For cooperative matrices with use *matrix_a* we restrict :math:`M` to being a multiple of :math:`S`.
-Moreover, low precision matrices are VNNI transformed:
+Moreover, low precision matrices are VNNI transformed if the number of columns :math:`N` is divisible by the number of operands per channel:
 Let :math:`\omega_a=\max(1, \max(1,4/\text{size}(\text{ty}))` be the number of operands per channel.
 The shape of the :math:`B` tensor is adjusted as following:
 
@@ -199,19 +199,19 @@ The shape of the :math:`B` tensor is adjusted as following:
 
    \begin{aligned}
    I &:= S,\\
-   J &:= \lceil N/\omega_a\rceil \\
+   J &:= \lceil N/\omega_a \rceil \\
    K &:= M/I.\\
    \end{aligned}
 
 Each entry in the :math:`B` tensor has :math:`\omega_a` channels, where channel access is denoted with
-:math:`[.]`, and we define the mapping of :math:`A` to :math:`B` to be
+:math:`[.]`, and we define the mapping of :math:`A` to :math:`A^*` to be
 
 .. math::
 
-   B_{i,j,k}[c] = \left\{\begin{array}{rcl}
-                      A_{i+kI,c+j\omega_a} & \text{ if } & i+kI < M \wedge c+j\omega_a < N, \\
-                      0 & \text{ else.}
-                  \end{array}\right.
+   A^*_{i,j,k}[c] = \left\{\begin{array}{rcl}
+                        A_{i+kI,c+j\omega_a} & \text{ if } & i+kI < M \wedge c+j\omega_a < N, \\
+                        0 & \text{ else.}
+                    \end{array}\right.
 
 Matrix B
 ========

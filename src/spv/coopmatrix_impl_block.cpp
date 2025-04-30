@@ -46,8 +46,8 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return coopmatrix_impl::load(in, odv, operand, pos0, pos1);
     }
 
-    auto result_ty = spv_ty(layout);
-    auto result_component_ty = unique().scalar_ty(sty);
+    auto matrix_ty = spv_ty(layout);
+    auto interface_ty = spv_interface_ty(layout);
     auto io_sty = get_io_sty(sty);
     auto io_ty = unique().scalar_ty(io_sty);
     auto pointer_ty = [&] {
@@ -62,34 +62,49 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
 
     auto &mod = unique().mod();
     operand = mod.add<OpBitcast>(pointer_ty, operand);
+    spv_inst *result = mod.add<OpUndef>(matrix_ty);
 
-    spv_inst *result = mod.add<OpUndef>(result_ty);
-    for (std::int64_t w = 0; w < layout.blocks; ++w) {
-        auto const ld_block = [&](tinytc_spv_mod &mod) {
-            spv_inst *block_result = result;
-            for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
-                const auto ld = [&](tinytc_spv_mod &mod) {
-                    auto pointer = mod.add<OpInBoundsPtrAccessChain>(
-                        pointer_ty, operand, walker.offset(), std::vector<spv_inst *>{});
-                    auto value = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer);
-                    return mod.add<OpBitcast>(result_component_ty, value);
-                };
-                const auto ld_chk = [&](tinytc_spv_mod &) {
-                    return make_conditional_execution(
-                        unique(), result_component_ty, walker.col_ok(), ld,
-                        unique().null_constant(result_component_ty), in.loc());
-                };
+    const auto pointer = [&]() {
+        return mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
+                                                 std::vector<spv_inst *>{});
+    };
+    const auto ld = [&](tinytc_spv_mod &mod) -> spv_inst * {
+        if (layout.ops_per_chan > 1) {
+            const auto ty = unique().scalar_ty(sty);
+            spv_inst *packed = mod.add<OpUndef>(interface_ty);
+            for (std::int32_t c = 0; c < layout.ops_per_chan; ++c) {
+                spv_inst *val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer());
+                val = mod.add<OpBitcast>(ty, val);
+                packed = mod.add<OpCompositeInsert>(interface_ty, val, packed,
+                                                    std::vector{walker.channel_no()});
 
-                spv_inst *val =
-                    walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
-                block_result = insert(layout, val, block_result, walker.component_no());
-
-                if (u < layout.cols - 1) {
-                    walker.advance_column();
+                if (c < layout.ops_per_chan - 1) {
+                    walker.advance_channel();
                 }
             }
-            return block_result;
-        };
+            return packed;
+        }
+        auto val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer());
+        return mod.add<OpBitcast>(interface_ty, val);
+    };
+    const auto ld_chk = [&](tinytc_spv_mod &) {
+        return make_conditional_execution(unique(), interface_ty, walker.col_ok(), ld,
+                                          unique().null_constant(interface_ty), in.loc());
+    };
+    auto const ld_block = [&](tinytc_spv_mod &mod) {
+        spv_inst *block_result = result;
+        for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
+            spv_inst *val = walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
+            block_result = insert(layout, val, block_result, walker.component_no());
+
+            if (u < layout.cols - 1) {
+                walker.advance_column();
+            }
+        }
+        return block_result;
+    };
+
+    for (std::int64_t w = 0; w < layout.blocks; ++w) {
         result = ld_block(mod);
 
         if (w < layout.blocks - 1) {
