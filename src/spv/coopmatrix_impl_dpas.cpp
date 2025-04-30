@@ -3,31 +3,27 @@
 
 #include "spv/coopmatrix_impl_dpas.hpp"
 #include "codegen_tools.hpp"
-#include "error.hpp"
+#include "device_info.hpp"
+#include "matrix_ext_info.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
-#include "node/value_node.hpp"
 #include "spv/block2d_diy.hpp"
 #include "spv/defs.hpp"
-#include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/lut.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/xe_constants.hpp"
-#include "support/casting.hpp"
 #include "support/util.hpp"
-#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <bit>
+#include <algorithm>
+#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
-#include <variant>
-#include <vector>
 
 namespace tinytc::spv {
 

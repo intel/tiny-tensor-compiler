@@ -7,6 +7,7 @@
 #include "codegen_tools.hpp"
 #include "converter_aux.hpp"
 #include "error.hpp"
+#include "matrix_ext_info.hpp"
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"

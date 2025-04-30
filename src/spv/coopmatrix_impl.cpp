@@ -14,11 +14,13 @@
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "support/visit.hpp"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <complex>
 #include <functional>
 #include <iterator>

@@ -6,9 +6,9 @@
 
 #include "spv/block2d_diy.hpp"
 #include "spv/coopmatrix_impl_block.hpp"
+#include "spv/coopmatrix_layout.hpp"
 #include "support/fnv1a.hpp"
 #include "support/temp_counter.hpp"
-#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
@@ -17,24 +17,15 @@
 #include <tuple>
 #include <unordered_map>
 #include <utility>
+#include <variant>
 
 namespace tinytc {
-class arith_inst;
-class cast_inst;
-class constant_inst;
-class cooperative_matrix_load_inst;
-class cooperative_matrix_mul_add_inst;
-class cooperative_matrix_prefetch_inst;
-class cooperative_matrix_scale_inst;
-class cooperative_matrix_store_inst;
 class coopmatrix_data_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
 
-class dope_vector;
 class spv_inst;
-class uniquifier;
 
 class coopmatrix_impl_dpas : public coopmatrix_impl_block {
   public:

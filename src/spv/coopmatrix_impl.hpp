@@ -7,6 +7,7 @@
 #include "analysis/gcd.hpp"
 #include "spv/coopmatrix_layout.hpp"
 #include "spv/defs.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <functional>
