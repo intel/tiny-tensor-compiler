@@ -13,9 +13,9 @@
 namespace tinytc::spv {
 
 matrix_walker::matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_layout const &layout,
-                             matrix_use use, spv_inst *pos0, spv_inst *pos1, spv_inst *shape0,
-                             spv_inst *shape1, spv_inst *stride0, spv_inst *stride1,
-                             checked_flag chk, std::int32_t constant_p)
+                             spv_inst *pos0, spv_inst *pos1, spv_inst *shape0, spv_inst *shape1,
+                             spv_inst *stride0, spv_inst *stride1, checked_flag chk,
+                             std::int32_t constant_p)
     : unique_{unique}, layout_{layout}, chk_{chk} {
     index_ty_ = unique.scalar_ty(scalar_type::index);
 
@@ -39,8 +39,6 @@ matrix_walker::matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_la
     col0_ = mod.add<OpIMul>(index_ty_, col0_, stride1);
     col_ = col0_;
 
-    transpose_ = use == matrix_use::b;
-
     if (rows_checked()) {
         row_max_ = mod.add<OpIMul>(index_ty_, shape0, stride0);
     }
@@ -60,30 +58,27 @@ void matrix_walker::advance_column() {
     ++col_no_;
 }
 
-auto matrix_walker::component_no(std::int32_t col_no) -> std::int32_t {
-    if (transpose_) {
-        return block_no_ + col_no * layout_.blocks;
-    }
-    return col_no + block_no_ * layout_.cols;
+auto matrix_walker::component_no(std::int32_t col_no) const -> std::int32_t {
+    return layout_.component_no(col_no, block_no_);
 }
-auto matrix_walker::component_no() -> std::int32_t { return component_no(col_no_); }
-auto matrix_walker::offset() -> spv_inst * {
+auto matrix_walker::component_no() const -> std::int32_t { return component_no(col_no_); }
+auto matrix_walker::offset() const -> spv_inst * {
     return unique_.mod().add<OpIAdd>(index_ty_, row_, col_);
 };
-auto matrix_walker::rows_checked() -> bool {
+auto matrix_walker::rows_checked() const -> bool {
     return chk_ == checked_flag::both || chk_ == checked_flag::rows;
 }
-auto matrix_walker::cols_checked() -> bool {
+auto matrix_walker::cols_checked() const -> bool {
     return chk_ == checked_flag::both || chk_ == checked_flag::cols;
 }
-auto matrix_walker::needs_mask() -> bool {
+auto matrix_walker::needs_mask() const -> bool {
     return (col_no_ + 1) * col_inc_factor_ > layout_.shape1;
 }
-auto matrix_walker::may_need_mask() -> bool {
+auto matrix_walker::may_need_mask() const -> bool {
     return layout_.cols * col_inc_factor_ > layout_.shape1;
 }
 
-auto matrix_walker::col_ok() -> spv_inst * {
+auto matrix_walker::col_ok() const -> spv_inst * {
     auto c0 = unique_.null_constant(index_ty_);
     auto bool_ty = unique_.bool_ty();
     auto &mod = unique_.mod();
@@ -91,7 +86,7 @@ auto matrix_walker::col_ok() -> spv_inst * {
     auto check2 = mod.add<OpSLessThan>(bool_ty, col_, col_max_);
     return mod.add<OpLogicalAnd>(bool_ty, check1, check2);
 }
-auto matrix_walker::row_ok() -> spv_inst * {
+auto matrix_walker::row_ok() const -> spv_inst * {
     auto c0 = unique_.null_constant(index_ty_);
     auto bool_ty = unique_.bool_ty();
     auto &mod = unique_.mod();

@@ -8,7 +8,6 @@
 
 namespace tinytc {
 enum class checked_flag;
-enum class matrix_use;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -19,23 +18,22 @@ class uniquifier;
 class matrix_walker {
   public:
     matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_layout const &layout,
-                  matrix_use use, spv_inst *pos0, spv_inst *pos1, spv_inst *shape0,
-                  spv_inst *shape1, spv_inst *stride0, spv_inst *stride1, checked_flag chk,
+                  spv_inst *pos0, spv_inst *pos1, spv_inst *shape0, spv_inst *shape1,
+                  spv_inst *stride0, spv_inst *stride1, checked_flag chk,
                   std::int32_t constant_p = -1);
 
     void advance_block();
     void advance_column();
 
-    auto component_no(std::int32_t col_no) -> std::int32_t;
-    auto component_no() -> std::int32_t;
-    auto offset() -> spv_inst *;
-    auto rows_checked() -> bool;
-    auto cols_checked() -> bool;
-    auto needs_mask() -> bool;
-    auto may_need_mask() -> bool;
-
-    auto col_ok() -> spv_inst *;
-    auto row_ok() -> spv_inst *;
+    auto component_no(std::int32_t col_no) const -> std::int32_t;
+    auto component_no() const -> std::int32_t;
+    auto offset() const -> spv_inst *;
+    auto rows_checked() const -> bool;
+    auto cols_checked() const -> bool;
+    auto needs_mask() const -> bool;
+    auto may_need_mask() const -> bool;
+    auto col_ok() const -> spv_inst *;
+    auto row_ok() const -> spv_inst *;
 
   private:
     uniquifier &unique_;
@@ -48,7 +46,6 @@ class matrix_walker {
     spv_inst *row_;
     spv_inst *col0_;
     spv_inst *col_;
-    bool transpose_;
     spv_inst *row_max_ = nullptr;
     spv_inst *col_max_ = nullptr;
     std::int32_t block_no_ = 0;

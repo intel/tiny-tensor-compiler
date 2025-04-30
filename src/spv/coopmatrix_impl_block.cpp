@@ -57,9 +57,8 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return unique().pointer_ty(storage_cls, io_ty, align);
     }();
 
-    auto walker =
-        matrix_walker(unique(), subgroup_size(), layout, rt->use(), pos0, pos1, odv.shape(0),
-                      odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
+    auto walker = matrix_walker(unique(), subgroup_size(), layout, pos0, pos1, odv.shape(0),
+                                odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
 
     auto &mod = unique().mod();
     operand = mod.add<OpBitcast>(pointer_ty, operand);
@@ -129,9 +128,8 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
         return unique().pointer_ty(storage_cls, io_ty, align);
     }();
 
-    auto walker =
-        matrix_walker(unique(), subgroup_size(), layout, vt->use(), pos0, pos1, odv.shape(0),
-                      odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
+    auto walker = matrix_walker(unique(), subgroup_size(), layout, pos0, pos1, odv.shape(0),
+                                odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
 
     auto &mod = unique().mod();
     operand = mod.add<OpBitcast>(pointer_ty, operand);

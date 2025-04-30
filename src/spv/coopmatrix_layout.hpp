@@ -15,14 +15,23 @@ enum class scalar_type;
 namespace tinytc::spv {
 
 struct coopmatrix_layout {
-    std::int64_t rows, cols, blocks, length, shape1;
-    std::int32_t ops_per_chan;
     scalar_type sty;
+    std::int64_t rows, cols, blocks, length, shape1, blocks1;
+    std::int32_t ops_per_chan;
 
     inline auto operator==(coopmatrix_layout const &other) const {
-        return rows == other.rows && cols == other.cols && blocks == other.blocks &&
-               length == other.length && shape1 == other.shape1 &&
-               ops_per_chan == other.ops_per_chan && sty == other.sty;
+        return sty == other.sty && rows == other.rows && cols == other.cols &&
+               blocks == other.blocks && length == other.length && shape1 == other.shape1 &&
+               blocks1 == other.blocks1 && ops_per_chan == other.ops_per_chan;
+    }
+
+    inline auto component_no(std::int64_t block1, std::int64_t col, std::int64_t block2) const
+        -> std::int64_t {
+        return block1 + col * blocks1 + block2 * blocks1 * (length / blocks);
+    }
+
+    inline auto component_no(std::int64_t col, std::int64_t block) const -> std::int64_t {
+        return component_no(block % blocks1, col, block / blocks1);
     }
 };
 
@@ -31,8 +40,8 @@ struct coopmatrix_layout {
 namespace std {
 template <> struct hash<tinytc::spv::coopmatrix_layout> {
     inline auto operator()(tinytc::spv::coopmatrix_layout const &key) const -> std::size_t {
-        return fnv1a_combine(key.rows, key.cols, key.blocks, key.length, key.shape1,
-                             key.ops_per_chan, key.sty);
+        return fnv1a_combine(key.sty, key.rows, key.cols, key.blocks, key.length, key.shape1,
+                             key.blocks1, key.ops_per_chan);
     }
 };
 } // namespace std

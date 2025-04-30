@@ -9,177 +9,30 @@ A cooperative matrix is distributed to work-items such that each work-item holds
 share of the matrix, potentially with zero-padding if the matrix size is not divisible by
 the subgroup size.
 
-Definitions
-===========
+General layout
+==============
 
-Let a coopmatrix :math:`A` of size :math:`M\times N` be given, and let the subgroup size
-be given by :math:`S`, where :math:`S\geq 1` must be a power of two.
-
-Matrix Accumulator
-==================
-
-For cooperative matrices with use *matrix_acc* we restrict :math:`M` to being a multiple of :math:`S`.
-Internally, we represent the matrix as the :math:`I \times J \times K` tensor :math:`C`,
-where the mapping of :math:`A` to :math:`C` is
+Let a coopmatrix :math:`A` of size :math:`M\times N` be given and let the subgroup size
+be given by :math:`S`.
+We require :math:`M,S` to be powers of two and to be greater or equal than 1.
+Internally, we represent the :math:`A` matrix as the :math:`I \times K_1\times J \times K_2` tensor :math:`A^*`.
+The mapping of :math:`A` to :math:`A^*` is
 
 .. math::
 
-   C_{ijk} = \left\{\begin{array}{rcl}
-                A_{(i+kI)j} & \text{ if } & i+kI\leq M \wedge j \leq N, \\
-                0 & \text{ else.}
-             \end{array}\right.
+   A^*_{i,k_1,j,k_2} = \left\{\begin{array}{rcl}
+                           A_{i+k_1I+k_2IK_1,j} & \text{ if } & i+k_1I+k_2IK_1 < M \wedge j < N, \\
+                           0 & \text{ else.}
+                       \end{array}\right.
 
-The shape of :math:`C` is given by
-
-.. math::
-
-   \begin{aligned}
-   I &:= S,\\
-   J &:= N,\\
-   K &:= M / I.
-   \end{aligned}
-
-Work-item mapping
------------------
-
-We linearize the index of the C tensor canonically:
-
-.. math::
-
-   L(i,j,k) := i + j I + k IJ
-
-Every work-item stores a vector :math:`v` with :math:`V:=JK` components.
-We define the per work-item vector as
-
-.. math::
-
-   W^p := (v \in [V] : B[L^{-1}(p+vS)]),
-
-where :math:`p=0,\dots,S-1`.
-
-Mapping properties
-------------------
-
-The inverse of :math:`L` is
-
-.. math::
-
-   \begin{aligned}
-   i &= L \bmod I, \\
-   j &= \lfloor L / I\rfloor \bmod J, \\
-   k &= \lfloor L / (IJ)\rfloor.
-   \end{aligned}
-
-Applying :math:`L^{-1}` on :math:`p+vS` and using that :math:`I=S` we find
-
-.. math::
-
-   \begin{aligned}
-   i &= (p+vS) \bmod I = p \bmod S + vS \bmod S = p, \\
-   j &= \lfloor(p+vS) / I\rfloor \bmod J = v \bmod J, \\
-   k &= \lfloor(p+vS) / (IJ)\rfloor = \lfloor(\lfloor p/S\rfloor + v) / J\rfloor = \lfloor v/J\rfloor.
-   \end{aligned}
-
-We let :math:`v=u+wJ`, with :math:`u=0,\dots,J-1` and :math:`w=0,\dots,K-1` and get
-
-.. math::
-
-   \begin{aligned}
-   i &= p, \\
-   j &= (u + wJ) \bmod J = u, \\
-   k &= \lfloor(u + wJ) / J\rfloor = w.
-   \end{aligned}
-
-Load pseudo-code (SIMT)
------------------------
-
-.. code-block:: cpp
-
-   template <typename RealT, int M, int N, bool Transpose, bool RowsChecked, bool ColsChecked>
-   vector<V> load_coopmatrix_acc(RealT* C, int pos0, int pos1, int shape0, int shape1,
-                                 int stride0, int stride1) {
-       int p = get_sub_group_local_id();
-       constexpr int S = get_sub_group_size();
-       constexpr int o = max(1, 4 / sizeof(RealT));
-       constexpr int I = S;
-       constexpr int J = ceil(N/o)*o;
-       constexpr int K = M/I;
-
-       if (Transpose) {
-           std::swap(shape0, shape1);
-           std::swap(stride0, stride1);
-       }
-
-       constexpr int V = J*K;
-       vector<V> R;
-       int i = p;
-       for (int w = 0; w < K; ++w) {
-           int k = w;
-           int row = pos0 + i + k*I;
-           bool row_ok = !RowsChecked || (row >= 0 && row < shape0);
-           if (row_ok) {
-               for (int u = 0; u < J; ++u) {
-                   int j = u;
-                   int col = pos1 + j;
-                   bool col_ok = !ColsChecked || (col >= 0 && col < shape1);
-                   R[u + w*J] = col_ok ? C[row * stride0 + col * stride1] : 0;
-               }
-           } else {
-               for (int u = 0; u < J; ++u) {
-                   R[u + w*J] = 0;
-               }
-           }
-       }
-       return R;
-    }
-
-Matrix A
-========
-
-For cooperative matrices with use *matrix_a* we restrict :math:`M` to being a multiple of
-:math:`S`, too.
-The internal representation of a matrix A is obtained by VNNI transforming the C tensor,
-where the C tensor is defined in the same way as for matrices with use *matrix_acc*.
-The VNNI transform is defined as following:
-
-.. math::
-
-   C'_{i,j,k} = C_{\lfloor i/o\rfloor + (j\bmod o)(S/o),i\bmod o+\lfloor j/o\rfloor o,k}
-
-The inverse mapping is
-
-.. math::
-
-   C_{i,j,k} = C'_{io\bmod S + j\bmod o,\lfloor i/(S/o)\rfloor + \lfloor j/o\rfloor o,k}
-
-Using the mapping properties of *matrix_acc* we have
-
-.. math::
-
-   C'_{p,u,w} = C_{\lfloor p/o\rfloor + (u\bmod o)(S/o),p\bmod o+\lfloor u/o\rfloor o,w}
-
-Matrix B
-========
-
-For cooperative matrices with use *matrix_b* we restrict :math:`M` to be a power of two.
-Internally, we represent the matrix the :math:`I \times K \times J` tensor :math:`B`,
-where the mapping of :math:`A` to :math:`B` is
-
-.. math::
-
-   B_{ikj} = \left\{\begin{array}{rcl}
-                A_{(i+kI)j} & \text{ if } & i+kI\leq M \wedge j \leq N, \\
-                0 & \text{ else.}
-             \end{array}\right.
-
-The shape of :math:`B` is given by
+The shape of :math:`A^*` is given by :math:`(I,K_1,J,K_2)`, where
 
 .. math::
 
    \begin{aligned}
    I &:= \min(M, S),\\
-   K &:= M/I,\\
-   J &:= \min(\{n\in\mathbb N : n \geq N \wedge (In) \bmod{S} = 0\})\\
+   J &:= \min(\{n\in\mathbb N : n \geq N \wedge (In) \bmod S = 0\})\\
+   K &:= K_1K_2 = M/I.\\
    \end{aligned}
 
 As both :math:`S` and :math:`I` are powers of two, an explicit formula for :math:`J` is given by
@@ -188,18 +41,18 @@ As both :math:`S` and :math:`I` are powers of two, an explicit formula for :math
 Work-item mapping
 -----------------
 
-We linearize the index of the B matrix canonically:
+We linearize the index of the :math:`A^*` tensor canonically:
 
 .. math::
 
-   L(i,k,j) := i + k I + j IK
+   L(i,j,k) := i + k_1I + j IK_1 + k_2 IK_1J
 
 Every work-item stores a vector :math:`v` with :math:`V:=IKJ/S` components.
 We define the per work-item vector as
 
 .. math::
 
-   W^p := (v \in [V] : B[L^{-1}(p+vS)]),
+   W^p := (v \in [V] : A^*[L^{-1}(p+vS)]),
 
 where :math:`p=0,\dots,S-1`.
 
@@ -217,7 +70,7 @@ p     0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   
 .w 0,12 1,12 2,12 3,12 0,13 1,13 2,13 3,13 0,14 1,14 2,14 3,14 -, - -, - -, - -, -
 == ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 
-For a :math:`1\times 17` coopmatrix in f32 we have
+For a :math:`1\times 17` coopmatrix we have
 
 == ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ==== ====
 p     0    1    2    3    4    5    6    7    8    9   10   11   12   13   14   15
@@ -235,31 +88,36 @@ The inverse of :math:`L` is
 
    \begin{aligned}
    i &= L \bmod I, \\
-   k &= \lfloor L / I\rfloor \bmod K, \\
-   j &= \lfloor L / (IK)\rfloor, \\
+   k_1 &= \lfloor L / I \rfloor \bmod K_1, \\
+   j &= \lfloor L / (IK_1)\rfloor \bmod J, \\
+   k_2 &= \lfloor L / (IK_1J)\rfloor. \\
    \end{aligned}
 
-Let :math:`v=w+uK`, with :math:`w=0,\dots,K-1` and :math:`u=0,\dots,V/K-1`.
+Let :math:`v=w_1 + uK_1 + w_2K_1(V/K)`, with :math:`u=0,\dots,V/K-1`,
+:math:`w_1=0,\dots,K_1-1`, and :math:`w=0,\dots,K_2-1`.
+(Note that :math:`V/K=IJ/S`.)
 
 We first assume that :math:`I=S`. Then
    
 .. math::
 
    \begin{aligned}
-   i &= (p + wS + uKS) \bmod S = p, \\
-   k &= \lfloor (p + wS + uKS) / S \rfloor \bmod K = w, \\
-   j &= \lfloor (p + wS + uKS) / (SK)\rfloor = u, \\
+   i &= (p + (w_1 + uK_1 + w_2K_1J)S) \bmod S = p, \\
+   k_1 &= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / S \rfloor \bmod K_1 = w_1, \\
+   j &= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / (SK_1) \rfloor \bmod J = u, \\
+   k_2 &= \lfloor (p + (w_1 + uK_1 + wK_1J)S) / (SK_1J)\rfloor = w_2, \\
    \end{aligned}
 
-Now we assume :math:`I<S` (which implies :math:`K=1, w=0,` and :math:`S/I\in\mathbb{N}`).
+Now we assume :math:`I<S` (which implies :math:`K=K_1=K_2=1, w_1=w_2=0,` and :math:`S/I\in\mathbb{N}`).
 We have
 
 .. math::
 
    \begin{aligned}
    i &= (p + uS) \bmod I = p \bmod I, \\
-   k &= \lfloor (p + uS) / I \rfloor \bmod 1 = 0, \\
-   j &= \lfloor (p + uS) / I\rfloor = \lfloor p/I \rfloor + u (S/I) , \\
+   k_1 &= \lfloor (p + uS) / I \rfloor \bmod 1 = 0, \\
+   j &= \lfloor (p + uS) / I \rfloor \bmod J = \lfloor p/I \rfloor + u (S/I), \\
+   k_2 &= \lfloor (p + uS) / (IJ) \rfloor = 0, \\
    \end{aligned}
 
 Combining both cases into a single formula we get
@@ -268,26 +126,26 @@ Combining both cases into a single formula we get
 
    \begin{aligned}
    i &= p \bmod I, \\
-   k &= w, \\
+   k_1 &= w_1, \\
    j &= \lfloor p/I \rfloor + u (S/I) , \\
+   k_2 &= w_2, \\
    \end{aligned}
-
 
 Load pseudo-code (SIMT)
 -----------------------
 
 .. code-block:: cpp
 
-   template <typename RealT, int M, int N, bool Transpose, bool RowsChecked, bool ColsChecked>
-   vector<V> load_coopmatrix_b(RealT* B, int pos0, int pos1, int shape0, int shape1,
+   template <typename RealT, int M, int N, int K1, bool Transpose, bool RowsChecked, bool ColsChecked>
+   vector<V> load_coopmatrix(RealT* B, int pos0, int pos1, int shape0, int shape1,
                              int stride0, int stride1) {
-       int p = get_sub_group_local_id();
        constexpr int S = get_sub_group_size();
-       constexpr int o = max(1, 4 / sizeof(RealT));
-       constexpr int e = o*S;
        constexpr int I = min(M,S);
-       constexpr int K = M/I;
        constexpr int J = ceil(I*N/S)*S/I;
+       constexpr int K = M/I;
+       static_assert(K%K1 == 0);
+       constexpr int K2 = K/K1;
+       constexpr bool needs_mask = J*S/I > N;
 
        if (Transpose) {
            std::swap(shape0, shape1);
@@ -295,27 +153,68 @@ Load pseudo-code (SIMT)
        }
 
        constexpr int V = I*K*J/S;
-       vector<V> R;
+       array<RealT, V> R;
+       int p =  get_sub_group_local_id();
        int i0 = p % I;
        int j0 = p / I;
-       for (int w = 0; w < K; ++w) {
-           int k = w;
-           int row = pos0 + i0 + k*I;
-           bool row_ok = !RowsChecked || (row >= 0 && row < shape0);
-           if (row_ok) {
-               for (int u = 0; u < V/K; ++u) {
-                   int j = j0 + u*(S/I);
-                   int col = pos1 + j;
-                   bool col_ok = !ColsChecked || (col >= 0 && col < shape1);
-                   bool mask_ok = (u+1)*(S/I) <= N || j < N;
-                   R[w + u*K] = mask_ok && col_ok ? A[row * stride0 + col * stride1] : 0;
-               }
-           } else {
-               for (int u = 0; u < V/K; ++u) {
-                   R[w + u*K] = 0;
+       for (int w1 = 0; w1 < K1; ++w1) {
+           for (int w2 = 0; w2 < K2; ++w2) {
+               int k1 = w1, k2 = w2;
+               int row = pos0 + i0 + (k1 + k2*K1)*I;
+               bool row_ok = !RowsChecked || (row >= 0 && row < shape0);
+               if (row_ok) {
+                   for (int u = 0; u < V/K; ++u) {
+                       int j = j0 + u*(S/I);
+                       int col = pos1 + j;
+                       bool col_ok = !ColsChecked || (col >= 0 && col < shape1);
+                       bool mask_ok = !needs_mask || j < N;
+                       R[w1 + u*K1 + w2*K1*(V/K)] = mask_ok && col_ok ? A[row * stride0 + col * stride1] : 0;
+                   }
+               } else {
+                   for (int u = 0; u < V/K; ++u) {
+                       R[w1 + u*K1 + w2*K1*(V/K)] = 0;
+                   }
                }
            }
        }
        return R;
     }
 
+Matrix Accumulator
+==================
+
+For cooperative matrices with use *matrix_acc* we restrict that
+:math:`M` is a multiple of :math:`S`.
+We always have :math:`K_1=1`.
+
+Matrix A
+========
+
+For cooperative matrices with use *matrix_a* we restrict :math:`M` to being a multiple of :math:`S`.
+Moreover, low precision matrices are VNNI transformed:
+Let :math:`\omega_a=\max(1, \max(1,4/\text{size}(\text{ty}))` be the number of operands per channel.
+The shape of the :math:`B` tensor is adjusted as following:
+
+.. math::
+
+   \begin{aligned}
+   I &:= S,\\
+   J &:= \lceil N/\omega_a\rceil \\
+   K &:= M/I.\\
+   \end{aligned}
+
+Each entry in the :math:`B` tensor has :math:`\omega_a` channels, where channel access is denoted with
+:math:`[.]`, and we define the mapping of :math:`A` to :math:`B` to be
+
+.. math::
+
+   B_{i,j,k}[c] = \left\{\begin{array}{rcl}
+                      A_{i+kI,c+j\omega_a} & \text{ if } & i+kI < M \wedge c+j\omega_a < N, \\
+                      0 & \text{ else.}
+                  \end{array}\right.
+
+Matrix B
+========
+
+Let :math:`\omega_b = \max(1,2/\text{size}(\text{ty}))`.
+We choose :math:`K_1 = \omega_b \text{ if } M/S > 1 \text{ else } 1`.

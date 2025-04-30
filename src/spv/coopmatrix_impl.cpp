@@ -49,8 +49,8 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
         std::swap(stride[0], stride[1]);
     }
 
-    auto walker = matrix_walker(*unique_, sgs_, layout, rt->use(), pos0, pos1, shape[0], shape[1],
-                                stride[0], stride[1], in.checked());
+    auto walker = matrix_walker(*unique_, sgs_, layout, pos0, pos1, shape[0], shape[1], stride[0],
+                                stride[1], in.checked());
 
     auto &mod = unique_->mod();
 
@@ -109,8 +109,8 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
 
     auto layout = get_layout(vt);
 
-    auto walker = matrix_walker(*unique_, sgs_, layout, vt->use(), pos0, pos1, odv.shape(0),
-                                odv.shape(1), odv.stride(0), odv.stride(1), in.checked());
+    auto walker = matrix_walker(*unique_, sgs_, layout, pos0, pos1, odv.shape(0), odv.shape(1),
+                                odv.stride(0), odv.stride(1), in.checked());
 
     auto &mod = unique_->mod();
 
@@ -187,7 +187,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             std::fill(std::begin(c_im_block), std::end(c_im_block), nullptr);
             for (std::int32_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
-                    c_block[n - nb] = extract(cl, c, n + m_block * cl.cols);
+                    c_block[n - nb] = extract(cl, c, cl.component_no(n, m_block));
                     if (a_and_b_complex) {
                         c_im_block[n - nb] = unique_->null_constant(spv_c_ty);
                     }
@@ -195,14 +195,17 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             }
 
             for (std::int64_t k = 0; k < bl.rows * bl.blocks; ++k) {
-                auto a_mk = extract(al, a, k + m_block * al.cols);
+                auto a_mk = extract(al, a, al.component_no(k, m_block));
                 for (std::int32_t n = nb; n < nb + nbb; ++n) {
                     if (n < rl.cols) {
-                        /** For matrix B we have L(i,k,j) = i + k*I + j*I*K.
+                        /** For matrix B we have L(i,k_1,j,k_2) = i + k_1*I + j*I*K_1 + k_2*I*K_1*J.
                          *
-                         * The k loop variable is actually indices i,k fused,
-                         * and the n loop variable is equal to j. Thus,
-                         * L(k,j) = k + n*I*K.
+                         * The n loop variable is equal to j and the k loop variable fuses iteration
+                         * over indices i,k_1,k_2, such that k = i + k_1*I + k_2*I*K_1:
+                         * The k loop variable fuses iteration over indices i,k_1,k_2,
+                         * We recover
+                         * i+k_1*I = k%(IK_1)
+                         * k_2 = k/(IK_1)
                          *
                          * We have
                          * p + vS = L
@@ -210,7 +213,8 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                          * p = L%S
                          * v = L/S
                          */
-                        const auto L = k + n * bl.rows * bl.blocks;
+                        const auto IK_1 = bl.rows * bl.blocks1;
+                        const auto L = k % IK_1 + n * IK_1 + (k / IK_1) * IK_1 * bl.cols;
                         const auto p = unique_->constant(static_cast<std::int32_t>(L % sgs_));
                         const auto v = static_cast<LiteralInteger>(L / sgs_);
 
@@ -341,30 +345,38 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
 
-    const auto P = rt->use() == matrix_use::b && at->use() == matrix_use::acc
-                       ? std::function([&](LiteralInteger v) -> LiteralInteger {
-                             /**
-                              * Using that M >= S we have
-                              * For matrix_acc we have L_{acc}(i,j,k) = i + j*S + k*S*J
-                              * For matrix_b   we have     L_b(i,k,j) = i + k*S + j*S*K.
-                              *
-                              * We have
-                              * p_b + v_bS = L_b
-                              *
-                              * Recovering i,j,k from L_b we have
-                              * i = L_b%S = p_b
-                              * k = L_b/S%K = v_b%K
-                              * j = L_b/(SK) = v_b/K
-                              *
-                              * Recovering p_{acc}, v_{acc} from
-                              * p_{acc} + v_{acc}S = L_{acc} = p_b + v_b/K*S + v_b%K*S*J
-                              * we have
-                              * p_{acc} = L_{acc}%S = p_b
-                              * v_{acc} = L_{acc}/S = v_b/K + v_b%K*J
-                              */
-                             return v / rl.blocks + v % rl.blocks * al.cols;
-                         })
-                       : std::function([](LiteralInteger v) -> LiteralInteger { return v; });
+    const auto P =
+        rt->use() == matrix_use::b && at->use() == matrix_use::acc
+            ? std::function([&](LiteralInteger v) -> LiteralInteger {
+                  /**
+                   * Using that M >= S we have for matrix_b
+                   * L_b(i,k_1,j,k_2) = i + k_1*S + j*S*K_1 + k_2*S*K_1*J.
+                   *
+                   * We have
+                   * p_b + v_bS = L_b
+                   *
+                   * Recovering i,k_1,j,k_2 from L_b we have
+                   *   i = L_b%S = p_b
+                   * k_1 = L_b/S%K_1 = v_b%K_1
+                   *   j = L_b/(SK_1)%J = v_b/K_1%J
+                   * k_2 = L_b/(SK_1J) = v_b/(K_1J)
+                   *
+                   * Let k=k_1 + k_2K_1, and L_1, L_2 be the block sizes of matrix acc. We have
+                   * L_{acc} = i + (k%L_1)*S + j*S*L_1 + (k/L_1)*S*L_1*J.
+                   *
+                   * Recovering p_{acc}, v_{acc} from
+                   * p_{acc} + v_{acc}S = L_{acc}
+                   * we have
+                   * p_{acc} = L_{acc}%S = p_b
+                   * v_{acc} = L_{acc}/S = k%L_1 + j*L_1 + (k/L_1)*L_1*J
+                   */
+                  auto const k_1 = v % rl.blocks1;
+                  auto const j = v / rl.blocks1 % rl.cols;
+                  auto const k_2 = v / (rl.blocks1 * rl.cols);
+                  auto const k = k_1 + k_2 * rl.blocks1;
+                  return k % al.blocks1 + j * al.blocks1 + (k / al.blocks1) * al.blocks1 * al.cols;
+              })
+            : std::function([](LiteralInteger v) -> LiteralInteger { return v; });
 
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, P(v));
@@ -409,13 +421,18 @@ auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
 
 auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout {
     auto l = coopmatrix_layout{};
+    l.sty = ct->component_ty();
     l.rows = std::min(ct->shape(0), static_cast<std::int64_t>(sgs_));
     l.cols = (1 + (l.rows * ct->shape(1) - 1) / sgs_) * sgs_ / l.rows;
     l.blocks = ct->shape(0) / l.rows;
     l.length = l.rows * l.cols * l.blocks / sgs_;
     l.shape1 = ct->shape(1);
+    l.blocks1 = 1;
+    if (ct->use() == matrix_use::b && l.blocks > 1) {
+        const auto omega_b = std::max(1, static_cast<int>(2 / size(l.sty)));
+        l.blocks1 = omega_b;
+    }
     l.ops_per_chan = 1;
-    l.sty = ct->component_ty();
 
     return l;
 }
