@@ -44,9 +44,6 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
                spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) override;
 
-  protected:
-    auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout override;
-
   private:
     struct mul_add_key {
         std::array<coopmatrix_data_type const *, 4u> op_ty;
