@@ -80,6 +80,8 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::last_loop:
         return tinytc::inst_execution_kind::mixed;
     case tinytc::IK::cooperative_matrix_apply:
+    case tinytc::IK::cooperative_matrix_extract:
+    case tinytc::IK::cooperative_matrix_insert:
     case tinytc::IK::cooperative_matrix_load:
     case tinytc::IK::cooperative_matrix_mul_add:
     case tinytc::IK::cooperative_matrix_prefetch:
@@ -585,13 +587,13 @@ auto constant_inst::is_identity() const -> bool {
 }
 
 cooperative_matrix_apply_inst::cooperative_matrix_apply_inst(tinytc_value_t a0,
-                                                             tinytc_data_type_t to_ty,
+                                                             tinytc_data_type_t ty,
                                                              location const &lc)
     : standard_inst{IK::cooperative_matrix_apply} {
     op(0, a0);
     loc(lc);
 
-    if (a().ty() != to_ty) {
+    if (a().ty() != ty) {
         throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
     }
 
@@ -606,7 +608,46 @@ cooperative_matrix_apply_inst::cooperative_matrix_apply_inst(tinytc_value_t a0,
     body().set_param(1, i32_ty);
     body().set_param(2, at->ty());
 
-    result(0) = value_node{to_ty, this, lc};
+    result(0) = value_node{ty, this, lc};
+}
+
+cooperative_matrix_extract_inst::cooperative_matrix_extract_inst(tinytc_value_t mat0,
+                                                                 std::int64_t index,
+                                                                 tinytc_data_type_t ty,
+                                                                 location const &lc)
+    : standard_inst{IK::cooperative_matrix_extract}, index_{index} {
+    op(0, mat0);
+    loc(lc);
+
+    auto matt = get_coopmatrix_type(loc(), mat());
+    if (matt->ty() != ty) {
+        throw compilation_error(loc(), {&mat()}, status::ir_scalar_mismatch);
+    }
+
+    result(0) = value_node{ty, this, lc};
+}
+
+cooperative_matrix_insert_inst::cooperative_matrix_insert_inst(tinytc_value_t val0,
+                                                               tinytc_value_t mat0,
+                                                               std::int64_t index,
+                                                               tinytc_data_type_t ty,
+                                                               location const &lc)
+    : standard_inst{IK::cooperative_matrix_insert}, index_{index} {
+    op(0, val0);
+    op(1, mat0);
+    loc(lc);
+
+    if (mat().ty() != ty) {
+        throw compilation_error(loc(), {&mat()}, status::ir_operand_type_must_match_return_type);
+    }
+
+    auto valt = get_scalar_type(loc(), val());
+    auto matt = get_coopmatrix_type(loc(), mat());
+    if (matt->ty() != valt) {
+        throw compilation_error(loc(), {&val(), &mat()}, status::ir_scalar_mismatch);
+    }
+
+    result(0) = value_node{ty, this, lc};
 }
 
 cooperative_matrix_load_inst::cooperative_matrix_load_inst(transpose t, checked_flag flag,

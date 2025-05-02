@@ -264,6 +264,24 @@ void dump_ir_pass::operator()(cooperative_matrix_apply_inst const &c) {
     dump_region(c.body());
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_extract_inst const &c) {
+    dump_val(c.result(0));
+    *os_ << " = cooperative_matrix_extract ";
+    dump_val(c.mat());
+    *os_ << "[" << c.index() << "] : ";
+    visit(*this, *c.result(0).ty());
+}
+
+void dump_ir_pass::operator()(cooperative_matrix_insert_inst const &c) {
+    dump_val(c.result(0));
+    *os_ << " = cooperative_matrix_insert ";
+    dump_val(c.val());
+    *os_ << ", ";
+    dump_val(c.mat());
+    *os_ << "[" << c.index() << "] : ";
+    visit(*this, *c.result(0).ty());
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_load_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cooperative_matrix_load";

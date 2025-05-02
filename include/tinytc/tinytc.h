@@ -550,6 +550,59 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
                                                                const tinytc_location_t *loc);
 
 /**
+ * @brief Create cooperative matrix apply instruction
+ *
+ * @code %value = cooperative_matrix_apply (%row,%column,%value)=%mat -> ty {}
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param mat [in] %mat
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_apply_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t mat, tinytc_data_type_t ty, const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix extract instruction
+ *
+ * @code %value = cooperative_matrix_extract %mat[index] : ty
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param mat [in] %mat
+ * @param index [in] index
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_extract_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t mat, int64_t index, tinytc_data_type_t ty,
+    const tinytc_location_t *loc);
+
+/**
+ * @brief Create cooperative matrix insert instruction
+ *
+ * @code %value = cooperative_matrix_insert %val, %mat[index] : ty
+ * @endcode
+ *
+ * @param instr [out] pointer to the inst object created
+ * @param val [in] %val
+ * @param mat [in] %mat
+ * @param index [in] index
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_insert_inst_create(
+    tinytc_inst_t *instr, tinytc_value_t val, tinytc_value_t mat, int64_t index,
+    tinytc_data_type_t ty, const tinytc_location_t *loc);
+
+/**
  * @brief Create cooperative matrix load instruction
  *
  * @code %value = cooperative_matrix_load.transpose.checked %op[%p0, %p1] : to_ty

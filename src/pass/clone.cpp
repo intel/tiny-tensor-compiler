@@ -60,6 +60,14 @@ auto inst_cloner::operator()(cooperative_matrix_apply_inst &in) -> std::unique_p
     return std::make_unique<cooperative_matrix_apply_inst>(subs(&in.a()), in.result(0).ty(),
                                                            in.loc());
 }
+auto inst_cloner::operator()(cooperative_matrix_extract_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<cooperative_matrix_extract_inst>(subs(&in.mat()), in.index(),
+                                                             in.result(0).ty(), in.loc());
+}
+auto inst_cloner::operator()(cooperative_matrix_insert_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<cooperative_matrix_insert_inst>(
+        subs(&in.val()), subs(&in.mat()), in.index(), in.result(0).ty(), in.loc());
+}
 auto inst_cloner::operator()(cooperative_matrix_load_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cooperative_matrix_load_inst>(in.t(), in.checked(), subs(&in.operand()),
                                                           subs(&in.pos0()), subs(&in.pos1()),

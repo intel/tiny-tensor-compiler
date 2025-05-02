@@ -1620,6 +1620,58 @@ inline inst make_constant_zero(data_type ty, location const &loc = {}) {
 }
 
 /**
+ * @brief Create cooperative matrix apply instruction
+ *
+ * @param mat %mat
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+inline inst make_cooperative_matrix_apply(value mat, data_type ty, location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_apply_inst_create(&instr, mat, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix extract instruction
+ *
+ * @param mat %mat
+ * @param index index
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+inline inst make_cooperative_matrix_extract(value mat, std::int64_t index, data_type ty,
+                                            location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_extract_inst_create(&instr, mat, index, ty, &loc),
+                     loc);
+    return inst(instr);
+}
+
+/**
+ * @brief Create cooperative matrix insert instruction
+ *
+ * @param val %val
+ * @param mat %mat
+ * @param index index
+ * @param ty [in] result type
+ * @param loc [in][optional] Source code location; can be nullptr
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+inline inst make_cooperative_matrix_insert(value val, value mat, std::int64_t index, data_type ty,
+                                           location const &loc = {}) {
+    tinytc_inst_t instr;
+    CHECK_STATUS_LOC(
+        tinytc_cooperative_matrix_insert_inst_create(&instr, val, mat, index, ty, &loc), loc);
+    return inst(instr);
+}
+
+/**
  * @brief Create cooperative matrix load instruction
  *
  * @param trans transpose operation applied on load

@@ -397,6 +397,47 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_da
     });
 }
 
+tinytc_status_t tinytc_cooperative_matrix_apply_inst_create(tinytc_inst_t *instr,
+                                                            tinytc_value_t mat,
+                                                            tinytc_data_type_t ty,
+                                                            const tinytc_location_t *loc) {
+    if (instr == nullptr || mat == nullptr || ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<cooperative_matrix_apply_inst>(mat, ty, get_optional(loc)).release();
+    });
+}
+
+tinytc_status_t tinytc_cooperative_matrix_extract_inst_create(tinytc_inst_t *instr,
+                                                              tinytc_value_t mat, int64_t index,
+                                                              tinytc_data_type_t ty,
+                                                              const tinytc_location_t *loc) {
+    if (instr == nullptr || mat == nullptr || ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<cooperative_matrix_extract_inst>(mat, index, ty, get_optional(loc))
+                .release();
+    });
+}
+
+tinytc_status_t tinytc_cooperative_matrix_insert_inst_create(tinytc_inst_t *instr,
+                                                             tinytc_value_t val, tinytc_value_t mat,
+                                                             int64_t index, tinytc_data_type_t ty,
+                                                             const tinytc_location_t *loc) {
+    if (instr == nullptr || val == nullptr || mat == nullptr || ty == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] {
+        *instr =
+            std::make_unique<cooperative_matrix_insert_inst>(val, mat, index, ty, get_optional(loc))
+                .release();
+    });
+}
+
 tinytc_status_t tinytc_cooperative_matrix_load_inst_create(
     tinytc_inst_t *instr, tinytc_transpose_t trans, tinytc_checked_flag_t flag, tinytc_value_t op,
     tinytc_value_t p0, tinytc_value_t p1, tinytc_data_type_t to_ty, const tinytc_location_t *loc) {

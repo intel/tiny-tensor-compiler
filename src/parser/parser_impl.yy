@@ -126,6 +126,8 @@
     CAST            "cast"
     CONSTANT        "constant"
     COOPERATIVE_MATRIX_APPLY    "cooperative_matrix_apply"
+    COOPERATIVE_MATRIX_EXTRACT  "cooperative_matrix_extract"
+    COOPERATIVE_MATRIX_INSERT   "cooperative_matrix_insert"
     COOPERATIVE_MATRIX_LOAD     "cooperative_matrix_load"
     COOPERATIVE_MATRIX_MUL_ADD  "cooperative_matrix_mul_add"
     COOPERATIVE_MATRIX_PREFETCH "cooperative_matrix_prefetch"
@@ -231,6 +233,8 @@
 %nterm <inst> compare_inst
 %nterm <inst> constant_inst
 %nterm <inst> cooperative_matrix_apply_inst
+%nterm <inst> cooperative_matrix_extract_inst
+%nterm <inst> cooperative_matrix_insert_inst
 %nterm <inst> cooperative_matrix_load_inst
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_prefetch_inst
@@ -783,6 +787,8 @@ valued_inst:
   | compare_inst            { $$ = std::move($1); }
   | constant_inst           { $$ = std::move($1); }
   | cooperative_matrix_apply_inst   { $$ = std::move($1); }
+  | cooperative_matrix_extract_inst { $$ = std::move($1); }
+  | cooperative_matrix_insert_inst  { $$ = std::move($1); }
   | cooperative_matrix_load_inst    { $$ = std::move($1); }
   | cooperative_matrix_mul_add_inst { $$ = std::move($1); }
   | cooperative_matrix_scale_inst   { $$ = std::move($1); }
@@ -945,6 +951,37 @@ cooperative_matrix_apply_inst:
         ctx.pop_region();
         ctx.pop_scope();
         $$ = std::move($apply_header);
+    }
+;
+
+cooperative_matrix_extract_inst:
+    COOPERATIVE_MATRIX_EXTRACT var[mat] LSQBR INTEGER_CONSTANT[index] RSQBR COLON data_type[ty]  {
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_extract_inst>(std::move($mat), $index, std::move($ty),
+                                                                  @cooperative_matrix_extract_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_insert_inst:
+    COOPERATIVE_MATRIX_INSERT var[val] COMMA var[mat] LSQBR INTEGER_CONSTANT[index] RSQBR COLON data_type[ty]  {
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_insert_inst>(std::move($val), std::move($mat), $index,
+                                                                 std::move($ty),
+                                                                 @cooperative_matrix_insert_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
     }
 ;
 

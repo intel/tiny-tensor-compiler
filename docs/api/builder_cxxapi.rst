@@ -560,6 +560,12 @@ Instruction
 
   * :ref:`tinytc::make_constant_zero`
 
+  * :ref:`tinytc::make_cooperative_matrix_apply`
+
+  * :ref:`tinytc::make_cooperative_matrix_extract`
+
+  * :ref:`tinytc::make_cooperative_matrix_insert`
+
   * :ref:`tinytc::make_cooperative_matrix_load`
 
   * :ref:`tinytc::make_cooperative_matrix_mul_add`
@@ -725,6 +731,27 @@ make_constant_zero
 ..................
 
 .. doxygenfunction:: tinytc::make_constant_zero
+
+.. _tinytc::make_cooperative_matrix_apply:
+
+make_cooperative_matrix_apply
+.............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_apply
+
+.. _tinytc::make_cooperative_matrix_extract:
+
+make_cooperative_matrix_extract
+...............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_extract
+
+.. _tinytc::make_cooperative_matrix_insert:
+
+make_cooperative_matrix_insert
+..............................
+
+.. doxygenfunction:: tinytc::make_cooperative_matrix_insert
 
 .. _tinytc::make_cooperative_matrix_load:
 

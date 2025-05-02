@@ -84,6 +84,9 @@ Builder C++-API:
       - tinytc::make_constant(std::int64_t,data_type,location const&)
       - tinytc::make_constant_one
       - tinytc::make_constant_zero
+      - tinytc::make_cooperative_matrix_apply
+      - tinytc::make_cooperative_matrix_extract
+      - tinytc::make_cooperative_matrix_insert
       - tinytc::make_cooperative_matrix_load
       - tinytc::make_cooperative_matrix_mul_add
       - tinytc::make_cooperative_matrix_prefetch

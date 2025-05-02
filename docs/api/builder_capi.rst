@@ -686,6 +686,12 @@ Instruction
 
   * :ref:`tinytc_constant_inst_create_zero`
 
+  * :ref:`tinytc_cooperative_matrix_apply_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_extract_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_insert_inst_create`
+
   * :ref:`tinytc_cooperative_matrix_load_inst_create`
 
   * :ref:`tinytc_cooperative_matrix_mul_add_inst_create`
@@ -850,6 +856,27 @@ tinytc_constant_inst_create_zero
 ................................
 
 .. doxygenfunction:: tinytc_constant_inst_create_zero
+
+.. _tinytc_cooperative_matrix_apply_inst_create:
+
+tinytc_cooperative_matrix_apply_inst_create
+...........................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_apply_inst_create
+
+.. _tinytc_cooperative_matrix_extract_inst_create:
+
+tinytc_cooperative_matrix_extract_inst_create
+.............................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_extract_inst_create
+
+.. _tinytc_cooperative_matrix_insert_inst_create:
+
+tinytc_cooperative_matrix_insert_inst_create
+............................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_insert_inst_create
 
 .. _tinytc_cooperative_matrix_load_inst_create:
 

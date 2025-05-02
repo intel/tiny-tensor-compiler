@@ -1740,6 +1740,62 @@ Example:
     }
     ; The entries of %1 are given by %1[i,j] = exp(%0[i,j]) if i <= j else 0
 
+Cooperative matrix extract
+..........................
+
+.. code:: abnf
+
+    value-instruction       =/ "cooperative_matrix_extract"
+                                local-identifier "[" integer-constant "]" ":" scalar-type
+
+Overview
+~~~~~~~~
+
+Return an element of the coopmatrix's work-item vector.
+The index is supplied in square brackets and must be greater or equal than zero
+and smaller than the length of the work-item vector, cf. :ref:`coopmatrix layout`.
+
+The scalar type of the returned value must match the component type of the coopmatrix.
+
+Operands
+~~~~~~~~~
+
+======= ================ ===========================
+Op.-No. Type             Description
+======= ================ ===========================
+1       coopmatrix-type  Cooperative matrix
+2       integer-constant Index into work-item vector
+======= ================ ===========================
+
+Cooperative matrix insert
+..........................
+
+.. code:: abnf
+
+    value-instruction       =/ "cooperative_matrix_insert" local-identifier ","
+                                local-identifier "[" integer-constant "]" ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Return a copy the coopmatrix, while modifying one entry of the coopmatrix.
+The index is supplied in square brackets and must be greater or equal than zero
+Jand smaller than the length of the work-item vector, cf. :ref:`coopmatrix layout`.
+
+The coopmatrix type of the returned value must match the coopmatrix type of the incoming matrix.
+The scalar type of the inserted scalar must match the component type of the coopmatrix.
+
+Operands
+~~~~~~~~~
+
+======= ================ ===========================
+Op.-No. Type             Description
+======= ================ ===========================
+1       scalar-type      Inserted scalar
+2       coopmatrix-type  Cooperative matrix
+3       integer-constant Index into work-item vector
+======= ================ ===========================
+
 Cooperative matrix load
 .......................
 

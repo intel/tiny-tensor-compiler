@@ -44,6 +44,8 @@ enum class IK {
     compare,
     constant,
     cooperative_matrix_apply,
+    cooperative_matrix_extract,
+    cooperative_matrix_insert,
     cooperative_matrix_load,
     cooperative_matrix_mul_add,
     cooperative_matrix_prefetch,
@@ -87,6 +89,7 @@ using inst_nodes =
     type_list<class alloca_inst, class axpby_inst, class arith_inst, class arith_unary_inst,
               class builtin_inst, class barrier_inst, class cast_inst, class compare_inst,
               class constant_inst, class cooperative_matrix_apply_inst,
+              class cooperative_matrix_extract_inst, class cooperative_matrix_insert_inst,
               class cooperative_matrix_load_inst, class cooperative_matrix_mul_add_inst,
               class cooperative_matrix_prefetch_inst, class cooperative_matrix_scale_inst,
               class cooperative_matrix_store_inst, class cumsum_inst, class expand_inst,
@@ -479,7 +482,7 @@ class cooperative_matrix_apply_inst : public standard_inst<1, 1, 1> {
     inline static bool classof(inst_node const &i) {
         return i.type_id() == IK::cooperative_matrix_apply;
     }
-    cooperative_matrix_apply_inst(tinytc_value_t a, tinytc_data_type_t to_ty,
+    cooperative_matrix_apply_inst(tinytc_value_t a, tinytc_data_type_t ty,
                                   location const &loc = {});
 
     inline auto a() -> tinytc_value & { return op(0); }
@@ -493,6 +496,40 @@ class cooperative_matrix_apply_inst : public standard_inst<1, 1, 1> {
     inline auto col() const -> tinytc_value const & { return body().param(1); }
     inline auto val() -> tinytc_value & { return body().param(2); }
     inline auto val() const -> tinytc_value const & { return body().param(2); }
+};
+
+class cooperative_matrix_extract_inst : public standard_inst<1, 1, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_extract;
+    }
+    cooperative_matrix_extract_inst(tinytc_value_t mat, std::int64_t index, tinytc_data_type_t ty,
+                                    location const &loc = {});
+
+    inline auto mat() -> tinytc_value & { return op(0); }
+    inline auto mat() const -> tinytc_value const & { return op(0); }
+    inline auto index() const -> std::int64_t { return index_; }
+
+  private:
+    std::int64_t index_;
+};
+
+class cooperative_matrix_insert_inst : public standard_inst<2, 1, 0> {
+  public:
+    inline static bool classof(inst_node const &i) {
+        return i.type_id() == IK::cooperative_matrix_insert;
+    }
+    cooperative_matrix_insert_inst(tinytc_value_t val, tinytc_value_t mat, std::int64_t index,
+                                   tinytc_data_type_t ty, location const &loc = {});
+
+    inline auto val() -> tinytc_value & { return op(0); }
+    inline auto val() const -> tinytc_value const & { return op(0); }
+    inline auto mat() -> tinytc_value & { return op(1); }
+    inline auto mat() const -> tinytc_value const & { return op(1); }
+    inline auto index() const -> std::int64_t { return index_; }
+
+  private:
+    std::int64_t index_;
 };
 
 class cooperative_matrix_load_inst : public standard_inst<3, 1, 0> {
