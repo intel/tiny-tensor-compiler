@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/coopmatrix_impl_dpas.hpp"
+#include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
 #include "matrix_ext_info.hpp"
@@ -20,11 +21,10 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
-#include <algorithm>
-#include <optional>
 #include <sstream>
 #include <string>
 #include <utility>
+#include <vector>
 
 namespace tinytc::spv {
 

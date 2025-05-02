@@ -6,9 +6,9 @@
 
 #include "spv/block2d_diy.hpp"
 #include "spv/coopmatrix_impl_block.hpp"
-#include "spv/coopmatrix_layout.hpp"
 #include "support/fnv1a.hpp"
 #include "support/temp_counter.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>
@@ -16,7 +16,6 @@
 #include <cstdint>
 #include <tuple>
 #include <unordered_map>
-#include <utility>
 #include <variant>
 
 namespace tinytc {

@@ -10,7 +10,6 @@
 #include "tinytc/types.h"
 
 #include <cstdint>
-#include <functional>
 #include <utility>
 
 namespace tinytc {
