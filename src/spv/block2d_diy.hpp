@@ -16,8 +16,6 @@ enum class scalar_type;
 
 namespace tinytc::spv {
 
-enum class lsc_sfid { ugm, slm };
-
 struct block_config {
     scalar_type sty;
     std::int32_t element_size;
@@ -28,7 +26,6 @@ struct block_config {
     std::int32_t col_blocks;
     bool transpose;
     bool vnni;
-    lsc_sfid sfid;
     std::int32_t pos0_shr; // Number of bits to shift pos0 to the right (= divide by 2^pos0_shr)
     std::int32_t cache_level;
 
@@ -42,23 +39,13 @@ struct block_config {
 };
 
 auto lsc_data_size(std::int32_t element_size) -> std::int32_t;
-auto lsc_vector_size_d32(std::int32_t bytes) -> std::int32_t;
 auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
     -> std::array<std::int32_t, 2u>;
-auto to_string(lsc_sfid sfid) -> char const *;
 auto visa_type(scalar_type sty) -> char const *;
 
 auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto prefetch_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto store_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
-
-auto load_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
-auto store_block2d_emulated(block_config const &cfg, temp_counter &make_tmp) -> std::string;
-
-auto load_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
-auto prefetch_block2d(block_config const &cfg, temp_counter &make_tmp)
-    -> std::optional<std::string>;
-auto store_block2d(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 
 } // namespace tinytc::spv
 

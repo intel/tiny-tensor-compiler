@@ -9,6 +9,7 @@
 #include "node/inst_node.hpp"
 #include "spv/block2d_diy.hpp"
 #include "spv/defs.hpp"
+#include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/lut.hpp"
@@ -49,9 +50,29 @@ auto coopmatrix_impl_dpas::max_rows_in_block(matrix_use use, std::int32_t elemen
     return xe::exec_size;
 }
 
+auto coopmatrix_impl_dpas::check_2d_block_io(tinytc_value const &operand, tinytc_value const &pos0)
+    -> bool {
+    if (auto mi = gcd().get_memref_if(operand); mi) {
+        auto const mt = get_memref_type(operand);
+        const auto sty_size = size(mt->element_ty());
+        auto const &block_io = info().matrix().block_io();
+
+        const bool sfid_ok = mt->addrspace() == address_space::global;
+        const bool base_address_alignment_ok =
+            (mi->offset_gcd() * sty_size) % block_io.base_address_alignment == 0;
+        const bool pos0_alignment_ok = (gcd().get(pos0) * sty_size) % block_io.pos0_alignment == 0;
+        const bool stride_ok =
+            mt->stride(0) == 1 && (mi->stride_gcd()[1] * sty_size) % block_io.stride_alignment == 0;
+        const bool width_ok = (mi->shape_gcd()[0] * sty_size) % block_io.width_alignment == 0;
+
+        return sfid_ok && base_address_alignment_ok && pos0_alignment_ok && stride_ok && width_ok;
+    }
+    return false;
+}
+
 auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::int32_t cols,
-                                       matrix_use use, transpose trans, address_space addrspace,
-                                       int32_t cache_level) -> block_config {
+                                       matrix_use use, transpose trans, int32_t cache_level)
+    -> block_config {
     auto cfg = block_config{};
     cfg.sty = sty;
     cfg.element_size = size(sty);
@@ -62,7 +83,6 @@ auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::
     cfg.col_blocks = 1;
     cfg.transpose = trans == transpose::T;
     cfg.vnni = use == matrix_use::a;
-    cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
     cfg.cache_level = cache_level;
 
@@ -125,14 +145,14 @@ auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::
 }
 
 auto coopmatrix_impl_dpas::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
-                                    transpose trans, address_space addrspace) -> spv_inst * {
-    const auto key = load_key{result_ty, spv_operand_ty, trans, addrspace};
+                                    transpose trans) -> spv_inst * {
+    const auto key = load_key{result_ty, spv_operand_ty, trans};
     return lookup(load_funs_, key, [&](load_key const &key) {
-        const auto [result_ty, spv_operand_ty, trans, addrspace] = key;
+        const auto [result_ty, spv_operand_ty, trans] = key;
 
         const auto cfg = load_config(result_ty->component_ty(), result_ty->rows(),
-                                     result_ty->cols(), result_ty->use(), trans, addrspace);
-        auto code = load_block2d(cfg, tmp_);
+                                     result_ty->cols(), result_ty->use(), trans);
+        auto code = load_block2d_native(cfg, tmp_);
 
         auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
         auto spv_result_ty = spv_ty(result_ty);
@@ -147,31 +167,26 @@ auto coopmatrix_impl_dpas::load_fun(coopmatrix_data_type const *result_ty, spv_i
 
 auto coopmatrix_impl_dpas::prefetch_fun(std::int32_t cache_level, scalar_type sty,
                                         spv_inst *spv_operand_ty, std::int32_t rows,
-                                        std::int32_t cols, address_space addrspace) -> spv_inst * {
-    const auto key = prefetch_key{cache_level, sty, spv_operand_ty, rows, cols, addrspace};
+                                        std::int32_t cols) -> spv_inst * {
+    const auto key = prefetch_key{cache_level, sty, spv_operand_ty, rows, cols};
     return lookup(prefetch_funs_, key, [&](prefetch_key const &key) -> spv_inst * {
-        const auto [cache_level, sty, spv_operand_ty, rows, cols, addrspace] = key;
+        const auto [cache_level, sty, spv_operand_ty, rows, cols] = key;
 
-        const auto cfg =
-            load_config(sty, rows, cols, matrix_use::acc, transpose::N, addrspace, cache_level);
-        auto code = prefetch_block2d(cfg, tmp_);
+        const auto cfg = load_config(sty, rows, cols, matrix_use::acc, transpose::N, cache_level);
+        auto code = prefetch_block2d_native(cfg, tmp_);
 
-        if (code) {
-            auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
-            auto spv_void_ty = unique().void_ty();
-            auto fun_ty = unique().function_ty(
-                spv_void_ty, array_view<spv_inst *>{spv_operand_ty, spv_i32_ty, spv_i32_ty,
-                                                    spv_i32_ty, spv_i32_ty, spv_i32_ty});
-            return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
-                                                     unique().asm_target(), *code,
-                                                     "rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
-        }
-        return nullptr;
+        auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+        auto spv_void_ty = unique().void_ty();
+        auto fun_ty = unique().function_ty(
+            spv_void_ty, array_view<spv_inst *>{spv_operand_ty, spv_i32_ty, spv_i32_ty, spv_i32_ty,
+                                                spv_i32_ty, spv_i32_ty});
+        return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, spv_void_ty, fun_ty,
+                                                 unique().asm_target(), code,
+                                                 "rw.u,rw.u,rw.u,rw.u,rw.u,rw.u");
     });
 }
 
-auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct, address_space addrspace)
-    -> block_config {
+auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct) -> block_config {
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
@@ -184,7 +199,6 @@ auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct, address_
     cfg.col_blocks = 1;
     cfg.transpose = false;
     cfg.vnni = false;
-    cfg.sfid = addrspace == address_space::local ? lsc_sfid::slm : lsc_sfid::ugm;
     cfg.pos0_shr = 0;
     cfg.cache_level = -1;
 
@@ -202,14 +216,14 @@ auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct, address_
     return cfg;
 }
 
-auto coopmatrix_impl_dpas::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty,
-                                     address_space addrspace) -> spv_inst * {
-    const auto key = store_key{val_ty, spv_operand_ty, addrspace};
+auto coopmatrix_impl_dpas::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty)
+    -> spv_inst * {
+    const auto key = store_key{val_ty, spv_operand_ty};
     return lookup(store_funs_, key, [&](store_key const &key) {
-        const auto [val_ty, spv_operand_ty, addrspace] = key;
+        const auto [val_ty, spv_operand_ty] = key;
 
-        const auto cfg = store_config(val_ty, addrspace);
-        auto code = store_block2d(cfg, tmp_);
+        const auto cfg = store_config(val_ty);
+        auto code = store_block2d_native(cfg, tmp_);
 
         auto spv_void_ty = unique().void_ty();
         auto spv_val_ty = spv_ty(val_ty);
@@ -337,350 +351,21 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
     });
 }
 
-auto coopmatrix_impl_dpas::vnni_transform_fun(coopmatrix_layout const &layout) -> spv_inst * {
-    return lookup(vnni_transform_funs_, layout, [&](coopmatrix_layout const &layout) {
-        const auto width = xe::grf_size / size(layout.sty);
-
-        auto oasm = std::ostringstream{};
-        oasm << "{\n";
-
-        for (std::int64_t block = 0; block < layout.blocks; ++block) {
-            for (std::int32_t col = 0; col < layout.cols; ++col) {
-                const auto cmod = col % layout.ops_per_chan;
-                const auto cbase = col - cmod;
-                const auto src_offset = (col + block * layout.cols) * layout.rows;
-                const auto dst_offset = cmod + (cbase + block * layout.cols) * layout.rows;
-
-                auto R_from = src_offset / width;
-                auto C_from = src_offset % width;
-                auto R_to = dst_offset / width;
-                auto C_to = dst_offset % width;
-
-                // C'_{io%S+j%o,floor(i/(S/o))+floor(j/o)o,k} = C_{i,j,k}
-                oasm << "mov (M1," << layout.rows << ") $0(" << R_to << "," << C_to << ")<"
-                     << layout.ops_per_chan << "> $1(" << R_from << "," << C_from << ")<1;1,0>\n";
-            }
-        }
-        oasm << "}\n";
-
-        auto ty = spv_ty(layout);
-        auto fun_ty = unique().function_ty(ty, array_view<spv_inst *>{ty});
-        return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, ty, fun_ty,
-                                                 unique().asm_target(), std::move(oasm).str(),
-                                                 "=rw,rw");
-    });
-}
-
-/*auto coopmatrix_impl_dpas::cast_fun(scalar_type to_ty, matrix_use to_use, scalar_type from_ty,
-                                    matrix_use from_use, std::int32_t rows, std::int32_t cols)
-    -> spv_inst * {
-    const auto key = cast_key{to_ty, to_use, from_ty, from_use, rows, cols};
-    return lookup(cast_funs_, key, [&](cast_key const &key) {
-        auto &[to_ty, to_use, from_ty, from_use, rows, cols] = key;
-        const auto num_elements = rows * cols;
-        const std::int32_t num_components = num_elements / xe::exec_size;
-
-        auto spv_component_ty = unique().scalar_ty(to_ty);
-        auto spv_operation_ty = unique().vec_ty(spv_component_ty, num_components);
-        const auto to_width = xe::grf_size / size(to_ty);
-        const auto from_width = xe::grf_size / size(from_ty);
-        const auto to_visa_ty = visa_type(to_ty);
-        const auto from_visa_ty = visa_type(from_ty);
-        const bool need_vnni_transform = to_use == matrix_use::a && from_use != matrix_use::a;
-
-        auto const row_stride = [](scalar_type sty, matrix_use use) -> std::int32_t {
-            const std::int32_t ops_per_chan = xe::channel_size / size(sty);
-            const auto M = xe::exec_size;
-            const auto K = ops_per_chan * xe::sdepth;
-            switch (use) {
-            case matrix_use::a:
-            case matrix_use::acc:
-                return M;
-            case matrix_use::b:
-                return K;
-            }
-            throw status::internal_compiler_error;
-        };
-
-        const auto from_stride = row_stride(from_ty, from_use);
-        const auto to_stride = row_stride(to_ty, to_use);
-
-        auto oasm = std::ostringstream{};
-        const auto a_tmp = tmp_("a_tmp");
-        const auto b_tmp = tmp_("b_tmp");
-        oasm << "{\n";
-        oasm << ".decl " << a_tmp << " v_type=G type=" << from_visa_ty
-             << " num_elts=" << num_elements << " align=wordx32 alias=<$1, 0>\n";
-        oasm << ".decl " << b_tmp << " v_type=G type=" << to_visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$0, 0>\n";
-
-        // A[m,n,bm] = m + n * M + bm * M * cols
-        // B[m,n,bm] = m + n * K + bm * K * cols
-        // C[m,n,bm] = m + n * M + bm * M * cols
-        for (std::int32_t row = 0; row < rows; row += xe::exec_size) {
-            for (std::int32_t col = 0; col < cols; ++col) {
-                const std::int32_t from_m = row % from_stride;
-                const std::int32_t from_bm = row / from_stride;
-                const std::int32_t to_m = row % to_stride;
-                const std::int32_t to_bm = row / to_stride;
-
-                const std::int32_t from_offset =
-                    from_m + col * from_stride + from_bm * from_stride * cols;
-
-                const std::int32_t ops_per_chan = xe::channel_size / size(to_ty);
-                const auto cmod = need_vnni_transform ? col % ops_per_chan : 0;
-                const auto cbase = need_vnni_transform ? col - cmod : col;
-                const std::int32_t to_offset =
-                    (to_m + cmod) + cbase * to_stride + to_bm * to_stride * cols;
-
-                auto R_from = from_offset / from_width;
-                auto C_from = from_offset % from_width;
-                auto R_to = to_offset / to_width;
-                auto C_to = to_offset % to_width;
-                if (need_vnni_transform) {
-                    oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << ","
-                         << C_to << ")<" << ops_per_chan << "> " << a_tmp << "(" << R_from << ","
-                         << C_from << ")<1;1,0>\n";
-                } else {
-                    oasm << "mov (M1," << xe::exec_size << ") " << b_tmp << "(" << R_to << ","
-                         << C_to << ")<1> " << a_tmp << "(" << R_from << "," << C_from
-                         << ")<1;1,0>\n";
-                }
-            }
-        }
-        oasm << "}\n";
-
-        auto fun_ty =
-            unique().function_ty(spv_operation_ty, array_view<spv_inst *>{spv_operation_ty});
-        return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, spv_operation_ty, fun_ty,
-                                                 unique().asm_target(), std::move(oasm).str(),
-                                                 "=rw,rw");
-    });
-}*/
-
-/*auto coopmatrix_impl_dpas::arith_fun(arithmetic op, scalar_type cty, std::int32_t num_components)
-    -> spv_inst * {
-    const auto key = arith_key{op, cty, num_components};
-    return lookup(arith_funs_, key, [&](arith_key const &key) {
-        const auto &[op, cty, num_components] = key;
-        const auto num_elements = num_components * xe::exec_size;
-
-        auto spv_component_ty = unique().spv_ty(cty);
-        auto spv_operation_ty = unique().spv_vec_ty(spv_component_ty, num_components);
-        const auto width = xe::grf_size / size(cty);
-        const auto visa_ty = visa_type(cty);
-
-        auto oasm = std::ostringstream{};
-        const auto a_tmp = tmp_("a_tmp");
-        const auto b_tmp = tmp_("b_tmp");
-        const auto c_tmp = tmp_("c_tmp");
-        oasm << "{\n";
-        oasm << ".decl " << a_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$1, 0>\n";
-        oasm << ".decl " << b_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$2, 0>\n";
-        oasm << ".decl " << c_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$0, 0>\n";
-        auto [opcode, neg_prefix] = [](arithmetic op) -> std::pair<char const *, char const *> {
-            switch (op) {
-            case arithmetic::add:
-                return {"add", ""};
-            case arithmetic::sub:
-                return {"add", "(-)"};
-            case arithmetic::mul:
-                return {"mul", ""};
-            case arithmetic::div:
-                return {"div", ""};
-            default:
-                throw status::ir_coopmatrix_unsupported;
-            }
-        }(op);
-        for (std::int32_t m = 0; m < num_elements; m += xe::exec_size) {
-            auto R = m / width;
-            auto C = m % width;
-            oasm << opcode << " (M1," << xe::exec_size << ") " << c_tmp << "(" << R << "," << C
-                 << ")<1> " << a_tmp << "(" << R << "," << C << ")<1;1,0> " << neg_prefix << b_tmp
-                 << "(" << R << "," << C << ")<1;1,0>\n";
-        }
-        oasm << "}\n";
-
-        auto fun_ty = unique().function_ty(
-            spv_operation_ty, array_view<spv_inst *>{spv_component_ty, spv_operation_ty});
-        return mod.add_to<OpAsmINTEL>(section::type_const_var, spv_operation_ty, fun_ty,
-                                        unique().asm_target(), std::move(oasm).str(), "=rw,rw,rw");
-    });
-}
-
-auto coopmatrix_impl_dpas::scale_fun(scalar_type cty, std::int32_t num_components) -> spv_inst * {
-    const auto key = scale_key{cty, num_components};
-    return lookup(scale_funs_, key, [&](scale_key const &key) {
-        auto &[cty, num_components] = key;
-        const auto num_elements = num_components * xe::exec_size;
-
-        auto spv_component_ty = unique().spv_ty(cty);
-        auto spv_operation_ty = unique().spv_vec_ty(spv_component_ty, num_components);
-        const auto width = xe::grf_size / size(cty);
-        const auto visa_ty = visa_type(cty);
-
-        auto oasm = std::ostringstream{};
-        const auto a_tmp = tmp_("a_tmp");
-        const auto b_tmp = tmp_("b_tmp");
-        const auto c_tmp = tmp_("c_tmp");
-        oasm << "{\n";
-        oasm << ".decl " << a_tmp << " v_type=G type=" << visa_ty
-             << " num_elts=1 align=word alias=<$1, 0>\n";
-        oasm << ".decl " << b_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$2, 0>\n";
-        oasm << ".decl " << c_tmp << " v_type=G type=" << visa_ty << " num_elts=" << num_elements
-             << " align=wordx32 alias=<$0, 0>\n";
-        for (std::int32_t m = 0; m < num_elements; m += xe::exec_size) {
-            auto R = m / width;
-            auto C = m % width;
-            oasm << "mul (M1," << xe::exec_size << ") " << c_tmp << "(" << R << "," << C << ")<1> "
-                 << a_tmp << "(0,0)<0;1,0> " << b_tmp << "(" << R << "," << C << ")<1;1,0>\n";
-        }
-        oasm << "}\n";
-
-        auto fun_ty = unique().function_ty(
-            spv_operation_ty, array_view<spv_inst *>{spv_component_ty, spv_operation_ty});
-        return mod.add_to<OpAsmINTEL>(section::type_const_var, spv_operation_ty, fun_ty,
-                                        unique().asm_target(), std::move(oasm).str(),
-                                        "=rw,rw.u,rw");
-    });
-}
-
-auto coopmatrix_impl_dpas::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
-
-    const scalar_type cty = rt->component_ty();
-    const std::int32_t num_components = rt->rows() * rt->cols() / xe::exec_size;
-    auto spv_component_ty = unique().spv_ty(cty);
-    auto spv_operation_ty = unique().spv_vec_ty(spv_component_ty, num_components);
-
-    auto fun = arith_fun(in.operation(), cty, num_components);
-    auto c = mod.add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a, b});
-    return mod.add<OpBitcast>(unique().spv_ty(rt), c);
-}
-
-auto coopmatrix_impl_dpas::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
-    auto at = get_coopmatrix_type(in.a());
-    auto rt = get_coopmatrix_type(in.result(0));
-
-    const scalar_type to_ty = rt->component_ty();
-    const matrix_use to_use = rt->use();
-    const scalar_type from_ty = at->component_ty();
-    const matrix_use from_use = at->use();
-    const std::int32_t num_components = rt->rows() * rt->cols() / xe::exec_size;
-    auto spv_component_ty = unique().spv_ty(to_ty);
-    auto spv_operation_ty = unique().spv_vec_ty(spv_component_ty, num_components);
-
-    auto fun = cast_fun(to_ty, to_use, from_ty, from_use, rt->rows(), rt->cols());
-    auto b = mod.add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a});
-    return mod.add<OpBitcast>(unique().spv_ty(rt), b);
-}
-
-auto coopmatrix_impl_dpas::constant(constant_inst const &in) -> spv_inst * {
-    auto spv_result_ty = unique().spv_ty(in.result(0).ty());
-    if (in.is_zero()) {
-        return unique().null_constant(spv_result_ty);
-    }
-
-    auto spv_vec_ty = dyn_cast<OpTypeVector>(spv_result_ty);
-    if (!spv_vec_ty) {
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    }
-    const auto sty = get_coopmatrix_type(in.result(0))->component_ty();
-
-    spv_inst *cst = nullptr;
-    if (sty == scalar_type::i32) {
-        cst = std::visit(
-            overloaded{[&](std::int64_t i) -> spv_inst * {
-                           switch (sty) {
-                           case scalar_type::i8: {
-                               auto v8 = std::bit_cast<std::uint8_t>(static_cast<std::int8_t>(i));
-                               return unique().constant(
-                                   std::int32_t{v8 | (v8 << 8) | (v8 << 16) | (v8 << 24)});
-                               return unique().constant(static_cast<std::int8_t>(i));
-                           }
-                           case scalar_type::i32:
-                               return unique().constant(static_cast<std::int32_t>(i));
-                           default:
-                               return nullptr;
-                           }
-                       },
-                       [&](double d) -> spv_inst * {
-                           const float f = static_cast<float>(d);
-                           switch (sty) {
-                           case scalar_type::bf16: {
-                               std::uint16_t v16 = bfloat16{f}.bits();
-                               return unique().constant(std::int32_t{v16 | (v16 << 16)});
-                           }
-                           case scalar_type::f16: {
-                               std::uint16_t v16 = half{f}.bits();
-                               return unique().constant(std::int32_t{v16 | (v16 << 16)});
-                           }
-                           case scalar_type::f32:
-                               return unique().constant(std::bit_cast<std::int32_t>(f));
-                           default:
-                               return nullptr;
-                           }
-                       },
-                       [&](auto const &) -> spv_inst * { return nullptr; }},
-            in.value());
-    } else {
-        cst = std::visit(overloaded{[&](std::int64_t i) -> spv_inst * {
-                                        switch (sty) {
-                                        case scalar_type::i8: {
-                                            return unique().constant(static_cast<std::int8_t>(i));
-                                        }
-                                        case scalar_type::i32:
-                                            return unique().constant(static_cast<std::int32_t>(i));
-                                        default:
-                                            return nullptr;
-                                        }
-                                    },
-                                    [&](double d) -> spv_inst * {
-                                        const float f = static_cast<float>(d);
-                                        switch (sty) {
-                                        case scalar_type::bf16: {
-                                            return unique().constant(
-                                                std::bit_cast<std::int16_t>(bfloat16{f}.bits()));
-                                        }
-                                        case scalar_type::f16: {
-                                            return unique().constant(half{f});
-                                        }
-                                        case scalar_type::f32:
-                                            return unique().constant(f);
-                                        default:
-                                            return nullptr;
-                                        }
-                                    },
-                                    [&](auto const &) -> spv_inst * { return nullptr; }},
-                         in.value());
-    }
-
-    if (!cst) {
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    }
-    return mod.add_to<OpConstantComposite>(section::type_const_var, spv_result_ty,
-                                             std::vector<spv_inst *>(spv_vec_ty->op1(), cst));
-}*/
-
 auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                 spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
-    // auto rt = get_coopmatrix_type(in.result(0));
-    // auto rl = get_layout(rt);
-    auto result = coopmatrix_impl_block::load(in, odv, pointer, pos0, pos1);
-    // if (rl.ops_per_chan > 1) {
-    // auto fun = vnni_transform_fun(rl);
-    // result =
-    // unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{result});
-    //}
-    return result;
+    auto rt = get_coopmatrix_type(in.result(0));
+    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const auto type_ok = info().matrix().have_type(rt);
+    const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
+    const bool transpose_ok = in.t() == transpose::N || rt->use() == matrix_use::a;
 
-    /*auto ot = get_memref_type(in.operand());
+    if (!sgs_ok || !type_ok || !block_io_ok || !transpose_ok) {
+        return coopmatrix_impl_block::load(in, odv, pointer, pos0, pos1);
+    }
+
+    auto ot = get_memref_type(in.operand());
     auto ct = get_coopmatrix_type(in.result(0));
-    auto fun = load_fun(ct, unique().pointer_ty(ot), in.t(), ot->addrspace());
+    auto fun = load_fun(ct, unique().pointer_ty(ot), in.t());
 
     auto &mod = unique().mod();
     auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
@@ -695,7 +380,7 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vec
 
     return mod.add<OpAsmCallINTEL>(spv_ty(ct), fun,
                                    array_view<spv_inst *>{pointer, width_in_bytes, height,
-                                                          stride_in_bytes, pos0_i32, pos1_i32});*/
+                                                          stride_in_bytes, pos0_i32, pos1_i32});
 }
 
 auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a,
@@ -719,13 +404,51 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, sp
 void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
                                     dope_vector const &odv, spv_inst *pointer, spv_inst *pos0,
                                     spv_inst *pos1) {
-    coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
+    auto rt = get_coopmatrix_type(in.result(0));
+    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const auto type_ok = info().matrix().have_type(rt);
+    const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
-    /*auto ot = get_memref_type(in.operand());
-    auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), unique().pointer_ty(ot), in.rows(),
-                            in.cols(), ot->addrspace());
+    if (!sgs_ok || !type_ok || !block_io_ok) {
+        coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
+    } else {
+        auto ot = get_memref_type(in.operand());
+        auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), unique().pointer_ty(ot),
+                                in.rows(), in.cols());
 
-    if (fun) {
+        if (fun) {
+            auto &mod = unique().mod();
+            auto spv_void_ty = unique().void_ty();
+            auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+            auto csize = unique().constant(static_cast<std::int32_t>(size(ot->element_ty())));
+            auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
+            auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
+            auto height = mod.add<OpSConvert>(spv_i32_ty, odv.shape(1));
+            auto stride1_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.stride(1));
+            auto stride_in_bytes = mod.add<OpIMul>(spv_i32_ty, stride1_i32, csize);
+            auto pos0_i32 = mod.add<OpSConvert>(spv_i32_ty, pos0);
+            auto pos1_i32 = mod.add<OpSConvert>(spv_i32_ty, pos1);
+
+            mod.add<OpAsmCallINTEL>(spv_void_ty, fun,
+                                    array_view<spv_inst *>{pointer, width_in_bytes, height,
+                                                           stride_in_bytes, pos0_i32, pos1_i32});
+        }
+    }
+}
+
+void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
+                                 spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
+    auto ct = get_coopmatrix_type(in.val());
+    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const auto type_ok = info().matrix().have_type(ct);
+    const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
+
+    if (!sgs_ok || !type_ok || !block_io_ok) {
+        coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
+    } else {
+        auto ot = get_memref_type(in.operand());
+        auto fun = store_fun(ct, unique().pointer_ty(ot));
+
         auto &mod = unique().mod();
         auto spv_void_ty = unique().void_ty();
         auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
@@ -739,49 +462,9 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
         auto pos1_i32 = mod.add<OpSConvert>(spv_i32_ty, pos1);
 
         mod.add<OpAsmCallINTEL>(spv_void_ty, fun,
-                                array_view<spv_inst *>{pointer, width_in_bytes, height,
+                                array_view<spv_inst *>{val, pointer, width_in_bytes, height,
                                                        stride_in_bytes, pos0_i32, pos1_i32});
-    }*/
-}
-
-/*auto coopmatrix_impl_dpas::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst
-*b)
-    -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
-
-    const scalar_type cty = rt->component_ty();
-    const std::int32_t num_components = rt->rows() * rt->cols() / xe::exec_size;
-    auto spv_component_ty = unique().spv_ty(cty);
-    auto spv_operation_ty = unique().spv_vec_ty(spv_component_ty, num_components);
-
-    auto fun = scale_fun(cty, num_components);
-    auto c = mod.add<OpAsmCallINTEL>(spv_operation_ty, fun, array_view<spv_inst *>{a, b});
-    return mod.add<OpBitcast>(unique().spv_ty(rt), c);
-}*/
-
-void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
-                                 spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
-    coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
-
-    /*auto ot = get_memref_type(in.operand());
-    auto ct = get_coopmatrix_type(in.val());
-    auto fun = store_fun(ct, unique().pointer_ty(ot), ot->addrspace());
-
-    auto &mod = unique().mod();
-    auto spv_void_ty = unique().void_ty();
-    auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
-    auto csize = unique().constant(static_cast<std::int32_t>(size(ot->element_ty())));
-    auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
-    auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
-    auto height = mod.add<OpSConvert>(spv_i32_ty, odv.shape(1));
-    auto stride1_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.stride(1));
-    auto stride_in_bytes = mod.add<OpIMul>(spv_i32_ty, stride1_i32, csize);
-    auto pos0_i32 = mod.add<OpSConvert>(spv_i32_ty, pos0);
-    auto pos1_i32 = mod.add<OpSConvert>(spv_i32_ty, pos1);
-
-    mod.add<OpAsmCallINTEL>(spv_void_ty, fun,
-                            array_view<spv_inst *>{val, pointer, width_in_bytes, height,
-                                                   stride_in_bytes, pos0_i32, pos1_i32});*/
+    }
 }
 
 } // namespace tinytc::spv
