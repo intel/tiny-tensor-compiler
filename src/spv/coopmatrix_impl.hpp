@@ -17,6 +17,8 @@ class arith_inst;
 class arith_unary_inst;
 class cast_inst;
 class constant_inst;
+class cooperative_matrix_extract_inst;
+class cooperative_matrix_insert_inst;
 class cooperative_matrix_load_inst;
 class cooperative_matrix_mul_add_inst;
 class cooperative_matrix_prefetch_inst;
@@ -43,6 +45,9 @@ class coopmatrix_impl {
     inline auto subgroup_size() const -> std::int32_t { return sgs_; }
     inline void subgroup_size(std::int32_t sgs) { sgs_ = sgs; }
 
+    virtual auto extract(cooperative_matrix_extract_inst const &in, spv_inst *mat) -> spv_inst *;
+    virtual auto insert(cooperative_matrix_insert_inst const &in, spv_inst *val, spv_inst *mat)
+        -> spv_inst *;
     virtual auto load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                       spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst *;
     virtual auto mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b,

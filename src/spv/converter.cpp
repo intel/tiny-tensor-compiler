@@ -451,6 +451,13 @@ void inst_converter::operator()(constant_inst const &in) {
     }
 }
 
+void inst_converter::operator()(cooperative_matrix_extract_inst const &in) {
+    declare(in.result(0), matrix_impl_->extract(in, val(in.mat())));
+}
+void inst_converter::operator()(cooperative_matrix_insert_inst const &in) {
+    declare(in.result(0), matrix_impl_->insert(in, val(in.val()), val(in.mat())));
+}
+
 void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
     auto odv = get_dope_vector(in.operand());
     if (!odv) {

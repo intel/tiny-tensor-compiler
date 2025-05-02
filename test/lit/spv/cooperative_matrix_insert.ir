@@ -1,0 +1,18 @@
+; Copyright (C) 2024 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
+
+; CHECK: %[[#F32:]] = OpTypeFloat 32
+; CHECK: %[[#F32_V3:]] = OpTypeVector %[[#F32]] 3
+; CHECK: %[[#F32_2:]] = OpConstant %[[#F32]] 0x1p+1
+
+func @tinsert() attributes{subgroup_size=16} {
+    %0 = constant 1.0 : coopmatrix<f32x16x3,matrix_acc>
+    %1 = constant 2.0 : f32
+    parallel {
+        %2 = cooperative_matrix_insert %1, %0[1] : coopmatrix<f32x16x3,matrix_acc>
+    }
+; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
+; CHECK:       %[[#]] = OpCompositeInsert %[[#F32_V3]] %[[#F32_2]] %[[#]] 1
+}

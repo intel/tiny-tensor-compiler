@@ -33,6 +33,27 @@ namespace tinytc::spv {
 coopmatrix_impl::coopmatrix_impl(tinytc_core_info const &info, uniquifier &unique)
     : info_{&info}, unique_{&unique}, sgs_{32} {}
 
+auto coopmatrix_impl::extract(cooperative_matrix_extract_inst const &in, spv_inst *mat)
+    -> spv_inst * {
+    auto matt = get_coopmatrix_type(in.mat());
+    auto matl = get_layout(matt);
+    const auto idx = in.index();
+    if (idx < 0 || idx >= matl.length) {
+        throw compilation_error(in.loc(), status::ir_out_of_bounds);
+    }
+    return extract(matl, mat, idx);
+}
+auto coopmatrix_impl::insert(cooperative_matrix_insert_inst const &in, spv_inst *val, spv_inst *mat)
+    -> spv_inst * {
+    auto matt = get_coopmatrix_type(in.mat());
+    auto matl = get_layout(matt);
+    const auto idx = in.index();
+    if (idx < 0 || idx >= matl.length) {
+        throw compilation_error(in.loc(), status::ir_out_of_bounds);
+    }
+    return insert(matl, val, mat, idx);
+}
+
 auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto ot = get_memref_type(in.operand());

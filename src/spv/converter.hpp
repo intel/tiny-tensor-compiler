@@ -44,6 +44,8 @@ class inst_converter {
     void operator()(cast_inst const &in);
     void operator()(compare_inst const &in);
     void operator()(constant_inst const &in);
+    void operator()(cooperative_matrix_extract_inst const &in);
+    void operator()(cooperative_matrix_insert_inst const &in);
     void operator()(cooperative_matrix_load_inst const &in);
     void operator()(cooperative_matrix_mul_add_inst const &in);
     void operator()(cooperative_matrix_prefetch_inst const &in);
