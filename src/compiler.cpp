@@ -9,7 +9,6 @@
 #include "pass/dump_def_use.hpp"
 #include "pass/dump_gcd.hpp"
 #include "pass/dump_ir.hpp"
-#include "pass/dump_matrix_ext.hpp"
 // IWYU pragma: end_keep
 #include "pass/check_ir.hpp"
 #include "pass/constant_propagation.hpp"
@@ -80,7 +79,7 @@ void apply_default_optimization_pipeline(tinytc_prog_t prg, const_tinytc_core_in
         run_function_pass(cpp, *prg);
         run_function_pass(dead_code_elimination_pass{}, *prg);
     }
-    //run_function_pass(lower_coopmatrix_pass{info}, *prg);
+    run_function_pass(lower_coopmatrix_pass{info}, *prg);
 
     run_function_pass(check_ir_pass{}, *prg);
 }

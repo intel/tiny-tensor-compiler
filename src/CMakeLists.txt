@@ -21,7 +21,6 @@ set(SOURCES
     analysis/cfg.cpp
     analysis/gcd.cpp
     analysis/equal.cpp
-    analysis/matrix_ext.cpp
     analysis/stack.cpp
     attribute.cpp
     binary.cpp
@@ -57,11 +56,9 @@ set(SOURCES
     pass/dump_def_use.cpp
     pass/dump_gcd.cpp
     pass/dump_ir.cpp
-    pass/dump_matrix_ext.cpp
     pass/insert_barrier.cpp
     pass/insert_lifetime_stop.cpp
     pass/lower_coopmatrix.cpp
-    pass/lower_coopmatrix_aux.cpp
     pass/lower_foreach.cpp
     pass/lower_linalg.cpp
     pass/slot_tracker.cpp
