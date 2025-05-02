@@ -404,15 +404,14 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, sp
 void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
                                     dope_vector const &odv, spv_inst *pointer, spv_inst *pos0,
                                     spv_inst *pos1) {
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto ot = get_memref_type(in.operand());
     const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
-    const auto type_ok = info().matrix().have_type(rt);
+    const auto type_ok = size(ot->element_ty()) <= 4;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
     if (!sgs_ok || !type_ok || !block_io_ok) {
         coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
     } else {
-        auto ot = get_memref_type(in.operand());
         auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), unique().pointer_ty(ot),
                                 in.rows(), in.cols());
 
