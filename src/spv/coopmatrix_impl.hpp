@@ -70,9 +70,6 @@ class coopmatrix_impl {
     auto extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v) -> spv_inst *;
     auto insert(coopmatrix_layout const &layout, spv_inst *val, spv_inst *mat, LiteralInteger v)
         -> spv_inst *;
-    auto apply_function(coopmatrix_layout const &layout,
-                        std::function<spv_inst *(spv_inst *, spv_inst *)> fun, spv_inst *a,
-                        spv_inst *b = nullptr) -> spv_inst *;
 
     inline auto unique() -> uniquifier & { return *unique_; }
 

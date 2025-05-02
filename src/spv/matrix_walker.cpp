@@ -50,18 +50,12 @@ matrix_walker::matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_la
 void matrix_walker::advance_block() {
     col_ = col0_;
     col_no_ = 0;
-    channel_no_ = 0;
     row_ = unique_.mod().add<OpIAdd>(index_ty_, row_, row_inc_);
     ++block_no_;
 }
 void matrix_walker::advance_column() {
-    channel_no_ = 0;
     col_ = unique_.mod().add<OpIAdd>(index_ty_, col_, col_inc_);
     ++col_no_;
-}
-void matrix_walker::advance_channel() {
-    col_ = unique_.mod().add<OpIAdd>(index_ty_, col_, col_inc_);
-    ++channel_no_;
 }
 
 auto matrix_walker::component_no(std::int32_t col_no) const -> std::int32_t {

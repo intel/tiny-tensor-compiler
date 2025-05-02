@@ -65,27 +65,10 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     operand = mod.add<OpBitcast>(pointer_ty, operand);
     spv_inst *result = mod.add<OpUndef>(matrix_ty);
 
-    const auto pointer = [&]() {
-        return mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
-                                                 std::vector<spv_inst *>{});
-    };
     const auto ld = [&](tinytc_spv_mod &mod) -> spv_inst * {
-        if (layout.ops_per_chan > 1) {
-            const auto ty = unique().scalar_ty(sty);
-            spv_inst *packed = mod.add<OpUndef>(interface_ty);
-            for (std::int32_t c = 0; c < layout.ops_per_chan; ++c) {
-                spv_inst *val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer());
-                val = mod.add<OpBitcast>(ty, val);
-                packed = mod.add<OpCompositeInsert>(interface_ty, val, packed,
-                                                    std::vector{walker.channel_no()});
-
-                if (c < layout.ops_per_chan - 1) {
-                    walker.advance_channel();
-                }
-            }
-            return packed;
-        }
-        auto val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer());
+        auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
+                                                         std::vector<spv_inst *>{});
+        auto val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer);
         return mod.add<OpBitcast>(interface_ty, val);
     };
     const auto ld_chk = [&](tinytc_spv_mod &) {

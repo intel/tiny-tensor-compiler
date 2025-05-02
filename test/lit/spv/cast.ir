@@ -10,6 +10,7 @@
 ; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
 ; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]
 ; CHECK: %[[#F16:]] = OpTypeFloat 16
+; CHECK: %[[#I32:]] = OpTypeInt 32 0
 ; CHECK: %[[#I8_4:]] = OpTypeVector %[[#I8]] 4
 
 func @tint(%a: i64) {
@@ -71,17 +72,24 @@ func @tfloatcoopmatrix() attributes{subgroup_size=16} {
     %0 = constant 1.0 : coopmatrix<f32x16x4,matrix_a>
     %2 = cast %0  : coopmatrix<i8x16x4,matrix_a>
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
-; CHECK:         %[[#R3:]] = OpUndef %[[#I8_4]]
+; CHECK:         %[[#R3:]] = OpUndef %[[#I32]]
 ; CHECK-NEXT:  %[[#A3_0:]] = OpCompositeExtract %[[#F32]] %[[#]] 0
 ; CHECK-NEXT: %[[#cA3_0:]] = OpConvertFToS %[[#I8]] %[[#A3_0]]
-; CHECK-NEXT:  %[[#R3_0:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_0]] %[[#R3]] 0
+; CHECK-NEXT: %[[#vR3_0:]] = OpBitcast %[[#I8_4]] %[[#R3]]
+; CHECK-NEXT: %[[#wR3_0:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_0]] %[[#vR3_0]] 0
+; CHECK-NEXT:  %[[#R3_0:]] = OpBitcast %[[#I32]] %[[#wR3_0]]
 ; CHECK-NEXT:  %[[#A3_1:]] = OpCompositeExtract %[[#F32]] %[[#]] 1
 ; CHECK-NEXT: %[[#cA3_1:]] = OpConvertFToS %[[#I8]] %[[#A3_1]]
-; CHECK-NEXT:  %[[#R3_1:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_1]] %[[#R3_0]] 1
+; CHECK-NEXT: %[[#vR3_1:]] = OpBitcast %[[#I8_4]] %[[#R3_0]]
+; CHECK-NEXT: %[[#wR3_1:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_1]] %[[#vR3_1]] 1
+; CHECK-NEXT:  %[[#R3_1:]] = OpBitcast %[[#I32]] %[[#wR3_1]]
 ; CHECK-NEXT:  %[[#A3_2:]] = OpCompositeExtract %[[#F32]] %[[#]] 2
 ; CHECK-NEXT: %[[#cA3_2:]] = OpConvertFToS %[[#I8]] %[[#A3_2]]
-; CHECK-NEXT:  %[[#R3_2:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_2]] %[[#R3_1]] 2
+; CHECK-NEXT: %[[#vR3_2:]] = OpBitcast %[[#I8_4]] %[[#R3_1]]
+; CHECK-NEXT: %[[#wR3_2:]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_2]] %[[#vR3_2]] 2
+; CHECK-NEXT:  %[[#R3_2:]] = OpBitcast %[[#I32]] %[[#wR3_2]]
 ; CHECK-NEXT:  %[[#A3_3:]] = OpCompositeExtract %[[#F32]] %[[#]] 3
 ; CHECK-NEXT: %[[#cA3_3:]] = OpConvertFToS %[[#I8]] %[[#A3_3]]
-; CHECK-NEXT:       %[[#]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_3]] %[[#R3_2]] 3
+; CHECK-NEXT: %[[#vR3_3:]] = OpBitcast %[[#I8_4]] %[[#R3_2]]
+; CHECK-NEXT:       %[[#]] = OpCompositeInsert %[[#I8_4]] %[[#cA3_3]] %[[#vR3_3]] 3
 }

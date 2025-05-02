@@ -191,27 +191,26 @@ Matrix A
 ========
 
 For cooperative matrices with use *matrix_a* we restrict :math:`M` to being a multiple of :math:`S`.
-Moreover, low precision matrices are VNNI transformed if the number of columns :math:`N` is divisible by the number of operands per channel:
-Let :math:`\omega_a=\max(1, \max(1,4/\text{size}(\text{ty}))` be the number of operands per channel.
-The shape of the :math:`B` tensor is adjusted as following:
+Moreover, low precision matrices are VNNI transformed if :math:`N` is a multiple of :math:`\omega`,
+where :math:`\omega=\max(1, \max(1,4/\text{size}(\text{ty}))` is the number of operands per channel.
+We store :math:`A^*` tensors internally
+as the :math:`\omega\times I \times K_1\times \lceil J/\omega\rceil \times K_2` tensor :math:`A^{**}`,
+The mapping from :math:`A^*` to :math:`A^{**}` is given by
 
 .. math::
 
-   \begin{aligned}
-   I &:= S,\\
-   J &:= \lceil N/\omega_a \rceil \\
-   K &:= M/I.\\
-   \end{aligned}
+   A^{**}_{c,i,k_1,j,k_2} := A^{*}_{i,k_1,c+j\omega,k_2}
 
-Each entry in the :math:`B` tensor has :math:`\omega_a` channels, where channel access is denoted with
-:math:`[.]`, and we define the mapping of :math:`A` to :math:`A^*` to be
+and the inverse mapping is given by
 
 .. math::
 
-   A^*_{i,j,k}[c] = \left\{\begin{array}{rcl}
-                        A_{i+kI,c+j\omega_a} & \text{ if } & i+kI < M \wedge c+j\omega_a < N, \\
-                        0 & \text{ else.}
-                    \end{array}\right.
+   A^{*}_{i,k_1,j,k_2} = A^{**}_{j\bmod\omega,i,k_1,\lfloor j/\omega\rfloor,k_2}.
+
+Moreover, all channels of an entry are packed. E.g. for half precision floats we have two channels
+and we pack :math:`A^{**}_{0,i,k_1,j,k_2}` in the lower 16 bits of an i32 and :math:`A^{**}_{1,i,k_1,j,k_2}` 
+in the higher 16 bits of the i32.
+We store an i32 per work-item, so from the SIMT point of view one work-item owns all channels of an entry.
 
 Matrix B
 ========
