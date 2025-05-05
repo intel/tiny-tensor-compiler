@@ -8,6 +8,7 @@ Builder C++-API:
       - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
+      - tinytc::group_arithmetic
       - tinytc::group_operation
       - tinytc::math_unary
       - tinytc::matrix_use
@@ -22,6 +23,7 @@ Builder C++-API:
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(group_arithmetic)
       - tinytc::to_string(group_operation)
       - tinytc::to_string(math_unary)
       - tinytc::to_string(matrix_use)

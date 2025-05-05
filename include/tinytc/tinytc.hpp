@@ -1203,6 +1203,17 @@ inline char const *to_string(cmp_condition cond) {
 }
 
 /**
+ * @brief Convert subgroup arithmetic to string
+ *
+ * @param op Operation type
+ *
+ * @return C-string
+ */
+inline char const *to_string(group_arithmetic op) {
+    return ::tinytc_group_arithmetic_to_string(static_cast<::tinytc_group_arithmetic_t>(op));
+}
+
+/**
  * @brief Convert subgroup operation to string
  *
  * @param op Operation type

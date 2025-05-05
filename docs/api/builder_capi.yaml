@@ -9,6 +9,7 @@ Builder C-API:
       - tinytc_builtin_t
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
+      - tinytc_group_arithmetic_t
       - tinytc_group_operation_t
       - tinytc_math_unary_t
       - tinytc_matrix_use_t
@@ -24,6 +25,7 @@ Builder C-API:
       - tinytc_builtin_to_string
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
+      - tinytc_group_arithmetic_to_string
       - tinytc_group_operation_to_string
       - tinytc_math_unary_to_string
       - tinytc_matrix_use_to_string

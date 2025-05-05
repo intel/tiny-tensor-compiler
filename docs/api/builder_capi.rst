@@ -24,6 +24,8 @@ Common
 
   * :ref:`tinytc_cmp_condition_t`
 
+  * :ref:`tinytc_group_arithmetic_t`
+
   * :ref:`tinytc_group_operation_t`
 
   * :ref:`tinytc_math_unary_t`
@@ -53,6 +55,8 @@ Common
   * :ref:`tinytc_checked_flag_to_string`
 
   * :ref:`tinytc_cmp_condition_to_string`
+
+  * :ref:`tinytc_group_arithmetic_to_string`
 
   * :ref:`tinytc_group_operation_to_string`
 
@@ -161,6 +165,13 @@ tinytc_cmp_condition_t
 
 .. doxygenenum:: tinytc_cmp_condition_t
 
+.. _tinytc_group_arithmetic_t:
+
+tinytc_group_arithmetic_t
+.........................
+
+.. doxygenenum:: tinytc_group_arithmetic_t
+
 .. _tinytc_group_operation_t:
 
 tinytc_group_operation_t
@@ -257,6 +268,13 @@ tinytc_cmp_condition_to_string
 ..............................
 
 .. doxygenfunction:: tinytc_cmp_condition_to_string
+
+.. _tinytc_group_arithmetic_to_string:
+
+tinytc_group_arithmetic_to_string
+.................................
+
+.. doxygenfunction:: tinytc_group_arithmetic_to_string
 
 .. _tinytc_group_operation_to_string:
 

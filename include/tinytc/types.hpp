@@ -318,6 +318,13 @@ enum class cmp_condition {
     le = tinytc_cmp_condition_le  ///< less or equal than
 };
 
+//! Group arithmetic
+enum class group_arithmetic {
+    add = tinytc_group_arithmetic_add, ///< Group add
+    max = tinytc_group_arithmetic_max, ///< Group max
+    min = tinytc_group_arithmetic_min  ///< Group min
+};
+
 //! Group operation
 enum class group_operation {
     exclusive_scan = tinytc_group_operation_exclusive_scan, ///< Exclusive scan

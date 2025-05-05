@@ -353,7 +353,14 @@ typedef enum {
     tinytc_math_unary_native_exp2 = 7, ///< Native base-2 exponential
 } tinytc_math_unary_t;
 
-//! Subgroup operation
+//! Group arithmetic
+typedef enum {
+    tinytc_group_arithmetic_add = 0, ///< Group add
+    tinytc_group_arithmetic_max = 1, ///< Group max
+    tinytc_group_arithmetic_min = 2  ///< Group min
+} tinytc_group_arithmetic_t;
+
+//! Group operation
 typedef enum {
     tinytc_group_operation_exclusive_scan = 0, ///< Exclusive scan
     tinytc_group_operation_inclusive_scan = 1, ///< Inclusive scan

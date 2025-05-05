@@ -181,6 +181,18 @@ char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
     return "unknown";
 }
 
+char const *tinytc_group_arithmetic_to_string(tinytc_group_arithmetic_t op) {
+    switch (op) {
+    case tinytc_group_arithmetic_add:
+        return "add";
+    case tinytc_group_arithmetic_max:
+        return "max";
+    case tinytc_group_arithmetic_min:
+        return "min";
+    }
+    return "unknown";
+}
+
 char const *tinytc_group_operation_to_string(tinytc_group_operation_t op) {
     switch (op) {
     case tinytc_group_operation_exclusive_scan:

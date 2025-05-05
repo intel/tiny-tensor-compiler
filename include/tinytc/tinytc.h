@@ -351,6 +351,8 @@ TINYTC_EXPORT char const *tinytc_builtin_to_string(tinytc_builtin_t b);
 TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
 //! Convert cmp condition to string
 TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
+//! Convert subgroup arithmmetic to string
+TINYTC_EXPORT char const *tinytc_group_arithmetic_to_string(tinytc_group_arithmetic_t op);
 //! Convert subgroup op to string
 TINYTC_EXPORT char const *tinytc_group_operation_to_string(tinytc_group_operation_t op);
 //! Convert math operation type to string (unary)
