@@ -979,25 +979,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tiny
                                                       const tinytc_location_t *loc);
 
 /**
- * @brief Create subgroup add instruction
- *
- * @code %value = subgroup_add.group_operation %a : ty @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param operation [in] group operation type
- * @param a [in] operand
- * @param ty [in] result type
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_add_inst_create(tinytc_inst_t *instr,
-                                                              tinytc_group_operation_t operation,
-                                                              tinytc_value_t a,
-                                                              tinytc_data_type_t ty,
-                                                              const tinytc_location_t *loc);
-
-/**
  * @brief Create subgroup broadcast instruction
  *
  * @code %value = subgroup_broadcast %a, %idx : ty @endcode
@@ -1017,11 +998,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_
                                                                     const tinytc_location_t *loc);
 
 /**
- * @brief Create subgroup max instruction
+ * @brief Create subgroup operation instruction
  *
- * @code %value = subgroup_max.group_operation %a : ty @endcode
+ * @code %value = subgroup_operation.group_arithmetic.group_operation %a : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param arith [in] group arithmetic type
  * @param operation [in] group operation type
  * @param a [in] operand
  * @param ty [in] result type
@@ -1029,30 +1011,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_max_inst_create(tinytc_inst_t *instr,
-                                                              tinytc_group_operation_t operation,
-                                                              tinytc_value_t a,
-                                                              tinytc_data_type_t ty,
-                                                              const tinytc_location_t *loc);
-
-/**
- * @brief Create subgroup min instruction
- *
- * @code %value = subgroup_min.group_operation %a : ty @endcode
- *
- * @param instr [out] pointer to the inst object created
- * @param operation [in] group operation type
- * @param a [in] operand
- * @param ty [in] result type
- * @param loc [in][optional] Source code location; can be nullptr
- *
- * @return tinytc_status_success on success and error otherwise
- */
-TINYTC_EXPORT tinytc_status_t tinytc_subgroup_min_inst_create(tinytc_inst_t *instr,
-                                                              tinytc_group_operation_t operation,
-                                                              tinytc_value_t a,
-                                                              tinytc_data_type_t ty,
-                                                              const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_subgroup_operation_inst_create(
+    tinytc_inst_t *instr, tinytc_group_arithmetic_t arith, tinytc_group_operation_t operation,
+    tinytc_value_t a, tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create subview instruction

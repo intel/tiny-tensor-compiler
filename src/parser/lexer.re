@@ -239,15 +239,15 @@ lex:
         "math.native_exp2"  { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp2, loc_); }
 
         // subgroup op
-        "subgroup_add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::exclusive_scan, loc_); }
-        "subgroup_add.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::inclusive_scan, loc_); }
-        "subgroup_add.reduce"         { adv_loc(); return parser::make_SUBGROUP_ADD(group_operation::reduce, loc_); }
-        "subgroup_max.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::exclusive_scan, loc_); }
-        "subgroup_max.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::inclusive_scan, loc_); }
-        "subgroup_max.reduce"         { adv_loc(); return parser::make_SUBGROUP_MAX(group_operation::reduce, loc_); }
-        "subgroup_min.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::exclusive_scan, loc_); }
-        "subgroup_min.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::inclusive_scan, loc_); }
-        "subgroup_min.reduce"         { adv_loc(); return parser::make_SUBGROUP_MIN(group_operation::reduce, loc_); }
+        "subgroup_operation.add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::add, group_operation::exclusive_scan}, loc_); }
+        "subgroup_operation.add.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::add, group_operation::inclusive_scan}, loc_); }
+        "subgroup_operation.add.reduce"         { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::add, group_operation::reduce}, loc_); }
+        "subgroup_operation.max.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::max, group_operation::exclusive_scan}, loc_); }
+        "subgroup_operation.max.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::max, group_operation::inclusive_scan}, loc_); }
+        "subgroup_operation.max.reduce"         { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::max, group_operation::reduce}, loc_); }
+        "subgroup_operation.min.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::min, group_operation::exclusive_scan}, loc_); }
+        "subgroup_operation.min.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::min, group_operation::inclusive_scan}, loc_); }
+        "subgroup_operation.min.reduce"         { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::min, group_operation::reduce}, loc_); }
 
         // other strings
         string              { adv_loc(); return parser::make_STRING(std::string(b+1, YYCURSOR-1), loc_); }

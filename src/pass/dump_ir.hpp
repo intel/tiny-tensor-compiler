@@ -70,10 +70,8 @@ class dump_ir_pass {
     void operator()(math_unary_inst const &in);
     void operator()(parallel_inst const &p);
     void operator()(size_inst const &s);
-    void operator()(subgroup_add_inst const &in);
     void operator()(subgroup_broadcast_inst const &in);
-    void operator()(subgroup_max_inst const &in);
-    void operator()(subgroup_min_inst const &in);
+    void operator()(subgroup_operation_inst const &in);
     void operator()(subview_inst const &s);
     void operator()(store_inst const &s);
     void operator()(sum_inst const &s);

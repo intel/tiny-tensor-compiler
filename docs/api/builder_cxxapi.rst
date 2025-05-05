@@ -624,13 +624,9 @@ Instruction
 
   * :ref:`tinytc::make_store`
 
-  * :ref:`tinytc::make_subgroup_add`
-
   * :ref:`tinytc::make_subgroup_broadcast`
 
-  * :ref:`tinytc::make_subgroup_max`
-
-  * :ref:`tinytc::make_subgroup_min`
+  * :ref:`tinytc::make_subgroup_operation`
 
   * :ref:`tinytc::make_subview`
 
@@ -911,13 +907,6 @@ make_store
 
 .. doxygenfunction:: tinytc::make_store
 
-.. _tinytc::make_subgroup_add:
-
-make_subgroup_add
-.................
-
-.. doxygenfunction:: tinytc::make_subgroup_add
-
 .. _tinytc::make_subgroup_broadcast:
 
 make_subgroup_broadcast
@@ -925,19 +914,12 @@ make_subgroup_broadcast
 
 .. doxygenfunction:: tinytc::make_subgroup_broadcast
 
-.. _tinytc::make_subgroup_max:
+.. _tinytc::make_subgroup_operation:
 
-make_subgroup_max
-.................
+make_subgroup_operation
+.......................
 
-.. doxygenfunction:: tinytc::make_subgroup_max
-
-.. _tinytc::make_subgroup_min:
-
-make_subgroup_min
-.................
-
-.. doxygenfunction:: tinytc::make_subgroup_min
+.. doxygenfunction:: tinytc::make_subgroup_operation
 
 .. _tinytc::make_subview:
 

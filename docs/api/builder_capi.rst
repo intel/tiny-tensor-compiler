@@ -748,13 +748,9 @@ Instruction
 
   * :ref:`tinytc_size_inst_create`
 
-  * :ref:`tinytc_subgroup_add_inst_create`
-
   * :ref:`tinytc_subgroup_broadcast_inst_create`
 
-  * :ref:`tinytc_subgroup_max_inst_create`
-
-  * :ref:`tinytc_subgroup_min_inst_create`
+  * :ref:`tinytc_subgroup_operation_inst_create`
 
   * :ref:`tinytc_store_inst_create`
 
@@ -1029,13 +1025,6 @@ tinytc_size_inst_create
 
 .. doxygenfunction:: tinytc_size_inst_create
 
-.. _tinytc_subgroup_add_inst_create:
-
-tinytc_subgroup_add_inst_create
-...............................
-
-.. doxygenfunction:: tinytc_subgroup_add_inst_create
-
 .. _tinytc_subgroup_broadcast_inst_create:
 
 tinytc_subgroup_broadcast_inst_create
@@ -1043,19 +1032,12 @@ tinytc_subgroup_broadcast_inst_create
 
 .. doxygenfunction:: tinytc_subgroup_broadcast_inst_create
 
-.. _tinytc_subgroup_max_inst_create:
+.. _tinytc_subgroup_operation_inst_create:
 
-tinytc_subgroup_max_inst_create
-...............................
+tinytc_subgroup_operation_inst_create
+.....................................
 
-.. doxygenfunction:: tinytc_subgroup_max_inst_create
-
-.. _tinytc_subgroup_min_inst_create:
-
-tinytc_subgroup_min_inst_create
-...............................
-
-.. doxygenfunction:: tinytc_subgroup_min_inst_create
+.. doxygenfunction:: tinytc_subgroup_operation_inst_create
 
 .. _tinytc_store_inst_create:
 

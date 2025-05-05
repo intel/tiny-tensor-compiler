@@ -87,10 +87,8 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::cooperative_matrix_prefetch:
     case tinytc::IK::cooperative_matrix_scale:
     case tinytc::IK::cooperative_matrix_store:
-    case tinytc::IK::subgroup_add:
     case tinytc::IK::subgroup_broadcast:
-    case tinytc::IK::subgroup_max:
-    case tinytc::IK::subgroup_min:
+    case tinytc::IK::subgroup_operation:
         return tinytc::inst_execution_kind::spmd;
     case tinytc::IK::builtin:
         return tinytc::dyn_cast<const tinytc::builtin_inst>(this)->kind();
@@ -1300,23 +1298,6 @@ size_inst::size_inst(tinytc_value_t op0, std::int64_t mode, tinytc_data_type_t t
     result(0) = value_node{ty, this, lc};
 }
 
-subgroup_add_inst::subgroup_add_inst(group_operation operation, tinytc_value_t a0,
-                                     tinytc_data_type_t ty, location const &lc)
-    : standard_inst{IK::subgroup_add}, operation_{operation} {
-    op(0, a0);
-    loc(lc);
-
-    if (!isa<scalar_data_type>(*ty)) {
-        throw compilation_error(loc(), status::ir_expected_scalar);
-    }
-
-    if (a().ty() != ty) {
-        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-    }
-
-    result(0) = value_node{ty, this, lc};
-}
-
 subgroup_broadcast_inst::subgroup_broadcast_inst(tinytc_value_t a0, tinytc_value_t idx0,
                                                  tinytc_data_type_t ty, location const &lc)
     : standard_inst{IK::subgroup_broadcast} {
@@ -1340,32 +1321,15 @@ subgroup_broadcast_inst::subgroup_broadcast_inst(tinytc_value_t a0, tinytc_value
     result(0) = value_node{ty, this, lc};
 }
 
-subgroup_max_inst::subgroup_max_inst(group_operation operation, tinytc_value_t a0,
-                                     tinytc_data_type_t ty, location const &lc)
-    : standard_inst{IK::subgroup_max}, operation_{operation} {
+subgroup_operation_inst::subgroup_operation_inst(group_arithmetic arith0, group_operation operation,
+                                                 tinytc_value_t a0, tinytc_data_type_t ty,
+                                                 location const &lc)
+    : standard_inst{IK::subgroup_operation}, arith_{arith0}, operation_{operation} {
     op(0, a0);
     loc(lc);
 
     auto sty = get_scalar_type(loc(), a());
-    if (is_complex_type(sty->ty())) {
-        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
-    }
-
-    if (a().ty() != ty) {
-        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-    }
-
-    result(0) = value_node{ty, this, lc};
-}
-
-subgroup_min_inst::subgroup_min_inst(group_operation operation, tinytc_value_t a0,
-                                     tinytc_data_type_t ty, location const &lc)
-    : standard_inst{IK::subgroup_min}, operation_{operation} {
-    op(0, a0);
-    loc(lc);
-
-    auto sty = get_scalar_type(loc(), a());
-    if (is_complex_type(sty->ty())) {
+    if (arith() != group_arithmetic::add && is_complex_type(sty->ty())) {
         throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
     }
 

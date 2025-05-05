@@ -537,14 +537,6 @@ void dump_ir_pass::operator()(size_inst const &s) {
     visit(*this, *s.result(0).ty());
 }
 
-void dump_ir_pass::operator()(subgroup_add_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = subgroup_add." << to_string(in.operation()) << " ";
-    dump_val(in.a());
-    *os_ << " : ";
-    visit(*this, *in.result(0).ty());
-}
-
 void dump_ir_pass::operator()(subgroup_broadcast_inst const &in) {
     dump_val(in.result(0));
     *os_ << " = subgroup_broadcast ";
@@ -555,17 +547,9 @@ void dump_ir_pass::operator()(subgroup_broadcast_inst const &in) {
     visit(*this, *in.result(0).ty());
 }
 
-void dump_ir_pass::operator()(subgroup_max_inst const &in) {
+void dump_ir_pass::operator()(subgroup_operation_inst const &in) {
     dump_val(in.result(0));
-    *os_ << " = subgroup_max." << to_string(in.operation()) << " ";
-    dump_val(in.a());
-    *os_ << " : ";
-    visit(*this, *in.result(0).ty());
-}
-
-void dump_ir_pass::operator()(subgroup_min_inst const &in) {
-    dump_val(in.result(0));
-    *os_ << " = subgroup_min." << to_string(in.operation()) << " ";
+    *os_ << " = subgroup." << to_string(in.arith()) << "." << to_string(in.operation()) << " ";
     dump_val(in.a());
     *os_ << " : ";
     visit(*this, *in.result(0).ty());

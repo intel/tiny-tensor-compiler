@@ -119,10 +119,8 @@ Builder C-API:
       - tinytc_math_unary_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
-      - tinytc_subgroup_add_inst_create
       - tinytc_subgroup_broadcast_inst_create
-      - tinytc_subgroup_max_inst_create
-      - tinytc_subgroup_min_inst_create
+      - tinytc_subgroup_operation_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create
       - tinytc_sum_inst_create

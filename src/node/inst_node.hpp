@@ -59,10 +59,8 @@ enum class IK {
     math_unary_,
     parallel,
     size,
-    subgroup_add,
     subgroup_broadcast,
-    subgroup_max,
-    subgroup_min,
+    subgroup_operation,
     subview,
     store,
     yield,
@@ -96,9 +94,8 @@ using inst_nodes =
               class fuse_inst, class load_inst, class lifetime_stop_inst, class gemm_inst,
               class gemv_inst, class ger_inst, class for_inst, class foreach_inst,
               class hadamard_inst, class if_inst, class math_unary_inst, class parallel_inst,
-              class size_inst, class subgroup_add_inst, class subgroup_broadcast_inst,
-              class subgroup_max_inst, class subgroup_min_inst, class subview_inst,
-              class store_inst, class sum_inst, class yield_inst>;
+              class size_inst, class subgroup_broadcast_inst, class subgroup_operation_inst,
+              class subview_inst, class store_inst, class sum_inst, class yield_inst>;
 
 using result_range = iterator_range_wrapper<tinytc_value_t>;
 using const_result_range = iterator_range_wrapper<const_tinytc_value_t>;
@@ -858,20 +855,6 @@ class size_inst : public standard_inst<1, 1> {
     std::int64_t mode_;
 };
 
-class subgroup_add_inst : public standard_inst<1, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_add; }
-    subgroup_add_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
-                      location const &lc = {});
-
-    inline auto operation() const -> group_operation { return operation_; }
-    inline auto a() -> tinytc_value & { return op(0); }
-    inline auto a() const -> tinytc_value const & { return op(0); }
-
-  private:
-    group_operation operation_;
-};
-
 class subgroup_broadcast_inst : public standard_inst<2, 1> {
   public:
     inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_broadcast; }
@@ -884,31 +867,19 @@ class subgroup_broadcast_inst : public standard_inst<2, 1> {
     inline auto idx() const -> tinytc_value const & { return op(1); }
 };
 
-class subgroup_max_inst : public standard_inst<1, 1> {
+class subgroup_operation_inst : public standard_inst<1, 1> {
   public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_max; }
-    subgroup_max_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
-                      location const &lc = {});
+    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_operation; }
+    subgroup_operation_inst(group_arithmetic arith, group_operation operation, tinytc_value_t a,
+                            tinytc_data_type_t ty, location const &lc = {});
 
+    inline auto arith() const -> group_arithmetic { return arith_; }
     inline auto operation() const -> group_operation { return operation_; }
     inline auto a() -> tinytc_value & { return op(0); }
     inline auto a() const -> tinytc_value const & { return op(0); }
 
   private:
-    group_operation operation_;
-};
-
-class subgroup_min_inst : public standard_inst<1, 1> {
-  public:
-    inline static bool classof(inst_node const &i) { return i.type_id() == IK::subgroup_min; }
-    subgroup_min_inst(group_operation operation, tinytc_value_t a, tinytc_data_type_t ty,
-                      location const &lc = {});
-
-    inline auto operation() const -> group_operation { return operation_; }
-    inline auto a() -> tinytc_value & { return op(0); }
-    inline auto a() const -> tinytc_value const & { return op(0); }
-
-  private:
+    group_arithmetic arith_;
     group_operation operation_;
 };
 

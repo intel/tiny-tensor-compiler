@@ -2099,15 +2099,15 @@ Subgroup operation
 
 .. code:: abnf
 
-    subgroup-operation-type = "subgroup.add.exclusive_scan" /
-                              "subgroup.add.inclusive_scan" /
-                              "subgroup.add.reduce" /
-                              "subgroup.max.exclusive_scan" /
-                              "subgroup.max.inclusive_scan" /
-                              "subgroup.max.reduce" /
-                              "subgroup.min.exclusive_scan" /
-                              "subgroup.min.inclusive_scan" /
-                              "subgroup.min.reduce"
+    subgroup-operation-type = "subgroup_operation.add.exclusive_scan" /
+                              "subgroup_operation.add.inclusive_scan" /
+                              "subgroup_operation.add.reduce" /
+                              "subgroup_operation.max.exclusive_scan" /
+                              "subgroup_operation.max.inclusive_scan" /
+                              "subgroup_operation.max.reduce" /
+                              "subgroup_operation.min.exclusive_scan" /
+                              "subgroup_operation.min.inclusive_scan" /
+                              "subgroup_operation.min.reduce"
     value-instruction       =/ subgroup-operation-type local-identifier ":" scalar-type
 
 Overview

@@ -2050,24 +2050,6 @@ inline inst make_size(value a, std::int64_t mode, data_type ty, location const &
 }
 
 /**
- * @brief Make subgroup add instruction
- *
- * @param op Group operation
- * @param a Operand
- * @param ty Result type
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subgroup_add(group_operation op, value a, data_type ty, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_add_inst_create(
-                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
-                     loc);
-    return inst(instr);
-}
-
-/**
  * @brief Make subgroup broadcast instruction
  *
  * @param a Operand
@@ -2084,8 +2066,9 @@ inline inst make_subgroup_broadcast(value a, value idx, data_type ty, location c
 }
 
 /**
- * @brief Make subgroup max instruction
+ * @brief Make subgroup operation instruction
  *
+ * @param arith Group arithmetic
  * @param op Group operation
  * @param a Operand
  * @param ty Result type
@@ -2093,29 +2076,12 @@ inline inst make_subgroup_broadcast(value a, value idx, data_type ty, location c
  *
  * @return Instruction
  */
-inline inst make_subgroup_max(group_operation op, value a, data_type ty, location const &loc = {}) {
+inline inst make_subgroup_operation(group_arithmetic arith, group_operation op, value a,
+                                    data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_max_inst_create(
-                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
-                     loc);
-    return inst(instr);
-}
-
-/**
- *
- * @brief Make subgroup min instruction
- *
- * @param op Group operation
- * @param a Operand
- * @param ty Result type
- * @param loc Source code location
- *
- * @return Instruction
- */
-inline inst make_subgroup_min(group_operation op, value a, data_type ty, location const &loc = {}) {
-    tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_subgroup_min_inst_create(
-                         &instr, static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
+    CHECK_STATUS_LOC(tinytc_subgroup_operation_inst_create(
+                         &instr, static_cast<tinytc_group_arithmetic_t>(arith),
+                         static_cast<tinytc_group_operation_t>(op), a, ty, &loc),
                      loc);
     return inst(instr);
 }

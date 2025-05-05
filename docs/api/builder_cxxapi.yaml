@@ -109,10 +109,8 @@ Builder C++-API:
       - tinytc::make_parallel
       - tinytc::make_size
       - tinytc::make_store
-      - tinytc::make_subgroup_add
       - tinytc::make_subgroup_broadcast
-      - tinytc::make_subgroup_max
-      - tinytc::make_subgroup_min
+      - tinytc::make_subgroup_operation
       - tinytc::make_subview
       - tinytc::make_sum
       - tinytc::make_yield

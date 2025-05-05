@@ -161,9 +161,7 @@
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
-%token <group_operation> SUBGROUP_ADD
-%token <group_operation> SUBGROUP_MAX
-%token <group_operation> SUBGROUP_MIN
+%token <std::pair<group_arithmetic,group_operation>> SUBGROUP_OPERATION
 %token <math_unary> MATH_UNARY
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
@@ -249,10 +247,8 @@
 %nterm <inst> math_unary_inst
 %nterm <inst> parallel_inst
 %nterm <inst> size_inst
-%nterm <inst> subgroup_add_inst
 %nterm <inst> subgroup_broadcast_inst
-%nterm <inst> subgroup_max_inst
-%nterm <inst> subgroup_min_inst
+%nterm <inst> subgroup_operation_inst
 %nterm <inst> store_inst
 %nterm <store_flag> store_flag
 %nterm <inst> subview_inst
@@ -799,10 +795,8 @@ valued_inst:
   | load_inst               { $$ = std::move($1); }
   | math_unary_inst         { $$ = std::move($1); }
   | size_inst               { $$ = std::move($1); }
-  | subgroup_add_inst       { $$ = std::move($1); }
   | subgroup_broadcast_inst { $$ = std::move($1); }
-  | subgroup_max_inst       { $$ = std::move($1); }
-  | subgroup_min_inst       { $$ = std::move($1); }
+  | subgroup_operation_inst { $$ = std::move($1); }
   | subview_inst            { $$ = std::move($1); }
 ;
 
@@ -1252,21 +1246,6 @@ size_inst:
     }
 ;
 
-subgroup_add_inst:
-    SUBGROUP_ADD var[a] COLON scalar_type {
-        try {
-            $$ = inst {
-                std::make_unique<subgroup_add_inst>($SUBGROUP_ADD, std::move($a), $scalar_type,
-                                                    @subgroup_add_inst)
-                    .release()
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
-
 subgroup_broadcast_inst:
     SUBGROUP_BROADCAST var[a] COMMA var[idx] COLON scalar_type {
         try {
@@ -1282,27 +1261,13 @@ subgroup_broadcast_inst:
     }
 ;
 
-subgroup_max_inst:
-    SUBGROUP_MAX var[a] COLON scalar_type {
+subgroup_operation_inst:
+    SUBGROUP_OPERATION var[a] COLON scalar_type {
         try {
             $$ = inst {
-                std::make_unique<subgroup_max_inst>($SUBGROUP_MAX, std::move($a), $scalar_type,
-                                                    @subgroup_max_inst)
-                    .release()
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
-
-subgroup_min_inst:
-    SUBGROUP_MIN var[a] COLON scalar_type {
-        try {
-            $$ = inst {
-                std::make_unique<subgroup_min_inst>($SUBGROUP_MIN, std::move($a), $scalar_type,
-                                                    @subgroup_min_inst)
+                std::make_unique<subgroup_operation_inst>($SUBGROUP_OPERATION.first,
+                                                          $SUBGROUP_OPERATION.second, std::move($a),
+                                                          $scalar_type, @subgroup_operation_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

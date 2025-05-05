@@ -697,20 +697,6 @@ tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a, 
         [&] { *instr = std::make_unique<size_inst>(a, mode, ty, get_optional(loc)).release(); });
 }
 
-tinytc_status_t tinytc_subgroup_add_inst_create(tinytc_inst_t *instr,
-                                                tinytc_group_operation_t operation,
-                                                tinytc_value_t a, tinytc_data_type_t ty,
-                                                const tinytc_location_t *loc) {
-    if (instr == nullptr || a == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<subgroup_add_inst>(enum_cast<group_operation>(operation), a, ty,
-                                                     get_optional(loc))
-                     .release();
-    });
-}
-
 tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
                                                       tinytc_value_t idx, tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc) {
@@ -722,30 +708,18 @@ tinytc_status_t tinytc_subgroup_broadcast_inst_create(tinytc_inst_t *instr, tiny
     });
 }
 
-tinytc_status_t tinytc_subgroup_max_inst_create(tinytc_inst_t *instr,
-                                                tinytc_group_operation_t operation,
-                                                tinytc_value_t a, tinytc_data_type_t ty,
-                                                const tinytc_location_t *loc) {
+tinytc_status_t tinytc_subgroup_operation_inst_create(tinytc_inst_t *instr,
+                                                      tinytc_group_arithmetic_t arith,
+                                                      tinytc_group_operation_t operation,
+                                                      tinytc_value_t a, tinytc_data_type_t ty,
+                                                      const tinytc_location_t *loc) {
     if (instr == nullptr || a == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = std::make_unique<subgroup_max_inst>(enum_cast<group_operation>(operation), a, ty,
-                                                     get_optional(loc))
-                     .release();
-    });
-}
-
-tinytc_status_t tinytc_subgroup_min_inst_create(tinytc_inst_t *instr,
-                                                tinytc_group_operation_t operation,
-                                                tinytc_value_t a, tinytc_data_type_t ty,
-                                                const tinytc_location_t *loc) {
-    if (instr == nullptr || a == nullptr) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] {
-        *instr = std::make_unique<subgroup_min_inst>(enum_cast<group_operation>(operation), a, ty,
-                                                     get_optional(loc))
+        *instr = std::make_unique<subgroup_operation_inst>(enum_cast<group_arithmetic>(arith),
+                                                           enum_cast<group_operation>(operation), a,
+                                                           ty, get_optional(loc))
                      .release();
     });
 }
