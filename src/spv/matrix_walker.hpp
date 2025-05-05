@@ -8,10 +8,10 @@
 
 namespace tinytc {
 enum class checked_flag;
+struct coopmatrix_layout;
 } // namespace tinytc
 
 namespace tinytc::spv {
-struct coopmatrix_layout;
 class spv_inst;
 class uniquifier;
 

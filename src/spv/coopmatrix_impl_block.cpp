@@ -5,11 +5,12 @@
 #include "analysis/gcd.hpp"
 #include "codegen_tools.hpp"
 #include "converter_aux.hpp"
+#include "coopmatrix_layout.hpp"
+#include "device_info.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
-#include "spv/coopmatrix_layout.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/instructions.hpp"
@@ -32,12 +33,12 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto ot = get_memref_type(in.operand());
     auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(rt);
+    auto layout = get_layout(cfg(), rt);
     auto sty = rt->component_ty();
 
     const std::int32_t required_alignment = ot->addrspace() == address_space::global ? 4 : 16;
 
-    const bool layout_ok = layout.rows >= subgroup_size();
+    const bool layout_ok = layout.rows >= cfg().subgroup_size;
     const bool transpose_ok = in.t() == transpose::N;
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
@@ -58,7 +59,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return unique().pointer_ty(storage_cls, io_ty, align);
     }();
 
-    auto walker = matrix_walker(unique(), subgroup_size(), layout, pos0, pos1, odv.shape(0),
+    auto walker = matrix_walker(unique(), cfg().subgroup_size, layout, pos0, pos1, odv.shape(0),
                                 odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
 
     auto &mod = unique().mod();
@@ -104,10 +105,10 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
     constexpr std::int32_t required_alignment = 16;
 
     auto vt = get_coopmatrix_type(in.val());
-    auto layout = get_layout(vt);
+    auto layout = get_layout(cfg(), vt);
     auto sty = vt->component_ty();
 
-    const bool layout_ok = layout.rows >= subgroup_size();
+    const bool layout_ok = layout.rows >= cfg().subgroup_size;
     const bool flag_ok = in.flag() == store_flag::regular;
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
@@ -127,7 +128,7 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
         return unique().pointer_ty(storage_cls, io_ty, align);
     }();
 
-    auto walker = matrix_walker(unique(), subgroup_size(), layout, pos0, pos1, odv.shape(0),
+    auto walker = matrix_walker(unique(), cfg().subgroup_size, layout, pos0, pos1, odv.shape(0),
                                 odv.shape(1), odv.stride(0), odv.stride(1), in.checked(), 0);
 
     auto &mod = unique().mod();

@@ -5,11 +5,10 @@
 #define COOPMATRIX_IMPL_20250415_HPP
 
 #include "analysis/gcd.hpp"
-#include "spv/coopmatrix_layout.hpp"
+#include "coopmatrix_layout.hpp" // IWYU pragma: keep
+#include "device_info.hpp"
 #include "spv/defs.hpp"
-#include "tinytc/types.h"
 
-#include <cstdint>
 #include <utility>
 
 namespace tinytc {
@@ -34,16 +33,14 @@ class uniquifier;
 
 class coopmatrix_impl {
   public:
-    coopmatrix_impl(tinytc_core_info const &info, uniquifier &unique);
+    coopmatrix_impl(uniquifier &unique, core_config const &cfg, gcd_analysis_result g);
     virtual ~coopmatrix_impl() = default;
-
-    inline auto info() const -> tinytc_core_info const & { return *info_; }
 
     inline auto gcd() const -> gcd_analysis_result const & { return gcd_; }
     inline void gcd(gcd_analysis_result g) { gcd_ = std::move(g); }
 
-    inline auto subgroup_size() const -> std::int32_t { return sgs_; }
-    inline void subgroup_size(std::int32_t sgs) { sgs_ = sgs; }
+    auto cfg() const -> core_config const & { return cfg_; }
+    inline void cfg(core_config const &cfg) { cfg_ = cfg; }
 
     virtual auto extract(cooperative_matrix_extract_inst const &in, spv_inst *mat) -> spv_inst *;
     virtual auto insert(cooperative_matrix_insert_inst const &in, spv_inst *val, spv_inst *mat)
@@ -67,7 +64,6 @@ class coopmatrix_impl {
     virtual auto spv_ty(coopmatrix_data_type const *ct) -> spv_inst *;
 
   protected:
-    virtual auto get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout;
     auto spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst *;
     auto spv_ty(coopmatrix_layout const &layout) -> spv_inst *;
@@ -78,9 +74,8 @@ class coopmatrix_impl {
     inline auto unique() -> uniquifier & { return *unique_; }
 
   private:
-    const_tinytc_core_info_t info_;
     uniquifier *unique_;
-    std::int32_t sgs_;
+    core_config cfg_;
     gcd_analysis_result gcd_;
 };
 

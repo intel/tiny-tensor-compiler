@@ -55,7 +55,7 @@ auto coopmatrix_impl_dpas::check_2d_block_io(tinytc_value const &operand, tinytc
     if (auto mi = gcd().get_memref_if(operand); mi) {
         auto const mt = get_memref_type(operand);
         const auto sty_size = size(mt->element_ty());
-        auto const &block_io = info().matrix().block_io();
+        auto const &block_io = cfg().matrix->block_io();
 
         const bool sfid_ok = mt->addrspace() == address_space::global;
         const bool base_address_alignment_ok =
@@ -354,8 +354,8 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
 auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                 spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
-    const auto type_ok = info().matrix().have_type(rt);
+    const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
+    const auto type_ok = cfg().matrix->have_type(rt);
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
     const bool transpose_ok = in.t() == transpose::N || rt->use() == matrix_use::a;
 
@@ -389,10 +389,10 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, sp
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result(0));
-    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const bool have_gemm =
-        info().matrix().have_gemm(at->component_ty(), bt->component_ty(), ct->component_ty(),
-                                  rt->component_ty(), rt->rows(), rt->cols(), at->cols());
+        cfg().matrix->have_gemm(at->component_ty(), bt->component_ty(), ct->component_ty(),
+                                rt->component_ty(), rt->rows(), rt->cols(), at->cols());
     if (!sgs_ok || !have_gemm) {
         return coopmatrix_impl_block::mul_add(in, a, b, c);
     }
@@ -405,7 +405,7 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
                                     dope_vector const &odv, spv_inst *pointer, spv_inst *pos0,
                                     spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
-    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
+    const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const auto type_ok = size(ot->element_ty()) <= 4;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
@@ -438,8 +438,8 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
 void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
                                  spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ct = get_coopmatrix_type(in.val());
-    const bool sgs_ok = subgroup_size() == info().matrix().required_subgroup_size();
-    const auto type_ok = info().matrix().have_type(ct);
+    const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
+    const auto type_ok = cfg().matrix->have_type(ct);
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
     if (!sgs_ok || !type_ok || !block_io_ok) {

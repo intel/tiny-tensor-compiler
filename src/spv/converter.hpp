@@ -82,11 +82,13 @@ class inst_converter {
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
     auto convert_group_operation(group_operation op) const -> GroupOperation;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
+    auto matrix_impl() -> coopmatrix_impl &;
+    auto make_matrix_impl() -> std::unique_ptr<coopmatrix_impl>;
 
     tinytc_spv_mod_t mod_;
     tinytc_core_info const *info_;
     uniquifier unique_;
-    std::unique_ptr<coopmatrix_impl> matrix_impl_;
+    std::unique_ptr<coopmatrix_impl> matrix_impl_ = nullptr;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;
     std::stack<std::vector<spv_inst *>> yielded_vals_;

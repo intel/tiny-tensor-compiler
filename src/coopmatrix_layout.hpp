@@ -6,13 +6,13 @@
 
 #include "support/fnv1a.hpp"
 
+#include <cstddef>
 #include <cstdint>
 
 namespace tinytc {
+class coopmatrix_data_type;
+class core_config;
 enum class scalar_type;
-} // namespace tinytc
-
-namespace tinytc::spv {
 
 struct coopmatrix_layout {
     scalar_type sty;
@@ -35,11 +35,13 @@ struct coopmatrix_layout {
     }
 };
 
-} // namespace tinytc::spv
+auto get_layout(core_config const &cfg, coopmatrix_data_type const *ct) -> coopmatrix_layout;
+
+} // namespace tinytc
 
 namespace std {
-template <> struct hash<tinytc::spv::coopmatrix_layout> {
-    inline auto operator()(tinytc::spv::coopmatrix_layout const &key) const -> std::size_t {
+template <> struct hash<tinytc::coopmatrix_layout> {
+    inline auto operator()(tinytc::coopmatrix_layout const &key) const -> std::size_t {
         return fnv1a_combine(key.sty, key.rows, key.cols, key.blocks, key.length, key.shape1,
                              key.blocks1, key.ops_per_chan);
     }

@@ -83,15 +83,7 @@ auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
 }
 
 inst_converter::inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info)
-    : mod_(&m), info_(&info), unique_(m) {
-    if (info_->matrix().have_dpas()) {
-        matrix_impl_ = std::make_unique<coopmatrix_impl_dpas>(info, unique_);
-    } else if (info_->have_spirv_feature(spirv_feature::subgroup_buffer_block_io)) {
-        matrix_impl_ = std::make_unique<coopmatrix_impl_block>(info, unique_);
-    } else {
-        matrix_impl_ = std::make_unique<coopmatrix_impl>(info, unique_);
-    }
-}
+    : mod_(&m), info_(&info), unique_(m) {}
 
 auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     if (auto it = dope_vec_.find(&v); it != dope_vec_.end()) {
@@ -119,7 +111,7 @@ auto inst_converter::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
             },
             [&](memref_data_type const &mr) -> spv_inst * { return unique_.pointer_ty(&mr); },
             [&](scalar_data_type const &ty) -> spv_inst * { return unique_.scalar_ty(ty.ty()); },
-            [&](coopmatrix_data_type const &ty) -> spv_inst * { return matrix_impl_->spv_ty(&ty); },
+            [&](coopmatrix_data_type const &ty) -> spv_inst * { return matrix_impl().spv_ty(&ty); },
             [](auto const &) -> spv_inst * {
                 // @todo
                 throw status::not_implemented;
@@ -163,6 +155,13 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
                    },
                    [](auto const &) -> dope_vector * { return nullptr; }},
         *v.ty());
+}
+
+auto inst_converter::matrix_impl() -> coopmatrix_impl & {
+    if (matrix_impl_) {
+        return *matrix_impl_;
+    }
+    throw status::internal_compiler_error;
 }
 
 void inst_converter::operator()(inst_node const &in) {
@@ -232,7 +231,7 @@ void inst_converter::operator()(arith_inst const &in) {
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
         auto av = val(in.a());
         auto bv = val(in.b());
-        declare(in.result(0), matrix_impl_->arith(in, av, bv));
+        declare(in.result(0), matrix_impl().arith(in, av, bv));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -257,7 +256,7 @@ void inst_converter::operator()(arith_unary_inst const &in) {
         declare(in.result(0), make_unary_op(unique_, st->ty(), in.operation(), av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
         auto av = val(in.a());
-        declare(in.result(0), matrix_impl_->arith_unary(in, av));
+        declare(in.result(0), matrix_impl().arith_unary(in, av));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -340,7 +339,7 @@ void inst_converter::operator()(cast_inst const &in) {
         auto a_ty = get_scalar_type(in.a());
         declare(in.result(0), make_cast(unique_, st->ty(), a_ty, av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        declare(in.result(0), matrix_impl_->cast(in, val(in.a())));
+        declare(in.result(0), matrix_impl().cast(in, val(in.a())));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
@@ -445,17 +444,17 @@ void inst_converter::operator()(constant_inst const &in) {
         }
         declare(in.result(0), cst);
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result(0).ty()); ct) {
-        declare(in.result(0), matrix_impl_->constant(in));
+        declare(in.result(0), matrix_impl().constant(in));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
     }
 }
 
 void inst_converter::operator()(cooperative_matrix_extract_inst const &in) {
-    declare(in.result(0), matrix_impl_->extract(in, val(in.mat())));
+    declare(in.result(0), matrix_impl().extract(in, val(in.mat())));
 }
 void inst_converter::operator()(cooperative_matrix_insert_inst const &in) {
-    declare(in.result(0), matrix_impl_->insert(in, val(in.val()), val(in.mat())));
+    declare(in.result(0), matrix_impl().insert(in, val(in.val()), val(in.mat())));
 }
 
 void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
@@ -464,28 +463,28 @@ void inst_converter::operator()(cooperative_matrix_load_inst const &in) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
     declare(in.result(0),
-            matrix_impl_->load(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1())));
+            matrix_impl().load(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1())));
 }
 
 void inst_converter::operator()(cooperative_matrix_mul_add_inst const &in) {
-    declare(in.result(0), matrix_impl_->mul_add(in, val(in.a()), val(in.b()), val(in.c())));
+    declare(in.result(0), matrix_impl().mul_add(in, val(in.a()), val(in.b()), val(in.c())));
 }
 void inst_converter::operator()(cooperative_matrix_prefetch_inst const &in) {
     auto odv = get_dope_vector(in.operand());
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    matrix_impl_->prefetch(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1()));
+    matrix_impl().prefetch(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1()));
 }
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
-    declare(in.result(0), matrix_impl_->scale(in, val(in.a()), val(in.b())));
+    declare(in.result(0), matrix_impl().scale(in, val(in.a()), val(in.b())));
 }
 void inst_converter::operator()(cooperative_matrix_store_inst const &in) {
     auto odv = get_dope_vector(in.operand());
     if (!odv) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
-    matrix_impl_->store(in, *odv, val(in.val()), val(in.operand()), val(in.pos0()), val(in.pos1()));
+    matrix_impl().store(in, *odv, val(in.val()), val(in.operand()), val(in.pos0()), val(in.pos1()));
 }
 
 void inst_converter::operator()(expand_inst const &in) {
@@ -1194,8 +1193,15 @@ void inst_converter::run_on_function(function_node const &fn) {
     tiling_[0] = work_group_size[0] / subgroup_size;
     tiling_[1] = work_group_size[1];
 
-    matrix_impl_->subgroup_size(subgroup_size);
-    matrix_impl_->gcd(gcd_analysis{info_->alignment()}.run_on_function(fn));
+    matrix_impl_ = [&]() -> std::unique_ptr<coopmatrix_impl> {
+        const auto gcd = gcd_analysis{info_->alignment()}.run_on_function(fn);
+        if (info_->matrix().have_dpas()) {
+            return std::make_unique<coopmatrix_impl_dpas>(unique_, core_cfg_, std::move(gcd));
+        } else if (info_->have_spirv_feature(spirv_feature::subgroup_buffer_block_io)) {
+            return std::make_unique<coopmatrix_impl_block>(unique_, core_cfg_, std::move(gcd));
+        }
+        return std::make_unique<coopmatrix_impl>(unique_, core_cfg_, std::move(gcd));
+    }();
 
     auto void_ty = unique_.void_ty();
     auto fun = mod_->add<OpFunction>(void_ty, FunctionControl::None, fun_ty);

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/matrix_walker.hpp"
-#include "spv/coopmatrix_layout.hpp"
+#include "coopmatrix_layout.hpp"
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
@@ -72,10 +72,10 @@ auto matrix_walker::cols_checked() const -> bool {
     return chk_ == checked_flag::both || chk_ == checked_flag::cols;
 }
 auto matrix_walker::needs_mask() const -> bool {
-    return layout_.ops_per_chan * (col_no_ + 1) * col_inc_factor_ > layout_.shape1;
+    return (col_no_ + 1) * col_inc_factor_ > layout_.shape1;
 }
 auto matrix_walker::may_need_mask() const -> bool {
-    return layout_.ops_per_chan * layout_.cols * col_inc_factor_ > layout_.shape1;
+    return layout_.cols * col_inc_factor_ > layout_.shape1;
 }
 
 auto matrix_walker::col_ok() const -> spv_inst * {

@@ -28,6 +28,7 @@ set(SOURCES
     compiler.cpp
     compiler_context.cpp
     compiler_context_cache.cpp
+    coopmatrix_layout.cpp
     data_type.cpp
     device_info.cpp
     error.cpp

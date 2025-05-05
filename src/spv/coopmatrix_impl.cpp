@@ -4,6 +4,7 @@
 #include "spv/coopmatrix_impl.hpp"
 #include "codegen_tools.hpp"
 #include "converter_aux.hpp"
+#include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "scalar_type.hpp"
@@ -22,6 +23,7 @@
 #include <array>
 #include <bit>
 #include <complex>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <utility>
@@ -30,13 +32,13 @@
 
 namespace tinytc::spv {
 
-coopmatrix_impl::coopmatrix_impl(tinytc_core_info const &info, uniquifier &unique)
-    : info_{&info}, unique_{&unique}, sgs_{32} {}
+coopmatrix_impl::coopmatrix_impl(uniquifier &unique, core_config const &cfg, gcd_analysis_result g)
+    : unique_{&unique}, cfg_{cfg}, gcd_{std::move(g)} {}
 
 auto coopmatrix_impl::extract(cooperative_matrix_extract_inst const &in, spv_inst *mat)
     -> spv_inst * {
     auto matt = get_coopmatrix_type(in.mat());
-    auto matl = get_layout(matt);
+    auto matl = get_layout(cfg(), matt);
     const auto idx = in.index();
     if (idx < 0 || idx >= matl.length) {
         throw compilation_error(in.loc(), status::ir_out_of_bounds);
@@ -46,7 +48,7 @@ auto coopmatrix_impl::extract(cooperative_matrix_extract_inst const &in, spv_ins
 auto coopmatrix_impl::insert(cooperative_matrix_insert_inst const &in, spv_inst *val, spv_inst *mat)
     -> spv_inst * {
     auto matt = get_coopmatrix_type(in.mat());
-    auto matl = get_layout(matt);
+    auto matl = get_layout(cfg(), matt);
     const auto idx = in.index();
     if (idx < 0 || idx >= matl.length) {
         throw compilation_error(in.loc(), status::ir_out_of_bounds);
@@ -60,7 +62,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
     auto rt = get_coopmatrix_type(in.result(0));
     auto pointer_ty = unique_->pointer_ty(ot);
 
-    auto layout = get_layout(rt);
+    auto layout = get_layout(cfg(), rt);
     auto matrix_ty = spv_ty(layout);
     auto interface_ty = spv_interface_ty(layout);
 
@@ -72,8 +74,8 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
         std::swap(stride[0], stride[1]);
     }
 
-    auto walker = matrix_walker(*unique_, sgs_, layout, pos0, pos1, shape[0], shape[1], stride[0],
-                                stride[1], in.checked());
+    auto walker = matrix_walker(*unique_, cfg().subgroup_size, layout, pos0, pos1, shape[0],
+                                shape[1], stride[0], stride[1], in.checked());
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(matrix_ty);
@@ -128,10 +130,10 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
     auto vt = get_coopmatrix_type(in.val());
     auto pointer_ty = unique_->pointer_ty(ot);
 
-    auto layout = get_layout(vt);
+    auto layout = get_layout(cfg(), vt);
 
-    auto walker = matrix_walker(*unique_, sgs_, layout, pos0, pos1, odv.shape(0), odv.shape(1),
-                                odv.stride(0), odv.stride(1), in.checked());
+    auto walker = matrix_walker(*unique_, cfg().subgroup_size, layout, pos0, pos1, odv.shape(0),
+                                odv.shape(1), odv.stride(0), odv.stride(1), in.checked());
 
     auto &mod = unique_->mod();
     const auto st = [&](tinytc_spv_mod &mod) {
@@ -177,10 +179,10 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result(0));
 
-    auto al = get_layout(at);
-    auto bl = get_layout(bt);
-    auto cl = get_layout(ct);
-    auto rl = get_layout(rt);
+    auto al = get_layout(cfg(), at);
+    auto bl = get_layout(cfg(), bt);
+    auto cl = get_layout(cfg(), ct);
+    auto rl = get_layout(cfg(), rt);
 
     const auto a_ty = at->component_ty();
     const auto b_ty = bt->component_ty();
@@ -235,8 +237,9 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                          */
                         const auto IK_1 = bl.rows * bl.blocks1;
                         const auto L = k % IK_1 + n * IK_1 + (k / IK_1) * IK_1 * bl.cols;
-                        const auto p = unique_->constant(static_cast<std::int32_t>(L % sgs_));
-                        const auto v = static_cast<LiteralInteger>(L / sgs_);
+                        const auto p =
+                            unique_->constant(static_cast<std::int32_t>(L % cfg().subgroup_size));
+                        const auto v = static_cast<LiteralInteger>(L / cfg().subgroup_size);
 
                         spv_inst *b_kn = extract(bl, b, v);
                         b_kn = mod.add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b_kn, p);
@@ -300,8 +303,8 @@ void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst const &, dope_ve
 auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
     -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto rl = get_layout(rt);
-    auto bl = get_layout(get_coopmatrix_type(in.b()));
+    auto rl = get_layout(cfg(), rt);
+    auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
 
@@ -318,9 +321,9 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a
 
 auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto rl = get_layout(rt);
-    auto al = get_layout(get_coopmatrix_type(in.a()));
-    auto bl = get_layout(get_coopmatrix_type(in.b()));
+    auto rl = get_layout(cfg(), rt);
+    auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
+    auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
 
@@ -337,9 +340,9 @@ auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> s
 }
 
 auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> spv_inst * {
-    auto al = get_layout(get_coopmatrix_type(in.a()));
+    auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto rt = get_coopmatrix_type(in.result(0));
-    auto rl = get_layout(rt);
+    auto rl = get_layout(cfg(), rt);
     auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
 
@@ -356,10 +359,10 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> sp
 
 auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
-    auto al = get_layout(at);
+    auto al = get_layout(cfg(), at);
     auto a_ty = at->component_ty();
     auto rt = get_coopmatrix_type(in.result(0));
-    auto rl = get_layout(rt);
+    auto rl = get_layout(cfg(), rt);
     auto r_ty = rt->component_ty();
     auto ty = spv_ty(rl);
 
@@ -410,7 +413,7 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
 
 auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
-    auto rl = get_layout(rt);
+    auto rl = get_layout(cfg(), rt);
     auto sty = rt->component_ty();
     auto spv_result_ty = spv_ty(rl);
 
@@ -480,30 +483,6 @@ auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
                                                       init_vector());
 }
 
-auto coopmatrix_impl::get_layout(coopmatrix_data_type const *ct) const -> coopmatrix_layout {
-    auto l = coopmatrix_layout{};
-    l.sty = ct->component_ty();
-    l.rows = std::min(ct->shape(0), static_cast<std::int64_t>(sgs_));
-    l.cols = (1 + (l.rows * ct->shape(1) - 1) / sgs_) * sgs_ / l.rows;
-    l.blocks = ct->shape(0) / l.rows;
-    l.length = l.rows * l.cols * l.blocks / sgs_;
-    l.shape1 = ct->shape(1);
-    l.blocks1 = 1;
-    if (ct->use() == matrix_use::b && l.blocks > 1) {
-        const auto omega_b = std::max(1, static_cast<int>(2 / size(l.sty)));
-        l.blocks1 = omega_b;
-    }
-    l.ops_per_chan = 1;
-    if (ct->use() == matrix_use::a) {
-        const auto omega = std::max(1, static_cast<int>(4 / size(l.sty)));
-        if (l.cols % l.ops_per_chan == 0) {
-            l.ops_per_chan = omega;
-        }
-    }
-
-    return l;
-}
-
 auto coopmatrix_impl::spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst * {
     return unique_->scalar_ty(layout.sty);
 }
@@ -529,7 +508,7 @@ auto coopmatrix_impl::spv_ty(coopmatrix_layout const &layout) -> spv_inst * {
 }
 
 auto coopmatrix_impl::spv_ty(coopmatrix_data_type const *ct) -> spv_inst * {
-    return spv_ty(get_layout(ct));
+    return spv_ty(get_layout(cfg(), ct));
 }
 
 auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *mat, LiteralInteger v)
