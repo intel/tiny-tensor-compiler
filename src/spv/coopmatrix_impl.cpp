@@ -179,6 +179,16 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result(0));
 
+    if (at->rows() % cfg().subgroup_size != 0) {
+        throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
+    }
+    if (ct->rows() % cfg().subgroup_size != 0) {
+        throw compilation_error(in.loc(), {&in.c()}, status::ir_unsupported_coopmatrix_shape);
+    }
+    if (rt->rows() % cfg().subgroup_size != 0) {
+        throw compilation_error(in.loc(), {}, status::ir_unsupported_coopmatrix_shape);
+    }
+
     auto al = get_layout(cfg(), at);
     auto bl = get_layout(cfg(), bt);
     auto cl = get_layout(cfg(), ct);
@@ -208,7 +218,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
             auto c_im_block = std::array<spv_inst *, nbb>{};
             std::fill(std::begin(c_block), std::end(c_block), nullptr);
             std::fill(std::begin(c_im_block), std::end(c_im_block), nullptr);
-            for (std::int32_t n = nb; n < nb + nbb; ++n) {
+            for (std::int64_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
                     c_block[n - nb] = extract(cl, c, cl.component_no(n, m_block));
                     if (a_and_b_complex) {
@@ -219,7 +229,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
 
             for (std::int64_t k = 0; k < bl.rows * bl.blocks; ++k) {
                 auto a_mk = extract(al, a, al.component_no(k, m_block));
-                for (std::int32_t n = nb; n < nb + nbb; ++n) {
+                for (std::int64_t n = nb; n < nb + nbb; ++n) {
                     if (n < rl.cols) {
                         /** For matrix B we have L(i,k_1,j,k_2) = i + k_1*I + j*I*K_1 +
                          * k_2*I*K_1*J.
@@ -243,8 +253,8 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
 
                         spv_inst *b_kn = extract(bl, b, v);
                         b_kn = mod.add<OpGroupBroadcast>(spv_b_ty, broadcast_scope, b_kn, p);
-                        auto &c_mn = c_block[n - nb];
 
+                        auto &c_mn = c_block[n - nb];
                         if (a_and_b_complex) {
                             auto &c_im_mn = c_im_block[n - nb];
                             auto b_kn_re = mod.add<OpCompositeExtract>(
@@ -272,7 +282,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                 }
             }
             if (a_and_b_complex) {
-                for (std::int32_t n = nb; n < nb + nbb; ++n) {
+                for (std::int64_t n = nb; n < nb + nbb; ++n) {
                     if (n < rl.cols) {
                         auto &c_mn = c_block[n - nb];
                         auto &c_im_mn = c_im_block[n - nb];
@@ -283,7 +293,7 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
                     }
                 }
             }
-            for (std::int32_t n = nb; n < nb + nbb; ++n) {
+            for (std::int64_t n = nb; n < nb + nbb; ++n) {
                 if (n < rl.cols) {
                     auto &c_mn = c_block[n - nb];
                     if (c_ty != r_ty) {
@@ -394,6 +404,9 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
                    * we have
                    * p_{acc} = L_{acc}%S = p_b
                    * v_{acc} = L_{acc}/S = k%L_1 + j*L_1 + (k/L_1)*L_1*J
+                   *
+                   * If M < S, then we have K_1=K_2=L_1=L_2=1, and there is no layout
+                   * transformation. The code below just returns v - the identity - if M < S.
                    */
                   auto const k_1 = v % rl.blocks1;
                   auto const j = v / rl.blocks1 % rl.cols;

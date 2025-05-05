@@ -1768,7 +1768,7 @@ Op.-No. Type             Description
 ======= ================ ===========================
 
 Cooperative matrix insert
-..........................
+.........................
 
 .. code:: abnf
 
@@ -1780,7 +1780,7 @@ Overview
 
 Return a copy the coopmatrix, while modifying one entry of the coopmatrix.
 The index is supplied in square brackets and must be greater or equal than zero
-Jand smaller than the length of the work-item vector, cf. :ref:`coopmatrix layout`.
+and smaller than the length of the work-item vector, cf. :ref:`coopmatrix layout`.
 
 The coopmatrix type of the returned value must match the coopmatrix type of the incoming matrix.
 The scalar type of the inserted scalar must match the component type of the coopmatrix.
@@ -1876,6 +1876,8 @@ Matrix mul add returns the value of
 
 where A, B, and C are matrices given by the three operands.
 
+The number of rows of matrix A,C, and D must be a multiple of the subgroup size.
+
 Operands
 ~~~~~~~~
 
@@ -1890,6 +1892,7 @@ Op.-No. Type            Use        Description
 Restrictions
 ~~~~~~~~~~~~
 
+* :math:`\forall X\in\{A,C,D\}: \text{rows}(X) \bmod \text{subgroup_size} = 0`
 * :math:`\text{columns}(A) = \text{rows}(B)`
 * :math:`\text{rows}(C) = \text{rows}(A) \land \text{columns}(C) = \text{columns}(B)`
 * :math:`\text{shape}(D) = \text{shape}(C)`
@@ -1941,6 +1944,39 @@ Restrictions
 ~~~~~~~~~~~~
 
 * All arguments **must** be dynamically uniform.
+
+Cooperative matrix reduce
+.........................
+
+.. code:: abnf
+
+    coopmatrix-reduce-type  =  "cooperative_matrix_reduce.add.row" /
+                               "cooperative_matrix_reduce.add.column" /
+                               "cooperative_matrix_reduce.max.row" /
+                               "cooperative_matrix_reduce.max.column" /
+                               "cooperative_matrix_reduce.min.row" /
+                               "cooperative_matrix_reduce.min.column"
+    value-instruction       =/ coopmatrix-reduce-type local-identifier ":" coopmatrix-type
+
+Overview
+~~~~~~~~
+
+Computes the sum, maximum, or minimum over either the rows or columns of a coopmatrix.
+
+The component type and use of the the returned value's coopmatrix type
+must match the component type and use of the incoming matrix.
+
+For a row reduction the resulting shape must be :math:`M\times 1` and for a column reduction
+the resulting shape must be :math:`1\times N`, where the shape of the incoming matrix is :math:`M\times N`.
+
+Operands
+~~~~~~~~~
+
+======= ================ ===========================
+Op.-No. Type             Description
+======= ================ ===========================
+1       coopmatrix-type  Incoming cooperative matrix
+======= ================ ===========================
 
 Cooperative matrix scale
 ........................
@@ -2058,71 +2094,24 @@ Restrictions
 
 * The second operand **must** be dynamically uniform.
 
-Subgroup add
-............
-
-.. code:: abnf
-
-    subgroup-add-type       = "subgroup_add.exclusive_scan" /
-                              "subgroup_add.inclusive_scan" /
-                              "subgroup_add.reduce" /
-    value-instruction       =/ subgroup-add-type local-identifier ":" scalar-type
-
-Overview
-~~~~~~~~
-
-Computes the :ref:`subgroup operation` with :math:`\diamond:=+` and :math:`I:=0`.
-
-Subgroup max
-............
-
-.. code:: abnf
-
-    subgroup-max-type       = "subgroup_max.exclusive_scan" /
-                              "subgroup_max.inclusive_scan" /
-                              "subgroup_max.reduce" /
-    value-instruction       =/ subgroup-max-type local-identifier ":" scalar-type
-
-Overview
-~~~~~~~~
-
-Computes the :ref:`subgroup operation` with :math:`\diamond:=\max` and identity as given in the following table:
-
-============= ==============================================
-Identity      Value
-============= ==============================================
-integer-type  Smallest integer representable by integer type
-floating-type :math:`-\infty`
-complex type  Forbidden
-============= ==============================================
-
-Subgroup min
-............
-
-.. code:: abnf
-
-    subgroup-min-type       = "subgroup_min.exclusive_scan" /
-                              "subgroup_min.inclusive_scan" /
-                              "subgroup_min.reduce" /
-    value-instruction       =/ subgroup-min-type local-identifier ":" scalar-type
-
-Overview
-~~~~~~~~
-
-Computes the :ref:`subgroup operation` with :math:`\diamond:=\min` and identity as given in the following table:
-
-============= =============================================
-Identity      Value
-============= =============================================
-integer-type  Largest integer representable by integer type
-floating-type :math:`+\infty`
-complex type  Forbidden
-============= =============================================
-
-.. _subgroup operation:
-
 Subgroup operation
 ..................
+
+.. code:: abnf
+
+    subgroup-operation-type = "subgroup.add.exclusive_scan" /
+                              "subgroup.add.inclusive_scan" /
+                              "subgroup.add.reduce" /
+                              "subgroup.max.exclusive_scan" /
+                              "subgroup.max.inclusive_scan" /
+                              "subgroup.max.reduce" /
+                              "subgroup.min.exclusive_scan" /
+                              "subgroup.min.inclusive_scan" /
+                              "subgroup.min.reduce"
+    value-instruction       =/ subgroup-operation-type local-identifier ":" scalar-type
+
+Overview
+~~~~~~~~
 
 Let :math:`[x_0,x_1,\dots,x_{n-1}]` be the input vector contributed by a subgroup of size *n*.
 (The work-item with subgroup local id *i* contributes :math:`x_i`.)
@@ -2136,6 +2125,37 @@ exclusive_scan :math:`[I, x_0, (x_0 \diamond x_1), \dots, x_0 \diamond x_1 \diam
 inclusive_scan :math:`[x_0, (x_0 \diamond x_1), \dots, x_0 \diamond x_1 \diamond \dots \diamond x_{n-1}]`
 reduce         :math:`[s,s,\dots,s] \text{ with } s := x_0 \diamond \dots \diamond x_{n-1}`
 ============== =============================================================================================
+
+Add
+~~~
+
+Computes the subgroup operation with :math:`\diamond:=+` and :math:`I:=0`.
+
+Max
+~~~
+
+Computes the subgroup operation with :math:`\diamond:=\max` and identity as given in the following table:
+
+============= ==============================================
+Identity      Value
+============= ==============================================
+integer-type  Smallest integer representable by integer type
+floating-type :math:`-\infty`
+complex type  Forbidden
+============= ==============================================
+
+Min
+~~~
+
+Computes the subgroup operation with :math:`\diamond:=\min` and identity as given in the following table:
+
+============= =============================================
+Identity      Value
+============= =============================================
+integer-type  Largest integer representable by integer type
+floating-type :math:`+\infty`
+complex type  Forbidden
+============= =============================================
 
 
 Sample code

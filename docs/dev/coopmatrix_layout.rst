@@ -185,14 +185,12 @@ Load pseudo-code (SIMT)
 Matrix Accumulator
 ==================
 
-For cooperative matrices with use *matrix_acc* we restrict that
-:math:`M` is a multiple of :math:`S`.
-We always have :math:`K_1=1`.
+For cooperative matrices with use *matrix_acc* we always have :math:`K_1=1`.
 
 Matrix A
 ========
 
-For cooperative matrices with use *matrix_a* we restrict :math:`M` to being a multiple of :math:`S`.
+For cooperative matrices with use *matrix_a* we always have :math:`K_1=1`.
 Moreover, low precision matrices are VNNI transformed if :math:`N` is a multiple of :math:`\omega`,
 where :math:`\omega=\max(1, \max(1,4/\text{size}(\text{ty}))` is the number of operands per channel.
 We store :math:`A^*` tensors internally
