@@ -238,6 +238,14 @@ lex:
         "math.native_exp"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp, loc_); }
         "math.native_exp2"  { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp2, loc_); }
 
+        // coopmatrix reduce
+        "cooperative_matrix_reduce.add.row"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::add, reduce_mode::row}, loc_); }
+        "cooperative_matrix_reduce.add.column" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::add, reduce_mode::column}, loc_); }
+        "cooperative_matrix_reduce.max.row"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::max, reduce_mode::row}, loc_); }
+        "cooperative_matrix_reduce.max.column" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::max, reduce_mode::column}, loc_); }
+        "cooperative_matrix_reduce.min.row"    { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::min, reduce_mode::row}, loc_); }
+        "cooperative_matrix_reduce.min.column" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE({group_arithmetic::min, reduce_mode::column}, loc_); }
+
         // subgroup op
         "subgroup_operation.add.exclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::add, group_operation::exclusive_scan}, loc_); }
         "subgroup_operation.add.inclusive_scan" { adv_loc(); return parser::make_SUBGROUP_OPERATION({group_arithmetic::add, group_operation::inclusive_scan}, loc_); }

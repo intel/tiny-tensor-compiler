@@ -161,6 +161,7 @@
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
+%token <std::pair<group_arithmetic,reduce_mode>> COOPERATIVE_MATRIX_REDUCE
 %token <std::pair<group_arithmetic,group_operation>> SUBGROUP_OPERATION
 %token <math_unary> MATH_UNARY
 %token <matrix_use> MATRIX_USE
@@ -236,6 +237,7 @@
 %nterm <inst> cooperative_matrix_load_inst
 %nterm <inst> cooperative_matrix_mul_add_inst
 %nterm <inst> cooperative_matrix_prefetch_inst
+%nterm <inst> cooperative_matrix_reduce_inst
 %nterm <inst> cooperative_matrix_scale_inst
 %nterm <inst> cooperative_matrix_store_inst
 %nterm <checked_flag> checked
@@ -787,6 +789,7 @@ valued_inst:
   | cooperative_matrix_insert_inst  { $$ = std::move($1); }
   | cooperative_matrix_load_inst    { $$ = std::move($1); }
   | cooperative_matrix_mul_add_inst { $$ = std::move($1); }
+  | cooperative_matrix_reduce_inst  { $$ = std::move($1); }
   | cooperative_matrix_scale_inst   { $$ = std::move($1); }
   | expand_inst             { $$ = std::move($1); }
   | for_inst                { $$ = std::move($1); }
@@ -1023,6 +1026,22 @@ cooperative_matrix_prefetch_inst:
                 std::make_unique<cooperative_matrix_prefetch_inst>($cache_level, std::move($op),
                                                                    std::move($p0), std::move($p1), $rows,
                                                                    $cols, @cooperative_matrix_prefetch_inst)
+                    .release()
+            };
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            YYERROR;
+        }
+    }
+;
+
+cooperative_matrix_reduce_inst:
+    COOPERATIVE_MATRIX_REDUCE var[a] COLON data_type[ty] {
+        try {
+            $$ = inst {
+                std::make_unique<cooperative_matrix_reduce_inst>(
+                    $COOPERATIVE_MATRIX_REDUCE.first, $COOPERATIVE_MATRIX_REDUCE.second, std::move($a),
+                    std::move($ty), @cooperative_matrix_reduce_inst)
                     .release()
             };
         } catch (compilation_error const &e) {

@@ -82,6 +82,10 @@ auto inst_cloner::operator()(cooperative_matrix_prefetch_inst &in) -> std::uniqu
                                                               subs(&in.pos0()), subs(&in.pos1()),
                                                               in.rows(), in.cols(), in.loc());
 }
+auto inst_cloner::operator()(cooperative_matrix_reduce_inst &in) -> std::unique_ptr<tinytc_inst> {
+    return std::make_unique<cooperative_matrix_reduce_inst>(in.arith(), in.mode(), subs(&in.a()),
+                                                            in.result(0).ty(), in.loc());
+}
 auto inst_cloner::operator()(cooperative_matrix_scale_inst &in) -> std::unique_ptr<tinytc_inst> {
     return std::make_unique<cooperative_matrix_scale_inst>(subs(&in.a()), subs(&in.b()),
                                                            in.result(0).ty(), in.loc());

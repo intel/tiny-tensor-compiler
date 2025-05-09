@@ -1225,6 +1225,17 @@ inline char const *to_string(group_operation op) {
 }
 
 /**
+ * @brief Convert reduce mode to string
+ *
+ * @param m Reduce mode
+ *
+ * @return C-string
+ */
+inline char const *to_string(reduce_mode m) {
+    return ::tinytc_reduce_mode_to_string(static_cast<::tinytc_reduce_mode_t>(m));
+}
+
+/**
  * @brief Convert math operation type to string (unary)
  *
  * @param op Math operation type

@@ -326,6 +326,14 @@ void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst const &c) {
     *os_ << c.cols();
 }
 
+void dump_ir_pass::operator()(cooperative_matrix_reduce_inst const &c) {
+    *os_ << "cooperative_matrix_reduce.";
+    *os_ << to_string(c.arith()) << "." << to_string(c.mode()) << " ";
+    dump_val(c.a());
+    *os_ << " : ";
+    visit(*this, *c.result(0).ty());
+}
+
 void dump_ir_pass::operator()(cooperative_matrix_scale_inst const &c) {
     dump_val(c.result(0));
     *os_ << " = cooperative_matrix_scale ";

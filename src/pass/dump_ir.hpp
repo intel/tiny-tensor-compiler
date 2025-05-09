@@ -53,6 +53,7 @@ class dump_ir_pass {
     void operator()(cooperative_matrix_load_inst const &c);
     void operator()(cooperative_matrix_mul_add_inst const &c);
     void operator()(cooperative_matrix_prefetch_inst const &c);
+    void operator()(cooperative_matrix_reduce_inst const &c);
     void operator()(cooperative_matrix_scale_inst const &c);
     void operator()(cooperative_matrix_store_inst const &c);
     void operator()(cumsum_inst const &a);

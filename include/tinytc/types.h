@@ -367,6 +367,12 @@ typedef enum {
     tinytc_group_operation_reduce = 2          ///< Reduction
 } tinytc_group_operation_t;
 
+//! Reduce mode
+typedef enum {
+    tinytc_reduce_mode_row = 0,    ///< Reduction over rows
+    tinytc_reduce_mode_column = 1, ///< Reducation over columns
+} tinytc_reduce_mode_t;
+
 //! Transpose
 typedef enum {
     tinytc_transpose_N = 0, ///< No transpose

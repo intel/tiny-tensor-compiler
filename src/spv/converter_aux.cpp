@@ -26,6 +26,18 @@
 
 namespace tinytc::spv {
 
+auto convert_group_operation(group_operation op) -> GroupOperation {
+    switch (op) {
+    case group_operation::exclusive_scan:
+        return GroupOperation::ExclusiveScan;
+    case group_operation::inclusive_scan:
+        return GroupOperation::InclusiveScan;
+    case group_operation::reduce:
+        return GroupOperation::Reduce;
+    }
+    throw status::internal_compiler_error;
+}
+
 auto get_last_label(tinytc_spv_mod &mod) -> spv_inst * {
     auto &insts = mod.insts(section::function);
     auto it = insts.end();
@@ -593,6 +605,60 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv
     case scalar_type::c64: {
         return make_complex(op, sty, ty, a);
     }
+    }
+    throw compilation_error(loc, status::internal_compiler_error);
+}
+
+auto make_subgroup_op(uniquifier &unique, scalar_type sty, group_arithmetic arith,
+                      group_operation op, spv_inst *a, location const &loc) -> spv_inst * {
+    auto &mod = unique.mod();
+    auto const make_impl = [&]<typename Ops>(scalar_type sty, GroupOperation group_op, spv_inst *ty,
+                                             spv_inst *operand) -> spv_inst * {
+        auto scope = unique.constant(static_cast<std::int32_t>(Scope::Subgroup));
+        switch (sty) {
+        case scalar_type::i8:
+        case scalar_type::i16:
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            return mod.add<typename Ops::i>(ty, scope, group_op, operand);
+        case scalar_type::bf16: {
+            auto float_ty = unique.scalar_ty(scalar_type::f32);
+            auto operandf = mod.add<OpConvertBF16ToFINTEL>(float_ty, operand);
+            auto resultf = mod.add<OpGroupFMax>(float_ty, scope, group_op, operandf);
+            return mod.add<OpConvertFToBF16INTEL>(ty, resultf);
+        }
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+            return mod.add<typename Ops::f>(ty, scope, group_op, operand);
+        case scalar_type::c32:
+        case scalar_type::c64:
+            return mod.add<typename Ops::f>(ty, scope, group_op, operand);
+        }
+        throw compilation_error(loc, status::internal_compiler_error);
+    };
+    auto ty = unique.scalar_ty(sty);
+    struct add_ops {
+        using i = OpGroupIAdd;
+        using f = OpGroupFAdd;
+    };
+    struct max_ops {
+        using i = OpGroupSMax;
+        using f = OpGroupFMax;
+    };
+    struct min_ops {
+        using i = OpGroupSMin;
+        using f = OpGroupFMin;
+    };
+    auto spv_op = convert_group_operation(op);
+    switch (arith) {
+    case group_arithmetic::add:
+        return make_impl.template operator()<add_ops>(sty, spv_op, ty, a);
+    case group_arithmetic::max:
+        return make_impl.template operator()<max_ops>(sty, spv_op, ty, a);
+    case group_arithmetic::min:
+        return make_impl.template operator()<min_ops>(sty, spv_op, ty, a);
     }
     throw compilation_error(loc, status::internal_compiler_error);
 }

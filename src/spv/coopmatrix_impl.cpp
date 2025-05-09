@@ -310,6 +310,84 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
 void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst const &, dope_vector const &,
                                spv_inst *, spv_inst *, spv_inst *) {}
 
+auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a) -> spv_inst * {
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto rl = get_layout(cfg(), rt);
+    auto at = get_coopmatrix_type(in.a());
+    auto al = get_layout(cfg(), at);
+    auto matrix_ty = spv_ty(rl);
+    const auto sty = rt->component_ty();
+    auto ty = unique_->scalar_ty(sty);
+    auto bool_ty = unique_->bool_ty();
+    auto i32_ty = unique_->scalar_ty(scalar_type::i32);
+    const auto sgs = cfg().subgroup_size;
+
+    if (at->rows() % sgs != 0) {
+        throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
+    }
+
+    auto const binary_arith = [&](group_arithmetic a) {
+        switch (a) {
+        case group_arithmetic::add:
+            return arithmetic::add;
+        case group_arithmetic::max:
+            return arithmetic::max;
+        case group_arithmetic::min:
+            return arithmetic::min;
+        }
+        throw compilation_error(in.loc(), status::internal_compiler_error);
+    }(in.arith());
+
+    auto &mod = unique_->mod();
+    spv_inst *result = mod.add<OpUndef>(matrix_ty);
+    if (in.mode() == reduce_mode::column) {
+        auto p = unique_->load_builtin(BuiltIn::SubgroupLocalInvocationId);
+        auto scope = unique_->constant(static_cast<std::int32_t>(Scope::Subgroup));
+        auto c0 = unique_->constant(std::int32_t{0});
+        auto cnull = unique_->null_constant(ty);
+
+        for (std::int32_t j0 = 0; j0 < al.shape1; j0 += sgs) {
+            auto x = std::vector<spv_inst *>(sgs, nullptr);
+            for (std::int32_t b = 0; b < al.blocks; ++b) {
+                for (std::int32_t i = 0; i < sgs; ++i) {
+                    if (j0 + i < al.shape1) {
+                        auto a_i = extract(al, a, al.component_no(j0 + i, b));
+                        x[i] =
+                            x[i] ? make_binary_op(*unique_, sty, binary_arith, x[i], a_i, in.loc())
+                                 : a_i;
+                    } else if (x[i] == nullptr) {
+                        x[i] = cnull;
+                    }
+                }
+            }
+            for (std::int32_t v = 1; v < sgs; v *= 2) {
+                auto cv = unique_->constant(v);
+                spv_inst *cond = mod.add<OpBitwiseAnd>(i32_ty, p, cv);
+                cond = mod.add<OpIEqual>(bool_ty, cond, c0);
+                for (int i = 0; i < sgs / v; ++i) {
+                    auto shl = mod.add<OpGroupNonUniformShuffleXor>(ty, scope, x[i], cv);
+                    x[i] = make_binary_op(*unique_, sty, binary_arith, x[i], shl, in.loc());
+                }
+                for (int i = 0; i < sgs / v; i += 2) {
+                    x[i / 2] = mod.add<OpSelect>(ty, cond, x[i], x[i + 1]);
+                }
+            }
+            result = insert(rl, x[0], result, j0 / sgs);
+        }
+    } else {
+        for (std::int32_t b = 0; b < al.blocks; ++b) {
+            spv_inst *sum = nullptr;
+            for (std::int32_t j = 0; j < al.length / al.blocks; ++j) {
+                auto a_i = extract(al, a, al.component_no(j, b));
+                sum = sum ? make_binary_op(*unique_, sty, binary_arith, sum, a_i, in.loc()) : a_i;
+            }
+            result = insert(rl, sum, result, rl.component_no(0, b));
+        }
+    }
+
+    return result;
+}
+
 auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
     -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));

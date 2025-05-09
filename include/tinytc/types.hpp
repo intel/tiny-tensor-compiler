@@ -332,6 +332,12 @@ enum class group_operation {
     reduce = tinytc_group_operation_reduce                  ///< Reduction
 };
 
+//! Reduce mode
+enum class reduce_mode {
+    row = tinytc_reduce_mode_row,       ///< Row reduction
+    column = tinytc_reduce_mode_column, ///< Column reduction
+};
+
 //! Math operations (unary)
 enum class math_unary {
     cos = tinytc_math_unary_cos,                 ///< Cosine

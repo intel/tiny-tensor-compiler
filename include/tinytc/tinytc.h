@@ -355,6 +355,8 @@ TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t 
 TINYTC_EXPORT char const *tinytc_group_arithmetic_to_string(tinytc_group_arithmetic_t op);
 //! Convert subgroup op to string
 TINYTC_EXPORT char const *tinytc_group_operation_to_string(tinytc_group_operation_t op);
+//! Convert reduce mode to string
+TINYTC_EXPORT char const *tinytc_reduce_mode_to_string(tinytc_reduce_mode_t m);
 //! Convert math operation type to string (unary)
 TINYTC_EXPORT char const *tinytc_math_unary_to_string(tinytc_math_unary_t op);
 //! Convert matrix use to string

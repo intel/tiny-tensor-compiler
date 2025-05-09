@@ -704,4 +704,84 @@ func @use_cast(%A: memref<i8x128x128>,
     check(32, 48, 0, 8);
 }
 
+TEST_CASE(RUNTIME_NAME " matrix reduction i16") {
+    auto gpu_rt = std::make_shared<runtime_class>();
+
+    const std::string code = R"TinyTL(
+func @reduction(%A: memref<i16x128x128>,
+                %B: memref<i16x128x128>)
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        %0 = constant 0 : index
+        %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x16,matrix_acc>
+        %2 = cooperative_matrix_reduce.add.column %1 : coopmatrix<i16x1x16,matrix_acc>
+        cooperative_matrix_store %2, %B[%0,%0]
+
+        %c1 = constant 1 : index
+        %3 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x7,matrix_acc>
+        %4 = cooperative_matrix_reduce.add.column %3 : coopmatrix<i16x1x7,matrix_acc>
+        cooperative_matrix_store %4, %B[%c1,%0]
+
+        %c2 = constant 2 : index
+        %5 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x32x32,matrix_acc>
+        %6 = cooperative_matrix_reduce.add.column %5 : coopmatrix<i16x1x32,matrix_acc>
+        cooperative_matrix_store %6, %B[%c2,%0]
+
+        %c3 = constant 3 : index
+        %7 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x16,matrix_acc>
+        %8 = cooperative_matrix_reduce.add.row %7 : coopmatrix<i16x16x1,matrix_acc>
+        cooperative_matrix_store %8, %B[%c3,%0]
+
+        %9 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x7,matrix_acc>
+        %10 = cooperative_matrix_reduce.add.row %9 : coopmatrix<i16x16x1,matrix_acc>
+        cooperative_matrix_store %10, %B[%c3,%c1]
+
+        %11 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x32x32,matrix_acc>
+        %12 = cooperative_matrix_reduce.add.row %11 : coopmatrix<i16x32x1,matrix_acc>
+        cooperative_matrix_store %12, %B[%c3,%c2]
+
+        ;%13 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x4x42,matrix_acc>
+        ;%14 = cooperative_matrix_reduce.add.row %13 : coopmatrix<i16x4x1,matrix_acc>
+        ;cooperative_matrix_store %14, %B[%c3,%c3]
+    }
+})TinyTL";
+
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<std::int16_t>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                A(i, j) = i + j;
+            }
+        }
+        return A;
+    }();
+    auto B = test_matrix<std::int16_t>(N, N);
+
+    run_custom_test_case(code, "reduction", A, B);
+
+    auto const sum = [&](std::int64_t n) { return (n - 1) * n / 2; };
+    auto const check_column = [&](std::int64_t i, std::int64_t j0, std::int64_t j1,
+                                  std::int64_t M) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            REQUIRE(B(i, j) == sum(M) + (j - j0) * M);
+        }
+    };
+    check_column(0, 0, 16, 16);
+    check_column(1, 0, 7, 16);
+    check_column(2, 0, 32, 32);
+
+    auto const check_row = [&](std::int64_t i, std::int64_t j0, std::int64_t j1, std::int64_t M) {
+        for (std::int64_t j = j0; j < j1; ++j) {
+            REQUIRE(B(j, i) == sum(M) + (j - j0) * M);
+        }
+    };
+
+    check_row(0, 3, 19, 16);
+    check_row(1, 3, 19, 7);
+    check_row(2, 3, 35, 32);
+    // check_row(3, 3, 7, 42);
+}
+
 #endif // XMX_20250120_HPP

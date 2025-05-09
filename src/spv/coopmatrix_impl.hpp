@@ -21,6 +21,7 @@ class cooperative_matrix_insert_inst;
 class cooperative_matrix_load_inst;
 class cooperative_matrix_mul_add_inst;
 class cooperative_matrix_prefetch_inst;
+class cooperative_matrix_reduce_inst;
 class cooperative_matrix_scale_inst;
 class cooperative_matrix_store_inst;
 class coopmatrix_data_type;
@@ -51,6 +52,7 @@ class coopmatrix_impl {
                          spv_inst *c) -> spv_inst *;
     virtual void prefetch(cooperative_matrix_prefetch_inst const &in, dope_vector const &odv,
                           spv_inst *pointer, spv_inst *pos0, spv_inst *pos1);
+    virtual auto reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a) -> spv_inst *;
     virtual auto scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
         -> spv_inst *;
     virtual void store(cooperative_matrix_store_inst const &in, dope_vector const &odv,

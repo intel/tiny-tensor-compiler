@@ -5,6 +5,7 @@
 #define CONVERTER_AUX_20250416_HPP
 
 #include "node/inst_node.hpp"
+#include "spv/enums.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -15,6 +16,7 @@ namespace tinytc::spv {
 class spv_inst;
 class uniquifier;
 
+auto convert_group_operation(group_operation op) -> GroupOperation;
 auto get_last_label(tinytc_spv_mod &mod) -> spv_inst *;
 auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst *a, spv_inst *b,
                     location const &loc) -> spv_inst *;
@@ -40,6 +42,8 @@ void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_sp
                 spv_inst *pointer, spv_inst *value, location const &loc);
 auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv_inst *a,
                    location const &loc) -> spv_inst *;
+auto make_subgroup_op(uniquifier &unique, scalar_type sty, group_arithmetic arith,
+                      group_operation op, spv_inst *a, location const &loc) -> spv_inst *;
 
 } // namespace tinytc::spv
 

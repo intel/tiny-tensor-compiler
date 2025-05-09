@@ -12,6 +12,7 @@ Builder C++-API:
       - tinytc::group_operation
       - tinytc::math_unary
       - tinytc::matrix_use
+      - tinytc::reduce_mode
       - tinytc::scalar_type
       - tinytc::store_flag
       - tinytc::transpose
@@ -27,6 +28,7 @@ Builder C++-API:
       - tinytc::to_string(group_operation)
       - tinytc::to_string(math_unary)
       - tinytc::to_string(matrix_use)
+      - tinytc::to_string(reduce_mode)
       - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)

@@ -119,18 +119,6 @@ auto inst_converter::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
         *ty);
 }
 
-auto inst_converter::convert_group_operation(group_operation op) const -> GroupOperation {
-    switch (op) {
-    case group_operation::exclusive_scan:
-        return GroupOperation::ExclusiveScan;
-    case group_operation::inclusive_scan:
-        return GroupOperation::InclusiveScan;
-    case group_operation::reduce:
-        return GroupOperation::Reduce;
-    }
-    throw status::internal_compiler_error;
-}
-
 auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
     if (dope_vec_.contains(&v)) {
         throw compilation_error(v.loc(), status::internal_compiler_error);
@@ -475,6 +463,9 @@ void inst_converter::operator()(cooperative_matrix_prefetch_inst const &in) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
     matrix_impl().prefetch(in, *odv, val(in.operand()), val(in.pos0()), val(in.pos1()));
+}
+void inst_converter::operator()(cooperative_matrix_reduce_inst const &in) {
+    declare(in.result(0), matrix_impl().reduce(in, val(in.a())));
 }
 void inst_converter::operator()(cooperative_matrix_scale_inst const &in) {
     declare(in.result(0), matrix_impl().scale(in, val(in.a()), val(in.b())));
@@ -904,61 +895,9 @@ void inst_converter::operator()(subgroup_broadcast_inst const &in) {
 }
 
 void inst_converter::operator()(subgroup_operation_inst const &in) {
-    auto const make_impl = [&]<typename Ops>(scalar_type sty, GroupOperation group_op, spv_inst *ty,
-                                             spv_inst *operand) -> spv_inst * {
-        auto scope = unique_.constant(static_cast<std::int32_t>(Scope::Subgroup));
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            return mod_->add<typename Ops::i>(ty, scope, group_op, operand);
-        case scalar_type::bf16: {
-            auto float_ty = unique_.scalar_ty(scalar_type::f32);
-            auto operandf = mod_->add<OpConvertBF16ToFINTEL>(float_ty, operand);
-            auto resultf = mod_->add<OpGroupFMax>(float_ty, scope, group_op, operandf);
-            return mod_->add<OpConvertFToBF16INTEL>(ty, resultf);
-        }
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return mod_->add<typename Ops::f>(ty, scope, group_op, operand);
-        case scalar_type::c32:
-        case scalar_type::c64:
-            return mod_->add<typename Ops::f>(ty, scope, group_op, operand);
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-    auto const make = [&](scalar_type sty, group_arithmetic arith, group_operation op, spv_inst *ty,
-                          spv_inst *operand) -> spv_inst * {
-        struct add_ops {
-            using i = OpGroupIAdd;
-            using f = OpGroupFAdd;
-        };
-        struct max_ops {
-            using i = OpGroupSMax;
-            using f = OpGroupFMax;
-        };
-        struct min_ops {
-            using i = OpGroupSMin;
-            using f = OpGroupFMin;
-        };
-        auto spv_op = convert_group_operation(op);
-        switch (arith) {
-        case group_arithmetic::add:
-            return make_impl.template operator()<add_ops>(sty, spv_op, ty, operand);
-        case group_arithmetic::max:
-            return make_impl.template operator()<max_ops>(sty, spv_op, ty, operand);
-        case group_arithmetic::min:
-            return make_impl.template operator()<min_ops>(sty, spv_op, ty, operand);
-        }
-        throw compilation_error(in.loc(), status::internal_compiler_error);
-    };
-
-    auto ty = spv_ty(in.result(0).ty());
     auto sty = get_scalar_type(in.a());
-    declare(in.result(0), make(sty, in.arith(), in.operation(), ty, val(in.a())));
+    declare(in.result(0),
+            make_subgroup_op(unique_, sty, in.arith(), in.operation(), val(in.a()), in.loc()));
 }
 
 void inst_converter::operator()(store_inst const &in) {

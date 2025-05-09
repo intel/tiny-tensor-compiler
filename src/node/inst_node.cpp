@@ -85,6 +85,7 @@ auto tinytc_inst::kind() const -> tinytc::inst_execution_kind {
     case tinytc::IK::cooperative_matrix_load:
     case tinytc::IK::cooperative_matrix_mul_add:
     case tinytc::IK::cooperative_matrix_prefetch:
+    case tinytc::IK::cooperative_matrix_reduce:
     case tinytc::IK::cooperative_matrix_scale:
     case tinytc::IK::cooperative_matrix_store:
     case tinytc::IK::subgroup_broadcast:
@@ -770,6 +771,30 @@ cooperative_matrix_prefetch_inst::cooperative_matrix_prefetch_inst(
 
     check_index_ty(lc, pos0());
     check_index_ty(lc, pos1());
+}
+
+cooperative_matrix_reduce_inst::cooperative_matrix_reduce_inst(group_arithmetic arith,
+                                                               reduce_mode mode, tinytc_value_t a0,
+                                                               tinytc_data_type_t ty,
+                                                               location const &lc)
+    : standard_inst{IK::cooperative_matrix_reduce}, arith_{arith}, mode_{mode} {
+    op(0, a0);
+    loc(lc);
+
+    auto at = get_coopmatrix_type(loc(), a());
+    auto rt = get_coopmatrix_type(loc(), ty);
+    if (at->ty() != rt->ty()) {
+        throw compilation_error(loc(), {&a()}, status::ir_scalar_mismatch);
+    }
+    if (at->use() != rt->use()) {
+        throw compilation_error(loc(), {&a()}, status::ir_invalid_matrix_use);
+    }
+    const int m = mode_ == reduce_mode::column ? 0 : 1;
+    if (rt->shape(1 - m) != at->shape(1 - m) || rt->shape(m) != 1) {
+        throw compilation_error(loc(), {&a()}, status::ir_invalid_shape);
+    }
+
+    result(0) = value_node{ty, this, lc};
 }
 
 cooperative_matrix_scale_inst::cooperative_matrix_scale_inst(tinytc_value_t a0, tinytc_value_t b0,

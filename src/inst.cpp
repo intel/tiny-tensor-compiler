@@ -205,6 +205,16 @@ char const *tinytc_group_operation_to_string(tinytc_group_operation_t op) {
     return "unknown";
 }
 
+char const *tinytc_reduce_mode_to_string(tinytc_reduce_mode_t m) {
+    switch (m) {
+    case tinytc_reduce_mode_row:
+        return "row";
+    case tinytc_reduce_mode_column:
+        return "column";
+    }
+    return "unknown";
+}
+
 char const *tinytc_transpose_to_string(tinytc_transpose_t t) {
     switch (t) {
     case tinytc_transpose_T:

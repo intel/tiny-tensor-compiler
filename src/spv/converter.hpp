@@ -49,6 +49,7 @@ class inst_converter {
     void operator()(cooperative_matrix_load_inst const &in);
     void operator()(cooperative_matrix_mul_add_inst const &in);
     void operator()(cooperative_matrix_prefetch_inst const &in);
+    void operator()(cooperative_matrix_reduce_inst const &in);
     void operator()(cooperative_matrix_scale_inst const &in);
     void operator()(cooperative_matrix_store_inst const &in);
     void operator()(expand_inst const &in);
@@ -78,7 +79,6 @@ class inst_converter {
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
     auto spv_ty(const_tinytc_data_type_t ty) -> spv_inst *;
-    auto convert_group_operation(group_operation op) const -> GroupOperation;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto matrix_impl() -> coopmatrix_impl &;
     auto make_matrix_impl() -> std::unique_ptr<coopmatrix_impl>;
