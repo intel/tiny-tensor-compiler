@@ -49,7 +49,7 @@ lex:
         mantissa_hex          = (hexdigit* "." hexdigit+ | hexdigit+ ".");
         exponent              = [eE] [-+]? digit+;
         exponent_hex          = [pP] [-+]? digit+;
-        floating_constant     = [-+]? (mantissa exponent? | digit+ exponent);
+        floating_constant     = [-+]? (mantissa exponent? | digit+ exponent | "inf" | "nan");
         floating_constant_hex = [-+]? "0x" (mantissa_hex exponent_hex? | hexdigit+ exponent_hex);
 
 

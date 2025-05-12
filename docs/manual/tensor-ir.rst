@@ -72,7 +72,7 @@ Constants
     boolean-constant            = "true" / "false"
     integer-constant            = [sign] 1*DIGIT
     sign                        = "-" / "+"
-    floating-constant           = [sign] *DIGIT "." 1*DIGIT ["e" [sign] 1*DIGIT]
+    floating-constant           = [sign] (*DIGIT "." 1*DIGIT ["e" [sign] 1*DIGIT] / "inf" / "nan")
     mantissa-dec                = *DIGIT "." 1*DIGIT / 1*DIGIT "."
     mantissa-hex                = *HEXDIG "." 1*HEXDIG / 1*HEXDIG "."
     exponent                    = [sign] 1*DIGIT
@@ -1977,6 +1977,11 @@ Op.-No. Type             Description
 ======= ================ ===========================
 1       coopmatrix-type  Incoming cooperative matrix
 ======= ================ ===========================
+
+Restrictions
+~~~~~~~~~~~~
+
+* :math:`\text{rows}(A) \bmod \text{subgroup_size} = 0`
 
 Cooperative matrix scale
 ........................
