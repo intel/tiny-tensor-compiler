@@ -365,7 +365,13 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst 
                 spv_inst *cond = mod.add<OpBitwiseAnd>(i32_ty, p, cv);
                 cond = mod.add<OpIEqual>(bool_ty, cond, c0);
                 for (int i = 0; i < sgs / v; ++i) {
-                    auto shl = mod.add<OpGroupNonUniformShuffleXor>(ty, scope, x[i], cv);
+                    auto shl = [&]() -> spv_inst * {
+                        if (i % 2 == 0) {
+                            return mod.add<OpGroupNonUniformShuffleDown>(ty, scope, x[i], cv);
+                        } else {
+                            return mod.add<OpGroupNonUniformShuffleUp>(ty, scope, x[i], cv);
+                        }
+                    }();
                     x[i] = make_binary_op(*unique_, sty, binary_arith, x[i], shl, in.loc());
                 }
                 for (int i = 0; i < sgs / v; i += 2) {
@@ -484,7 +490,8 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
                    * v_{acc} = L_{acc}/S = k%L_1 + j*L_1 + (k/L_1)*L_1*J
                    *
                    * If M < S, then we have K_1=K_2=L_1=L_2=1, and there is no layout
-                   * transformation. The code below just returns v - the identity - if M < S.
+                   * transformation. The code below just returns v - the identity -
+                   * if M < S.
                    */
                   auto const k_1 = v % rl.blocks1;
                   auto const j = v / rl.blocks1 % rl.cols;
