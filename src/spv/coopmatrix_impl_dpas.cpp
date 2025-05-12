@@ -443,14 +443,16 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
                     oasm << ".decl " << tmp2 << " v_type=G type=" << visa_type(at->component_ty())
                          << " num_elts=" << sgs << " align=wordx32\n";
 
-                    const auto t0 = region_origin(sty_size, sgs * (dst_offset + i / 2) * sty_size);
+                    const auto t0 = region_origin(sty_size, (dst_offset + sgs * i / 2) * sty_size);
                     const auto t1 = region_origin(sty_size, sgs * i * sty_size);
+                    const auto t1down = region_origin(sty_size, (sgs * i + v) * sty_size);
                     const auto t2 = region_origin(sty_size, sgs * (i + 1) * sty_size);
+                    const auto t2up = region_origin(sty_size, (sgs * (i + 1) - v) * sty_size);
                     oasm << "(!" << predicate << ") sel (M1," << sgs << ") " << tmp1 << "(0,0)<1> "
-                         << src << "(" << t2[0] << "," << t2[1] + v << ")<1;1,0>" << src << "("
+                         << src << "(" << t2up[0] << "," << t2up[1] << ")<1;1,0> " << src << "("
                          << t1[0] << "," << t1[1] << ")<1;1,0>\n";
                     oasm << "(" << predicate << ") sel (M1," << sgs << ") " << tmp2 << "(0,0)<1> "
-                         << src << "(" << t1[0] << "," << t1[1] + v << ")<1;1,0> " << src << "("
+                         << src << "(" << t1down[0] << "," << t1down[1] << ")<1;1,0> " << src << "("
                          << t2[0] << "," << t2[1] << ")<1;1,0>\n";
                     oasm << reduce() << " (M1," << sgs << ") " << dst << "(" << t0[0] << ","
                          << t0[1] << ")<1> " << tmp1 << "(0,0)<1;1,0> " << tmp2 << "(0,0)<1;1,0>\n";
