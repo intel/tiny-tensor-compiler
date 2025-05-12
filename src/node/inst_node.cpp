@@ -295,54 +295,45 @@ arith_inst::arith_inst(arithmetic operation, tinytc_value_t a0, tinytc_value_t b
         if (!inst_supports_bool) {
             throw compilation_error(loc(), status::ir_boolean_unsupported);
         }
-    } else if (isa<coopmatrix_data_type>(*ty)) {
-        bool inst_supports_coopmatrix = false;
-        switch (operation) {
-        case arithmetic::add:
-        case arithmetic::sub:
-        case arithmetic::mul:
-        case arithmetic::div:
-            inst_supports_coopmatrix = true;
-            break;
-        default:
-            break;
-        }
-        if (!inst_supports_coopmatrix) {
-            throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
-        }
     } else {
-        auto sty = get_scalar_type(loc(), ty)->ty();
+        auto const check_scalar_ty = [&](scalar_type sty) {
+            bool inst_supports_fp = true;
+            bool inst_supports_complex = true;
+            switch (operation) {
+            case arithmetic::add:
+            case arithmetic::sub:
+            case arithmetic::mul:
+            case arithmetic::div:
+                break;
+            case arithmetic::min:
+            case arithmetic::max:
+            case arithmetic::rem:
+                inst_supports_complex = false;
+                break;
+            case arithmetic::and_:
+            case arithmetic::or_:
+            case arithmetic::xor_:
+                inst_supports_fp = false;
+                inst_supports_complex = false;
+                break;
+            case arithmetic::shl:
+            case arithmetic::shr:
+                inst_supports_fp = false;
+                inst_supports_complex = false;
+                break;
+            }
+            if (!inst_supports_fp && is_floating_type(sty)) {
+                throw compilation_error(loc(), status::ir_fp_unsupported);
+            }
+            if (!inst_supports_complex && is_complex_type(sty)) {
+                throw compilation_error(loc(), status::ir_complex_unsupported);
+            }
+        };
 
-        bool inst_supports_fp = true;
-        bool inst_supports_complex = true;
-        switch (operation) {
-        case arithmetic::add:
-        case arithmetic::sub:
-        case arithmetic::mul:
-        case arithmetic::div:
-            break;
-        case arithmetic::min:
-        case arithmetic::max:
-        case arithmetic::rem:
-            inst_supports_complex = false;
-            break;
-        case arithmetic::and_:
-        case arithmetic::or_:
-        case arithmetic::xor_:
-            inst_supports_fp = false;
-            inst_supports_complex = false;
-            break;
-        case arithmetic::shl:
-        case arithmetic::shr:
-            inst_supports_fp = false;
-            inst_supports_complex = false;
-            break;
-        }
-        if (!inst_supports_fp && is_floating_type(sty)) {
-            throw compilation_error(loc(), status::ir_fp_unsupported);
-        }
-        if (!inst_supports_complex && is_complex_type(sty)) {
-            throw compilation_error(loc(), status::ir_complex_unsupported);
+        if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
+            check_scalar_ty(ct->component_ty());
+        } else {
+            check_scalar_ty(get_scalar_type(loc(), ty)->ty());
         }
     }
 
@@ -357,62 +348,67 @@ arith_unary_inst::arith_unary_inst(arithmetic_unary operation, tinytc_value_t a0
 
     result(0) = value_node{ty, this, lc};
 
-    // Check if inst is supported for combination of a type and result type
-    switch (operation_) {
-    case arithmetic_unary::abs:
-    case arithmetic_unary::im:
-    case arithmetic_unary::re: {
-        auto a_ty = get_scalar_type(a().loc(), a());
-        auto r_ty = get_scalar_type(loc(), result(0));
-        if (r_ty->ty() != component_type(a_ty->ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-        }
-        break;
-    }
-    default:
-        if (a().ty() != ty) {
-            throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-        }
-        break;
-    }
-
     if (isa<boolean_data_type>(*ty)) {
         if (operation_ != arithmetic_unary::not_) {
             throw compilation_error(loc(), status::ir_boolean_unsupported);
         }
-    } else if (isa<coopmatrix_data_type>(*ty)) {
-        if (operation_ != arithmetic_unary::neg) {
-            throw compilation_error(loc(), status::ir_coopmatrix_unsupported);
-        }
     } else {
-        auto a_ty = get_scalar_type(loc(), a());
+        auto const check_scalar_ty = [&](scalar_type a_ty, scalar_type r_ty) {
+            // Check if inst is supported for combination of a type and result type
+            switch (operation_) {
+            case arithmetic_unary::abs:
+            case arithmetic_unary::im:
+            case arithmetic_unary::re: {
+                if (r_ty != component_type(a_ty)) {
+                    throw compilation_error(loc(), {&a()},
+                                            status::ir_operand_type_must_match_return_type);
+                }
+                break;
+            }
+            default:
+                if (a_ty != r_ty) {
+                    throw compilation_error(loc(), {&a()},
+                                            status::ir_operand_type_must_match_return_type);
+                }
+                break;
+            }
 
-        bool inst_supports_int = true;
-        bool inst_supports_fp = true;
-        bool inst_supports_complex = true;
-        switch (operation_) {
-        case arithmetic_unary::abs:
-        case arithmetic_unary::neg:
-            break;
-        case arithmetic_unary::not_:
-            inst_supports_fp = false;
-            inst_supports_complex = false;
-            break;
-        case arithmetic_unary::conj:
-        case arithmetic_unary::im:
-        case arithmetic_unary::re:
-            inst_supports_int = false;
-            inst_supports_fp = false;
-            break;
-        }
-        if (!inst_supports_int && is_integer_type(a_ty->ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
-        }
-        if (!inst_supports_fp && is_floating_type(a_ty->ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
-        }
-        if (!inst_supports_complex && is_complex_type(a_ty->ty())) {
-            throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+            bool inst_supports_int = true;
+            bool inst_supports_fp = true;
+            bool inst_supports_complex = true;
+            switch (operation_) {
+            case arithmetic_unary::abs:
+            case arithmetic_unary::neg:
+                break;
+            case arithmetic_unary::not_:
+                inst_supports_fp = false;
+                inst_supports_complex = false;
+                break;
+            case arithmetic_unary::conj:
+            case arithmetic_unary::im:
+            case arithmetic_unary::re:
+                inst_supports_int = false;
+                inst_supports_fp = false;
+                break;
+            }
+            if (!inst_supports_int && is_integer_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
+            }
+            if (!inst_supports_fp && is_floating_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
+            }
+            if (!inst_supports_complex && is_complex_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+            }
+        };
+
+        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
+        auto rt = dyn_cast<coopmatrix_data_type>(ty);
+        if (ct && rt) {
+            check_scalar_ty(ct->component_ty(), rt->component_ty());
+        } else {
+            check_scalar_ty(get_scalar_type(loc(), a())->ty(),
+                            get_scalar_type(loc(), result(0))->ty());
         }
     }
 }

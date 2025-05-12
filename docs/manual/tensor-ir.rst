@@ -958,10 +958,10 @@ The backslash "\\" is used to exclude types from the list of allowed types.
 === ============================= ======================================================
 Op  Allowed type                  Description
 === ============================= ======================================================
-add scalar-type / coopmatrix-type Sum of operands
-sub scalar-type / coopmatrix-type Difference of operands
-mul scalar-type / coopmatrix-type Product of operands
-div scalar-type / coopmatrix-type Quotient of operands
+add scalar-type                   Sum of operands
+sub scalar-type                   Difference of operands
+mul scalar-type                   Product of operands
+div scalar-type                   Quotient of operands
 rem scalar-type \\ complex-type   Remainder from the division of operands
 shl integer-type                  Left shift first operand by second operand
 shr integer-type                  Arithmetic right shift first operand by second operand
@@ -994,6 +994,7 @@ For integer and floating point input, the operand must have the same type as the
 For complex input, the returned value has the component floating point type
 for ".abs", ".im", and ".re", and the returned value has the same type as the operand
 for ".neg" and ".conj".
+Arithmetic on cooperative matrices is done component-wise.
 
 The following table shows the operations' description and the types that are allowed for the operation.
 
@@ -1001,7 +1002,7 @@ The following table shows the operations' description and the types that are all
 Op   Allowed type                  Description
 ==== ============================= =============================
 abs  scalar-type                   Compute absolute value
-neg  scalar-type / coopmatrix-type Negation
+neg  scalar-type                   Negation
 not  boolean-type / integer-type   Bitwise not
 conj complex-type                  Complex conjugate
 im   complex-type                  Extract imaginary part
