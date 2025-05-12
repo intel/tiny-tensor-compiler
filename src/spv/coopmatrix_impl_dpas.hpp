@@ -38,6 +38,7 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
                   spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) override;
     void store(cooperative_matrix_store_inst const &in, dope_vector const &odv, spv_inst *val,
                spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) override;
+    auto reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a) -> spv_inst * override;
 
   private:
     struct mul_add_key {
@@ -73,15 +74,20 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
                      coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
         -> spv_inst *;
+    auto reduce_fun(std::int32_t sgs, group_arithmetic arith, coopmatrix_data_type const *at,
+                    coopmatrix_data_type const *rt) -> spv_inst *;
 
     using load_key = std::tuple<coopmatrix_data_type const *, spv_inst *, transpose>;
     using prefetch_key =
         std::tuple<std::int32_t, scalar_type, spv_inst *, std::int32_t, std::int32_t>;
     using store_key = std::tuple<coopmatrix_data_type const *, spv_inst *>;
+    using reduce_key = std::tuple<std::int32_t, group_arithmetic, coopmatrix_data_type const *,
+                                  coopmatrix_data_type const *>;
     std::unordered_map<load_key, spv_inst *, tuple_hash<load_key>> load_funs_;
     std::unordered_map<prefetch_key, spv_inst *, tuple_hash<prefetch_key>> prefetch_funs_;
     std::unordered_map<store_key, spv_inst *, tuple_hash<store_key>> store_funs_;
     std::unordered_map<mul_add_key, spv_inst *, mul_add_hash> mul_add_funs_;
+    std::unordered_map<reduce_key, spv_inst *, tuple_hash<reduce_key>> reduce_funs_;
     temp_counter tmp_;
 };
 

@@ -311,20 +311,21 @@ void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst const &, dope_ve
                                spv_inst *, spv_inst *, spv_inst *) {}
 
 auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a) -> spv_inst * {
+    auto at = get_coopmatrix_type(in.a());
+    const auto sgs = cfg().subgroup_size;
+
+    if (at->rows() % sgs != 0) {
+        throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
+    }
+
     auto rt = get_coopmatrix_type(in.result(0));
     auto rl = get_layout(cfg(), rt);
-    auto at = get_coopmatrix_type(in.a());
     auto al = get_layout(cfg(), at);
     auto matrix_ty = spv_ty(rl);
     const auto sty = rt->component_ty();
     auto ty = unique_->scalar_ty(sty);
     auto bool_ty = unique_->bool_ty();
     auto i32_ty = unique_->scalar_ty(scalar_type::i32);
-    const auto sgs = cfg().subgroup_size;
-
-    if (at->rows() % sgs != 0) {
-        throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
-    }
 
     auto const binary_arith = [&](group_arithmetic a) {
         switch (a) {
@@ -364,18 +365,12 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst 
                 auto cv = unique_->constant(v);
                 spv_inst *cond = mod.add<OpBitwiseAnd>(i32_ty, p, cv);
                 cond = mod.add<OpIEqual>(bool_ty, cond, c0);
-                for (int i = 0; i < sgs / v; ++i) {
-                    auto shl = [&]() -> spv_inst * {
-                        if (i % 2 == 0) {
-                            return mod.add<OpGroupNonUniformShuffleDown>(ty, scope, x[i], cv);
-                        } else {
-                            return mod.add<OpGroupNonUniformShuffleUp>(ty, scope, x[i], cv);
-                        }
-                    }();
-                    x[i] = make_binary_op(*unique_, sty, binary_arith, x[i], shl, in.loc());
-                }
                 for (int i = 0; i < sgs / v; i += 2) {
-                    x[i / 2] = mod.add<OpSelect>(ty, cond, x[i], x[i + 1]);
+                    auto xip1_up = mod.add<OpGroupNonUniformShuffleUp>(ty, scope, x[i + 1], cv);
+                    auto xi_down = mod.add<OpGroupNonUniformShuffleDown>(ty, scope, x[i], cv);
+                    auto s1 = mod.add<OpSelect>(ty, cond, x[i], xip1_up);
+                    auto s2 = mod.add<OpSelect>(ty, cond, xi_down, x[i + 1]);
+                    x[i / 2] = make_binary_op(*unique_, sty, binary_arith, s1, s2, in.loc());
                 }
             }
             result = insert(rl, x[0], result, j0 / sgs);

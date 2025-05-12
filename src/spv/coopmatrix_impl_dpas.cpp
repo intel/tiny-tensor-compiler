@@ -351,6 +351,122 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
     });
 }
 
+auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
+                                      coopmatrix_data_type const *at,
+                                      coopmatrix_data_type const *rt) -> spv_inst * {
+    const auto key = std::make_tuple(sgs, arith, at, rt);
+    return lookup(reduce_funs_, key, [&](reduce_key const &key) {
+        auto [sgs, arith, at, rt] = key;
+        auto rl = get_layout(cfg(), rt);
+        auto al = get_layout(cfg(), at);
+        auto matrix_ty = spv_ty(rl);
+        const auto sty = rt->component_ty();
+        const auto sty_size = size(sty);
+
+        auto oasm = std::ostringstream{};
+
+        oasm << "{\n";
+        auto aview = tmp_("aview");
+        oasm << ".decl " << aview << " v_type=G type=" << visa_type(at->component_ty())
+             << " num_elts=" << al.length * sgs << " align=wordx32 alias=<$1,0>\n";
+        auto rview = tmp_("rview");
+        oasm << ".decl " << rview << " v_type=G type=" << visa_type(rt->component_ty())
+             << " num_elts=" << rl.length * sgs << " align=wordx32 alias=<$0,0>\n";
+        auto predicate = tmp_("predicate");
+        oasm << ".decl " << predicate << " v_type=P num_elts=" << sgs << "\n";
+
+        auto const reduce = [&]() -> char const * {
+            switch (arith) {
+            case group_arithmetic::add:
+                return "add";
+            case group_arithmetic::max:
+                return "max";
+            case group_arithmetic::min:
+                return "min";
+            default:
+                break;
+            }
+            throw status::internal_compiler_error;
+        };
+
+        for (std::int32_t offset = 0; offset < al.shape1; offset += sgs) {
+            const std::int32_t remainder =
+                std::min(sgs, static_cast<std::int32_t>(al.shape1 - offset));
+            std::string src = aview;
+            if (al.blocks > 1) {
+                auto tmp = tmp_("tmp");
+                oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at->component_ty())
+                     << " num_elts=" << sgs * sgs << " align=wordx32\n";
+                for (std::int32_t j0 = offset; j0 < offset + remainder; ++j0) {
+                    const auto t1 = region_origin(sty_size, sgs * (j0 - offset) * sty_size);
+                    const auto a1 =
+                        region_origin(sty_size, sgs * al.component_no(j0, 0) * sty_size);
+                    const auto a2 =
+                        region_origin(sty_size, sgs * al.component_no(j0, 1) * sty_size);
+                    oasm << reduce() << " (M1," << sgs << ") " << tmp << "(" << t1[0] << ","
+                         << t1[1] << ")<1> " << aview << "(" << a1[0] << "," << a1[1] << ")<1;1,0> "
+                         << aview << "(" << a2[0] << "," << a2[1] << ")<1;1,0>\n";
+                    for (std::int32_t b = 2; b < al.blocks; ++b) {
+                        const auto a2 =
+                            region_origin(sty_size, sgs * al.component_no(j0, b) * sty_size);
+                        oasm << reduce() << " (M1," << sgs << ") " << tmp << "(" << t1[0] << ","
+                             << t1[1] << ")<1> " << tmp << "(" << t1[0] << "," << t1[1]
+                             << ")<1;1,0> " << aview << "(" << a2[0] << "," << a2[1]
+                             << ")<1;1,0>\n";
+                    }
+                }
+                src = tmp;
+            }
+
+            for (std::int32_t v = 1; v < sgs; v *= 2) {
+                std::uint32_t pval = 0;
+                for (std::uint32_t j = 0; j < 32; j += 2 * v) {
+                    pval |= (((1 << v) - 1) << j);
+                }
+                oasm << "setp (M1," << sgs << ") " << predicate << " " << pval << ":ud\n";
+
+                std::string dst = rview;
+                auto dst_offset = offset;
+                if (2 * v < sgs) {
+                    auto tmp = tmp_("tmp");
+                    oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at->component_ty())
+                         << " num_elts=" << sgs * sgs / (2 * v) << " align=wordx32\n";
+                    dst = tmp;
+                    dst_offset = 0;
+                }
+
+                for (int i = 0; i < sgs / v && i < remainder; i += 2) {
+                    auto tmp1 = tmp_("tmp");
+                    oasm << ".decl " << tmp1 << " v_type=G type=" << visa_type(at->component_ty())
+                         << " num_elts=" << sgs << " align=wordx32\n";
+                    auto tmp2 = tmp_("tmp");
+                    oasm << ".decl " << tmp2 << " v_type=G type=" << visa_type(at->component_ty())
+                         << " num_elts=" << sgs << " align=wordx32\n";
+
+                    const auto t0 = region_origin(sty_size, sgs * (dst_offset + i / 2) * sty_size);
+                    const auto t1 = region_origin(sty_size, sgs * i * sty_size);
+                    const auto t2 = region_origin(sty_size, sgs * (i + 1) * sty_size);
+                    oasm << "(!" << predicate << ") sel (M1," << sgs << ") " << tmp1 << "(0,0)<1> "
+                         << src << "(" << t2[0] << "," << t2[1] + v << ")<1;1,0>" << src << "("
+                         << t1[0] << "," << t1[1] << ")<1;1,0>\n";
+                    oasm << "(" << predicate << ") sel (M1," << sgs << ") " << tmp2 << "(0,0)<1> "
+                         << src << "(" << t1[0] << "," << t1[1] + v << ")<1;1,0> " << src << "("
+                         << t2[0] << "," << t2[1] << ")<1;1,0>\n";
+                    oasm << reduce() << " (M1," << sgs << ") " << dst << "(" << t0[0] << ","
+                         << t0[1] << ")<1> " << tmp1 << "(0,0)<1;1,0> " << tmp2 << "(0,0)<1;1,0>\n";
+                }
+                src = dst;
+            }
+        }
+        oasm << "}\n";
+
+        auto fun_ty = unique().function_ty(matrix_ty, array_view<spv_inst *>{spv_ty(al)});
+        return unique().mod().add_to<OpAsmINTEL>(section::type_const_var, matrix_ty, fun_ty,
+                                                 unique().asm_target(), std::move(oasm).str(),
+                                                 "=rw,rw");
+    });
+}
+
 auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                 spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result(0));
@@ -464,6 +580,20 @@ void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_v
                                 array_view<spv_inst *>{val, pointer, width_in_bytes, height,
                                                        stride_in_bytes, pos0_i32, pos1_i32});
     }
+}
+
+auto coopmatrix_impl_dpas::reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a)
+    -> spv_inst * {
+    auto at = get_coopmatrix_type(in.a());
+    const auto sgs = cfg().subgroup_size;
+
+    if (in.mode() != reduce_mode::column || at->rows() % sgs != 0 || at->use() == matrix_use::a) {
+        return coopmatrix_impl::reduce(in, a);
+    }
+
+    auto rt = get_coopmatrix_type(in.result(0));
+    auto fun = reduce_fun(sgs, in.arith(), at, rt);
+    return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a});
 }
 
 } // namespace tinytc::spv
