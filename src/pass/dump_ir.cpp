@@ -327,7 +327,8 @@ void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst const &c) {
 }
 
 void dump_ir_pass::operator()(cooperative_matrix_reduce_inst const &c) {
-    *os_ << "cooperative_matrix_reduce.";
+    dump_val(c.result(0));
+    *os_ << " = cooperative_matrix_reduce.";
     *os_ << to_string(c.arith()) << "." << to_string(c.mode()) << " ";
     dump_val(c.a());
     *os_ << " : ";

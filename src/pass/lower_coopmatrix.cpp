@@ -122,9 +122,11 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst &in) {
         copy = bb_.add(
             make_cooperative_matrix_insert(modified_val, copy, v, in.result(0).ty(), in.loc()));
     }
-    for (auto &result : in.results()) {
-        for (auto &u : result.uses()) {
-            u.set(copy);
+    for (auto &r : in.results()) {
+        auto u = r.use_begin();
+        while (r.has_uses()) {
+            u->set(copy);
+            u = r.use_begin();
         }
     }
     return true;
