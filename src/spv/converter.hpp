@@ -10,7 +10,6 @@
 #include "spv/coopmatrix_impl.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
-#include "spv/enums.hpp"
 #include "spv/uniquifier.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
@@ -21,10 +20,6 @@
 #include <stack>
 #include <unordered_map>
 #include <vector>
-
-namespace tinytc {
-enum class group_operation;
-}
 
 namespace tinytc::spv {
 

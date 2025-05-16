@@ -15,7 +15,6 @@
 #include "support/casting.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -24,6 +23,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <utility>
+#include <vector>
 
 namespace tinytc {
 
