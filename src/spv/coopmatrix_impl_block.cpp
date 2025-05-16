@@ -45,7 +45,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
-    const bool sty_ok = !is_complex_type(sty);
+    const bool sty_ok = sty != scalar_type::c64; // We do not have 16 byte/lane block loads
     if (!layout_ok || !transpose_ok || !alignment_ok || !checked_ok || !sty_ok) {
         return coopmatrix_impl::load(in, odv, operand, pos0, pos1);
     }
@@ -133,7 +133,7 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
-    const bool sty_ok = !is_complex_type(sty);
+    const bool sty_ok = sty != scalar_type::c64; // We do not have 16 byte/lane block writes
     if (!layout_ok || !flag_ok || !alignment_ok || !checked_ok || !sty_ok) {
         coopmatrix_impl::store(in, odv, val, operand, pos0, pos1);
         return;
@@ -211,6 +211,7 @@ auto coopmatrix_impl_block::get_io_sty(scalar_type sty) -> scalar_type {
     case scalar_type::f32:
         return scalar_type::i32;
     case scalar_type::f64:
+    case scalar_type::c32:
         return scalar_type::i64;
     default:
         break;

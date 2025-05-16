@@ -173,7 +173,7 @@ TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm non-static", T, TEST_PRECISIONS) {
 
 TEST_CASE_TEMPLATE(RUNTIME_NAME " gemm packed complex alpha=1 beta=0", T, TEST_PRECISIONS) {
     auto KK = std::vector<std::uint32_t>{53};
-    auto MM = std::vector<std::uint32_t>{21, 42};
+    auto MM = std::vector<std::uint32_t>{16, 21, 32, 42};
     auto NN = std::vector<std::uint32_t>{7, 11};
 
     std::int64_t M = {}, N = {}, K = {};
