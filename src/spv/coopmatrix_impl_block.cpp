@@ -29,12 +29,14 @@
 
 namespace tinytc::spv {
 
+constexpr std::int64_t max_block_io_vec_size = 8;
+
 auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
-    auto ot = get_memref_type(in.operand());
-    auto rt = get_coopmatrix_type(in.result(0));
-    auto layout = get_layout(cfg(), rt);
-    auto sty = rt->component_ty();
+    const auto ot = get_memref_type(in.operand());
+    const auto rt = get_coopmatrix_type(in.result(0));
+    const auto layout = get_layout(cfg(), rt);
+    const auto sty = layout.sty;
 
     const std::int32_t required_alignment = ot->addrspace() == address_space::global ? 4 : 16;
 
@@ -48,11 +50,15 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return coopmatrix_impl::load(in, odv, operand, pos0, pos1);
     }
 
-    auto matrix_ty = spv_ty(layout);
-    auto interface_ty = spv_interface_ty(layout);
-    auto io_sty = get_io_sty(sty);
+    const auto matrix_ty = spv_ty(layout);
+    const auto interface_ty = spv_interface_ty(layout);
+    const auto io_sty = get_io_sty(sty);
+    const std::int32_t blocks_per_load = is_positive_power_of_two(layout.blocks)
+                                             ? std::min(layout.blocks, max_block_io_vec_size)
+                                             : 1;
     auto io_ty = unique().scalar_ty(io_sty);
-    auto pointer_ty = [&] {
+    spv_inst *io_vec_ty = blocks_per_load > 1 ? unique().vec_ty(io_ty, blocks_per_load) : io_ty;
+    const auto pointer_ty = [&] {
         auto ot = get_memref_type(in.operand());
         const auto storage_cls = address_space_to_storage_class(ot->addrspace());
         const auto align = ot->element_alignment();
@@ -67,20 +73,32 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     spv_inst *result = mod.add<OpUndef>(matrix_ty);
 
     const auto ld = [&](tinytc_spv_mod &mod) -> spv_inst * {
-        auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
+        spv_inst *offset = walker.offset();
+        auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, offset,
                                                          std::vector<spv_inst *>{});
-        auto val = mod.add<OpSubgroupBlockReadINTEL>(io_ty, pointer);
-        return mod.add<OpBitcast>(interface_ty, val);
+        return mod.add<OpSubgroupBlockReadINTEL>(io_vec_ty, pointer);
     };
     const auto ld_chk = [&](tinytc_spv_mod &) {
         return make_conditional_execution(unique(), interface_ty, walker.col_ok(), ld,
-                                          unique().null_constant(interface_ty), in.loc());
+                                          unique().null_constant(io_vec_ty), in.loc());
     };
     auto const ld_block = [&](tinytc_spv_mod &mod) {
         spv_inst *block_result = result;
         for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
             spv_inst *val = walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
-            block_result = insert(layout, val, block_result, walker.component_no());
+            if (blocks_per_load > 1) {
+                for (std::int32_t b = 0; b < blocks_per_load; ++b) {
+                    spv_inst *v =
+                        mod.add<OpCompositeExtract>(io_ty, val, std::vector<LiteralInteger>{b});
+                    v = mod.add<OpBitcast>(interface_ty, v);
+                    const auto comp_no =
+                        layout.component_no(walker.col_no(), walker.block_no() + b);
+                    block_result = insert(layout, v, block_result, comp_no);
+                }
+            } else {
+                val = mod.add<OpBitcast>(interface_ty, val);
+                block_result = insert(layout, val, block_result, walker.component_no());
+            }
 
             if (u < layout.cols - 1) {
                 walker.advance_column();
@@ -89,11 +107,13 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         return block_result;
     };
 
-    for (std::int64_t w = 0; w < layout.blocks; ++w) {
+    for (std::int64_t w = 0; w < layout.blocks; w += blocks_per_load) {
         result = ld_block(mod);
 
-        if (w < layout.blocks - 1) {
-            walker.advance_block();
+        if (w < layout.blocks - blocks_per_load) {
+            for (std::int32_t b = 0; b < blocks_per_load; ++b) {
+                walker.advance_block();
+            }
         }
     }
     return result;
@@ -119,9 +139,13 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
         return;
     }
 
-    auto io_sty = get_io_sty(sty);
+    const auto io_sty = get_io_sty(sty);
+    const std::int32_t blocks_per_store = is_positive_power_of_two(layout.blocks)
+                                              ? std::min(layout.blocks, max_block_io_vec_size)
+                                              : 1;
     auto io_ty = unique().scalar_ty(io_sty);
-    auto pointer_ty = [&] {
+    spv_inst *io_vec_ty = blocks_per_store > 1 ? unique().vec_ty(io_ty, blocks_per_store) : io_ty;
+    const auto pointer_ty = [&] {
         auto ot = get_memref_type(in.operand());
         const auto storage_cls = address_space_to_storage_class(ot->addrspace());
         const auto align = std::max(16, ot->element_alignment());
@@ -134,15 +158,29 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
     auto &mod = unique().mod();
     operand = mod.add<OpBitcast>(pointer_ty, operand);
 
-    for (std::int64_t w = 0; w < layout.blocks; ++w) {
+    for (std::int64_t w = 0; w < layout.blocks; w += blocks_per_store) {
         auto const st_block = [&](tinytc_spv_mod &mod) {
             for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
                 const auto st = [&](tinytc_spv_mod &mod) {
-                    auto pointer = mod.add<OpInBoundsPtrAccessChain>(
-                        pointer_ty, operand, walker.offset(), std::vector<spv_inst *>{});
-                    auto val_ij = extract(layout, val, walker.component_no());
-                    auto val_ij_int = mod.add<OpBitcast>(io_ty, val_ij);
-                    mod.add<OpSubgroupBlockWriteINTEL>(pointer, val_ij_int);
+                    spv_inst *offset = walker.offset();
+                    auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, offset,
+                                                                     std::vector<spv_inst *>{});
+                    spv_inst *val_ij = nullptr;
+                    if (blocks_per_store > 1) {
+                        val_ij = mod.add<OpUndef>(io_vec_ty);
+                        for (std::int32_t b = 0; b < blocks_per_store; ++b) {
+                            const auto comp_no =
+                                layout.component_no(walker.col_no(), walker.block_no() + b);
+                            spv_inst *v = extract(layout, val, comp_no);
+                            v = mod.add<OpBitcast>(io_ty, v);
+                            val_ij = mod.add<OpCompositeInsert>(io_vec_ty, v, val_ij,
+                                                                std::vector<LiteralInteger>{b});
+                        }
+                    } else {
+                        val_ij = extract(layout, val, walker.component_no());
+                        val_ij = mod.add<OpBitcast>(io_ty, val_ij);
+                    }
+                    mod.add<OpSubgroupBlockWriteINTEL>(pointer, val_ij);
                 };
                 if (walker.needs_mask() || walker.cols_checked()) {
                     make_conditional_execution(unique(), walker.col_ok(), st);
@@ -157,8 +195,10 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
         };
         st_block(mod);
 
-        if (w < layout.blocks - 1) {
-            walker.advance_block();
+        if (w < layout.blocks - blocks_per_store) {
+            for (std::int32_t b = 0; b < blocks_per_store; ++b) {
+                walker.advance_block();
+            }
         }
     }
 }

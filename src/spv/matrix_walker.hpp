@@ -34,6 +34,8 @@ class matrix_walker {
     auto may_need_mask() const -> bool;
     auto col_ok() const -> spv_inst *;
     auto row_ok() const -> spv_inst *;
+    inline auto block_no() const { return block_no_; }
+    inline auto col_no() const { return col_no_; }
 
   private:
     uniquifier &unique_;
