@@ -363,6 +363,18 @@ char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f) {
         return "atomic_float64_add_local";
     case tinytc_spirv_feature_atomic_float64_add_global:
         return "atomic_float64_add_global";
+    case tinytc_spirv_feature_atomic_float16_min_max_local:
+        return "atomic_float16_min_max_local";
+    case tinytc_spirv_feature_atomic_float16_min_max_global:
+        return "atomic_float16_min_max_global";
+    case tinytc_spirv_feature_atomic_float32_min_max_local:
+        return "atomic_float32_min_max_local";
+    case tinytc_spirv_feature_atomic_float32_min_max_global:
+        return "atomic_float32_min_max_global";
+    case tinytc_spirv_feature_atomic_float64_min_max_local:
+        return "atomic_float64_min_max_local";
+    case tinytc_spirv_feature_atomic_float64_min_max_global:
+        return "atomic_float64_min_max_global";
     case tinytc_spirv_feature_bfloat16_conversion:
         return "bfloat16_conversion";
     case tinytc_spirv_feature_subgroup_buffer_block_io:
