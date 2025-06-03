@@ -24,7 +24,11 @@ class capex {
     void operator()(spv_inst const &in);
     void operator()(OpAtomicStore const &in);
     void operator()(OpAtomicFAddEXT const &in);
+    void operator()(OpAtomicFMaxEXT const &in);
+    void operator()(OpAtomicFMinEXT const &in);
     void operator()(OpAtomicIAdd const &in);
+    void operator()(OpAtomicSMax const &in);
+    void operator()(OpAtomicSMin const &in);
     void operator()(OpAsmTargetINTEL const &in);
     void operator()(OpAsmINTEL const &in);
     void operator()(OpAsmCallINTEL const &in);
@@ -53,6 +57,10 @@ class capex {
     }
 
   private:
+    auto float_atomic_class(spv_inst *ty, spv_inst *op0) -> std::pair<LiteralInteger, StorageClass>;
+    void check_float_min_max_atomic(spv_inst *ty, spv_inst *op0);
+    void check_int_atomic(spv_inst *ty);
+
     uniquifier *unique_;
     std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> required_features_ = {};
 };

@@ -177,6 +177,10 @@ char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag) {
         return "atomic";
     case tinytc_store_flag_atomic_add:
         return "atomic_add";
+    case tinytc_store_flag_atomic_max:
+        return "atomic_max";
+    case tinytc_store_flag_atomic_min:
+        return "atomic_min";
     }
     return "unknown";
 }

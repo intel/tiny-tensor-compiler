@@ -372,9 +372,11 @@ enum class checked_flag {
 
 //! Store flag
 enum class store_flag {
-    regular = tinytc_store_flag_regular,      ///< Non-atomic non-block store
-    atomic = tinytc_store_flag_atomic,        ///< Atomic store
-    atomic_add = tinytc_store_flag_atomic_add ///< Atomic fetch add
+    regular = tinytc_store_flag_regular,       ///< Non-atomic non-block store
+    atomic = tinytc_store_flag_atomic,         ///< Atomic store
+    atomic_add = tinytc_store_flag_atomic_add, ///< Atomic fetch add
+    atomic_max = tinytc_store_flag_atomic_max, ///< Atomic fetch max
+    atomic_min = tinytc_store_flag_atomic_min  ///< Atomic fetch min
 };
 
 //! Matrix use
@@ -397,6 +399,12 @@ enum class spirv_feature {
     atomic_float32_add_global = tinytc_spirv_feature_atomic_float32_add_global,
     atomic_float64_add_local = tinytc_spirv_feature_atomic_float64_add_local,
     atomic_float64_add_global = tinytc_spirv_feature_atomic_float64_add_global,
+    atomic_float16_min_max_local = tinytc_spirv_feature_atomic_float16_min_max_local,
+    atomic_float16_min_max_global = tinytc_spirv_feature_atomic_float16_min_max_global,
+    atomic_float32_min_max_local = tinytc_spirv_feature_atomic_float32_min_max_local,
+    atomic_float32_min_max_global = tinytc_spirv_feature_atomic_float32_min_max_global,
+    atomic_float64_min_max_local = tinytc_spirv_feature_atomic_float64_min_max_local,
+    atomic_float64_min_max_global = tinytc_spirv_feature_atomic_float64_min_max_global,
     bfloat16_conversion = tinytc_spirv_feature_bfloat16_conversion,
     subgroup_buffer_block_io = tinytc_spirv_feature_subgroup_buffer_block_io,
 };

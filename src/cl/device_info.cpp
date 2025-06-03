@@ -75,6 +75,18 @@ void set_spirv_features(tinytc_core_info_t info, cl_device_id device) {
                     f32_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
         set_feature(tinytc_spirv_feature_atomic_float64_add_global,
                     f64_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_ADD_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_local,
+                    f16_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_min_max_local,
+                    f32_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_local,
+                    f64_flags & CL_DEVICE_LOCAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_global,
+                    f16_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float32_min_max_global,
+                    f32_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_global,
+                    f64_flags & CL_DEVICE_GLOBAL_FP_ATOMIC_MIN_MAX_EXT);
     }
 }
 } // namespace tinytc

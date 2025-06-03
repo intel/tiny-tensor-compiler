@@ -104,6 +104,8 @@
     TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
+    ATOMIC_MAX      ".atomic_max"
+    ATOMIC_MIN      ".atomic_min"
     INIT            "init"
     LOCAL           "local"
     GLOBAL          "global"
@@ -1175,6 +1177,8 @@ store_flag:
     %empty { $$ = store_flag::regular; }
   | ATOMIC { $$ = store_flag::atomic; }
   | ATOMIC_ADD { $$ = store_flag::atomic_add; }
+  | ATOMIC_MAX { $$ = store_flag::atomic_max; }
+  | ATOMIC_MIN { $$ = store_flag::atomic_min; }
 ;
 
 if_inst:

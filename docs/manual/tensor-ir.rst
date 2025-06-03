@@ -1590,7 +1590,7 @@ Store
 
     instruction     =/ "store" [store-flag] local-identifier ","
                                local-identifier "[" [local-identifier-list] "]"
-    store-flag      = ".atomic" / ".atomic_add"
+    store-flag      = ".atomic" / ".atomic_add" / ".atomic_max" / ".atomic_min"
 
 Overview
 ~~~~~~~~
@@ -1599,7 +1599,7 @@ Store a scalar value (first operand) in a memref (second operand) at the positio
 The number of indices must match the order of the memref.
 
 The store is atomic when the atomic flag is set with relaxed memory ordering.
-When the atomic_add flag is set, the following steps are done atomically:
+When the atomic_add/max/min flag is set, the following steps are done atomically:
 The value at the memory location is fetched, the scalar value is added to the fetched value,
 and the resulting value is stored at the memory location.
 

@@ -462,6 +462,34 @@ void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_sp
         auto im_val = mod.add<OpCompositeExtract>(float_ty, value, std::vector<LiteralInteger>{1});
         return {{{re_ptr, re_val}, {im_ptr, im_val}}};
     };
+    auto const make_atomic_something = [&]<typename SpvIOp, typename SpvFOp>() {
+        auto result_ty = unique.scalar_ty(sty);
+        auto scope = unique.constant(static_cast<std::int32_t>(Scope::Workgroup));
+        auto semantics = unique.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
+        switch (sty) {
+        case scalar_type::i32:
+        case scalar_type::i64:
+        case scalar_type::index:
+            mod.add<SpvIOp>(result_ty, pointer, scope, semantics, value);
+            break;
+        case scalar_type::f16:
+        case scalar_type::f32:
+        case scalar_type::f64:
+            mod.add<SpvFOp>(result_ty, pointer, scope, semantics, value);
+            break;
+        case scalar_type::c32:
+        case scalar_type::c64: {
+            auto re_im = split_re_im();
+            auto component_sty = component_type(sty);
+            auto float_ty = unique.scalar_ty(component_sty);
+            mod.add<SpvFOp>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
+            mod.add<SpvFOp>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
+            break;
+        }
+        default:
+            throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
+        }
+    };
     switch (flag) {
     case store_flag::regular:
         mod.add<OpStore>(pointer, value);
@@ -490,35 +518,15 @@ void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_sp
         }
         break;
     }
-    case store_flag::atomic_add: {
-        auto result_ty = unique.scalar_ty(sty);
-        auto scope = unique.constant(static_cast<std::int32_t>(Scope::Workgroup));
-        auto semantics = unique.constant(static_cast<std::int32_t>(MemorySemantics::Relaxed));
-        switch (sty) {
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            mod.add<OpAtomicIAdd>(result_ty, pointer, scope, semantics, value);
-            break;
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            mod.add<OpAtomicFAddEXT>(result_ty, pointer, scope, semantics, value);
-            break;
-        case scalar_type::c32:
-        case scalar_type::c64: {
-            auto re_im = split_re_im();
-            auto component_sty = component_type(sty);
-            auto float_ty = unique.scalar_ty(component_sty);
-            mod.add<OpAtomicFAddEXT>(float_ty, re_im[0][0], scope, semantics, re_im[0][1]);
-            mod.add<OpAtomicFAddEXT>(float_ty, re_im[1][0], scope, semantics, re_im[1][1]);
-            break;
-        }
-        default:
-            throw compilation_error(loc, status::spirv_unsupported_atomic_data_type);
-        }
+    case store_flag::atomic_add:
+        make_atomic_something.template operator()<OpAtomicIAdd, OpAtomicFAddEXT>();
         break;
-    } break;
+    case store_flag::atomic_max:
+        make_atomic_something.template operator()<OpAtomicSMax, OpAtomicFMaxEXT>();
+        break;
+    case store_flag::atomic_min:
+        make_atomic_something.template operator()<OpAtomicSMin, OpAtomicFMinEXT>();
+        break;
     }
 }
 

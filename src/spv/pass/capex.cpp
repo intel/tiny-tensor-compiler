@@ -41,8 +41,9 @@ void capex::operator()(OpAtomicStore const &in) {
         required_features_[tinytc_spirv_feature_int64_atomics] = true;
     }
 }
-void capex::operator()(OpAtomicFAddEXT const &in) {
-    auto ty = dyn_cast<OpTypeFloat>(in.type());
+auto capex::float_atomic_class(spv_inst *raw_ty, spv_inst *op0)
+    -> std::pair<LiteralInteger, StorageClass> {
+    auto ty = dyn_cast<OpTypeFloat>(raw_ty);
     if (!ty) {
         throw status::internal_compiler_error;
     }
@@ -51,13 +52,15 @@ void capex::operator()(OpAtomicFAddEXT const &in) {
                                            return dyn_cast<OpTypePointer>(a.type());
                                        },
                                        [](auto &) -> OpTypePointer * { return nullptr; }},
-                            *in.op0());
+                            *op0);
     if (!pointer_ty) {
         throw status::internal_compiler_error;
     }
-    const auto storage_cls = pointer_ty->op0();
-
-    switch (ty->op0()) {
+    return {ty->op0(), pointer_ty->op0()};
+}
+void capex::operator()(OpAtomicFAddEXT const &in) {
+    const auto [bits, storage_cls] = float_atomic_class(in.type(), in.op0());
+    switch (bits) {
     case 16:
         unique_->capability(Capability::AtomicFloat16AddEXT);
         unique_->extension("SPV_EXT_shader_atomic_float16_add");
@@ -83,8 +86,42 @@ void capex::operator()(OpAtomicFAddEXT const &in) {
         break;
     }
 }
-void capex::operator()(OpAtomicIAdd const &in) {
-    auto ty = dyn_cast<OpTypeInt>(in.type());
+void capex::check_float_min_max_atomic(spv_inst *ty, spv_inst *op0) {
+    const auto [bits, storage_cls] = float_atomic_class(ty, op0);
+    switch (bits) {
+    case 16:
+        unique_->capability(Capability::AtomicFloat16MinMaxEXT);
+        unique_->extension("SPV_EXT_shader_atomic_float16_min_max");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float16_min_max_local
+                               : tinytc_spirv_feature_atomic_float16_min_max_global] = true;
+        break;
+    case 32:
+        unique_->capability(Capability::AtomicFloat32MinMaxEXT);
+        unique_->extension("SPV_EXT_shader_atomic_float_min_max");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float32_min_max_local
+                               : tinytc_spirv_feature_atomic_float32_min_max_global] = true;
+        break;
+    case 64:
+        unique_->capability(Capability::AtomicFloat64MinMaxEXT);
+        unique_->extension("SPV_EXT_shader_atomic_float_min_max");
+        required_features_[storage_cls == StorageClass::Workgroup
+                               ? tinytc_spirv_feature_atomic_float64_min_max_local
+                               : tinytc_spirv_feature_atomic_float64_min_max_global] = true;
+        break;
+    default:
+        break;
+    }
+}
+void capex::operator()(OpAtomicFMaxEXT const &in) {
+    check_float_min_max_atomic(in.type(), in.op0());
+}
+void capex::operator()(OpAtomicFMinEXT const &in) {
+    check_float_min_max_atomic(in.type(), in.op0());
+}
+void capex::check_int_atomic(spv_inst *raw_ty) {
+    auto ty = dyn_cast<OpTypeInt>(raw_ty);
     if (!ty) {
         throw status::internal_compiler_error;
     }
@@ -93,6 +130,9 @@ void capex::operator()(OpAtomicIAdd const &in) {
         required_features_[tinytc_spirv_feature_int64_atomics] = true;
     }
 }
+void capex::operator()(OpAtomicIAdd const &in) { check_int_atomic(in.type()); }
+void capex::operator()(OpAtomicSMax const &in) { check_int_atomic(in.type()); }
+void capex::operator()(OpAtomicSMin const &in) { check_int_atomic(in.type()); }
 void capex::operator()(OpAsmTargetINTEL const &) {
     unique_->capability(Capability::AsmINTEL);
     unique_->extension("SPV_INTEL_inline_assembly");

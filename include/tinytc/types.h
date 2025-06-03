@@ -405,9 +405,11 @@ typedef enum {
 
 //! Store flag
 typedef enum {
-    tinytc_store_flag_regular = 0,   ///< Non-atomic store
-    tinytc_store_flag_atomic = 1,    ///< Atomic store
-    tinytc_store_flag_atomic_add = 2 ///< Atomic fetch add
+    tinytc_store_flag_regular = 0,    ///< Non-atomic store
+    tinytc_store_flag_atomic = 1,     ///< Atomic store
+    tinytc_store_flag_atomic_add = 2, ///< Atomic fetch add
+    tinytc_store_flag_atomic_max = 3, ///< Atomic fetch max
+    tinytc_store_flag_atomic_min = 4  ///< Atomic fetch min
 } tinytc_store_flag_t;
 
 //! Matrix use
@@ -419,21 +421,30 @@ typedef enum {
 
 //! SPIR-V features
 typedef enum {
-    tinytc_spirv_feature_float16 = 0,                    ///< f16 support
-    tinytc_spirv_feature_float64 = 1,                    ///< f64 support
-    tinytc_spirv_feature_int64_atomics = 2,              ///< i64 atomics support
-    tinytc_spirv_feature_groups = 3,                     ///< work group collectives
-    tinytc_spirv_feature_subgroup_dispatch = 4,          ///< subgroup support
-    tinytc_spirv_feature_atomic_float16_add_local = 5,   ///< f16 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float16_add_global = 6,  ///< f16 atomic add on global pointer
-    tinytc_spirv_feature_atomic_float32_add_local = 7,   ///< f32 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float32_add_global = 8,  ///< f32 atomic add on global pointer
-    tinytc_spirv_feature_atomic_float64_add_local = 9,   ///< f64 atomic add on local pointer
-    tinytc_spirv_feature_atomic_float64_add_global = 10, ///< f64 atomic add on global pointer
-    tinytc_spirv_feature_bfloat16_conversion = 11,       ///< bf16 -> f32 and f32 -> bf16 conversion
-    tinytc_spirv_feature_subgroup_buffer_block_io = 12   ///< subgroup block read/write support
+    tinytc_spirv_feature_float16 = 0,                       ///< f16 support
+    tinytc_spirv_feature_float64 = 1,                       ///< f64 support
+    tinytc_spirv_feature_int64_atomics = 2,                 ///< i64 atomics support
+    tinytc_spirv_feature_groups = 3,                        ///< work group collectives
+    tinytc_spirv_feature_subgroup_dispatch = 4,             ///< subgroup support
+    tinytc_spirv_feature_atomic_float16_add_local = 5,      ///< f16 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float16_add_global = 6,     ///< f16 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float32_add_local = 7,      ///< f32 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float32_add_global = 8,     ///< f32 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float64_add_local = 9,      ///< f64 atomic add on local pointer
+    tinytc_spirv_feature_atomic_float64_add_global = 10,    ///< f64 atomic add on global pointer
+    tinytc_spirv_feature_atomic_float16_min_max_local = 11, ///< f16 atomic min/max on local pointer
+    tinytc_spirv_feature_atomic_float16_min_max_global =
+        12, ///< f16 atomic min/max on global pointer
+    tinytc_spirv_feature_atomic_float32_min_max_local = 13, ///< f32 atomic min/max on local pointer
+    tinytc_spirv_feature_atomic_float32_min_max_global =
+        14, ///< f32 atomic min/max on global pointer
+    tinytc_spirv_feature_atomic_float64_min_max_local = 15, ///< f64 atomic min/max on local pointer
+    tinytc_spirv_feature_atomic_float64_min_max_global =
+        16,                                            ///< f64 atomic minmax on global pointer
+    tinytc_spirv_feature_bfloat16_conversion = 17,     ///< bf16 -> f32 and f32 -> bf16 conversion
+    tinytc_spirv_feature_subgroup_buffer_block_io = 18 ///< subgroup block read/write support
 } tinytc_spirv_feature_t;
-#define TINYTC_NUMBER_OF_SPIRV_FEATURES 13 // @todo Keep up to date with tinytc_spirv_feature_t
+#define TINYTC_NUMBER_OF_SPIRV_FEATURES 19 // @todo Keep up to date with tinytc_spirv_feature_t
 
 //! Core features that may be optionally enabled
 typedef enum {

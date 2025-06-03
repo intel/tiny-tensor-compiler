@@ -36,26 +36,34 @@ void set_spirv_features(tinytc_core_info_t info, ze_device_handle_t device) {
     set_feature(tinytc_spirv_feature_int64_atomics,
                 module_props.flags & ZE_DEVICE_MODULE_FLAG_INT64_ATOMICS);
     if (has_f16) {
-
         set_feature(tinytc_spirv_feature_atomic_float16_add_local,
                     float_atomics.fp16Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_ADD);
-
         set_feature(tinytc_spirv_feature_atomic_float16_add_global,
                     float_atomics.fp16Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_ADD);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_local,
+                    float_atomics.fp16Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_MIN_MAX);
+        set_feature(tinytc_spirv_feature_atomic_float16_min_max_global,
+                    float_atomics.fp16Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_MIN_MAX);
     }
 
     set_feature(tinytc_spirv_feature_atomic_float32_add_local,
                 float_atomics.fp32Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_ADD);
-
     set_feature(tinytc_spirv_feature_atomic_float32_add_global,
                 float_atomics.fp32Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_ADD);
-    if (has_f64) {
+    set_feature(tinytc_spirv_feature_atomic_float32_min_max_local,
+                float_atomics.fp32Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_MIN_MAX);
+    set_feature(tinytc_spirv_feature_atomic_float32_min_max_global,
+                float_atomics.fp32Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_MIN_MAX);
 
+    if (has_f64) {
         set_feature(tinytc_spirv_feature_atomic_float64_add_local,
                     float_atomics.fp64Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_ADD);
-
         set_feature(tinytc_spirv_feature_atomic_float64_add_global,
                     float_atomics.fp64Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_ADD);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_local,
+                    float_atomics.fp64Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_LOCAL_MIN_MAX);
+        set_feature(tinytc_spirv_feature_atomic_float64_min_max_global,
+                    float_atomics.fp64Flags & ZE_DEVICE_FP_ATOMIC_EXT_FLAG_GLOBAL_MIN_MAX);
     }
 }
 } // namespace tinytc
