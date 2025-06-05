@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_NAMES_20250326_HPP
-#define GENERATED_NAMES_20250326_HPP
+#ifndef GENERATED_NAMES_20250605_HPP
+#define GENERATED_NAMES_20250605_HPP
 
 namespace tinytc::spv {
 
@@ -123,7 +123,9 @@ enum class CooperativeVectorMatrixLayout;
 auto to_string(CooperativeVectorMatrixLayout e) -> char const *;
 enum class ComponentType;
 auto to_string(ComponentType e) -> char const *;
+enum class TensorOperands;
+auto to_string(TensorOperands e) -> char const *;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_NAMES_20250326_HPP
+#endif // GENERATED_NAMES_20250605_HPP

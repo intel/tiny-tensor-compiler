@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_DEFS_20250326_HPP
-#define GENERATED_DEFS_20250326_HPP
+#ifndef GENERATED_DEFS_20250605_HPP
+#define GENERATED_DEFS_20250605_HPP
 
 #include "enums.hpp"
 #include "support/ilist_base.hpp"
@@ -416,9 +416,11 @@ class OpAtomicFMaxEXT;                           // IWYU pragma: export
 class OpAtomicFAddEXT;                           // IWYU pragma: export
 class OpConvertFToBF16INTEL;                     // IWYU pragma: export
 class OpConvertBF16ToFINTEL;                     // IWYU pragma: export
+class OpControlBarrierArriveINTEL;               // IWYU pragma: export
+class OpControlBarrierWaitINTEL;                 // IWYU pragma: export
 class OpCooperativeMatrixLoadCheckedINTEL;       // IWYU pragma: export
 class OpCooperativeMatrixStoreCheckedINTEL;      // IWYU pragma: export
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_DEFS_20250326_HPP
+#endif // GENERATED_DEFS_20250605_HPP

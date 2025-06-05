@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_VISIT_20250326_HPP
-#define GENERATED_VISIT_20250326_HPP
+#ifndef GENERATED_VISIT_20250605_HPP
+#define GENERATED_VISIT_20250605_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -727,6 +727,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
         return visitor(static_cast<OpConvertFToBF16INTEL &>(inst));
     case Op::ConvertBF16ToFINTEL:
         return visitor(static_cast<OpConvertBF16ToFINTEL &>(inst));
+    case Op::ControlBarrierArriveINTEL:
+        return visitor(static_cast<OpControlBarrierArriveINTEL &>(inst));
+    case Op::ControlBarrierWaitINTEL:
+        return visitor(static_cast<OpControlBarrierWaitINTEL &>(inst));
     case Op::CooperativeMatrixLoadCheckedINTEL:
         return visitor(static_cast<OpCooperativeMatrixLoadCheckedINTEL &>(inst));
     case Op::CooperativeMatrixStoreCheckedINTEL:
@@ -1445,6 +1449,10 @@ template <typename Visitor> auto visit(Visitor &&visitor, spv_inst const &inst) 
         return visitor(static_cast<OpConvertFToBF16INTEL const &>(inst));
     case Op::ConvertBF16ToFINTEL:
         return visitor(static_cast<OpConvertBF16ToFINTEL const &>(inst));
+    case Op::ControlBarrierArriveINTEL:
+        return visitor(static_cast<OpControlBarrierArriveINTEL const &>(inst));
+    case Op::ControlBarrierWaitINTEL:
+        return visitor(static_cast<OpControlBarrierWaitINTEL const &>(inst));
     case Op::CooperativeMatrixLoadCheckedINTEL:
         return visitor(static_cast<OpCooperativeMatrixLoadCheckedINTEL const &>(inst));
     case Op::CooperativeMatrixStoreCheckedINTEL:
@@ -4506,6 +4514,20 @@ template <typename Derived, bool IsConst = true> class default_visitor {
         static_cast<Derived *>(this)->operator()(in.op0());
         static_cast<Derived *>(this)->post_visit(in);
     }
+    auto operator()(const_t<OpControlBarrierArriveINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
+    auto operator()(const_t<OpControlBarrierWaitINTEL> &in) {
+        static_cast<Derived *>(this)->pre_visit(in);
+        static_cast<Derived *>(this)->operator()(in.op0());
+        static_cast<Derived *>(this)->operator()(in.op1());
+        static_cast<Derived *>(this)->operator()(in.op2());
+        static_cast<Derived *>(this)->post_visit(in);
+    }
     auto operator()(const_t<OpCooperativeMatrixLoadCheckedINTEL> &in) {
         static_cast<Derived *>(this)->pre_visit(in);
         static_cast<Derived *>(this)->operator()(in.type());
@@ -4557,4 +4579,4 @@ template <typename Derived, bool IsConst = true> class default_visitor {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_VISIT_20250326_HPP
+#endif // GENERATED_VISIT_20250605_HPP

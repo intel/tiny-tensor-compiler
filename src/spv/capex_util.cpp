@@ -318,6 +318,14 @@ auto capabilities(ExecutionMode e) -> array_view<Capability> {
         constexpr static Capability values[] = {Capability::RoundingModeRTZ};
         return {values, 1};
     }
+    case ExecutionMode::NonCoherentTileAttachmentReadQCOM: {
+        constexpr static Capability values[] = {Capability::TileShadingQCOM};
+        return {values, 1};
+    }
+    case ExecutionMode::TileShadingRateQCOM: {
+        constexpr static Capability values[] = {Capability::TileShadingQCOM};
+        return {values, 1};
+    }
     case ExecutionMode::EarlyAndLateFragmentTestsAMD: {
         constexpr static Capability values[] = {Capability::Shader};
         return {values, 1};

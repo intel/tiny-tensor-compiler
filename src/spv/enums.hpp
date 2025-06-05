@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_ENUMS_20250326_HPP
-#define GENERATED_ENUMS_20250326_HPP
+#ifndef GENERATED_ENUMS_20250605_HPP
+#define GENERATED_ENUMS_20250605_HPP
 
 #include <cstdint>
 
@@ -368,6 +368,8 @@ enum class Op {
     AtomicFAddEXT = 6035,
     ConvertFToBF16INTEL = 6116,
     ConvertBF16ToFINTEL = 6117,
+    ControlBarrierArriveINTEL = 6142,
+    ControlBarrierWaitINTEL = 6143,
     CooperativeMatrixLoadCheckedINTEL = 6193,
     CooperativeMatrixStoreCheckedINTEL = 6194,
 };
@@ -589,6 +591,8 @@ enum class ExecutionMode {
     SignedZeroInfNanPreserve = 4461,
     RoundingModeRTE = 4462,
     RoundingModeRTZ = 4463,
+    NonCoherentTileAttachmentReadQCOM = 4489,
+    TileShadingRateQCOM = 4490,
     EarlyAndLateFragmentTestsAMD = 5017,
     StencilRefReplacingEXT = 5027,
     CoalescingAMDX = 5069,
@@ -651,6 +655,7 @@ enum class StorageClass {
     Image = 11,
     StorageBuffer = 12,
     TileImageEXT = 4172,
+    TileAttachmentQCOM = 4491,
     NodePayloadAMDX = 5068,
     CallableDataKHR = 5328,
     IncomingCallableDataKHR = 5329,
@@ -770,9 +775,15 @@ enum class ImageChannelDataType {
     Float = 14,
     UnormInt24 = 15,
     UnormInt101010_2 = 16,
+    UnormInt10X6EXT = 17,
     UnsignedIntRaw10EXT = 19,
     UnsignedIntRaw12EXT = 20,
     UnormInt2_101010EXT = 21,
+    UnsignedInt10X6EXT = 22,
+    UnsignedInt12X4EXT = 23,
+    UnsignedInt14X2EXT = 24,
+    UnormInt12X4EXT = 25,
+    UnormInt14X2EXT = 26,
 };
 enum class FPRoundingMode {
     RTE = 0,
@@ -879,6 +890,7 @@ enum class Decoration {
     MaxByteOffset = 45,
     AlignmentId = 46,
     MaxByteOffsetId = 47,
+    SaturatedToLargestFloat8NormalConversionEXT = 4216,
     NoSignedWrap = 4469,
     NoUnsignedWrap = 4470,
     WeightTextureQCOM = 4487,
@@ -1034,6 +1046,9 @@ enum class BuiltIn {
     DeviceIndex = 4438,
     ViewIndex = 4440,
     ShadingRateKHR = 4444,
+    TileOffsetQCOM = 4492,
+    TileDimensionQCOM = 4493,
+    TileApronSizeQCOM = 4494,
     BaryCoordNoPerspAMD = 4992,
     BaryCoordNoPerspCentroidAMD = 4993,
     BaryCoordNoPerspSampleAMD = 4994,
@@ -1198,7 +1213,12 @@ enum class Capability {
     TileImageColorReadAccessEXT = 4166,
     TileImageDepthReadAccessEXT = 4167,
     TileImageStencilReadAccessEXT = 4168,
+    TensorsARM = 4174,
+    StorageTensorArrayDynamicIndexingARM = 4175,
+    StorageTensorArrayNonUniformIndexingARM = 4176,
     CooperativeMatrixLayoutsARM = 4201,
+    Float8EXT = 4212,
+    Float8CooperativeMatrixEXT = 4213,
     FragmentShadingRateKHR = 4422,
     SubgroupBallotKHR = 4423,
     DrawParameters = 4427,
@@ -1232,6 +1252,7 @@ enum class Capability {
     TextureSampleWeightedQCOM = 4484,
     TextureBoxFilterQCOM = 4485,
     TextureBlockMatchQCOM = 4486,
+    TileShadingQCOM = 4495,
     TextureBlockMatch2QCOM = 4498,
     Float16ImageAMD = 5008,
     ImageGatherBiasLodAMD = 5009,
@@ -1242,6 +1263,8 @@ enum class Capability {
     ShaderClockKHR = 5055,
     ShaderEnqueueAMDX = 5067,
     QuadControlKHR = 5087,
+    Int4TypeINTEL = 5112,
+    Int4CooperativeMatrixINTEL = 5114,
     BFloat16TypeKHR = 5116,
     BFloat16DotProductKHR = 5117,
     BFloat16CooperativeMatrixKHR = 5118,
@@ -1378,11 +1401,13 @@ enum class Capability {
     Subgroup2DBlockTransformINTEL = 6229,
     Subgroup2DBlockTransposeINTEL = 6230,
     SubgroupMatrixMultiplyAccumulateINTEL = 6236,
+    TernaryBitwiseFunctionINTEL = 6241,
     GroupUniformArithmeticKHR = 6400,
     TensorFloat32RoundingINTEL = 6425,
     MaskedGatherScatterINTEL = 6427,
     CacheControlsINTEL = 6441,
     RegisterLimitsINTEL = 6460,
+    BindlessImagesINTEL = 6528,
     PackedCooperativeMatrixINTEL = 6434,
     CooperativeMatrixInvocationInstructionsINTEL = 6435,
     CooperativeMatrixTF32ComponentTypeINTEL = 6436,
@@ -1481,6 +1506,8 @@ enum class MatrixMultiplyAccumulateOperands {
 };
 enum class FPEncoding {
     BFloat16KHR = 0,
+    Float8E4M3EXT = 4214,
+    Float8E5M2EXT = 4215,
 };
 enum class CooperativeVectorMatrixLayout {
     RowMajorNV = 0,
@@ -1505,7 +1532,15 @@ enum class ComponentType {
     FloatE4M3NV = 1000491002,
     FloatE5M2NV = 1000491003,
 };
+enum class TensorOperands {
+    NoneARM = 0x0000,
+    NontemporalARM = 0x0001,
+    OutOfBoundsValueARM = 0x0002,
+    MakeElementAvailableARM = 0x0004,
+    MakeElementVisibleARM = 0x0008,
+    NonPrivateElementARM = 0x0010,
+};
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_ENUMS_20250326_HPP
+#endif // GENERATED_ENUMS_20250605_HPP

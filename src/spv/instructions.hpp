@@ -4,8 +4,8 @@
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_INSTRUCTIONS_20250326_HPP
-#define GENERATED_INSTRUCTIONS_20250326_HPP
+#ifndef GENERATED_INSTRUCTIONS_20250605_HPP
+#define GENERATED_INSTRUCTIONS_20250605_HPP
 
 #include "defs.hpp"
 #include "enums.hpp"
@@ -6860,6 +6860,50 @@ class OpConvertBF16ToFINTEL : public spv_inst {
     IdResultType type_;
     IdRef op0_;
 };
+class OpControlBarrierArriveINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::ControlBarrierArriveINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::SplitBarrierINTEL};
+    OpControlBarrierArriveINTEL(IdScope op0, IdScope op1, IdMemorySemantics op2)
+        : spv_inst{Op::ControlBarrierArriveINTEL, false}, op0_(std::move(op0)),
+          op1_(std::move(op1)), op2_(std::move(op2)) {}
+    inline auto op0() -> IdScope & { return op0_; }
+    inline auto op0() const -> IdScope const & { return op0_; }
+    inline auto op1() -> IdScope & { return op1_; }
+    inline auto op1() const -> IdScope const & { return op1_; }
+    inline auto op2() -> IdMemorySemantics & { return op2_; }
+    inline auto op2() const -> IdMemorySemantics const & { return op2_; }
+
+  private:
+    IdScope op0_;
+    IdScope op1_;
+    IdMemorySemantics op2_;
+};
+class OpControlBarrierWaitINTEL : public spv_inst {
+  public:
+    inline static bool classof(spv_inst const &s) {
+        return s.opcode() == Op::ControlBarrierWaitINTEL;
+    }
+    constexpr static std::array<Capability, 1> required_capabilities = {
+        Capability::SplitBarrierINTEL};
+    OpControlBarrierWaitINTEL(IdScope op0, IdScope op1, IdMemorySemantics op2)
+        : spv_inst{Op::ControlBarrierWaitINTEL, false}, op0_(std::move(op0)), op1_(std::move(op1)),
+          op2_(std::move(op2)) {}
+    inline auto op0() -> IdScope & { return op0_; }
+    inline auto op0() const -> IdScope const & { return op0_; }
+    inline auto op1() -> IdScope & { return op1_; }
+    inline auto op1() const -> IdScope const & { return op1_; }
+    inline auto op2() -> IdMemorySemantics & { return op2_; }
+    inline auto op2() const -> IdMemorySemantics const & { return op2_; }
+
+  private:
+    IdScope op0_;
+    IdScope op1_;
+    IdMemorySemantics op2_;
+};
 class OpCooperativeMatrixLoadCheckedINTEL : public spv_inst {
   public:
     inline static bool classof(spv_inst const &s) {
@@ -6961,4 +7005,4 @@ class OpCooperativeMatrixStoreCheckedINTEL : public spv_inst {
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_INSTRUCTIONS_20250326_HPP
+#endif // GENERATED_INSTRUCTIONS_20250605_HPP

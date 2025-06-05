@@ -719,6 +719,10 @@ auto to_string(Op op) -> char const * {
         return "ConvertFToBF16INTEL";
     case Op::ConvertBF16ToFINTEL:
         return "ConvertBF16ToFINTEL";
+    case Op::ControlBarrierArriveINTEL:
+        return "ControlBarrierArriveINTEL";
+    case Op::ControlBarrierWaitINTEL:
+        return "ControlBarrierWaitINTEL";
     case Op::CooperativeMatrixLoadCheckedINTEL:
         return "CooperativeMatrixLoadCheckedINTEL";
     case Op::CooperativeMatrixStoreCheckedINTEL:
@@ -1177,6 +1181,10 @@ auto to_string(ExecutionMode e) -> char const * {
         return "RoundingModeRTE";
     case ExecutionMode::RoundingModeRTZ:
         return "RoundingModeRTZ";
+    case ExecutionMode::NonCoherentTileAttachmentReadQCOM:
+        return "NonCoherentTileAttachmentReadQCOM";
+    case ExecutionMode::TileShadingRateQCOM:
+        return "TileShadingRateQCOM";
     case ExecutionMode::EarlyAndLateFragmentTestsAMD:
         return "EarlyAndLateFragmentTestsAMD";
     case ExecutionMode::StencilRefReplacingEXT:
@@ -1302,6 +1310,8 @@ auto to_string(StorageClass e) -> char const * {
         return "StorageBuffer";
     case StorageClass::TileImageEXT:
         return "TileImageEXT";
+    case StorageClass::TileAttachmentQCOM:
+        return "TileAttachmentQCOM";
     case StorageClass::NodePayloadAMDX:
         return "NodePayloadAMDX";
     case StorageClass::CallableDataKHR:
@@ -1546,12 +1556,24 @@ auto to_string(ImageChannelDataType e) -> char const * {
         return "UnormInt24";
     case ImageChannelDataType::UnormInt101010_2:
         return "UnormInt101010_2";
+    case ImageChannelDataType::UnormInt10X6EXT:
+        return "UnormInt10X6EXT";
     case ImageChannelDataType::UnsignedIntRaw10EXT:
         return "UnsignedIntRaw10EXT";
     case ImageChannelDataType::UnsignedIntRaw12EXT:
         return "UnsignedIntRaw12EXT";
     case ImageChannelDataType::UnormInt2_101010EXT:
         return "UnormInt2_101010EXT";
+    case ImageChannelDataType::UnsignedInt10X6EXT:
+        return "UnsignedInt10X6EXT";
+    case ImageChannelDataType::UnsignedInt12X4EXT:
+        return "UnsignedInt12X4EXT";
+    case ImageChannelDataType::UnsignedInt14X2EXT:
+        return "UnsignedInt14X2EXT";
+    case ImageChannelDataType::UnormInt12X4EXT:
+        return "UnormInt12X4EXT";
+    case ImageChannelDataType::UnormInt14X2EXT:
+        return "UnormInt14X2EXT";
     }
     return "unknown";
 }
@@ -1774,6 +1796,8 @@ auto to_string(Decoration e) -> char const * {
         return "AlignmentId";
     case Decoration::MaxByteOffsetId:
         return "MaxByteOffsetId";
+    case Decoration::SaturatedToLargestFloat8NormalConversionEXT:
+        return "SaturatedToLargestFloat8NormalConversionEXT";
     case Decoration::NoSignedWrap:
         return "NoSignedWrap";
     case Decoration::NoUnsignedWrap:
@@ -2085,6 +2109,12 @@ auto to_string(BuiltIn e) -> char const * {
         return "ViewIndex";
     case BuiltIn::ShadingRateKHR:
         return "ShadingRateKHR";
+    case BuiltIn::TileOffsetQCOM:
+        return "TileOffsetQCOM";
+    case BuiltIn::TileDimensionQCOM:
+        return "TileDimensionQCOM";
+    case BuiltIn::TileApronSizeQCOM:
+        return "TileApronSizeQCOM";
     case BuiltIn::BaryCoordNoPerspAMD:
         return "BaryCoordNoPerspAMD";
     case BuiltIn::BaryCoordNoPerspCentroidAMD:
@@ -2417,8 +2447,18 @@ auto to_string(Capability e) -> char const * {
         return "TileImageDepthReadAccessEXT";
     case Capability::TileImageStencilReadAccessEXT:
         return "TileImageStencilReadAccessEXT";
+    case Capability::TensorsARM:
+        return "TensorsARM";
+    case Capability::StorageTensorArrayDynamicIndexingARM:
+        return "StorageTensorArrayDynamicIndexingARM";
+    case Capability::StorageTensorArrayNonUniformIndexingARM:
+        return "StorageTensorArrayNonUniformIndexingARM";
     case Capability::CooperativeMatrixLayoutsARM:
         return "CooperativeMatrixLayoutsARM";
+    case Capability::Float8EXT:
+        return "Float8EXT";
+    case Capability::Float8CooperativeMatrixEXT:
+        return "Float8CooperativeMatrixEXT";
     case Capability::FragmentShadingRateKHR:
         return "FragmentShadingRateKHR";
     case Capability::SubgroupBallotKHR:
@@ -2485,6 +2525,8 @@ auto to_string(Capability e) -> char const * {
         return "TextureBoxFilterQCOM";
     case Capability::TextureBlockMatchQCOM:
         return "TextureBlockMatchQCOM";
+    case Capability::TileShadingQCOM:
+        return "TileShadingQCOM";
     case Capability::TextureBlockMatch2QCOM:
         return "TextureBlockMatch2QCOM";
     case Capability::Float16ImageAMD:
@@ -2505,6 +2547,10 @@ auto to_string(Capability e) -> char const * {
         return "ShaderEnqueueAMDX";
     case Capability::QuadControlKHR:
         return "QuadControlKHR";
+    case Capability::Int4TypeINTEL:
+        return "Int4TypeINTEL";
+    case Capability::Int4CooperativeMatrixINTEL:
+        return "Int4CooperativeMatrixINTEL";
     case Capability::BFloat16TypeKHR:
         return "BFloat16TypeKHR";
     case Capability::BFloat16DotProductKHR:
@@ -2777,6 +2823,8 @@ auto to_string(Capability e) -> char const * {
         return "Subgroup2DBlockTransposeINTEL";
     case Capability::SubgroupMatrixMultiplyAccumulateINTEL:
         return "SubgroupMatrixMultiplyAccumulateINTEL";
+    case Capability::TernaryBitwiseFunctionINTEL:
+        return "TernaryBitwiseFunctionINTEL";
     case Capability::GroupUniformArithmeticKHR:
         return "GroupUniformArithmeticKHR";
     case Capability::TensorFloat32RoundingINTEL:
@@ -2787,6 +2835,8 @@ auto to_string(Capability e) -> char const * {
         return "CacheControlsINTEL";
     case Capability::RegisterLimitsINTEL:
         return "RegisterLimitsINTEL";
+    case Capability::BindlessImagesINTEL:
+        return "BindlessImagesINTEL";
     case Capability::PackedCooperativeMatrixINTEL:
         return "PackedCooperativeMatrixINTEL";
     case Capability::CooperativeMatrixInvocationInstructionsINTEL:
@@ -2999,6 +3049,10 @@ auto to_string(FPEncoding e) -> char const * {
     switch (e) {
     case FPEncoding::BFloat16KHR:
         return "BFloat16KHR";
+    case FPEncoding::Float8E4M3EXT:
+        return "Float8E4M3EXT";
+    case FPEncoding::Float8E5M2EXT:
+        return "Float8E5M2EXT";
     }
     return "unknown";
 }
@@ -3047,6 +3101,23 @@ auto to_string(ComponentType e) -> char const * {
         return "FloatE4M3NV";
     case ComponentType::FloatE5M2NV:
         return "FloatE5M2NV";
+    }
+    return "unknown";
+}
+auto to_string(TensorOperands e) -> char const * {
+    switch (e) {
+    case TensorOperands::NoneARM:
+        return "NoneARM";
+    case TensorOperands::NontemporalARM:
+        return "NontemporalARM";
+    case TensorOperands::OutOfBoundsValueARM:
+        return "OutOfBoundsValueARM";
+    case TensorOperands::MakeElementAvailableARM:
+        return "MakeElementAvailableARM";
+    case TensorOperands::MakeElementVisibleARM:
+        return "MakeElementVisibleARM";
+    case TensorOperands::NonPrivateElementARM:
+        return "NonPrivateElementARM";
     }
     return "unknown";
 }
