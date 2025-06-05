@@ -79,7 +79,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     const auto interface_ty = spv_interface_ty(layout);
     auto io_ty = unique().scalar_ty(io_sty);
     const auto io_vec_size = blocks_per_load * cols_per_load;
-    spv_inst *io_vec_ty = io_vec_size ? unique().vec_ty(io_ty, io_vec_size) : io_ty;
+    spv_inst *io_vec_ty = io_vec_size > 1 ? unique().vec_ty(io_ty, io_vec_size) : io_ty;
     const auto pointer_ty = [&] {
         auto ot = get_memref_type(in.operand());
         const auto storage_cls = address_space_to_storage_class(ot->addrspace());
