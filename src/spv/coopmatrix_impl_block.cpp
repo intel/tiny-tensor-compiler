@@ -105,7 +105,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
         spv_inst *block_result = result;
         for (std::int64_t u = 0; u < layout.length / layout.blocks; u += cols_per_load) {
             spv_inst *val = walker.needs_mask() || walker.cols_checked() ? ld_chk(mod) : ld(mod);
-            if (blocks_per_load > 1) {
+            if (io_vec_size > 1) {
                 for (std::int32_t c = 0; c < cols_per_load; ++c) {
                     for (std::int32_t b = 0; b < blocks_per_load; ++b) {
                         spv_inst *v = mod.add<OpCompositeExtract>(
@@ -208,7 +208,7 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_
                     auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, offset,
                                                                      std::vector<spv_inst *>{});
                     spv_inst *val_ij = nullptr;
-                    if (blocks_per_store > 1) {
+                    if (io_vec_size > 1) {
                         val_ij = mod.add<OpUndef>(io_vec_ty);
                         for (std::int32_t c = 0; c < cols_per_store; ++c) {
                             for (std::int32_t b = 0; b < blocks_per_store; ++b) {
