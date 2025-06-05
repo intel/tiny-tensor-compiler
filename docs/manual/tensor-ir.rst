@@ -1311,8 +1311,8 @@ The following named attributes may be passed in the attribute dictionary:
       - Type
       - Description
     * - unroll
-      - boolean-attribute
-      - true: request to unroll loop, false: request to not unroll loop
+      - boolean-attribute or integer-attribute
+      - true: request to unroll loop, false: request to not unroll loop, integer: partial unroll count
 
 Fuse
 ....

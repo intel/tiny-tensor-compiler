@@ -576,18 +576,22 @@ void inst_converter::operator()(for_inst const &in) {
     auto iter_arg_phis = make_iter_arg_phi();
 
     auto condition = mod_->add<OpSLessThan>(spv_bool_ty, loop_var_phi, val(in.to()));
-    auto loop_control = [&]() -> LoopControl {
+    auto loop_control = [&]() -> std::pair<LoopControl, std::optional<LoopControlAttr>> {
         auto unroll = get_attr(in.attr(), "unroll");
         if (unroll) {
             auto ba = dyn_cast<boolean_attr>(unroll);
             if (ba) {
-                return ba->value() ? LoopControl::Unroll : LoopControl::DontUnroll;
+                return {ba->value() ? LoopControl::Unroll : LoopControl::DontUnroll, std::nullopt};
+            }
+            auto ia = dyn_cast<integer_attr>(unroll);
+            if (ia) {
+                return {LoopControl::PartialCount, ia->value()};
             }
             throw status::ir_expected_boolean_attribute;
         }
-        return LoopControl::None;
+        return {LoopControl::None, std::nullopt};
     }();
-    mod_->add<OpLoopMerge>(merge_label, continue_label, loop_control);
+    mod_->add<OpLoopMerge>(merge_label, continue_label, loop_control.first, loop_control.second);
     mod_->add<OpBranchConditional>(condition, body_label, merge_label,
                                    std::vector<LiteralInteger>{});
 
