@@ -12,9 +12,6 @@ else ()
     set(type static)
 endif ()
 
-find_package(re2c REQUIRED)
-find_package(BISON 3.8.2 REQUIRED)
-
 set(SOURCES
     analysis/aa_results.cpp
     analysis/alias.cpp
@@ -94,11 +91,27 @@ set(SOURCES
     value.cpp
     support/walk.cpp
 )
-set(RE2C_SOURCES
-    parser/lexer.re
-)
-BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
-             DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
+
+add_library(tinytc-objects OBJECT ${SOURCES})
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/lexer.cpp)
+    message(STATUS "Pre-generated lexer available -- skipping re2c dependency")
+    target_sources(tinytc-objects PRIVATE parser/lexer.cpp)
+else()
+    find_package(re2c REQUIRED)
+    add_re2c_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
+endif()
+
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/parser_impl.cpp)
+    message(STATUS "Pre-generated parser available -- skipping bison dependency")
+    target_sources(tinytc-objects PRIVATE parser/parser_impl.cpp)
+else()
+    find_package(BISON 3.8.2 REQUIRED)
+    BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
+                 DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
+    target_sources(tinytc-objects PRIVATE ${BISON_parser_OUTPUTS})
+endif()
+
 set(PUBLIC_HEADERS
     tinytc.h
     tinytc.hpp
@@ -109,8 +122,6 @@ list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
 add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
 
-add_library(tinytc-objects OBJECT ${SOURCES} ${BISON_parser_OUTPUTS})
-add_re2c_to_target(TARGET tinytc-objects SOURCES ${RE2C_SOURCES})
 set_cxx_common_options(tinytc-objects)
 target_compile_definitions(tinytc-objects PUBLIC
     "$<$<NOT:$<BOOL:${BUILD_SHARED_LIBS}>>:TINYTC_STATIC_DEFINE>")
@@ -149,7 +160,6 @@ target_sources(tinytc PUBLIC FILE_SET HEADERS
 
 
 # install
-
 install_lib(tinytc tinytc)
 
 # subdirs
@@ -162,3 +172,14 @@ endif()
 if(BUILD_LEVEL_ZERO)
     add_subdirectory(ze)
 endif()
+
+# cpack
+
+include(GeneratedFiles)
+get_generated_files(GENERATED_FILES tinytc-objects)
+if(BUILD_OPENCL)
+    list(APPEND GENERATED_FILES ${GENERATED_FILES_TINYTC_CL})
+endif()
+
+include(CPackSetup)
+cpack_setup()
