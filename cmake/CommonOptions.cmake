@@ -7,6 +7,7 @@
 
 include(CheckCompilerFlag)
 include(CheckLinkerFlag)
+include(GitVersion)
 
 function(add_flag_if_available lang target flag)
     string(MAKE_C_IDENTIFIER ${flag} flag_c)
@@ -54,6 +55,11 @@ function(set_common_options lang target)
                           SOVERSION ${tiny_tensor_compiler_VERSION_MAJOR})
     set_property(TARGET ${target} PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_compile_definitions(${target} PRIVATE -D_FORTIFY_SOURCE=2)
+
+    git_version()
+    set_target_properties(${target} PROPERTIES
+                          VERSION ${GIT_MAJOR_VERSION}.${GIT_MINOR_VERSION}.${GIT_PATCH_VERSION}
+                          SOVERSION ${GIT_MAJOR_VERSION})
 endfunction()
 
 function(set_c_common_options target)
