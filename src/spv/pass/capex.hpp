@@ -39,6 +39,7 @@ class capex {
     void operator()(OpCooperativeMatrixStoreKHR const &in);
     void operator()(OpEntryPoint const &in);
     void operator()(OpExecutionMode const &in);
+    void operator()(OpExtInstImport const &in);
     void operator()(OpGroupBroadcast const &in);
     void operator()(OpGroupFAdd const &in);
     void operator()(OpGroupIAdd const &in);

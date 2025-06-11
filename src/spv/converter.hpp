@@ -29,6 +29,9 @@ class inst_converter {
   public:
     inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info);
 
+    void add_memory_model();
+    void add_debug_info(tinytc_compiler_context_t ctx, location const &loc);
+
     // Instruction nodes
     void operator()(inst_node const &in);
     void operator()(alloca_inst const &in);
@@ -81,6 +84,8 @@ class inst_converter {
     tinytc_spv_mod_t mod_;
     tinytc_core_info const *info_;
     uniquifier unique_;
+    spv_inst *debug_source_ = nullptr;
+    spv_inst *compilation_unit_ = nullptr;
     std::unique_ptr<coopmatrix_impl> matrix_impl_ = nullptr;
     std::unordered_map<const_tinytc_value_t, dope_vector> dope_vec_;
     std::unordered_map<const_tinytc_value_t, spv_inst *> vals_;

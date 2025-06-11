@@ -81,6 +81,7 @@ set(SOURCES
     spv/module.cpp
     spv/names.cpp
     spv/opencl.std.cpp
+    spv/nonsemantic.shader.debuginfo.100.cpp
     spv/pass/assemble.cpp
     spv/pass/assign_ids.cpp
     spv/pass/dump_asm.cpp

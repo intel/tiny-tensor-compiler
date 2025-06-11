@@ -4,8 +4,10 @@
 #include "spv/pass/dump_asm.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
+#include "spv/nonsemantic.shader.debuginfo.100.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/casting.hpp"
+#include "support/fnv1a.hpp"
 #include "support/ilist.hpp"
 #include "support/ilist_base.hpp"
 #include "support/util.hpp"
@@ -118,9 +120,17 @@ void dump_asm_pass::operator()(OpExtInst const &in) {
     visit_result(in);
     this->operator()(in.op0());
 
-    if (auto extimport = dyn_cast<OpExtInstImport>(in.op0());
-        extimport && extimport->op0() == OpenCLExt) {
-        this->operator()(static_cast<OpenCLEntrypoint>(in.op1()));
+    if (auto extimport = dyn_cast<OpExtInstImport>(in.op0()); extimport) {
+        switch (fnv1a(extimport->op0())) {
+        case fnv1a(OpenCLstd_name):
+            this->operator()(static_cast<OpenCLstd>(in.op1()));
+            break;
+        case fnv1a(NonSemanticShaderDebugInfo100_name):
+            this->operator()(static_cast<NonSemanticShaderDebugInfo100>(in.op1()));
+            break;
+        default:
+            throw status::internal_compiler_error;
+        }
     } else {
         this->operator()(in.op1());
     }

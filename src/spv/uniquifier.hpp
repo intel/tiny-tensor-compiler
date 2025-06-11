@@ -46,6 +46,7 @@ class uniquifier {
     void extension(char const *ext_name);
     auto null_constant(spv_inst *spv_ty) -> spv_inst *;
     auto opencl_ext() -> spv_inst *;
+    auto debug_ext() -> spv_inst *;
 
     // types
     auto array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
@@ -81,6 +82,7 @@ class uniquifier {
     spv_inst *asm_target_ = nullptr;
     spv_inst *bool_true_ = nullptr, *bool_false_ = nullptr;
     spv_inst *opencl_ext_ = nullptr;
+    spv_inst *debug_ext_ = nullptr;
     std::unordered_map<BuiltIn, spv_inst *> builtin_;
     std::unordered_set<Capability> capabilities_;
     std::unordered_map<LiteralContextDependentNumber, spv_inst *> cst_map_;

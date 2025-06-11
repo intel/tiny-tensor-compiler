@@ -32,11 +32,13 @@ enum class section {
     memory_model = 3,
     entry_point = 4,
     execution_mode = 5,
-    decoration = 6,
-    type_const_var = 7,
-    function = 8
+    debug = 6,
+    decoration = 7,
+    type_const_var = 8,
+    debug_ext = 9,
+    function = 10
 };
-inline constexpr std::int32_t num_module_sections = 9;
+inline constexpr std::int32_t num_module_sections = 11;
 
 } // namespace spv
 } // namespace tinytc

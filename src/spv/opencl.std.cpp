@@ -1,4 +1,4 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
@@ -8,331 +8,331 @@
 
 namespace tinytc::spv {
 
-auto to_string(OpenCLEntrypoint ep) -> char const * {
+auto to_string(OpenCLstd ep) -> char const * {
     switch (ep) {
-    case OpenCLEntrypoint::acos:
+    case OpenCLstd::acos:
         return "acos";
-    case OpenCLEntrypoint::acosh:
+    case OpenCLstd::acosh:
         return "acosh";
-    case OpenCLEntrypoint::acospi:
+    case OpenCLstd::acospi:
         return "acospi";
-    case OpenCLEntrypoint::asin:
+    case OpenCLstd::asin:
         return "asin";
-    case OpenCLEntrypoint::asinh:
+    case OpenCLstd::asinh:
         return "asinh";
-    case OpenCLEntrypoint::asinpi:
+    case OpenCLstd::asinpi:
         return "asinpi";
-    case OpenCLEntrypoint::atan:
+    case OpenCLstd::atan:
         return "atan";
-    case OpenCLEntrypoint::atan2:
+    case OpenCLstd::atan2:
         return "atan2";
-    case OpenCLEntrypoint::atanh:
+    case OpenCLstd::atanh:
         return "atanh";
-    case OpenCLEntrypoint::atanpi:
+    case OpenCLstd::atanpi:
         return "atanpi";
-    case OpenCLEntrypoint::atan2pi:
+    case OpenCLstd::atan2pi:
         return "atan2pi";
-    case OpenCLEntrypoint::cbrt:
+    case OpenCLstd::cbrt:
         return "cbrt";
-    case OpenCLEntrypoint::ceil:
+    case OpenCLstd::ceil:
         return "ceil";
-    case OpenCLEntrypoint::copysign:
+    case OpenCLstd::copysign:
         return "copysign";
-    case OpenCLEntrypoint::cos:
+    case OpenCLstd::cos:
         return "cos";
-    case OpenCLEntrypoint::cosh:
+    case OpenCLstd::cosh:
         return "cosh";
-    case OpenCLEntrypoint::cospi:
+    case OpenCLstd::cospi:
         return "cospi";
-    case OpenCLEntrypoint::erfc:
+    case OpenCLstd::erfc:
         return "erfc";
-    case OpenCLEntrypoint::erf:
+    case OpenCLstd::erf:
         return "erf";
-    case OpenCLEntrypoint::exp:
+    case OpenCLstd::exp:
         return "exp";
-    case OpenCLEntrypoint::exp2:
+    case OpenCLstd::exp2:
         return "exp2";
-    case OpenCLEntrypoint::exp10:
+    case OpenCLstd::exp10:
         return "exp10";
-    case OpenCLEntrypoint::expm1:
+    case OpenCLstd::expm1:
         return "expm1";
-    case OpenCLEntrypoint::fabs:
+    case OpenCLstd::fabs:
         return "fabs";
-    case OpenCLEntrypoint::fdim:
+    case OpenCLstd::fdim:
         return "fdim";
-    case OpenCLEntrypoint::floor:
+    case OpenCLstd::floor:
         return "floor";
-    case OpenCLEntrypoint::fma:
+    case OpenCLstd::fma:
         return "fma";
-    case OpenCLEntrypoint::fmax:
+    case OpenCLstd::fmax:
         return "fmax";
-    case OpenCLEntrypoint::fmin:
+    case OpenCLstd::fmin:
         return "fmin";
-    case OpenCLEntrypoint::fmod:
+    case OpenCLstd::fmod:
         return "fmod";
-    case OpenCLEntrypoint::fract:
+    case OpenCLstd::fract:
         return "fract";
-    case OpenCLEntrypoint::frexp:
+    case OpenCLstd::frexp:
         return "frexp";
-    case OpenCLEntrypoint::hypot:
+    case OpenCLstd::hypot:
         return "hypot";
-    case OpenCLEntrypoint::ilogb:
+    case OpenCLstd::ilogb:
         return "ilogb";
-    case OpenCLEntrypoint::ldexp:
+    case OpenCLstd::ldexp:
         return "ldexp";
-    case OpenCLEntrypoint::lgamma:
+    case OpenCLstd::lgamma:
         return "lgamma";
-    case OpenCLEntrypoint::lgamma_r:
+    case OpenCLstd::lgamma_r:
         return "lgamma_r";
-    case OpenCLEntrypoint::log:
+    case OpenCLstd::log:
         return "log";
-    case OpenCLEntrypoint::log2:
+    case OpenCLstd::log2:
         return "log2";
-    case OpenCLEntrypoint::log10:
+    case OpenCLstd::log10:
         return "log10";
-    case OpenCLEntrypoint::log1p:
+    case OpenCLstd::log1p:
         return "log1p";
-    case OpenCLEntrypoint::logb:
+    case OpenCLstd::logb:
         return "logb";
-    case OpenCLEntrypoint::mad:
+    case OpenCLstd::mad:
         return "mad";
-    case OpenCLEntrypoint::maxmag:
+    case OpenCLstd::maxmag:
         return "maxmag";
-    case OpenCLEntrypoint::minmag:
+    case OpenCLstd::minmag:
         return "minmag";
-    case OpenCLEntrypoint::modf:
+    case OpenCLstd::modf:
         return "modf";
-    case OpenCLEntrypoint::nan:
+    case OpenCLstd::nan:
         return "nan";
-    case OpenCLEntrypoint::nextafter:
+    case OpenCLstd::nextafter:
         return "nextafter";
-    case OpenCLEntrypoint::pow:
+    case OpenCLstd::pow:
         return "pow";
-    case OpenCLEntrypoint::pown:
+    case OpenCLstd::pown:
         return "pown";
-    case OpenCLEntrypoint::powr:
+    case OpenCLstd::powr:
         return "powr";
-    case OpenCLEntrypoint::remainder:
+    case OpenCLstd::remainder:
         return "remainder";
-    case OpenCLEntrypoint::remquo:
+    case OpenCLstd::remquo:
         return "remquo";
-    case OpenCLEntrypoint::rint:
+    case OpenCLstd::rint:
         return "rint";
-    case OpenCLEntrypoint::rootn:
+    case OpenCLstd::rootn:
         return "rootn";
-    case OpenCLEntrypoint::round:
+    case OpenCLstd::round:
         return "round";
-    case OpenCLEntrypoint::rsqrt:
+    case OpenCLstd::rsqrt:
         return "rsqrt";
-    case OpenCLEntrypoint::sin:
+    case OpenCLstd::sin:
         return "sin";
-    case OpenCLEntrypoint::sincos:
+    case OpenCLstd::sincos:
         return "sincos";
-    case OpenCLEntrypoint::sinh:
+    case OpenCLstd::sinh:
         return "sinh";
-    case OpenCLEntrypoint::sinpi:
+    case OpenCLstd::sinpi:
         return "sinpi";
-    case OpenCLEntrypoint::sqrt:
+    case OpenCLstd::sqrt:
         return "sqrt";
-    case OpenCLEntrypoint::tan:
+    case OpenCLstd::tan:
         return "tan";
-    case OpenCLEntrypoint::tanh:
+    case OpenCLstd::tanh:
         return "tanh";
-    case OpenCLEntrypoint::tanpi:
+    case OpenCLstd::tanpi:
         return "tanpi";
-    case OpenCLEntrypoint::tgamma:
+    case OpenCLstd::tgamma:
         return "tgamma";
-    case OpenCLEntrypoint::trunc:
+    case OpenCLstd::trunc:
         return "trunc";
-    case OpenCLEntrypoint::half_cos:
+    case OpenCLstd::half_cos:
         return "half_cos";
-    case OpenCLEntrypoint::half_divide:
+    case OpenCLstd::half_divide:
         return "half_divide";
-    case OpenCLEntrypoint::half_exp:
+    case OpenCLstd::half_exp:
         return "half_exp";
-    case OpenCLEntrypoint::half_exp2:
+    case OpenCLstd::half_exp2:
         return "half_exp2";
-    case OpenCLEntrypoint::half_exp10:
+    case OpenCLstd::half_exp10:
         return "half_exp10";
-    case OpenCLEntrypoint::half_log:
+    case OpenCLstd::half_log:
         return "half_log";
-    case OpenCLEntrypoint::half_log2:
+    case OpenCLstd::half_log2:
         return "half_log2";
-    case OpenCLEntrypoint::half_log10:
+    case OpenCLstd::half_log10:
         return "half_log10";
-    case OpenCLEntrypoint::half_powr:
+    case OpenCLstd::half_powr:
         return "half_powr";
-    case OpenCLEntrypoint::half_recip:
+    case OpenCLstd::half_recip:
         return "half_recip";
-    case OpenCLEntrypoint::half_rsqrt:
+    case OpenCLstd::half_rsqrt:
         return "half_rsqrt";
-    case OpenCLEntrypoint::half_sin:
+    case OpenCLstd::half_sin:
         return "half_sin";
-    case OpenCLEntrypoint::half_sqrt:
+    case OpenCLstd::half_sqrt:
         return "half_sqrt";
-    case OpenCLEntrypoint::half_tan:
+    case OpenCLstd::half_tan:
         return "half_tan";
-    case OpenCLEntrypoint::native_cos:
+    case OpenCLstd::native_cos:
         return "native_cos";
-    case OpenCLEntrypoint::native_divide:
+    case OpenCLstd::native_divide:
         return "native_divide";
-    case OpenCLEntrypoint::native_exp:
+    case OpenCLstd::native_exp:
         return "native_exp";
-    case OpenCLEntrypoint::native_exp2:
+    case OpenCLstd::native_exp2:
         return "native_exp2";
-    case OpenCLEntrypoint::native_exp10:
+    case OpenCLstd::native_exp10:
         return "native_exp10";
-    case OpenCLEntrypoint::native_log:
+    case OpenCLstd::native_log:
         return "native_log";
-    case OpenCLEntrypoint::native_log2:
+    case OpenCLstd::native_log2:
         return "native_log2";
-    case OpenCLEntrypoint::native_log10:
+    case OpenCLstd::native_log10:
         return "native_log10";
-    case OpenCLEntrypoint::native_powr:
+    case OpenCLstd::native_powr:
         return "native_powr";
-    case OpenCLEntrypoint::native_recip:
+    case OpenCLstd::native_recip:
         return "native_recip";
-    case OpenCLEntrypoint::native_rsqrt:
+    case OpenCLstd::native_rsqrt:
         return "native_rsqrt";
-    case OpenCLEntrypoint::native_sin:
+    case OpenCLstd::native_sin:
         return "native_sin";
-    case OpenCLEntrypoint::native_sqrt:
+    case OpenCLstd::native_sqrt:
         return "native_sqrt";
-    case OpenCLEntrypoint::native_tan:
+    case OpenCLstd::native_tan:
         return "native_tan";
-    case OpenCLEntrypoint::s_abs:
+    case OpenCLstd::s_abs:
         return "s_abs";
-    case OpenCLEntrypoint::s_abs_diff:
+    case OpenCLstd::s_abs_diff:
         return "s_abs_diff";
-    case OpenCLEntrypoint::s_add_sat:
+    case OpenCLstd::s_add_sat:
         return "s_add_sat";
-    case OpenCLEntrypoint::u_add_sat:
+    case OpenCLstd::u_add_sat:
         return "u_add_sat";
-    case OpenCLEntrypoint::s_hadd:
+    case OpenCLstd::s_hadd:
         return "s_hadd";
-    case OpenCLEntrypoint::u_hadd:
+    case OpenCLstd::u_hadd:
         return "u_hadd";
-    case OpenCLEntrypoint::s_rhadd:
+    case OpenCLstd::s_rhadd:
         return "s_rhadd";
-    case OpenCLEntrypoint::u_rhadd:
+    case OpenCLstd::u_rhadd:
         return "u_rhadd";
-    case OpenCLEntrypoint::s_clamp:
+    case OpenCLstd::s_clamp:
         return "s_clamp";
-    case OpenCLEntrypoint::u_clamp:
+    case OpenCLstd::u_clamp:
         return "u_clamp";
-    case OpenCLEntrypoint::clz:
+    case OpenCLstd::clz:
         return "clz";
-    case OpenCLEntrypoint::ctz:
+    case OpenCLstd::ctz:
         return "ctz";
-    case OpenCLEntrypoint::s_mad_hi:
+    case OpenCLstd::s_mad_hi:
         return "s_mad_hi";
-    case OpenCLEntrypoint::u_mad_sat:
+    case OpenCLstd::u_mad_sat:
         return "u_mad_sat";
-    case OpenCLEntrypoint::s_mad_sat:
+    case OpenCLstd::s_mad_sat:
         return "s_mad_sat";
-    case OpenCLEntrypoint::s_max:
+    case OpenCLstd::s_max:
         return "s_max";
-    case OpenCLEntrypoint::u_max:
+    case OpenCLstd::u_max:
         return "u_max";
-    case OpenCLEntrypoint::s_min:
+    case OpenCLstd::s_min:
         return "s_min";
-    case OpenCLEntrypoint::u_min:
+    case OpenCLstd::u_min:
         return "u_min";
-    case OpenCLEntrypoint::s_mul_hi:
+    case OpenCLstd::s_mul_hi:
         return "s_mul_hi";
-    case OpenCLEntrypoint::rotate:
+    case OpenCLstd::rotate:
         return "rotate";
-    case OpenCLEntrypoint::s_sub_sat:
+    case OpenCLstd::s_sub_sat:
         return "s_sub_sat";
-    case OpenCLEntrypoint::u_sub_sat:
+    case OpenCLstd::u_sub_sat:
         return "u_sub_sat";
-    case OpenCLEntrypoint::u_upsample:
+    case OpenCLstd::u_upsample:
         return "u_upsample";
-    case OpenCLEntrypoint::s_upsample:
+    case OpenCLstd::s_upsample:
         return "s_upsample";
-    case OpenCLEntrypoint::popcount:
+    case OpenCLstd::popcount:
         return "popcount";
-    case OpenCLEntrypoint::s_mad24:
+    case OpenCLstd::s_mad24:
         return "s_mad24";
-    case OpenCLEntrypoint::u_mad24:
+    case OpenCLstd::u_mad24:
         return "u_mad24";
-    case OpenCLEntrypoint::s_mul24:
+    case OpenCLstd::s_mul24:
         return "s_mul24";
-    case OpenCLEntrypoint::u_mul24:
+    case OpenCLstd::u_mul24:
         return "u_mul24";
-    case OpenCLEntrypoint::u_abs:
+    case OpenCLstd::u_abs:
         return "u_abs";
-    case OpenCLEntrypoint::u_abs_diff:
+    case OpenCLstd::u_abs_diff:
         return "u_abs_diff";
-    case OpenCLEntrypoint::u_mul_hi:
+    case OpenCLstd::u_mul_hi:
         return "u_mul_hi";
-    case OpenCLEntrypoint::u_mad_hi:
+    case OpenCLstd::u_mad_hi:
         return "u_mad_hi";
-    case OpenCLEntrypoint::fclamp:
+    case OpenCLstd::fclamp:
         return "fclamp";
-    case OpenCLEntrypoint::degrees:
+    case OpenCLstd::degrees:
         return "degrees";
-    case OpenCLEntrypoint::fmax_common:
+    case OpenCLstd::fmax_common:
         return "fmax_common";
-    case OpenCLEntrypoint::fmin_common:
+    case OpenCLstd::fmin_common:
         return "fmin_common";
-    case OpenCLEntrypoint::mix:
+    case OpenCLstd::mix:
         return "mix";
-    case OpenCLEntrypoint::radians:
+    case OpenCLstd::radians:
         return "radians";
-    case OpenCLEntrypoint::step:
+    case OpenCLstd::step:
         return "step";
-    case OpenCLEntrypoint::smoothstep:
+    case OpenCLstd::smoothstep:
         return "smoothstep";
-    case OpenCLEntrypoint::sign:
+    case OpenCLstd::sign:
         return "sign";
-    case OpenCLEntrypoint::cross:
+    case OpenCLstd::cross:
         return "cross";
-    case OpenCLEntrypoint::distance:
+    case OpenCLstd::distance:
         return "distance";
-    case OpenCLEntrypoint::length:
+    case OpenCLstd::length:
         return "length";
-    case OpenCLEntrypoint::normalize:
+    case OpenCLstd::normalize:
         return "normalize";
-    case OpenCLEntrypoint::fast_distance:
+    case OpenCLstd::fast_distance:
         return "fast_distance";
-    case OpenCLEntrypoint::fast_length:
+    case OpenCLstd::fast_length:
         return "fast_length";
-    case OpenCLEntrypoint::fast_normalize:
+    case OpenCLstd::fast_normalize:
         return "fast_normalize";
-    case OpenCLEntrypoint::bitselect:
+    case OpenCLstd::bitselect:
         return "bitselect";
-    case OpenCLEntrypoint::select:
+    case OpenCLstd::select:
         return "select";
-    case OpenCLEntrypoint::vloadn:
+    case OpenCLstd::vloadn:
         return "vloadn";
-    case OpenCLEntrypoint::vstoren:
+    case OpenCLstd::vstoren:
         return "vstoren";
-    case OpenCLEntrypoint::vload_half:
+    case OpenCLstd::vload_half:
         return "vload_half";
-    case OpenCLEntrypoint::vload_halfn:
+    case OpenCLstd::vload_halfn:
         return "vload_halfn";
-    case OpenCLEntrypoint::vstore_half:
+    case OpenCLstd::vstore_half:
         return "vstore_half";
-    case OpenCLEntrypoint::vstore_half_r:
+    case OpenCLstd::vstore_half_r:
         return "vstore_half_r";
-    case OpenCLEntrypoint::vstore_halfn:
+    case OpenCLstd::vstore_halfn:
         return "vstore_halfn";
-    case OpenCLEntrypoint::vstore_halfn_r:
+    case OpenCLstd::vstore_halfn_r:
         return "vstore_halfn_r";
-    case OpenCLEntrypoint::vloada_halfn:
+    case OpenCLstd::vloada_halfn:
         return "vloada_halfn";
-    case OpenCLEntrypoint::vstorea_halfn:
+    case OpenCLstd::vstorea_halfn:
         return "vstorea_halfn";
-    case OpenCLEntrypoint::vstorea_halfn_r:
+    case OpenCLstd::vstorea_halfn_r:
         return "vstorea_halfn_r";
-    case OpenCLEntrypoint::shuffle:
+    case OpenCLstd::shuffle:
         return "shuffle";
-    case OpenCLEntrypoint::shuffle2:
+    case OpenCLstd::shuffle2:
         return "shuffle2";
-    case OpenCLEntrypoint::printf:
+    case OpenCLstd::printf:
         return "printf";
-    case OpenCLEntrypoint::prefetch:
+    case OpenCLstd::prefetch:
         return "prefetch";
     }
     return "unknown";

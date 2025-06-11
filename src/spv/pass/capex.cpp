@@ -6,6 +6,7 @@
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
+#include "spv/nonsemantic.shader.debuginfo.100.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
 #include "support/casting.hpp"
@@ -178,6 +179,11 @@ void capex::operator()(OpExecutionMode const &in) {
         if (cap == Capability::SubgroupDispatch) {
             required_features_[tinytc_spirv_feature_subgroup_dispatch] = true;
         }
+    }
+}
+void capex::operator()(OpExtInstImport const &in) {
+    if (in.op0() == NonSemanticShaderDebugInfo100_name) {
+        unique_->extension("SPV_KHR_non_semantic_info");
     }
 }
 void capex::operator()(OpGroupBroadcast const &) {

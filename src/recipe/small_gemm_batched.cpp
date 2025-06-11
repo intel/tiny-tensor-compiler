@@ -59,7 +59,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
     std::int32_t source_id = 0;
     TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(
-        ctx_.get(), "recipe/small_gemm_batched.cpp", "", &source_id));
+        ctx_.get(), std::source_location::current().file_name(), "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};

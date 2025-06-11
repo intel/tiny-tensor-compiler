@@ -77,11 +77,11 @@ auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst
             return mod.add<OpBitwiseXor>(ty, a, b);
         case arithmetic::min:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::s_min),
+                                      static_cast<std::int32_t>(OpenCLstd::s_min),
                                       std::vector<IdRef>{a, b});
         case arithmetic::max:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::s_max),
+                                      static_cast<std::int32_t>(OpenCLstd::s_max),
                                       std::vector<IdRef>{a, b});
         }
         throw compilation_error(loc, status::internal_compiler_error);
@@ -101,11 +101,11 @@ auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst
             return mod.add<OpFRem>(ty, a, b);
         case arithmetic::min:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::fmin),
+                                      static_cast<std::int32_t>(OpenCLstd::fmin),
                                       std::vector<IdRef>{a, b});
         case arithmetic::max:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::fmax),
+                                      static_cast<std::int32_t>(OpenCLstd::fmax),
                                       std::vector<IdRef>{a, b});
         default:
             break;
@@ -306,8 +306,7 @@ auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b
     auto b_1 = mod.add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{1, 1});
     auto b_1_a_times_i = mod.add<OpFMul>(ty, b_1, a_times_i);
     auto b_0 = mod.add<OpVectorShuffle>(ty, b, b, std::vector<LiteralInteger>{0, 0});
-    return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                              static_cast<std::int32_t>(OpenCLEntrypoint::fma),
+    return mod.add<OpExtInst>(ty, unique.opencl_ext(), static_cast<std::int32_t>(OpenCLstd::fma),
                               std::vector<IdRef>{a, b_0, b_1_a_times_i});
 }
 
@@ -537,7 +536,7 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv
         switch (op) {
         case arithmetic_unary::abs:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::s_abs),
+                                      static_cast<std::int32_t>(OpenCLstd::s_abs),
                                       std::vector<IdRef>{a});
         case arithmetic_unary::neg:
             return mod.add<OpSNegate>(ty, a);
@@ -552,7 +551,7 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv
         switch (op) {
         case arithmetic_unary::abs:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::fabs),
+                                      static_cast<std::int32_t>(OpenCLstd::fabs),
                                       std::vector<IdRef>{a});
         case arithmetic_unary::neg:
             return mod.add<OpFNegate>(ty, a);
@@ -571,7 +570,7 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv
             auto a2_1 = mod.add<OpCompositeExtract>(float_ty, a2, std::vector<LiteralInteger>{1});
             auto a2_0p1 = mod.add<OpFAdd>(float_ty, a2_0, a2_1);
             return mod.add<OpExtInst>(float_ty, unique.opencl_ext(),
-                                      static_cast<std::int32_t>(OpenCLEntrypoint::sqrt),
+                                      static_cast<std::int32_t>(OpenCLstd::sqrt),
                                       std::vector<IdRef>{a2_0p1});
         }
         case arithmetic_unary::neg:

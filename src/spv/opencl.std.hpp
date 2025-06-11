@@ -1,17 +1,17 @@
-// Copyright (C) 2024 Intel Corporation
+// Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
 // This file is generated
 // Do not edit manually
 
-#ifndef GENERATED_OPENCL_STD_2024115_HPP
-#define GENERATED_OPENCL_STD_2024115_HPP
+#ifndef GENERATED_OPENCL_STD_20250610_HPP
+#define GENERATED_OPENCL_STD_20250610_HPP
 
 namespace tinytc::spv {
 
-constexpr char const *OpenCLExt = "OpenCL.std";
+constexpr char const *OpenCLstd_name = "OpenCL.std";
 
-enum class OpenCLEntrypoint {
+enum class OpenCLstd {
     acos = 0,
     acosh = 1,
     acospi = 2,
@@ -176,8 +176,8 @@ enum class OpenCLEntrypoint {
     prefetch = 185,
 };
 
-auto to_string(OpenCLEntrypoint op) -> char const *;
+auto to_string(OpenCLstd op) -> char const *;
 
 } // namespace tinytc::spv
 
-#endif // GENERATED_OPENCL_STD_2024115_HPP
+#endif // GENERATED_OPENCL_STD_20250610_HPP

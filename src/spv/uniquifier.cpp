@@ -7,6 +7,7 @@
 #include "spv/instructions.hpp"
 #include "spv/lut.hpp"
 #include "spv/module.hpp"
+#include "spv/nonsemantic.shader.debuginfo.100.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
 #include "support/visit.hpp"
@@ -147,7 +148,12 @@ auto uniquifier::null_constant(spv_inst *spv_ty) -> spv_inst * {
 
 auto uniquifier::opencl_ext() -> spv_inst * {
     return lookup(opencl_ext_,
-                  [&] { return mod_->add_to<OpExtInstImport>(section::ext_inst, OpenCLExt); });
+                  [&] { return mod_->add_to<OpExtInstImport>(section::ext_inst, OpenCLstd_name); });
+}
+auto uniquifier::debug_ext() -> spv_inst * {
+    return lookup(debug_ext_, [&] {
+        return mod_->add_to<OpExtInstImport>(section::ext_inst, NonSemanticShaderDebugInfo100_name);
+    });
 }
 
 auto uniquifier::array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst * {

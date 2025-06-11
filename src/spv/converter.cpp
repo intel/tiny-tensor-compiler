@@ -21,6 +21,7 @@
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
+#include "spv/nonsemantic.shader.debuginfo.100.hpp"
 #include "spv/opencl.std.hpp"
 #include "spv/pass/capex.hpp"
 #include "spv/uniquifier.hpp"
@@ -56,8 +57,8 @@ auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
 
     auto conv = inst_converter{*m, info};
 
-    m->add_to<OpMemoryModel>(section::memory_model, AddressingModel::Physical64,
-                             MemoryModel::OpenCL);
+    conv.add_memory_model();
+    conv.add_debug_info(p.context(), p.loc());
 
     for (auto const &fn : p) {
         conv.run_on_function(fn);
@@ -84,6 +85,39 @@ auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info)
 
 inst_converter::inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info)
     : mod_(&m), info_(&info), unique_(m) {}
+
+void inst_converter::add_memory_model() {
+    mod_->add_to<OpMemoryModel>(section::memory_model, AddressingModel::Physical64,
+                                MemoryModel::OpenCL);
+}
+
+void inst_converter::add_debug_info(tinytc_compiler_context_t ctx, location const &loc) {
+    auto [source_name, source_name_size] = ctx->source_name(loc.begin.source_id);
+    auto [source_text, source_text_size] = ctx->source_text(loc.begin.source_id);
+    auto source_name_id = mod_->add_to<OpString>(
+        section::debug, std::string(source_name, source_name + source_name_size));
+    auto source_text_id =
+        source_text_size > 0
+            ? mod_->add_to<OpString>(section::debug,
+                                     std::string(source_text, source_text + source_text_size))
+            : nullptr;
+
+    auto debug_source_ops = std::vector<IdRef>{source_name_id};
+    if (source_text_id) {
+        debug_source_ops.push_back(source_text_id);
+    }
+    debug_source_ = mod_->add_to<OpExtInst>(
+        section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+        static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugSource), debug_source_ops);
+
+    const auto debug_info_version = unique_.constant(std::int32_t{0x10000});
+    const auto dwarf_version = unique_.constant(std::int32_t{0x0});
+    const auto language = unique_.constant(static_cast<std::int32_t>(SourceLanguage::Unknown));
+    compilation_unit_ = mod_->add_to<OpExtInst>(
+        section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+        static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugCompilationUnit),
+        std::vector<IdRef>{debug_info_version, dwarf_version, debug_source_, language});
+}
 
 auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     if (auto it = dope_vec_.find(&v); it != dope_vec_.end()) {
@@ -775,27 +809,27 @@ void inst_converter::operator()(load_inst const &in) {
 
 void inst_converter::operator()(math_unary_inst const &in) {
     auto const make_float = [&](math_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
-        auto const make_ext_inst = [&](OpenCLEntrypoint ep) {
+        auto const make_ext_inst = [&](OpenCLstd ep) {
             return mod_->add<OpExtInst>(ty, unique_.opencl_ext(), static_cast<std::int32_t>(ep),
                                         std::vector<IdRef>{a});
         };
         switch (op) {
         case math_unary::cos:
-            return make_ext_inst(OpenCLEntrypoint::cos);
+            return make_ext_inst(OpenCLstd::cos);
         case math_unary::sin:
-            return make_ext_inst(OpenCLEntrypoint::sin);
+            return make_ext_inst(OpenCLstd::sin);
         case math_unary::exp:
-            return make_ext_inst(OpenCLEntrypoint::exp);
+            return make_ext_inst(OpenCLstd::exp);
         case math_unary::exp2:
-            return make_ext_inst(OpenCLEntrypoint::exp2);
+            return make_ext_inst(OpenCLstd::exp2);
         case math_unary::native_cos:
-            return make_ext_inst(OpenCLEntrypoint::native_cos);
+            return make_ext_inst(OpenCLstd::native_cos);
         case math_unary::native_sin:
-            return make_ext_inst(OpenCLEntrypoint::native_sin);
+            return make_ext_inst(OpenCLstd::native_sin);
         case math_unary::native_exp:
-            return make_ext_inst(OpenCLEntrypoint::native_exp);
+            return make_ext_inst(OpenCLstd::native_exp);
         case math_unary::native_exp2:
-            return make_ext_inst(OpenCLEntrypoint::native_exp2);
+            return make_ext_inst(OpenCLstd::native_exp2);
         default:
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
@@ -830,17 +864,16 @@ void inst_converter::operator()(math_unary_inst const &in) {
         };
         switch (op) {
         case math_unary::exp:
-            return make_complex_exp(OpenCLEntrypoint::exp, OpenCLEntrypoint::cos,
-                                    OpenCLEntrypoint::sin);
+            return make_complex_exp(OpenCLstd::exp, OpenCLstd::cos, OpenCLstd::sin);
         case math_unary::exp2:
-            return make_complex_exp(OpenCLEntrypoint::exp2, OpenCLEntrypoint::cos,
-                                    OpenCLEntrypoint::sin, unique_.constant(log2));
+            return make_complex_exp(OpenCLstd::exp2, OpenCLstd::cos, OpenCLstd::sin,
+                                    unique_.constant(log2));
         case math_unary::native_exp:
-            return make_complex_exp(OpenCLEntrypoint::native_exp, OpenCLEntrypoint::native_cos,
-                                    OpenCLEntrypoint::native_sin);
+            return make_complex_exp(OpenCLstd::native_exp, OpenCLstd::native_cos,
+                                    OpenCLstd::native_sin);
         case math_unary::native_exp2:
-            return make_complex_exp(OpenCLEntrypoint::native_exp2, OpenCLEntrypoint::native_cos,
-                                    OpenCLEntrypoint::native_sin, unique_.constant(log2));
+            return make_complex_exp(OpenCLstd::native_exp2, OpenCLstd::native_cos,
+                                    OpenCLstd::native_sin, unique_.constant(log2));
         default:
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
@@ -1019,6 +1052,16 @@ void inst_converter::operator()(yield_inst const &in) {
 
 void inst_converter::run_on_region(region_node const &reg) {
     for (auto const &i : reg) {
+        if (debug_source_) {
+            auto line_start = unique_.constant(i.loc().begin.line);
+            auto line_end = unique_.constant(i.loc().end.line);
+            auto column_start = unique_.constant(i.loc().begin.column);
+            auto column_end = unique_.constant(i.loc().end.column);
+            mod_->add<OpExtInst>(
+                unique_.void_ty(), unique_.debug_ext(),
+                static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugLine),
+                std::vector<IdRef>{debug_source_, line_start, line_end, column_start, column_end});
+        }
         visit(*this, i);
     }
 }
@@ -1128,8 +1171,39 @@ void inst_converter::run_on_function(function_node const &fn) {
         }
     }
 
+    // Debug
+    spv_inst *debug_func = nullptr;
+    if (debug_source_ && compilation_unit_) {
+        auto flags = unique_.constant(std::int32_t{1 << 3 | 1 << 7 | 1 << 13});
+        auto debug_type = mod_->add_to<OpExtInst>(
+            section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugTypeFunction),
+            std::vector<IdRef>{flags, unique_.void_ty()});
+        auto debug_name = mod_->add_to<OpString>(section::debug, std::string(fn.name()));
+        auto line = unique_.constant(fn.loc().begin.line);
+        auto column = unique_.constant(fn.loc().begin.column);
+        debug_func = mod_->add_to<OpExtInst>(
+            section::debug_ext, unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugFunction),
+            std::vector<IdRef>{debug_name, debug_type, debug_source_, line, column,
+                               compilation_unit_, debug_name, flags, line});
+    }
+
+    // Function body
+
     mod_->add<OpLabel>();
     auto func_begin = --mod_->insts(section::function).end();
+
+    if (debug_func) {
+        mod_->add<OpExtInst>(
+            unique_.void_ty(), unique_.debug_ext(),
+            static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugFunctionDefinition),
+            std::vector<IdRef>{debug_func, fun});
+        mod_->add<OpExtInst>(unique_.void_ty(), unique_.debug_ext(),
+                             static_cast<std::int32_t>(NonSemanticShaderDebugInfo100::DebugScope),
+                             std::vector<IdRef>{debug_func});
+    }
+
     run_on_region(fn.body());
 
     auto func_end = mod_->insts(section::function).end();
