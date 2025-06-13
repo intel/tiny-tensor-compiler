@@ -4,7 +4,7 @@
 #include "pass/dump_cfg.hpp"
 #include "analysis/cfg.hpp"
 #include "pass/dump_ir.hpp"
-#include "support/util.hpp"
+#include "util/iterator.hpp"
 
 #include <cstdint>
 #include <ostream>

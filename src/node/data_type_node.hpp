@@ -4,10 +4,10 @@
 #ifndef DATA_TYPE_NODE_20230309_HPP
 #define DATA_TYPE_NODE_20230309_HPP
 
-#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/type_list.hpp"
 
 #include <algorithm>
 #include <array>

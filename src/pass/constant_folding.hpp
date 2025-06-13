@@ -9,11 +9,11 @@
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
-#include "support/casting.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 #include <cmath>

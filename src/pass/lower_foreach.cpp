@@ -11,15 +11,15 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "pass/clone.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/iterator.hpp"
+#include "util/visit.hpp"
 
 #include <array>
 #include <cstdint>

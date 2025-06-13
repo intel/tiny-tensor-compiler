@@ -4,9 +4,9 @@
 #include "node/attr_node.hpp"
 #include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
-#include "support/casting.hpp"
-#include "support/fnv1a.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <compare>

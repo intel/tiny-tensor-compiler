@@ -2,13 +2,13 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
-#include "support/casting.hpp"
-#include "support/fnv1a.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
-#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
+#include "util/ilist_base.hpp"
+#include "util/iterator.hpp"
+#include "util/visit.hpp"
 
 #include <complex>
 #include <cstddef>

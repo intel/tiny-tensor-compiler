@@ -6,9 +6,9 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "pass/dump_ir.hpp"
-#include "support/util.hpp"
-#include "support/visit.hpp"
 #include "support/walk.hpp"
+#include "util/iterator.hpp"
+#include "util/visit.hpp"
 
 #include <functional>
 #include <ostream>

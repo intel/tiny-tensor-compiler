@@ -4,9 +4,9 @@
 #include "error.hpp"
 #include "node/inst_node.hpp" // IWYU pragma: keep
 #include "node/region_node.hpp"
-#include "support/ilist.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
+#include "util/ilist.hpp"
 
 #include <algorithm>
 #include <cstdint>

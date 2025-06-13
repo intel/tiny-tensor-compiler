@@ -8,12 +8,11 @@
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
 
 #include <concepts>
 #include <cstdint>

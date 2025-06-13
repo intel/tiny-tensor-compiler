@@ -6,11 +6,11 @@
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "scalar_type.hpp"
-#include "support/casting.hpp"
-#include "support/fnv1a.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
-#include "support/util.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
+#include "util/math.hpp"
 
 #include <algorithm>
 #include <array>

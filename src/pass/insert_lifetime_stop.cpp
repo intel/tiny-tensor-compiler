@@ -7,11 +7,11 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "tinytc/types.h"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/iterator.hpp"
 
 #include <memory>
 #include <vector>

@@ -4,8 +4,8 @@
 #include "node/function_node.hpp"
 #include "error.hpp"
 #include "node/attr_node.hpp"
-#include "support/casting.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <cstddef>
 #include <utility>

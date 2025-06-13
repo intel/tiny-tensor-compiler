@@ -6,9 +6,13 @@
 
 #include <type_traits>
 
-// LLVM-style RTTI, cf. https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html
-
 namespace tinytc {
+
+template <typename T, typename V> auto enum_cast(V val) {
+    return T{std::underlying_type_t<T>(val)};
+}
+
+// LLVM-style RTTI, cf. https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html
 
 template <typename T, typename S> struct copy_cv {
   private:

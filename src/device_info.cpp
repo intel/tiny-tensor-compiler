@@ -3,12 +3,12 @@
 
 #include "device_info.hpp"
 #include "error.hpp"
-#include "support/fnv1a.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cstring>

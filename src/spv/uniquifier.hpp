@@ -6,9 +6,9 @@
 
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
-#include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "util/fnv1a.hpp"
 
 #include <array>
 #include <cstddef>

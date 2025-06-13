@@ -6,7 +6,7 @@
 
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
-#include "support/util.hpp"
+#include "util/iterator.hpp"
 
 #include <queue>
 #include <unordered_map>
@@ -32,15 +32,15 @@ class control_flow_graph {
 
     inline auto pred_begin(inst_node *a) { return adj_[a].pred.begin(); }
     inline auto pred_end(inst_node *a) { return adj_[a].pred.end(); }
-    inline auto
-    predecessors(inst_node *a) -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
+    inline auto predecessors(inst_node *a)
+        -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
         return {pred_begin(a), pred_end(a)};
     }
 
     inline auto succ_begin(inst_node *a) { return adj_[a].succ.begin(); }
     inline auto succ_end(inst_node *a) { return adj_[a].succ.end(); }
-    inline auto
-    successors(inst_node *a) -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
+    inline auto successors(inst_node *a)
+        -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
         return {succ_begin(a), succ_end(a)};
     }
 

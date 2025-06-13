@@ -28,14 +28,14 @@ spv_names_cpp = 'names.cpp'
 spv_names_cpp_includes = [spv_names, spv_enums]
 spv_defs = 'defs.hpp'
 spv_defs_includes = [
-    spv_enums, 'support/ilist_base.hpp', 'tinytc/tinytc.hpp', None,
+    spv_enums, 'util/ilist_base.hpp', 'tinytc/tinytc.hpp', None,
     '<cstdint>', '<limits>', '<variant>', '<string>', '<utility>'
 ]
 spv_ops = 'instructions.hpp'
 spv_visitor = 'visit.hpp'
 spv_visitor_includes = [spv_defs, spv_enums, spv_ops]
 spv_ops_includes = [
-    spv_defs, spv_enums, 'error.hpp', 'support/ilist_base.hpp', None,
+    spv_defs, spv_enums, 'error.hpp', 'util/ilist_base.hpp', None,
     '<array>', '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>',
     '<vector>'
 ]

@@ -5,9 +5,9 @@
 #define VALUE_NODE_20230309_HPP
 
 #include "node/data_type_node.hpp"
-#include "support/util.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/iterator.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -69,7 +69,7 @@ namespace tinytc {
 
 using value_node = ::tinytc_value;
 
-class use {
+class use final {
   public:
     use() = default;
     use(tinytc_inst_t owner);

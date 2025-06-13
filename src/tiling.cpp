@@ -6,8 +6,8 @@
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
 #include "scalar_type.hpp"
-#include "support/fnv1a.hpp"
 #include "tinytc/tinytc.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -23,8 +23,8 @@ auto blas_shape::operator==(blas_shape const &other) const -> bool {
 }
 auto blas_shape::operator!=(blas_shape const &other) const -> bool { return !(*this == other); }
 
-auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
-                           ::tinytc_core_info const &info) -> std::int32_t {
+auto suggest_subgroup_size(array_view<blas_shape> const &shapes, ::tinytc_core_info const &info)
+    -> std::int32_t {
     auto const &available_subgroup_sizes = info.subgroup_sizes();
     if (available_subgroup_sizes.size() == 0) {
         throw std::out_of_range("Subgroup size vector must have at least one entry");
@@ -83,8 +83,8 @@ auto suggest_subgroup_size(array_view<blas_shape> const &shapes,
     return sensible_subgroup_sizes.back();
 }
 
-auto suggest_local_tiling(array_view<blas_shape> const &shapes,
-                          core_config const &core_cfg) -> local_tiling {
+auto suggest_local_tiling(array_view<blas_shape> const &shapes, core_config const &core_cfg)
+    -> local_tiling {
     if (shapes.empty()) {
         return {1, 1};
     }
@@ -114,8 +114,8 @@ auto suggest_local_tiling(array_view<blas_shape> const &shapes,
 }
 
 auto suggest_local_tiling(std::size_t A_size, std::size_t B_size, std::size_t C_size,
-                          std::array<std::int64_t, 2u> const &shape,
-                          core_config const &core_cfg) -> local_tiling {
+                          std::array<std::int64_t, 2u> const &shape, core_config const &core_cfg)
+    -> local_tiling {
     auto [rows, cols] = max_register_block_gemm(A_size, B_size, C_size, core_cfg.subgroup_size,
                                                 core_cfg.register_space);
     auto const num_tile_limit = [](std::int64_t mode, std::int32_t block_size) {

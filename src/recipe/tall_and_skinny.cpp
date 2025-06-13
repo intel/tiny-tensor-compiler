@@ -5,12 +5,12 @@
 #include "device_info.hpp"
 #include "error.hpp"
 #include "recipe.hpp"
-#include "support/util.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 #include <array>

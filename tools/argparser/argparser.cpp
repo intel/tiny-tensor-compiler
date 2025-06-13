@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "argparser.hpp"
-#include "support/fnv1a.hpp"
+#include "util/fnv1a.hpp"
 
 #include <algorithm>
 #include <cctype>

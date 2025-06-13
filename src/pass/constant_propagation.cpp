@@ -7,12 +7,12 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "pass/constant_folding.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/visit.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/visit.hpp"
 
 #include <variant>
 

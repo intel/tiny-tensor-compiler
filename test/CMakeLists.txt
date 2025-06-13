@@ -11,7 +11,10 @@ add_library(test-lib STATIC main.cpp)
 target_include_directories(test-lib PUBLIC ${PROJECT_SOURCE_DIR}/external)
 target_compile_features(test-lib PUBLIC cxx_std_20)
 target_link_libraries(test-lib PUBLIC tinytc-objects)
-target_include_directories(test-lib PUBLIC ${PROJECT_SOURCE_DIR}/src)
+target_include_directories(test-lib PUBLIC
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/utilities
+)
 set_cxx_common_options(test-lib)
 
 #add_executable(test-lexer lexer.cpp)

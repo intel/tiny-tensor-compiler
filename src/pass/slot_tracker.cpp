@@ -4,8 +4,8 @@
 #include "pass/slot_tracker.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
-#include "support/util.hpp"
 #include "support/walk.hpp"
+#include "util/iterator.hpp"
 
 #include <functional>
 #include <utility>

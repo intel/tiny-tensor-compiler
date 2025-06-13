@@ -4,7 +4,7 @@
 #ifndef COOPMATRIX_LAYOUT_20250428_HPP
 #define COOPMATRIX_LAYOUT_20250428_HPP
 
-#include "support/fnv1a.hpp"
+#include "util/fnv1a.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/equal.hpp"
-#include "support/visit.hpp"
+#include "util/visit.hpp"
 
 #include <vector>
 

@@ -3,8 +3,8 @@
 
 #include "analysis/cfg.hpp"
 #include "node/inst_node.hpp"
-#include "support/casting.hpp"
-#include "support/ilist_base.hpp"
+#include "util/casting.hpp"
+#include "util/ilist_base.hpp"
 
 #include <algorithm>
 #include <utility>

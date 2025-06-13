@@ -7,10 +7,10 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
-#include "support/casting.hpp"
-#include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/visit.hpp"
 
 #include <cstdint>
 #include <functional>

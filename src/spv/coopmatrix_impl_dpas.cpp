@@ -19,9 +19,9 @@
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/xe_constants.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/math.hpp"
 
 #include <algorithm>
 #include <sstream>

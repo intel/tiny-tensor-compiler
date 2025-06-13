@@ -4,12 +4,12 @@
 #include "pass/check_ir.hpp"
 #include "error.hpp"
 #include "node/value_node.hpp"
-#include "support/casting.hpp"
-#include "support/ilist_base.hpp"
-#include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist_base.hpp"
+#include "util/visit.hpp"
 
 #include <cstdint>
 #include <functional>

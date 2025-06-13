@@ -145,6 +145,7 @@ configure_file(${tinytc_version_header_in} ${tinytc_version_header})
 target_include_directories(tinytc-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
     "$<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>"
+    "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/utilities>"
 )
 target_include_directories(tinytc-objects PUBLIC
     "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"

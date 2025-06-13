@@ -4,11 +4,11 @@
 #ifndef ATTR_NODE_20250205_HPP
 #define ATTR_NODE_20250205_HPP
 
-#include "support/casting.hpp"
-#include "support/type_list.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/type_list.hpp"
 
 #include <concepts>
 #include <cstddef>
@@ -42,8 +42,8 @@ namespace tinytc {
 class array_attr : public tinytc_attr {
   public:
     inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::array; }
-    static auto get(tinytc_compiler_context_t ctx,
-                    array_view<tinytc_attr_t> values) -> tinytc_attr_t;
+    static auto get(tinytc_compiler_context_t ctx, array_view<tinytc_attr_t> values)
+        -> tinytc_attr_t;
 
     inline auto begin() const -> std::vector<tinytc_attr_t>::const_iterator {
         return values_.begin();
@@ -78,8 +78,8 @@ class boolean_attr : public tinytc_attr {
 class dictionary_attr : public tinytc_attr {
   public:
     inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::dictionary; }
-    static auto get(tinytc_compiler_context_t ctx,
-                    array_view<named_attr> sorted_attrs) -> tinytc_attr_t;
+    static auto get(tinytc_compiler_context_t ctx, array_view<named_attr> sorted_attrs)
+        -> tinytc_attr_t;
     static void sort(mutable_array_view<named_attr> unsorted_attrs);
 
     inline auto begin() const -> std::vector<named_attr>::const_iterator { return attrs_.begin(); }

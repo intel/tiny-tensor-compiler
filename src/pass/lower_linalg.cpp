@@ -1,5 +1,6 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
+
 #include "pass/lower_linalg.hpp"
 #include "codegen_tools.hpp"
 #include "device_info.hpp"
@@ -12,15 +13,15 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
-#include "support/casting.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
+#include "util/visit.hpp"
 
 #include <array>
 #include <cstdint>

@@ -6,9 +6,9 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
-#include "support/casting.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 #include <functional>

@@ -16,10 +16,10 @@
 #include "spv/matrix_walker.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/math.hpp"
 
 #include <algorithm>
 #include <cstddef>

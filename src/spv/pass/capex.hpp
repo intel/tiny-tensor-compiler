@@ -5,9 +5,11 @@
 #define CAPEX_20241113_HPP
 
 #include "spv/defs.hpp"
+#include "spv/enums.hpp"
 #include "tinytc/types.h"
 
 #include <array>
+#include <utility>
 
 namespace tinytc {
 enum class spirv_feature;

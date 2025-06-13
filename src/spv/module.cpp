@@ -7,9 +7,9 @@
 #include "spv/defs.hpp"
 #include "spv/module.hpp"
 #include "spv/pass/dump_asm.hpp"
-#include "support/ilist_base.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.hpp"
+#include "util/ilist_base.hpp"
 
 #include <algorithm>
 #include <cstdlib>

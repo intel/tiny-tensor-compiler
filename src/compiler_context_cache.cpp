@@ -4,7 +4,7 @@
 #include "compiler_context_cache.hpp"
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
-#include "support/util.hpp"
+#include "util/casting.hpp"
 
 namespace tinytc {
 

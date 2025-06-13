@@ -7,9 +7,9 @@
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
-#include "support/casting.hpp"
-#include "support/visit.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
+#include "util/visit.hpp"
 
 #include <algorithm>
 #include <cstddef>

@@ -9,8 +9,8 @@
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
-#include "support/visit.hpp"
 #include "tinytc/types.hpp"
+#include "util/visit.hpp"
 
 #include <algorithm>
 #include <iterator>

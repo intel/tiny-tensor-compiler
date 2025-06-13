@@ -7,12 +7,11 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "support/casting.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 #include <complex>

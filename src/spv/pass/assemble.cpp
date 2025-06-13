@@ -6,11 +6,11 @@
 #include "spv/inst_assembler.hpp"
 #include "spv/module.hpp"
 #include "spv/visit.hpp"
-#include "support/ilist.hpp"
-#include "support/ilist_base.hpp"
-#include "support/util.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/types.h"
+#include "util/casting.hpp"
+#include "util/ilist.hpp"
+#include "util/ilist_base.hpp"
 
 #include <cstdint>
 #include <vector>

@@ -4,8 +4,8 @@
 #include "spv/block2d_diy.hpp"
 #include "spv/xe_constants.hpp"
 #include "support/temp_counter.hpp"
-#include "support/util.hpp"
 #include "tinytc/types.hpp"
+#include "util/math.hpp"
 
 #include <algorithm>
 #include <array>
