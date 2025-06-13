@@ -3,5 +3,6 @@
 
 add_subdirectory(argparser)
 add_subdirectory(device_info)
+add_subdirectory(mochi)
 add_subdirectory(offline_compiler)
 add_subdirectory(opt)

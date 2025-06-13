@@ -1,0 +1,98 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+inst @alloca_inst {
+    ret %result
+}
+
+inst @arith_binary {
+    prop %operator => "bin_op"
+    op %lhs
+    op %rhs
+    ret %result
+}
+
+inst @arith_binary {
+    prop %operator => "un_op"
+    op %operand
+    ret %result
+}
+
+inst @barrier {
+    prop %operator => "tinytc_address_spaces_t"    
+}
+
+inst @builtin {
+    prop %kind => "builtin"
+    ret %result
+}
+
+inst @cast {
+    op %operand
+    ret %result
+}
+
+inst @expand {
+    prop %expand_mode => "std::int64_t"
+    prop* %expand_shape => "std::int64_t"
+    op %operand
+    ret %result
+}
+
+inst @if {
+    op %cond
+    reg %then
+    reg %otherwise
+}
+
+inst @subview {
+    prop* %static_offsets => "std::int64_t"
+    prop* %static_sizes => "std::int64_t"
+    op %tensor
+    op* %offsets
+    op* %sizes
+    ret %result
+}
+
+inst @blas_a2 {
+    prop %atomic => "bool"
+    op %alpha
+    op %A
+    op %beta
+    op %B
+}
+
+inst @axpby : @blas_a2 {
+    prop %tA => "transpose"
+}
+
+inst @blas_a3 {
+    prop %atomic => "bool"
+    op %alpha
+    op %A
+    op %B
+    op %beta
+    op %C
+}
+
+inst @gemm : @blas_a3 {
+    prop %tA => "transpose"
+    prop %tB => "transpose"
+}
+
+inst @gemv : @blas_a3 {
+    prop %tA => "transpose"
+}
+
+inst @loop {
+    reg %body
+}
+
+inst @for : @loop {
+    op %from
+    op %to
+    op? %step
+    op* %iter_init
+    ret* %results
+}
+
