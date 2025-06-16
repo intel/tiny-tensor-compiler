@@ -141,8 +141,9 @@ inline auto {0}() const -> tinytc_value const& {{ in().result({1}); }}
         os << code << "\n";
     }
 
+    os << "protected:\n";
+    os << "void check(); // throws compilation_error on invalid IR\n";
     if (reg_no > 0) {
-        os << "protected:\n";
         os << "void setup_regions();\n";
     }
 
@@ -246,11 +247,15 @@ std::int32_t op_no = 0;
         }
     });
 
-    os << "};\n";
+    os << "};\n\n";
 
     if (num_child_regions > 0) {
-        os << "in->setup_regions();\n";
+        os << "in->setup_regions();\n\n";
     }
+
+    os << std::format("{}(in.get()).check();\n\n", in->class_name());
+
+    os << "return in.release();\n";
 
     os << "}\n\n";
 }

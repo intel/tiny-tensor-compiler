@@ -1,57 +1,210 @@
 ; Copyright (C) 2025 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-inst @alloca_inst {
-    ret %result
+inst @alloca {
+    ret %tensor
+    cxx "auto stack_ptr() const -> std::int64_t;"
+    cxx "void stack_ptr(std::int64_t ptr);"
 }
 
-inst @arith_binary {
-    prop %operator => "bin_op"
-    op %lhs
-    op %rhs
-    ret %result
+inst @arith {
+    prop %operation => "arithmetic"
+    op %a
+    op %b
+    ret %a_op_b
 }
 
-inst @arith_binary {
-    prop %operator => "un_op"
-    op %operand
-    ret %result
+inst @arith_unary {
+    prop %operation => "arithmetic_unary"
+    op %a
+    ret %op_a
 }
 
 inst @barrier {
-    prop %operator => "tinytc_address_spaces_t"    
+    prop %fence_flags => "tinytc_address_spaces_t"    
+    cxx "auto has_fence(address_space as) const;"
 }
 
 inst @builtin {
-    prop %kind => "builtin"
-    ret %result
+    prop %builtin_type => "builtin"
+    ret %builtin_value
 }
 
 inst @cast {
-    op %operand
-    ret %result
+    op %a
+    ret %a_casted
 }
 
+inst @compare {
+    prop %cond => "cmp_condition"
+    op %a
+    op %b
+    ret %comparison
+}
+
+inst @constant {
+    prop %value => "value_type"
+    ret %constant
+    cxx "using value_type = std::variant<bool, std::int64_t, double, std::complex<double>>;"
+    cxx "auto is_zero() const -> bool;"
+    cxx "auto is_identity() const -> bool;"
+}
+
+inst @cooperative_matrix_apply {
+    op %a
+    reg %body
+    ret %a_applied
+    cxx "inline auto row() -> tinytc_value & { return body().param(0); }"
+    cxx "inline auto row() const -> tinytc_value const & { return body().param(0); }"
+    cxx "inline auto col() -> tinytc_value & { return body().param(1); }"
+    cxx "inline auto col() const -> tinytc_value const & { return body().param(1); }"
+    cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
+    cxx "inline auto val() const -> tinytc_value const & { return body().param(2); }"
+}
+
+inst @cooperative_matrix_extract {
+    prop %index => "std::int64_t"
+    op %mat
+    ret %component
+}
+
+inst @cooperative_matrix_insert {
+    prop %index => "std::int64_t"
+    op %val
+    op %mat
+    ret %new_mat
+}
+
+inst @cooperative_matrix_load {
+    prop %t => "transpose"
+    prop %checked => "checked_flag"
+    op %operand
+    op %pos0
+    op %pos1
+    ret %mat
+}
+
+inst @cooperative_matrix_mul_add {
+    op %a
+    op %b
+    op %c
+    ret %d
+    cxx "auto is_c_zero() const -> bool;"
+}
+
+inst @cooperative_matrix_prefetch {
+    prop %cache_level => "std::int32_t"
+    prop %rows => "std::int32_t"
+    prop %cols => "std::int32_t"
+    op %operand
+    op %pos0
+    op %pos1
+}
+
+inst @cooperative_matrix_reduce {
+    prop %arith => "group_aritmetic"
+    prop %mode => "reduce_mode"
+    op %a
+    ret %a_reduced
+}
+
+inst @cooperative_matrix_scale {
+    op %a
+    op %b
+    ret %a_times_b
+}
+
+inst @cooperative_matrix_store {
+    prop %checked => "checked_flag"
+    prop %flag => "store_flag"
+    op %val
+    op %operand
+    op %pos0
+    op %pos1
+}
+
+
 inst @expand {
-    prop %expand_mode => "std::int64_t"
+    prop %expanded_mode => "std::int64_t"
     prop* %expand_shape => "std::int64_t"
     op %operand
-    ret %result
+    ret %expanded
+}
+
+inst @fuse {
+    prop %from => "std::int64_t"
+    prop %to => "std::int64_t"
+    op %operand
+    ret %fused
 }
 
 inst @if {
-    op %cond
+    op %condition
     reg %then
     reg %otherwise
+    ret* %yielded_vals
+    cxx "auto is_otherwise_empty() const -> bool;"
+}
+
+inst @lifetime_stop {
+    op %object
+}
+
+
+inst @load {
+    op %operand
+    op* %index_list
+    ret %loaded_value
+}
+
+inst @math_unary {
+    prop %operation => "math_unary"
+    op %a
+    ret %math_a
+}
+
+inst @parallel {
+    reg %body
+}
+
+inst @size {
+    prop %mode => "std::int64_t"
+    op %operand
+    ret %size
+}
+
+inst @subgroup_broadcast {
+    op %a
+    op %idx
+    ret %a_bc
+}
+
+inst @subgroup_operation {
+    prop %arith => "group_arithmetic"
+    prop %operation => "group_operation"
+    op %a
+    op %idx
+    ret %a_group_op
 }
 
 inst @subview {
     prop* %static_offsets => "std::int64_t"
     prop* %static_sizes => "std::int64_t"
-    op %tensor
+    op %operand
     op* %offsets
     op* %sizes
-    ret %result
+    ret %operand_sub
+}
+
+inst @store_inst {
+    prop %flag => "store_flag"
+    op %val
+    op %operand
+    op* %index_list
+}
+
+inst @yield_inst {
+    op* %yielded_vals
 }
 
 inst @blas_a2 {
@@ -63,6 +216,14 @@ inst @blas_a2 {
 }
 
 inst @axpby : @blas_a2 {
+    prop %tA => "transpose"
+}
+
+inst @cumsum : @blas_a2 {
+    prop %mode => "std::int64_t"
+}
+
+inst @sum : @blas_a2 {
     prop %tA => "transpose"
 }
 
@@ -84,6 +245,10 @@ inst @gemv : @blas_a3 {
     prop %tA => "transpose"
 }
 
+inst @ger : @blas_a3 {}
+
+inst @hadamard : @blas_a3 {}
+
 inst @loop {
     reg %body
 }
@@ -93,10 +258,17 @@ inst @for : @loop {
     op %to
     op? %step
     op* %iter_init
-    ret* %results
+    ret* %yielded_vals
     cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
     cxx "inline auto loop_var() const -> tinytc_value const & { return body().param(0); }"
     cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
     cxx "inline auto iter_arg(std::int64_t no) const -> tinytc_value const & { return body().param(no + 1); }"
 }
 
+inst @foreach : @loop {
+    op* %from
+    op* %to
+    cxx "inline auto dim() const -> std::int64_t { return from().size(); } }"
+    cxx "inline auto loop_vars() { return body().params(); }"
+    cxx "inline auto loop_vars() const { return body().params(); }"
+}
