@@ -15,7 +15,7 @@ namespace mochi {
 
 class lexer {
   public:
-    lexer(std::uint64_t input_size, char const *input, char const *filename = nullptr);
+    lexer(std::size_t input_size, char const *input, char const *filename = nullptr);
     auto operator()() -> parser::symbol_type;
 
     inline auto input() const -> char const * { return input_; }

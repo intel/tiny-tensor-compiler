@@ -94,5 +94,9 @@ inst @for : @loop {
     op? %step
     op* %iter_init
     ret* %results
+    cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
+    cxx "inline auto loop_var() const -> tinytc_value const & { return body().param(0); }"
+    cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
+    cxx "inline auto iter_arg(std::int64_t no) const -> tinytc_value const & { return body().param(no + 1); }"
 }
 

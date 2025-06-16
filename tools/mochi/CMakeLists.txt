@@ -8,6 +8,7 @@ set(SOURCES main.cpp
     codegen.cpp
     inst.cpp
     objects.cpp
+    omochi.cpp
     parser.cpp
 )
 
@@ -20,12 +21,13 @@ target_include_directories(mochi PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
 )
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lexer.cpp)
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lexer.cpp AND
+   EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/omochi_lexer.cpp)
     message(STATUS "Pre-generated lexer available -- skipping re2c dependency")
-    target_sources(mochi PRIVATE lexer.cpp)
+    target_sources(mochi PRIVATE lexer.cpp omochi_lexer.cpp)
 else()
     find_package(re2c REQUIRED)
-    add_re2c_to_target(TARGET mochi SOURCES lexer.re)
+    add_re2c_to_target(TARGET mochi SOURCES lexer.re omochi_lexer.re FLAGS "--input-encoding;utf8;-8")
 endif()
 
 if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser_impl.cpp)

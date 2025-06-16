@@ -4,6 +4,7 @@
 #include "inst.hpp"
 
 #include <sstream>
+#include <stdexcept>
 #include <utility>
 
 namespace mochi {
@@ -38,9 +39,6 @@ auto ret::cxx_type() const -> char const * {
 
 inst::inst(std::string name, std::vector<member> members, inst *parent)
     : name_{std::move(name)}, parent_{parent} {
-    ops_.reserve(members.size());
-    props_.reserve(members.size());
-
     bool needs_offset_property = false;
     bool has_star_ret = false;
     if (parent) {
@@ -71,7 +69,8 @@ inst::inst(std::string name, std::vector<member> members, inst *parent)
                         has_star_ret = true;
                     }
                     rets_.emplace_back(std::move(i));
-                }},
+                },
+                [&](raw_cxx &&i) { cxx_.emplace_back(std::move(i.code)); }},
             std::move(m));
     }
 }

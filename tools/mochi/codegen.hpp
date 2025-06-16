@@ -18,6 +18,8 @@ void generate_inst_create(std::ostream &os, inst *in);
 void generate_inst_header(std::ostream &os, objects const &obj);
 void generate_inst_cpp(std::ostream &os, objects const &obj);
 
+void generate_inst_visit_header(std::ostream &os, objects const &obj);
+
 } // namespace mochi
 
 #endif // CODEGEN_20250611_HPP

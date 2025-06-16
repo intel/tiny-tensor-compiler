@@ -5,7 +5,6 @@
 #define INST_20250611_HPP
 
 #include <memory>
-#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -39,7 +38,10 @@ struct ret {
 
     auto cxx_type() const -> char const *;
 };
-using member = std::variant<prop, op, reg, ret>;
+struct raw_cxx {
+    std::string code;
+};
+using member = std::variant<prop, op, reg, ret, raw_cxx>;
 
 class inst {
   public:
@@ -54,6 +56,7 @@ class inst {
     inline auto ops() const -> std::vector<op> const & { return ops_; }
     inline auto regs() const -> std::vector<reg> const & { return regs_; }
     inline auto rets() const -> std::vector<ret> const & { return rets_; }
+    inline auto cxx() const -> std::vector<std::string> const & { return cxx_; }
 
     inline auto children() -> auto & { return children_; }
     inline auto children() const -> const auto & { return children_; }
@@ -67,6 +70,7 @@ class inst {
     std::vector<op> ops_;
     std::vector<reg> regs_;
     std::vector<ret> rets_;
+    std::vector<std::string> cxx_;
     std::vector<std::unique_ptr<inst>> children_;
 };
 

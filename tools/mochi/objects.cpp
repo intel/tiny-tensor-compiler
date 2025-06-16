@@ -4,6 +4,8 @@
 #include "objects.hpp"
 #include "util/fnv1a.hpp"
 
+#include <cstdint>
+#include <string>
 #include <utility>
 
 namespace mochi {

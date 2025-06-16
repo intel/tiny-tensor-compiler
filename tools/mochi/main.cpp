@@ -2,21 +2,35 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "argparser.hpp"
-#include "codegen.hpp"
-#include "parser.hpp"
+#include "omochi.hpp"
 
+#include <cstring>
 #include <exception>
 #include <iostream>
 #include <optional>
+#include <string>
 
 using namespace mochi;
 
 int main(int argc, char **argv) {
-    char const *filename = nullptr;
     bool help = false;
+    generator gen = generator::template_;
+    char const *filename = "";
+    std::vector<char const *> search_paths;
+
+    auto const gen_converter = [](char const *str, generator &gen) {
+        auto g = lex_generator(strlen(str), str);
+        if (g) {
+            gen = *g;
+            return tinytc::cmd::parser_status::success;
+        }
+        return tinytc::cmd::parser_status::invalid_argument;
+    };
 
     auto parser = tinytc::cmd::arg_parser{};
     try {
+        parser.set_short_opt('g', &gen, "Generator").converter(gen_converter);
+        parser.set_short_opt('I', &search_paths, "Search path");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
         parser.add_positional_arg("file-name", &filename,
@@ -30,17 +44,24 @@ int main(int argc, char **argv) {
     if (help) {
         parser.print_help(std::cout, "mochi", "");
 
+        std::cout << std::endl;
+        std::cout << "Available generators:" << std::endl;
+        const auto print_option = [&](char const *opt) {
+            for (int i = 0; i < tinytc::cmd::arg_parser::optindent; ++i) {
+                std::cout << ' ';
+            }
+            std::cout << opt << std::endl;
+        };
+        print_option("inst_header");
+        print_option("inst_cpp");
+        print_option("inst_visit_header");
+        print_option("template");
+
         return 0;
     }
 
     try {
-        auto obj = parse_file(filename);
-        if (obj) {
-            generate_inst_header(std::cout, *obj);
-            generate_inst_cpp(std::cout, *obj);
-        } else {
-            return 1;
-        }
+        please_do(std::cout, {gen, filename}, search_paths);
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return 1;

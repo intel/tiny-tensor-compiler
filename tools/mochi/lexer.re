@@ -11,7 +11,7 @@
 
 namespace mochi {
 
-lexer::lexer(std::uint64_t input_size, char const *input, char const *filename)
+lexer::lexer(std::size_t input_size, char const *input, char const *filename)
     : input_{input}, len_(input_size), filename_(filename), YYCURSOR{input_},
       YYLIMIT{input_ + len_} {
     loc_.initialize(&filename_);
@@ -61,6 +61,7 @@ lex:
 
         // keywords
         "collective"        { adv_loc(); return parser::make_COLLECTIVE(loc_); }
+        "cxx"               { adv_loc(); return parser::make_CXX(loc_); }
         "enum"              { adv_loc(); return parser::make_ENUM(loc_); }
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
         "mixed"             { adv_loc(); return parser::make_MIXED(loc_); }

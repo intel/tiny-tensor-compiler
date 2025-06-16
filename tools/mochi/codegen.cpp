@@ -7,6 +7,8 @@
 #include "walk.hpp"
 
 #include <cstdint>
+#include <format>
+#include <functional>
 #include <memory>
 #include <ostream>
 #include <string>
@@ -18,17 +20,16 @@ constexpr std::string base_parent = "inst_view";
 
 void generate_inst_class(std::ostream &os, inst *in) {
     inst *parent = in->parent();
-    os << "class " << in->class_name();
     const auto parent_name = parent ? parent->class_name() : base_parent;
-    os << " : public " << parent_name << " {\npublic:\n";
-    os << "using " << parent_name << "::" << parent_name << ";\n\n";
+    os << std::format(R"CXXT(
+class {0} : public {1} {{
+public:
+    using {1}::{1};
+    struct properties : {1}::properties {{
+)CXXT",
+                      in->class_name(), parent_name);
 
     // Properties struct
-    os << "struct properties";
-    if (parent) {
-        os << " : " << parent->class_name() << "::properties";
-    }
-    os << " {\n";
     for (auto &o : in->ops()) {
         if (o.has_offset_property) {
             os << "std::int32_t " << o.offset_name() << ";\n";
@@ -42,10 +43,10 @@ void generate_inst_class(std::ostream &os, inst *in) {
     // classof function
     os << "inline static bool classof(inst_node const& i) {\n";
     if (in->has_children()) {
-        os << "return IK::" << in->ik_name()
-           << " <= i.type_id() && i.type_id() < IK::" << in->ik_name(true) << ";\n";
+        os << std::format("return IK::{} <= i.type_id() && i.type_id() < IK::{};\n", in->ik_name(),
+                          in->ik_name(true));
     } else {
-        os << "return IK::" << in->ik_name() << " == i.type_id();\n";
+        os << std::format("return IK::{} == i.type_id();\n", in->ik_name());
     }
     os << "}\n";
 
@@ -61,8 +62,8 @@ void generate_inst_class(std::ostream &os, inst *in) {
     os << "inline auto props() -> properties const& { return "
           "*static_cast<properties*>(in().props()); }\n";
     for (auto &p : in->props()) {
-        os << "inline auto " << p.name << "() const -> " << p.cxx_type() << " { return props()."
-           << p.name << "}\n";
+        os << std::format("inline auto {0}() const -> {1} {{ return props().{0}; }}\n", p.name,
+                          p.cxx_type());
     }
     os << "\n";
 
@@ -78,15 +79,20 @@ void generate_inst_class(std::ostream &os, inst *in) {
                                                             : std::to_string(op_no + 1));
         switch (it->quantity) {
         case quantifier::optional:
-            os << "inline auto has_" << it->name << "() -> bool { return " << offset << " < "
-               << next_offset << "; }\n";
+            os << std::format("inline auto has_{}() -> bool {{ return {} < {}; }}\n", it->name,
+                              offset, next_offset);
         case quantifier::single:
-            os << "inline auto " << it->name << "() -> tinytc_value & { return in().op(" << offset
-               << "); }\n";
+            os << std::format(R"CXXT(inline auto {0}() -> tinytc_value & {{ return in().op({1}); }}
+inline auto {0}() const -> tinytc_value const& {{ return in().op({1}); }}
+)CXXT",
+                              it->name, offset);
             break;
         case quantifier::many:
-            os << "inline auto " << it->name << "() -> op_range { return {op_begin() + " << offset
-               << ", op_begin() + " << next_offset << "}; }\n";
+            os << std::format(
+                R"CXXT(inline auto {0}() -> op_range {{ {{op_begin() + {1}, op_end() + {2}}}; }}
+inline auto {0}() const -> const_op_range {{ {{op_begin() + {1}, op_end() + {2}}}; }}
+)CXXT",
+                it->name, offset, next_offset);
             break;
         }
         ++op_no;
@@ -100,8 +106,11 @@ void generate_inst_class(std::ostream &os, inst *in) {
                                         [&reg_no](inst *in) { reg_no += in->regs().size(); });
     }
     for (auto &r : in->regs()) {
-        os << "inline auto " << r.name << "() const -> tinytc_region& { in().child_region("
-           << reg_no++ << ");}\n";
+        os << std::format(
+            R"CXXT(inline auto {0}() -> tinytc_region& {{ in().child_region({1}); }}
+inline auto {0}() const -> tinytc_region const& {{ in().child_region({1}); }}
+)CXXT",
+            r.name, reg_no++);
     }
     os << "\n";
 
@@ -113,14 +122,29 @@ void generate_inst_class(std::ostream &os, inst *in) {
     }
     for (auto &r : in->rets()) {
         if (r.quantity == quantifier::many) {
-            os << "inline auto " << r.name << "() -> result_range { return {result_begin() + "
-               << ret_no++ << ", result_end()}; }\n";
+            os << std::format(
+                R"CXXT(inline auto {0}() -> result_range {{ return {{result_begin() + {1}, result_end()}}; }}
+inline auto {0}() const -> const_result_range {{ return {{result_begin() + {1}, result_end()}}; }}
+)CXXT",
+                r.name, ret_no);
         } else {
-            os << "inline auto " << r.name << "() const -> tinytc_value& { in().result(" << ret_no++
-               << ");}\n";
+            os << std::format(R"CXXT(inline auto {0}() -> tinytc_value& {{ in().result({1}); }}
+inline auto {0}() const -> tinytc_value const& {{ in().result({1}); }}
+)CXXT",
+                              r.name, ret_no);
         }
+        ++ret_no;
     }
     os << "\n";
+
+    for (auto &code : in->cxx()) {
+        os << code << "\n";
+    }
+
+    if (reg_no > 0) {
+        os << "protected:\n";
+        os << "void setup_regions();\n";
+    }
 
     os << "};\n\n";
 }
@@ -134,17 +158,17 @@ void generate_inst_create_prototype(std::ostream &os, inst *in, bool insert_clas
 
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &p : in->props()) {
-            os << p.cxx_type() << " " << p.name << ", ";
+            os << std::format("{} {},", p.cxx_type(), p.name);
         }
     });
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
-            os << o.cxx_type() << " " << o.name << ", ";
+            os << std::format("{} {},", o.cxx_type(), o.name);
         }
     });
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &r : in->rets()) {
-            os << r.cxx_type() << " " << r.name << ", ";
+            os << std::format("{} {},", r.cxx_type(), r.name);
         }
     });
     os << "location const& lc) -> tinytc_inst_t";
@@ -164,50 +188,48 @@ void generate_inst_create(std::ostream &os, inst *in) {
                 ++num_static_operands;
                 break;
             case quantifier::optional:
-                os << "safe_increase(num_operands, " << o.name << " ? 1 : 0);\n";
+                os << std::format("safe_increase(num_operands, {} ? 1 : 0);\n", o.name);
                 break;
             case quantifier::many:
-                os << "safe_increase(num_operands, " << o.name << ".size());\n";
+                os << std::format("safe_increase(num_operands, {}.size());\n", o.name);
                 break;
             }
         }
         num_child_regions += in->regs().size();
         for (auto &r : in->rets()) {
             if (r.quantity == quantifier::many) {
-                os << "safe_increase(num_results, " << r.name << ".size());\n";
+                os << std::format("safe_increase(num_results, {}.size());\n", r.name);
             } else {
                 ++num_static_results;
             }
         }
     });
     if (num_static_operands) {
-        os << "safe_increase(num_operands, " << num_static_operands << ");\n";
+        os << std::format("safe_increase(num_operands, {});\n", num_static_operands);
     }
     if (num_static_results) {
-        os << "safe_increase(num_results, " << num_static_results << ");\n";
+        os << std::format("safe_increase(num_results, {});\n", num_static_results);
     }
 
-    os << "auto layout = inst_layout{num_operands, num_results, " << num_child_regions << "};\n"
-       << "auto in = inst{tinytc_inst::create(IK::" << in->ik_name() << ", layout)};\n";
-    os << "std::int32_t op_no = 0;\n";
+    os << std::format(R"CXXT(auto layout = inst_layout{{num_operands, num_results, {}}};
+auto in = inst{{tinytc_inst::create(IK::{}, layout)}};
+std::int32_t op_no = 0;
+)CXXT",
+                      num_child_regions, in->ik_name());
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
             if (o.has_offset_property) {
-                os << "std::int32_t " << o.offset_name() << " = op_no;\n";
+                os << std::format("std::int32_t {} = op_no;\n", o.offset_name());
             }
             switch (o.quantity) {
             case quantifier::single:
-                os << "in->op(op_no++, " << o.name << ");\n";
+                os << std::format("in->op(op_no++, {});\n", o.name);
                 break;
             case quantifier::optional:
-                os << "if (" << o.name << ") {\n";
-                os << "in->op(op_no++, " << o.name << ");\n";
-                os << "}\n";
+                os << std::format("if ({0}) {{ in->op(op_no++, {0}); }}", o.name);
                 break;
             case quantifier::many:
-                os << "for (auto& o_ : " << o.name << ") {\n";
-                os << "in->op(op_no++, o_);\n";
-                os << "}\n";
+                os << std::format("for (auto& o_ : {0}) {{ in->op(op_no++, o_); }}", o.name);
                 break;
             }
         }
@@ -220,11 +242,16 @@ void generate_inst_create(std::ostream &os, inst *in) {
             }
         }
         for (auto &p : in->props()) {
-            os << "std::move(" << p.name << "),";
+            os << std::format("std::move({}),", p.name);
         }
     });
 
     os << "};\n";
+
+    if (num_child_regions > 0) {
+        os << "in->setup_regions();\n";
+    }
+
     os << "}\n\n";
 }
 
@@ -253,6 +280,20 @@ void generate_inst_cpp(std::ostream &os, objects const &obj) {
         walk_down<walk_order::pre_order, true>(i.get(),
                                                [&os](inst *in) { generate_inst_create(os, in); });
     }
+}
+
+void generate_inst_visit_header(std::ostream &os, objects const &obj) {
+    os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_inst &in) {\n";
+    os << "switch(in.type_id()) {\n";
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+            if (!in->has_children()) {
+                os << std::format("case IK::{}: return visitor({}{{&in}});\n", in->ik_name(),
+                                  in->class_name());
+            }
+        });
+    }
+    os << "default: break;\n}\nthrow status::internal_compiler_error;\n}\n";
 }
 
 } // namespace mochi

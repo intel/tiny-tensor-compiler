@@ -13,14 +13,9 @@
 
 namespace mochi {
 
-auto parse_file(char const *filename) -> std::optional<objects> {
-    auto code_stream = std::ifstream(filename);
-    if (!code_stream.good()) {
-        throw std::runtime_error("Could not open source file");
-    }
-    auto code = std::string(std::istreambuf_iterator<char>{code_stream}, {});
-
-    auto lex = lexer(code.size(), code.data(), filename);
+auto parse_file(std::size_t input_size, char const *input, char const *filename)
+    -> std::optional<objects> {
+    auto lex = lexer(input_size, input, filename);
     auto obj = objects();
     auto p = parser(lex, obj);
     if (p() == 0) {

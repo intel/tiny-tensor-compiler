@@ -9,6 +9,7 @@
 
     #include <cstddef>
     #include <cstdint>
+    #include <new>
     #include <variant>
     #include <utility>
 
@@ -22,6 +23,7 @@
     #include "lexer.hpp"
     #include "objects.hpp"
 
+    #include <memory>
     #include <utility>
 }
 
@@ -41,6 +43,7 @@
 %define api.token.prefix {TOK_}
 %token
     COLLECTIVE      "collective"
+    CXX             "cxx"
     ENUM            "enum"
     INST            "inst"
     MIXED           "mixed"
@@ -102,10 +105,15 @@ members:
 ;
 
 member:
-    OP op_quantifier LOCAL_ID { $$ = op{$op_quantifier, $LOCAL_ID}; }
-  | PROP nonop_quantifier LOCAL_ID ARROW STRING { $$ = prop{$nonop_quantifier, $LOCAL_ID, $STRING}; }
-  | RET nonop_quantifier LOCAL_ID { $$ = ret{$nonop_quantifier, $LOCAL_ID}; }
-  | REG LOCAL_ID { $$ = reg{$LOCAL_ID}; }
+    OP op_quantifier LOCAL_ID {
+        $$ = op{$op_quantifier, std::move($LOCAL_ID)};
+    }
+  | PROP nonop_quantifier LOCAL_ID ARROW STRING {
+        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING)};
+    }
+  | RET nonop_quantifier LOCAL_ID { $$ = ret{$nonop_quantifier, std::move($LOCAL_ID)}; }
+  | REG LOCAL_ID { $$ = reg{std::move($LOCAL_ID)}; }
+  | CXX STRING { $$ = raw_cxx{std::move($STRING)}; }
 ;
 
 op_quantifier:
