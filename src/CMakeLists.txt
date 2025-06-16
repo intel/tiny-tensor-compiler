@@ -17,7 +17,6 @@ set(SOURCES
     analysis/alias.cpp
     analysis/cfg.cpp
     analysis/gcd.cpp
-    analysis/equal.cpp
     analysis/stack.cpp
     attribute.cpp
     binary.cpp

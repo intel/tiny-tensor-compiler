@@ -31,11 +31,6 @@ target_link_libraries(test-generator PRIVATE test-lib)
 doctest_discover_tests(test-generator)
 set_cxx_common_options(test-generator)
 
-add_executable(test-visitor visitor.cpp)
-target_link_libraries(test-visitor PRIVATE test-lib)
-doctest_discover_tests(test-visitor)
-set_cxx_common_options(test-visitor)
-
 add_library(test-lib-linalg STATIC linalg_blas_a2.cpp linalg_blas_a3.cpp linalg_types.cpp)
 target_link_libraries(test-lib-linalg PUBLIC tinytc)
 if (BUILD_DOUBLE_PRECISION_TESTS)
