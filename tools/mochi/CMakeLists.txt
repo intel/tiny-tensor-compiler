@@ -22,9 +22,10 @@ target_include_directories(mochi PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
 )
 
-add_re2c_or_pregenerated_to_target(TARGET mochi IN lexer.re OUT lexer.cpp)
-add_re2c_or_pregenerated_to_target(TARGET mochi
-    IN omochi_lexer.re
-    OUT omochi_lexer.cpp
-    FLAGS "--input-encoding;utf8")
-add_bison_or_pregenerated_to_target(TARGET mochi IN parser_impl.yy OUT parser_impl.cpp)
+add_re2c_or_pregenerated_to_target(TARGET mochi SOURCES lexer.re omochi_lexer.re FLAGS "--input-encoding;utf8")
+add_bison_or_pregenerated_to_target(TARGET mochi SOURCES parser_impl.yy HAVE_LOCATION)
+
+# cpack
+
+include(GeneratedFiles)
+write_generated_files(mochi)

@@ -6,6 +6,7 @@
 
 #include "objects.hpp"
 
+#include <cstddef>
 #include <optional>
 
 namespace mochi {

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedPath)
 
 function(get_generated_files VAR target)
     get_target_property(_sources ${target} SOURCES)
@@ -15,38 +16,87 @@ function(get_generated_files VAR target)
     set(${VAR} ${_generated_files} PARENT_SCOPE)
 endfunction()
 
-function(add_re2c_or_pregenerated_to_target)
-    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;IN;OUT;FLAGS" "")
+function(write_generated_files target)
+    get_generated_files(GENERATED_FILES ${target})
+    file(WRITE "${PROJECT_BINARY_DIR}/generated_file_lists/${target}.list" "${GENERATED_FILES}")
+endfunction()
 
-    if(EXISTS ${ARG_OUT})
-        message(STATUS "Pre-generated ${ARG_OUT} available -- skipping re2c dependency")
-        target_sources(${ARG_TARGET} PRIVATE ${ARG_OUT})
-    else()
-        find_package(re2c REQUIRED)
-        add_re2c_to_target(TARGET ${ARG_TARGET} SOURCES ${ARG_IN} FLAGS "${ARG_FLAGS}")
-    endif()
+function(add_re2c_or_pregenerated_to_target)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;FLAGS" "SOURCES")
+
+    foreach(SOURCE IN LISTS ARG_SOURCES)
+        get_path_of_generated_file(SOURCE ${SOURCE} EXT "cpp")
+
+        if(EXISTS ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
+            message(STATUS "Pre-generated ${OUTPUT_REL_PATH} available -- skipping re2c dependency")
+            target_sources(${ARG_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
+        else()
+            find_package(re2c REQUIRED)
+            add_re2c_to_target(TARGET ${ARG_TARGET} SOURCES ${SOURCE} FLAGS "${ARG_FLAGS}")
+        endif()
+    endforeach()
 endfunction()
 
 function(add_bison_or_pregenerated_to_target)
-    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;IN;OUT" "")
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "HAVE_LOCATION" "TARGET" "SOURCES")
 
-    get_filename_component(file_name ${ARG_OUT} NAME)
-    string(REGEX REPLACE "[.]cpp$" ".hpp" out_header ${ARG_OUT})
-    string(REGEX REPLACE "${file_name}$" "location.hh" location_header ${ARG_OUT})
+    foreach(SOURCE IN LISTS ARG_SOURCES)
+        get_path_of_generated_file(SOURCE ${SOURCE} EXT "cpp")
 
-    if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${ARG_OUT} AND
-        EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${out_header} AND
-        EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/${location_header})
-        message(STATUS "Pre-generated ${ARG_OUT}/${out_header}/${location_header} available -- skipping bison dependency")
-        target_sources(${ARG_TARGET} PRIVATE ${ARG_OUT})
-        add_flag_if_available_to_source_files(CXX "${ARG_OUT}" "-Wno-unused-but-set-variable")
-        set(BISON_parser_OUTPUTS ${ARG_OUT})
-    else()
-        find_package(BISON 3.8.2 REQUIRED)
-        BISON_TARGET(parser ${ARG_IN} ${CMAKE_CURRENT_BINARY_DIR}/${ARG_OUT}
-            DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/${out_header})
+        string(REGEX REPLACE "[.]cpp$" ".hpp" header_rel_path ${OUTPUT_REL_PATH})
+        if(ARG_HAVE_LOCATION)
+            get_filename_component(rel_path ${OUTPUT_REL_PATH} DIRECTORY)
+            set(location_hh "${rel_path}/location.hh")
+        endif()
+
+        if(EXISTS ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH} AND
+                EXISTS ${PROJECT_SOURCE_DIR}/${header_rel_path} AND
+                (NOT location_hh OR EXISTS ${PROJECT_SOURCE_DIR}/${location_hh}))
+            message(STATUS "Pre-generated ${OUTPUT_REL_PATH},${header_rel_path} available -- skipping bison dependency")
+            target_sources(${ARG_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
+            set(BISON_parser_OUTPUTS "${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH}")
+            if(location_hh)
+                set(location_hh "${PROJECT_SOURCE_DIR}/${location_hh}")
+            endif()
+        else()
+            find_package(BISON 3.8.2 REQUIRED)
+            BISON_TARGET(parser ${INPUT_PATH} ${OUTPUT_PATH}
+                         DEFINES_FILE ${PROJECT_BINARY_DIR}/${header_rel_path})
+            if(location_hh)
+                set(location_hh "${PROJECT_BINARY_DIR}/${location_hh}")
+            endif()
+        endif()
         target_sources(${ARG_TARGET} PRIVATE ${BISON_parser_OUTPUTS})
-    endif()
-    add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
+        if(location_hh)
+            set_property(SOURCE "${location_hh}" PROPERTY GENERATED 1)
+        target_sources(${ARG_TARGET} PRIVATE ${location_hh})
+        endif()
+        add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
+    endforeach()
 endfunction()
 
+function(add_mochi_or_pregenerated_to_target)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;FLAGS" "SOURCES;SEARCH_PATHS")
+
+    set(search_paths "")
+    foreach(search_path IN LISTS ARG_SEARCH_PATHS)
+        list(APPEND search_paths "-I\"${search_path}\"")
+    endforeach()
+
+    foreach(SOURCE IN LISTS ARG_SOURCES)
+        get_path_of_generated_file(SOURCE ${SOURCE})
+
+        if(EXISTS ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
+            message(STATUS "Pre-generated ${OUTPUT_REL_PATH} available -- skipping mochi dependency")
+            target_sources(${ARG_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
+        else()
+            add_custom_command(
+                OUTPUT ${OUTPUT_PATH}
+                DEPENDS mochi ${SOURCE}
+                COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
+                COMMENT "Generating code ${OUTPUT_REL_PATH}"
+            )
+            target_sources(${ARG_TARGET} PRIVATE ${OUTPUT_PATH})
+        endif()
+    endforeach()
+endfunction()

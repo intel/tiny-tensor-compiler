@@ -29,6 +29,8 @@ auto lex_omochi(std::size_t str_length, char const *str) -> std::optional<action
 
 void please_do(std::ostream &os, action const &a,
                std::vector<char const *> const &search_paths = {});
+void please_do(std::ostream &os, std::istream &is, action const &a,
+               std::vector<char const *> const &search_paths = {});
 void process_template(std::ostream &os, std::string const &filename,
                       std::vector<char const *> const &search_paths = {});
 

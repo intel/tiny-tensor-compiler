@@ -3,6 +3,8 @@
 
 add_subdirectory(argparser)
 add_subdirectory(device_info)
-add_subdirectory(mochi)
+if(BUILD_MOCHI)
+    add_subdirectory(mochi)
+endif()
 add_subdirectory(offline_compiler)
 add_subdirectory(opt)

@@ -27,7 +27,7 @@ target_include_directories(tinytc_cl-objects PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
 )
 
-add_re2c_or_pregenerated_to_target(TARGET tinytc_cl-objects IN device_info_helper.re OUT device_info_helper.cpp)
+add_re2c_or_pregenerated_to_target(TARGET tinytc_cl-objects SOURCES device_info_helper.re)
 
 add_library(tinytc_cl $<TARGET_OBJECTS:tinytc_cl-objects>)
 add_library(tinytc::tinytc_cl ALIAS tinytc_cl)
@@ -54,5 +54,4 @@ install(FILES
 # cpack
 
 include(GeneratedFiles)
-get_generated_files(GENERATED_FILES_TINYTC_CL tinytc_cl-objects)
-set(GENERATED_FILES_TINYTC_CL ${GENERATED_FILES_TINYTC_CL} PARENT_SCOPE)
+write_generated_files(tinytc_cl-objects)

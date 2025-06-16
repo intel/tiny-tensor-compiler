@@ -15,6 +15,7 @@ cmake_dependent_option(BUILD_OPENCL
     "Build support for OpenCL run-time; required when SYCL is enabled"
     ON "NOT BUILD_SYCL" ON)
 option(BUILD_DOUBLE_PRECISION_TESTS "Build double precision unit tests" ON)
+option(BUILD_MOCHI "Build mochi; can only be disabled if building from release tarball" ON)
 
 include(CTest)
 
@@ -40,6 +41,13 @@ add_subdirectory(tools)
 if(BUILD_DOCUMENTATION)
     add_subdirectory(docs)
 endif()
+
+# cpack
+
+include(CPackSetup)
+cpack_setup()
+
+# tests
 
 enable_testing()
 if(BUILD_TESTING)

@@ -94,8 +94,10 @@ set(SOURCES
 
 add_library(tinytc-objects OBJECT ${SOURCES})
 
-add_re2c_or_pregenerated_to_target(TARGET tinytc-objects IN parser/lexer.re OUT parser/lexer.cpp)
-add_bison_or_pregenerated_to_target(TARGET tinytc-objects IN parser/parser_impl.yy OUT parser/parser_impl.cpp)
+add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
+add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
+add_mochi_or_pregenerated_to_target(TARGET tinytc-objects SOURCES node/inst_view.hpp.mochi
+                                    SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS
     tinytc.h
@@ -160,10 +162,5 @@ endif()
 # cpack
 
 include(GeneratedFiles)
-get_generated_files(GENERATED_FILES tinytc-objects)
-if(BUILD_OPENCL)
-    list(APPEND GENERATED_FILES ${GENERATED_FILES_TINYTC_CL})
-endif()
+write_generated_files(tinytc-objects)
 
-include(CPackSetup)
-cpack_setup()

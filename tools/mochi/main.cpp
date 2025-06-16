@@ -6,16 +6,22 @@
 
 #include <cstring>
 #include <exception>
+#include <fstream>
 #include <iostream>
 #include <optional>
+#include <sstream>
+#include <stdexcept>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace mochi;
 
 int main(int argc, char **argv) {
     bool help = false;
     generator gen = generator::template_;
-    char const *filename = "";
+    char const *filename = nullptr;
+    char const *output_filename = nullptr;
     std::vector<char const *> search_paths;
 
     auto const gen_converter = [](char const *str, generator &gen) {
@@ -31,10 +37,10 @@ int main(int argc, char **argv) {
     try {
         parser.set_short_opt('g', &gen, "Generator").converter(gen_converter);
         parser.set_short_opt('I', &search_paths, "Search path");
+        parser.set_short_opt('o', &output_filename, "Output filename");
         parser.set_short_opt('h', &help, "Show help");
         parser.set_long_opt("help", &help, "Show help");
-        parser.add_positional_arg("file-name", &filename,
-                                  "Path to source code; leave empty to read from stdin");
+        parser.add_positional_arg("file-name", &filename, "Path to source code");
 
         parser.parse(argc, argv);
     } catch (std::exception const &e) {
@@ -60,8 +66,23 @@ int main(int argc, char **argv) {
         return 0;
     }
 
+    if (!filename) {
+        std::cerr << "Empty filename not permitted" << std::endl;
+        return 1;
+    }
+
     try {
-        please_do(std::cout, {gen, filename}, search_paths);
+        if (output_filename) {
+            auto code_stream = std::ofstream(output_filename, std::ios_base::out);
+            if (!code_stream.good()) {
+                auto err = std::ostringstream{} << "Could not open " << output_filename
+                                                << " for writing.";
+                throw std::runtime_error(std::move(err).str());
+            }
+            please_do(code_stream, {gen, filename}, search_paths);
+        } else {
+            please_do(std::cout, {gen, filename}, search_paths);
+        }
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return 1;

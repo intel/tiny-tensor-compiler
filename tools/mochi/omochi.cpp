@@ -5,12 +5,13 @@
 #include "codegen.hpp"
 #include "parser.hpp"
 
-#include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace fs = std::filesystem;
 
@@ -29,8 +30,7 @@ auto find_path_to(std::string const &filename, std::vector<char const *> const &
 }
 
 auto open_file(fs::path const &p) -> std::ifstream {
-    setlocale(LC_ALL, "de_DE.UTF-8");
-    auto code_stream = std::ifstream(p, std::ios_base::in | std::ios_base::binary);
+    auto code_stream = std::ifstream(p, std::ios_base::in);
     if (!code_stream.good()) {
         auto err = std::ostringstream{} << "Could not open " << p << " for reading.";
         throw std::runtime_error(std::move(err).str());

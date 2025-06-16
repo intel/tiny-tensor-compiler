@@ -6,11 +6,6 @@
 #include "lexer.hpp"
 #include "parser_impl.hpp"
 
-#include <fstream>
-#include <iterator>
-#include <stdexcept>
-#include <string>
-
 namespace mochi {
 
 auto parse_file(std::size_t input_size, char const *input, char const *filename)
