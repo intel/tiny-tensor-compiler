@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GenerateExportHeader)
 include(GitVersion)
 include(InstallLib)
@@ -93,23 +94,8 @@ set(SOURCES
 
 add_library(tinytc-objects OBJECT ${SOURCES})
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/lexer.cpp)
-    message(STATUS "Pre-generated lexer available -- skipping re2c dependency")
-    target_sources(tinytc-objects PRIVATE parser/lexer.cpp)
-else()
-    find_package(re2c REQUIRED)
-    add_re2c_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser/parser_impl.cpp)
-    message(STATUS "Pre-generated parser available -- skipping bison dependency")
-    target_sources(tinytc-objects PRIVATE parser/parser_impl.cpp)
-else()
-    find_package(BISON 3.8.2 REQUIRED)
-    BISON_TARGET(parser parser/parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.cpp
-                 DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser/parser_impl.hpp)
-    target_sources(tinytc-objects PRIVATE ${BISON_parser_OUTPUTS})
-endif()
+add_re2c_or_pregenerated_to_target(TARGET tinytc-objects IN parser/lexer.re OUT parser/lexer.cpp)
+add_bison_or_pregenerated_to_target(TARGET tinytc-objects IN parser/parser_impl.yy OUT parser/parser_impl.cpp)
 
 set(PUBLIC_HEADERS
     tinytc.h
@@ -118,8 +104,6 @@ set(PUBLIC_HEADERS
     types.hpp
 )
 list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
-
-add_flag_if_available_to_source_files(CXX "${BISON_parser_OUTPUTS}" "-Wno-unused-but-set-variable")
 
 set_cxx_common_options(tinytc-objects)
 target_compile_definitions(tinytc-objects PUBLIC

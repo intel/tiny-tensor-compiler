@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 include(CommonOptions)
+include(GeneratedFiles)
 include(GNUInstallDirs)
 
 set(SOURCES main.cpp
@@ -21,22 +22,9 @@ target_include_directories(mochi PRIVATE
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>"
 )
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/lexer.cpp AND
-   EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/omochi_lexer.cpp)
-    message(STATUS "Pre-generated lexer available -- skipping re2c dependency")
-    target_sources(mochi PRIVATE lexer.cpp omochi_lexer.cpp)
-else()
-    find_package(re2c REQUIRED)
-    add_re2c_to_target(TARGET mochi SOURCES lexer.re omochi_lexer.re FLAGS "--input-encoding;utf8;-8")
-endif()
-
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/parser_impl.cpp)
-    message(STATUS "Pre-generated parser available -- skipping bison dependency")
-    target_sources(mochi PRIVATE parser_impl.cpp)
-else()
-    find_package(BISON 3.8.2 REQUIRED)
-    BISON_TARGET(mochi_parser parser_impl.yy ${CMAKE_CURRENT_BINARY_DIR}/parser_impl.cpp
-                 DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/parser_impl.hpp)
-    target_sources(mochi PRIVATE ${BISON_mochi_parser_OUTPUTS})
-endif()
-
+add_re2c_or_pregenerated_to_target(TARGET mochi IN lexer.re OUT lexer.cpp)
+add_re2c_or_pregenerated_to_target(TARGET mochi
+    IN omochi_lexer.re
+    OUT omochi_lexer.cpp
+    FLAGS "--input-encoding;utf8")
+add_bison_or_pregenerated_to_target(TARGET mochi IN parser_impl.yy OUT parser_impl.cpp)
