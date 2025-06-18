@@ -25,9 +25,6 @@ else()
         ENV PATH
     )
 
-    include(FindPackageHandleStandardArgs)
-    find_package_handle_standard_args(re2c DEFAULT_MSG re2c_EXECUTABLE)
-
     execute_process(COMMAND ${re2c_EXECUTABLE} --version
         OUTPUT_VARIABLE re2c_version_output
         ERROR_VARIABLE re2c_version_error
@@ -35,7 +32,7 @@ else()
         OUTPUT_STRIP_TRAILING_WHITESPACE)
 
     if(NOT ${re2c_version_result} EQUAL 0)
-        set(re2c_message "Command \"{re2c_EXECUTABLE} --version\" failed:\n${re2c_version_output}\n${re2c_version_error}")
+        set(re2c_message "Command \"${re2c_EXECUTABLE} --version\" failed:\n${re2c_version_output}\n${re2c_version_error}")
         if(re2c_FIND_REQUIRED)
             message(SEND_ERROR ${re2c_message})
         else()
@@ -45,7 +42,10 @@ else()
         string(REGEX REPLACE "re2c ([0-9\.]+)" "\\1" re2c_VERSION "${re2c_version_output}")
     endif()
 
-    mark_as_advanced(re2c_EXECUTABLE)
+    include(FindPackageHandleStandardArgs)
+    find_package_handle_standard_args(re2c DEFAULT_MSG re2c_EXECUTABLE re2c_VERSION)
+
+    mark_as_advanced(re2c_EXECUTABLE re2c_VERSION)
 endif()
 
 if(re2c_EXECUTABLE)

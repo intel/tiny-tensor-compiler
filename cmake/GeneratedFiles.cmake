@@ -90,12 +90,23 @@ function(add_mochi_or_pregenerated_to_target)
             message(STATUS "Pre-generated ${OUTPUT_REL_PATH} available -- skipping mochi dependency")
             target_sources(${ARG_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
         else()
-            add_custom_command(
-                OUTPUT ${OUTPUT_PATH}
-                DEPENDS mochi ${SOURCE}
-                COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
-                COMMENT "Generating code ${OUTPUT_REL_PATH}"
-            )
+            find_package(ClangFormat)
+            if(ClangFormat_FOUND)
+                add_custom_command(
+                    OUTPUT ${OUTPUT_PATH}
+                    DEPENDS mochi ${SOURCE}
+                    COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
+                    COMMAND ${ClangFormat_EXECUTABLE} -i ${OUTPUT_PATH}
+                    COMMENT "Generating code ${OUTPUT_REL_PATH}"
+                )
+            else()
+                add_custom_command(
+                    OUTPUT ${OUTPUT_PATH}
+                    DEPENDS mochi ${SOURCE}
+                    COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
+                    COMMENT "Generating code ${OUTPUT_REL_PATH}"
+                )
+            endif()
             target_sources(${ARG_TARGET} PRIVATE ${OUTPUT_PATH})
         endif()
     endforeach()
