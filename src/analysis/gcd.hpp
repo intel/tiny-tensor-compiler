@@ -99,7 +99,7 @@ class gcd_analysis {
   public:
     inline gcd_analysis(std::int32_t default_alignment) : default_alignment_(default_alignment) {}
 
-    auto run_on_function(function_node const &fn) -> gcd_analysis_result;
+    auto run_on_function(function_node &fn) -> gcd_analysis_result;
 
   private:
     std::int32_t default_alignment_;

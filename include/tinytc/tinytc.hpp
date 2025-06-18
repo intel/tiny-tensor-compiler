@@ -1659,17 +1659,17 @@ inline inst make_cooperative_matrix_apply(value mat, data_type ty, location cons
 /**
  * @brief Create cooperative matrix extract instruction
  *
- * @param mat %mat
  * @param index index
+ * @param mat %mat
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-inline inst make_cooperative_matrix_extract(value mat, std::int64_t index, data_type ty,
+inline inst make_cooperative_matrix_extract(std::int64_t index, value mat, data_type ty,
                                             location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_extract_inst_create(&instr, mat, index, ty, &loc),
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_extract_inst_create(&instr, index, mat, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -1677,19 +1677,19 @@ inline inst make_cooperative_matrix_extract(value mat, std::int64_t index, data_
 /**
  * @brief Create cooperative matrix insert instruction
  *
+ * @param index index
  * @param val %val
  * @param mat %mat
- * @param index index
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-inline inst make_cooperative_matrix_insert(value val, value mat, std::int64_t index, data_type ty,
+inline inst make_cooperative_matrix_insert(std::int64_t index, value val, value mat, data_type ty,
                                            location const &loc = {}) {
     tinytc_inst_t instr;
     CHECK_STATUS_LOC(
-        tinytc_cooperative_matrix_insert_inst_create(&instr, val, mat, index, ty, &loc), loc);
+        tinytc_cooperative_matrix_insert_inst_create(&instr, index, val, mat, ty, &loc), loc);
     return inst(instr);
 }
 
@@ -1739,21 +1739,21 @@ inline inst make_cooperative_matrix_mul_add(value a, value b, value c, data_type
  * @brief Create cooperative matrix prefetch instruction
  *
  * @param cache_level Cache-level; "0" is closest to the core
+ * @param rows Number of rows
+ * @param cols Number of cols
  * @param op %op
  * @param p0 %p0
  * @param p1 %p1
- * @param rows Number of rows
- * @param cols Number of cols
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_cooperative_matrix_prefetch(std::int32_t cache_level, value op, value p0, value p1,
-                                             std::int32_t rows, std::int32_t cols,
+inline inst make_cooperative_matrix_prefetch(std::int32_t cache_level, std::int32_t rows,
+                                             std::int32_t cols, value op, value p0, value p1,
                                              location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cooperative_matrix_prefetch_inst_create(&instr, cache_level, op, p0, p1,
-                                                                    rows, cols, &loc),
+    CHECK_STATUS_LOC(tinytc_cooperative_matrix_prefetch_inst_create(&instr, cache_level, rows, cols,
+                                                                    op, p0, p1, &loc),
                      loc);
     return inst(instr);
 }
@@ -1815,8 +1815,8 @@ inline inst make_alloca(data_type ty, location const &loc = {}) {
 /**
  * @brief Make AXPBY instruction
  *
- * @param tA Operation applied on A
  * @param atomic true for atomic updates of B
+ * @param tA Operation applied on A
  * @param alpha @f$\alpha@f$
  * @param A A
  * @param beta @f$\beta@f$
@@ -1825,10 +1825,10 @@ inline inst make_alloca(data_type ty, location const &loc = {}) {
  *
  * @return Instruction
  */
-inline inst make_axpby(transpose tA, bool atomic, value alpha, value A, value beta, value B,
+inline inst make_axpby(bool atomic, transpose tA, value alpha, value A, value beta, value B,
                        location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_axpby_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+    CHECK_STATUS_LOC(tinytc_axpby_inst_create(&instr, atomic, static_cast<tinytc_transpose_t>(tA),
                                               alpha, A, beta, B, &loc),
                      loc);
     return inst(instr);
@@ -1838,37 +1838,37 @@ inline inst make_axpby(transpose tA, bool atomic, value alpha, value A, value be
  * @brief Make cumsum instruction
  *
  * @param atomic true for atomic updates of B
+ * @param mode n (summation mode)
  * @param alpha @f$\alpha@f$
  * @param A A
- * @param mode n (summation mode)
  * @param beta @f$\beta@f$
  * @param B B
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_cumsum(bool atomic, value alpha, value A, std::int64_t mode, value beta, value B,
+inline inst make_cumsum(bool atomic, std::int64_t mode, value alpha, value A, value beta, value B,
                         location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_cumsum_inst_create(&instr, atomic, alpha, A, mode, beta, B, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_cumsum_inst_create(&instr, atomic, mode, alpha, A, beta, B, &loc), loc);
     return inst(instr);
 }
 
 /**
  * @brief Make expand instruction
  *
- * @param a Operand
  * @param expanded_mode Expanded mode
  * @param static_expand_shape Static expand shape
+ * @param a Operand
  * @param expand_shape Dynamic expand shape
  * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_expand(value a, std::int64_t expanded_mode,
-                        array_view<std::int64_t> static_expand_shape,
-                        array_view<value> expand_shape, data_type ty, location const &loc = {}) {
+inline inst make_expand(std::int64_t expanded_mode, array_view<std::int64_t> static_expand_shape,
+                        value a, array_view<value> expand_shape, data_type ty,
+                        location const &loc = {}) {
     tinytc_inst_t instr;
     auto static_len = static_expand_shape.size();
     if (static_len > std::numeric_limits<std::uint32_t>::max()) {
@@ -1879,8 +1879,8 @@ inline inst make_expand(value a, std::int64_t expanded_mode,
         throw std::out_of_range("expand shape too large");
     }
     const tinytc_value_t *es = reinterpret_cast<const tinytc_value_t *>(expand_shape.data());
-    CHECK_STATUS_LOC(tinytc_expand_inst_create(&instr, a, expanded_mode, static_len,
-                                               static_expand_shape.data(), len, es, ty, &loc),
+    CHECK_STATUS_LOC(tinytc_expand_inst_create(&instr, expanded_mode, static_len,
+                                               static_expand_shape.data(), a, len, es, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -1888,18 +1888,18 @@ inline inst make_expand(value a, std::int64_t expanded_mode,
 /**
  * @brief Make fuse instruciton
  *
- * @param a Operand
  * @param from First mode to fuse
  * @param to Last mode to fuse
+ * @param a Operand
  * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_fuse(value a, std::int64_t from, std::int64_t to, data_type ty,
+inline inst make_fuse(std::int64_t from, std::int64_t to, value a, data_type ty,
                       location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_fuse_inst_create(&instr, a, from, to, ty, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_fuse_inst_create(&instr, from, to, a, ty, &loc), loc);
     return inst(instr);
 }
 
@@ -1928,9 +1928,9 @@ inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t 
 /**
  * @brief Make GEMM instruction
  *
+ * @param atomic true for atomic updates of C
  * @param tA Operation applied on A
  * @param tB Operation applied on B
- * @param atomic true for atomic updates of C
  * @param alpha @f$\alpha@f$
  * @param A A
  * @param B B
@@ -1940,12 +1940,12 @@ inline inst make_load(value a, array_view<value> index_list, tinytc_data_type_t 
  *
  * @return Instruction
  */
-inline inst make_gemm(transpose tA, transpose tB, bool atomic, value alpha, value A, value B,
+inline inst make_gemm(bool atomic, transpose tA, transpose tB, value alpha, value A, value B,
                       value beta, value C, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_gemm_inst_create(&instr, static_cast<tinytc_transpose_t>(tA),
-                                             static_cast<tinytc_transpose_t>(tB), atomic, alpha, A,
-                                             B, beta, C, &loc),
+    CHECK_STATUS_LOC(tinytc_gemm_inst_create(&instr, atomic, static_cast<tinytc_transpose_t>(tA),
+                                             static_cast<tinytc_transpose_t>(tB), alpha, A, B, beta,
+                                             C, &loc),
                      loc);
     return inst(instr);
 }
@@ -1953,8 +1953,8 @@ inline inst make_gemm(transpose tA, transpose tB, bool atomic, value alpha, valu
 /**
  * @brief Make GEMV instruction
  *
- * @param tA Operation applied on A
  * @param atomic true for atomic updates of C
+ * @param tA Operation applied on A
  * @param alpha @f$\alpha@f$
  * @param A A
  * @param B B
@@ -1964,10 +1964,10 @@ inline inst make_gemm(transpose tA, transpose tB, bool atomic, value alpha, valu
  *
  * @return Instruction
  */
-inline inst make_gemv(transpose tA, bool atomic, value alpha, value A, value B, value beta, value C,
+inline inst make_gemv(bool atomic, transpose tA, value alpha, value A, value B, value beta, value C,
                       location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_gemv_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+    CHECK_STATUS_LOC(tinytc_gemv_inst_create(&instr, atomic, static_cast<tinytc_transpose_t>(tA),
                                              alpha, A, B, beta, C, &loc),
                      loc);
     return inst(instr);
@@ -2047,16 +2047,16 @@ inline inst make_parallel(location const &loc = {}) {
 /**
  * @brief Make size instruction
  *
- * @param a Operand
  * @param mode Mode
+ * @param a Operand
  * @param ty Result type
  * @param loc Source code location
  *
  * @return Instruction
  */
-inline inst make_size(value a, std::int64_t mode, data_type ty, location const &loc = {}) {
+inline inst make_size(std::int64_t mode, value a, data_type ty, location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, a, mode, ty, &loc), loc);
+    CHECK_STATUS_LOC(tinytc_size_inst_create(&instr, mode, a, ty, &loc), loc);
     return inst(instr);
 }
 
@@ -2100,9 +2100,9 @@ inline inst make_subgroup_operation(group_arithmetic arith, group_operation op, 
 /**
  * @brief Make subview instruction
  *
- * @param a Operand
  * @param static_offset_list Static offsets
  * @param static_size_list Static sizes
+ * @param a Operand
  * @param offset_list Vector of offsets; need to add dynamic offsets here if static_offset_list
  * contains "dynamic"
  * @param size_list Vector of sizes; need to add dynamic sizes here if static_size_list contains
@@ -2112,9 +2112,10 @@ inline inst make_subgroup_operation(group_arithmetic arith, group_operation op, 
  *
  * @return Instruction
  */
-inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
-                         array_view<std::int64_t> static_size_list, array_view<value> offset_list,
-                         array_view<value> size_list, data_type ty, location const &loc = {}) {
+inline inst make_subview(array_view<std::int64_t> static_offset_list,
+                         array_view<std::int64_t> static_size_list, value a,
+                         array_view<value> offset_list, array_view<value> size_list, data_type ty,
+                         location const &loc = {}) {
     tinytc_inst_t instr;
     if (static_offset_list.size() != static_size_list.size()) {
         throw std::invalid_argument(
@@ -2134,9 +2135,9 @@ inline inst make_subview(value a, array_view<std::int64_t> static_offset_list,
     }
     const tinytc_value_t *ol = reinterpret_cast<const tinytc_value_t *>(offset_list.data());
     const tinytc_value_t *sl = reinterpret_cast<const tinytc_value_t *>(size_list.data());
-    CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, a, static_len, static_offset_list.data(),
-                                                static_size_list.data(), offset_len, ol, size_len,
-                                                sl, ty, &loc),
+    CHECK_STATUS_LOC(tinytc_subview_inst_create(&instr, static_len, static_offset_list.data(),
+                                                static_size_list.data(), a, offset_len, ol,
+                                                size_len, sl, ty, &loc),
                      loc);
     return inst(instr);
 }
@@ -2169,8 +2170,8 @@ inline inst make_store(store_flag flag, value val, value a, array_view<value> in
 /**
  * @brief Make sum instruction
  *
- * @param tA Operation applied on A
  * @param atomic true for atomic updates of B
+ * @param tA Operation applied on A
  * @param alpha @f$\alpha@f$
  * @param A A
  * @param beta @f$\beta@f$
@@ -2179,10 +2180,10 @@ inline inst make_store(store_flag flag, value val, value a, array_view<value> in
  *
  * @return Instruction
  */
-inline inst make_sum(transpose tA, bool atomic, value alpha, value A, value beta, value B,
+inline inst make_sum(bool atomic, transpose tA, value alpha, value A, value beta, value B,
                      location const &loc = {}) {
     tinytc_inst_t instr;
-    CHECK_STATUS_LOC(tinytc_sum_inst_create(&instr, static_cast<tinytc_transpose_t>(tA), atomic,
+    CHECK_STATUS_LOC(tinytc_sum_inst_create(&instr, atomic, static_cast<tinytc_transpose_t>(tA),
                                             alpha, A, beta, B, &loc),
                      loc);
     return inst(instr);
@@ -2201,7 +2202,7 @@ inline inst make_sum(transpose tA, bool atomic, value alpha, value A, value beta
  *
  * @return Instruction
  */
-inline inst make_for(data_type loop_var_type, value from, value to, value step,
+inline inst make_for(scalar_type loop_var_type, value from, value to, value step,
                      array_view<value> initial_value_list, array_view<data_type> return_type_list,
                      location const &loc = {}) {
     tinytc_inst_t instr;
@@ -2214,8 +2215,9 @@ inline inst make_for(data_type loop_var_type, value from, value to, value step,
             "initial value list must have the same length as the return type list");
     }
     const tinytc_value_t *il = reinterpret_cast<const tinytc_value_t *>(initial_value_list.data());
-    CHECK_STATUS_LOC(tinytc_for_inst_create(&instr, loop_var_type, from, to, step, len, il,
-                                            return_type_list.data(), &loc),
+    CHECK_STATUS_LOC(tinytc_for_inst_create(&instr,
+                                            static_cast<tinytc_scalar_type_t>(loop_var_type), from,
+                                            to, step, len, il, return_type_list.data(), &loc),
                      loc);
     return inst(instr);
 }
@@ -2230,7 +2232,7 @@ inline inst make_for(data_type loop_var_type, value from, value to, value step,
  *
  * @return Instruction
  */
-inline inst make_foreach(data_type loop_var_type, array_view<value> from_list,
+inline inst make_foreach(scalar_type loop_var_type, array_view<value> from_list,
                          array_view<value> to_list, location const &loc = {}) {
 
     tinytc_inst_t instr;
@@ -2247,7 +2249,9 @@ inline inst make_foreach(data_type loop_var_type, array_view<value> from_list,
     }
     const tinytc_value_t *fl = reinterpret_cast<const tinytc_value_t *>(from_list.data());
     const tinytc_value_t *tl = reinterpret_cast<const tinytc_value_t *>(to_list.data());
-    CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr, loop_var_type, from_len, fl, tl, &loc),
+    CHECK_STATUS_LOC(tinytc_foreach_inst_create(&instr,
+                                                static_cast<tinytc_scalar_type_t>(loop_var_type),
+                                                from_len, fl, tl, &loc),
                      loc);
     return inst(instr);
 }
@@ -2538,7 +2542,7 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(data_type loop_var_ty, value from, value to, F &&f, attr attributes = nullptr,
+    void for_loop(scalar_type loop_var_ty, value from, value to, F &&f, attr attributes = nullptr,
                   location const &loc = {}) {
         for_loop<F>(std::move(loop_var_ty), std::move(from), std::move(to), nullptr,
                     std::forward<F>(f), attributes, loc);
@@ -2558,7 +2562,7 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(data_type loop_var_ty, value from, value to, value step, F &&f,
+    void for_loop(scalar_type loop_var_ty, value from, value to, value step, F &&f,
                   attr attributes = nullptr, location const &loc = {}) {
         auto fi = ::tinytc::make_for(loop_var_ty, from, to, step, {}, {}, loc);
         fi.set_attr(attributes);
@@ -2591,7 +2595,7 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    auto for_loop(data_type loop_var_ty, value from, value to, value step,
+    auto for_loop(scalar_type loop_var_ty, value from, value to, value step,
                   array_view<value> initial_value_list, array_view<data_type> return_type_list,
                   F &&f, attr attributes = nullptr, location const &loc = {})
         -> std::vector<value> {
@@ -2622,7 +2626,7 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void foreach_loop(data_type loop_var_ty, array_view<value> from, array_view<value> to, F &&f,
+    void foreach_loop(scalar_type loop_var_ty, array_view<value> from, array_view<value> to, F &&f,
                       location const &loc = {}) {
         auto fi = ::tinytc::make_foreach(loop_var_ty, std::move(from), std::move(to), loc);
         auto reg = region{};

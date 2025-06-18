@@ -9,14 +9,73 @@
 #include "scalar_type.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
+#include "util/math.hpp"
 #include "util/visit.hpp"
 
 #include <algorithm>
 #include <cstddef>
+#include <cstdlib>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <utility>
+
+static_assert(alignof(tinytc_value) == alignof(tinytc_inst));
+static_assert(alignof(tinytc::use) == alignof(tinytc_inst));
+static_assert(alignof(tinytc_region) == alignof(tinytc_inst));
+static_assert(alignof(tinytc_inst) <= alignof(std::max_align_t));
+
+auto tinytc_inst::create(tinytc::IK tid, inst_layout layout) -> tinytc_inst_t {
+    std::size_t size = 0;
+    size += sizeof(tinytc_value) * layout.num_results;
+    size += sizeof(tinytc_inst);
+    size += sizeof(tinytc::use) * layout.num_operands;
+    size += layout.sizeof_properties;
+    size += sizeof(tinytc_region) * layout.num_child_regions;
+
+    auto raw_mem = std::unique_ptr<uint8_t, decltype(&std::free)>(std::malloc(size));
+    if (raw_mem.get() == nullptr) {
+        throw tinytc::status::bad_alloc;
+    }
+
+    // initialize results
+    tinytc_value_t first_result = static_cast<tinytc_value_t>(raw_mem.get());
+    tinytc_value_t last_result = first_result + layout.num_results;
+    for (; first_result != last_result; ++first_result) {
+        new (first_result) tinytc_value();
+    }
+
+    // initialize inst
+    tinytc_inst_t in = reinterpret_cast<tinytc_inst_t>(last_result);
+    new (in) tinytc_inst(tid, layout);
+
+    // initialize uses
+    tinytc::use *first_use = reinterpret_cast<tinytc::use *>(in + 1);
+    tinytc::use *last_use = first_use + layout.num_operands;
+    for (; first_use != last_use; ++first_use) {
+        new (first_use) tinytc::use(in);
+    }
+
+    // properties
+    std::uint8_t *first_prop = reinterpret_cast<std::uint8_t *>(last_use);
+    std::uint8_t *last_prop = first_prop + layout.sizeof_properties;
+
+    // child regions
+    tinytc_region_t *first_region = reinterpret_cast<tinytc_region_t>(last_prop);
+    tinytc_region_t *last_region = first_region + layout.num_regions;
+    for (; first_region != last_region; ++first_region) {
+        new (first_region) tinytc_region(in);
+    }
+
+    raw_mem.release();
+    return in;
+}
+
+void tinytc_inst::destroy(tinytc_inst_t in) {
+    void *raw_mem = reinterpret_cast<tinytc_value_t>(this) - in->layout_.num_results;
+    in->~tinytc_inst();
+    std::free(raw_mem);
+}
 
 auto tinytc_inst::context() const -> tinytc_compiler_context_t {
     if (num_results() > 0) {
@@ -28,7 +87,7 @@ auto tinytc_inst::context() const -> tinytc_compiler_context_t {
 }
 
 void tinytc_inst::subs(tinytc_value_t old_value, tinytc_value_t new_value, bool recursive) {
-    for (auto op = op_begin_; op != op_end_; ++op) {
+    for (auto op = op_ptr(0); op != op_ptr(layout_.num_operands); ++op) {
         if (op->get() == old_value) {
             op->set(new_value);
         }

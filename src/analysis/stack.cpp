@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
@@ -15,16 +16,16 @@
 
 namespace tinytc {
 
-auto stack_high_water_mark::run_on_function(function_node const &fn) -> std::int64_t {
+auto stack_high_water_mark::run_on_function(function_node &fn) -> std::int64_t {
     std::int64_t high_water_mark = 0;
 
-    walk<walk_order::pre_order>(fn, [&high_water_mark](inst_node const &i) {
-        if (auto *a = dyn_cast<const alloca_inst>(&i); a) {
-            auto t = dyn_cast<const memref_data_type>(a->result(0).ty());
+    walk<walk_order::pre_order>(fn, [&high_water_mark](inst_node &i) {
+        if (auto a = dyn_cast<alloca_inst>(&i); a) {
+            auto t = dyn_cast<memref_data_type>(a.result().ty());
             if (t == nullptr) {
-                throw compilation_error(a->loc(), status::ir_expected_memref);
+                throw compilation_error(a.loc(), status::ir_expected_memref);
             }
-            high_water_mark = std::max(high_water_mark, a->stack_ptr() + t->size_in_bytes());
+            high_water_mark = std::max(high_water_mark, a.stack_ptr() + t->size_in_bytes());
         }
     });
 

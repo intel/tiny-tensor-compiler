@@ -21,7 +21,7 @@ class use_iterator;
 class const_use_iterator;
 }; // namespace tinytc
 
-struct tinytc_value final {
+struct alignas(8) tinytc_value final {
   public:
     tinytc_value(tinytc_data_type_t ty = nullptr, tinytc_inst_t def_inst_ = nullptr,
                  tinytc::location const &lc = {});
@@ -69,7 +69,7 @@ namespace tinytc {
 
 using value_node = ::tinytc_value;
 
-class use final {
+class alignas(8) use final {
   public:
     use() = default;
     use(tinytc_inst_t owner);

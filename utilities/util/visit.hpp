@@ -13,11 +13,6 @@
 
 namespace tinytc {
 
-template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
 namespace detail {
 /**
  * @brief Computes \prod_{i=0}^{MaxMode-1} Size_i, where Size_0 = Head, and Size_i = Tail_i for i >

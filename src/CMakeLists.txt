@@ -96,7 +96,13 @@ add_library(tinytc-objects OBJECT ${SOURCES})
 
 add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re)
 add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
-add_mochi_or_pregenerated_to_target(TARGET tinytc-objects SOURCES node/inst_view.hpp.mochi
+add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
+                                    SOURCES
+                                        node/inst_view.cpp.mochi
+                                        node/inst_view.hpp.mochi
+                                        node/visit.hpp.mochi
+                                    DEPENDS
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/instructions.anko
                                     SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS

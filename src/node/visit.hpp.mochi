@@ -1,0 +1,20 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef VISIT_HPP_20250618_MOCHI
+#define VISIT_HPP_20250618_MOCHI
+
+#include "node/inst_view.hpp"
+
+namespace tinytc {
+
+template <class... Ts> struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
+
+// もち inst_visit_header "tinytc/instructions.anko"
+
+} // namespace tinytc
+
+#endif // VISIT_HPP_20250618_MOCHI

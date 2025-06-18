@@ -24,7 +24,8 @@ void ilist_callbacks<tinytc_inst>::node_removed(tinytc_inst_t node) { tinytc_ins
 
 using namespace tinytc;
 
-tinytc_region::tinytc_region() : def_inst_{nullptr}, kind_{tinytc::region_kind::mixed} {}
+tinytc_region::tinytc_region(tinytc_inst_t def_inst)
+    : def_inst_{def_inst}, kind_{tinytc::region_kind::mixed} {}
 
 tinytc_region::~tinytc_region() {}
 

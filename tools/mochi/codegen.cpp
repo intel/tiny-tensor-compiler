@@ -25,7 +25,7 @@ void generate_inst_class(std::ostream &os, inst *in) {
 class {0} : public {1} {{
 public:
     using {1}::{1};
-    struct properties : {1}::properties {{
+    struct alignas(8) properties : {1}::properties {{
 )CXXT",
                       in->class_name(), parent_name);
 
@@ -59,10 +59,10 @@ public:
     os << "\n";
 
     // property access
-    os << "inline auto props() -> properties const& { return "
-          "*static_cast<properties*>(in().props()); }\n";
+    os << "inline auto props() -> properties& { return "
+          "*static_cast<properties*>(get().props()); }\n";
     for (auto &p : in->props()) {
-        os << std::format("inline auto {0}() const -> {1} {{ return props().{0}; }}\n", p.name,
+        os << std::format("inline auto {0}() -> {1} {{ return props().{0}; }}\n", p.name,
                           p.cxx_type());
     }
     os << "\n";
@@ -74,7 +74,7 @@ public:
             it->has_offset_property ? "props()." + it->offset_name() : std::to_string(op_no);
         auto peek = it + 1;
         auto next_offset = peek == in->ops().end()
-                               ? "in().num_operands()"
+                               ? "get().num_operands()"
                                : (peek->has_offset_property ? "props()." + peek->offset_name()
                                                             : std::to_string(op_no + 1));
         switch (it->quantity) {
@@ -82,17 +82,13 @@ public:
             os << std::format("inline auto has_{}() -> bool {{ return {} < {}; }}\n", it->name,
                               offset, next_offset);
         case quantifier::single:
-            os << std::format(R"CXXT(inline auto {0}() -> tinytc_value & {{ return in().op({1}); }}
-inline auto {0}() const -> tinytc_value const& {{ return in().op({1}); }}
-)CXXT",
+            os << std::format("inline auto {0}() -> tinytc_value & {{ return get().op({1}); }}\n",
                               it->name, offset);
             break;
         case quantifier::many:
-            os << std::format(
-                R"CXXT(inline auto {0}() -> op_range {{ {{op_begin() + {1}, op_end() + {2}}}; }}
-inline auto {0}() const -> const_op_range {{ {{op_begin() + {1}, op_end() + {2}}}; }}
-)CXXT",
-                it->name, offset, next_offset);
+            os << std::format("inline auto {0}() -> op_range {{ return {{get().op_begin() + {1}, "
+                              "get().op_end() + {2}}}; }}\n",
+                              it->name, offset, next_offset);
             break;
         }
         ++op_no;
@@ -107,10 +103,8 @@ inline auto {0}() const -> const_op_range {{ {{op_begin() + {1}, op_end() + {2}}
     }
     for (auto &r : in->regs()) {
         os << std::format(
-            R"CXXT(inline auto {0}() -> tinytc_region& {{ in().child_region({1}); }}
-inline auto {0}() const -> tinytc_region const& {{ in().child_region({1}); }}
-)CXXT",
-            r.name, reg_no++);
+            "inline auto {0}() -> tinytc_region& {{ return get().child_region({1}); }}\n", r.name,
+            reg_no++);
     }
     os << "\n";
 
@@ -122,16 +116,13 @@ inline auto {0}() const -> tinytc_region const& {{ in().child_region({1}); }}
     }
     for (auto &r : in->rets()) {
         if (r.quantity == quantifier::many) {
-            os << std::format(
-                R"CXXT(inline auto {0}() -> result_range {{ return {{result_begin() + {1}, result_end()}}; }}
-inline auto {0}() const -> const_result_range {{ return {{result_begin() + {1}, result_end()}}; }}
-)CXXT",
-                r.name, ret_no);
-        } else {
-            os << std::format(R"CXXT(inline auto {0}() -> tinytc_value& {{ in().result({1}); }}
-inline auto {0}() const -> tinytc_value const& {{ in().result({1}); }}
-)CXXT",
+            os << std::format("inline auto {0}() -> result_range {{ return {{get().result_begin() "
+                              "+ {1}, get().result_end()}}; }}\n",
                               r.name, ret_no);
+        } else {
+            os << std::format(
+                "inline auto {0}() -> tinytc_value& {{ return get().result({1}); }}\n", r.name,
+                ret_no);
         }
         ++ret_no;
     }
@@ -147,7 +138,11 @@ inline auto {0}() const -> tinytc_value const& {{ in().result({1}); }}
         os << "void setup_regions();\n";
     }
 
-    os << "};\n\n";
+    os << "};\n";
+    os << std::format(
+        "static_assert(alignof({0}::properties) == alignof(tinytc_inst));\n"
+        "static_assert(sizeof({0}::properties) <= std::numeric_limits<std::uint32_t>::max());\n\n",
+        in->class_name());
 }
 
 void generate_inst_create_prototype(std::ostream &os, inst *in, bool insert_class_name) {
@@ -212,11 +207,33 @@ void generate_inst_create(std::ostream &os, inst *in) {
         os << std::format("safe_increase(num_results, {});\n", num_static_results);
     }
 
-    os << std::format(R"CXXT(auto layout = inst_layout{{num_operands, num_results, {}}};
-auto in = inst{{tinytc_inst::create(IK::{}, layout)}};
+    os << std::format(
+        R"CXXT(auto layout = inst_layout{{
+    num_results,
+    num_operands,
+    sizeof({1}::properties),
+    {0},
+}};
+auto in = inst{{tinytc_inst::create(IK::{2}, layout)}};
+std::int32_t ret_no = 0;
 std::int32_t op_no = 0;
 )CXXT",
-                      num_child_regions, in->ik_name());
+        num_child_regions, in->class_name(), in->ik_name());
+
+    walk_up<walk_order::post_order>(in, [&os](inst *in) {
+        for (auto &r : in->rets()) {
+            if (r.quantity == quantifier::many) {
+                os << std::format(R"CXXT(for (auto &r : {}) {{
+    in->result(ret_no++) = value_node{{r, in.get(), lc}};
+}}
+)CXXT",
+                                  r.name);
+            } else {
+                os << std::format("in->result(ret_no++) = value_node{{{}, in.get(), lc}};\n",
+                                  r.name);
+            }
+        }
+    });
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
             if (o.has_offset_property) {
@@ -293,7 +310,7 @@ void generate_inst_visit_header(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
             if (!in->has_children()) {
-                os << std::format("case IK::{}: return visitor({}{{&in}});\n", in->ik_name(),
+                os << std::format("case IK::{}: {{ auto view = {}{{&in}}; return visitor(view); }}\n", in->ik_name(),
                                   in->class_name());
             }
         });

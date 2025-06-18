@@ -12,7 +12,7 @@ namespace tinytc {
 
 class stack_high_water_mark {
   public:
-    auto run_on_function(function_node const &fn) -> std::int64_t;
+    auto run_on_function(function_node &fn) -> std::int64_t;
 };
 
 } // namespace tinytc

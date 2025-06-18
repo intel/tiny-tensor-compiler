@@ -7,6 +7,7 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep
@@ -31,7 +32,7 @@ class constant_folding {
   public:
     constant_folding(bool unsafe_fp_math);
 
-    auto operator()(inst_node &) -> fold_result;
+    auto operator()(inst_view &) -> fold_result;
     auto operator()(arith_inst &) -> fold_result;
     auto operator()(arith_unary_inst &) -> fold_result;
     auto operator()(cooperative_matrix_scale_inst &) -> fold_result;

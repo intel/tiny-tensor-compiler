@@ -5,6 +5,7 @@
 #define CLONE_20241118_HPP
 
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
 #include "tinytc/types.h"

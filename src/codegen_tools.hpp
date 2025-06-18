@@ -6,6 +6,7 @@
 
 #include "device_info.hpp"
 #include "node/function_node.hpp"
+#include "node/inst_view.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -21,7 +22,6 @@ namespace tinytc {
 
 class coopmatrix_data_type;
 class memref_data_type;
-class yield_inst;
 
 auto get_core_config_and_tiling(function_node const &fn, const_tinytc_core_info_t info)
     -> std::pair<core_config, local_tiling>;
@@ -53,7 +53,7 @@ auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t>;
 auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const *;
 auto get_memref_type(tinytc_value const &v) -> memref_data_type const *;
 auto get_scalar_type(tinytc_value const &v) -> scalar_type;
-auto get_yield(location const &loc, tinytc_region const &reg) -> yield_inst const *;
+auto get_yield(location const &loc, tinytc_region &reg) -> yield_inst;
 
 template <typename T> auto get_int_constants(T &&val_range) -> std::vector<std::int64_t> {
     auto result = std::vector<std::int64_t>{};

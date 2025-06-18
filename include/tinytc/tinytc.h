@@ -576,15 +576,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_apply_inst_create(
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param mat [in] %mat
  * @param index [in] index
+ * @param mat [in] %mat
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_extract_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t mat, int64_t index, tinytc_data_type_t ty,
+    tinytc_inst_t *instr, int64_t index, tinytc_value_t mat, tinytc_data_type_t ty,
     const tinytc_location_t *loc);
 
 /**
@@ -594,16 +594,16 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_extract_inst_create(
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param index [in] index
  * @param val [in] %val
  * @param mat [in] %mat
- * @param index [in] index
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_insert_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t val, tinytc_value_t mat, int64_t index,
+    tinytc_inst_t *instr, int64_t index, tinytc_value_t val, tinytc_value_t mat,
     tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
@@ -654,18 +654,18 @@ TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_mul_add_inst_create(
  *
  * @param instr [out] pointer to the inst object created
  * @param cache_level [in] Cache-level; "0" is closest to the core
+ * @param rows [in] Number of rows
+ * @param cols [in] Number of cols
  * @param op [in] %op
  * @param p0 [in] %p0
  * @param p1 [in] %p1
- * @param rows [in] Number of rows
- * @param cols [in] Number of cols
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cooperative_matrix_prefetch_inst_create(
-    tinytc_inst_t *instr, int32_t cache_level, tinytc_value_t op, tinytc_value_t p0,
-    tinytc_value_t p1, int32_t rows, int32_t cols, const tinytc_location_t *loc);
+    tinytc_inst_t *instr, int32_t cache_level, int32_t rows, int32_t cols, tinytc_value_t op,
+    tinytc_value_t p0, tinytc_value_t p1, const tinytc_location_t *loc);
 
 /**
  * @brief Create cooperative matrix scale instruction
@@ -728,8 +728,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, ti
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of B
+ * @param tA [in] operation applied on A
  * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param beta [in] @f$\beta@f$
@@ -738,8 +738,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_alloca_inst_create(tinytc_inst_t *instr, ti
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
-                                                       tinytc_bool_t atomic, tinytc_value_t alpha,
+TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                                       tinytc_transpose_t tA, tinytc_value_t alpha,
                                                        tinytc_value_t A, tinytc_value_t beta,
                                                        tinytc_value_t B,
                                                        const tinytc_location_t *loc);
@@ -753,9 +753,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  *
  * @param instr [out] pointer to the inst object created
  * @param atomic [in] true for atomic updates of B
+ * @param mode [in] n (summation mode)
  * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
- * @param mode [in] n (summation mode)
  * @param beta [in] @f$\beta@f$
  * @param B [in] B
  * @param loc [in][optional] Source code location; can be nullptr
@@ -763,8 +763,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_axpby_inst_create(tinytc_inst_t *instr, tin
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_cumsum_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
-                                                        tinytc_value_t alpha, tinytc_value_t A,
-                                                        int64_t mode, tinytc_value_t beta,
+                                                        int64_t mode, tinytc_value_t alpha,
+                                                        tinytc_value_t A, tinytc_value_t beta,
                                                         tinytc_value_t B,
                                                         const tinytc_location_t *loc);
 
@@ -774,10 +774,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_cumsum_inst_create(tinytc_inst_t *instr, ti
  * @code %value = expand %a[%mode -> %expand_shape] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param a [in] operand
  * @param expanded_mode [in] expanded mode
  * @param static_expand_shape_size [in] dimension of static expand shape; must be at least 2
  * @param static_expand_shape [in][range(2, static expand_shape_size)] static expand shape array
+ * @param a [in] operand
  * @param expand_shape_size [in][optional] dimension of expand shape; must match number of entries
  * equal to TINYTC_DYNAMIC in static_expand_shape array; can be 0
  * @param expand_shape [in][optional][range(0, expand_shape_size)] expand shape array
@@ -786,11 +786,10 @@ TINYTC_EXPORT tinytc_status_t tinytc_cumsum_inst_create(tinytc_inst_t *instr, ti
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t
-tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t expanded_mode,
-                          uint32_t static_expand_shape_size, const int64_t *static_expand_shape,
-                          uint32_t expand_shape_size, const tinytc_value_t *expand_shape,
-                          tinytc_data_type_t ty, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_expand_inst_create(
+    tinytc_inst_t *instr, int64_t expanded_mode, uint32_t static_expand_shape_size,
+    const int64_t *static_expand_shape, tinytc_value_t a, uint32_t expand_shape_size,
+    const tinytc_value_t *expand_shape, tinytc_data_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Create fuse instruction
@@ -798,16 +797,16 @@ tinytc_expand_inst_create(tinytc_inst_t *instr, tinytc_value_t a, int64_t expand
  * @code %value = fuse %a[%from, %to] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param a [in] operand
  * @param from [in] first mode to fuse
  * @param to [in] last mode to fuse
+ * @param a [in] operand
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                      int64_t from, int64_t to,
+TINYTC_EXPORT tinytc_status_t tinytc_fuse_inst_create(tinytc_inst_t *instr, int64_t from,
+                                                      int64_t to, tinytc_value_t a,
                                                       tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
 
@@ -840,9 +839,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tiny
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
+ * @param atomic [in] true for atomic updates of C
  * @param tA [in] operation applied on A
  * @param tB [in] operation applied on B
- * @param atomic [in] true for atomic updates of C
  * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
@@ -852,8 +851,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_load_inst_create(tinytc_inst_t *instr, tiny
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
-                                                      tinytc_transpose_t tB, tinytc_bool_t atomic,
+TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                                      tinytc_transpose_t tA, tinytc_transpose_t tB,
                                                       tinytc_value_t alpha, tinytc_value_t A,
                                                       tinytc_value_t B, tinytc_value_t beta,
                                                       tinytc_value_t C,
@@ -867,8 +866,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tiny
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of C
+ * @param tA [in] operation applied on A
  * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param B [in] B
@@ -878,8 +877,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_gemm_inst_create(tinytc_inst_t *instr, tiny
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
-                                                      tinytc_bool_t atomic, tinytc_value_t alpha,
+TINYTC_EXPORT tinytc_status_t tinytc_gemv_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                                      tinytc_transpose_t tA, tinytc_value_t alpha,
                                                       tinytc_value_t A, tinytc_value_t B,
                                                       tinytc_value_t beta, tinytc_value_t C,
                                                       const tinytc_location_t *loc);
@@ -969,15 +968,15 @@ TINYTC_EXPORT tinytc_status_t tinytc_parallel_inst_create(tinytc_inst_t *instr,
  * @code %value = size %a[%mode] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param a [in] operand
  * @param mode [in] mode for that the size is queried
+ * @param a [in] operand
  * @param ty [in] result type
  * @param loc [in][optional] Source code location; can be nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, tinytc_value_t a,
-                                                      int64_t mode, tinytc_data_type_t ty,
+TINYTC_EXPORT tinytc_status_t tinytc_size_inst_create(tinytc_inst_t *instr, int64_t mode,
+                                                      tinytc_value_t a, tinytc_data_type_t ty,
                                                       const tinytc_location_t *loc);
 
 /**
@@ -1023,12 +1022,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_operation_inst_create(
  * @code %value = subview %a[%offset1:%size1,...,%offsetN:%sizeN] : ty @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param a [in] operand
  * @param static_list_size [in] number of slices
  * @param static_offset_list [in][range(0, static_list_size)] offsets (need to add value to
  * offset_list if static_offset_list[i] == TINYTC_DYNAMIC); may be nullptr if static_offset_list = 0
  * @param static_size_list [in][range(0, static_list_size)] sizes (need to add value to size_list
  * if static_size_list[i] == TINYTC_DYNAMIC); may be nullptr if static_offset_list = 0
+ * @param a [in] operand
  * @param offset_list_size [in] number of dynamic offsets
  * @param offset_list [in][range(0, offset_list_size)] offset array; may be nullptr if
  * offset_list_size is 0
@@ -1040,8 +1039,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_subgroup_operation_inst_create(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_subview_inst_create(
-    tinytc_inst_t *instr, tinytc_value_t a, uint32_t static_list_size,
-    const int64_t *static_offset_list, const int64_t *static_size_list, uint32_t offset_list_size,
+    tinytc_inst_t *instr, uint32_t static_list_size, const int64_t *static_offset_list,
+    const int64_t *static_size_list, tinytc_value_t a, uint32_t offset_list_size,
     const tinytc_value_t *offset_list, uint32_t size_list_size, const tinytc_value_t *size_list,
     tinytc_data_type_t ty, const tinytc_location_t *loc);
 
@@ -1075,8 +1074,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr,
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param tA [in] operation applied on A
  * @param atomic [in] true for atomic updates of C
+ * @param tA [in] operation applied on A
  * @param alpha [in] @f$\alpha@f$
  * @param A [in] A
  * @param beta [in] @f$\beta@f$
@@ -1085,8 +1084,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_store_inst_create(tinytc_inst_t *instr,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_transpose_t tA,
-                                                     tinytc_bool_t atomic, tinytc_value_t alpha,
+TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomic,
+                                                     tinytc_transpose_t tA, tinytc_value_t alpha,
                                                      tinytc_value_t A, tinytc_value_t beta,
                                                      tinytc_value_t B,
                                                      const tinytc_location_t *loc);
@@ -1116,10 +1115,11 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(
-    tinytc_inst_t *instr, tinytc_data_type_t loop_var_type, tinytc_value_t from, tinytc_value_t to,
-    tinytc_value_t step, uint32_t init_return_list_size, const tinytc_value_t *initial_value_list,
-    const tinytc_data_type_t *return_type_list, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t
+tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
+                       tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+                       uint32_t init_return_list_size, const tinytc_value_t *initial_value_list,
+                       const tinytc_data_type_t *return_type_list, const tinytc_location_t *loc);
 
 /**
  * @brief Create foreach loop
@@ -1140,7 +1140,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(
-    tinytc_inst_t *instr, tinytc_data_type_t loop_var_type, uint32_t dim,
+    tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type, uint32_t dim,
     const tinytc_value_t *from_list, const tinytc_value_t *to_list, const tinytc_location_t *loc);
 
 /**

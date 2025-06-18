@@ -76,7 +76,7 @@ function(add_bison_or_pregenerated_to_target)
 endfunction()
 
 function(add_mochi_or_pregenerated_to_target)
-    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "TARGET;FLAGS" "SOURCES;SEARCH_PATHS")
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "" "FLAGS;TARGET" "DEPENDS;SEARCH_PATHS;SOURCES")
 
     set(search_paths "")
     foreach(search_path IN LISTS ARG_SEARCH_PATHS)
@@ -94,7 +94,7 @@ function(add_mochi_or_pregenerated_to_target)
             if(ClangFormat_FOUND)
                 add_custom_command(
                     OUTPUT ${OUTPUT_PATH}
-                    DEPENDS mochi ${SOURCE}
+                    DEPENDS mochi ${SOURCE} ${ARG_DEPENDS}
                     COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
                     COMMAND ${ClangFormat_EXECUTABLE} -i ${OUTPUT_PATH}
                     COMMENT "Generating code ${OUTPUT_REL_PATH}"
@@ -102,7 +102,7 @@ function(add_mochi_or_pregenerated_to_target)
             else()
                 add_custom_command(
                     OUTPUT ${OUTPUT_PATH}
-                    DEPENDS mochi ${SOURCE}
+                    DEPENDS mochi ${SOURCE} ${ARG_DEPENDS}
                     COMMAND mochi ${ARG_FLAGS} -o ${OUTPUT_PATH} ${INPUT_PATH} ${search_paths}
                     COMMENT "Generating code ${OUTPUT_REL_PATH}"
                 )

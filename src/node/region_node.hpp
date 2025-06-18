@@ -30,12 +30,12 @@ template <> struct ilist_callbacks<tinytc_inst> {
 
 } // namespace tinytc
 
-struct tinytc_region final {
+struct alignas(8) tinytc_region final {
   public:
     using iterator = tinytc::ilist<tinytc_inst>::iterator;
     using const_iterator = tinytc::ilist<tinytc_inst>::const_iterator;
 
-    tinytc_region();
+    tinytc_region(tinytc_inst_t def_inst = nullptr);
     ~tinytc_region();
 
     tinytc_region(tinytc_region const &) = delete;

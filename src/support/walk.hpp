@@ -31,8 +31,7 @@ class walk_stage {
     int next_region_ = 0;
 };
 
-template <walk_order Order>
-void walk(inst_node const &i, std::function<void(inst_node const &i)> callback) {
+template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node &i)> callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(i);
     }
@@ -45,13 +44,9 @@ void walk(inst_node const &i, std::function<void(inst_node const &i)> callback) 
         callback(i);
     }
 }
-template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node &i)> callback) {
-    walk<Order>(const_cast<inst_node const &>(i),
-                [c = std::move(callback)](inst_node const &i) { c(const_cast<inst_node &>(i)); });
-}
 
 template <walk_order Order>
-void walk(inst_node const &i, std::function<void(region_node const &reg)> callback) {
+void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
     for (auto &reg : i.child_regions()) {
         if constexpr (Order == walk_order::pre_order) {
             callback(reg);
@@ -64,21 +59,9 @@ void walk(inst_node const &i, std::function<void(region_node const &reg)> callba
         }
     }
 }
-template <walk_order Order>
-void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
-    walk<Order>(
-        const_cast<inst_node const &>(i),
-        [c = std::move(callback)](region_node const &reg) { c(const_cast<region_node &>(reg)); });
-}
 
 void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage)> callback);
 
-template <walk_order Order>
-void walk(function_node const &fn, std::function<void(inst_node const &i)> callback) {
-    for (auto &i : fn.body()) {
-        walk<Order>(i, callback);
-    }
-}
 template <walk_order Order>
 void walk(function_node &fn, std::function<void(inst_node &i)> callback) {
     for (auto &i : fn.body()) {
@@ -87,7 +70,7 @@ void walk(function_node &fn, std::function<void(inst_node &i)> callback) {
 }
 
 template <walk_order Order>
-void walk(function_node const &fn, std::function<void(region_node const &reg)> callback) {
+void walk(function_node &fn, std::function<void(region_node &reg)> callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(fn.body());
     }
@@ -97,12 +80,6 @@ void walk(function_node const &fn, std::function<void(region_node const &reg)> c
     if constexpr (Order == walk_order::post_order) {
         callback(fn.body());
     }
-}
-template <walk_order Order>
-void walk(function_node &i, std::function<void(region_node &reg)> callback) {
-    walk<Order>(
-        const_cast<function_node const &>(i),
-        [c = std::move(callback)](region_node const &reg) { c(const_cast<region_node &>(reg)); });
 }
 
 inline void walk(function_node &fn,

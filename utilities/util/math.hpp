@@ -20,6 +20,14 @@ template <std::integral T> auto ilog2(T x) -> T {
     return il2;
 }
 
+// Alignment must be a power of two
+template <std::unsigned_integral T> inline auto align_to(T size, T alignment) {
+    // ceil(size/alignment) * alignment =
+    // (size + alignment - 1) / alignment * alignment =
+    // (size + alignment - 1) & ~(alignment - 1)
+    return (size + alignment - 1) & ~(alignment - 1);
+}
+
 } // namespace tinytc
 
 #endif // MATH_20250613_HPP

@@ -6,6 +6,7 @@
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
@@ -19,11 +20,11 @@ namespace tinytc {
 
 class alias_analysis_visitor {
   public:
-    void operator()(inst_node const &);
-    void operator()(alloca_inst const &a);
-    void operator()(expand_inst const &e);
-    void operator()(fuse_inst const &f);
-    void operator()(subview_inst const &s);
+    void operator()(inst_view &);
+    void operator()(alloca_inst &a);
+    void operator()(expand_inst &e);
+    void operator()(fuse_inst &f);
+    void operator()(subview_inst &s);
 
     auto get_result() && -> aa_results { return aa_results(std::move(alias_), std::move(allocs_)); }
 
@@ -32,38 +33,38 @@ class alias_analysis_visitor {
     std::unordered_map<value_node const *, value_node const *> alias_;
 };
 
-void alias_analysis_visitor::operator()(inst_node const &) {}
-void alias_analysis_visitor::operator()(alloca_inst const &a) {
+void alias_analysis_visitor::operator()(inst_view &) {}
+void alias_analysis_visitor::operator()(alloca_inst &a) {
     if (a.stack_ptr() >= 0) {
-        auto t = dyn_cast<memref_data_type>(a.result()->ty());
+        auto t = dyn_cast<memref_data_type>(a.result().ty());
         if (t == nullptr) {
             throw compilation_error(a.loc(), status::ir_expected_memref);
         }
-        allocs_[a.result()] =
+        allocs_[&a.result()] =
             aa_results::allocation{a.stack_ptr(), a.stack_ptr() + t->size_in_bytes()};
     }
 }
-void alias_analysis_visitor::operator()(expand_inst const &e) {
+void alias_analysis_visitor::operator()(expand_inst &e) {
     value_node const *source = &e.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[e.result()] = source;
+    alias_[&e.result()] = source;
 }
-void alias_analysis_visitor::operator()(fuse_inst const &f) {
+void alias_analysis_visitor::operator()(fuse_inst &f) {
     value_node const *source = &f.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[f.result()] = source;
+    alias_[&f.result()] = source;
 }
 
-void alias_analysis_visitor::operator()(subview_inst const &s) {
+void alias_analysis_visitor::operator()(subview_inst &s) {
     value_node const *source = &s.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
-    alias_[s.result()] = source;
+    alias_[&s.result()] = source;
 }
 
 auto alias_analysis::run_on_function(function_node &fn) -> aa_results {

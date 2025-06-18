@@ -7,7 +7,9 @@
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
@@ -62,21 +64,21 @@ class gcd_helper {
   public:
     inline gcd_helper(std::int32_t default_alignment) : default_alignment_{default_alignment} {}
 
-    void operator()(inst_node const &in);
-    void operator()(alloca_inst const &in);
-    void operator()(arith_inst const &in);
-    void operator()(arith_unary_inst const &in);
-    void operator()(cast_inst const &in);
-    void operator()(constant_inst const &in);
-    void operator()(expand_inst const &in);
-    void operator()(for_inst const &in);
-    void operator()(fuse_inst const &in);
-    void operator()(load_inst const &in);
-    void operator()(size_inst const &in);
-    void operator()(subgroup_broadcast_inst const &in);
-    void operator()(subview_inst const &in);
+    void operator()(inst_view &in);
+    void operator()(alloca_inst &in);
+    void operator()(arith_inst &in);
+    void operator()(arith_unary_inst &in);
+    void operator()(cast_inst &in);
+    void operator()(constant_inst &in);
+    void operator()(expand_inst &in);
+    void operator()(for_inst &in);
+    void operator()(fuse_inst &in);
+    void operator()(load_inst &in);
+    void operator()(size_inst &in);
+    void operator()(subgroup_broadcast_inst &in);
+    void operator()(subview_inst &in);
 
-    void set_from_attributes(function_node const &fn);
+    void set_from_attributes(function_node &fn);
 
     auto get_result() && { return std::move(gcd_); }
 
@@ -85,10 +87,10 @@ class gcd_helper {
     gcd_analysis_result gcd_;
 };
 
-void gcd_helper::operator()(inst_node const &) {}
-void gcd_helper::operator()(alloca_inst const &in) {
+void gcd_helper::operator()(inst_view &) {}
+void gcd_helper::operator()(alloca_inst &in) {
     if (in.stack_ptr() >= 0) {
-        const auto rt = get_memref_type(in.result(0).ty());
+        const auto rt = get_memref_type(in.result().ty());
         std::int32_t i = rt->element_alignment();
         while (i < default_alignment_) {
             const auto i2 = 2 * i;
@@ -99,11 +101,11 @@ void gcd_helper::operator()(alloca_inst const &in) {
         }
         // alloca shape/stride must be static, therefore we can set shape_gcd/stride_gcd to
         // shape/stride
-        gcd_.set_memref(in.result(0),
+        gcd_.set_memref(in.result(),
                         memref_info(i / size(rt->element_ty()), rt->shape(), rt->stride()));
     }
 }
-void gcd_helper::operator()(arith_inst const &in) {
+void gcd_helper::operator()(arith_inst &in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
         const auto ga = gcd_.get(in.a());
         const auto gb = gcd_.get(in.b());
@@ -122,10 +124,10 @@ void gcd_helper::operator()(arith_inst const &in) {
     };
     auto g = compute_gcd();
     if (g) {
-        gcd_.set(in.result(0), *g);
+        gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(arith_unary_inst const &in) {
+void gcd_helper::operator()(arith_unary_inst &in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
         switch (in.operation()) {
         case arithmetic_unary::abs:
@@ -138,21 +140,21 @@ void gcd_helper::operator()(arith_unary_inst const &in) {
     };
     auto g = compute_gcd();
     if (g) {
-        gcd_.set(in.result(0), *g);
+        gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(cast_inst const &in) {
+void gcd_helper::operator()(cast_inst &in) {
     auto g = gcd_.get_if(in.a());
     if (g) {
-        gcd_.set(in.result(0), *g);
+        gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(constant_inst const &in) {
+void gcd_helper::operator()(constant_inst &in) {
     if (std::holds_alternative<std::int64_t>(in.value())) {
-        gcd_.set(in.result(0), std::abs(std::get<std::int64_t>(in.value())));
+        gcd_.set(in.result(), std::abs(std::get<std::int64_t>(in.value())));
     }
 }
-void gcd_helper::operator()(expand_inst const &in) {
+void gcd_helper::operator()(expand_inst &in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
         const auto offset_gcd = mi->offset_gcd();
@@ -188,16 +190,16 @@ void gcd_helper::operator()(expand_inst const &in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        gcd_.set_memref(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
-void gcd_helper::operator()(for_inst const &in) {
+void gcd_helper::operator()(for_inst &in) {
     if (in.has_step()) {
         auto g = std::gcd(gcd_.get(in.from()), gcd_.get(in.step()));
         gcd_.set(in.loop_var(), g);
     }
 }
-void gcd_helper::operator()(fuse_inst const &in) {
+void gcd_helper::operator()(fuse_inst &in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
         const auto offset_gcd = mi->offset_gcd();
@@ -223,21 +225,21 @@ void gcd_helper::operator()(fuse_inst const &in) {
             stride_gcd.push_back(mi->stride_gcd(i));
         }
 
-        gcd_.set_memref(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
-void gcd_helper::operator()(load_inst const &in) {
+void gcd_helper::operator()(load_inst &in) {
     if (auto mi = gcd_.get_memref_if(in.operand());
         mi && isa<group_data_type>(*in.operand().ty())) {
-        gcd_.set_memref(in.result(0), *mi);
+        gcd_.set_memref(in.result(), *mi);
     }
 }
-void gcd_helper::operator()(size_inst const &in) {
+void gcd_helper::operator()(size_inst &in) {
     const auto size =
-        visit(overloaded{[&](group_data_type const &g) -> std::int64_t {
+        visit(overloaded{[&](group_data_type &g) -> std::int64_t {
                              return !is_dynamic_value(g.size()) ? g.size() : 1;
                          },
-                         [&](memref_data_type const &m) -> std::int64_t {
+                         [&](memref_data_type &m) -> std::int64_t {
                              const auto s_i = m.shape(in.mode());
                              if (is_dynamic_value(s_i)) {
                                  if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
@@ -247,20 +249,20 @@ void gcd_helper::operator()(size_inst const &in) {
                              }
                              return s_i;
                          },
-                         [&](auto const &) -> std::int64_t {
+                         [&](auto &) -> std::int64_t {
                              throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
                          }},
               *in.operand().ty());
 
-    gcd_.set(in.result(0), size);
+    gcd_.set(in.result(), size);
 }
-void gcd_helper::operator()(subgroup_broadcast_inst const &in) {
+void gcd_helper::operator()(subgroup_broadcast_inst &in) {
     auto g = gcd_.get_if(in.a());
     if (g) {
-        gcd_.set(in.result(0), *g);
+        gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(subview_inst const &in) {
+void gcd_helper::operator()(subview_inst &in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
 
@@ -296,12 +298,12 @@ void gcd_helper::operator()(subview_inst const &in) {
             }
         }
 
-        gcd_.set_memref(in.result(0), memref_info(offset_gcd, shape_gcd, stride_gcd));
+        gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
 
-void gcd_helper::set_from_attributes(function_node const &fn) {
-    auto known_memref_info = [&](memref_data_type const *mr, tinytc_attr_t dict) -> memref_info {
+void gcd_helper::set_from_attributes(function_node &fn) {
+    auto known_memref_info = [&](memref_data_type *mr, tinytc_attr_t dict) -> memref_info {
         const std::int64_t alignment = [&]() -> std::int64_t {
             if (auto alignment_attr = get_attr(dict, "alignment"); alignment_attr) {
                 auto ia = dyn_cast<integer_attr>(alignment_attr);
@@ -362,11 +364,11 @@ void gcd_helper::set_from_attributes(function_node const &fn) {
     }
 }
 
-auto gcd_analysis::run_on_function(function_node const &fn) -> gcd_analysis_result {
+auto gcd_analysis::run_on_function(function_node &fn) -> gcd_analysis_result {
     auto visitor = gcd_helper{default_alignment_};
     visitor.set_from_attributes(fn);
 
-    walk<walk_order::pre_order>(fn, [&visitor](inst_node const &i) { visit(visitor, i); });
+    walk<walk_order::pre_order>(fn, [&visitor](inst_node &i) { visit(visitor, i); });
 
     return std::move(visitor).get_result();
 }

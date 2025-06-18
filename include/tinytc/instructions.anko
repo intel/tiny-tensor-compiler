@@ -2,22 +2,22 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 inst @alloca {
-    ret %tensor
-    cxx "auto stack_ptr() const -> std::int64_t;"
+    ret %result
     cxx "void stack_ptr(std::int64_t ptr);"
+    cxx "auto stack_ptr() const -> std::int64_t;"
 }
 
 inst @arith {
     prop %operation => "arithmetic"
     op %a
     op %b
-    ret %a_op_b
+    ret %result
 }
 
 inst @arith_unary {
     prop %operation => "arithmetic_unary"
     op %a
-    ret %op_a
+    ret %result
 }
 
 inst @barrier {
@@ -27,25 +27,24 @@ inst @barrier {
 
 inst @builtin {
     prop %builtin_type => "builtin"
-    ret %builtin_value
+    ret %result
 }
 
 inst @cast {
     op %a
-    ret %a_casted
+    ret %result
 }
 
 inst @compare {
     prop %cond => "cmp_condition"
     op %a
     op %b
-    ret %comparison
+    ret %result
 }
 
 inst @constant {
-    prop %value => "value_type"
-    ret %constant
-    cxx "using value_type = std::variant<bool, std::int64_t, double, std::complex<double>>;"
+    prop %value => "constant_value_type"
+    ret %result
     cxx "auto is_zero() const -> bool;"
     cxx "auto is_identity() const -> bool;"
 }
@@ -53,26 +52,23 @@ inst @constant {
 inst @cooperative_matrix_apply {
     op %a
     reg %body
-    ret %a_applied
+    ret %result
     cxx "inline auto row() -> tinytc_value & { return body().param(0); }"
-    cxx "inline auto row() const -> tinytc_value const & { return body().param(0); }"
     cxx "inline auto col() -> tinytc_value & { return body().param(1); }"
-    cxx "inline auto col() const -> tinytc_value const & { return body().param(1); }"
     cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
-    cxx "inline auto val() const -> tinytc_value const & { return body().param(2); }"
 }
 
 inst @cooperative_matrix_extract {
     prop %index => "std::int64_t"
     op %mat
-    ret %component
+    ret %result
 }
 
 inst @cooperative_matrix_insert {
     prop %index => "std::int64_t"
     op %val
     op %mat
-    ret %new_mat
+    ret %result
 }
 
 inst @cooperative_matrix_load {
@@ -81,14 +77,14 @@ inst @cooperative_matrix_load {
     op %operand
     op %pos0
     op %pos1
-    ret %mat
+    ret %result
 }
 
 inst @cooperative_matrix_mul_add {
     op %a
     op %b
     op %c
-    ret %d
+    ret %result
     cxx "auto is_c_zero() const -> bool;"
 }
 
@@ -102,16 +98,16 @@ inst @cooperative_matrix_prefetch {
 }
 
 inst @cooperative_matrix_reduce {
-    prop %arith => "group_aritmetic"
+    prop %arith => "group_arithmetic"
     prop %mode => "reduce_mode"
     op %a
-    ret %a_reduced
+    ret %result
 }
 
 inst @cooperative_matrix_scale {
     op %a
     op %b
-    ret %a_times_b
+    ret %result
 }
 
 inst @cooperative_matrix_store {
@@ -126,23 +122,24 @@ inst @cooperative_matrix_store {
 
 inst @expand {
     prop %expanded_mode => "std::int64_t"
-    prop* %expand_shape => "std::int64_t"
+    prop* %static_expand_shape => "std::int64_t"
     op %operand
-    ret %expanded
+    op* %expand_shape
+    ret %result
 }
 
 inst @fuse {
     prop %from => "std::int64_t"
     prop %to => "std::int64_t"
     op %operand
-    ret %fused
+    ret %result
 }
 
 inst @if {
     op %condition
     reg %then
     reg %otherwise
-    ret* %yielded_vals
+    ret* %results
     cxx "auto is_otherwise_empty() const -> bool;"
 }
 
@@ -154,13 +151,13 @@ inst @lifetime_stop {
 inst @load {
     op %operand
     op* %index_list
-    ret %loaded_value
+    ret %result
 }
 
 inst @math_unary {
     prop %operation => "math_unary"
     op %a
-    ret %math_a
+    ret %result
 }
 
 inst @parallel {
@@ -170,21 +167,20 @@ inst @parallel {
 inst @size {
     prop %mode => "std::int64_t"
     op %operand
-    ret %size
+    ret %result
 }
 
 inst @subgroup_broadcast {
     op %a
     op %idx
-    ret %a_bc
+    ret %result
 }
 
 inst @subgroup_operation {
     prop %arith => "group_arithmetic"
     prop %operation => "group_operation"
     op %a
-    op %idx
-    ret %a_group_op
+    ret %result
 }
 
 inst @subview {
@@ -193,17 +189,17 @@ inst @subview {
     op %operand
     op* %offsets
     op* %sizes
-    ret %operand_sub
+    ret %result
 }
 
-inst @store_inst {
+inst @store {
     prop %flag => "store_flag"
     op %val
     op %operand
     op* %index_list
 }
 
-inst @yield_inst {
+inst @yield {
     op* %yielded_vals
 }
 
@@ -250,6 +246,7 @@ inst @ger : @blas_a3 {}
 inst @hadamard : @blas_a3 {}
 
 inst @loop {
+    prop %loop_var_type => "scalar_type"
     reg %body
 }
 
@@ -258,17 +255,14 @@ inst @for : @loop {
     op %to
     op? %step
     op* %iter_init
-    ret* %yielded_vals
+    ret* %results
     cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
-    cxx "inline auto loop_var() const -> tinytc_value const & { return body().param(0); }"
     cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
-    cxx "inline auto iter_arg(std::int64_t no) const -> tinytc_value const & { return body().param(no + 1); }"
 }
 
 inst @foreach : @loop {
     op* %from
     op* %to
-    cxx "inline auto dim() const -> std::int64_t { return from().size(); } }"
+    cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
     cxx "inline auto loop_vars() { return body().params(); }"
-    cxx "inline auto loop_vars() const { return body().params(); }"
 }

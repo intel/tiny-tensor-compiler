@@ -3,6 +3,7 @@
 
 #include "analysis/cfg.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "util/casting.hpp"
 #include "util/ilist_base.hpp"
 
