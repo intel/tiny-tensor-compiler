@@ -6,14 +6,16 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "pass/constant_folding.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
+#include <iterator>
 #include <variant>
 
 namespace tinytc {

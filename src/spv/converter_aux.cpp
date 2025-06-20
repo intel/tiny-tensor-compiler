@@ -15,7 +15,7 @@
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <array>
 #include <complex>
@@ -311,7 +311,7 @@ auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b
                               std::vector<IdRef>{a, b_0, b_1_a_times_i});
 }
 
-auto make_constant(uniquifier &unique, scalar_type sty, constant_inst::value_type const &val)
+auto make_constant(uniquifier &unique, scalar_type sty, constant_value_type const &val)
     -> spv_inst * {
     auto const add_constant_complex = [&](auto cst) -> spv_inst * {
         auto c_re = unique.constant(cst.real());

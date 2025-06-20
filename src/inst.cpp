@@ -7,7 +7,6 @@
 #include "node/inst_node.hpp"
 #include "node/inst_view.hpp"
 #include "node/region_node.hpp"
-#include "node/value_node.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -17,8 +16,8 @@
 #include <algorithm>
 #include <complex>
 #include <cstdint>
+#include <iterator>
 #include <limits>
-#include <memory>
 #include <stdexcept>
 
 using namespace tinytc;

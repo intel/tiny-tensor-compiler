@@ -9,18 +9,19 @@
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "pass/clone.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
-#include "util/visit.hpp"
 
 #include <cstdint>
+#include <iterator>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -32,8 +33,8 @@ class coopmatrix_code_generator {
     coopmatrix_code_generator(core_config core_cfg, region_node &reg)
         : core_cfg_{std::move(core_cfg)}, bb_{&reg} {}
     // Returns true if instruction was replaced
-    bool operator()(inst_node &in);
-    bool operator()(cooperative_matrix_apply_inst &in);
+    bool operator()(inst_view in);
+    bool operator()(cooperative_matrix_apply_inst in);
 
     void run_on_region(region_node &reg);
 
@@ -44,15 +45,15 @@ class coopmatrix_code_generator {
     region_builder bb_;
 };
 
-bool coopmatrix_code_generator::operator()(inst_node &) { return false; }
+bool coopmatrix_code_generator::operator()(inst_view) { return false; }
 
-bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst &in) {
+bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     if (in.body().empty()) {
         throw compilation_error(in.loc(), status::ir_must_have_yield);
     }
 
-    auto bool_ty = boolean_data_type::get(in.context());
-    auto i32_ty = scalar_data_type::get(in.context(), scalar_type::i32);
+    auto bool_ty = boolean_data_type::get(in.get().context());
+    auto i32_ty = scalar_data_type::get(in.get().context(), scalar_type::i32);
 
     auto cloner = inst_cloner{};
 
@@ -83,7 +84,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst &in) {
         }
         auto j1 = bb_.add(make_constant(u * col_inc_factor, i32_ty, in.loc()));
         auto col = j0 ? bb_.add(make_arith(arithmetic::add, j0, j1, i32_ty, in.loc())) : j1;
-        auto val = bb_.add(make_cooperative_matrix_extract(&in.a(), v, ct->ty(), in.loc()));
+        auto val = bb_.add(make_cooperative_matrix_extract(v, &in.a(), ct->ty(), in.loc()));
 
         cloner.set_subs(&in.row(), row);
         cloner.set_subs(&in.col(), col);
@@ -109,20 +110,20 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst &in) {
 
             auto last_inst = --bb_.get_region()->end();
             if (last_inst != bb_.get_region()->end() && isa<yield_inst>(*last_inst)) {
-                auto yi = dyn_cast<yield_inst>(last_inst.get());
-                if (yi->num_operands() != 1) {
+                auto vals = dyn_cast<yield_inst>(last_inst.get()).yielded_vals();
+                if (vals.size() != 1) {
                     throw compilation_error(in.loc(), status::ir_yield_mismatch);
                 }
-                modified_val = &yi->op(0);
+                modified_val = &vals[0];
                 bb_.get_region()->insts().erase(last_inst);
             } else {
                 throw compilation_error(in.loc(), status::ir_must_have_yield);
             }
         }
         copy = bb_.add(
-            make_cooperative_matrix_insert(modified_val, copy, v, in.result(0).ty(), in.loc()));
+            make_cooperative_matrix_insert(v, modified_val, copy, in.result().ty(), in.loc()));
     }
-    for (auto &r : in.results()) {
+    for (auto &r : in.get().results()) {
         auto u = r.use_begin();
         while (r.has_uses()) {
             u->set(copy);

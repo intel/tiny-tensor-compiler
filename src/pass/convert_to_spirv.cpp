@@ -16,7 +16,7 @@ convert_to_spirv_pass::convert_to_spirv_pass(::tinytc_core_info const *info)
     }
 }
 
-auto convert_to_spirv_pass::run_on_program(program_node const &p) -> spv_mod {
+auto convert_to_spirv_pass::run_on_program(program_node &p) -> spv_mod {
     return spv::convert_prog_to_spirv(p, *info_);
 }
 

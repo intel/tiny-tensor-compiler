@@ -13,10 +13,6 @@
 
 namespace tinytc::spv {
 
-template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 template <typename Visitor> auto visit(Visitor &&visitor, spv_inst &inst) {
     switch (inst.opcode()) {
     case Op::Nop:

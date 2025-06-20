@@ -8,7 +8,7 @@
 #include "coopmatrix_layout.hpp"
 #include "device_info.hpp"
 #include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
@@ -33,10 +33,10 @@ auto max_block_io_vec_size(scalar_type sty) -> std::int64_t {
     return sty == scalar_type::i8 || sty == scalar_type::i16 ? 16 : 8;
 }
 
-auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
+auto coopmatrix_impl_block::load(cooperative_matrix_load_inst in, dope_vector const &odv,
                                  spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     const auto ot = get_memref_type(in.operand());
-    const auto rt = get_coopmatrix_type(in.result(0));
+    const auto rt = get_coopmatrix_type(in.result());
     const auto layout = get_layout(cfg(), rt);
     const auto sty = layout.sty;
 
@@ -142,7 +142,7 @@ auto coopmatrix_impl_block::load(cooperative_matrix_load_inst const &in, dope_ve
     return result;
 }
 
-void coopmatrix_impl_block::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
+void coopmatrix_impl_block::store(cooperative_matrix_store_inst in, dope_vector const &odv,
                                   spv_inst *val, spv_inst *operand, spv_inst *pos0,
                                   spv_inst *pos1) {
     constexpr std::int32_t required_alignment = 16;

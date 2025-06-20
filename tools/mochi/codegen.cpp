@@ -132,7 +132,6 @@ public:
         os << code << "\n";
     }
 
-    os << "protected:\n";
     os << "void check(); // throws compilation_error on invalid IR\n";
     if (reg_no > 0) {
         os << "void setup_regions();\n";
@@ -214,9 +213,9 @@ void generate_inst_create(std::ostream &os, inst *in) {
     sizeof({1}::properties),
     {0},
 }};
-auto in = inst{{tinytc_inst::create(IK::{2}, layout)}};
-std::int32_t ret_no = 0;
-std::int32_t op_no = 0;
+auto in = inst{{tinytc_inst::create(IK::{2}, layout, lc)}};
+[[maybe_unused]] std::int32_t ret_no = 0;
+[[maybe_unused]] std::int32_t op_no = 0;
 )CXXT",
         num_child_regions, in->class_name(), in->ik_name());
 
@@ -252,28 +251,26 @@ std::int32_t op_no = 0;
             }
         }
     });
-    os << "*static_cast<properties*>(in->props()) = properties{\n";
+    os << std::format("[[maybe_unused]] auto view = {}(in.get());\n", in->class_name());
+    os << std::format("[[maybe_unused]] {}::properties& props = view.props();\n", in->class_name());
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
             if (o.has_offset_property) {
-                os << o.offset_name() << ",";
+                os << std::format("props.{0} = {0};\n", o.offset_name());
             }
         }
         for (auto &p : in->props()) {
-            os << std::format("std::move({}),", p.name);
+            os << std::format("props.{0} = std::move({0});", p.name);
         }
     });
-
-    os << "};\n\n";
+    os << "\n\n";
 
     if (num_child_regions > 0) {
-        os << "in->setup_regions();\n\n";
+        os << "view.setup_regions();\n\n";
     }
 
-    os << std::format("{}(in.get()).check();\n\n", in->class_name());
-
+    os << "view.check();\n\n";
     os << "return in.release();\n";
-
     os << "}\n\n";
 }
 
@@ -310,7 +307,7 @@ void generate_inst_visit_header(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
             if (!in->has_children()) {
-                os << std::format("case IK::{}: {{ auto view = {}{{&in}}; return visitor(view); }}\n", in->ik_name(),
+                os << std::format("case IK::{}: {{ return visitor({}{{&in}}); }}\n", in->ik_name(),
                                   in->class_name());
             }
         });

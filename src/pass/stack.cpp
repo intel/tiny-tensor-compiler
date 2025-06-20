@@ -6,11 +6,13 @@
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <cstdint>
 #include <functional>
@@ -28,13 +30,13 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
 
     walk<walk_order::pre_order>(fn, [&allocs](inst_node &i) {
         visit(overloaded{
-                  [&allocs](alloca_inst &a) {
-                      auto t = dyn_cast<memref_data_type>(a.result()->ty());
+                  [&allocs](alloca_inst a) {
+                      auto t = dyn_cast<memref_data_type>(a.result().ty());
                       if (t == nullptr) {
                           throw compilation_error(a.loc(), status::ir_expected_memref);
                       }
                       const auto alignment = [&]() -> std::int32_t {
-                          if (auto aa = get_attr(a.attr(), "alignment"); aa) {
+                          if (auto aa = get_attr(a.get().attr(), "alignment"); aa) {
                               auto val = dyn_cast_or_throw<integer_attr>(aa, [&] {
                                              return status::ir_expected_integer_attribute;
                                          })->value();
@@ -51,10 +53,10 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                           }
                           stack_ptr = (1 + (it->stop - 1) / alignment) * alignment;
                       }
-                      allocs.insert(it, allocation{a.result(), stack_ptr, stack_ptr + size});
+                      allocs.insert(it, allocation{&a.result(), stack_ptr, stack_ptr + size});
                       a.stack_ptr(stack_ptr);
                   },
-                  [&allocs](lifetime_stop_inst &s) {
+                  [&allocs](lifetime_stop_inst s) {
                       int num = 0;
                       auto &v = s.object();
                       for (auto it = allocs.begin(); it != allocs.end();) {
@@ -71,7 +73,7 @@ void set_stack_ptr_pass::run_on_function(function_node &fn) {
                               "Incorrect lifetime_stop: value not found in list of allocations");
                       }
                   },
-                  [](inst_node &) {}},
+                  [](inst_view) {}},
               i);
     });
 }

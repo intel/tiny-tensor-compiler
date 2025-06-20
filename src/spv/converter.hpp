@@ -5,7 +5,6 @@
 #define CONVERTER_20241111_HPP
 
 #include "device_info.hpp"
-#include "node/inst_node.hpp"
 #include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "spv/coopmatrix_impl.hpp"
@@ -24,49 +23,49 @@
 
 namespace tinytc::spv {
 
-auto convert_prog_to_spirv(tinytc_prog const &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
+auto convert_prog_to_spirv(tinytc_prog &p, tinytc_core_info const &info) -> ::tinytc::spv_mod;
 
 class inst_converter {
   public:
     inst_converter(tinytc_spv_mod &m, tinytc_core_info const &info);
 
     // Instruction nodes
-    void operator()(inst_node const &in);
-    void operator()(alloca_inst const &in);
-    void operator()(arith_inst const &in);
-    void operator()(arith_unary_inst const &in);
-    void operator()(barrier_inst const &in);
-    void operator()(builtin_inst const &in);
-    void operator()(cast_inst const &in);
-    void operator()(compare_inst const &in);
-    void operator()(constant_inst const &in);
-    void operator()(cooperative_matrix_extract_inst const &in);
-    void operator()(cooperative_matrix_insert_inst const &in);
-    void operator()(cooperative_matrix_load_inst const &in);
-    void operator()(cooperative_matrix_mul_add_inst const &in);
-    void operator()(cooperative_matrix_prefetch_inst const &in);
-    void operator()(cooperative_matrix_reduce_inst const &in);
-    void operator()(cooperative_matrix_scale_inst const &in);
-    void operator()(cooperative_matrix_store_inst const &in);
-    void operator()(expand_inst const &in);
-    void operator()(for_inst const &in);
-    void operator()(fuse_inst const &in);
-    void operator()(if_inst const &in);
-    void operator()(lifetime_stop_inst const &in);
-    void operator()(load_inst const &in);
-    void operator()(math_unary_inst const &in);
-    void operator()(parallel_inst const &in);
-    void operator()(size_inst const &in);
-    void operator()(subgroup_broadcast_inst const &in);
-    void operator()(subgroup_operation_inst const &in);
-    void operator()(store_inst const &in);
-    void operator()(subview_inst const &in);
-    void operator()(yield_inst const &in);
+    void operator()(inst_view in);
+    void operator()(alloca_inst in);
+    void operator()(arith_inst in);
+    void operator()(arith_unary_inst in);
+    void operator()(barrier_inst in);
+    void operator()(builtin_inst in);
+    void operator()(cast_inst in);
+    void operator()(compare_inst in);
+    void operator()(constant_inst in);
+    void operator()(cooperative_matrix_extract_inst in);
+    void operator()(cooperative_matrix_insert_inst in);
+    void operator()(cooperative_matrix_load_inst in);
+    void operator()(cooperative_matrix_mul_add_inst in);
+    void operator()(cooperative_matrix_prefetch_inst in);
+    void operator()(cooperative_matrix_reduce_inst in);
+    void operator()(cooperative_matrix_scale_inst in);
+    void operator()(cooperative_matrix_store_inst in);
+    void operator()(expand_inst in);
+    void operator()(for_inst in);
+    void operator()(fuse_inst in);
+    void operator()(if_inst in);
+    void operator()(lifetime_stop_inst in);
+    void operator()(load_inst in);
+    void operator()(math_unary_inst in);
+    void operator()(parallel_inst in);
+    void operator()(size_inst in);
+    void operator()(subgroup_broadcast_inst in);
+    void operator()(subgroup_operation_inst in);
+    void operator()(store_inst in);
+    void operator()(subview_inst in);
+    void operator()(yield_inst in);
 
-    void run_on_region(tinytc_region const &reg);
-    auto run_on_region_with_yield(region_node const &reg, std::int64_t num_results)
+    void run_on_region(tinytc_region &reg);
+    auto run_on_region_with_yield(region_node &reg, std::int64_t num_results)
         -> std::vector<spv_inst *>;
-    void run_on_function(tinytc_func const &fn);
+    void run_on_function(tinytc_func &fn);
 
     inline auto unique() -> uniquifier & { return unique_; }
 

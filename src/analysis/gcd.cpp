@@ -15,12 +15,12 @@
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/iterator.hpp"
+#include "util/overloaded.hpp"
 #include "util/visit.hpp"
 
 #include <cstdlib> // IWYU pragma: keep
 #include <functional>
 #include <numeric>
-#include <ranges>
 #include <utility>
 #include <variant>
 
@@ -64,19 +64,19 @@ class gcd_helper {
   public:
     inline gcd_helper(std::int32_t default_alignment) : default_alignment_{default_alignment} {}
 
-    void operator()(inst_view &in);
-    void operator()(alloca_inst &in);
-    void operator()(arith_inst &in);
-    void operator()(arith_unary_inst &in);
-    void operator()(cast_inst &in);
-    void operator()(constant_inst &in);
-    void operator()(expand_inst &in);
-    void operator()(for_inst &in);
-    void operator()(fuse_inst &in);
-    void operator()(load_inst &in);
-    void operator()(size_inst &in);
-    void operator()(subgroup_broadcast_inst &in);
-    void operator()(subview_inst &in);
+    void operator()(inst_view in);
+    void operator()(alloca_inst in);
+    void operator()(arith_inst in);
+    void operator()(arith_unary_inst in);
+    void operator()(cast_inst in);
+    void operator()(constant_inst in);
+    void operator()(expand_inst in);
+    void operator()(for_inst in);
+    void operator()(fuse_inst in);
+    void operator()(load_inst in);
+    void operator()(size_inst in);
+    void operator()(subgroup_broadcast_inst in);
+    void operator()(subview_inst in);
 
     void set_from_attributes(function_node &fn);
 
@@ -87,8 +87,8 @@ class gcd_helper {
     gcd_analysis_result gcd_;
 };
 
-void gcd_helper::operator()(inst_view &) {}
-void gcd_helper::operator()(alloca_inst &in) {
+void gcd_helper::operator()(inst_view) {}
+void gcd_helper::operator()(alloca_inst in) {
     if (in.stack_ptr() >= 0) {
         const auto rt = get_memref_type(in.result().ty());
         std::int32_t i = rt->element_alignment();
@@ -105,7 +105,7 @@ void gcd_helper::operator()(alloca_inst &in) {
                         memref_info(i / size(rt->element_ty()), rt->shape(), rt->stride()));
     }
 }
-void gcd_helper::operator()(arith_inst &in) {
+void gcd_helper::operator()(arith_inst in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
         const auto ga = gcd_.get(in.a());
         const auto gb = gcd_.get(in.b());
@@ -127,7 +127,7 @@ void gcd_helper::operator()(arith_inst &in) {
         gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(arith_unary_inst &in) {
+void gcd_helper::operator()(arith_unary_inst in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
         switch (in.operation()) {
         case arithmetic_unary::abs:
@@ -143,18 +143,18 @@ void gcd_helper::operator()(arith_unary_inst &in) {
         gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(cast_inst &in) {
+void gcd_helper::operator()(cast_inst in) {
     auto g = gcd_.get_if(in.a());
     if (g) {
         gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(constant_inst &in) {
+void gcd_helper::operator()(constant_inst in) {
     if (std::holds_alternative<std::int64_t>(in.value())) {
         gcd_.set(in.result(), std::abs(std::get<std::int64_t>(in.value())));
     }
 }
-void gcd_helper::operator()(expand_inst &in) {
+void gcd_helper::operator()(expand_inst in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
         const auto offset_gcd = mi->offset_gcd();
@@ -193,13 +193,13 @@ void gcd_helper::operator()(expand_inst &in) {
         gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
-void gcd_helper::operator()(for_inst &in) {
+void gcd_helper::operator()(for_inst in) {
     if (in.has_step()) {
         auto g = std::gcd(gcd_.get(in.from()), gcd_.get(in.step()));
         gcd_.set(in.loop_var(), g);
     }
 }
-void gcd_helper::operator()(fuse_inst &in) {
+void gcd_helper::operator()(fuse_inst in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
         const auto offset_gcd = mi->offset_gcd();
@@ -228,13 +228,13 @@ void gcd_helper::operator()(fuse_inst &in) {
         gcd_.set_memref(in.result(), memref_info(offset_gcd, shape_gcd, stride_gcd));
     }
 }
-void gcd_helper::operator()(load_inst &in) {
+void gcd_helper::operator()(load_inst in) {
     if (auto mi = gcd_.get_memref_if(in.operand());
         mi && isa<group_data_type>(*in.operand().ty())) {
         gcd_.set_memref(in.result(), *mi);
     }
 }
-void gcd_helper::operator()(size_inst &in) {
+void gcd_helper::operator()(size_inst in) {
     const auto size =
         visit(overloaded{[&](group_data_type &g) -> std::int64_t {
                              return !is_dynamic_value(g.size()) ? g.size() : 1;
@@ -256,13 +256,13 @@ void gcd_helper::operator()(size_inst &in) {
 
     gcd_.set(in.result(), size);
 }
-void gcd_helper::operator()(subgroup_broadcast_inst &in) {
+void gcd_helper::operator()(subgroup_broadcast_inst in) {
     auto g = gcd_.get_if(in.a());
     if (g) {
         gcd_.set(in.result(), *g);
     }
 }
-void gcd_helper::operator()(subview_inst &in) {
+void gcd_helper::operator()(subview_inst in) {
     if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
         const auto mt = get_memref_type(in.operand());
 

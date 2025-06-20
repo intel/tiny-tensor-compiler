@@ -8,12 +8,13 @@
 #include "node/attr_node.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
+#include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <array>
 #include <cstdint>
@@ -30,7 +31,7 @@ auto get_shapes(function_node &fn) -> std::vector<blas_shape> {
     auto shape_set = std::unordered_set<blas_shape>{};
 
     walk<walk_order::pre_order>(fn, [&shape_set](inst_node &i) {
-        visit(overloaded{[&](blas_a2_inst &in) {
+        visit(overloaded{[&](blas_a2_inst in) {
                              auto aty = get_memref_type(in.A())->element_ty();
                              auto b = get_memref_type(in.B());
                              if (b->dim() == 1) {
@@ -40,7 +41,7 @@ auto get_shapes(function_node &fn) -> std::vector<blas_shape> {
                                      {aty, aty, b->element_ty(), {b->shape(0), b->shape(1)}});
                              }
                          },
-                         [&](blas_a3_inst &in) {
+                         [&](blas_a3_inst in) {
                              auto aty = get_memref_type(in.A())->element_ty();
                              auto bty = get_memref_type(in.B())->element_ty();
                              auto c = get_memref_type(in.C());
@@ -51,10 +52,10 @@ auto get_shapes(function_node &fn) -> std::vector<blas_shape> {
                                                    bty,
                                                    c->element_ty(),
                                                    {c->shape(0), c->shape(1)},
-                                                   isa<gemm_inst>(in)});
+                                                   isa<gemm_inst>(in.get())});
                              }
                          },
-                         [](inst_node &) {}},
+                         [](inst_view) {}},
               i);
     });
 

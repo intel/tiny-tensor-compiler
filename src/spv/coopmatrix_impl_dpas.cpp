@@ -8,7 +8,7 @@
 #include "device_info.hpp"
 #include "matrix_ext_info.hpp"
 #include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "spv/block2d_diy.hpp"
 #include "spv/coopmatrix_impl.hpp"
 #include "spv/defs.hpp"
@@ -472,9 +472,9 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
     });
 }
 
-auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
+auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst in, dope_vector const &odv,
                                 spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const auto type_ok = cfg().matrix->have_type(rt);
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
@@ -485,7 +485,7 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vec
     }
 
     auto ot = get_memref_type(in.operand());
-    auto ct = get_coopmatrix_type(in.result(0));
+    auto ct = get_coopmatrix_type(in.result());
     auto fun = load_fun(ct, unique().pointer_ty(ot), in.t());
 
     auto &mod = unique().mod();
@@ -504,12 +504,12 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst const &in, dope_vec
                                                           stride_in_bytes, pos0_i32, pos1_i32});
 }
 
-auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a,
-                                   spv_inst *b, spv_inst *c) -> spv_inst * {
+auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, spv_inst *b,
+                                   spv_inst *c) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const bool have_gemm =
         cfg().matrix->have_gemm(at->component_ty(), bt->component_ty(), ct->component_ty(),
@@ -522,9 +522,8 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst const &in, sp
     return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a, b, c});
 }
 
-void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
-                                    dope_vector const &odv, spv_inst *pointer, spv_inst *pos0,
-                                    spv_inst *pos1) {
+void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst in, dope_vector const &odv,
+                                    spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const auto type_ok = size(ot->element_ty()) <= 4;
@@ -556,7 +555,7 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst const &in,
     }
 }
 
-void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
+void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst in, dope_vector const &odv,
                                  spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ct = get_coopmatrix_type(in.val());
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
@@ -587,8 +586,7 @@ void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst const &in, dope_v
     }
 }
 
-auto coopmatrix_impl_dpas::reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a)
-    -> spv_inst * {
+auto coopmatrix_impl_dpas::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     const auto sgs = cfg().subgroup_size;
 
@@ -596,7 +594,7 @@ auto coopmatrix_impl_dpas::reduce(cooperative_matrix_reduce_inst const &in, spv_
         return coopmatrix_impl::reduce(in, a);
     }
 
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto fun = reduce_fun(sgs, in.arith(), at, rt);
     return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a});
 }

@@ -116,14 +116,14 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                      address_space::global, my_loc());
                 auto ct = get_memref(ty_, array_view(C_static_sizes.data(), 2), {1, ldC},
                                      address_space::global, my_loc());
-                auto a = bb.add(make_subview(params[1], static_offsets, A_static_sizes,
+                auto a = bb.add(make_subview(static_offsets, A_static_sizes, params[1],
                                              array_view<value>{gid}, {}, at, my_loc()));
-                auto b = bb.add(make_subview(params[2], static_offsets, B_static_sizes,
+                auto b = bb.add(make_subview(static_offsets, B_static_sizes, params[2],
                                              array_view<value>{gid}, {}, bt, my_loc()));
-                auto c = bb.add(make_subview(params[4], static_offsets, C_static_sizes,
+                auto c = bb.add(make_subview(static_offsets, C_static_sizes, params[4],
                                              array_view<value>{gid}, {}, ct, my_loc()));
                 auto beta = is_beta_nonzero ? params[3] : bb.add(make_constant_zero(ty_, my_loc()));
-                bb.add(make_gemm(tA_, tB_, false, params[0], std::move(a), std::move(b), beta,
+                bb.add(make_gemm(false, tA_, tB_, params[0], std::move(a), std::move(b), beta,
                                  std::move(c), my_loc()));
 
                 return f;

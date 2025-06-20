@@ -6,7 +6,7 @@
 #include "converter_aux.hpp"
 #include "error.hpp"
 #include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "scalar_type.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
@@ -17,7 +17,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <array>
@@ -35,8 +35,7 @@ namespace tinytc::spv {
 coopmatrix_impl::coopmatrix_impl(uniquifier &unique, core_config const &cfg, gcd_analysis_result g)
     : unique_{&unique}, cfg_{cfg}, gcd_{std::move(g)} {}
 
-auto coopmatrix_impl::extract(cooperative_matrix_extract_inst const &in, spv_inst *mat)
-    -> spv_inst * {
+auto coopmatrix_impl::extract(cooperative_matrix_extract_inst in, spv_inst *mat) -> spv_inst * {
     auto matt = get_coopmatrix_type(in.mat());
     auto matl = get_layout(cfg(), matt);
     const auto idx = in.index();
@@ -45,7 +44,7 @@ auto coopmatrix_impl::extract(cooperative_matrix_extract_inst const &in, spv_ins
     }
     return extract(matl, mat, idx);
 }
-auto coopmatrix_impl::insert(cooperative_matrix_insert_inst const &in, spv_inst *val, spv_inst *mat)
+auto coopmatrix_impl::insert(cooperative_matrix_insert_inst in, spv_inst *val, spv_inst *mat)
     -> spv_inst * {
     auto matt = get_coopmatrix_type(in.mat());
     auto matl = get_layout(cfg(), matt);
@@ -56,10 +55,10 @@ auto coopmatrix_impl::insert(cooperative_matrix_insert_inst const &in, spv_inst 
     return insert(matl, val, mat, idx);
 }
 
-auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector const &odv,
+auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &odv,
                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto ot = get_memref_type(in.operand());
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto pointer_ty = unique_->pointer_ty(ot);
 
     auto layout = get_layout(cfg(), rt);
@@ -124,8 +123,8 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst const &in, dope_vector c
     return result;
 }
 
-void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector const &odv,
-                            spv_inst *val, spv_inst *operand, spv_inst *pos0, spv_inst *pos1) {
+void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const &odv, spv_inst *val,
+                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
     auto vt = get_coopmatrix_type(in.val());
     auto pointer_ty = unique_->pointer_ty(ot);
@@ -172,12 +171,12 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst const &in, dope_vector
     }
 }
 
-auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_inst *a, spv_inst *b,
+auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, spv_inst *b,
                               spv_inst *c) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
 
     if (at->rows() % cfg().subgroup_size != 0) {
         throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
@@ -307,10 +306,10 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst const &in, spv_ins
     return result;
 }
 
-void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst const &, dope_vector const &,
-                               spv_inst *, spv_inst *, spv_inst *) {}
+void coopmatrix_impl::prefetch(cooperative_matrix_prefetch_inst, dope_vector const &, spv_inst *,
+                               spv_inst *, spv_inst *) {}
 
-auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst *a) -> spv_inst * {
+auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     const auto sgs = cfg().subgroup_size;
 
@@ -318,7 +317,7 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst 
         throw compilation_error(in.loc(), {&in.a()}, status::ir_unsupported_coopmatrix_shape);
     }
 
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), at);
     auto matrix_ty = spv_ty(rl);
@@ -389,9 +388,9 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst const &in, spv_inst 
     return result;
 }
 
-auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a, spv_inst *b)
+auto coopmatrix_impl::scale(cooperative_matrix_scale_inst in, spv_inst *a, spv_inst *b)
     -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
     auto sty = rt->component_ty();
@@ -408,8 +407,8 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst const &in, spv_inst *a
     return result;
 }
 
-auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
+auto coopmatrix_impl::arith(arith_inst in, spv_inst *a, spv_inst *b) -> spv_inst * {
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
@@ -428,9 +427,9 @@ auto coopmatrix_impl::arith(arith_inst const &in, spv_inst *a, spv_inst *b) -> s
     return result;
 }
 
-auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> spv_inst * {
+auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst * {
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
@@ -446,11 +445,11 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst const &in, spv_inst *a) -> sp
     return result;
 }
 
-auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
+auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto al = get_layout(cfg(), at);
     auto a_ty = at->component_ty();
-    auto rt = get_coopmatrix_type(in.result(0));
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto r_ty = rt->component_ty();
     auto ty = spv_ty(rl);
@@ -504,8 +503,8 @@ auto coopmatrix_impl::cast(cast_inst const &in, spv_inst *a) -> spv_inst * {
     return result;
 }
 
-auto coopmatrix_impl::constant(constant_inst const &in) -> spv_inst * {
-    auto rt = get_coopmatrix_type(in.result(0));
+auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
+    auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto sty = rt->component_ty();
     auto spv_result_ty = spv_ty(rl);

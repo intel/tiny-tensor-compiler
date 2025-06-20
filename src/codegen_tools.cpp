@@ -14,10 +14,9 @@
 #include "tinytc/types.h"
 #include "util/casting.hpp"
 #include "util/ilist_base.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <array>
-#include <memory>
 #include <stdexcept>
 #include <type_traits>
 #include <utility>

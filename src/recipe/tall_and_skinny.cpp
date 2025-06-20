@@ -126,10 +126,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto ct =
                         get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
                     auto a = bb.add(
-                        make_subview(A, static_offsets, A_static_sizes, offsets, {}, at, my_loc()));
+                        make_subview(static_offsets, A_static_sizes, A, offsets, {}, at, my_loc()));
                     auto c = bb.add(
-                        make_subview(C, static_offsets, C_static_sizes, offsets, {}, ct, my_loc()));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
+                        make_subview(static_offsets, C_static_sizes, C, offsets, {}, ct, my_loc()));
+                    bb.add(make_gemm(false, transpose::N, transpose::N, alpha, a, B, beta, c,
                                      my_loc()));
                 };
                 auto const dynamic_gemm = [&](region_builder &bb, value dyn_block_size) {
@@ -140,11 +140,11 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                         get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
                     auto ct =
                         get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
-                    auto a = bb.add(make_subview(A, static_offsets, A_static_sizes, offsets, sizes,
+                    auto a = bb.add(make_subview(static_offsets, A_static_sizes, A, offsets, sizes,
                                                  at, my_loc()));
-                    auto c = bb.add(make_subview(C, static_offsets, C_static_sizes, offsets, sizes,
+                    auto c = bb.add(make_subview(static_offsets, C_static_sizes, C, offsets, sizes,
                                                  ct, my_loc()));
-                    bb.add(make_gemm(transpose::N, transpose::N, false, alpha, a, B, beta, c,
+                    bb.add(make_gemm(false, transpose::N, transpose::N, alpha, a, B, beta, c,
                                      my_loc()));
                 };
 
@@ -152,7 +152,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     static_gemm(bb);
                 } else {
 
-                    auto M_val = bb.add(make_size(C, 0, index_ty, my_loc()));
+                    auto M_val = bb.add(make_size(0, C, index_ty, my_loc()));
                     auto M_val_sub_m =
                         bb.add(make_arith(arithmetic::sub, M_val, m, m.get_type(), my_loc()));
                     auto cond = bb.add(make_cmp(cmp_condition::lt, M_val_sub_m, c_M_block_size,

@@ -10,8 +10,6 @@
 #include "util/ilist_base.hpp"
 
 #include <functional>
-#include <type_traits>
-#include <utility>
 
 namespace tinytc {
 

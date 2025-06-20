@@ -8,8 +8,10 @@
 #include "node/data_type_node.hpp"
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "pass/clone.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
@@ -19,13 +21,10 @@
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
-#include "util/visit.hpp"
 
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <memory>
-#include <ranges>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -60,43 +59,45 @@ class foreach_generator {
   public:
     foreach_generator(local_tiling tiling, core_config core_cfg)
         : tiling_{std::move(tiling)}, core_cfg_{std::move(core_cfg)} {}
-    auto operator()(inst_node &) -> inst { return inst{}; }
-    auto operator()(foreach_inst &in) -> inst;
+    auto operator()(inst_view) -> inst { return inst{}; }
+    auto operator()(foreach_inst in) -> inst;
 
   private:
     local_tiling tiling_ = {};
     core_config core_cfg_ = {};
 };
 
-auto foreach_generator::operator()(foreach_inst &in) -> inst {
+auto foreach_generator::operator()(foreach_inst in) -> inst {
     const int block_size0 = core_cfg_.subgroup_size;
 
     auto parallel = make_parallel(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
-    auto i32_ty = scalar_data_type::get(in.context(), scalar_type::i32);
+    auto i32_ty = scalar_data_type::get(in.get().context(), scalar_type::i32);
 
     auto cloner = inst_cloner{};
     auto loop_vars = in.loop_vars().begin();
     auto from = in.from().begin();
     auto to = in.to().begin();
     auto ity = (*from).ty();
+    auto isty = get_scalar_type(*from);
 
     if (in.dim() > 1) {
         auto const make_inner_loop_nest = [&](region_builder &bb, value from1, value to1) {
             tinytc_region_t current_region = bb.get_region().get();
             for (std::int64_t i = in.dim() - 1; i > 1; --i) {
-                auto for_i = std::make_unique<for_inst>(ity, &from[i], &to[i], nullptr,
-                                                        array_view<tinytc_value_t>{},
-                                                        array_view<tinytc_data_type_t>{}, in.loc());
-                cloner.set_subs(&loop_vars[i], &for_i->loop_var());
-                tinytc_region_t next_region = &for_i->body();
+                auto for_i = inst{for_inst::create(isty, &from[i], &to[i], nullptr,
+                                                   array_view<tinytc_value_t>{},
+                                                   array_view<tinytc_data_type_t>{}, in.loc())};
+                auto for_i_view = for_inst(for_i.get());
+                cloner.set_subs(&loop_vars[i], &for_i_view.loop_var());
+                tinytc_region_t next_region = &for_i_view.body();
                 current_region->insts().push_back(for_i.release());
                 current_region = next_region;
             }
             region_builder{current_region}.for_loop(
-                ity, from1, to1,
+                isty, from1, to1,
                 [&](region_builder &bb, value loop_var1) {
                     cloner.set_subs(&loop_vars[1], loop_var1.get());
                     cloner.clone_region(in.body(), *bb.get_region());

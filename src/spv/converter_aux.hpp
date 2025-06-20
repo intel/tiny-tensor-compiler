@@ -4,7 +4,7 @@
 #ifndef CONVERTER_AUX_20250416_HPP
 #define CONVERTER_AUX_20250416_HPP
 
-#include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "spv/enums.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -27,7 +27,7 @@ auto make_cast(uniquifier &unique, scalar_type to_ty, scalar_type a_ty, spv_inst
                location const &loc) -> spv_inst *;
 auto make_complex_mul(uniquifier &unique, spv_inst *ty, spv_inst *a, spv_inst *b,
                       bool conj_b = false) -> spv_inst *;
-auto make_constant(uniquifier &unique, scalar_type sty, constant_inst::value_type const &val)
+auto make_constant(uniquifier &unique, scalar_type sty, constant_value_type const &val)
     -> spv_inst *;
 void make_conditional_execution(uniquifier &unique, spv_inst *condition,
                                 std::function<void(tinytc_spv_mod &)> then);

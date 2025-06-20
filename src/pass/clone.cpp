@@ -2,14 +2,12 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/clone.hpp"
-#include "node/data_type_node.hpp"
+#include "node/visit.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
-#include "util/iterator.hpp"
-#include "util/visit.hpp"
 
 #include <cstdint>
-#include <ranges>
+#include <iterator>
 #include <utility>
 
 namespace tinytc {
@@ -25,185 +23,29 @@ auto inst_cloner::subs(tinytc_value_t val) -> tinytc_value_t {
     return val;
 }
 
-auto inst_cloner::operator()(alloca_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<alloca_inst>(in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(axpby_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<axpby_inst>(in.tA(), subs(&in.alpha()), subs(&in.A()), subs(&in.beta()),
-                                        subs(&in.B()), in.atomic(), in.loc());
-}
-auto inst_cloner::operator()(arith_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<arith_inst>(in.operation(), subs(&in.a()), subs(&in.b()),
-                                        in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(arith_unary_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<arith_unary_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
-                                              in.loc());
-}
-auto inst_cloner::operator()(barrier_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<barrier_inst>(in.fence_flags(), in.loc());
-}
-auto inst_cloner::operator()(builtin_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<builtin_inst>(in.builtin_type(), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cast_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cast_inst>(subs(&in.a()), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(compare_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<compare_inst>(in.cond(), subs(&in.a()), subs(&in.b()),
-                                          in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(constant_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<constant_inst>(in.value(), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_apply_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_apply_inst>(subs(&in.a()), in.result(0).ty(),
-                                                           in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_extract_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_extract_inst>(subs(&in.mat()), in.index(),
-                                                             in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_insert_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_insert_inst>(
-        subs(&in.val()), subs(&in.mat()), in.index(), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_load_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_load_inst>(in.t(), in.checked(), subs(&in.operand()),
-                                                          subs(&in.pos0()), subs(&in.pos1()),
-                                                          in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_mul_add_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_mul_add_inst>(
-        subs(&in.a()), subs(&in.b()), subs(&in.c()), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_prefetch_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_prefetch_inst>(in.cache_level(), subs(&in.operand()),
-                                                              subs(&in.pos0()), subs(&in.pos1()),
-                                                              in.rows(), in.cols(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_reduce_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_reduce_inst>(in.arith(), in.mode(), subs(&in.a()),
-                                                            in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_scale_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_scale_inst>(subs(&in.a()), subs(&in.b()),
-                                                           in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(cooperative_matrix_store_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cooperative_matrix_store_inst>(in.checked(), in.flag(), subs(&in.val()),
-                                                           subs(&in.operand()), subs(&in.pos0()),
-                                                           subs(&in.pos1()), in.loc());
-}
-auto inst_cloner::operator()(cumsum_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<cumsum_inst>(subs(&in.alpha()), subs(&in.A()), in.mode(),
-                                         subs(&in.beta()), subs(&in.B()), in.atomic(), in.loc());
-}
-auto inst_cloner::operator()(expand_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<expand_inst>(
-        subs(&in.operand()), in.expanded_mode(), in.static_expand_shape(),
-        subs_value_range(in.expand_shape()), in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(fuse_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<fuse_inst>(subs(&in.operand()), in.from(), in.to(), in.result(0).ty(),
-                                       in.loc());
-}
+auto inst_cloner::clone_instruction(inst_node &in) -> inst {
+    auto cloned = visit(
+        [&](auto view) {
+            auto tid = view.get().type_id();
+            auto layout = view.get().layout();
+            auto lc = view.get().loc();
+            auto clone = inst{tinytc_inst::create(tid, layout, lc)};
+            for (std::int32_t ret_no = 0; ret_no < layout.num_results; ++ret_no) {
+                clone->result(ret_no) = value_node{view.get().result(ret_no).ty(), clone.get(), lc};
+            }
+            for (std::int32_t op_no = 0; op_no < layout.num_operands; ++op_no) {
+                clone->op(op_no, subs(&view.get().op(op_no)));
+            }
 
-auto inst_cloner::operator()(lifetime_stop_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<lifetime_stop_inst>(subs(&in.object()), in.loc());
-}
-auto inst_cloner::operator()(load_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<load_inst>(subs(&in.operand()), subs_value_range(in.index_list()),
-                                       in.result(0).ty(), in.loc());
-}
-auto inst_cloner::operator()(gemm_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<gemm_inst>(in.tA(), in.tB(), subs(&in.alpha()), subs(&in.A()),
-                                       subs(&in.B()), subs(&in.beta()), subs(&in.C()), in.atomic(),
-                                       in.loc());
-}
+            auto clone_view = decltype(view)(clone.get());
+            clone_view.props() = view.props();
+            clone_view.setup_regions();
+            clone_view.check();
 
-auto inst_cloner::operator()(gemv_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<gemv_inst>(in.tA(), subs(&in.alpha()), subs(&in.A()), subs(&in.B()),
-                                       subs(&in.beta()), subs(&in.C()), in.atomic(), in.loc());
-}
+            return clone;
+        },
+        in);
 
-auto inst_cloner::operator()(ger_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<ger_inst>(subs(&in.alpha()), subs(&in.A()), subs(&in.B()),
-                                      subs(&in.beta()), subs(&in.C()), in.atomic(), in.loc());
-}
-auto inst_cloner::operator()(for_inst &in) -> std::unique_ptr<tinytc_inst> {
-    auto return_types = std::vector<tinytc_data_type_t>(in.num_results());
-    for (std::int64_t i = 0; i < in.num_results(); ++i) {
-        return_types[i] = in.result(0).ty();
-    }
-    return std::make_unique<for_inst>(in.body().param(0).ty(), subs(&in.from()), subs(&in.to()),
-                                      in.has_step() ? subs(&in.step()) : nullptr,
-                                      subs_value_range(in.iter_init()), return_types, in.loc());
-}
-
-auto inst_cloner::operator()(foreach_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<foreach_inst>(in.body().param(0).ty(), subs_value_range(in.from()),
-                                          subs_value_range(in.to()), in.loc());
-}
-
-auto inst_cloner::operator()(hadamard_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<hadamard_inst>(subs(&in.alpha()), subs(&in.A()), subs(&in.B()),
-                                           subs(&in.beta()), subs(&in.C()), in.atomic(), in.loc());
-}
-
-auto inst_cloner::operator()(if_inst &in) -> std::unique_ptr<tinytc_inst> {
-    auto return_types = std::vector<tinytc_data_type_t>(in.num_results());
-    for (std::int64_t i = 0; i < in.num_results(); ++i) {
-        return_types[i] = in.result(i).ty();
-    }
-    return std::make_unique<if_inst>(subs(&in.condition()), return_types, in.loc());
-}
-
-auto inst_cloner::operator()(math_unary_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<math_unary_inst>(in.operation(), subs(&in.a()), in.result(0).ty(),
-                                             in.loc());
-}
-
-auto inst_cloner::operator()(parallel_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<parallel_inst>(in.loc());
-}
-
-auto inst_cloner::operator()(size_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<size_inst>(subs(&in.operand()), in.mode(), in.result(0).ty(), in.loc());
-}
-
-auto inst_cloner::operator()(subgroup_broadcast_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subgroup_broadcast_inst>(subs(&in.a()), subs(&in.idx()),
-                                                     in.result(0).ty(), in.loc());
-}
-
-auto inst_cloner::operator()(subgroup_operation_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subgroup_operation_inst>(in.arith(), in.operation(), subs(&in.a()),
-                                                     in.result(0).ty(), in.loc());
-}
-
-auto inst_cloner::operator()(subview_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<subview_inst>(
-        subs(&in.operand()), in.static_offsets(), in.static_sizes(), subs_value_range(in.offsets()),
-        subs_value_range(in.sizes()), in.result(0).ty(), in.loc());
-}
-
-auto inst_cloner::operator()(store_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<store_inst>(in.flag(), subs(&in.val()), subs(&in.operand()),
-                                        subs_value_range(in.index_list()), in.loc());
-}
-
-auto inst_cloner::operator()(sum_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<sum_inst>(in.tA(), subs(&in.alpha()), subs(&in.A()), subs(&in.beta()),
-                                      subs(&in.B()), in.atomic(), in.loc());
-}
-
-auto inst_cloner::operator()(yield_inst &in) -> std::unique_ptr<tinytc_inst> {
-    return std::make_unique<yield_inst>(subs_value_range(std::views::all(in.operands())), in.loc());
-}
-
-auto inst_cloner::clone_instruction(inst_node &in) -> std::unique_ptr<tinytc_inst> {
-    auto cloned = visit(*this, in);
     for (auto res_orig = in.result_begin(), res_cloned = cloned->result_begin();
          res_orig != in.result_end() && res_cloned != cloned->result_end();
          ++res_orig, ++res_cloned) {

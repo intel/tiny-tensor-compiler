@@ -41,6 +41,8 @@ class inst_view {
 
     inline explicit operator bool() const { return in_ != nullptr; }
 
+    inline void setup_regions() {}
+
   private:
     tinytc_inst_t in_;
 };

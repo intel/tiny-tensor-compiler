@@ -6,7 +6,6 @@
 
 #include "error.hpp"
 #include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
 #include "node/inst_view.hpp"
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
@@ -32,15 +31,15 @@ class constant_folding {
   public:
     constant_folding(bool unsafe_fp_math);
 
-    auto operator()(inst_view &) -> fold_result;
-    auto operator()(arith_inst &) -> fold_result;
-    auto operator()(arith_unary_inst &) -> fold_result;
-    auto operator()(cooperative_matrix_scale_inst &) -> fold_result;
-    auto operator()(cast_inst &) -> fold_result;
-    auto operator()(compare_inst &) -> fold_result;
-    auto operator()(math_unary_inst &) -> fold_result;
-    auto operator()(size_inst &in) -> fold_result;
-    auto operator()(subgroup_broadcast_inst &in) -> fold_result;
+    auto operator()(inst_view) -> fold_result;
+    auto operator()(arith_inst) -> fold_result;
+    auto operator()(arith_unary_inst) -> fold_result;
+    auto operator()(cooperative_matrix_scale_inst) -> fold_result;
+    auto operator()(cast_inst) -> fold_result;
+    auto operator()(compare_inst) -> fold_result;
+    auto operator()(math_unary_inst) -> fold_result;
+    auto operator()(size_inst in) -> fold_result;
+    auto operator()(subgroup_broadcast_inst in) -> fold_result;
 
   private:
     auto get_memref_type(value_node const &v) const -> const memref_data_type *;

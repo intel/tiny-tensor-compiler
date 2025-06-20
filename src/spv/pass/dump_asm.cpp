@@ -9,6 +9,7 @@
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
+#include "util/overloaded.hpp"
 
 #include <array>
 #include <concepts>

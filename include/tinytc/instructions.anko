@@ -22,7 +22,7 @@ inst @arith_unary {
 
 inst @barrier {
     prop %fence_flags => "tinytc_address_spaces_t"    
-    cxx "auto has_fence(address_space as) const;"
+    cxx "auto has_fence(address_space as) const -> bool;"
 }
 
 inst @builtin {

@@ -8,6 +8,7 @@
 #include "util/iterator.hpp"
 
 #include <functional>
+#include <iterator>
 #include <utility>
 #include <vector>
 
@@ -19,12 +20,12 @@ void slot_tracker::set_slot(value_node const &v) {
     }
 }
 
-void slot_tracker::run_on_function(function_node const &fn) {
+void slot_tracker::run_on_function(function_node &fn) {
     slot_ = 0;
     for (auto const &arg : fn.params()) {
         set_slot(arg);
     }
-    walk<walk_order::pre_order>(fn, [this](inst_node const &i) {
+    walk<walk_order::pre_order>(fn, [this](inst_node &i) {
         for (auto const &reg : i.child_regions()) {
             for (auto const &p : reg.params()) {
                 set_slot(p);

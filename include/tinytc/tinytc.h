@@ -1523,7 +1523,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_retain(tinytc_spv_mod_t mod);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg);
+TINYTC_EXPORT tinytc_status_t tinytc_prog_dump(tinytc_prog_t prg);
 
 /**
  * @brief Print program to file
@@ -1533,8 +1533,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg,
-                                                        char const *filename);
+TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(tinytc_prog_t prg, char const *filename);
 
 /**
  * @brief Print program to string
@@ -1546,7 +1545,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str);
+TINYTC_EXPORT tinytc_status_t tinytc_prog_print_to_string(tinytc_prog_t prg, char **str);
 
 /**
  * @brief Dump SPIR-V module to stderr

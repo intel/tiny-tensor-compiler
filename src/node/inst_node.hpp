@@ -4,26 +4,17 @@
 #ifndef INST_NODE_20230327_HPP
 #define INST_NODE_20230327_HPP
 
-#include "error.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
-#include "util/type_list.hpp"
 
-#include <array>
-#include <complex>
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <memory>
 #include <ranges>
-#include <variant>
-#include <vector>
 
 namespace tinytc {
 
@@ -58,10 +49,11 @@ enum class IK;
 
 struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tinytc_region> {
   public:
-    static auto create(tinytc::IK tid, tinytc::inst_layout layout) -> tinytc_inst_t;
+    static auto create(tinytc::IK tid, tinytc::inst_layout layout, tinytc_location const &lc)
+        -> tinytc_inst_t;
     static void destroy(tinytc_inst_t in);
 
-    auto context() const -> tinytc_compiler_context_t;
+    auto context() -> tinytc_compiler_context_t;
     inline auto type_id() const -> tinytc::IK { return tid_; }
 
     inline auto attr() const noexcept -> tinytc_attr_t { return attr_; }
@@ -106,10 +98,13 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     auto child_region(std::size_t pos) -> tinytc_region & { return *child_region_ptr(pos); }
     auto num_child_regions() const -> std::int32_t { return layout_.num_child_regions; }
 
-    auto kind() const -> tinytc::inst_execution_kind;
+    auto kind() -> tinytc::inst_execution_kind;
+
+    auto layout() const -> tinytc::inst_layout const & { return layout_; }
 
   private:
-    inline tinytc_inst(tinytc::IK tid, tinytc::inst_layout layout) : tid_(tid), layout_(layout) {}
+    inline tinytc_inst(tinytc::IK tid, tinytc::inst_layout layout, tinytc_location const &lc)
+        : tid_(tid), layout_(layout), loc_{lc} {}
     ~tinytc_inst() = default;
 
     tinytc_inst(tinytc_inst const &other) = delete;

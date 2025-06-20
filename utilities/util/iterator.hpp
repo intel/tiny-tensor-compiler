@@ -24,6 +24,12 @@ template <typename ItT> class iterator_range_wrapper {
         return begin()[n];
     }
 
+    auto size() const
+    requires std::random_access_iterator<ItT>
+    {
+        return end_ - begin_;
+    }
+
   private:
     ItT begin_, end_;
 };

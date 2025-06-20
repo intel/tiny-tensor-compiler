@@ -8,15 +8,16 @@
 #include "error.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
-#include "util/visit.hpp"
+#include "util/overloaded.hpp"
 
 #include <cstdint>
-#include <memory>
 #include <queue>
 #include <unordered_map>
 #include <utility>
@@ -139,17 +140,17 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
             }
         };
 
-        visit(overloaded{[&](blas_a2_inst &in) {
+        visit(overloaded{[&](blas_a2_inst in) {
                              emplace_read(in.A());
                              emplace_write(in.B());
                          },
-                         [&](blas_a3_inst &in) {
+                         [&](blas_a3_inst in) {
                              emplace_read(in.A());
                              emplace_read(in.B());
                              emplace_write(in.C());
                          },
-                         [&](load_inst &in) { emplace_read(in.operand()); },
-                         [&](store_inst &in) { emplace_write(in.operand()); }, [](inst_node &) {}},
+                         [&](load_inst in) { emplace_read(in.operand()); },
+                         [&](store_inst in) { emplace_write(in.operand()); }, [](inst_view) {}},
               in);
         return rw;
     };
@@ -178,9 +179,9 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
 
         auto out_size_before_update = get_cardinal(out);
 
-        if (auto *barrier = dyn_cast<barrier_inst>(n); insert_barriers && barrier) {
+        if (auto barrier = dyn_cast<barrier_inst>(n); insert_barriers && barrier) {
             for (auto &as : reads_writes::address_spaces) {
-                if (!barrier->has_fence(as)) {
+                if (!barrier.has_fence(as)) {
                     out.merge(as, in);
                 }
             }
@@ -197,11 +198,9 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
             }
             if (fence_flags != 0) {
                 tinytc_region *subreg = n->parent();
-                auto new_barrier =
-                    subreg->insts()
-                        .insert(n->iterator(),
-                                std::make_unique<barrier_inst>(fence_flags).release())
-                        .get();
+                auto new_barrier = subreg->insts()
+                                       .insert(n->iterator(), barrier_inst::create(fence_flags, {}))
+                                       .get();
                 // update cfg
                 cfg.insert_before(n, new_barrier);
                 q.push(new_barrier);

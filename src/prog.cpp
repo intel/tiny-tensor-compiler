@@ -60,7 +60,7 @@ tinytc_status_t tinytc_prog_retain(tinytc_prog_t obj) {
     return tinytc_status_success;
 }
 
-tinytc_status_t tinytc_prog_dump(const_tinytc_prog_t prg) {
+tinytc_status_t tinytc_prog_dump(tinytc_prog_t prg) {
     if (prg == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -75,7 +75,7 @@ tinytc_status_t tinytc_prog_get_compiler_context(const_tinytc_prog_t prg,
     return exception_to_status_code([&] { *ctx = prg->share_context().release(); });
 }
 
-tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *filename) {
+tinytc_status_t tinytc_prog_print_to_file(tinytc_prog_t prg, char const *filename) {
     if (prg == nullptr || filename == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -88,7 +88,7 @@ tinytc_status_t tinytc_prog_print_to_file(const_tinytc_prog_t prg, char const *f
     });
 }
 
-tinytc_status_t tinytc_prog_print_to_string(const_tinytc_prog_t prg, char **str) {
+tinytc_status_t tinytc_prog_print_to_string(tinytc_prog_t prg, char **str) {
     if (prg == nullptr || str == nullptr) {
         return tinytc_status_invalid_arguments;
     }

@@ -6,6 +6,7 @@
 #include "analysis/alias.hpp"
 #include "node/data_type_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/value_node.hpp"
 #include "tinytc/types.h"
 #include "util/casting.hpp"
@@ -13,7 +14,7 @@
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
 
-#include <memory>
+#include <iterator>
 #include <vector>
 
 namespace tinytc {
@@ -26,8 +27,8 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
 
     auto allocas = std::vector<tinytc_value_t>{};
     for (auto &i : reg) {
-        if (auto alloca = dyn_cast<alloca_inst>(&i); alloca != nullptr) {
-            allocas.emplace_back(&alloca->result(0));
+        if (auto alloca = dyn_cast<alloca_inst>(&i); alloca) {
+            allocas.emplace_back(&alloca.result());
         }
     }
 
@@ -52,8 +53,8 @@ auto insert_lifetime_stop_pass::run_on_region(region_node &reg, aa_results const
         auto alloca_it = allocas.begin();
         while (alloca_it != allocas.end()) {
             if (rgn_ops.contains(*alloca_it)) {
-                prev_it = reg.insts().insert_after(
-                    prev_it, std::make_unique<lifetime_stop_inst>(*alloca_it).release());
+                prev_it =
+                    reg.insts().insert_after(prev_it, lifetime_stop_inst::create(*alloca_it, {}));
                 --prev_it;
                 alloca_it = allocas.erase(alloca_it);
             } else {

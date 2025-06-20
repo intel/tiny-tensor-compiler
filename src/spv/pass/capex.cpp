@@ -13,6 +13,7 @@
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
+#include "util/overloaded.hpp"
 
 #include <concepts>
 #include <cstdint>

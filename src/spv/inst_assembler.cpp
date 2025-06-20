@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/inst_assembler.hpp"
+#include "util/overloaded.hpp"
 
 #include <array>
 #include <utility>

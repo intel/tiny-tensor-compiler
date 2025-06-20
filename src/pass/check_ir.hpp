@@ -6,6 +6,7 @@
 
 #include "node/function_node.hpp"
 #include "node/inst_node.hpp"
+#include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "tinytc/types.hpp"
 
@@ -13,14 +14,14 @@ namespace tinytc {
 
 class check_ir_pass {
   public:
-    void operator()(inst_node const &in);
-    void operator()(for_inst const &in);
-    void operator()(if_inst const &in);
+    void operator()(inst_view in);
+    void operator()(for_inst in);
+    void operator()(if_inst in);
 
     void run_on_function(function_node &fn);
 
   private:
-    void check_yield(region_node const &reg, inst_node const &in,
+    void check_yield(region_node &reg, inst_node &in,
                      status yield_missing_status = status::ir_must_have_yield);
 
     bool inside_spmd_region_ = false;

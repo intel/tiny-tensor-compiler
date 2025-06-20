@@ -5,12 +5,13 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "pass/dump_ir.hpp"
 #include "support/walk.hpp"
 #include "util/iterator.hpp"
-#include "util/visit.hpp"
 
 #include <functional>
+#include <iterator>
 #include <ostream>
 #include <string_view>
 #include <vector>
@@ -19,12 +20,12 @@ namespace tinytc {
 
 dump_def_use_pass::dump_def_use_pass(std::ostream &os) : os_(&os) {}
 
-void dump_def_use_pass::run_on_function(function_node const &fn) {
+void dump_def_use_pass::run_on_function(function_node &fn) {
     auto dump_ir = dump_ir_pass(*os_, 0);
     dump_ir.init_slot_tracker(fn);
 
     *os_ << "Def-use in @" << fn.name() << std::endl;
-    walk<walk_order::pre_order>(fn, [&](inst_node const &i) {
+    walk<walk_order::pre_order>(fn, [&](inst_node &i) {
         if (i.num_results() > 0 || i.num_child_regions() > 0) {
             *os_ << "> ";
             visit(dump_ir, i);
