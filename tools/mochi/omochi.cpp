@@ -17,6 +17,22 @@ namespace fs = std::filesystem;
 
 namespace mochi {
 
+auto to_string(generator g) -> char const * {
+    switch (g) {
+    case generator::inst_header:
+        return "inst_header";
+    case generator::inst_cpp:
+        return "inst_cpp";
+    case generator::inst_visit_header:
+        return "inst_visit_header";
+    case generator::template_:
+        return "template";
+    case generator::NUM_GENERATORS:
+        break;
+    }
+    return "unknown";
+}
+
 auto find_path_to(std::string const &filename, std::vector<char const *> const &search_paths)
     -> fs::path {
     auto path = fs::path{filename};

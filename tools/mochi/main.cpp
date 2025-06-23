@@ -3,6 +3,7 @@
 
 #include "argparser.hpp"
 #include "omochi.hpp"
+#include "util/casting.hpp"
 
 #include <cstring>
 #include <exception>
@@ -58,10 +59,9 @@ int main(int argc, char **argv) {
             }
             std::cout << opt << std::endl;
         };
-        print_option("inst_header");
-        print_option("inst_cpp");
-        print_option("inst_visit_header");
-        print_option("template");
+        for (int i = 0; i < static_cast<int>(generator::NUM_GENERATORS); ++i) {
+            print_option(to_string(tinytc::enum_cast<generator>(i)));
+        }
 
         return 0;
     }

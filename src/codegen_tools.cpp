@@ -82,7 +82,6 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
 void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_size, int num_tiles,
                          value sg_id, uniform_loop_body_builder const &body, attr for_attributes) {
     auto ity = loop_trip_count->ty();
-    auto isty = get_scalar_type(*loop_trip_count.get());
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c0 = bb.add(make_constant(0, ity));
     auto c1 = bb.add(make_constant(1, ity));

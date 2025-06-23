@@ -19,10 +19,10 @@ auto lex_generator(std::size_t str_length, char const *str) -> std::optional<gen
         re2c:define:YYCTYPE = std::uint8_t;
         re2c:eof = 1;
 
-        "template"          { return generator::template_; }
         "inst_header"       { return generator::inst_header; }
         "inst_cpp"          { return generator::inst_cpp; }
         "inst_visit_header" { return generator::inst_visit_header; }
+        "template"          { return generator::template_; }
 
         $                   { return std::nullopt; }
         *                   { return std::nullopt; }
