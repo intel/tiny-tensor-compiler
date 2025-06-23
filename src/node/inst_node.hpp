@@ -78,7 +78,8 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
         return tinytc::result_iterator(reinterpret_cast<tinytc_value_t>(this));
     }
     inline auto result_end() -> tinytc::result_iterator {
-        return tinytc::result_iterator(result_ptr(layout_.num_results));
+        return tinytc::result_iterator(reinterpret_cast<tinytc_value_t>(this) -
+                                       layout_.num_results);
     }
     inline auto results() -> tinytc::result_range { return {result_begin(), result_end()}; }
     inline auto result(std::size_t pos) -> tinytc_value & { return *result_ptr(pos); }
@@ -105,7 +106,7 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
   private:
     inline tinytc_inst(tinytc::IK tid, tinytc::inst_layout layout, tinytc_location const &lc)
         : tid_(tid), layout_(layout), loc_{lc} {}
-    ~tinytc_inst() = default;
+    ~tinytc_inst();
 
     tinytc_inst(tinytc_inst const &other) = delete;
     tinytc_inst(tinytc_inst &&other) = delete;

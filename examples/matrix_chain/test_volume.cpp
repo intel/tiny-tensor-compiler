@@ -114,25 +114,25 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
         auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
         auto a0 =
-            bb.add(make_subview(A(0), static_offsets3, static_sizes3(A_[0]), offsets3, {}, a0t));
+            bb.add(make_subview(static_offsets3, static_sizes3(A_[0]), A(0), offsets3, {}, a0t));
         auto a1 =
-            bb.add(make_subview(A(1), static_offsets3, static_sizes3(A_[1]), offsets3, {}, a1t));
+            bb.add(make_subview(static_offsets3, static_sizes3(A_[1]), A(1), offsets3, {}, a1t));
         auto a2 =
-            bb.add(make_subview(A(2), static_offsets3, static_sizes3(A_[2]), offsets3, {}, a2t));
-        auto k0 = bb.add(make_subview(K(0), static_offsets2, sizeK2, {}, {}, k0t));
-        auto k1 = bb.add(make_subview(K(1), static_offsets2, sizeK2, {}, {}, k1t));
-        auto k2 = bb.add(make_subview(K(2), static_offsets2, sizeK2, {}, {}, k2t));
-        auto qv = bb.add(make_subview(Q, static_offsets3, {B3_aligned_, P_, 0}, offsets3, {}, qvt));
-        auto iv = bb.add(make_subview(I, static_offsets3, {B2_aligned_, P_, 0}, offsets3, {}, ivt));
-        auto tmpv = bb.add(make_subview(tmp, static_offsets2, {B2_, P_}, {}, {}, tmpvt));
+            bb.add(make_subview(static_offsets3, static_sizes3(A_[2]), A(2), offsets3, {}, a2t));
+        auto k0 = bb.add(make_subview(static_offsets2, sizeK2, K(0), {}, {}, k0t));
+        auto k1 = bb.add(make_subview(static_offsets2, sizeK2, K(1), {}, {}, k1t));
+        auto k2 = bb.add(make_subview(static_offsets2, sizeK2, K(2), {}, {}, k2t));
+        auto qv = bb.add(make_subview(static_offsets3, {B3_aligned_, P_, 0}, Q, offsets3, {}, qvt));
+        auto iv = bb.add(make_subview(static_offsets3, {B2_aligned_, P_, 0}, I, offsets3, {}, ivt));
+        auto tmpv = bb.add(make_subview(static_offsets2, {B2_, P_}, tmp, {}, {}, tmpvt));
         auto const c0 = bb.add(make_constant_zero(element_ty));
         auto const c1 = bb.add(make_constant_one(element_ty));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a0, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k0, tmpv, c1, qv));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a1, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k1, tmpv, c1, qv));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, iv, a2, c0, tmp));
-        bb.add(make_gemm(transpose::N, transpose::N, false, c1, k2, tmpv, c1, qv));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a0, c0, tmp));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k0, tmpv, c1, qv));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a1, c0, tmp));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k1, tmpv, c1, qv));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a2, c0, tmp));
+        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k2, tmpv, c1, qv));
 
         return f;
     };

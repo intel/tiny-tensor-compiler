@@ -48,6 +48,7 @@
     INST            "inst"
     MIXED           "mixed"
     OP              "op"
+    PRIVATE         "private"
     PROP            "prop"
     REG             "reg"
     RET             "ret"
@@ -69,6 +70,7 @@
 %nterm <quantifier> op_quantifier
 %nterm <quantifier> nonop_quantifier
 %nterm <inst*> parent
+%nterm <bool> private
 
 %%
 entity:
@@ -108,8 +110,8 @@ member:
     OP op_quantifier LOCAL_ID {
         $$ = op{$op_quantifier, std::move($LOCAL_ID)};
     }
-  | PROP nonop_quantifier LOCAL_ID ARROW STRING {
-        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING)};
+  | PROP nonop_quantifier LOCAL_ID private ARROW STRING {
+        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING), $private};
     }
   | RET nonop_quantifier LOCAL_ID { $$ = ret{$nonop_quantifier, std::move($LOCAL_ID)}; }
   | REG LOCAL_ID { $$ = reg{std::move($LOCAL_ID)}; }
@@ -126,6 +128,10 @@ nonop_quantifier:
     %empty   { $$ = quantifier::single; }
   | STAR     { $$ = quantifier::many; }
 ;
+
+private:
+    %empty { $$ = false; }
+  | PRIVATE { $$ = true; }
 %%
 
 namespace mochi {

@@ -17,6 +17,7 @@ enum class quantifier { single, optional, many };
 struct prop {
     quantifier quantity;
     std::string name, type;
+    bool private_;
 
     auto cxx_type() const -> std::string;
     auto cxx_storage_type() const -> std::string;

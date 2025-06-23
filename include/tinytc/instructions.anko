@@ -2,9 +2,8 @@
 ; SPDX-License-Identifier: BSD-3-Clause
 
 inst @alloca {
+    prop %stack_ptr private => "std::int64_t"
     ret %result
-    cxx "void stack_ptr(std::int64_t ptr);"
-    cxx "auto stack_ptr() const -> std::int64_t;"
 }
 
 inst @arith {
@@ -22,12 +21,13 @@ inst @arith_unary {
 
 inst @barrier {
     prop %fence_flags => "tinytc_address_spaces_t"    
-    cxx "auto has_fence(address_space as) const -> bool;"
+    cxx "auto has_fence(address_space as) -> bool;"
 }
 
 inst @builtin {
     prop %builtin_type => "builtin"
     ret %result
+    cxx "auto kind() -> inst_execution_kind;"
 }
 
 inst @cast {
@@ -45,8 +45,8 @@ inst @compare {
 inst @constant {
     prop %value => "constant_value_type"
     ret %result
-    cxx "auto is_zero() const -> bool;"
-    cxx "auto is_identity() const -> bool;"
+    cxx "auto is_zero() -> bool;"
+    cxx "auto is_identity() -> bool;"
 }
 
 inst @cooperative_matrix_apply {
@@ -85,7 +85,7 @@ inst @cooperative_matrix_mul_add {
     op %b
     op %c
     ret %result
-    cxx "auto is_c_zero() const -> bool;"
+    cxx "auto is_c_zero() -> bool;"
 }
 
 inst @cooperative_matrix_prefetch {
@@ -140,7 +140,7 @@ inst @if {
     reg %then
     reg %otherwise
     ret* %results
-    cxx "auto is_otherwise_empty() const -> bool;"
+    cxx "auto is_otherwise_empty() -> bool;"
 }
 
 inst @lifetime_stop {

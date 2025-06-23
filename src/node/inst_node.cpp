@@ -6,7 +6,9 @@
 #include "node/inst_view.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
+#include "node/visit.hpp"
 #include "tinytc/types.hpp"
+#include "util/overloaded.hpp"
 
 #include <cstddef>
 #include <cstdlib>
@@ -57,6 +59,13 @@ auto tinytc_inst::create(tinytc::IK tid, tinytc::inst_layout layout, tinytc_loca
     // properties
     std::uint8_t *first_prop = reinterpret_cast<std::uint8_t *>(last_use);
     std::uint8_t *last_prop = first_prop + layout.sizeof_properties;
+    if (layout.sizeof_properties > 0) {
+        tinytc::visit(tinytc::overloaded{[&](auto view) {
+                          std::construct_at(
+                              reinterpret_cast<decltype(view)::properties *>(first_prop));
+                      }},
+                      *in);
+    }
 
     // child regions
     tinytc_region_t first_region = reinterpret_cast<tinytc_region_t>(last_prop);
@@ -73,6 +82,32 @@ void tinytc_inst::destroy(tinytc_inst_t in) {
     void *raw_mem = reinterpret_cast<tinytc_value_t>(in) - in->layout_.num_results;
     in->~tinytc_inst();
     std::free(raw_mem);
+}
+
+tinytc_inst::~tinytc_inst() {
+    // child regions
+    for (tinytc_region_t r = child_region_ptr(0); r != child_region_ptr(layout_.num_child_regions);
+         ++r) {
+        std::destroy_at(r);
+    }
+
+    // properties
+    if (layout_.sizeof_properties > 0) {
+        tinytc::visit(tinytc::overloaded{[&](auto view) {
+                          std::destroy_at(static_cast<decltype(view)::properties *>(props()));
+                      }},
+                      *this);
+    }
+
+    // uses
+    for (tinytc::use *u = use_ptr(0); u != use_ptr(layout_.num_operands); ++u) {
+        std::destroy_at(u);
+    }
+
+    // results
+    for (tinytc_value_t r = result_ptr(0); r != result_ptr(layout_.num_results); --r) {
+        std::destroy_at(r);
+    }
 }
 
 auto tinytc_inst::context() -> tinytc_compiler_context_t {
@@ -149,9 +184,7 @@ auto tinytc_inst::kind() -> tinytc::inst_execution_kind {
     case tinytc::IK::IK_subgroup_operation:
         return tinytc::inst_execution_kind::spmd;
     case tinytc::IK::IK_builtin:
-        return tinytc::inst_execution_kind::spmd;
-        //\todo
-        // return tinytc::dyn_cast<tinytc::builtin_inst>(this).kind();
+        return tinytc::dyn_cast<tinytc::builtin_inst>(this).kind();
     };
     throw tinytc::internal_compiler_error();
 }

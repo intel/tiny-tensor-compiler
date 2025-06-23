@@ -66,6 +66,7 @@ lex:
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
         "mixed"             { adv_loc(); return parser::make_MIXED(loc_); }
         "op"                { adv_loc(); return parser::make_OP(loc_); }
+        "private"           { adv_loc(); return parser::make_PRIVATE(loc_); }
         "prop"              { adv_loc(); return parser::make_PROP(loc_); }
         "reg"               { adv_loc(); return parser::make_REG(loc_); }
         "ret"               { adv_loc(); return parser::make_RET(loc_); }

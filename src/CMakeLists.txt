@@ -39,6 +39,7 @@ set(SOURCES
     node/data_type_node.cpp
     node/function_node.cpp
     node/inst_node.cpp
+    node/inst_view_impl.cpp
     node/region_node.cpp
     node/program_node.cpp
     node/value_node.cpp

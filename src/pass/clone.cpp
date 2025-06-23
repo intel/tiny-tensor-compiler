@@ -39,8 +39,7 @@ auto inst_cloner::clone_instruction(inst_node &in) -> inst {
 
             auto clone_view = decltype(view)(clone.get());
             clone_view.props() = view.props();
-            clone_view.setup_regions();
-            clone_view.check();
+            clone_view.setup_and_check();
 
             return clone;
         },

@@ -4,25 +4,18 @@
 #ifndef INST_VIEW_HPP_20250616
 #define INST_VIEW_HPP_20250616
 
-#include "error.hpp"
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
-#include "node/value_node.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/ilist.hpp"
-#include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
-#include "util/type_list.hpp"
 
-#include <array>
 #include <complex>
-#include <cstddef>
 #include <cstdint>
 #include <iterator>
-#include <memory>
-#include <ranges>
+#include <limits>
+#include <type_traits>
 #include <variant>
 #include <vector>
 
@@ -40,8 +33,6 @@ class inst_view {
     inline auto loc() noexcept -> tinytc::location const & { return get().loc(); }
 
     inline explicit operator bool() const { return in_ != nullptr; }
-
-    inline void setup_regions() {}
 
   private:
     tinytc_inst_t in_;

@@ -41,7 +41,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
             [&](region_builder &bb, array_view<value> params) {
-                bb.add(make_axpby(tA_, false, params[0], params[1], params[2], params[3]));
+                bb.add(make_axpby(false, tA_, params[0], params[1], params[2], params[3]));
             });
     }
     void reference_impl(AlphaT alpha, AT const *A, BetaT beta, BT *B) {
@@ -100,7 +100,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class cumsu
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
             [&](region_builder &bb, array_view<value> params) {
-                bb.add(make_cumsum(false, params[0], params[1], mode_, params[2], params[3]));
+                bb.add(make_cumsum(false, mode_, params[0], params[1], params[2], params[3]));
             },
             work_group_size_);
     }
@@ -171,7 +171,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
             [&](region_builder &bb, array_view<value> params) {
-                bb.add(make_sum(tA_, false, params[0], params[1], params[2], params[3]));
+                bb.add(make_sum(false, tA_, params[0], params[1], params[2], params[3]));
             },
             work_group_size_);
     }

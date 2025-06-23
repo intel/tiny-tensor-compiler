@@ -58,7 +58,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
                                  [&](region_builder &bb, array_view<value> params) {
-                                     bb.add(make_gemm(tA_, tB_, false, params[0], params[1],
+                                     bb.add(make_gemm(false, tA_, tB_, params[0], params[1],
                                                       params[2], params[3], params[4]));
                                  });
     }
@@ -103,7 +103,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
                                  [&](region_builder &bb, array_view<value> params) {
-                                     bb.add(make_gemv(tA_, false, params[0], params[1], params[2],
+                                     bb.add(make_gemv(false, tA_, params[0], params[1], params[2],
                                                       params[3], params[4]));
                                  });
     }

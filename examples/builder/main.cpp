@@ -30,7 +30,7 @@ int main() {
         auto bb = region_builder{body};
         auto alpha = bb.add(make_constant_one(element_ty));
         auto beta = bb.add(make_constant_zero(element_ty));
-        bb.add(make_axpby(transpose::N, false, alpha, params[0], beta, params[1]));
+        bb.add(make_axpby(false, transpose::N, alpha, params[0], beta, params[1]));
 
         auto p = make_prog(ctx);
         p.add_function(std::move(f));

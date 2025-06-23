@@ -64,6 +64,8 @@ public:
     for (auto &p : in->props()) {
         os << std::format("inline auto {0}() -> {1} {{ return props().{0}; }}\n", p.name,
                           p.cxx_type());
+        os << std::format("inline void {0}({1} val) {{ props().{0} = val; }}\n", p.name,
+                          p.cxx_type());
     }
     os << "\n";
 
@@ -87,7 +89,7 @@ public:
             break;
         case quantifier::many:
             os << std::format("inline auto {0}() -> op_range {{ return {{get().op_begin() + {1}, "
-                              "get().op_end() + {2}}}; }}\n",
+                              "get().op_begin() + {2}}}; }}\n",
                               it->name, offset, next_offset);
             break;
         }
@@ -132,10 +134,7 @@ public:
         os << code << "\n";
     }
 
-    os << "void check(); // throws compilation_error on invalid IR\n";
-    if (reg_no > 0) {
-        os << "void setup_regions();\n";
-    }
+    os << "void setup_and_check(); // throws compilation_error on invalid IR\n";
 
     os << "};\n";
     os << std::format(
@@ -153,7 +152,9 @@ void generate_inst_create_prototype(std::ostream &os, inst *in, bool insert_clas
 
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
         for (auto &p : in->props()) {
-            os << std::format("{} {},", p.cxx_type(), p.name);
+            if (!p.private_) {
+                os << std::format("{} {},", p.cxx_type(), p.name);
+            }
         }
     });
     walk_up<walk_order::post_order>(in, [&os](inst *in) {
@@ -260,16 +261,14 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, lc)}};
             }
         }
         for (auto &p : in->props()) {
-            os << std::format("props.{0} = std::move({0});", p.name);
+            if (!p.private_) {
+                os << std::format("props.{0} = std::move({0});", p.name);
+            }
         }
     });
     os << "\n\n";
 
-    if (num_child_regions > 0) {
-        os << "view.setup_regions();\n\n";
-    }
-
-    os << "view.check();\n\n";
+    os << "view.setup_and_check();\n\n";
     os << "return in.release();\n";
     os << "}\n\n";
 }
