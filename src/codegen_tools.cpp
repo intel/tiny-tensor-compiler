@@ -42,7 +42,6 @@ auto get_core_config_and_tiling(function_node const &fn, const_tinytc_core_info_
 void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
                       value sg_id, sgs_loop_body_builder const &body, attr for_attributes) {
     auto ity = loop_trip_count->ty();
-    auto isty = get_scalar_type(*loop_trip_count.get());
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c_sgs = bb.add(make_constant(sgs, ity));
     auto c_sgs_tiles = bb.add(make_constant(sgs * num_tiles, ity));
@@ -63,7 +62,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
         auto block_end =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, c_sgs, blocks, ity));
         bb.for_loop(
-            isty, std::move(block_start), std::move(block_end), c_sgs_tiles,
+            std::move(block_start), std::move(block_end), c_sgs_tiles,
             [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); },
             for_attributes);
     });
@@ -122,7 +121,7 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
         auto step_1 =
             instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs_1, c_tiles, ity));
         bb.for_loop(
-            isty, std::move(block_start_1), std::move(block_end_1), std::move(step_1),
+            std::move(block_start_1), std::move(block_end_1), std::move(step_1),
             [&](region_builder &bb, value block) { body(bb, block, bs_1); }, for_attributes);
     });
 
@@ -134,7 +133,7 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     auto block_start = instant_constant_fold_add(bb, make_arith(arithmetic::add, tmp3, tmp2, ity));
     auto step = instant_constant_fold_add(bb, make_arith(arithmetic::mul, bs, c_tiles, ity));
     bb.for_loop(
-        isty, std::move(block_start), loop_trip_count, std::move(step),
+        std::move(block_start), loop_trip_count, std::move(step),
         [&](region_builder &bb, value block) { body(bb, block, bs); }, for_attributes);
 }
 
@@ -348,7 +347,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
                 auto c_sgs = bb.add(make_constant(subgroup_size_, i32_ty, loc));
                 auto c_init = bb.add(make_constant_zero(ty_, loc));
                 auto acc = bb.for_loop(
-                    scalar_type::i32, sglid, c_num_tiles, c_sgs, {c_init}, {ty_},
+                    sglid, c_num_tiles, c_sgs, {c_init}, {ty_},
                     [&](region_builder &bb, array_view<value> args) {
                         auto lv_index = bb.add(make_cast(args[0], index_ty, loc));
                         auto a_sg_reduced = bb.add(make_load(tmp_, {lv_index}, ty_, loc));
@@ -392,7 +391,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
         bb.add(make_barrier(static_cast<tinytc_address_spaces_t>(address_space::local), loc));
 
         auto c_zero = bb.add(make_constant_zero(i32_ty, loc));
-        a_scan = bb.for_loop(scalar_type::i32, c_zero, sgid, nullptr, {a_scan}, {ty_},
+        a_scan = bb.for_loop(c_zero, sgid, nullptr, {a_scan}, {ty_},
                              [&](region_builder &bb, array_view<value> args) {
                                  auto lv_index = bb.add(make_cast(args[0], index_ty, loc));
                                  auto prefix = bb.add(make_load(tmp_, {lv_index}, ty_, loc));

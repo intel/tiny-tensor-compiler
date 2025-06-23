@@ -116,7 +116,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto b = bb.add(make_load(params[1], {gid}, B_ty, my_loc()));
         auto c = bb.add(make_load(params[2], {gid}, C_ty, my_loc()));
         bb.for_loop(
-            scalar_type::index, from, to,
+            from, to,
             [&](region_builder &bb, value const &) {
                 bb.add(make_gemm(atomic, tA, tB, calpha, a, b, cbeta, c, my_loc()));
             },

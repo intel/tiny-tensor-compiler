@@ -33,7 +33,7 @@ func @known_loop_bounds() {
 ; CHECK-NEXT:  %tmp = arith.sub %size, %lb : index
 ; CHECK-NEXT:  %1 = constant 36 : index
 ; CHECK-NEXT:  %ub = arith.sub %0, %one : index
-; CHECK-NEXT:  for %i:index=%lb,%1 {
+; CHECK-NEXT:  for %i=%lb,%1 {
 }
 
 func @known_loop_iter_args() {
@@ -48,7 +48,7 @@ func @known_loop_iter_args() {
 ; CHECK-NEXT:  %c5 = constant 5 : index
 ; CHECK-NEXT:  %0 = constant 6 : index
 ; CHECK-NEXT:  %1 = arith.add %c1, %c5 : index
-; CHECK-NEXT:  %3 = for %i:index=%c1,%c5 init(%2=%0) -> (index) {
+; CHECK-NEXT:  %3 = for %i=%c1,%c5 init(%2=%0) -> (index) {
 ; CHECK-NEXT:    yield (%2)
 ; CHECK-NEXT:  }
 }

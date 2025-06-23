@@ -81,15 +81,14 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
     auto from = in.from().begin();
     auto to = in.to().begin();
     auto ity = (*from).ty();
-    auto isty = get_scalar_type(*from);
 
     if (in.dim() > 1) {
         auto const make_inner_loop_nest = [&](region_builder &bb, value from1, value to1) {
             tinytc_region_t current_region = bb.get_region().get();
             for (std::int64_t i = in.dim() - 1; i > 1; --i) {
-                auto for_i = inst{for_inst::create(isty, &from[i], &to[i], nullptr,
-                                                   array_view<tinytc_value_t>{},
-                                                   array_view<tinytc_data_type_t>{}, in.loc())};
+                auto for_i =
+                    inst{for_inst::create(&from[i], &to[i], nullptr, array_view<tinytc_value_t>{},
+                                          array_view<tinytc_data_type_t>{}, in.loc())};
                 auto for_i_view = for_inst(for_i.get());
                 cloner.set_subs(&loop_vars[i], &for_i_view.loop_var());
                 tinytc_region_t next_region = &for_i_view.body();
@@ -97,7 +96,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                 current_region = next_region;
             }
             region_builder{current_region}.for_loop(
-                isty, from1, to1,
+                from1, to1,
                 [&](region_builder &bb, value loop_var1) {
                     cloner.set_subs(&loop_vars[1], loop_var1.get());
                     cloner.clone_region(in.body(), *bb.get_region());

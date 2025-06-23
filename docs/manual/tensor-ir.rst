@@ -634,7 +634,7 @@ Foreach
 
 .. code:: abnf
 
-    instruction     =/ "foreach" "(" local-identifier-list ")" [":" integer-type] "="
+    instruction     =/ "foreach" "(" local-identifier-list ")" "="
                        "(" local-identifier-list ")" "," "(" local-identifier-list ")" region
 
 Overview
@@ -661,8 +661,8 @@ The loop range is defined as the cartesian product of the half-open intervals
     (\text{var}_1, \dots, \text{var}_N) \in [\text{from}_1; \text{to}_1) \times \dots \times
     [\text{from}_N; \text{to}_N)
 
-The integer type of the loop variable and the loop bounds can be optionally set after the colon.
-The default integer type is ``index``.
+The integer type of a "from" and "to" pair must match.
+The integer type of a loop variable follows the integer type of its corresponding "from" and "to" pair.
 
 The mapping of trip count to work-item is implementation-defined.
 
@@ -1246,7 +1246,7 @@ For
 
 .. code:: abnf
 
-    multi-value-instruction = "for" local-identifier [":" integer-type] "="
+    multi-value-instruction = "for" local-identifier "="
                                     local-identifier "," local-identifier ["," local-identifier]
                               ["init" "(" init-value-list ")" "->" "(" return-type-list ")" ] region
                               [dictionary-attribute]
@@ -1269,8 +1269,8 @@ The trip count is stored in the first local identifier and is accessible within 
 The loop's range [from; to) is given by the first and the second local identifier after the equals sign,
 and a step size may be given with the third local identifier after the equals sign.
 The step size defaults to 1 if omitted.
-The integer type of the loop variable and the loop bounds is given after the colon and
-the default integer type is ``index``.
+The integer type of "from", "to", and "step" must be identical, and the integer type of the loop variable
+follows the loop range's type.
 
 Values that are given in the init-value-list may be carried from one iteration to the next.
 The local identifier gives the name of the loop-carried value as it is accessible in the loop body.

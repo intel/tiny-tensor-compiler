@@ -1095,10 +1095,25 @@ void loop_inst::setup_and_check() {}
 void for_inst::setup_and_check() {
     loop_inst::setup_and_check();
 
-    auto res = results();
+    auto fromt = get_scalar_type(loc(), from());
+    auto tot = get_scalar_type(loc(), to());
 
+    if (!is_integer_type(fromt->ty())) {
+        throw compilation_error(loc(), {&from()}, status::ir_expected_int);
+    }
+    if (fromt->ty() != tot->ty()) {
+        throw compilation_error(loc(), {&from(), &to()}, status::ir_scalar_mismatch);
+    }
+    if (has_step()) {
+        auto stept = get_scalar_type(loc(), step());
+        if (fromt->ty() != stept->ty()) {
+            throw compilation_error(loc(), {&from(), &step()}, status::ir_scalar_mismatch);
+        }
+    }
+
+    auto res = results();
     body().set_num_params(1 + res.size());
-    body().set_param(0, scalar_data_type::get(get().context(), loop_var_type()));
+    body().set_param(0, from().ty());
 
     auto init = iter_init();
     if (init.size() != res.size()) {
@@ -1115,48 +1130,29 @@ void for_inst::setup_and_check() {
         }
         body().set_param(1 + i, ty);
     }
-
-    auto lvt = get_scalar_type(loc(), loop_var());
-    auto fromt = get_scalar_type(loc(), from());
-    auto tot = get_scalar_type(loc(), to());
-
-    if (!is_integer_type(lvt->ty())) {
-        throw compilation_error(loc(), status::ir_expected_int);
-    }
-    if (lvt->ty() != fromt->ty()) {
-        throw compilation_error(loc(), {&from()}, status::ir_scalar_mismatch);
-    }
-    if (lvt->ty() != tot->ty()) {
-        throw compilation_error(loc(), {&to()}, status::ir_scalar_mismatch);
-    }
-    if (has_step()) {
-        auto stept = get_scalar_type(loc(), step());
-        if (lvt->ty() != stept->ty()) {
-            throw compilation_error(loc(), {&step()}, status::ir_scalar_mismatch);
-        }
-    }
 }
 
 void foreach_inst::setup_and_check() {
     loop_inst::setup_and_check();
 
-    body().kind(region_kind::spmd);
-
-    auto lv_ty = scalar_data_type::get(get().context(), loop_var_type());
-    auto num_lv = from().size();
-    body().set_num_params(num_lv);
-    for (std::int64_t i = 0; i < num_lv; ++i) {
-        body().set_param(i, lv_ty);
-    }
-
-    if (from().size() == 0 || from().size() != to().size()) {
+    auto from_ = from();
+    auto to_ = to();
+    if (from_.size() == 0 || from_.size() != to_.size()) {
         throw compilation_error(loc(), status::ir_from_to_mismatch);
     }
 
-    if (!is_integer_type(loop_var_type()) ||
-        std::any_of(get().op_begin(), get().op_end(),
-                    [&lv_ty](tinytc_value &val) { return val.ty() != lv_ty; })) {
-        throw compilation_error(loc(), status::ir_scalar_mismatch);
+    auto num_lv = from_.size();
+    body().kind(region_kind::spmd);
+    body().set_num_params(num_lv);
+    for (std::int64_t i = 0; i < num_lv; ++i) {
+        auto lv_ty = get_scalar_type(loc(), from_[i]);
+        if (!is_integer_type(lv_ty->ty())) {
+            throw compilation_error(loc(), {&from_[i]}, status::ir_expected_int);
+        }
+        if (from_[i].ty() != to_[i].ty()) {
+            throw compilation_error(loc(), {&from_[i], &to_[i]}, status::ir_scalar_mismatch);
+        }
+        body().set_param(i, from_[i].ty());
     }
 }
 

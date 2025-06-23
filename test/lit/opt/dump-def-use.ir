@@ -7,7 +7,7 @@ func @foobar() {
     %one = constant 1 : index
     %lb = constant 0 : index
     %ub = constant 5 : index
-    for %i:index=%lb,%ub {
+    for %i=%lb,%ub {
         %0 = arith.add %i, %one : index
         %1 = arith.rem %0, %one : index
     }
@@ -18,11 +18,11 @@ func @foobar() {
 ; CHECK-NEXT:     > %0 = arith.add %i, %one : index
 ; CHECK-NEXT: > %lb = constant 0 : index
 ; CHECK-NEXT:   def %lb
-; CHECK-NEXT:     > for %i:index=%lb,%ub {...}
+; CHECK-NEXT:     > for %i=%lb,%ub {...}
 ; CHECK-NEXT: > %ub = constant 5 : index
 ; CHECK-NEXT:   def %ub
-; CHECK-NEXT:     > for %i:index=%lb,%ub {...}
-; CHECK-NEXT: > for %i:index=%lb,%ub {...}
+; CHECK-NEXT:     > for %i=%lb,%ub {...}
+; CHECK-NEXT: > for %i=%lb,%ub {...}
 ; CHECK-NEXT:   def %i
 ; CHECK-NEXT:     > %0 = arith.add %i, %one : index
 ; CHECK-NEXT: > %0 = arith.add %i, %one : index

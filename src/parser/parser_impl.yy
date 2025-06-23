@@ -223,7 +223,6 @@
 %nterm <std::vector<tinytc_data_type_t>> return_type_list
 %nterm <inst> sum_inst
 %nterm <inst> yield_inst
-%nterm <scalar_type> for_loop_var_type
 %nterm <inst> var_definition
 %nterm <std::vector<identifier>> identifier_list
 %nterm <inst> valued_inst
@@ -628,13 +627,12 @@ ger_inst:
 ;
 
 for_inst:
-    FOR LOCAL_IDENTIFIER[loop_var] for_loop_var_type EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst> {
+    FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst> {
         try {
             auto &[lcv_id, lcv_init, lcv_type] = $lcv;
             location loc = @FOR;
             loc.end = @lcv.end;
-            $$ = inst{
-                for_inst::create($for_loop_var_type, $from, $to, $optional_step, lcv_init, lcv_type, loc)};
+            $$ = inst{for_inst::create($from, $to, $optional_step, lcv_init, lcv_type, loc)};
             auto inode = for_inst($$.get());
             ctx.push_scope();
             auto &loop_var = inode.loop_var();
@@ -685,12 +683,12 @@ init_value:
 ;
 
 foreach_inst:
-    FOREACH LPAREN identifier_list[loop_var] RPAREN for_loop_var_type EQUALS
-            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN <inst>{
+    FOREACH LPAREN identifier_list[loop_var] RPAREN EQUALS
+            LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN[header_end] <inst>{
         try {
             location loc = @FOREACH;
-            loc.end = @for_loop_var_type.end;
-            $$ = inst{foreach_inst::create($for_loop_var_type, $from, $to, loc)};
+            loc.end = @header_end.end;
+            $$ = inst{foreach_inst::create($from, $to, loc)};
             auto inode = foreach_inst($$.get());
             ctx.push_scope();
             auto loop_vars = inode.loop_vars().begin();
@@ -707,11 +705,6 @@ foreach_inst:
         ctx.pop_scope();
         $$ = std::move($loop_header);
     }
-;
-
-for_loop_var_type:
-    %empty { $$ = scalar_type::index; }
-  | COLON INTEGER_TYPE { $$ = $INTEGER_TYPE; }
 ;
 
 var_definition:

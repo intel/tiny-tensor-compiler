@@ -1102,7 +1102,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param loop_var_type [in] type of loop variable
  * @param from [in] loop begion
  * @param to [in] loop bound
  * @param step [in][optional] loop step; can be nullptr
@@ -1115,11 +1114,12 @@ TINYTC_EXPORT tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinyt
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t
-tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
-                       tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                       uint32_t init_return_list_size, const tinytc_value_t *initial_value_list,
-                       const tinytc_data_type_t *return_type_list, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from,
+                                                     tinytc_value_t to, tinytc_value_t step,
+                                                     uint32_t init_return_list_size,
+                                                     const tinytc_value_t *initial_value_list,
+                                                     const tinytc_data_type_t *return_type_list,
+                                                     const tinytc_location_t *loc);
 
 /**
  * @brief Create foreach loop
@@ -1131,7 +1131,6 @@ tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
  * @endcode
  *
  * @param instr [out] pointer to the inst object created
- * @param loop_var_type [in] type of loop variable
  * @param dim [in] length of from and to array; must be > 0
  * @param from_list [in][range(1, dim)] loop begion
  * @param to_list [in][range(1, dim)] loop bound
@@ -1139,9 +1138,10 @@ tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(
-    tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type, uint32_t dim,
-    const tinytc_value_t *from_list, const tinytc_value_t *to_list, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
+                                                         const tinytc_value_t *from_list,
+                                                         const tinytc_value_t *to_list,
+                                                         const tinytc_location_t *loc);
 
 /**
  * @brief Create if condition

@@ -58,7 +58,7 @@ func @dead_loop(%a: memref<f64>) {
 ; CHECK-LABEL: func @dead_loop({{.*}}
 ; CHECK-NEXT: %c5 = constant 5 : index
 ; CHECK-NEXT: %c6 = constant 6 : index
-; CHECK-NEXT: for %0:index=%c5,%c6 {
+; CHECK-NEXT: for %0=%c5,%c6 {
 ; CHECK-NEXT:   %c43{{.*}}
 ; CHECK-NEXT:   store{{.*}}
 ; CHECK-NEXT: }

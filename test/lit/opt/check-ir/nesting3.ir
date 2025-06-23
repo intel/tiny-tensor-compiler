@@ -8,6 +8,6 @@ func @illegal_nesting() {
     parallel {
         foreach (%j)=(%lb),(%ub) {
         }
-; CHECK: 9.9-20: Collective instruction must not be called from SPMD region
+; CHECK: 9.9-32: Collective instruction must not be called from SPMD region
     }
 }

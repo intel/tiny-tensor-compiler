@@ -740,9 +740,8 @@ tinytc_status_t tinytc_sum_inst_create(tinytc_inst_t *instr, tinytc_bool_t atomi
     });
 }
 
-tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
-                                       tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
-                                       uint32_t init_return_list_size,
+tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_value_t from, tinytc_value_t to,
+                                       tinytc_value_t step, uint32_t init_return_list_size,
                                        const tinytc_value_t *initial_value_list,
                                        const tinytc_data_type_t *return_type_list,
                                        const tinytc_location_t *loc) {
@@ -752,24 +751,22 @@ tinytc_status_t tinytc_for_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr = for_inst::create(enum_cast<scalar_type>(loop_var_type), from, to, step,
-                                  array_view{initial_value_list, init_return_list_size},
-                                  array_view{return_type_list, init_return_list_size},
-                                  get_optional(loc));
+        *instr = for_inst::create(
+            from, to, step, array_view{initial_value_list, init_return_list_size},
+            array_view{return_type_list, init_return_list_size}, get_optional(loc));
     });
 }
 
-tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, tinytc_scalar_type_t loop_var_type,
-                                           uint32_t dim, const tinytc_value_t *from_list,
+tinytc_status_t tinytc_foreach_inst_create(tinytc_inst_t *instr, uint32_t dim,
+                                           const tinytc_value_t *from_list,
                                            const tinytc_value_t *to_list,
                                            const tinytc_location_t *loc) {
     if (instr == nullptr || from_list == nullptr || to_list == nullptr) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *instr =
-            foreach_inst::create(enum_cast<scalar_type>(loop_var_type), array_view{from_list, dim},
-                                 array_view{to_list, dim}, get_optional(loc));
+        *instr = foreach_inst::create(array_view{from_list, dim}, array_view{to_list, dim},
+                                      get_optional(loc));
     });
 }
 

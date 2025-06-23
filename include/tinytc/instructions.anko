@@ -246,7 +246,6 @@ inst @ger : @blas_a3 {}
 inst @hadamard : @blas_a3 {}
 
 inst @loop {
-    prop %loop_var_type => "scalar_type"
     reg %body
 }
 

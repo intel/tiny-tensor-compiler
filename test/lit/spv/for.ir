@@ -23,7 +23,7 @@ func @for1() {
   %lb = constant 0 : i16
   %ub = constant 10 : i16
   %step = constant 2 : i16
-  for %0:i16 = %lb,%ub,%step {
+  for %0=%lb,%ub,%step {
   }
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:         %[[#ENTRY_LABEL1:]] = OpLabel
@@ -46,7 +46,7 @@ func @for2() {
   %to = constant 6 : i32
   %f0 = constant 0 : i64
   %f1 = constant 1 : i64
-  %fn_1, %fn = for %n:i32=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
+  %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
     %fn = arith.add %fn_2, %fn_1 : i64
     yield (%fn_1, %fn)
   }
@@ -75,7 +75,7 @@ func @for3() attributes{subgroup_size=16} {
   %from = constant 2 : i16
   %to = constant 6 : i16
   %m_init = constant 1 : coopmatrix<i16x16x4,matrix_acc>
-  %m = for %n:i16=%from,%to init(%m_iter=%m_init) -> (coopmatrix<i16x16x4,matrix_acc>) {
+  %m = for %n=%from,%to init(%m_iter=%m_init) -> (coopmatrix<i16x16x4,matrix_acc>) {
     %m_update = arith.add %m_iter, %m_init : coopmatrix<i16x16x4,matrix_acc>
     yield (%m_update)
   }
@@ -104,9 +104,9 @@ func @for3() attributes{subgroup_size=16} {
 func @for4() {
   %lb = constant 0 : i16
   %ub = constant 10 : i16
-  for %0:i16 = %lb,%ub {
+  for %0=%lb,%ub {
   } {unroll=false}
-  for %2:i16 = %lb,%ub {
+  for %2=%lb,%ub {
   } {unroll=true}
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:                               OpLoopMerge %[[#]] %[[#]] DontUnroll
