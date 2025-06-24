@@ -28,11 +28,22 @@ auto find_in_list(std::vector<std::unique_ptr<inst>> const &list, std::string_vi
     return find_in_list(list, name, tinytc::fnv1a(name));
 }
 
+void objects::add(std::unique_ptr<enum_> e) { enums_.emplace_back(std::move(e)); }
+
 void objects::add(inst *parent, std::unique_ptr<inst> i) {
     auto &parent_list = parent ? parent->children() : insts_;
     parent_list.emplace_back(std::move(i));
 }
 
-auto objects::find(std::string_view name) -> inst * { return find_in_list(insts_, name); }
+auto objects::find_enum(std::string_view name) -> enum_ * {
+    const auto hash = tinytc::fnv1a(name);
+    for (auto it = enums_.rbegin(); it != enums_.rend(); ++it) {
+        if (hash == tinytc::fnv1a((*it)->name()) && name == (*it)->name()) {
+            return it->get();
+        }
+    }
+    return nullptr;
+}
+auto objects::find_inst(std::string_view name) -> inst * { return find_in_list(insts_, name); }
 
 } // namespace mochi

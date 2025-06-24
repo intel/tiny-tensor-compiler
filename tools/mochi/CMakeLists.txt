@@ -7,7 +7,7 @@ include(GNUInstallDirs)
 
 set(SOURCES main.cpp
     codegen.cpp
-    inst.cpp
+    object.cpp
     objects.cpp
     omochi.cpp
     parser.cpp

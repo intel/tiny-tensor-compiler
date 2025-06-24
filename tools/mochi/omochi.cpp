@@ -19,12 +19,24 @@ namespace mochi {
 
 auto to_string(generator g) -> char const * {
     switch (g) {
-    case generator::inst_header:
-        return "inst_header";
+    case generator::api_builder_cpp:
+        return "api_builder_cpp";
+    case generator::api_builder_h:
+        return "api_builder_h";
+    case generator::api_builder_hpp:
+        return "api_builder_hpp";
+    case generator::enum_cpp:
+        return "enum_cpp";
+    case generator::enum_h:
+        return "enum_h";
+    case generator::enum_hpp:
+        return "enum_hpp";
+    case generator::inst_hpp:
+        return "inst_hpp";
     case generator::inst_cpp:
         return "inst_cpp";
-    case generator::inst_visit_header:
-        return "inst_visit_header";
+    case generator::inst_visit_hpp:
+        return "inst_visit_hpp";
     case generator::template_:
         return "template";
     case generator::NUM_GENERATORS:
@@ -64,14 +76,32 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
         auto obj = parse_file(code.size(), code.c_str(), a.filename.c_str());
         if (obj) {
             switch (a.gen) {
-            case generator::inst_header:
-                generate_inst_header(os, *obj);
+            case generator::api_builder_cpp:
+                generate_api_builder_cpp(os, *obj);
+                break;
+            case generator::api_builder_h:
+                generate_api_builder_h(os, *obj);
+                break;
+            case generator::api_builder_hpp:
+                generate_api_builder_hpp(os, *obj);
+                break;
+            case generator::enum_cpp:
+                generate_enum_cpp(os, *obj);
+                break;
+            case generator::enum_h:
+                generate_enum_h(os, *obj);
+                break;
+            case generator::enum_hpp:
+                generate_enum_hpp(os, *obj);
+                break;
+            case generator::inst_hpp:
+                generate_inst_hpp(os, *obj);
                 break;
             case generator::inst_cpp:
                 generate_inst_cpp(os, *obj);
                 break;
-            case generator::inst_visit_header:
-                generate_inst_visit_header(os, *obj);
+            case generator::inst_visit_hpp:
+                generate_inst_visit_hpp(os, *obj);
                 break;
             default:
                 break;

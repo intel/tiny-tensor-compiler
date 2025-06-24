@@ -30,8 +30,16 @@ lex:
         re2c:eof = 0;
 
         // strings
-         "\"" [^\"]* "\"" {
-             adv_loc();
+         "\"" [^\"]* "\"" | "'" [^']* "'" {
+             char const* begin = b;
+             char const* mark = begin;
+             for (; mark != YYCURSOR; ++mark) {
+                if (*mark == '\n') {
+                    loc_.lines(1);
+                    begin = mark + 1;
+                }
+             }
+             loc_.columns(YYCURSOR - begin);
              auto str = std::string(b + 1, YYCURSOR - 1);
              return parser::make_STRING(std::move(str), loc_);
          }
@@ -60,8 +68,10 @@ lex:
         }
 
         // keywords
+        "case"              { adv_loc(); return parser::make_CASE(loc_); }
         "collective"        { adv_loc(); return parser::make_COLLECTIVE(loc_); }
         "cxx"               { adv_loc(); return parser::make_CXX(loc_); }
+        "doc_to_string"     { adv_loc(); return parser::make_DOC_TO_STRING(loc_); }
         "enum"              { adv_loc(); return parser::make_ENUM(loc_); }
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
         "mixed"             { adv_loc(); return parser::make_MIXED(loc_); }

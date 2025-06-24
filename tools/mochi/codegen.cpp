@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "codegen.hpp"
-#include "inst.hpp"
+#include "object.hpp"
 #include "objects.hpp"
 #include "walk.hpp"
 
@@ -11,12 +11,138 @@
 #include <functional>
 #include <memory>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
 namespace mochi {
 
 constexpr std::string base_parent = "inst_view";
+
+void generate_docstring(std::ostream &os, std::string const &doc) {
+    auto docstream = std::istringstream(doc);
+    std::string docline;
+    while (std::getline(docstream, docline)) {
+        os << std::format(" * {}\n", docline);
+    }
+}
+
+void generate_params(
+    std::ostream &os, inst *in,
+    std::function<void(quantifier, std::string_view, std::string_view, std::string_view)>
+        format_arg) {
+    walk_up<walk_order::post_order>(in, [&](inst *in) {
+        for (auto &p : in->props()) {
+            if (!p.private_) {
+                format_arg(p.quantity, p.type, p.name, p.doc);
+            }
+        }
+    });
+    walk_up<walk_order::post_order>(in, [&](inst *in) {
+        for (auto &o : in->ops()) {
+            format_arg(o.quantity, "tinytc_value_t", o.name, o.doc);
+        }
+    });
+    walk_up<walk_order::post_order>(in, [&](inst *in) {
+        for (auto &r : in->rets()) {
+            format_arg(r.quantity, "tinytc_data_type_t", r.name, r.doc);
+        }
+    });
+}
+void generate_c_params(std::ostream &os, inst *in) {
+    os << "tinytc_inst_t *instr, ";
+    generate_params(
+        os, in,
+        [&os](quantifier q, std::string_view type, std::string_view name, std::string_view) {
+            if (q == quantifier::many) {
+                os << std::format("size_t {1}_size, const {0} *{1}, ", type, name);
+            } else {
+                os << std::format("{} {}, ", type, name);
+            }
+        });
+    os << "const tinytc_location_t *loc";
+}
+void generate_cxx_params(std::ostream &os, inst *in) {
+    generate_params(
+        os, in,
+        [&os](quantifier q, std::string_view type, std::string_view name, std::string_view) {
+            if (q == quantifier::many) {
+                os << std::format("array_view<{0}> {1}, ", type, name);
+            } else {
+                os << std::format("{} {}, ", type, name);
+            }
+        });
+    os << "location const& lc";
+}
+
+void generate_api_builder_cpp(std::ostream &os, objects const &obj) {}
+void generate_api_builder_h(std::ostream &os, objects const &obj) {
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+            os << "/*\n";
+            generate_params(
+                os, in,
+                [&os](quantifier q, std::string_view, std::string_view name, std::string_view doc) {
+                    if (q == quantifier::many) {
+                        // \todo
+                    } else {
+                        os << std::format("* @param {} [in] {}\n", name, doc);
+                    }
+                });
+            os << "*/\n";
+            os << "TINYTC_EXPORT tinytc_status_t tinytc_" << in->class_name() << "_create(";
+            generate_c_params(os, in);
+            os << ");\n\n";
+        });
+    }
+}
+void generate_api_builder_hpp(std::ostream &os, objects const &obj) {}
+
+void generate_enum_cpp(std::ostream &os, objects const &obj) {
+    for (auto &e : obj.enums()) {
+        os << std::format("char const* tinytc_{0}_to_string(tinytc_{0}_t val) {{", e->name());
+        os << "switch (val) {\n";
+        for (auto &c : e->cases()) {
+            os << std::format("case tinytc_{0}_{1}: return \"{2}\";\n", e->name(), c.name,
+                              e->doc_to_string() ? c.doc : c.name);
+        }
+        os << "}\nreturn \"unknown\";\n";
+        os << "}\n\n";
+    }
+}
+void generate_enum_h(std::ostream &os, objects const &obj) {
+    for (auto &e : obj.enums()) {
+        os << "/**\n";
+        generate_docstring(os, e->doc());
+        os << " */\ntypedef enum {";
+        int i = 0;
+        for (auto &c : e->cases()) {
+            os << std::format("tinytc_{}_{} = {}, ///< {}\n", e->name(), c.name, c.value, c.doc);
+            ++i;
+        }
+        os << std::format("}} tinytc_{}_t;\n", e->name());
+        std::string uname = e->name();
+        std::transform(uname.begin(), uname.end(), uname.begin(),
+                       [](auto c) { return std::toupper(c); });
+        os << std::format("#define TINYTC_ENUM_NUM_{} {}\n\n", uname, i);
+        os << std::format("TINYTC_EXPORT char const* tinytc_{0}_to_string(tinytc_{0}_t val);\n\n",
+                          e->name());
+    }
+}
+void generate_enum_hpp(std::ostream &os, objects const &obj) {
+    for (auto &e : obj.enums()) {
+        os << "/**\n";
+        generate_docstring(os, e->doc());
+        os << std::format(" */\nenum class {} {{", e->name());
+        for (auto &c : e->cases()) {
+            os << std::format("{0} = {1}, ///< {2}\n", c.name, c.value, c.doc);
+        }
+        os << "};\n\n";
+        os << std::format("inline auto to_string({0} val) -> char const* {{ return "
+                          "::tinytc_{0}_to_string(static_cast<tinytc_{0}_t>(val)); }}\n\n",
+                          e->name());
+    }
+}
 
 void generate_inst_class(std::ostream &os, inst *in) {
     inst *parent = in->parent();
@@ -52,9 +178,9 @@ public:
 
     // create function
     if (!in->has_children()) {
-        os << "static ";
-        generate_inst_create_prototype(os, in);
-        os << ";\n\n";
+        os << "static auto create(";
+        generate_cxx_params(os, in);
+        os << ") -> tinytc_inst_t;\n\n";
     }
     os << "\n";
 
@@ -62,10 +188,9 @@ public:
     os << "inline auto props() -> properties& { return "
           "*static_cast<properties*>(get().props()); }\n";
     for (auto &p : in->props()) {
-        os << std::format("inline auto {0}() -> {1} {{ return props().{0}; }}\n", p.name,
-                          p.cxx_type());
-        os << std::format("inline void {0}({1} val) {{ props().{0} = val; }}\n", p.name,
-                          p.cxx_type());
+        auto type = p.quantity == quantifier::many ? std::format("array_view<{}>", p.type) : p.type;
+        os << std::format("inline auto {0}() -> {1} {{ return props().{0}; }}\n", p.name, type);
+        os << std::format("inline void {0}({1} val) {{ props().{0} = val; }}\n", p.name, type);
     }
     os << "\n";
 
@@ -143,36 +268,10 @@ public:
         in->class_name());
 }
 
-void generate_inst_create_prototype(std::ostream &os, inst *in, bool insert_class_name) {
-    os << "auto ";
-    if (insert_class_name) {
-        os << in->class_name() << "::";
-    }
-    os << "create(";
-
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
-        for (auto &p : in->props()) {
-            if (!p.private_) {
-                os << std::format("{} {},", p.cxx_type(), p.name);
-            }
-        }
-    });
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
-        for (auto &o : in->ops()) {
-            os << std::format("{} {},", o.cxx_type(), o.name);
-        }
-    });
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
-        for (auto &r : in->rets()) {
-            os << std::format("{} {},", r.cxx_type(), r.name);
-        }
-    });
-    os << "location const& lc) -> tinytc_inst_t";
-}
-
 void generate_inst_create(std::ostream &os, inst *in) {
-    generate_inst_create_prototype(os, in, true);
-    os << " {\n";
+    os << "auto " << in->class_name() << "::create(";
+    generate_cxx_params(os, in);
+    os << ") -> tinytc_inst_t {\n";
 
     os << "std::int32_t num_operands = 0;\n"
        << "std::int32_t num_results = 0;\n";
@@ -273,7 +372,7 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, lc)}};
     os << "}\n\n";
 }
 
-void generate_inst_header(std::ostream &os, objects const &obj) {
+void generate_inst_hpp(std::ostream &os, objects const &obj) {
     os << "enum class IK {\n";
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(
@@ -300,7 +399,7 @@ void generate_inst_cpp(std::ostream &os, objects const &obj) {
     }
 }
 
-void generate_inst_visit_header(std::ostream &os, objects const &obj) {
+void generate_inst_visit_hpp(std::ostream &os, objects const &obj) {
     os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_inst &in) {\n";
     os << "switch(in.type_id()) {\n";
     for (auto &i : obj.insts()) {

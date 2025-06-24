@@ -12,7 +12,19 @@
 
 namespace mochi {
 
-enum class generator { inst_header = 0, inst_cpp, inst_visit_header, template_, NUM_GENERATORS };
+enum class generator {
+    api_builder_cpp = 0,
+    api_builder_h,
+    api_builder_hpp,
+    enum_cpp,
+    enum_h,
+    enum_hpp,
+    inst_hpp,
+    inst_cpp,
+    inst_visit_hpp,
+    template_,
+    NUM_GENERATORS
+};
 
 auto to_string(generator g) -> char const *;
 

@@ -4,7 +4,7 @@
 #ifndef WALK_20250613_HPP
 #define WALK_20250613_HPP
 
-#include "inst.hpp"
+#include "object.hpp"
 
 #include <functional>
 

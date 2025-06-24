@@ -5,7 +5,7 @@
 %language "c++"
 
 %code requires {
-    #include "inst.hpp"
+    #include "object.hpp"
 
     #include <cstddef>
     #include <cstdint>
@@ -42,8 +42,10 @@
 %define api.value.type variant
 %define api.token.prefix {TOK_}
 %token
+    CASE            "case"
     COLLECTIVE      "collective"
     CXX             "cxx"
+    DOC_TO_STRING   "doc_to_string"
     ENUM            "enum"
     INST            "inst"
     MIXED           "mixed"
@@ -65,17 +67,48 @@
 %token <std::string> STRING
 %token <std::int64_t> NUMBER
 
+%nterm <std::vector<case_>> cases
+%nterm <case_> case
 %nterm <std::vector<member>> members
 %nterm <member> member
 %nterm <quantifier> op_quantifier
 %nterm <quantifier> nonop_quantifier
 %nterm <inst*> parent
 %nterm <bool> private
+%nterm <bool> doc_to_string
+%nterm <std::string> optstring
+%nterm <std::string> string
 
 %%
-entity:
-    inst {}
-  | entity inst {}
+stmt_list:
+    stmt {}
+  | stmt_list stmt {}
+
+stmt:
+    enum {}
+  | inst {}
+;
+
+enum:
+    ENUM GLOBAL_ID doc_to_string optstring LBRACE cases RBRACE {
+        try {
+            obj.add(std::make_unique<enum_>($GLOBAL_ID, std::move($optstring), std::move($cases), $doc_to_string));
+        } catch (std::exception const& e) {
+            error(@enum, e.what());
+            YYERROR;
+        }
+    }
+;
+
+cases:
+    %empty {}
+  | cases case { $$ = std::move($1); $$.emplace_back(std::move($case)); }
+;
+
+case:
+    CASE LOCAL_ID ARROW NUMBER optstring {
+        $$ = case_{std::move($LOCAL_ID), std::move($optstring), $NUMBER};
+    }
 ;
 
 inst:
@@ -92,7 +125,7 @@ inst:
 parent:
     %empty { $$ = nullptr; }
   | COLON GLOBAL_ID {
-        auto parent = obj.find($GLOBAL_ID);
+        auto parent = obj.find_inst($GLOBAL_ID);
         if (!parent) {
             error(@GLOBAL_ID, "Could not find parent class definition");
             YYERROR;
@@ -107,15 +140,18 @@ members:
 ;
 
 member:
-    OP op_quantifier LOCAL_ID {
-        $$ = op{$op_quantifier, std::move($LOCAL_ID)};
+    OP op_quantifier LOCAL_ID optstring {
+        $$ = op{$op_quantifier, std::move($LOCAL_ID), std::move($optstring)};
     }
-  | PROP nonop_quantifier LOCAL_ID private ARROW STRING {
-        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING), $private};
+  | PROP nonop_quantifier LOCAL_ID private ARROW STRING optstring {
+        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING), std::move($optstring),
+                  $private};
     }
-  | RET nonop_quantifier LOCAL_ID { $$ = ret{$nonop_quantifier, std::move($LOCAL_ID)}; }
-  | REG LOCAL_ID { $$ = reg{std::move($LOCAL_ID)}; }
-  | CXX STRING { $$ = raw_cxx{std::move($STRING)}; }
+  | RET nonop_quantifier LOCAL_ID optstring {
+        $$ = ret{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring)};
+    }
+  | REG LOCAL_ID optstring { $$ = reg{std::move($LOCAL_ID), std::move($optstring)}; }
+  | CXX string { $$ = raw_cxx{std::move($string)}; }
 ;
 
 op_quantifier:
@@ -132,6 +168,23 @@ nonop_quantifier:
 private:
     %empty { $$ = false; }
   | PRIVATE { $$ = true; }
+;
+
+doc_to_string:
+    %empty { $$ = false; }
+  | DOC_TO_STRING { $$ = true; }
+;
+
+optstring:
+    %empty { $$ = ""; }
+  | string { $$ = std::move($1); }
+;
+
+string:
+    STRING { $$ = std::move($1); }
+  | string STRING { $$ = std::move($1) + std::move($2); }
+;
+
 %%
 
 namespace mochi {

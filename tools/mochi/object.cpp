@@ -1,7 +1,7 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "inst.hpp"
+#include "object.hpp"
 
 #include <sstream>
 #include <stdexcept>

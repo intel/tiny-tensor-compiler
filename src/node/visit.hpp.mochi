@@ -8,7 +8,7 @@
 
 namespace tinytc {
 
-// もち inst_visit_header "tinytc/instructions.anko"
+// もち inst_visit_hpp "tinytc/instructions.anko"
 
 } // namespace tinytc
 

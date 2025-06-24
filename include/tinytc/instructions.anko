@@ -3,7 +3,7 @@
 
 inst @alloca {
     prop %stack_ptr private => "std::int64_t"
-    ret %result
+    ret %result 'memref type of allocated variable'
 }
 
 inst @arith {

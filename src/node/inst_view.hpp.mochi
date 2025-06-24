@@ -62,7 +62,7 @@ auto dyn_cast_or_throw(tinytc_inst_t obj, F &&make_exception) -> To * {
     throw make_exception();
 }
 
-// もち inst_header "tinytc/instructions.anko"
+// もち inst_hpp "tinytc/instructions.anko"
 
 } // namespace tinytc
 

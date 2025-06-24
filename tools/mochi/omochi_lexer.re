@@ -19,9 +19,15 @@ auto lex_generator(std::size_t str_length, char const *str) -> std::optional<gen
         re2c:define:YYCTYPE = std::uint8_t;
         re2c:eof = 1;
 
-        "inst_header"       { return generator::inst_header; }
+        "api_builder_cpp"   { return generator::api_builder_cpp; }
+        "api_builder_h"     { return generator::api_builder_h; }
+        "api_builder_hpp"   { return generator::api_builder_hpp; }
+        "enum_cpp"          { return generator::enum_cpp; }
+        "enum_h"            { return generator::enum_h; }
+        "enum_hpp"          { return generator::enum_hpp; }
+        "inst_hpp"          { return generator::inst_hpp; }
         "inst_cpp"          { return generator::inst_cpp; }
-        "inst_visit_header" { return generator::inst_visit_header; }
+        "inst_visit_hpp"    { return generator::inst_visit_hpp; }
         "template"          { return generator::template_; }
 
         $                   { return std::nullopt; }
