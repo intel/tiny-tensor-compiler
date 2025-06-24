@@ -1,20 +1,22 @@
 ; Copyright (C) 2025 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
+include "tinytc/enums.anko"
+
 inst @alloca {
-    prop %stack_ptr private => "std::int64_t"
+    prop %stack_ptr private => i64
     ret %result 'memref type of allocated variable'
 }
 
 inst @arith {
-    prop %operation => "arithmetic"
+    prop %operation => @arithmetic
     op %a
     op %b
     ret %result
 }
 
 inst @arith_unary {
-    prop %operation => "arithmetic_unary"
+    prop %operation => @arithmetic_unary
     op %a
     ret %result
 }
@@ -25,7 +27,7 @@ inst @barrier {
 }
 
 inst @builtin {
-    prop %builtin_type => "builtin"
+    prop %builtin_type => @builtin
     ret %result
     cxx "auto kind() -> inst_execution_kind;"
 }
@@ -36,7 +38,7 @@ inst @cast {
 }
 
 inst @compare {
-    prop %cond => "cmp_condition"
+    prop %cond => @cmp_condition
     op %a
     op %b
     ret %result
@@ -59,21 +61,21 @@ inst @cooperative_matrix_apply {
 }
 
 inst @cooperative_matrix_extract {
-    prop %index => "std::int64_t"
+    prop %index => i64
     op %mat
     ret %result
 }
 
 inst @cooperative_matrix_insert {
-    prop %index => "std::int64_t"
+    prop %index => i64
     op %val
     op %mat
     ret %result
 }
 
 inst @cooperative_matrix_load {
-    prop %t => "transpose"
-    prop %checked => "checked_flag"
+    prop %t       => @transpose
+    prop %checked => @checked_flag
     op %operand
     op %pos0
     op %pos1
@@ -89,17 +91,17 @@ inst @cooperative_matrix_mul_add {
 }
 
 inst @cooperative_matrix_prefetch {
-    prop %cache_level => "std::int32_t"
-    prop %rows => "std::int32_t"
-    prop %cols => "std::int32_t"
+    prop %cache_level => i32
+    prop %rows        => i32
+    prop %cols        => i32
     op %operand
     op %pos0
     op %pos1
 }
 
 inst @cooperative_matrix_reduce {
-    prop %arith => "group_arithmetic"
-    prop %mode => "reduce_mode"
+    prop %arith => @group_arithmetic
+    prop %mode  => @reduce_mode
     op %a
     ret %result
 }
@@ -111,8 +113,8 @@ inst @cooperative_matrix_scale {
 }
 
 inst @cooperative_matrix_store {
-    prop %checked => "checked_flag"
-    prop %flag => "store_flag"
+    prop %checked => @checked_flag
+    prop %flag    => @store_flag
     op %val
     op %operand
     op %pos0
@@ -121,16 +123,16 @@ inst @cooperative_matrix_store {
 
 
 inst @expand {
-    prop %expanded_mode => "std::int64_t"
-    prop* %static_expand_shape => "std::int64_t"
+    prop %expanded_mode        => i64
+    prop* %static_expand_shape => i64
     op %operand
     op* %expand_shape
     ret %result
 }
 
 inst @fuse {
-    prop %from => "std::int64_t"
-    prop %to => "std::int64_t"
+    prop %from => i64
+    prop %to   => i64
     op %operand
     ret %result
 }
@@ -155,7 +157,7 @@ inst @load {
 }
 
 inst @math_unary {
-    prop %operation => "math_unary"
+    prop %operation => @math_unary
     op %a
     ret %result
 }
@@ -165,7 +167,7 @@ inst @parallel {
 }
 
 inst @size {
-    prop %mode => "std::int64_t"
+    prop %mode => i64
     op %operand
     ret %result
 }
@@ -177,23 +179,30 @@ inst @subgroup_broadcast {
 }
 
 inst @subgroup_operation {
-    prop %arith => "group_arithmetic"
-    prop %operation => "group_operation"
+    prop %arith     => @group_arithmetic
+    prop %operation => @group_operation
     op %a
     ret %result
 }
 
-inst @subview {
-    prop* %static_offsets => "std::int64_t"
-    prop* %static_sizes => "std::int64_t"
-    op %operand
-    op* %offsets
-    op* %sizes
-    ret %result
+inst @subview
+'@brief Create subview instruction
+
+@code %value = subview %operand[%offset1:%size1,...,%offsetN:%sizeN] : result @endcode
+'
+{
+    prop* %static_offsets => i64 'static offsets (need to add value to dynamic offsets '
+                                 'if static_offsets[i] == TINYTC_DYNAMIC)'
+    prop* %static_sizes   => i64 'static sizes (need to add value to dynamic sizes '
+                                 'if static_sizes[i] == TINYTC_DYNAMIC)'
+    op %operand  'operand'
+    op* %offsets 'dynamic offsets'
+    op* %sizes   'dynamic sizes'
+    ret %result  'resulting memref type'
 }
 
 inst @store {
-    prop %flag => "store_flag"
+    prop %flag => @store_flag
     op %val
     op %operand
     op* %index_list
@@ -204,7 +213,7 @@ inst @yield {
 }
 
 inst @blas_a2 {
-    prop %atomic => "bool"
+    prop %atomic => bool
     op %alpha
     op %A
     op %beta
@@ -212,19 +221,19 @@ inst @blas_a2 {
 }
 
 inst @axpby : @blas_a2 {
-    prop %tA => "transpose"
+    prop %tA => @transpose
 }
 
 inst @cumsum : @blas_a2 {
-    prop %mode => "std::int64_t"
+    prop %mode => i64
 }
 
 inst @sum : @blas_a2 {
-    prop %tA => "transpose"
+    prop %tA => @transpose
 }
 
 inst @blas_a3 {
-    prop %atomic => "bool"
+    prop %atomic => bool
     op %alpha
     op %A
     op %B
@@ -233,12 +242,12 @@ inst @blas_a3 {
 }
 
 inst @gemm : @blas_a3 {
-    prop %tA => "transpose"
-    prop %tB => "transpose"
+    prop %tA => @transpose
+    prop %tB => @transpose
 }
 
 inst @gemv : @blas_a3 {
-    prop %tA => "transpose"
+    prop %tA => @transpose
 }
 
 inst @ger : @blas_a3 {}
@@ -249,12 +258,19 @@ inst @loop {
     reg %body
 }
 
-inst @for : @loop {
-    op %from
-    op %to
-    op? %step
-    op* %iter_init
-    ret* %results
+inst @for : @loop
+'@brief Create for loop
+
+@code
+for %loop_var = %from, %to, %step
+    init(initial_value_list) -> (types(initial_value_list)) { }
+@endcode'
+{
+    op %from       'loop begin (inclusive)'
+    op %to         'loop end (exclusive)'
+    op? %step      'loop step'
+    op* %iter_init 'array of initial values'
+    ret* %results  'array of return types'
     cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
     cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
 }

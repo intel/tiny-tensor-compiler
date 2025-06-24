@@ -22,14 +22,17 @@
 %code {
     #include "lexer.hpp"
     #include "objects.hpp"
+    #include "parser.hpp"
 
     #include <memory>
+    #include <optional>
     #include <utility>
 }
 
 %header
 %parse-param { lexer& lex }
 %parse-param { objects& obj }
+%parse-param { std::vector<char const*> const& search_paths }
 %lex-param { lexer& lex }
 %locations
 
@@ -47,6 +50,7 @@
     CXX             "cxx"
     DOC_TO_STRING   "doc_to_string"
     ENUM            "enum"
+    INCLUDE         "include"
     INST            "inst"
     MIXED           "mixed"
     OP              "op"
@@ -66,6 +70,7 @@
 %token <std::string> LOCAL_ID
 %token <std::string> STRING
 %token <std::int64_t> NUMBER
+%token <basic_type> BASIC_TYPE
 
 %nterm <std::vector<case_>> cases
 %nterm <case_> case
@@ -73,6 +78,7 @@
 %nterm <member> member
 %nterm <quantifier> op_quantifier
 %nterm <quantifier> nonop_quantifier
+%nterm <prop_type> prop_type
 %nterm <inst*> parent
 %nterm <bool> private
 %nterm <bool> doc_to_string
@@ -87,6 +93,19 @@ stmt_list:
 stmt:
     enum {}
   | inst {}
+  | INCLUDE STRING {
+        try {
+            auto included_obj = parse_file($STRING, search_paths);
+            if (!included_obj) {
+                error(@STRING, "Could not find parse included file");
+                YYERROR;
+            }
+            obj.add(std::move(*included_obj));
+        } catch (std::exception const& e) {
+            error(@STRING, e.what());
+            YYERROR;
+        }
+    }
 ;
 
 enum:
@@ -112,10 +131,11 @@ case:
 ;
 
 inst:
-    INST GLOBAL_ID parent LBRACE members RBRACE {
+    INST GLOBAL_ID parent optstring LBRACE members RBRACE {
         try {
-            obj.add($parent, std::make_unique<inst>($GLOBAL_ID, std::move($members), $parent));
-        } catch (std::exception const& e) {
+            obj.add($parent, std::make_unique<inst>($GLOBAL_ID, std::move($optstring),
+                                                    std::move($members), $parent));
+        } catch (std::exception const &e) {
             error(@inst, e.what());
             YYERROR;
         }
@@ -143,9 +163,9 @@ member:
     OP op_quantifier LOCAL_ID optstring {
         $$ = op{$op_quantifier, std::move($LOCAL_ID), std::move($optstring)};
     }
-  | PROP nonop_quantifier LOCAL_ID private ARROW STRING optstring {
-        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($STRING), std::move($optstring),
-                  $private};
+  | PROP nonop_quantifier LOCAL_ID private ARROW prop_type optstring {
+        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring),
+                  std::move($prop_type), $private};
     }
   | RET nonop_quantifier LOCAL_ID optstring {
         $$ = ret{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring)};
@@ -163,6 +183,19 @@ op_quantifier:
 nonop_quantifier:
     %empty   { $$ = quantifier::single; }
   | STAR     { $$ = quantifier::many; }
+;
+
+prop_type:
+    BASIC_TYPE { $$ = std::move($1); }
+  | STRING     { $$ = std::move($1); }
+  | GLOBAL_ID  {
+        auto ty = obj.find_enum($GLOBAL_ID);
+        if (!ty) {
+            error(@GLOBAL_ID, "Could not find enum definition");
+            YYERROR;
+        }
+        $$ = std::move(ty);
+    }
 ;
 
 private:

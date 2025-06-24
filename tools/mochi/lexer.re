@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "lexer.hpp"
+#include "object.hpp"
 
 #include <cerrno>
 #include <cstdint>
@@ -73,6 +74,7 @@ lex:
         "cxx"               { adv_loc(); return parser::make_CXX(loc_); }
         "doc_to_string"     { adv_loc(); return parser::make_DOC_TO_STRING(loc_); }
         "enum"              { adv_loc(); return parser::make_ENUM(loc_); }
+        "include"           { adv_loc(); return parser::make_INCLUDE(loc_); }
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
         "mixed"             { adv_loc(); return parser::make_MIXED(loc_); }
         "op"                { adv_loc(); return parser::make_OP(loc_); }
@@ -81,6 +83,11 @@ lex:
         "reg"               { adv_loc(); return parser::make_REG(loc_); }
         "ret"               { adv_loc(); return parser::make_RET(loc_); }
         "spmd"              { adv_loc(); return parser::make_SPMD(loc_); }
+
+        // basic types
+        "bool"              { adv_loc(); return parser::make_BASIC_TYPE(basic_type::bool_, loc_); }
+        "i32"               { adv_loc(); return parser::make_BASIC_TYPE(basic_type::i32, loc_); }
+        "i64"               { adv_loc(); return parser::make_BASIC_TYPE(basic_type::i64, loc_); }
 
         // punctuation
         "=>"                { adv_loc(); return parser::make_ARROW(loc_); }

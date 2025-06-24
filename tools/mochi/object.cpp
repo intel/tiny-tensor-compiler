@@ -2,43 +2,60 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "object.hpp"
+#include "util/overloaded.hpp"
 
+#include <format>
 #include <sstream>
 #include <stdexcept>
 #include <utility>
 
+using tinytc::overloaded;
+
 namespace mochi {
 
-template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
+auto enum_::c_name() const -> std::string { return std::format("tinytc_{}_t", name_); }
+
+auto to_c_type(basic_type ty) -> char const * {
+    switch (ty) {
+    case basic_type::bool_:
+        return "tinytc_bool_t";
+    case basic_type::i32:
+        return "int32_t";
+    case basic_type::i64:
+        return "int64_t";
+    }
+}
+auto to_cxx_type(basic_type ty) -> char const * {
+    switch (ty) {
+    case basic_type::bool_:
+        return "bool";
+    case basic_type::i32:
+        return "std::int32_t";
+    case basic_type::i64:
+        return "std::int64_t";
+    }
+}
 
 auto op::offset_name() const -> std::string {
     return (std::ostringstream{} << name << "_offset_").str();
 }
-auto op::cxx_type() const -> char const * {
-    return quantity == quantifier::many ? "array_view<tinytc_value_t>" : "tinytc_value_t";
-}
 
+auto prop::c_type() const -> std::string {
+    return std::visit(overloaded{[&](basic_type const &ty) -> std::string { return to_c_type(ty); },
+                                 [&](enum_ *const &ty) -> std::string { return ty->c_name(); },
+                                 [&](std::string const &ty) -> std::string { return ty; }},
+                      type);
+}
 auto prop::cxx_type() const -> std::string {
-    if (quantity == quantifier::many) {
-        return (std::ostringstream{} << "array_view<" << type << ">").str();
-    }
-    return type;
-}
-auto prop::cxx_storage_type() const -> std::string {
-    if (quantity == quantifier::many) {
-        return (std::ostringstream{} << "std::vector<" << type << ">").str();
-    }
-    return type;
+    return std::visit(
+        overloaded{[&](basic_type const &ty) -> std::string { return to_cxx_type(ty); },
+                   [&](enum_ *const &ty) -> std::string { return ty->cxx_name(); },
+                   [&](std::string const &ty) -> std::string { return ty; }},
+        type);
 }
 
-auto ret::cxx_type() const -> char const * {
-    return quantity == quantifier::many ? "array_view<tinytc_data_type_t>" : "tinytc_data_type_t";
-}
-
-inst::inst(std::string name, std::vector<member> members, inst *parent)
-    : name_{std::move(name)}, parent_{parent} {
+inst::inst(std::string name, std::string doc, std::vector<member> members, inst *parent)
+    : name_{std::move(name)}, doc_{std::move(doc)}, parent_{parent} {
     bool needs_offset_property = false;
     bool has_star_ret = false;
     if (parent) {

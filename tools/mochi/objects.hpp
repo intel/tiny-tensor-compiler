@@ -16,6 +16,7 @@ class objects {
   public:
     void add(std::unique_ptr<enum_> e);
     void add(inst *parent, std::unique_ptr<inst> i);
+    void add(objects &&other);
 
     inline auto enums() const -> std::vector<std::unique_ptr<enum_>> const & { return enums_; }
     inline auto insts() const -> std::vector<std::unique_ptr<inst>> const & { return insts_; }

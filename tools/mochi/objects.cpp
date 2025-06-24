@@ -35,6 +35,15 @@ void objects::add(inst *parent, std::unique_ptr<inst> i) {
     parent_list.emplace_back(std::move(i));
 }
 
+void objects::add(objects &&other) {
+    for (auto &&e : std::move(other.enums_)) {
+        enums_.emplace_back(std::move(e));
+    }
+    for (auto &&i : std::move(other.insts_)) {
+        insts_.emplace_back(std::move(i));
+    }
+}
+
 auto objects::find_enum(std::string_view name) -> enum_ * {
     const auto hash = tinytc::fnv1a(name);
     for (auto it = enums_.rbegin(); it != enums_.rend(); ++it) {

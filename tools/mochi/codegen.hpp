@@ -6,6 +6,7 @@
 
 #include <functional>
 #include <iosfwd>
+#include <string>
 #include <string_view>
 
 namespace mochi {
@@ -19,7 +20,8 @@ void generate_docstring(std::ostream &os, std::string const &doc);
 void generate_params(
     std::ostream &os, inst *in,
     std::function<void(quantifier, std::string_view, std::string_view, std::string_view)>
-        format_arg);
+        format_arg,
+    bool C = false);
 void generate_c_params(std::ostream &os, inst *in);
 void generate_cxx_params(std::ostream &os, inst *in);
 

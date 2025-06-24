@@ -324,7 +324,7 @@ enum @address_space 'Address space' {
     case %local  => 0x2 'Local memory, returned by alloca'
 }
 
-enum @checked
+enum @checked_flag
 '@brief Checked flag
 
 Checks can be combined by bitwise or, that is,
