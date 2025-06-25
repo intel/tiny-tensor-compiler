@@ -134,6 +134,20 @@ void tinytc_inst::subs(tinytc_value_t old_value, tinytc_value_t new_value, bool 
     }
 }
 
+void tinytc_inst::op(std::size_t pos, tinytc_value_t val) {
+    if (val == nullptr) {
+        throw tinytc::compilation_error(loc(), tinytc::status::invalid_arguments);
+    }
+    *use_ptr(pos) = val;
+}
+
+void tinytc_inst::result(std::size_t pos, tinytc_data_type_t ty) {
+    if (ty == nullptr) {
+        throw tinytc::compilation_error(loc(), tinytc::status::invalid_arguments);
+    }
+    *result_ptr(pos) = tinytc_value{ty, this, loc()};
+}
+
 auto tinytc_inst::kind() -> tinytc::inst_execution_kind {
     switch (type_id()) {
     case tinytc::IK::IK_alloca:

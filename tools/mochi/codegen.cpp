@@ -4,6 +4,7 @@
 #include "codegen.hpp"
 #include "object.hpp"
 #include "objects.hpp"
+#include "util/overloaded.hpp"
 #include "walk.hpp"
 
 #include <algorithm>
@@ -16,9 +17,97 @@
 #include <string>
 #include <vector>
 
+using tinytc::overloaded;
+
 namespace mochi {
 
 constexpr std::string base_parent = "inst_view";
+
+auto to_c_type(builtin_type ty) -> char const * {
+    switch (ty) {
+    case builtin_type::bool_:
+        return "tinytc_bool_t";
+    case builtin_type::i32:
+        return "int32_t";
+    case builtin_type::i64:
+        return "int64_t";
+    case builtin_type::type:
+        return "tinytc_data_type_t";
+    case builtin_type::value:
+        return "tinytc_value_t";
+    }
+}
+auto to_cxx_type(builtin_type ty) -> char const * {
+    switch (ty) {
+    case builtin_type::bool_:
+        return "bool";
+    case builtin_type::i32:
+        return "std::int32_t";
+    case builtin_type::i64:
+        return "std::int64_t";
+    case builtin_type::type:
+        return "data_type";
+    case builtin_type::value:
+        return "value";
+    }
+}
+
+void generate_c_type(std::ostream &os, data_type const &ty) {
+    std::visit(overloaded{[&](builtin_type const &ty) { os << to_c_type(ty); },
+                          [&](enum_ *const &ty) { os << std::format("tinytc_{}_t", ty->name()); },
+                          [&](std::string const &ty) { os << ty; }},
+               ty);
+}
+void generate_cxx_type(std::ostream &os, data_type const &ty) {
+    std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty); },
+                          [&](enum_ *const &ty) { os << ty->name(); },
+                          [&](std::string const &ty) { os << ty; }},
+               ty);
+}
+void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
+                            std::string_view name) {
+    std::visit(overloaded{[&](builtin_type const &ty) {
+                              if (q == quantifier::many) {
+                                  if (ty == builtin_type::value) {
+                                      os << std::format("reinterpret_cast<const {}*>({}.data())",
+                                                        to_c_type(ty), name);
+                                  } else {
+                                      os << std::format("{}.data()", name);
+                                  }
+                              } else {
+                                  os << name;
+                              }
+                          },
+                          [&](enum_ *const &ty) {
+                              if (q == quantifier::many) {
+                                  os << std::format("reinterpret_cast<const {}*>({}.data())",
+                                                    to_c_type(ty), name);
+                              } else {
+                                  os << std::format("static_cast<{}>({})", to_c_type(ty), name);
+                              }
+                          },
+                          [&](std::string const &) { os << name; }},
+               ty);
+}
+void generate_c_to_cxx_cast(std::ostream &os, quantifier q, data_type const &ty,
+                            std::string_view name) {
+    std::visit(overloaded{[&](builtin_type const &) {
+                              if (q == quantifier::many) {
+                                  os << std::format("array_view{{{0}, {0}_size}}", name);
+                              } else {
+                                  os << name;
+                              }
+                          },
+                          [&](enum_ *const &ty) {
+                              if (q == quantifier::many) {
+                                  os << std::format("array_view{{{0}, {0}_size}}", name);
+                              } else {
+                                  os << std::format("enum_cast<{}>({})", to_cxx_type(ty), name);
+                              }
+                          },
+                          [&](std::string const &) { os << name; }},
+               ty);
+}
 
 void generate_docstring(std::ostream &os, std::string const &doc) {
     auto docstream = std::istringstream(doc);
@@ -30,49 +119,43 @@ void generate_docstring(std::ostream &os, std::string const &doc) {
 
 void generate_params(
     std::ostream &os, inst *in,
-    std::function<void(quantifier, std::string_view, std::string_view, std::string_view)>
-        format_arg,
-    bool C) {
+    std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
+        format_arg) {
     walk_up<walk_order::post_order>(in, [&](inst *in) {
         for (auto &p : in->props()) {
             if (!p.private_) {
-                if (C) {
-                    format_arg(p.quantity, p.c_type(), p.name, p.doc);
-                } else {
-                    format_arg(p.quantity, p.cxx_type(), p.name, p.doc);
-                }
+                format_arg(p.quantity, p.type, p.name, p.doc);
             }
         }
     });
     walk_up<walk_order::post_order>(in, [&](inst *in) {
         for (auto &o : in->ops()) {
-            format_arg(o.quantity, "tinytc_value_t", o.name, o.doc);
+            format_arg(o.quantity, builtin_type::value, o.name, o.doc);
         }
     });
     walk_up<walk_order::post_order>(in, [&](inst *in) {
         for (auto &r : in->rets()) {
-            format_arg(r.quantity, "tinytc_data_type_t", r.name, r.doc);
+            format_arg(r.quantity, builtin_type::type, r.name, r.doc);
         }
     });
 }
 void generate_c_params(std::ostream &os, inst *in) {
     os << "tinytc_inst_t *instr, ";
     generate_params(
-        os, in,
-        [&os](quantifier q, std::string_view type, std::string_view name, std::string_view) {
+        os, in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+            const auto type = to_c_type(ty);
             if (q == quantifier::many) {
                 os << std::format("size_t {1}_size, const {0} *{1}, ", type, name);
             } else {
                 os << std::format("{} {}, ", type, name);
             }
-        },
-        true);
+        });
     os << "const tinytc_location_t *loc";
 }
 void generate_cxx_params(std::ostream &os, inst *in) {
     generate_params(
-        os, in,
-        [&os](quantifier q, std::string_view type, std::string_view name, std::string_view) {
+        os, in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+            const auto type = to_cxx_type(ty);
             if (q == quantifier::many) {
                 os << std::format("array_view<{0}> {1}, ", type, name);
             } else {
@@ -82,72 +165,94 @@ void generate_cxx_params(std::ostream &os, inst *in) {
     os << "location const& lc";
 }
 
-void generate_api_builder_cpp(std::ostream &os, objects const &obj) {}
+void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+            if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
+                os << "tinytc_status_t tinytc_" << in->class_name() << "_create(";
+                generate_c_params(os, in);
+                os << ") {\nif (instr == nullptr) {";
+                os << "return tinytc_status_invalid_arguments; }\nreturn "
+                      "exception_to_status_code([&] "
+                      "{\n";
+                os << std::format("*instr = {}::create(", in->class_name());
+                generate_params(os, in,
+                                [&os](quantifier q, data_type const &ty, std::string_view name,
+                                      std::string_view) {
+                                    generate_c_to_cxx_cast(os, q, ty, name);
+                                    os << ", ";
+                                });
+                os << "get_optional(loc));\n});\n}\n\n";
+            }
+        });
+    }
+}
 void generate_api_builder_h(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
-            os << "/*\n";
-            generate_docstring(os, in->doc());
-            os << " *\n";
-            os << " * @param instr [out] pointer to the inst object created\n";
-            generate_params(
-                os, in,
-                [&os](quantifier q, std::string_view, std::string_view name, std::string_view doc) {
-                    if (q == quantifier::many) {
-                        os << std::format(" * @param {0}_size [in] array size of {0}\n"
-                                          " * @param {0} [in][range(0, {0}_size)] {1}; may be "
-                                          "nullptr if {0}_size is 0\n",
-                                          name, doc);
-                    } else if (q == quantifier::optional) {
-                        os << std::format(" * @param {} [in][optional] {}; can be nullptr\n", name,
-                                          doc);
-                    } else {
-                        os << std::format(" * @param {} [in] {}\n", name, doc);
-                    }
-                });
-            os << " * @param loc [in][optional] Source code location; can be nullptr\n *\n";
-            os << " * @return tinytc_status_success on success and error otherwise\n */\n";
-            os << "TINYTC_EXPORT tinytc_status_t tinytc_" << in->class_name() << "_create(";
-            generate_c_params(os, in);
-            os << ");\n\n";
+            if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
+                os << "/*\n";
+                generate_docstring(os, in->doc());
+                os << " *\n";
+                os << " * @param instr [out] pointer to the inst object created\n";
+                generate_params(
+                    os, in,
+                    [&os](quantifier q, data_type const &, std::string_view name,
+                          std::string_view doc) {
+                        if (q == quantifier::many) {
+                            os << std::format(" * @param {0}_size [in] array size of {0}\n"
+                                              " * @param {0} [in][range(0, {0}_size)] {1}; may be "
+                                              "nullptr if {0}_size is 0\n",
+                                              name, doc);
+                        } else if (q == quantifier::optional) {
+                            os << std::format(" * @param {} [in][optional] {}; can be nullptr\n",
+                                              name, doc);
+                        } else {
+                            os << std::format(" * @param {} [in] {}\n", name, doc);
+                        }
+                    });
+                os << " * @param loc [in][optional] Source code location; can be nullptr\n *\n";
+                os << " * @return tinytc_status_success on success and error otherwise\n */\n";
+                os << "TINYTC_EXPORT tinytc_status_t tinytc_" << in->class_name() << "_create(";
+                generate_c_params(os, in);
+                os << ");\n\n";
+            }
         });
     }
 }
 void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
-            os << "/*\n";
-            generate_docstring(os, in->doc());
-            os << " *\n";
-            generate_params(
-                os, in,
-                [&os](quantifier q, std::string_view, std::string_view name, std::string_view doc) {
-                    if (q == quantifier::optional || q == quantifier::many) {
-                        os << std::format(" * @param {} {}; can be {{}}\n", name, doc);
-                    } else {
-                        os << std::format(" * @param {} {}\n", name, doc);
-                    }
-                });
-            os << " * @param loc Source code location; can be {}\n *\n";
-            os << " * @return Instruction\n */\n";
-            os << "inline auto make_" << in->class_name() << "(";
-            generate_cxx_params(os, in);
-            os << ") -> inst {\n";
-            os << "tinytc_inst_t instr;\n";
-            os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n", in->class_name());
-            generate_params(
-                os, in,
-                [&os](quantifier q, std::string_view type, std::string_view name,
-                      std::string_view) {
-                    if (q == quantifier::many) {
-                        os << std::format("{0}.size(), reinterpret_cast<const {1}*>({0}.data()), ",
-                                          name, type);
-                    } else {
-                        os << std::format("{}, ", name);
-                    }
-                },
-                true);
-            os << "&loc), loc);\nreturn inst(instr);\n}\n\n";
+            if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
+                os << "/*\n";
+                generate_docstring(os, in->doc());
+                os << " *\n";
+                generate_params(os, in,
+                                [&os](quantifier q, data_type const &, std::string_view name,
+                                      std::string_view doc) {
+                                    if (q == quantifier::optional || q == quantifier::many) {
+                                        os << std::format(" * @param {} {}; can be {{}}\n", name,
+                                                          doc);
+                                    } else {
+                                        os << std::format(" * @param {} {}\n", name, doc);
+                                    }
+                                });
+                os << " * @param loc Source code location; can be {}\n *\n";
+                os << " * @return Instruction\n */\n";
+                os << "inline auto make_" << in->class_name() << "(";
+                generate_cxx_params(os, in);
+                os << ") -> inst {\n";
+                os << "tinytc_inst_t instr;\n";
+                os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",
+                                  in->class_name());
+                generate_params(os, in,
+                                [&os](quantifier q, data_type const &ty, std::string_view name,
+                                      std::string_view) {
+                                    generate_cxx_to_c_cast(os, q, ty, name);
+                                    os << ", ";
+                                });
+                os << "&loc), loc);\nreturn inst(instr);\n}\n\n";
+            }
         });
     }
 }
@@ -158,7 +263,7 @@ void generate_enum_cpp(std::ostream &os, objects const &obj) {
         os << "switch (val) {\n";
         for (auto &c : e->cases()) {
             os << std::format("case tinytc_{0}_{1}: return \"{2}\";\n", e->name(), c.name,
-                              e->doc_to_string() ? c.doc : c.name);
+                              e->is_set(enum_flag::doc_to_string) ? c.doc : c.name);
         }
         os << "}\nreturn \"unknown\";\n";
         os << "}\n\n";
@@ -216,12 +321,10 @@ public:
         }
     }
     for (auto &p : in->props()) {
-        if (p.quantity == quantifier::many) {
-            os << std::format("std::vector<{}>", p.cxx_type());
-        } else {
-            os << p.cxx_type();
-        }
-        os << " " << p.name << ";\n";
+        const auto type = p.quantity == quantifier::many
+                              ? std::format("std::vector<{}>", to_cxx_type(p.type))
+                              : to_cxx_type(p.type);
+        os << std::format("{} {};\n", type, p.name);
     }
     os << "};\n";
 
@@ -247,8 +350,9 @@ public:
     os << "inline auto props() -> properties& { return "
           "*static_cast<properties*>(get().props()); }\n";
     for (auto &p : in->props()) {
-        auto type = p.quantity == quantifier::many ? std::format("array_view<{}>", p.cxx_type())
-                                                   : p.cxx_type();
+        auto type = p.quantity == quantifier::many
+                        ? std::format("array_view<{}>", to_cxx_type(p.type))
+                        : to_cxx_type(p.type);
         os << std::format("inline auto {0}() -> {1} {{ return props().{0}; }}\n", p.name, type);
         os << std::format("inline void {0}({1} val) {{ props().{0} = val; }}\n", p.name, type);
     }
@@ -383,13 +487,12 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, lc)}};
         for (auto &r : in->rets()) {
             if (r.quantity == quantifier::many) {
                 os << std::format(R"CXXT(for (auto &r : {}) {{
-    in->result(ret_no++) = value_node{{r, in.get(), lc}};
+    in->result(ret_no++, r);
 }}
 )CXXT",
                                   r.name);
             } else {
-                os << std::format("in->result(ret_no++) = value_node{{{}, in.get(), lc}};\n",
-                                  r.name);
+                os << std::format("in->result(ret_no++, {});\n", r.name);
             }
         }
     });

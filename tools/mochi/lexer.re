@@ -72,7 +72,6 @@ lex:
         "case"              { adv_loc(); return parser::make_CASE(loc_); }
         "collective"        { adv_loc(); return parser::make_COLLECTIVE(loc_); }
         "cxx"               { adv_loc(); return parser::make_CXX(loc_); }
-        "doc_to_string"     { adv_loc(); return parser::make_DOC_TO_STRING(loc_); }
         "enum"              { adv_loc(); return parser::make_ENUM(loc_); }
         "include"           { adv_loc(); return parser::make_INCLUDE(loc_); }
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
@@ -84,10 +83,17 @@ lex:
         "ret"               { adv_loc(); return parser::make_RET(loc_); }
         "spmd"              { adv_loc(); return parser::make_SPMD(loc_); }
 
+        // enum flags
+        "doc_to_string"     { adv_loc(); return parser::make_ENUM_FLAG(enum_flag::doc_to_string, loc_); }
+
+        // inst flags
+        "skip_builder"      { adv_loc(); return parser::make_INST_FLAG(inst_flag::skip_builder, loc_); }
+
         // basic types
-        "bool"              { adv_loc(); return parser::make_BASIC_TYPE(basic_type::bool_, loc_); }
-        "i32"               { adv_loc(); return parser::make_BASIC_TYPE(basic_type::i32, loc_); }
-        "i64"               { adv_loc(); return parser::make_BASIC_TYPE(basic_type::i64, loc_); }
+        "bool"              { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::bool_, loc_); }
+        "i32"               { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::i32, loc_); }
+        "i64"               { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::i64, loc_); }
+        // No lex for: builtin_type::type, builtin_type::value
 
         // punctuation
         "=>"                { adv_loc(); return parser::make_ARROW(loc_); }

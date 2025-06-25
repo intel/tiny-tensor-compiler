@@ -48,7 +48,6 @@
     CASE            "case"
     COLLECTIVE      "collective"
     CXX             "cxx"
-    DOC_TO_STRING   "doc_to_string"
     ENUM            "enum"
     INCLUDE         "include"
     INST            "inst"
@@ -58,6 +57,7 @@
     PROP            "prop"
     REG             "reg"
     RET             "ret"
+    SKIP_BUILDER    "skip_builder"
     SPMD            "spmd"
     ARROW           "=>"
     COLON           ":"
@@ -70,18 +70,19 @@
 %token <std::string> LOCAL_ID
 %token <std::string> STRING
 %token <std::int64_t> NUMBER
-%token <basic_type> BASIC_TYPE
+%token <builtin_type> BUILTIN_TYPE
+%token <enum_flag> ENUM_FLAG
+%token <inst_flag> INST_FLAG
 
-%nterm <std::vector<case_>> cases
+%nterm <std::pair<std::uint32_t, std::vector<case_>>> enum_content
 %nterm <case_> case
-%nterm <std::vector<member>> members
+%nterm <std::pair<std::uint32_t, std::vector<member>>> members
 %nterm <member> member
 %nterm <quantifier> op_quantifier
 %nterm <quantifier> nonop_quantifier
-%nterm <prop_type> prop_type
+%nterm <data_type> data_type
 %nterm <inst*> parent
 %nterm <bool> private
-%nterm <bool> doc_to_string
 %nterm <std::string> optstring
 %nterm <std::string> string
 
@@ -109,19 +110,24 @@ stmt:
 ;
 
 enum:
-    ENUM GLOBAL_ID doc_to_string optstring LBRACE cases RBRACE {
+    ENUM GLOBAL_ID optstring LBRACE enum_content RBRACE {
         try {
-            obj.add(std::make_unique<enum_>($GLOBAL_ID, std::move($optstring), std::move($cases), $doc_to_string));
-        } catch (std::exception const& e) {
+            auto e =
+                std::make_unique<enum_>($GLOBAL_ID, std::move($optstring),
+                                        std::move($enum_content.second));
+            e->flags($enum_content.first);
+            obj.add(std::move(e));
+        } catch (std::exception const &e) {
             error(@enum, e.what());
             YYERROR;
         }
     }
 ;
 
-cases:
+enum_content:
     %empty {}
-  | cases case { $$ = std::move($1); $$.emplace_back(std::move($case)); }
+  | enum_content ENUM_FLAG { $$ = std::move($1); $$.first |= static_cast<std::uint32_t>($ENUM_FLAG); }
+  | enum_content case { $$ = std::move($1); $$.second.emplace_back(std::move($case)); }
 ;
 
 case:
@@ -133,8 +139,10 @@ case:
 inst:
     INST GLOBAL_ID parent optstring LBRACE members RBRACE {
         try {
-            obj.add($parent, std::make_unique<inst>($GLOBAL_ID, std::move($optstring),
-                                                    std::move($members), $parent));
+            auto i = std::make_unique<inst>($GLOBAL_ID, std::move($optstring),
+                                            std::move($members.second), $parent);
+            i->flags($members.first);
+            obj.add($parent, std::move(i));
         } catch (std::exception const &e) {
             error(@inst, e.what());
             YYERROR;
@@ -156,16 +164,17 @@ parent:
 
 members:
     %empty {}
-  | members member { $$ = std::move($1); $$.emplace_back(std::move($member)); }
+  | members INST_FLAG { $$ = std::move($1); $$.first |= static_cast<std::uint32_t>($INST_FLAG); }
+  | members member { $$ = std::move($1); $$.second.emplace_back(std::move($member)); }
 ;
 
 member:
     OP op_quantifier LOCAL_ID optstring {
         $$ = op{$op_quantifier, std::move($LOCAL_ID), std::move($optstring)};
     }
-  | PROP nonop_quantifier LOCAL_ID private ARROW prop_type optstring {
+  | PROP nonop_quantifier LOCAL_ID private ARROW data_type optstring {
         $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring),
-                  std::move($prop_type), $private};
+                  std::move($data_type), $private};
     }
   | RET nonop_quantifier LOCAL_ID optstring {
         $$ = ret{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring)};
@@ -185,8 +194,8 @@ nonop_quantifier:
   | STAR     { $$ = quantifier::many; }
 ;
 
-prop_type:
-    BASIC_TYPE { $$ = std::move($1); }
+data_type:
+    BUILTIN_TYPE { $$ = std::move($1); }
   | STRING     { $$ = std::move($1); }
   | GLOBAL_ID  {
         auto ty = obj.find_enum($GLOBAL_ID);
@@ -201,11 +210,6 @@ prop_type:
 private:
     %empty { $$ = false; }
   | PRIVATE { $$ = true; }
-;
-
-doc_to_string:
-    %empty { $$ = false; }
-  | DOC_TO_STRING { $$ = true; }
 ;
 
 optstring:

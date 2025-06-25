@@ -1,416 +1,417 @@
 ; Copyright (C) 2025 Intel Corporation
 ; SPDX-License-Identifier: BSD-3-Clause
 
-enum @status doc_to_string 'Status codes' {
-    case %success                     => 0x0  'Success'
-    case %bad_alloc                   => 0x1  'Bad allocation'
-    case %invalid_arguments           => 0x2  'Invalid arguments passed to function'
-    case %out_of_range                => 0x3  'Out of range'
-    case %runtime_error               => 0x4  'General runtime error'
-    case %internal_compiler_error     => 0x5  'Internal compiler error'
-    case %unsupported_subgroup_size   => 0x6  'Device does not support subgroup size'
-    case %unsupported_work_group_size => 0x7  'Device does not support work-group size'
-    case %compilation_error           => 0x8  'Compilation error'
-    case %file_io_error               => 0x9  'I/O error occured in file operation'
-    case %parse_error                 => 0xa  'Parse error'
-    case %unavailable_extension       => 0xb  'Required vendor extension is unavailable'
-    case %unsupported_backend         => 0xc  'Unsupported backend'
-    case %invalid_kernel_arguments    => 0xd  'Invalid arguments passed to kernel'
-    case %unsupported_device          => 0xe  'Unsupported device'
-    case %invalid_core_info           => 0xf  'Invalid core info object (e.g. max work group size is 0 or '
-                                              'subgroup sizes vector is empty)'
-    case %unknown_pass_name           => 0x10 'Unknown compiler pass name'
-    case %not_implemented             => 0x11 'Not implemented'
+enum @status "Status codes" {
+    doc_to_string
+    case %success                     => 0x0  "Success"
+    case %bad_alloc                   => 0x1  "Bad allocation"
+    case %invalid_arguments           => 0x2  "Invalid arguments passed to function"
+    case %out_of_range                => 0x3  "Out of range"
+    case %runtime_error               => 0x4  "General runtime error"
+    case %internal_compiler_error     => 0x5  "Internal compiler error"
+    case %unsupported_subgroup_size   => 0x6  "Device does not support subgroup size"
+    case %unsupported_work_group_size => 0x7  "Device does not support work-group size"
+    case %compilation_error           => 0x8  "Compilation error"
+    case %file_io_error               => 0x9  "I/O error occured in file operation"
+    case %parse_error                 => 0xa  "Parse error"
+    case %unavailable_extension       => 0xb  "Required vendor extension is unavailable"
+    case %unsupported_backend         => 0xc  "Unsupported backend"
+    case %invalid_kernel_arguments    => 0xd  "Invalid arguments passed to kernel"
+    case %unsupported_device          => 0xe  "Unsupported device"
+    case %invalid_core_info           => 0xf  "Invalid core info object (e.g. max work group size is 0 or "
+                                              "subgroup sizes vector is empty)"
+    case %unknown_pass_name           => 0x10 "Unknown compiler pass name"
+    case %not_implemented             => 0x11 "Not implemented"
     ; IR errors
-    case %ir_out_of_bounds                         => 0x100 'Argument is out of bounds'
-    case %ir_invalid_shape                         => 0x101 'Invalid shape'
-    case %ir_incompatible_shapes                   => 0x102 'Incompatible tensor shapes'
-    case %ir_shape_stride_mismatch                 => 0x103 'Dimension of shape and stride must match'
-    case %ir_scalar_mismatch                       => 0x104 'Scalar type mismatch'
-    case %ir_invalid_number_of_indices             => 0x105 'Number of indices must match memref order '
-                                                            'or must be 1 for group types'
-    case %ir_expected_boolean                      => 0x106 'Expected boolean type'
-    case %ir_expected_scalar                       => 0x107 'Expected scalar type'
-    case %ir_expected_int                          => 0x108 'Expected integer type'
-    case %ir_expected_float                        => 0x109 'Expected floating point type'
-    case %ir_expected_complex                      => 0x10a 'Expected complex type'
-    case %ir_expected_i32                          => 0x10b 'Expected i32 type'
-    case %ir_expected_index                        => 0x10c 'Expected index type'
-    case %ir_expected_coopmatrix                   => 0x10d 'Expected coopmatrix type'
-    case %ir_expected_coopmatrix_or_scalar         => 0x10e 'Expected coopmatrix or scalar type'
-    case %ir_expected_coopmatrix_scalar_or_boolean => 0x10f 'Expected coopmatrix type, scalar type, '
-                                                            'or boolean type'
-    case %ir_expected_memref                       => 0x110 'Expected memref type'
-    case %ir_expected_memref_or_scalar             => 0x111 'Expected memref or scalar type'
-    case %ir_expected_memref_or_group              => 0x112 'Expected memref or group type'
-    case %ir_expected_memref_order_0               => 0x113 'Expected memref of order 0 (scalar)'
-    case %ir_expected_memref_order_1               => 0x114 'Expected memref of order 1 (vector)'
-    case %ir_expected_memref_order_2               => 0x115 'Expected memref of order 2 (matrix)'
-    case %ir_expected_memref_order_0_or_1          => 0x116 'Expected memref of order 0 or 1 (scalar or vector)'
-    case %ir_expected_memref_order_1_or_2          => 0x117 'Expected memref of order 1 or 2 (vector or matrix)'
-    case %ir_expected_memref_order_0_1_or_2        => 0x118 'Expected memref of order 0, 1, or 2 '
-                                                            '(scalar, vector, or matrix)'
-    case %ir_unexpected_yield                      => 0x119 'Yield encountered in non-yielding region'
-    case %ir_yield_mismatch                        => 0x11a 'Number of yielded values does not match number of '
-                                                            'values yielded by region or the types are different'
-    case %ir_subview_mismatch                      => 0x11b 'Number of dynamic offsets and sizes must match '
-                                                            'number of dynamic operands'
-    case %ir_invalid_slice                         => 0x11c 'Static offset and size must be non-negative or '
-                                                            'dynamic (?)'
-    case %ir_expand_shape_order_too_small          => 0x11d 'Expand shape must have at least 2 entries'
-    case %ir_expand_shape_mismatch                 => 0x11e 'Number of dynamic expand shape operands must equal '
-                                                            'number of dynamic modes in static expand shape'
-    case %ir_collective_called_from_spmd           => 0x11f 'Collective instruction must not be called from '
-                                                            'SPMD region'
-    case %ir_fp_unsupported                        => 0x120 'Floating point type unsupported by instruction'
-    case %ir_spmd_called_from_collective           => 0x121 'SPMD instruction must not be called from collective '
-                                                            'region'
-    case %ir_expected_local_address_space          => 0x122 'Expected memref with local address space'
-    case %ir_expected_global_address_space         => 0x123 'Expected memref with global address space'
-    case %ir_address_space_mismatch                => 0x124 'Address space must match'
-    case %ir_invalid_offset                        => 0x125 'Offset must be non-negative or dynamic'
-    case %ir_int_unsupported                       => 0x126 'Instruction does not support int type'
-    case %ir_boolean_unsupported                   => 0x127 'Instruction does not support boolean type'
-    case %ir_complex_unsupported                   => 0x128 'Instruction does not support complex type'
-    case %ir_coopmatrix_unsupported                => 0x129 'Instruction does not support coopmatrix type'
-    case %ir_forbidden_cast                        => 0x12a 'Forbidden cast'
-    case %ir_invalid_beta                          => 0x12b 'beta must be constant and 0 or 1 for atomic linear '
-                                                            'algebra operations'
-    case %ir_init_return_mismatch                  => 0x12c 'The number or types of the initial values does not '
-                                                            'match the return type list'
-    case %ir_invalid_matrix_use                    => 0x12d 'Operands have invalid matrix use'
-    case %ir_unsupported_coopmatrix_shape          => 0x12e 'Unsupported coopmatrix shape for the combination of '
-                                                            'scalar type, matrix use, and target architecture'
-    case %ir_forbidden_promotion                   => 0x12f 'Scalar type promotion is forbidden'
-    case %ir_constant_mismatch                     => 0x130 'Type of constant does not match type or returned '
-                                                            'value'
-    case %ir_insufficient_alignment                => 0x131 'Pointer does not satisfy minimum alignment '
-                                                            'requirements'
-    case %ir_must_have_yield                       => 0x132 'Last instruction of region that returns values must '
-                                                            'be yield'
-    case %ir_yield_in_else_branch_missing          => 0x133 'Else-branch must have yield instruction if '
-                                                            'then-branch has yield instruction'
-    case %ir_from_to_mismatch                      => 0x134 'length(from) != length(to) in foreach'
-    case %ir_operand_type_must_match_return_type   => 0x135 'Operand type must match return type'
-    case %ir_invalid_stride                        => 0x136 'Invalid stride'
-    case %ir_init_return_type_mismatch             => 0x137 'Type of initializer does not match return type or '
-                                                            'the number of return types is not equal the number '
-                                                            'of initializers'
-    case %ir_value_still_has_uses                  => 0x138 'A value shall be erased that still has uses'
-    case %ir_expected_array_attribute              => 0x139 'Expected array attribute'
-    case %ir_expected_boolean_attribute            => 0x140 'Expected boolean attribute'
-    case %ir_expected_dictionary_attribute         => 0x141 'Expected dictionary attribute'
-    case %ir_expected_integer_attribute            => 0x142 'Expected integer attribute'
-    case %ir_expected_string_attribute             => 0x143 'Expected string attribute'
-    case %ir_duplicate_key_in_dictionary           => 0x144 'Duplicate key detected in list of named attributes'
-    case %ir_unexpected_array_attribute_size       => 0x145 'Unexpected array size'
-    case %ir_expected_non_scalar_memref            => 0x146 'Expected memref of dimension greater or equal than 1'
+    case %ir_out_of_bounds                         => 0x100 "Argument is out of bounds"
+    case %ir_invalid_shape                         => 0x101 "Invalid shape"
+    case %ir_incompatible_shapes                   => 0x102 "Incompatible tensor shapes"
+    case %ir_shape_stride_mismatch                 => 0x103 "Dimension of shape and stride must match"
+    case %ir_scalar_mismatch                       => 0x104 "Scalar type mismatch"
+    case %ir_invalid_number_of_indices             => 0x105 "Number of indices must match memref order "
+                                                            "or must be 1 for group types"
+    case %ir_expected_boolean                      => 0x106 "Expected boolean type"
+    case %ir_expected_scalar                       => 0x107 "Expected scalar type"
+    case %ir_expected_int                          => 0x108 "Expected integer type"
+    case %ir_expected_float                        => 0x109 "Expected floating point type"
+    case %ir_expected_complex                      => 0x10a "Expected complex type"
+    case %ir_expected_i32                          => 0x10b "Expected i32 type"
+    case %ir_expected_index                        => 0x10c "Expected index type"
+    case %ir_expected_coopmatrix                   => 0x10d "Expected coopmatrix type"
+    case %ir_expected_coopmatrix_or_scalar         => 0x10e "Expected coopmatrix or scalar type"
+    case %ir_expected_coopmatrix_scalar_or_boolean => 0x10f "Expected coopmatrix type, scalar type, "
+                                                            "or boolean type"
+    case %ir_expected_memref                       => 0x110 "Expected memref type"
+    case %ir_expected_memref_or_scalar             => 0x111 "Expected memref or scalar type"
+    case %ir_expected_memref_or_group              => 0x112 "Expected memref or group type"
+    case %ir_expected_memref_order_0               => 0x113 "Expected memref of order 0 (scalar)"
+    case %ir_expected_memref_order_1               => 0x114 "Expected memref of order 1 (vector)"
+    case %ir_expected_memref_order_2               => 0x115 "Expected memref of order 2 (matrix)"
+    case %ir_expected_memref_order_0_or_1          => 0x116 "Expected memref of order 0 or 1 (scalar or vector)"
+    case %ir_expected_memref_order_1_or_2          => 0x117 "Expected memref of order 1 or 2 (vector or matrix)"
+    case %ir_expected_memref_order_0_1_or_2        => 0x118 "Expected memref of order 0, 1, or 2 "
+                                                            "(scalar, vector, or matrix)"
+    case %ir_unexpected_yield                      => 0x119 "Yield encountered in non-yielding region"
+    case %ir_yield_mismatch                        => 0x11a "Number of yielded values does not match number of "
+                                                            "values yielded by region or the types are different"
+    case %ir_subview_mismatch                      => 0x11b "Number of dynamic offsets and sizes must match "
+                                                            "number of dynamic operands"
+    case %ir_invalid_slice                         => 0x11c "Static offset and size must be non-negative or "
+                                                            "dynamic (?)"
+    case %ir_expand_shape_order_too_small          => 0x11d "Expand shape must have at least 2 entries"
+    case %ir_expand_shape_mismatch                 => 0x11e "Number of dynamic expand shape operands must equal "
+                                                            "number of dynamic modes in static expand shape"
+    case %ir_collective_called_from_spmd           => 0x11f "Collective instruction must not be called from "
+                                                            "SPMD region"
+    case %ir_fp_unsupported                        => 0x120 "Floating point type unsupported by instruction"
+    case %ir_spmd_called_from_collective           => 0x121 "SPMD instruction must not be called from collective "
+                                                            "region"
+    case %ir_expected_local_address_space          => 0x122 "Expected memref with local address space"
+    case %ir_expected_global_address_space         => 0x123 "Expected memref with global address space"
+    case %ir_address_space_mismatch                => 0x124 "Address space must match"
+    case %ir_invalid_offset                        => 0x125 "Offset must be non-negative or dynamic"
+    case %ir_int_unsupported                       => 0x126 "Instruction does not support int type"
+    case %ir_boolean_unsupported                   => 0x127 "Instruction does not support boolean type"
+    case %ir_complex_unsupported                   => 0x128 "Instruction does not support complex type"
+    case %ir_coopmatrix_unsupported                => 0x129 "Instruction does not support coopmatrix type"
+    case %ir_forbidden_cast                        => 0x12a "Forbidden cast"
+    case %ir_invalid_beta                          => 0x12b "beta must be constant and 0 or 1 for atomic linear "
+                                                            "algebra operations"
+    case %ir_init_return_mismatch                  => 0x12c "The number or types of the initial values does not "
+                                                            "match the return type list"
+    case %ir_invalid_matrix_use                    => 0x12d "Operands have invalid matrix use"
+    case %ir_unsupported_coopmatrix_shape          => 0x12e "Unsupported coopmatrix shape for the combination of "
+                                                            "scalar type, matrix use, and target architecture"
+    case %ir_forbidden_promotion                   => 0x12f "Scalar type promotion is forbidden"
+    case %ir_constant_mismatch                     => 0x130 "Type of constant does not match type or returned "
+                                                            "value"
+    case %ir_insufficient_alignment                => 0x131 "Pointer does not satisfy minimum alignment "
+                                                            "requirements"
+    case %ir_must_have_yield                       => 0x132 "Last instruction of region that returns values must "
+                                                            "be yield"
+    case %ir_yield_in_else_branch_missing          => 0x133 "Else-branch must have yield instruction if "
+                                                            "then-branch has yield instruction"
+    case %ir_from_to_mismatch                      => 0x134 "length(from) != length(to) in foreach"
+    case %ir_operand_type_must_match_return_type   => 0x135 "Operand type must match return type"
+    case %ir_invalid_stride                        => 0x136 "Invalid stride"
+    case %ir_init_return_type_mismatch             => 0x137 "Type of initializer does not match return type or "
+                                                            "the number of return types is not equal the number "
+                                                            "of initializers"
+    case %ir_value_still_has_uses                  => 0x138 "A value shall be erased that still has uses"
+    case %ir_expected_array_attribute              => 0x139 "Expected array attribute"
+    case %ir_expected_boolean_attribute            => 0x140 "Expected boolean attribute"
+    case %ir_expected_dictionary_attribute         => 0x141 "Expected dictionary attribute"
+    case %ir_expected_integer_attribute            => 0x142 "Expected integer attribute"
+    case %ir_expected_string_attribute             => 0x143 "Expected string attribute"
+    case %ir_duplicate_key_in_dictionary           => 0x144 "Duplicate key detected in list of named attributes"
+    case %ir_unexpected_array_attribute_size       => 0x145 "Unexpected array size"
+    case %ir_expected_non_scalar_memref            => 0x146 "Expected memref of dimension greater or equal than 1"
     ; SPIR-V errors
-    case %spirv_forbidden_forward_declaration => 0x1000 'Forward declaration of id is forbidden'
-    case %spirv_undefined_value               => 0x1001 'Undefined SPIR-V value'
-    case %spirv_missing_dope_vector           => 0x1002 'Dope vector missing'
-    case %spirv_unsupported_atomic_data_type  => 0x1003 'Atomic data type unsupported by SPIR-V'
-    case %spirv_required_feature_unavailable  => 0x1004 'A required SPIR-V feature is unavailable'
+    case %spirv_forbidden_forward_declaration => 0x1000 "Forward declaration of id is forbidden"
+    case %spirv_undefined_value               => 0x1001 "Undefined SPIR-V value"
+    case %spirv_missing_dope_vector           => 0x1002 "Dope vector missing"
+    case %spirv_unsupported_atomic_data_type  => 0x1003 "Atomic data type unsupported by SPIR-V"
+    case %spirv_required_feature_unavailable  => 0x1004 "A required SPIR-V feature is unavailable"
     ; Level zero errors
-    case %ze_result_not_ready                            => 0x10000 'ZE_RESULT_NOT_READY'
-    case %ze_result_error_device_lost                    => 0x10001 'ZE_RESULT_ERROR_DEVICE_LOST'
-    case %ze_result_error_out_of_host_memory             => 0x10002 'ZE_RESULT_ERROR_OUT_OF_HOST_MEMORY'
-    case %ze_result_error_out_of_device_memory           => 0x10003 'ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY'
-    case %ze_result_error_module_build_failure           => 0x10004 'ZE_RESULT_ERROR_MODULE_BUILD_FAILURE'
-    case %ze_result_error_module_link_failure            => 0x10005 'ZE_RESULT_ERROR_MODULE_LINK_FAILURE'
-    case %ze_result_error_device_requires_reset          => 0x10006 'ZE_RESULT_ERROR_DEVICE_REQUIRES_RESET'
-    case %ze_result_error_device_in_low_power_state      => 0x10007 'ZE_RESULT_ERROR_DEVICE_IN_LOW_POWER_STATE'
-    case %ze_result_exp_error_device_is_not_vertex       => 0x10008 'ZE_RESULT_EXP_ERROR_DEVICE_IS_NOT_VERTEX'
-    case %ze_result_exp_error_vertex_is_not_device       => 0x10009 'ZE_RESULT_EXP_ERROR_VERTEX_IS_NOT_DEVICE'
-    case %ze_result_exp_error_remote_device              => 0x1000A 'ZE_RESULT_EXP_ERROR_REMOTE_DEVICE'
-    case %ze_result_exp_error_operands_incompatible      => 0x1000B 'ZE_RESULT_EXP_ERROR_OPERANDS_INCOMPATIBLE'
-    case %ze_result_exp_rtas_build_retry                 => 0x1000C 'ZE_RESULT_EXP_RTAS_BUILD_RETRY'
-    case %ze_result_exp_rtas_build_deferred              => 0x1000D 'ZE_RESULT_EXP_RTAS_BUILD_DEFERRED'
-    case %ze_result_error_insufficient_permissions       => 0x1000E 'ZE_RESULT_ERROR_INSUFFICIENT_PERMISSIONS'
-    case %ze_result_error_not_available                  => 0x1000F 'ZE_RESULT_ERROR_NOT_AVAILABLE'
-    case %ze_result_error_dependency_unavailable         => 0x10010 'ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE'
-    case %ze_result_warning_dropped_data                 => 0x10011 'ZE_RESULT_WARNING_DROPPED_DATA'
-    case %ze_result_error_uninitialized                  => 0x10012 'ZE_RESULT_ERROR_UNINITIALIZED'
-    case %ze_result_error_unsupported_version            => 0x10013 'ZE_RESULT_ERROR_UNSUPPORTED_VERSION'
-    case %ze_result_error_unsupported_feature            => 0x10014 'ZE_RESULT_ERROR_UNSUPPORTED_FEATURE'
-    case %ze_result_error_invalid_argument               => 0x10015 'ZE_RESULT_ERROR_INVALID_ARGUMENT'
-    case %ze_result_error_invalid_null_handle            => 0x10016 'ZE_RESULT_ERROR_INVALID_NULL_HANDLE'
-    case %ze_result_error_handle_object_in_use           => 0x10017 'ZE_RESULT_ERROR_HANDLE_OBJECT_IN_USE'
-    case %ze_result_error_invalid_null_pointer           => 0x10018 'ZE_RESULT_ERROR_INVALID_NULL_POINTER'
-    case %ze_result_error_invalid_size                   => 0x10019 'ZE_RESULT_ERROR_INVALID_SIZE'
-    case %ze_result_error_unsupported_size               => 0x1001A 'ZE_RESULT_ERROR_UNSUPPORTED_SIZE'
-    case %ze_result_error_unsupported_alignment          => 0x1001B 'ZE_RESULT_ERROR_UNSUPPORTED_ALIGNMENT'
-    case %ze_result_error_invalid_synchronization_object => 0x1001C 'ZE_RESULT_ERROR_INVALID_SYNCHRONIZATION_OBJECT'
-    case %ze_result_error_invalid_enumeration            => 0x1001D 'ZE_RESULT_ERROR_INVALID_ENUMERATION'
-    case %ze_result_error_unsupported_enumeration        => 0x1001E 'ZE_RESULT_ERROR_UNSUPPORTED_ENUMERATION'
-    case %ze_result_error_unsupported_image_format       => 0x1001F 'ZE_RESULT_ERROR_UNSUPPORTED_IMAGE_FORMAT'
-    case %ze_result_error_invalid_native_binary          => 0x10020 'ZE_RESULT_ERROR_INVALID_NATIVE_BINARY'
-    case %ze_result_error_invalid_global_name            => 0x10021 'ZE_RESULT_ERROR_INVALID_GLOBAL_NAME'
-    case %ze_result_error_invalid_kernel_name            => 0x10022 'ZE_RESULT_ERROR_INVALID_KERNEL_NAME'
-    case %ze_result_error_invalid_function_name          => 0x10023 'ZE_RESULT_ERROR_INVALID_FUNCTION_NAME'
-    case %ze_result_error_invalid_group_size_dimension   => 0x10024 'ZE_RESULT_ERROR_INVALID_GROUP_SIZE_DIMENSION'
-    case %ze_result_error_invalid_global_width_dimension => 0x10025 'ZE_RESULT_ERROR_INVALID_GLOBAL_WIDTH_DIMENSION'
-    case %ze_result_error_invalid_kernel_argument_index  => 0x10026 'ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_INDEX'
-    case %ze_result_error_invalid_kernel_argument_size   => 0x10027 'ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_SIZE'
-    case %ze_result_error_invalid_kernel_attribute_value => 0x10028 'ZE_RESULT_ERROR_INVALID_KERNEL_ATTRIBUTE_VALUE'
-    case %ze_result_error_invalid_module_unlinked        => 0x10029 'ZE_RESULT_ERROR_INVALID_MODULE_UNLINKED'
-    case %ze_result_error_invalid_command_list_type      => 0x1002A 'ZE_RESULT_ERROR_INVALID_COMMAND_LIST_TYPE'
-    case %ze_result_error_overlapping_regions            => 0x1002B 'ZE_RESULT_ERROR_OVERLAPPING_REGIONS'
-    case %ze_result_warning_action_required              => 0x1002C 'ZE_RESULT_WARNING_ACTION_REQUIRED'
-    case %ze_result_error_unknown                        => 0x1002D 'ZE_RESULT_ERROR_UNKNOWN'
+    case %ze_result_not_ready                            => 0x10000 "ZE_RESULT_NOT_READY"
+    case %ze_result_error_device_lost                    => 0x10001 "ZE_RESULT_ERROR_DEVICE_LOST"
+    case %ze_result_error_out_of_host_memory             => 0x10002 "ZE_RESULT_ERROR_OUT_OF_HOST_MEMORY"
+    case %ze_result_error_out_of_device_memory           => 0x10003 "ZE_RESULT_ERROR_OUT_OF_DEVICE_MEMORY"
+    case %ze_result_error_module_build_failure           => 0x10004 "ZE_RESULT_ERROR_MODULE_BUILD_FAILURE"
+    case %ze_result_error_module_link_failure            => 0x10005 "ZE_RESULT_ERROR_MODULE_LINK_FAILURE"
+    case %ze_result_error_device_requires_reset          => 0x10006 "ZE_RESULT_ERROR_DEVICE_REQUIRES_RESET"
+    case %ze_result_error_device_in_low_power_state      => 0x10007 "ZE_RESULT_ERROR_DEVICE_IN_LOW_POWER_STATE"
+    case %ze_result_exp_error_device_is_not_vertex       => 0x10008 "ZE_RESULT_EXP_ERROR_DEVICE_IS_NOT_VERTEX"
+    case %ze_result_exp_error_vertex_is_not_device       => 0x10009 "ZE_RESULT_EXP_ERROR_VERTEX_IS_NOT_DEVICE"
+    case %ze_result_exp_error_remote_device              => 0x1000A "ZE_RESULT_EXP_ERROR_REMOTE_DEVICE"
+    case %ze_result_exp_error_operands_incompatible      => 0x1000B "ZE_RESULT_EXP_ERROR_OPERANDS_INCOMPATIBLE"
+    case %ze_result_exp_rtas_build_retry                 => 0x1000C "ZE_RESULT_EXP_RTAS_BUILD_RETRY"
+    case %ze_result_exp_rtas_build_deferred              => 0x1000D "ZE_RESULT_EXP_RTAS_BUILD_DEFERRED"
+    case %ze_result_error_insufficient_permissions       => 0x1000E "ZE_RESULT_ERROR_INSUFFICIENT_PERMISSIONS"
+    case %ze_result_error_not_available                  => 0x1000F "ZE_RESULT_ERROR_NOT_AVAILABLE"
+    case %ze_result_error_dependency_unavailable         => 0x10010 "ZE_RESULT_ERROR_DEPENDENCY_UNAVAILABLE"
+    case %ze_result_warning_dropped_data                 => 0x10011 "ZE_RESULT_WARNING_DROPPED_DATA"
+    case %ze_result_error_uninitialized                  => 0x10012 "ZE_RESULT_ERROR_UNINITIALIZED"
+    case %ze_result_error_unsupported_version            => 0x10013 "ZE_RESULT_ERROR_UNSUPPORTED_VERSION"
+    case %ze_result_error_unsupported_feature            => 0x10014 "ZE_RESULT_ERROR_UNSUPPORTED_FEATURE"
+    case %ze_result_error_invalid_argument               => 0x10015 "ZE_RESULT_ERROR_INVALID_ARGUMENT"
+    case %ze_result_error_invalid_null_handle            => 0x10016 "ZE_RESULT_ERROR_INVALID_NULL_HANDLE"
+    case %ze_result_error_handle_object_in_use           => 0x10017 "ZE_RESULT_ERROR_HANDLE_OBJECT_IN_USE"
+    case %ze_result_error_invalid_null_pointer           => 0x10018 "ZE_RESULT_ERROR_INVALID_NULL_POINTER"
+    case %ze_result_error_invalid_size                   => 0x10019 "ZE_RESULT_ERROR_INVALID_SIZE"
+    case %ze_result_error_unsupported_size               => 0x1001A "ZE_RESULT_ERROR_UNSUPPORTED_SIZE"
+    case %ze_result_error_unsupported_alignment          => 0x1001B "ZE_RESULT_ERROR_UNSUPPORTED_ALIGNMENT"
+    case %ze_result_error_invalid_synchronization_object => 0x1001C "ZE_RESULT_ERROR_INVALID_SYNCHRONIZATION_OBJECT"
+    case %ze_result_error_invalid_enumeration            => 0x1001D "ZE_RESULT_ERROR_INVALID_ENUMERATION"
+    case %ze_result_error_unsupported_enumeration        => 0x1001E "ZE_RESULT_ERROR_UNSUPPORTED_ENUMERATION"
+    case %ze_result_error_unsupported_image_format       => 0x1001F "ZE_RESULT_ERROR_UNSUPPORTED_IMAGE_FORMAT"
+    case %ze_result_error_invalid_native_binary          => 0x10020 "ZE_RESULT_ERROR_INVALID_NATIVE_BINARY"
+    case %ze_result_error_invalid_global_name            => 0x10021 "ZE_RESULT_ERROR_INVALID_GLOBAL_NAME"
+    case %ze_result_error_invalid_kernel_name            => 0x10022 "ZE_RESULT_ERROR_INVALID_KERNEL_NAME"
+    case %ze_result_error_invalid_function_name          => 0x10023 "ZE_RESULT_ERROR_INVALID_FUNCTION_NAME"
+    case %ze_result_error_invalid_group_size_dimension   => 0x10024 "ZE_RESULT_ERROR_INVALID_GROUP_SIZE_DIMENSION"
+    case %ze_result_error_invalid_global_width_dimension => 0x10025 "ZE_RESULT_ERROR_INVALID_GLOBAL_WIDTH_DIMENSION"
+    case %ze_result_error_invalid_kernel_argument_index  => 0x10026 "ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_INDEX"
+    case %ze_result_error_invalid_kernel_argument_size   => 0x10027 "ZE_RESULT_ERROR_INVALID_KERNEL_ARGUMENT_SIZE"
+    case %ze_result_error_invalid_kernel_attribute_value => 0x10028 "ZE_RESULT_ERROR_INVALID_KERNEL_ATTRIBUTE_VALUE"
+    case %ze_result_error_invalid_module_unlinked        => 0x10029 "ZE_RESULT_ERROR_INVALID_MODULE_UNLINKED"
+    case %ze_result_error_invalid_command_list_type      => 0x1002A "ZE_RESULT_ERROR_INVALID_COMMAND_LIST_TYPE"
+    case %ze_result_error_overlapping_regions            => 0x1002B "ZE_RESULT_ERROR_OVERLAPPING_REGIONS"
+    case %ze_result_warning_action_required              => 0x1002C "ZE_RESULT_WARNING_ACTION_REQUIRED"
+    case %ze_result_error_unknown                        => 0x1002D "ZE_RESULT_ERROR_UNKNOWN"
     ; OpenCL errors
-    case %cl_build_program_failure                     => 0x20000 'CL_BUILD_PROGRAM_FAILURE'
-    case %cl_compile_program_failure                   => 0x20001 'CL_COMPILE_PROGRAM_FAILURE'
-    case %cl_compiler_not_available                    => 0x20002 'CL_COMPILER_NOT_AVAILABLE'
-    case %cl_device_not_found                          => 0x20003 'CL_DEVICE_NOT_FOUND'
-    case %cl_device_not_available                      => 0x20004 'CL_DEVICE_NOT_AVAILABLE'
-    case %cl_device_partition_failed                   => 0x20005 'CL_DEVICE_PARTITION_FAILED'
-    case %cl_exec_status_error_for_events_in_wait_list => 0x20006 'CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST'
-    case %cl_image_format_mismatch                     => 0x20007 'CL_IMAGE_FORMAT_MISMATCH'
-    case %cl_image_format_not_supported                => 0x20008 'CL_IMAGE_FORMAT_NOT_SUPPORTED'
-    case %cl_invalid_arg_index                         => 0x20009 'CL_INVALID_ARG_INDEX'
-    case %cl_invalid_arg_size                          => 0x2000A 'CL_INVALID_ARG_SIZE'
-    case %cl_invalid_arg_value                         => 0x2000B 'CL_INVALID_ARG_VALUE'
-    case %cl_invalid_binary                            => 0x2000C 'CL_INVALID_BINARY'
-    case %cl_invalid_buffer_size                       => 0x2000D 'CL_INVALID_BUFFER_SIZE'
-    case %cl_invalid_build_options                     => 0x2000E 'CL_INVALID_BUILD_OPTIONS'
-    case %cl_invalid_command_queue                     => 0x2000F 'CL_INVALID_COMMAND_QUEUE'
-    case %cl_invalid_compiler_options                  => 0x20010 'CL_INVALID_COMPILER_OPTIONS'
-    case %cl_invalid_context                           => 0x20011 'CL_INVALID_CONTEXT'
-    case %cl_invalid_device                            => 0x20012 'CL_INVALID_DEVICE'
-    case %cl_invalid_device_partition_count            => 0x20013 'CL_INVALID_DEVICE_PARTITION_COUNT'
-    case %cl_invalid_device_queue                      => 0x20014 'CL_INVALID_DEVICE_QUEUE'
-    case %cl_invalid_device_type                       => 0x20015 'CL_INVALID_DEVICE_TYPE'
-    case %cl_invalid_event                             => 0x20016 'CL_INVALID_EVENT'
-    case %cl_invalid_event_wait_list                   => 0x20017 'CL_INVALID_EVENT_WAIT_LIST'
-    case %cl_invalid_global_offset                     => 0x20018 'CL_INVALID_GLOBAL_OFFSET'
-    case %cl_invalid_global_work_size                  => 0x20019 'CL_INVALID_GLOBAL_WORK_SIZE'
-    case %cl_invalid_host_ptr                          => 0x2001A 'CL_INVALID_HOST_PTR'
-    case %cl_invalid_image_descriptor                  => 0x2001B 'CL_INVALID_IMAGE_DESCRIPTOR'
-    case %cl_invalid_image_format_descriptor           => 0x2001C 'CL_INVALID_IMAGE_FORMAT_DESCRIPTOR'
-    case %cl_invalid_image_size                        => 0x2001D 'CL_INVALID_IMAGE_SIZE'
-    case %cl_invalid_kernel                            => 0x2001E 'CL_INVALID_KERNEL'
-    case %cl_invalid_kernel_args                       => 0x2001F 'CL_INVALID_KERNEL_ARGS'
-    case %cl_invalid_kernel_definition                 => 0x20020 'CL_INVALID_KERNEL_DEFINITION'
-    case %cl_invalid_kernel_name                       => 0x20021 'CL_INVALID_KERNEL_NAME'
-    case %cl_invalid_linker_options                    => 0x20022 'CL_INVALID_LINKER_OPTIONS'
-    case %cl_invalid_mem_object                        => 0x20023 'CL_INVALID_MEM_OBJECT'
-    case %cl_invalid_operation                         => 0x20024 'CL_INVALID_OPERATION'
-    case %cl_invalid_pipe_size                         => 0x20025 'CL_INVALID_PIPE_SIZE'
-    case %cl_invalid_platform                          => 0x20026 'CL_INVALID_PLATFORM'
-    case %cl_invalid_program                           => 0x20027 'CL_INVALID_PROGRAM'
-    case %cl_invalid_program_executable                => 0x20028 'CL_INVALID_PROGRAM_EXECUTABLE'
-    case %cl_invalid_property                          => 0x20029 'CL_INVALID_PROPERTY'
-    case %cl_invalid_queue_properties                  => 0x2002A 'CL_INVALID_QUEUE_PROPERTIES'
-    case %cl_invalid_sampler                           => 0x2002B 'CL_INVALID_SAMPLER'
-    case %cl_invalid_spec_id                           => 0x2002C 'CL_INVALID_SPEC_ID'
-    case %cl_invalid_value                             => 0x2002D 'CL_INVALID_VALUE'
-    case %cl_invalid_work_dimension                    => 0x2002E 'CL_INVALID_WORK_DIMENSION'
-    case %cl_invalid_work_group_size                   => 0x2002F 'CL_INVALID_WORK_GROUP_SIZE'
-    case %cl_invalid_work_item_size                    => 0x20030 'CL_INVALID_WORK_ITEM_SIZE'
-    case %cl_kernel_arg_info_not_available             => 0x20031 'CL_KERNEL_ARG_INFO_NOT_AVAILABLE'
-    case %cl_link_program_failure                      => 0x20032 'CL_LINK_PROGRAM_FAILURE'
-    case %cl_linker_not_available                      => 0x20033 'CL_LINKER_NOT_AVAILABLE'
-    case %cl_map_failure                               => 0x20034 'CL_MAP_FAILURE'
-    case %cl_mem_copy_overlap                          => 0x20035 'CL_MEM_COPY_OVERLAP'
-    case %cl_mem_object_allocation_failure             => 0x20036 'CL_MEM_OBJECT_ALLOCATION_FAILURE'
-    case %cl_misaligned_sub_buffer_offset              => 0x20037 'CL_MISALIGNED_SUB_BUFFER_OFFSET'
-    case %cl_out_of_host_memory                        => 0x20038 'CL_OUT_OF_HOST_MEMORY'
-    case %cl_out_of_resources                          => 0x20039 'CL_OUT_OF_RESOURCES'
-    case %cl_max_size_restriction_exceeded             => 0x2003A 'CL_MAX_SIZE_RESTRICTION_EXCEEDED'
-    case %cl_profiling_info_not_available              => 0x2003B 'CL_PROFILING_INFO_NOT_AVAILABLE'
+    case %cl_build_program_failure                     => 0x20000 "CL_BUILD_PROGRAM_FAILURE"
+    case %cl_compile_program_failure                   => 0x20001 "CL_COMPILE_PROGRAM_FAILURE"
+    case %cl_compiler_not_available                    => 0x20002 "CL_COMPILER_NOT_AVAILABLE"
+    case %cl_device_not_found                          => 0x20003 "CL_DEVICE_NOT_FOUND"
+    case %cl_device_not_available                      => 0x20004 "CL_DEVICE_NOT_AVAILABLE"
+    case %cl_device_partition_failed                   => 0x20005 "CL_DEVICE_PARTITION_FAILED"
+    case %cl_exec_status_error_for_events_in_wait_list => 0x20006 "CL_EXEC_STATUS_ERROR_FOR_EVENTS_IN_WAIT_LIST"
+    case %cl_image_format_mismatch                     => 0x20007 "CL_IMAGE_FORMAT_MISMATCH"
+    case %cl_image_format_not_supported                => 0x20008 "CL_IMAGE_FORMAT_NOT_SUPPORTED"
+    case %cl_invalid_arg_index                         => 0x20009 "CL_INVALID_ARG_INDEX"
+    case %cl_invalid_arg_size                          => 0x2000A "CL_INVALID_ARG_SIZE"
+    case %cl_invalid_arg_value                         => 0x2000B "CL_INVALID_ARG_VALUE"
+    case %cl_invalid_binary                            => 0x2000C "CL_INVALID_BINARY"
+    case %cl_invalid_buffer_size                       => 0x2000D "CL_INVALID_BUFFER_SIZE"
+    case %cl_invalid_build_options                     => 0x2000E "CL_INVALID_BUILD_OPTIONS"
+    case %cl_invalid_command_queue                     => 0x2000F "CL_INVALID_COMMAND_QUEUE"
+    case %cl_invalid_compiler_options                  => 0x20010 "CL_INVALID_COMPILER_OPTIONS"
+    case %cl_invalid_context                           => 0x20011 "CL_INVALID_CONTEXT"
+    case %cl_invalid_device                            => 0x20012 "CL_INVALID_DEVICE"
+    case %cl_invalid_device_partition_count            => 0x20013 "CL_INVALID_DEVICE_PARTITION_COUNT"
+    case %cl_invalid_device_queue                      => 0x20014 "CL_INVALID_DEVICE_QUEUE"
+    case %cl_invalid_device_type                       => 0x20015 "CL_INVALID_DEVICE_TYPE"
+    case %cl_invalid_event                             => 0x20016 "CL_INVALID_EVENT"
+    case %cl_invalid_event_wait_list                   => 0x20017 "CL_INVALID_EVENT_WAIT_LIST"
+    case %cl_invalid_global_offset                     => 0x20018 "CL_INVALID_GLOBAL_OFFSET"
+    case %cl_invalid_global_work_size                  => 0x20019 "CL_INVALID_GLOBAL_WORK_SIZE"
+    case %cl_invalid_host_ptr                          => 0x2001A "CL_INVALID_HOST_PTR"
+    case %cl_invalid_image_descriptor                  => 0x2001B "CL_INVALID_IMAGE_DESCRIPTOR"
+    case %cl_invalid_image_format_descriptor           => 0x2001C "CL_INVALID_IMAGE_FORMAT_DESCRIPTOR"
+    case %cl_invalid_image_size                        => 0x2001D "CL_INVALID_IMAGE_SIZE"
+    case %cl_invalid_kernel                            => 0x2001E "CL_INVALID_KERNEL"
+    case %cl_invalid_kernel_args                       => 0x2001F "CL_INVALID_KERNEL_ARGS"
+    case %cl_invalid_kernel_definition                 => 0x20020 "CL_INVALID_KERNEL_DEFINITION"
+    case %cl_invalid_kernel_name                       => 0x20021 "CL_INVALID_KERNEL_NAME"
+    case %cl_invalid_linker_options                    => 0x20022 "CL_INVALID_LINKER_OPTIONS"
+    case %cl_invalid_mem_object                        => 0x20023 "CL_INVALID_MEM_OBJECT"
+    case %cl_invalid_operation                         => 0x20024 "CL_INVALID_OPERATION"
+    case %cl_invalid_pipe_size                         => 0x20025 "CL_INVALID_PIPE_SIZE"
+    case %cl_invalid_platform                          => 0x20026 "CL_INVALID_PLATFORM"
+    case %cl_invalid_program                           => 0x20027 "CL_INVALID_PROGRAM"
+    case %cl_invalid_program_executable                => 0x20028 "CL_INVALID_PROGRAM_EXECUTABLE"
+    case %cl_invalid_property                          => 0x20029 "CL_INVALID_PROPERTY"
+    case %cl_invalid_queue_properties                  => 0x2002A "CL_INVALID_QUEUE_PROPERTIES"
+    case %cl_invalid_sampler                           => 0x2002B "CL_INVALID_SAMPLER"
+    case %cl_invalid_spec_id                           => 0x2002C "CL_INVALID_SPEC_ID"
+    case %cl_invalid_value                             => 0x2002D "CL_INVALID_VALUE"
+    case %cl_invalid_work_dimension                    => 0x2002E "CL_INVALID_WORK_DIMENSION"
+    case %cl_invalid_work_group_size                   => 0x2002F "CL_INVALID_WORK_GROUP_SIZE"
+    case %cl_invalid_work_item_size                    => 0x20030 "CL_INVALID_WORK_ITEM_SIZE"
+    case %cl_kernel_arg_info_not_available             => 0x20031 "CL_KERNEL_ARG_INFO_NOT_AVAILABLE"
+    case %cl_link_program_failure                      => 0x20032 "CL_LINK_PROGRAM_FAILURE"
+    case %cl_linker_not_available                      => 0x20033 "CL_LINKER_NOT_AVAILABLE"
+    case %cl_map_failure                               => 0x20034 "CL_MAP_FAILURE"
+    case %cl_mem_copy_overlap                          => 0x20035 "CL_MEM_COPY_OVERLAP"
+    case %cl_mem_object_allocation_failure             => 0x20036 "CL_MEM_OBJECT_ALLOCATION_FAILURE"
+    case %cl_misaligned_sub_buffer_offset              => 0x20037 "CL_MISALIGNED_SUB_BUFFER_OFFSET"
+    case %cl_out_of_host_memory                        => 0x20038 "CL_OUT_OF_HOST_MEMORY"
+    case %cl_out_of_resources                          => 0x20039 "CL_OUT_OF_RESOURCES"
+    case %cl_max_size_restriction_exceeded             => 0x2003A "CL_MAX_SIZE_RESTRICTION_EXCEEDED"
+    case %cl_profiling_info_not_available              => 0x2003B "CL_PROFILING_INFO_NOT_AVAILABLE"
     ; The unknown error comes last
-    case %unknown => 0x7fffffff 'Unknown status code'
+    case %unknown => 0x7fffffff "Unknown status code"
 }
 
-enum @scalar_type 'Scalar types' {
-    case %i8    => 0  'Signed 8 bit integer'
-    case %i16   => 1  'Signed 16 bit integer'
-    case %i32   => 2  'Signed 32 bit integer'
-    case %i64   => 3  'Signed 64 bit integer'
-    case %index => 4  'Integer type for indices'
-    case %bf16  => 5  'Brain floating point (16 bit)'
-    case %f16   => 6  'Half precision floating point (16 bit)'
-    case %f32   => 7  'Single precision floating point (32 bit)'
-    case %f64   => 8  'Double precision floating point (64 bit)'
-    case %c32   => 9  'Single precision complex (2x32 bit)'
-    case %c64   => 10 'Double precision complex (2x64 bit)'
+enum @scalar_type "Scalar types" {
+    case %i8    => 0  "Signed 8 bit integer"
+    case %i16   => 1  "Signed 16 bit integer"
+    case %i32   => 2  "Signed 32 bit integer"
+    case %i64   => 3  "Signed 64 bit integer"
+    case %index => 4  "Integer type for indices"
+    case %bf16  => 5  "Brain floating point (16 bit)"
+    case %f16   => 6  "Half precision floating point (16 bit)"
+    case %f32   => 7  "Single precision floating point (32 bit)"
+    case %f64   => 8  "Double precision floating point (64 bit)"
+    case %c32   => 9  "Single precision complex (2x32 bit)"
+    case %c64   => 10 "Double precision complex (2x64 bit)"
 }
 
-enum @arithmetic 'Arithmetic operations' {
-    case %add => 0  'add'
-    case %sub => 1  'subtract'
-    case %mul => 2  'multiply'
-    case %div => 3  'divide'
-    case %rem => 4  'division remainder'
-    case %shl => 5  'left shift'
-    case %shr => 6  'arithmetic right shift'
-    case %and => 7  'bitwise and'
-    case %or  => 8  'bitwise or'
-    case %xor => 9  'bitwise xor'
-    case %min => 10 'minimum'
-    case %max => 11 'maximum'
+enum @arithmetic "Arithmetic operations" {
+    case %add => 0  "add"
+    case %sub => 1  "subtract"
+    case %mul => 2  "multiply"
+    case %div => 3  "divide"
+    case %rem => 4  "division remainder"
+    case %shl => 5  "left shift"
+    case %shr => 6  "arithmetic right shift"
+    case %and => 7  "bitwise and"
+    case %or  => 8  "bitwise or"
+    case %xor => 9  "bitwise xor"
+    case %min => 10 "minimum"
+    case %max => 11 "maximum"
 }
 
-enum @arithmetic_unary 'Arithmetic operations (unary)' {
-    case %neg  => 0 'negation'
-    case %not  => 1 'bitwise not'
-    case %abs  => 2 'absolute value'
-    case %conj => 3 'complex conjugate'
-    case %im   => 4 'imaginary part'
-    case %re   => 5 'real part'
+enum @arithmetic_unary "Arithmetic operations (unary)" {
+    case %neg  => 0 "negation"
+    case %not  => 1 "bitwise not"
+    case %abs  => 2 "absolute value"
+    case %conj => 3 "complex conjugate"
+    case %im   => 4 "imaginary part"
+    case %re   => 5 "real part"
 }
 
-enum @builtin 'Builtin values' {
-    case %group_id_x         => 0  'group_id.x'
-    case %group_id_y         => 1  'group_id.y'
-    case %group_id_z         => 2  'group_id.z'
-    case %num_groups_x       => 3  'num_groups.x'
-    case %num_groups_y       => 4  'num_groups.y'
-    case %num_groups_z       => 5  'num_groups.z'
-    case %num_subgroups_x    => 6  'num_subgroups.x'
-    case %num_subgroups_y    => 7  'num_subgroups.y'
-    case %subgroup_size      => 8  'subgroup_size'
-    case %subgroup_id_x      => 9  'subgroup_id.x'
-    case %subgroup_id_y      => 10 'subgroup_id.y'
-    case %subgroup_linear_id => 11 'subgroup_linear_id'
-    case %subgroup_local_id  => 12 'subgroup_local_id'
+enum @builtin "Builtin values" {
+    case %group_id_x         => 0  "group_id.x"
+    case %group_id_y         => 1  "group_id.y"
+    case %group_id_z         => 2  "group_id.z"
+    case %num_groups_x       => 3  "num_groups.x"
+    case %num_groups_y       => 4  "num_groups.y"
+    case %num_groups_z       => 5  "num_groups.z"
+    case %num_subgroups_x    => 6  "num_subgroups.x"
+    case %num_subgroups_y    => 7  "num_subgroups.y"
+    case %subgroup_size      => 8  "subgroup_size"
+    case %subgroup_id_x      => 9  "subgroup_id.x"
+    case %subgroup_id_y      => 10 "subgroup_id.y"
+    case %subgroup_linear_id => 11 "subgroup_linear_id"
+    case %subgroup_local_id  => 12 "subgroup_local_id"
 }
 
-enum @cmp_condition 'Compare operation' {
-    case %eq => 0 'equals'
-    case %ne => 1 'not equal'
-    case %gt => 2 'greater than'
-    case %ge => 3 'greather or equal than'
-    case %lt => 4 'less than'
-    case %le => 5 'less or equal than'
+enum @cmp_condition "Compare operation" {
+    case %eq => 0 "equals"
+    case %ne => 1 "not equal"
+    case %gt => 2 "greater than"
+    case %ge => 3 "greather or equal than"
+    case %lt => 4 "less than"
+    case %le => 5 "less or equal than"
 }
 
-enum @math_unary 'Math operations (unary)' {
-    case %cos         => 0 'Cosine'
-    case %sin         => 1 'Sine'
-    case %exp         => 2 'Base-e exponential'
-    case %exp2        => 3 'Base-2 exponential'
-    case %native_cos  => 4 'Native cosine'
-    case %native_sin  => 5 'Native sine'
-    case %native_exp  => 6 'Native base-e exponential'
-    case %native_exp2 => 7 'Native base-2 exponential'
+enum @math_unary "Math operations (unary)" {
+    case %cos         => 0 "Cosine"
+    case %sin         => 1 "Sine"
+    case %exp         => 2 "Base-e exponential"
+    case %exp2        => 3 "Base-2 exponential"
+    case %native_cos  => 4 "Native cosine"
+    case %native_sin  => 5 "Native sine"
+    case %native_exp  => 6 "Native base-e exponential"
+    case %native_exp2 => 7 "Native base-2 exponential"
 }
 
-enum @group_arithmetic 'Group arithmetic' {
-    case %add => 0 'Group add'
-    case %max => 1 'Group max'
-    case %min => 2 'Group min'
+enum @group_arithmetic "Group arithmetic" {
+    case %add => 0 "Group add"
+    case %max => 1 "Group max"
+    case %min => 2 "Group min"
 }
 
-enum @group_operation 'Group operation' {
-    case %exclusive_scan => 0 'Exclusive scan'
-    case %inclusive_scan => 1 'Inclusive scan'
-    case %reduce         => 2 'Reduction'
+enum @group_operation "Group operation" {
+    case %exclusive_scan => 0 "Exclusive scan"
+    case %inclusive_scan => 1 "Inclusive scan"
+    case %reduce         => 2 "Reduction"
 }
 
-enum @reduce_mode 'Reduce mode' {
-    case %row    => 0 'Reduction over rows'
-    case %column => 1 'Reducation over columns'
+enum @reduce_mode "Reduce mode" {
+    case %row    => 0 "Reduction over rows"
+    case %column => 1 "Reducation over columns"
 }
 
-enum @transpose 'Transpose' {
-    case %N => 0 'No transpose'
-    case %T => 1 'Transpose'
+enum @transpose "Transpose" {
+    case %N => 0 "No transpose"
+    case %T => 1 "Transpose"
 }
 
-enum @address_space 'Address space' {
-    case %global => 0x1 'Global memory'
-    case %local  => 0x2 'Local memory, returned by alloca'
+enum @address_space "Address space" {
+    case %global => 0x1 "Global memory"
+    case %local  => 0x2 "Local memory, returned by alloca"
 }
 
 enum @checked_flag
-'@brief Checked flag
+"@brief Checked flag
 
 Checks can be combined by bitwise or, that is,
 
 tinytc_checked_flag_both = tinytc_checked_flag_rows | tinytc_checked_flag_cols
-tinytc_checked_flag_rows = tinytc_checked_flag_rows | tinytc_checked_flag_none'
+tinytc_checked_flag_rows = tinytc_checked_flag_rows | tinytc_checked_flag_none"
 {
-    case %none => 0x0 'Perform no checks'
-    case %rows => 0x1 'Check for out-of-bound rows'
-    case %cols => 0x2 'Check for out-of-bound cols'
-    case %both => 0x3 'Check for out-of-bound rows and cols'
+    case %none => 0x0 "Perform no checks"
+    case %rows => 0x1 "Check for out-of-bound rows"
+    case %cols => 0x2 "Check for out-of-bound cols"
+    case %both => 0x3 "Check for out-of-bound rows and cols"
 }
 
-enum @store_flag 'Store flag' {
-    case %regular    => 0 'Non-atomic store'
-    case %atomic     => 1 'Atomic store'
-    case %atomic_add => 2 'Atomic fetch add'
-    case %atomic_max => 3 'Atomic fetch max'
-    case %atomic_min => 4 'Atomic fetch min'
+enum @store_flag "Store flag" {
+    case %regular    => 0 "Non-atomic store"
+    case %atomic     => 1 "Atomic store"
+    case %atomic_add => 2 "Atomic fetch add"
+    case %atomic_max => 3 "Atomic fetch max"
+    case %atomic_min => 4 "Atomic fetch min"
 }
 
-enum @matrix_use 'Matrix use' {
-    case %a   => 0 'matrix_a'
-    case %b   => 1 'matrix_b'
-    case %acc => 2 'matrix_acc'
+enum @matrix_use "Matrix use" {
+    case %a   => 0 "matrix_a"
+    case %b   => 1 "matrix_b"
+    case %acc => 2 "matrix_acc"
 }
 
-enum @spirv_feature 'SPIR-V features' {
-    case %float16                         => 0  'f16 support'
-    case %float64                         => 1  'f64 support'
-    case %int64_atomics                   => 2  'i64 atomics support'
-    case %groups                          => 3  'work group collectives'
-    case %subgroup_dispatch               => 4  'subgroup support'
-    case %atomic_float16_add_local        => 5  'f16 atomic add on local pointer'
-    case %atomic_float16_add_global       => 6  'f16 atomic add on global pointer'
-    case %atomic_float32_add_local        => 7  'f32 atomic add on local pointer'
-    case %atomic_float32_add_global       => 8  'f32 atomic add on global pointer'
-    case %atomic_float64_add_local        => 9  'f64 atomic add on local pointer'
-    case %atomic_float64_add_global       => 10 'f64 atomic add on global pointer'
-    case %atomic_float16_min_max_local    => 11 'f16 atomic min/max on local pointer'
-    case %atomic_float16_min_max_global   => 12 'f16 atomic min/max on global pointer'
-    case %atomic_float32_min_max_local    => 13 'f32 atomic min/max on local pointer'
-    case %atomic_float32_min_max_global   => 14 'f32 atomic min/max on global pointer'
-    case %atomic_float64_min_max_local    => 15 'f64 atomic min/max on local pointer'
-    case %atomic_float64_min_max_global   => 16 'f64 atomic minmax on global pointer'
-    case %bfloat16_conversion             => 17 'bf16 -> f32 and f32 -> bf16 conversion'
-    case %subgroup_buffer_block_io        => 18 'subgroup block read/write support'
+enum @spirv_feature "SPIR-V features" {
+    case %float16                         => 0  "f16 support"
+    case %float64                         => 1  "f64 support"
+    case %int64_atomics                   => 2  "i64 atomics support"
+    case %groups                          => 3  "work group collectives"
+    case %subgroup_dispatch               => 4  "subgroup support"
+    case %atomic_float16_add_local        => 5  "f16 atomic add on local pointer"
+    case %atomic_float16_add_global       => 6  "f16 atomic add on global pointer"
+    case %atomic_float32_add_local        => 7  "f32 atomic add on local pointer"
+    case %atomic_float32_add_global       => 8  "f32 atomic add on global pointer"
+    case %atomic_float64_add_local        => 9  "f64 atomic add on local pointer"
+    case %atomic_float64_add_global       => 10 "f64 atomic add on global pointer"
+    case %atomic_float16_min_max_local    => 11 "f16 atomic min/max on local pointer"
+    case %atomic_float16_min_max_global   => 12 "f16 atomic min/max on global pointer"
+    case %atomic_float32_min_max_local    => 13 "f32 atomic min/max on local pointer"
+    case %atomic_float32_min_max_global   => 14 "f32 atomic min/max on global pointer"
+    case %atomic_float64_min_max_local    => 15 "f64 atomic min/max on local pointer"
+    case %atomic_float64_min_max_global   => 16 "f64 atomic minmax on global pointer"
+    case %bfloat16_conversion             => 17 "bf16 -> f32 and f32 -> bf16 conversion"
+    case %subgroup_buffer_block_io        => 18 "subgroup block read/write support"
 }
 
-enum @core_feature_flag 'Core features that may be optionally enabled' {
-    case %large_register_file => 0x1 'Request a large register file. '
-                                     'On PVC this doubles the number of registers per vector engine '
-                                     'but halves the number of available hardware threads. '
-                                     'When this feature is activated, the kernel is compiled with '
-                                     'the -ze-opt-large-register-file option.'
+enum @core_feature_flag "Core features that may be optionally enabled" {
+    case %large_register_file => 0x1 "Request a large register file. "
+                                     "On PVC this doubles the number of registers per vector engine "
+                                     "but halves the number of available hardware threads. "
+                                     "When this feature is activated, the kernel is compiled with "
+                                     "the -ze-opt-large-register-file option."
 }
 
 enum @intel_gpu_architecture
-'@brief IP versions for Intel GPUs
+"@brief IP versions for Intel GPUs
 
 Note: IP versions are extracted from
 * https://github.com/intel/compute-runtime/blob/4b5d5f235abf0ff67c9188f8096afd4da2e0574d/third_party/aot_config_headers/platforms.h
-* https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619'
+* https://github.com/intel/llvm/blob/56e9067ba69809fb6ea1fd4328456ca3a009f984/sycl/source/detail/device_info.hpp#L619"
 {
-    case %tgl => 0x03000000 'Tiger Lake'
-    case %pvc => 0x030f0000 'Ponte Vecchio'
-    case %bmg => 0x05004000 'Battlemage'
+    case %tgl => 0x03000000 "Tiger Lake"
+    case %pvc => 0x030f0000 "Ponte Vecchio"
+    case %bmg => 0x05004000 "Battlemage"
 }
 
-enum @bundle_format 'Target binary format' {
-    case %spirv  => 0 'SPIR-V'
-    case %native => 1 'Native device binary'
+enum @bundle_format "Target binary format" {
+    case %spirv  => 0 "SPIR-V"
+    case %native => 1 "Native device binary"
 }
 
-enum @optflag 'Flags for optimizer' {
-    case %unsafe_fp_math => 0 'Unsafe floating point math (e.g. 0.0 * x => 0.0)'
+enum @optflag "Flags for optimizer" {
+    case %unsafe_fp_math => 0 "Unsafe floating point math (e.g. 0.0 * x => 0.0)"
 }
 
-enum @mem_type 'Memory object type' {
-    case %buffer      => 0x0 'Buffer object (e.g. cl_mem)'
-    case %usm_pointer => 0x1 'Unified shared memory pointer'
-    case %svm_pointer => 0x2 'Shared virtual memory pointer'
+enum @mem_type "Memory object type" {
+    case %buffer      => 0x0 "Buffer object (e.g. cl_mem)"
+    case %usm_pointer => 0x1 "Unified shared memory pointer"
+    case %svm_pointer => 0x2 "Shared virtual memory pointer"
 }
 
-enum @support_level 'Support level of a device' {
-    case %none  => 0x0 'Device is unsupported (e.g. subgroups feature missing in OpenCL-C)'
-    case %basic => 0x1 'Device provides necessary features but is not well tested'
-    case %tuned => 0x2 'Device provides necessary features and is well tested'
+enum @support_level "Support level of a device" {
+    case %none  => 0x0 "Device is unsupported (e.g. subgroups feature missing in OpenCL-C)"
+    case %basic => 0x1 "Device provides necessary features but is not well tested"
+    case %tuned => 0x2 "Device provides necessary features and is well tested"
 }

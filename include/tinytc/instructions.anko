@@ -3,281 +3,271 @@
 
 include "tinytc/enums.anko"
 
-inst @alloca {
+inst @alloca "Alloca instruction" {
     prop %stack_ptr private => i64
-    ret %result 'memref type of allocated variable'
+    ret %result "memref type of allocated variable"
 }
 
-inst @arith {
-    prop %operation => @arithmetic
-    op %a
-    op %b
-    ret %result
+inst @arith "Arithmetic instruction (binary)" {
+    prop %operation => @arithmetic "arithmetic operation type"
+    op %a                          "left-hand operand"
+    op %b                          "right-hand operand"
+    ret %result                    "result type"
 }
 
-inst @arith_unary {
-    prop %operation => @arithmetic_unary
-    op %a
-    ret %result
+inst @arith_unary "Arithmetic instruction (unary)" {
+    prop %operation => @arithmetic_unary "unary arithmetic operation type"
+    op %a                                "operand"
+    ret %result                          "result type"
 }
 
-inst @barrier {
-    prop %fence_flags => "tinytc_address_spaces_t"    
+inst @barrier "Barrier instruction" {
+    prop %fence_flags => "tinytc_address_spaces_t" "address space(s) of memory fence; "
+                                                   "set to 0 for no fence"
     cxx "auto has_fence(address_space as) -> bool;"
 }
 
-inst @builtin {
-    prop %builtin_type => @builtin
-    ret %result
+inst @builtin "Builtin instruction" {
+    prop %builtin_type => @builtin "builtin type"
+    ret %result                    "result type"
     cxx "auto kind() -> inst_execution_kind;"
 }
 
-inst @cast {
-    op %a
-    ret %result
+inst @cast "Cast instruction" {
+    op %a       "operand"
+    ret %result "target type"
 }
 
-inst @compare {
-    prop %cond => @cmp_condition
-    op %a
-    op %b
-    ret %result
+inst @compare "Comparison instruction" {
+    prop %cond => @cmp_condition "comparison type"
+    op %a                        "left-hand operand"
+    op %b                        "right-hand operand"
+    ret %result                  "result type"
 }
 
-inst @constant {
-    prop %value => "constant_value_type"
-    ret %result
+inst @constant "Constant instruction" {
+    skip_builder
+    prop %value => "constant_value_type" "constant value"
+    ret %result                          "type of constant"
     cxx "auto is_zero() -> bool;"
     cxx "auto is_identity() -> bool;"
 }
 
-inst @cooperative_matrix_apply {
-    op %a
-    reg %body
-    ret %result
+inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
+    op %a       "matrix"
+    reg %body   "instructions to apply to coopmatrix entries"
+    ret %result "result type"
     cxx "inline auto row() -> tinytc_value & { return body().param(0); }"
     cxx "inline auto col() -> tinytc_value & { return body().param(1); }"
     cxx "inline auto val() -> tinytc_value & { return body().param(2); }"
 }
 
-inst @cooperative_matrix_extract {
-    prop %index => i64
-    op %mat
-    ret %result
+inst @cooperative_matrix_extract "Cooperative matrix extract instruction" {
+    prop %index => i64 "index"
+    op %mat            "matrix"
+    ret %result        "result type"
 }
 
-inst @cooperative_matrix_insert {
-    prop %index => i64
-    op %val
-    op %mat
-    ret %result
+inst @cooperative_matrix_insert "Cooperative matrix insert instruction" {
+    prop %index => i64 "index"
+    op %val            "value to insert"
+    op %mat            "matrix"
+    ret %result        "result type"
 }
 
-inst @cooperative_matrix_load {
-    prop %t       => @transpose
-    prop %checked => @checked_flag
-    op %operand
-    op %pos0
-    op %pos1
-    ret %result
+inst @cooperative_matrix_load "Cooperative matrix load instruction" {
+    prop %t       => @transpose    "transposed load"
+    prop %checked => @checked_flag "boundary check"
+    op %operand                    "matrix"
+    op %pos0                       "row offset"
+    op %pos1                       "column offset"
+    ret %result                    "result type"
 }
 
-inst @cooperative_matrix_mul_add {
-    op %a
-    op %b
-    op %c
-    ret %result
+inst @cooperative_matrix_mul_add "Cooperative matrix mul add instruction" {
+    op %a       "a matrix"
+    op %b       "b matrix"
+    op %c       "c matrix"
+    ret %result "result type"
     cxx "auto is_c_zero() -> bool;"
 }
 
-inst @cooperative_matrix_prefetch {
-    prop %cache_level => i32
-    prop %rows        => i32
-    prop %cols        => i32
-    op %operand
-    op %pos0
-    op %pos1
+inst @cooperative_matrix_prefetch "Cooperative matrix prefetch instruction" {
+    prop %cache_level => i32 "cache level; 0 is closest to the core"
+    prop %rows        => i32 "number of rows"
+    prop %cols        => i32 "number of columns"
+    op %operand              "matrix"
+    op %pos0                 "row offset"
+    op %pos1                 "column offset"
 }
 
-inst @cooperative_matrix_reduce {
-    prop %arith => @group_arithmetic
-    prop %mode  => @reduce_mode
-    op %a
-    ret %result
+inst @cooperative_matrix_reduce "Cooperative matrix reduce instruction" {
+    prop %arith => @group_arithmetic "reduction operator"
+    prop %mode  => @reduce_mode      "reduction mode"
+    op %a                            "matrix"
+    ret %result                      "result type"
 }
 
-inst @cooperative_matrix_scale {
-    op %a
-    op %b
-    ret %result
+inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
+    op %a       "scalar"
+    op %b       "matrix"
+    ret %result "result type"
 }
 
-inst @cooperative_matrix_store {
-    prop %checked => @checked_flag
-    prop %flag    => @store_flag
-    op %val
-    op %operand
-    op %pos0
-    op %pos1
+inst @cooperative_matrix_store "Cooperative matrix store instruction" {
+    prop %checked => @checked_flag "boundary check"
+    prop %flag    => @store_flag   "store mode"
+    op %val                        "value to store"
+    op %operand                    "matrix"
+    op %pos0                       "row offset"
+    op %pos1                       "column offset"
 }
 
 
-inst @expand {
-    prop %expanded_mode        => i64
-    prop* %static_expand_shape => i64
-    op %operand
-    op* %expand_shape
-    ret %result
+inst @expand "Expand instruction" {
+    prop %expanded_mode        => i64 "expanded mode"
+    prop* %static_expand_shape => i64 "static expand shape"
+    op %operand                       "tensor"
+    op* %expand_shape                 "dynamic expand shape"
+    ret %result                       "result type"
 }
 
-inst @fuse {
-    prop %from => i64
-    prop %to   => i64
-    op %operand
-    ret %result
+inst @fuse "Fuse instruction" {
+    prop %from => i64 "first mode to fuse"
+    prop %to   => i64 "last mode to fuse"
+    op %operand       "tensor"
+    ret %result       "result type"
 }
 
-inst @if {
-    op %condition
-    reg %then
-    reg %otherwise
-    ret* %results
+inst @if "If instruction"{
+    op %condition  "condition"
+    reg %then      "then block"
+    reg %otherwise "else block"
+    ret* %results  "return type array"
     cxx "auto is_otherwise_empty() -> bool;"
 }
 
-inst @lifetime_stop {
-    op %object
+inst @lifetime_stop "Lifetime stop instruction" {
+    op %object "stack object whose lifetime ends"
 }
 
 
-inst @load {
-    op %operand
-    op* %index_list
-    ret %result
+inst @load "Load instruction" {
+    op %operand     "tensor or group of tensors"
+    op* %index_list "indices"
+    ret %result     "result type"
 }
 
-inst @math_unary {
-    prop %operation => @math_unary
-    op %a
-    ret %result
+inst @math_unary "Math instruction" {
+    prop %operation => @math_unary "function"
+    op %a                          "argument"
+    ret %result                    "result type"
 }
 
-inst @parallel {
-    reg %body
+inst @parallel "Parallel instruction" {
+    reg %body "parallel region"
 }
 
-inst @size {
-    prop %mode => i64
-    op %operand
-    ret %result
+inst @size "Size instruction" {
+    prop %mode => i64 "mode for which size is extracted"
+    op %operand       "tensor"
+    ret %result       "result type"
 }
 
-inst @subgroup_broadcast {
-    op %a
-    op %idx
-    ret %result
+inst @subgroup_broadcast "Subgroup broadcast instruction" {
+    op %a       "operand"
+    op %idx     "subgroup local index"
+    ret %result "result index"
 }
 
-inst @subgroup_operation {
-    prop %arith     => @group_arithmetic
-    prop %operation => @group_operation
-    op %a
-    ret %result
+inst @subgroup_operation "Subgroup operation instruction" {
+    prop %arith     => @group_arithmetic "group arithmetic type"
+    prop %operation => @group_operation  "group operation type"
+    op %a                                "operand"
+    ret %result                          "result type"
 }
 
-inst @subview
-'@brief Create subview instruction
-
-@code %value = subview %operand[%offset1:%size1,...,%offsetN:%sizeN] : result @endcode
-'
-{
-    prop* %static_offsets => i64 'static offsets (need to add value to dynamic offsets '
-                                 'if static_offsets[i] == TINYTC_DYNAMIC)'
-    prop* %static_sizes   => i64 'static sizes (need to add value to dynamic sizes '
-                                 'if static_sizes[i] == TINYTC_DYNAMIC)'
-    op %operand  'operand'
-    op* %offsets 'dynamic offsets'
-    op* %sizes   'dynamic sizes'
-    ret %result  'resulting memref type'
+inst @subview "Subview instruction" {
+    prop* %static_offsets => i64 "static offsets (need to add value to dynamic offsets "
+                                 "if static_offsets[i] == TINYTC_DYNAMIC)"
+    prop* %static_sizes   => i64 "static sizes (need to add value to dynamic sizes "
+                                 "if static_sizes[i] == TINYTC_DYNAMIC)"
+    op %operand                  "operand"
+    op* %offsets                 "dynamic offsets"
+    op* %sizes                   "dynamic sizes"
+    ret %result                  "resulting memref type"
 }
 
-inst @store {
-    prop %flag => @store_flag
-    op %val
-    op %operand
-    op* %index_list
+inst @store "Store instruction" {
+    prop %flag => @store_flag "store flag"
+    op %val                   "value to store"
+    op %operand               "operand"
+    op* %index_list           "indices"
 }
 
-inst @yield {
-    op* %yielded_vals
+inst @yield "Yield instruction" {
+    op* %yielded_vals "yielded values"
 }
 
-inst @blas_a2 {
-    prop %atomic => bool
-    op %alpha
-    op %A
-    op %beta
-    op %B
+inst @blas_a2 "BLAS instruction with 2 tensor arguments" {
+    prop %atomic => bool "atomic flag"
+    op %alpha            "alpha scalar"
+    op %A                "A tensor"
+    op %beta             "beta scalar"
+    op %B                "B tensor"
 }
 
-inst @axpby : @blas_a2 {
-    prop %tA => @transpose
+inst @axpby : @blas_a2 "AXPBY instruction" {
+    prop %tA => @transpose "transpose A"
 }
 
-inst @cumsum : @blas_a2 {
-    prop %mode => i64
+inst @cumsum : @blas_a2 "Cumsum instruction" {
+    prop %mode => i64 "sum mode"
 }
 
-inst @sum : @blas_a2 {
-    prop %tA => @transpose
+inst @sum : @blas_a2 "Sum instruction" {
+    prop %tA => @transpose "transpose A"
 }
 
-inst @blas_a3 {
-    prop %atomic => bool
-    op %alpha
-    op %A
-    op %B
-    op %beta
-    op %C
+inst @blas_a3 "BLAS instruction with 3 tensor arguments" {
+    prop %atomic => bool "atomic flag"
+    op %alpha            "alpha scalar"
+    op %A                "A tensor"
+    op %B                "B tensor"
+    op %beta             "beta scalar"
+    op %C                "C tensor"
 }
 
-inst @gemm : @blas_a3 {
-    prop %tA => @transpose
-    prop %tB => @transpose
+inst @gemm : @blas_a3 "GEMM instruction" {
+    prop %tA => @transpose "transpose A"
+    prop %tB => @transpose "transpose B"
 }
 
-inst @gemv : @blas_a3 {
-    prop %tA => @transpose
+inst @gemv : @blas_a3 "GEMV instruction" {
+    prop %tA => @transpose "transpose A"
 }
 
-inst @ger : @blas_a3 {}
+inst @ger : @blas_a3 "GER instruction" {}
 
-inst @hadamard : @blas_a3 {}
+inst @hadamard : @blas_a3 "Hadamard instruction" {}
 
-inst @loop {
-    reg %body
+inst @loop "Loop instruction" {
+    reg %body "loop body"
 }
 
-inst @for : @loop
-'@brief Create for loop
-
-@code
-for %loop_var = %from, %to, %step
-    init(initial_value_list) -> (types(initial_value_list)) { }
-@endcode'
-{
-    op %from       'loop begin (inclusive)'
-    op %to         'loop end (exclusive)'
-    op? %step      'loop step'
-    op* %iter_init 'array of initial values'
-    ret* %results  'array of return types'
+inst @for : @loop "Create for loop" {
+    op %from       "loop begin (inclusive)"
+    op %to         "loop end (exclusive)"
+    op? %step      "loop step"
+    op* %iter_init "array of initial values"
+    ret* %results  "array of return types"
     cxx "inline auto loop_var() -> tinytc_value & { return body().param(0); }"
     cxx "inline auto iter_arg(std::int64_t no) -> tinytc_value & { return body().param(no + 1); }"
 }
 
-inst @foreach : @loop {
-    op* %from
-    op* %to
+inst @foreach : @loop "Create foreach loop" {
+    op* %from "array of loop begin (inclusive)"
+    op* %to   "array of loop end (exclusive)"
     cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
     cxx "inline auto loop_vars() { return body().params(); }"
 }

@@ -67,9 +67,9 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     inline auto op_end() -> tinytc::op_iterator { return {use_ptr(layout_.num_operands)}; }
     inline auto operands() -> tinytc::op_range { return {op_begin(), op_end()}; }
     inline auto op(std::size_t pos) -> tinytc_value & { return *use_ptr(pos)->get(); }
-    inline void op(std::size_t pos, tinytc_value_t val) { *use_ptr(pos) = val; }
     inline auto get_use(std::size_t pos) -> tinytc::use & { return *use_ptr(pos); }
     inline auto num_operands() const -> std::int32_t { return layout_.num_operands; }
+    void op(std::size_t pos, tinytc_value_t val);
 
     void subs(tinytc_value_t old_value, tinytc_value_t new_value, bool recursive = true);
 
@@ -84,6 +84,7 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     inline auto results() -> tinytc::result_range { return {result_begin(), result_end()}; }
     inline auto result(std::size_t pos) -> tinytc_value & { return *result_ptr(pos); }
     inline auto num_results() const -> std::int32_t { return layout_.num_results; }
+    void result(std::size_t pos, tinytc_data_type_t ty);
 
     // Properties
     inline auto props() -> void * { return use_ptr(layout_.num_operands); }

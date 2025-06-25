@@ -4,24 +4,42 @@
 #ifndef CODEGEN_20250611_HPP
 #define CODEGEN_20250611_HPP
 
+#include "object.hpp"
+
 #include <functional>
 #include <iosfwd>
+#include <sstream>
 #include <string>
 #include <string_view>
 
 namespace mochi {
 
-class inst;
 class objects;
-enum class quantifier;
+
+template <typename... T>
+auto to_string(void (*generator)(std::ostream &os, T const &...), T const &...args) -> std::string {
+    std::ostringstream oss;
+    (*generator)(oss, args...);
+    return std::move(oss).str();
+}
+
+auto to_c_type(builtin_type ty) -> char const *;
+auto to_cxx_type(builtin_type ty) -> char const *;
+void generate_c_type(std::ostream &os, data_type const &ty);
+void generate_cxx_type(std::ostream &os, data_type const &ty);
+inline auto to_c_type(data_type const &ty) { return to_string(&generate_c_type, ty); }
+inline auto to_cxx_type(data_type const &ty) { return to_string(&generate_cxx_type, ty); }
+void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
+                            std::string_view name);
+void generate_c_to_cxx_cast(std::ostream &os, quantifier q, data_type const &ty,
+                            std::string_view name);
 
 void generate_docstring(std::ostream &os, std::string const &doc);
 
 void generate_params(
     std::ostream &os, inst *in,
-    std::function<void(quantifier, std::string_view, std::string_view, std::string_view)>
-        format_arg,
-    bool C = false);
+    std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
+        format_arg);
 void generate_c_params(std::ostream &os, inst *in);
 void generate_cxx_params(std::ostream &os, inst *in);
 

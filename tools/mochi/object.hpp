@@ -18,43 +18,39 @@ struct case_ {
     std::int64_t value;
 };
 
+enum class enum_flag { doc_to_string = 0x1 };
+
 class enum_ {
   public:
     enum_() = default;
-    inline enum_(std::string name, std::string doc, std::vector<case_> cases, bool doc_to_string)
-        : name_(std::move(name)), doc_(std::move(doc)), cases_(std::move(cases)),
-          doc_to_string_(doc_to_string) {}
+    inline enum_(std::string name, std::string doc, std::vector<case_> cases)
+        : name_(std::move(name)), doc_(std::move(doc)), cases_(std::move(cases)) {}
 
     inline auto doc() const -> const std::string & { return doc_; }
     inline auto name() const -> const std::string & { return name_; }
     inline auto cases() const -> std::vector<case_> const & { return cases_; }
-    inline auto doc_to_string() const -> bool { return doc_to_string_; }
-
-    inline auto c_name() const -> std::string;
-    inline auto cxx_name() const -> const std::string & { return name_; }
+    inline auto is_set(enum_flag flag) const -> bool {
+        return flags_ & static_cast<std::uint32_t>(flag);
+    }
+    inline void flags(std::uint32_t f) { flags_ = f; }
 
   private:
     std::string name_, doc_;
     std::vector<case_> cases_;
-    bool doc_to_string_;
+    std::uint32_t flags_ = 0x0;
 };
 
 enum class inst_kind { mixed, collective, spmd };
 enum class quantifier { single, optional, many };
 
-enum class basic_type { bool_, i32, i64 };
-auto to_c_type(basic_type ty) -> char const *;
-auto to_cxx_type(basic_type ty) -> char const *;
-using prop_type = std::variant<basic_type, enum_ *, std::string>;
+enum class builtin_type { bool_, i32, i64, type, value };
+using data_type = std::variant<builtin_type, enum_ *, std::string>;
 
 struct prop {
     quantifier quantity;
     std::string name, doc;
-    prop_type type;
+    data_type type;
     bool private_;
-
-    auto c_type() const -> std::string;
-    auto cxx_type() const -> std::string;
 };
 struct op {
     quantifier quantity;
@@ -74,6 +70,8 @@ struct raw_cxx {
     std::string code;
 };
 
+enum class inst_flag { skip_builder = 0x1 };
+
 using member = std::variant<prop, op, reg, ret, raw_cxx>;
 class inst {
   public:
@@ -90,6 +88,10 @@ class inst {
     inline auto regs() const -> std::vector<reg> const & { return regs_; }
     inline auto rets() const -> std::vector<ret> const & { return rets_; }
     inline auto cxx() const -> std::vector<std::string> const & { return cxx_; }
+    inline auto is_set(inst_flag flag) const -> bool {
+        return flags_ & static_cast<std::uint32_t>(flag);
+    }
+    inline void flags(std::uint32_t f) { flags_ = f; }
 
     inline auto children() -> auto & { return children_; }
     inline auto children() const -> const auto & { return children_; }
@@ -105,6 +107,7 @@ class inst {
     std::vector<ret> rets_;
     std::vector<std::string> cxx_;
     std::vector<std::unique_ptr<inst>> children_;
+    std::uint32_t flags_;
 };
 
 } // namespace mochi
