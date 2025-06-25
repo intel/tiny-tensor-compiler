@@ -19,12 +19,14 @@ Core C-API:
       - tinytc_binary_t
       - tinytc_bool_t
       - tinytc_core_info_t
+      - tinytc_prog_t
       - tinytc_recipe_t
       - tinytc_recipe_handler_t
       - tinytc_spv_mod_t
       - tinytc_compiler_context_t
       - const_tinytc_binary_t
       - const_tinytc_core_info_t
+      - const_tinytc_prog_t
       - const_tinytc_recipe_t
       - const_tinytc_recipe_handler_t
       - const_tinytc_spv_mod_t
@@ -92,6 +94,14 @@ Core C-API:
       - tinytc_parse_file
       - tinytc_parse_stdin
       - tinytc_parse_string
+  Program:
+    function:
+      - tinytc_prog_dump
+      - tinytc_prog_get_compiler_context
+      - tinytc_prog_print_to_file
+      - tinytc_prog_print_to_string
+      - tinytc_prog_release
+      - tinytc_prog_retain
   Recipe:
     enum:
       - tinytc_mem_type_t

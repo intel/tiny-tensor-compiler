@@ -69,6 +69,9 @@ Core C++-API:
       - tinytc::parse_file
       - tinytc::parse_stdin
       - tinytc::parse_string
+  Program:
+    class:
+      - tinytc::prog
   Recipe:
     enum:
       - tinytc::mem_type

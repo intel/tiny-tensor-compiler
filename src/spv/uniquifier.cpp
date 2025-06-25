@@ -9,6 +9,7 @@
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
 #include "util/overloaded.hpp"
 

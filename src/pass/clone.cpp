@@ -3,6 +3,7 @@
 
 #include "pass/clone.hpp"
 #include "node/visit.hpp"
+#include "tinytc/tinytc.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 

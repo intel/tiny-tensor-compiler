@@ -15,6 +15,7 @@
 #include "pass/clone.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -38,16 +39,19 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
     auto ctx = compiler_context{sg_id->context(), true};
     auto bool_ty = get_boolean(ctx);
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
-    auto sg_lid_i32 = bb.add(make_builtin(builtin::subgroup_local_id, i32_ty, loc));
-    auto sg_lid = bb.add(make_cast(sg_lid_i32, ity, loc));
-    auto size = instant_constant_fold_add(bb, make_arith(arithmetic::sub, to, from, ity, loc));
-    auto work_item_offset = bb.add(make_arith(arithmetic::add, from, sg_lid, ity, loc));
+    auto sg_lid_i32 = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, loc);
+    auto sg_lid = bb.create<cast_inst>(sg_lid_i32, ity, loc);
+    auto size =
+        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::sub, to, from, ity, loc));
+    auto work_item_offset = bb.create<arith_inst>(arithmetic::add, from, sg_lid, ity, loc);
     tile_loop_by_sgs(
         bb, size, sgs, num_tiles, sg_id,
         [&](region_builder &bb, value block, bool is_remainder, value trip_count) {
-            auto loop_var0 = bb.add(make_arith(arithmetic::add, block, work_item_offset, ity, loc));
+            auto loop_var0 =
+                bb.create<arith_inst>(arithmetic::add, block, work_item_offset, ity, loc);
             if (is_remainder) {
-                auto cond = bb.add(make_cmp(cmp_condition::lt, sg_lid, trip_count, bool_ty, loc));
+                auto cond =
+                    bb.create<compare_inst>(cmp_condition::lt, sg_lid, trip_count, bool_ty, loc);
                 bb.if_condition(cond, [&](region_builder &bb) { make_body(bb, loop_var0); }, loc);
             } else {
                 make_body(bb, loop_var0);
@@ -70,7 +74,7 @@ class foreach_generator {
 auto foreach_generator::operator()(foreach_inst in) -> inst {
     const int block_size0 = core_cfg_.subgroup_size;
 
-    auto parallel = make_parallel(in.loc());
+    auto parallel = create<parallel_inst>(in.loc());
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
@@ -104,15 +108,16 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                 nullptr, in.loc());
         };
 
-        auto sg_id0 = bb.add(make_builtin(builtin::subgroup_id_x, i32_ty, in.loc()));
-        auto sg_id1 = bb.add(make_builtin(builtin::subgroup_id_y, i32_ty, in.loc()));
+        auto sg_id0 = bb.create<builtin_inst>(builtin::subgroup_id_x, i32_ty, in.loc());
+        auto sg_id1 = bb.create<builtin_inst>(builtin::subgroup_id_y, i32_ty, in.loc());
 
-        auto size1 = bb.add(make_arith(arithmetic::sub, &to[1], &from[1], ity, in.loc()));
+        auto size1 = bb.create<arith_inst>(arithmetic::sub, &to[1], &from[1], ity, in.loc());
         tile_loop_uniformly(
             bb, size1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_id1,
             [&](region_builder &bb, value block, value trip_count1) {
-                auto from1 = bb.add(make_arith(arithmetic::add, &from[1], block, ity, in.loc()));
-                auto to1 = bb.add(make_arith(arithmetic::add, from1, trip_count1, ity, in.loc()));
+                auto from1 = bb.create<arith_inst>(arithmetic::add, &from[1], block, ity, in.loc());
+                auto to1 =
+                    bb.create<arith_inst>(arithmetic::add, from1, trip_count1, ity, in.loc());
                 make_loop0(
                     bb, &from[0], &to[0], sg_id0, block_size0, tiling_.m_tiles(),
                     [&](region_builder &bb, value loop_var0) {
@@ -122,7 +127,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                     in.loc());
             });
     } else if (in.dim() == 1) {
-        auto sg_id = bb.add(make_builtin(builtin::subgroup_linear_id, i32_ty, in.loc()));
+        auto sg_id = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, in.loc());
         make_loop0(
             bb, &from[0], &to[0], sg_id, block_size0, tiling_.m_tiles() * tiling_.n_tiles(),
             [&](region_builder &bb, value loop_var0) {

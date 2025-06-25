@@ -3,6 +3,7 @@
 
 #include "pass/dump_ir.hpp"
 #include "node/visit.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

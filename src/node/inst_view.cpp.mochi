@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "node/inst_view.hpp"
-#include "node/value_node.hpp"
+#include "tinytc/builder.hpp"
 
 #include <concepts>
 #include <type_traits>

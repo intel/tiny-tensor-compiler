@@ -7,7 +7,6 @@
 #include "object.hpp"
 
 #include <functional>
-#include <iosfwd>
 #include <sstream>
 #include <string>
 #include <string_view>

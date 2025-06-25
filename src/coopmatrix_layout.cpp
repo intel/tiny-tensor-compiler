@@ -4,7 +4,7 @@
 #include "coopmatrix_layout.hpp"
 #include "device_info.hpp"
 #include "node/data_type_node.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>

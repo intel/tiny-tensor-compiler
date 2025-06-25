@@ -325,7 +325,7 @@ auto constant_folding::operator()(size_inst in) -> fold_result {
         *in.operand().ty());
 
     if (!is_dynamic_value(mode_size)) {
-        return make_constant(
+        return create<constant_inst>(
             mode_size, scalar_data_type::get(in.operand().context(), scalar_type::index), in.loc());
     }
     return tinytc_value_t{};

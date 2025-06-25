@@ -4,6 +4,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <level_zero/ze_api.h>
 
@@ -13,11 +14,6 @@
 #include <iostream>
 #include <type_traits>
 #include <vector>
-
-namespace tinytc {
-enum class spirv_feature;
-enum class status;
-} // namespace tinytc
 
 using namespace tinytc;
 

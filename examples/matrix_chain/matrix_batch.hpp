@@ -7,6 +7,7 @@
 #include "device_array.hpp"
 
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 
 #include <array>

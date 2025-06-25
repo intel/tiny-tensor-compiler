@@ -10,6 +10,7 @@
 #include "node/value_node.hpp"
 #include "scalar_type.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -21,6 +22,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <type_traits>
+#include <utility>
 #include <variant>
 
 namespace tinytc {
@@ -61,7 +63,7 @@ struct compute_unary_op {
         default:
             throw compilation_error(loc, status::ir_boolean_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T>
@@ -81,7 +83,7 @@ struct compute_unary_op {
         default:
             throw compilation_error(loc, status::ir_int_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T>
@@ -98,7 +100,7 @@ struct compute_unary_op {
         default:
             throw compilation_error(loc, status::ir_fp_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T, typename U>
@@ -116,7 +118,7 @@ struct compute_unary_op {
             default:
                 return inst{nullptr};
             }
-            return make_constant(val, ty, loc);
+            return create<constant_inst>(val, ty, loc);
         };
         const auto abs_im_re = [&](T const &a) -> inst {
             typename T::value_type val = {};
@@ -138,7 +140,7 @@ struct compute_unary_op {
                 throw compilation_error(loc, status::ir_expected_scalar);
             }
             auto cst_ty = scalar_data_type::get(sty->context(), component_type(sty->ty()));
-            return make_constant(val, cst_ty, loc);
+            return create<constant_inst>(val, cst_ty, loc);
         };
 
         const auto a = static_cast<T>(A);
@@ -174,7 +176,7 @@ struct compute_binary_op {
         default:
             throw compilation_error(loc, status::ir_boolean_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T>
@@ -219,7 +221,7 @@ struct compute_binary_op {
             val = std::max(a, b);
             break;
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T, typename U>
@@ -269,7 +271,7 @@ struct compute_binary_op {
             throw compilation_error(loc, status::ir_fp_unsupported);
             break;
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 };
 
@@ -284,7 +286,7 @@ struct compute_binop_identities {
         switch (operation) {
         case arithmetic::and_:
             if (!a) {
-                return make_constant(false, operand.ty(), loc);
+                return create<constant_inst>(false, operand.ty(), loc);
             }
             break;
         case arithmetic::or_:
@@ -315,7 +317,7 @@ struct compute_binop_identities {
             break;
         case arithmetic::mul:
             if (a == T{0}) { // operand * 0 or 0 * operand
-                return make_constant(T{0}, operand.ty(), loc);
+                return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
             }
@@ -327,14 +329,14 @@ struct compute_binop_identities {
             break;
         case arithmetic::rem:
             if (a == T{1} && !is_second_operand) { // operand % 1
-                return make_constant(T{0}, operand.ty(), loc);
+                return create<constant_inst>(T{0}, operand.ty(), loc);
             }
             break;
         case arithmetic::shl:
         case arithmetic::shr:
             if (a == T{0}) {
                 if (is_second_operand) { // 0 << operand
-                    return make_constant(T{0}, operand.ty(), loc);
+                    return create<constant_inst>(T{0}, operand.ty(), loc);
                 } else { // operand << 0
                     return &operand;
                 }
@@ -342,7 +344,7 @@ struct compute_binop_identities {
             break;
         case arithmetic::and_:
             if (a == T{0}) {
-                return make_constant(T{0}, operand.ty(), loc);
+                return create<constant_inst>(T{0}, operand.ty(), loc);
             }
             break;
         case arithmetic::or_:
@@ -374,7 +376,7 @@ struct compute_binop_identities {
             break;
         case arithmetic::mul:
             if (unsafe_fp_math && a == T{0}) { // operand * 0 or 0 * operand
-                return make_constant(T{0}, operand.ty(), loc);
+                return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
             }
@@ -420,7 +422,7 @@ struct compute_compare {
             val = (a <= b);
             break;
         };
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T, typename F>
@@ -439,7 +441,7 @@ struct compute_compare {
             throw compilation_error(loc, status::ir_complex_unsupported);
             break;
         };
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 };
 
@@ -473,27 +475,27 @@ template <typename T>
 auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_result {
     switch (to_ty->ty()) {
     case scalar_type::i8:
-        return make_constant(value_cast<std::int8_t>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::int8_t>(A), to_ty, loc);
     case scalar_type::i16:
-        return make_constant(value_cast<std::int16_t>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::int16_t>(A), to_ty, loc);
     case scalar_type::i32:
-        return make_constant(value_cast<std::int32_t>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::int32_t>(A), to_ty, loc);
     case scalar_type::i64:
-        return make_constant(value_cast<std::int64_t>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::int64_t>(A), to_ty, loc);
     case scalar_type::index:
-        return make_constant(value_cast<host_index_type>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<host_index_type>(A), to_ty, loc);
     case scalar_type::bf16:
-        return make_constant(value_cast<bfloat16>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<bfloat16>(A), to_ty, loc);
     case scalar_type::f16:
-        return make_constant(value_cast<half>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<half>(A), to_ty, loc);
     case scalar_type::f32:
-        return make_constant(value_cast<float>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<float>(A), to_ty, loc);
     case scalar_type::f64:
-        return make_constant(value_cast<double>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<double>(A), to_ty, loc);
     case scalar_type::c32:
-        return make_constant(value_cast<std::complex<float>>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::complex<float>>(A), to_ty, loc);
     case scalar_type::c64:
-        return make_constant(value_cast<std::complex<double>>(A), to_ty, loc);
+        return create<constant_inst>(value_cast<std::complex<double>>(A), to_ty, loc);
     };
     return {};
 };
@@ -533,7 +535,7 @@ struct compute_math_unary_op {
         default:
             throw compilation_error(loc, status::ir_fp_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 
     template <typename T, typename U>
@@ -552,7 +554,7 @@ struct compute_math_unary_op {
         default:
             throw compilation_error(loc, status::ir_complex_unsupported);
         }
-        return make_constant(val, ty, loc);
+        return create<constant_inst>(val, ty, loc);
     }
 };
 

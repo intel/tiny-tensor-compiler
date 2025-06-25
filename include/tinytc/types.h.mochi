@@ -32,7 +32,6 @@ typedef uint32_t tinytc_core_feature_flags_t;
 
 #define TINYTC_INTEL_GPU_ARCHITECTURE_SUB_VERSION_BITS 0xfff
 
-
 ////////////////////////////
 /////////// Types //////////
 ////////////////////////////
@@ -71,6 +70,12 @@ struct tinytc_inst; // IWYU pragma: export
 typedef struct tinytc_inst *tinytc_inst_t;
 //! @brief const inst handle
 typedef const struct tinytc_inst *const_tinytc_inst_t;
+/**
+ * @brief Delete inst object
+ *
+ * @param instr [inout] inst object
+ */
+TINYTC_EXPORT void tinytc_inst_destroy(tinytc_inst_t instr);
 
 //! @brief inst iterator handle
 typedef struct tinytc_inst *tinytc_inst_iterator_t;
@@ -90,6 +95,14 @@ struct tinytc_func; // IWYU pragma: export
 typedef struct tinytc_func *tinytc_func_t;
 //! @brief const func handle
 typedef const struct tinytc_func *const_tinytc_func_t;
+/**
+ * @brief Delete function object
+ *
+ * @param fun [inout] function object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT void tinytc_func_destroy(tinytc_func_t fun);
 
 //! @struct tinytc_prog
 //! @brief Opaque struct for a program
@@ -98,6 +111,24 @@ struct tinytc_prog; // IWYU pragma: export
 typedef struct tinytc_prog *tinytc_prog_t;
 //! @brief const prog handle
 typedef const struct tinytc_prog *const_tinytc_prog_t;
+/**
+ * @brief Release program object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param prg [inout] program object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_release(tinytc_prog_t prg);
+/**
+ * @brief Increase reference count of program object by 1
+ *
+ * @param prg [inout] program object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_prog_retain(tinytc_prog_t prg);
 
 //! @struct tinytc_spv_mod
 //! @brief Opaque struct for a SPIR-V module
@@ -106,6 +137,24 @@ struct tinytc_spv_mod; // IWYU pragma: export
 typedef struct tinytc_spv_mod *tinytc_spv_mod_t;
 //! @brief const spv_mod handle
 typedef const struct tinytc_spv_mod *const_tinytc_spv_mod_t;
+/**
+ * @brief Release SPIR-V module
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param mod [inout] SPIR-V module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_release(tinytc_spv_mod_t mod);
+/**
+ * @brief Increase reference count of SPIR-V module by 1
+ *
+ * @param mod [inout] SPIR-V module
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_retain(tinytc_spv_mod_t mod);
 
 //! @struct tinytc_core_info;
 //! @brief Opaque struct for core information
@@ -114,6 +163,24 @@ struct tinytc_core_info; // IWYU pragma: export
 typedef struct tinytc_core_info *tinytc_core_info_t;
 //! @brief const core_info handle
 typedef const struct tinytc_core_info *const_tinytc_core_info_t;
+/**
+ * @brief Release core info object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj);
+/**
+ * @brief Increase reference count of core info object by 1
+ *
+ * @param obj [inout] core info object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj);
 
 //! @struct tintyc_compiler_context
 //! @brief Opaque struct for compiler context
@@ -122,6 +189,24 @@ struct tinytc_compiler_context; // IWYU pragma: export
 typedef struct tinytc_compiler_context *tinytc_compiler_context_t;
 //! @brief const compiler_context handle
 typedef const struct tinytc_compiler_context *const_tinytc_compiler_context_t;
+/**
+ * @brief Release context object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] context object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_release(tinytc_compiler_context_t obj);
+/**
+ * @brief Increase reference count of context object by 1
+ *
+ * @param obj [inout] context object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_compiler_context_retain(tinytc_compiler_context_t obj);
 
 //! @struct tinytc_binary;
 //! @brief Opaque struct for a binary
@@ -130,6 +215,24 @@ struct tinytc_binary; // IWYU pragma: export
 typedef struct tinytc_binary *tinytc_binary_t;
 //! @brief const binary handle
 typedef const struct tinytc_binary *const_tinytc_binary_t;
+/**
+ * @brief Release binary object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param bin [inout] binary object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_release(tinytc_binary_t bin);
+/**
+ * @brief Increase reference count of binary object by 1
+ *
+ * @param bin [inout] binary object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_binary_retain(tinytc_binary_t bin);
 
 //! @struct tinytc_recipe;
 //! @brief Opaque struct for a recipe
@@ -138,6 +241,24 @@ struct tinytc_recipe; // IWYU pragma: export
 typedef struct tinytc_recipe *tinytc_recipe_t;
 //! @brief const recipe handle
 typedef const struct tinytc_recipe *const_tinytc_recipe_t;
+/**
+ * @brief Release recipe object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] recipe object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_release(tinytc_recipe_t obj);
+/**
+ * @brief Increase reference count of recipe object by 1
+ *
+ * @param obj [inout] recipe object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_retain(tinytc_recipe_t obj);
 
 //! @struct tinytc_recipe_handler;
 //! @brief Opaque struct for a recipe handler
@@ -146,6 +267,24 @@ struct tinytc_recipe_handler; // IWYU pragma: export
 typedef struct tinytc_recipe_handler *tinytc_recipe_handler_t;
 //! @brief const recipe_handler handle
 typedef const struct tinytc_recipe_handler *const_tinytc_recipe_handler_t;
+/**
+ * @brief Release recipe handler object
+ *
+ * Decreases reference count by 1, free memory if reference count is 0.
+ *
+ * @param obj [inout] recipe handler object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_handler_release(tinytc_recipe_handler_t obj);
+/**
+ * @brief Increase reference count of recipe handler object by 1
+ *
+ * @param obj [inout] recipe handler object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_handler_retain(tinytc_recipe_handler_t obj);
 
 ////////////////////////////
 ////////// Structs /////////

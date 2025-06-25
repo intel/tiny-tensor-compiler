@@ -8,6 +8,7 @@
 #include "node/value_node.hpp"
 #include "node/visit.hpp"
 #include "pass/constant_folding.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"

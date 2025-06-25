@@ -120,9 +120,8 @@ Builder C++-API:
       - tinytc::inst
   Program:
     function:
+      - tinytc::add_function
       - tinytc::make_prog
-    class:
-      - tinytc::prog
   Region:
     function:
       - tinytc::next

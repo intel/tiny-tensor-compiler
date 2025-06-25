@@ -99,10 +99,13 @@ add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re
 add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
 add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                     SOURCES
+                                        builder.cpp.mochi
                                         enums.cpp.mochi
                                         node/inst_view.cpp.mochi
                                         node/inst_view.hpp.mochi
                                         node/visit.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/builder.hpp.mochi
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/types.h.mochi
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/types.hpp.mochi
                                     DEPENDS
@@ -111,6 +114,8 @@ add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                     SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/builder.hpp
     ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.h
     ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.hpp
     ${PROJECT_BINARY_DIR}/include/tinytc/types.h

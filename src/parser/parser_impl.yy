@@ -5,6 +5,7 @@
 %language "c++"
 
 %code requires {
+    #include "tinytc/builder.hpp"
     #include "tinytc/tinytc.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
@@ -268,7 +269,7 @@ prog:
         ctx.program(p);
         $$ = std::move(p);
         for (auto& f : $func_list) {
-            $$.add_function(std::move(f));
+            add_function($$, std::move(f));
         }
     }
 ;

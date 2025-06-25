@@ -14,6 +14,7 @@
 #include "node/value_node.hpp"
 #include "node/visit.hpp"
 #include "pass/clone.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -60,13 +61,13 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     auto ct = get_coopmatrix_type(in.a());
     auto cl = get_layout(core_cfg_, ct);
 
-    auto p = bb_.add(make_builtin(builtin::subgroup_local_id, i32_ty, in.loc()));
+    auto p = bb_.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, in.loc());
     auto i = p;
     auto j0 = value{nullptr};
     if (cl.rows < core_cfg_.subgroup_size) {
-        auto cI = bb_.add(make_constant(cl.rows, i32_ty, in.loc()));
-        i = bb_.add(make_arith(arithmetic::rem, p, cI, i32_ty, in.loc()));
-        j0 = bb_.add(make_arith(arithmetic::div, p, cI, i32_ty, in.loc()));
+        auto cI = bb_.create<constant_inst>(cl.rows, i32_ty, in.loc());
+        i = bb_.create<arith_inst>(arithmetic::rem, p, cI, i32_ty, in.loc());
+        j0 = bb_.create<arith_inst>(arithmetic::div, p, cI, i32_ty, in.loc());
     }
     const auto col_inc_factor = core_cfg_.subgroup_size / cl.rows;
 
@@ -79,12 +80,12 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         auto row = i;
         const auto block_offset = k1 * cl.rows + k2 * cl.rows * cl.blocks1;
         if (block_offset) {
-            auto cblock_offset = bb_.add(make_constant(block_offset, i32_ty, in.loc()));
-            row = bb_.add(make_arith(arithmetic::add, i, cblock_offset, i32_ty, in.loc()));
+            auto cblock_offset = bb_.create<constant_inst>(block_offset, i32_ty, in.loc());
+            row = bb_.create<arith_inst>(arithmetic::add, i, cblock_offset, i32_ty, in.loc());
         }
-        auto j1 = bb_.add(make_constant(u * col_inc_factor, i32_ty, in.loc()));
-        auto col = j0 ? bb_.add(make_arith(arithmetic::add, j0, j1, i32_ty, in.loc())) : j1;
-        auto val = bb_.add(make_cooperative_matrix_extract(v, &in.a(), ct->ty(), in.loc()));
+        auto j1 = bb_.create<constant_inst>(u * col_inc_factor, i32_ty, in.loc());
+        auto col = j0 ? bb_.create<arith_inst>(arithmetic::add, j0, j1, i32_ty, in.loc()) : j1;
+        auto val = bb_.create<cooperative_matrix_extract_inst>(v, &in.a(), ct->ty(), in.loc());
 
         cloner.set_subs(&in.row(), row);
         cloner.set_subs(&in.col(), col);
@@ -92,16 +93,17 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
 
         auto modified_val = value{};
         if ((u + 1) * col_inc_factor > cl.shape1) {
-            auto cshape1 = bb_.add(make_constant(cl.shape1, i32_ty, in.loc()));
-            auto cond = bb_.add(make_cmp(cmp_condition::lt, col, cshape1, bool_ty, in.loc()));
+            auto cshape1 = bb_.create<constant_inst>(cl.shape1, i32_ty, in.loc());
+            auto cond =
+                bb_.create<compare_inst>(cmp_condition::lt, col, cshape1, bool_ty, in.loc());
             modified_val = bb_.ifelse(
                                   cond,
                                   [&](region_builder &bb) {
                                       cloner.clone_region(in.body(), *bb.get_region());
                                   },
                                   [&](region_builder &bb) {
-                                      auto c0 = bb.add(make_constant_zero(ct->ty(), in.loc()));
-                                      bb.add(make_yield(c0));
+                                      auto c0 = bb.constant_zero(ct->ty(), in.loc());
+                                      bb.create<yield_inst>(array_view{c0});
                                   },
                                   {ct->ty()}, in.loc())
                                .front();
@@ -120,8 +122,8 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
                 throw compilation_error(in.loc(), status::ir_must_have_yield);
             }
         }
-        copy = bb_.add(
-            make_cooperative_matrix_insert(v, modified_val, copy, in.result().ty(), in.loc()));
+        copy = bb_.create<cooperative_matrix_insert_inst>(v, modified_val, copy, in.result().ty(),
+                                                          in.loc());
     }
     for (auto &r : in.get().results()) {
         auto u = r.use_begin();

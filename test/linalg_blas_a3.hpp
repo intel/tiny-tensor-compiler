@@ -5,6 +5,7 @@
 #define LINALG_BLAS_A3_20241025_HPP
 
 #include "linalg_types.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 
 #include <array>
@@ -58,8 +59,8 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
                                  [&](region_builder &bb, array_view<value> params) {
-                                     bb.add(make_gemm(false, tA_, tB_, params[0], params[1],
-                                                      params[2], params[3], params[4]));
+                                     bb.create<gemm_inst>(false, tA_, tB_, params[0], params[1],
+                                                          params[2], params[3], params[4]);
                                  });
     }
     void reference_impl(AlphaT alpha, AT const *A, BT const *B, BetaT beta, CT *C) {
@@ -103,8 +104,8 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
                                  [&](region_builder &bb, array_view<value> params) {
-                                     bb.add(make_gemv(false, tA_, params[0], params[1], params[2],
-                                                      params[3], params[4]));
+                                     bb.create<gemv_inst>(false, tA_, params[0], params[1],
+                                                          params[2], params[3], params[4]);
                                  });
     }
     void reference_impl(AlphaT alpha, AT const *A, BT const *B, BetaT beta, CT *C) {
@@ -146,7 +147,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
             kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BT>, to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
             [&](region_builder &bb, array_view<value> params) {
-                bb.add(make_ger(false, params[0], params[1], params[2], params[3], params[4]));
+                bb.create<ger_inst>(false, params[0], params[1], params[2], params[3], params[4]);
             });
     }
     void reference_impl(AlphaT alpha, AT const *A, BT const *B, BetaT beta, CT *C) {
@@ -181,12 +182,13 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
     auto lC() const -> tensor_layout const & { return lC_; }
 
     auto make_prog() const -> prog {
-        return make_blas_a3_prog(
-            kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
-            to_scalar_type_v<BT>, to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
-            [&](region_builder &bb, array_view<value> params) {
-                bb.add(make_hadamard(false, params[0], params[1], params[2], params[3], params[4]));
-            });
+        return make_blas_a3_prog(kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>,
+                                 to_scalar_type_v<AT>, to_scalar_type_v<BT>,
+                                 to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
+                                 [&](region_builder &bb, array_view<value> params) {
+                                     bb.create<hadamard_inst>(false, params[0], params[1],
+                                                              params[2], params[3], params[4]);
+                                 });
     }
     void reference_impl(AlphaT alpha, AT const *A, BT const *B, BetaT beta, CT *C) {
         if (lC().dim() == 2) {

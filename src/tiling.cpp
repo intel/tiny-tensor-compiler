@@ -6,7 +6,9 @@
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
 #include "scalar_type.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 #include "util/fnv1a.hpp"
 
 #include <algorithm>

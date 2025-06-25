@@ -90,7 +90,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         I.set_name("I");
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.add(make_builtin(builtin::group_id_x, get_scalar(ctx, scalar_type::index)));
+        auto gid =
+            bb.create<builtin_inst>(builtin::group_id_x, get_scalar(ctx, scalar_type::index));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {
@@ -101,8 +102,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         };
         auto const offsets3 = array_view<value>(gid);
         auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
-        auto tmp = bb.add(
-            make_alloca(get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local)));
+        auto tmp = bb.create<alloca_inst>(
+            get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local));
 
         auto a0t = get_memref(element_ty, static_sizes2(A_[0]));
         auto a1t = get_memref(element_ty, static_sizes2(A_[1]));
@@ -113,31 +114,39 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto qvt = get_memref(element_ty, {B3_aligned_, P_});
         auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
         auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
-        auto a0 =
-            bb.add(make_subview(static_offsets3, static_sizes3(A_[0]), A(0), offsets3, {}, a0t));
-        auto a1 =
-            bb.add(make_subview(static_offsets3, static_sizes3(A_[1]), A(1), offsets3, {}, a1t));
-        auto a2 =
-            bb.add(make_subview(static_offsets3, static_sizes3(A_[2]), A(2), offsets3, {}, a2t));
-        auto k0 = bb.add(make_subview(static_offsets2, sizeK2, K(0), {}, {}, k0t));
-        auto k1 = bb.add(make_subview(static_offsets2, sizeK2, K(1), {}, {}, k1t));
-        auto k2 = bb.add(make_subview(static_offsets2, sizeK2, K(2), {}, {}, k2t));
-        auto qv = bb.add(make_subview(static_offsets3, {B3_aligned_, P_, 0}, Q, offsets3, {}, qvt));
-        auto iv = bb.add(make_subview(static_offsets3, {B2_aligned_, P_, 0}, I, offsets3, {}, ivt));
-        auto tmpv = bb.add(make_subview(static_offsets2, {B2_, P_}, tmp, {}, {}, tmpvt));
-        auto const c0 = bb.add(make_constant_zero(element_ty));
-        auto const c1 = bb.add(make_constant_one(element_ty));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a0, c0, tmp));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k0, tmpv, c1, qv));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a1, c0, tmp));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k1, tmpv, c1, qv));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, iv, a2, c0, tmp));
-        bb.add(make_gemm(false, transpose::N, transpose::N, c1, k2, tmpv, c1, qv));
+        auto a0 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[0]), A(0), offsets3,
+                                          array_view<value>{}, a0t);
+        auto a1 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[1]), A(1), offsets3,
+                                          array_view<value>{}, a1t);
+        auto a2 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[2]), A(2), offsets3,
+                                          array_view<value>{}, a2t);
+        auto k0 = bb.create<subview_inst>(static_offsets2, sizeK2, K(0), array_view<value>{},
+                                          array_view<value>{}, k0t);
+        auto k1 = bb.create<subview_inst>(static_offsets2, sizeK2, K(1), array_view<value>{},
+                                          array_view<value>{}, k1t);
+        auto k2 = bb.create<subview_inst>(static_offsets2, sizeK2, K(2), array_view<value>{},
+                                          array_view<value>{}, k2t);
+        auto qv =
+            bb.create<subview_inst>(static_offsets3, array_view{B3_aligned_, P_, std::int64_t{0}},
+                                    Q, offsets3, array_view<value>{}, qvt);
+        auto iv =
+            bb.create<subview_inst>(static_offsets3, array_view{B2_aligned_, P_, std::int64_t{0}},
+                                    I, offsets3, array_view<value>{}, ivt);
+        auto tmpv = bb.create<subview_inst>(static_offsets2, array_view{B2_, P_}, tmp,
+                                            array_view<value>{}, array_view<value>{}, tmpvt);
+        auto const c0 = bb.constant_zero(element_ty);
+        auto const c1 = bb.constant_one(element_ty);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a0, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k0, tmpv, c1, qv);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a1, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k1, tmpv, c1, qv);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a2, c0, tmp);
+        bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, k2, tmpv, c1, qv);
 
         return f;
     };
     auto p = make_prog(ctx_);
-    p.add_function(opt_kernel(ctx_));
+    add_function(p, opt_kernel(ctx_));
     if (dump) {
         p.dump();
     }

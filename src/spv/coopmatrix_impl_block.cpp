@@ -16,7 +16,7 @@
 #include "spv/matrix_walker.hpp"
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/math.hpp"

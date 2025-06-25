@@ -12,9 +12,11 @@
 #include <cstdint>
 #include <format>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <variant>
 #include <vector>
 
 using tinytc::overloaded;
@@ -68,6 +70,7 @@ void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
                             std::string_view name) {
     std::visit(overloaded{[&](builtin_type const &ty) {
                               if (q == quantifier::many) {
+                                  os << std::format("{}.size(), ", name);
                                   if (ty == builtin_type::value) {
                                       os << std::format("reinterpret_cast<const {}*>({}.data())",
                                                         to_c_type(ty), name);
@@ -161,7 +164,7 @@ void generate_cxx_params(std::ostream &os, inst *in, bool pub) {
                 os << std::format("{} {}, ", type, name);
             }
         });
-    os << "location const& lc";
+    os << "location const& loc";
 }
 
 void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
@@ -220,6 +223,35 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
+                os << std::format("class {0};\n", in->class_name());
+            }
+        });
+    }
+    os << "\n";
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+            if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
+                const auto ret_count = [&]() {
+                    std::int32_t ret_count = 0;
+
+                    walk_up<walk_order::post_order>(in, [&](inst *in) {
+                        for (auto &r : in->rets()) {
+                            if (r.quantity == quantifier::many) {
+                                ret_count = std::numeric_limits<std::int32_t>::max();
+                            }
+                            if (ret_count < std::numeric_limits<std::int32_t>::max()) {
+                                ++ret_count;
+                            }
+                        }
+                    });
+
+                    return ret_count;
+                }();
+
+                os << std::format("//! creator specialization for {0}\n"
+                                  "template<> struct creator<{0}> {{\n"
+                                  "constexpr static std::int32_t max_returned_values = {1};\n",
+                                  in->class_name(), ret_count);
                 os << "/*\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
@@ -233,9 +265,9 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                 });
                 os << " * @param loc Source code location; can be {}\n *\n";
                 os << " * @return Instruction\n */\n";
-                os << "inline auto make_" << in->class_name() << "(";
+                os << "inline auto operator()(";
                 generate_cxx_params(os, in, true);
-                os << ") -> inst {\n";
+                os << "= {}) -> inst {\n";
                 os << "tinytc_inst_t instr;\n";
                 os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",
                                   in->class_name());
@@ -244,7 +276,7 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                     generate_cxx_to_c_cast(os, q, ty, name);
                     os << ", ";
                 });
-                os << "&loc), loc);\nreturn inst(instr);\n}\n\n";
+                os << "&loc), loc);\nreturn inst(instr);\n}\n};\n\n";
             }
         });
     }
@@ -477,7 +509,7 @@ void generate_inst_create(std::ostream &os, inst *in) {
     sizeof({1}::properties),
     {0},
 }};
-auto in = inst{{tinytc_inst::create(IK::{2}, layout, lc)}};
+auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
 [[maybe_unused]] std::int32_t ret_no = 0;
 [[maybe_unused]] std::int32_t op_no = 0;
 )CXXT",

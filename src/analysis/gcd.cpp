@@ -11,6 +11,7 @@
 #include "node/value_node.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

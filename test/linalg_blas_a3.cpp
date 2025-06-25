@@ -112,7 +112,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
 
     make_op(bb, params);
 
-    p.add_function(std::move(f));
+    add_function(p, std::move(f));
 
     return p;
 }

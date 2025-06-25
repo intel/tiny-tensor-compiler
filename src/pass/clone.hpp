@@ -7,7 +7,7 @@
 #include "node/inst_node.hpp"
 #include "node/region_node.hpp"
 #include "node/value_node.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/types.h"
 
 #include <unordered_map>

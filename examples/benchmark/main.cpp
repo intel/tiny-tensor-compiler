@@ -5,6 +5,7 @@
 
 #include <argparser.hpp>
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_sycl.hpp>
 
@@ -106,19 +107,19 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         fn_body.get_parameters(params);
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.add(make_builtin(builtin::group_id_x, index_ty, my_loc()));
-        auto from = bb.add(make_constant_zero(index_ty, my_loc()));
-        auto to = bb.add(make_constant(repetitions, index_ty, my_loc()));
-        auto calpha = bb.add(make_constant_one(element_ty, my_loc()));
-        auto cbeta = bb.add(update ? make_constant_one(element_ty, my_loc())
-                                   : make_constant_zero(element_ty, my_loc()));
-        auto a = bb.add(make_load(params[0], {gid}, A_ty, my_loc()));
-        auto b = bb.add(make_load(params[1], {gid}, B_ty, my_loc()));
-        auto c = bb.add(make_load(params[2], {gid}, C_ty, my_loc()));
+        auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
+        auto from = bb.constant_zero(index_ty, my_loc());
+        auto to = bb.create<constant_inst>(repetitions, index_ty, my_loc());
+        auto calpha = bb.constant_one(element_ty, my_loc());
+        auto cbeta =
+            update ? bb.constant_one(element_ty, my_loc()) : bb.constant_zero(element_ty, my_loc());
+        auto a = bb.create<load_inst>(params[0], array_view{gid}, A_ty, my_loc());
+        auto b = bb.create<load_inst>(params[1], array_view{gid}, B_ty, my_loc());
+        auto c = bb.create<load_inst>(params[2], array_view{gid}, C_ty, my_loc());
         bb.for_loop(
             from, to,
             [&](region_builder &bb, value const &) {
-                bb.add(make_gemm(atomic, tA, tB, calpha, a, b, cbeta, c, my_loc()));
+                bb.create<gemm_inst>(atomic, tA, tB, calpha, a, b, cbeta, c, my_loc());
             },
             nullptr, my_loc());
 
@@ -127,7 +128,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 
     try {
         auto p = make_prog(ctx, my_loc());
-        p.add_function(kernel(ctx));
+        add_function(p, kernel(ctx));
         if (dump) {
             p.dump();
         }

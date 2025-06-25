@@ -3,6 +3,7 @@
 
 #include "error.hpp"
 #include "node/attr_node.hpp"
+#include "tinytc/builder.h"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"

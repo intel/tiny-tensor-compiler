@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
@@ -28,12 +29,12 @@ int main() {
         body.get_parameters(params);
 
         auto bb = region_builder{body};
-        auto alpha = bb.add(make_constant_one(element_ty));
-        auto beta = bb.add(make_constant_zero(element_ty));
-        bb.add(make_axpby(false, transpose::N, alpha, params[0], beta, params[1]));
+        auto alpha = bb.constant_one(element_ty);
+        auto beta = bb.constant_zero(element_ty);
+        bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
         auto p = make_prog(ctx);
-        p.add_function(std::move(f));
+        add_function(p, std::move(f));
 
         p.dump();
     } catch (builder_error const &e) {

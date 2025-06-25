@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "test_ader.hpp"
+#include <tinytc/builder.hpp>
 
 #include <array>
 #include <cmath>
@@ -95,10 +96,10 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         I.set_name("I");
 
         auto bb = region_builder{fn_body};
-        auto const c0 = bb.add(make_constant_zero(element_ty));
-        auto const c1 = bb.add(make_constant_one(element_ty));
+        auto const c0 = bb.constant_zero(element_ty);
+        auto const c1 = bb.constant_one(element_ty);
         auto const gid =
-            bb.add(make_builtin(builtin::group_id_x, get_scalar(ctx, scalar_type::index)));
+            bb.create<builtin_inst>(builtin::group_id_x, get_scalar(ctx, scalar_type::index));
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
@@ -108,43 +109,47 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         };
         auto const offsets3 = array_view<value>(gid);
         auto dqt = get_memref(element_ty, static_sizes2(dQ_[0]), {1, dynamic});
-        auto dq =
-            bb.add(make_subview(static_offsets3, static_sizes3(dQ_[0]), Q, offsets3, {}, dqt));
+        auto dq = bb.create<subview_inst>(static_offsets3, static_sizes3(dQ_[0]), Q, offsets3,
+                                          array_view<value>{}, dqt);
         for (std::size_t d = 0; d < dim; ++d) {
             auto At = get_memref(element_ty, static_sizes2(A_[d]));
-            A(d) =
-                bb.add(make_subview(static_offsets3, static_sizes3(A_[d]), A(d), offsets3, {}, At));
+            A(d) = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[d]), A(d), offsets3,
+                                           array_view<value>{}, At);
         }
         auto it = get_memref(element_ty, static_sizes2(I_opt_), {1, dynamic});
-        auto i = bb.add(make_subview(static_offsets3, static_sizes3(I_opt_), I, offsets3, {}, it));
-        bb.add(make_axpby(false, transpose::N, c1, dq, c1, i));
+        auto i = bb.create<subview_inst>(static_offsets3, static_sizes3(I_opt_), I, offsets3,
+                                         array_view<value>{}, it);
+        bb.create<axpby_inst>(false, transpose::N, c1, dq, c1, i);
 
         int denom = 1;
         auto cnum = c1;
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         for (std::int64_t n = 1; n <= N_; ++n) {
-            cnum = bb.add(make_arith(arithmetic::mul, cnum, dt, dt.get_type()));
+            cnum = bb.create<arith_inst>(arithmetic::mul, cnum, dt, dt.get_type());
             denom *= n + 1;
-            auto cdenom = bb.add(make_constant(static_cast<double>(denom), element_ty));
-            auto cfactor = bb.add(make_arith(arithmetic::div, cnum, cdenom, cnum.get_type()));
+            auto cdenom = bb.create<constant_inst>(static_cast<double>(denom), element_ty);
+            auto cfactor = bb.create<arith_inst>(arithmetic::div, cnum, cdenom, cnum.get_type());
             auto bn = Bd_aligned(N_ - n);
-            auto dq_next = bb.add(make_alloca(dQ_[n].local_type(element_ty)));
+            auto dq_next = bb.create<alloca_inst>(dQ_[n].local_type(element_ty));
             auto dq_nextvt = get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local);
             auto dq_nextv =
-                bb.add(make_subview(static_offsets2, {bn, P_}, dq_next, {}, {}, dq_nextvt));
-            auto tmp = bb.add(
-                make_alloca(get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local)));
+                bb.create<subview_inst>(static_offsets2, array_view{bn, P_}, dq_next,
+                                        array_view<value>{}, array_view<value>{}, dq_nextvt);
+            auto tmp = bb.create<alloca_inst>(
+                get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local));
             for (std::size_t d = 0; d < dim; ++d) {
                 auto Kvt = get_memref(element_ty, {bn, Bd(N_ - n + 1)}, {1, dynamic});
                 auto Kv =
-                    bb.add(make_subview(static_offsets2, {bn, Bd(N_ - n + 1)}, K(d), {}, {}, Kvt));
-                bb.add(make_gemm(false, transpose::N, transpose::N, c1, Kv, dq, c0, tmp));
-                bb.add(make_gemm(false, transpose::N, transpose::N, c1, tmp, A(d), d > 0 ? c1 : c0,
-                                 dq_nextv));
+                    bb.create<subview_inst>(static_offsets2, array_view{bn, Bd(N_ - n + 1)}, K(d),
+                                            array_view<value>{}, array_view<value>{}, Kvt);
+                bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, Kv, dq, c0, tmp);
+                bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, tmp, A(d),
+                                     d > 0 ? c1 : c0, dq_nextv);
             }
             auto ivt = get_memref(element_ty, {Bd(N_ - n), P_}, {1, dynamic});
-            auto iv = bb.add(make_subview(static_offsets2, {Bd(N_ - n), P_}, i, {}, {}, ivt));
-            bb.add(make_axpby(false, transpose::N, cfactor, dq_next, c1, iv));
+            auto iv = bb.create<subview_inst>(static_offsets2, array_view{Bd(N_ - n), P_}, i,
+                                              array_view<value>{}, array_view<value>{}, ivt);
+            bb.create<axpby_inst>(false, transpose::N, cfactor, dq_next, c1, iv);
             dq = dq_next;
         }
 
@@ -155,7 +160,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
         nullptr);
     auto p = make_prog(ctx);
-    p.add_function(opt_kernel(ctx));
+    add_function(p, opt_kernel(ctx));
     if (dump) {
         p.dump();
     }

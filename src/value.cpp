@@ -3,7 +3,7 @@
 
 #include "error.hpp"
 #include "node/value_node.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/builder.h"
 #include "tinytc/types.h"
 
 #include <cstdint>

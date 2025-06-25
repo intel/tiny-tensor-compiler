@@ -1,0 +1,979 @@
+// Copyright (C) 2025 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef BUILDER_HPP_20250625
+#define BUILDER_HPP_20250625
+
+#include "tinytc/builder.h"
+#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
+
+namespace tinytc {
+
+////////////////////////////
+//////// Scalar type ///////
+////////////////////////////
+
+//! Size of scalar type in bytes
+inline std::size_t size(scalar_type ty) {
+    return ::tinytc_scalar_type_size(static_cast<tinytc_scalar_type_t>(ty));
+}
+
+/**
+ * Returns the scalar type corresponding to C++ type T
+ *
+ * Specializations exist for bool, (u)int8_t, (u)int16_t, (u)int32_t, (u)int64_t, float, double.
+ * The scalar_type is stored in the static constexpr member "value".
+ */
+template <typename T> struct to_scalar_type;
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::int8_t> {
+    static constexpr scalar_type value = scalar_type::i8; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::int16_t> {
+    static constexpr scalar_type value = scalar_type::i16; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::int32_t> {
+    static constexpr scalar_type value = scalar_type::i32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::int64_t> {
+    static constexpr scalar_type value = scalar_type::i64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<bfloat16> {
+    static constexpr scalar_type value = scalar_type::bf16; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<half> {
+    static constexpr scalar_type value = scalar_type::f16; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<float> {
+    static constexpr scalar_type value = scalar_type::f32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<double> {
+    static constexpr scalar_type value = scalar_type::f64; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::complex<float>> {
+    static constexpr scalar_type value = scalar_type::c32; ///< value
+};
+//! to_scalar_type specialization
+template <> struct to_scalar_type<std::complex<double>> {
+    static constexpr scalar_type value = scalar_type::c64; ///< value
+};
+/**
+ * Convenience variable for to_scalar_type.
+ *
+ * Example: @code scalar_type ty = to_scalar_type_v<float>; @endcode
+ */
+template <typename T> inline constexpr scalar_type to_scalar_type_v = to_scalar_type<T>::value;
+
+////////////////////////////
+///////// Attribute ////////
+////////////////////////////
+
+//! Alias for tinytc_attr_t
+using attr = tinytc_attr_t;
+//! Alias for tinytc_named_attr_t
+using named_attr = tinytc_named_attr_t;
+
+/**
+ * @brief Get array attribute
+ *
+ * @param ctx compiler context
+ * @param array attribute array
+ *
+ * @return Attribute
+ */
+inline attr get_array_attr(compiler_context const &ctx, array_view<attr> array) {
+    attr a;
+    CHECK_STATUS(tinytc_array_attr_get(&a, ctx.get(), array.size(), array.data()));
+    return a;
+}
+
+/**
+ * @brief Get boolean attribute
+ *
+ * @param ctx compiler context
+ * @param value boolean value
+ *
+ * @return Attribute
+ */
+inline attr get_boolean_attr(compiler_context const &ctx, bool value) {
+    attr a;
+    CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx.get(), value));
+    return a;
+}
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * Each name must only appear once.
+ *
+ * @param ctx compiler context
+ * @param items named items array
+ *
+ * @return Attribute
+ */
+inline attr get_dictionary_attr(compiler_context const &ctx, mutable_array_view<named_attr> items) {
+    attr a;
+    CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx.get(), items.size(), items.data()));
+    return a;
+}
+
+/**
+ * @brief Get dictionary attribute
+ *
+ * The list of items must be sorted by name and each name must only appear once.
+ *
+ * @param ctx compiler context
+ * @param items named items array
+ *
+ * @return Attribute
+ */
+inline attr get_dictionary_attr_with_sorted(compiler_context const &ctx,
+                                            array_view<named_attr> items) {
+    attr a;
+    CHECK_STATUS(tinytc_dictionary_attr_get_with_sorted(&a, ctx.get(), items.size(), items.data()));
+    return a;
+}
+
+/**
+ * @brief Sort list of items
+ *
+ * Each name must only appear once.
+ *
+ * @param items named items array
+ */
+inline void sort_items(mutable_array_view<named_attr> items) {
+    CHECK_STATUS(tinytc_dictionary_attr_sort(items.size(), items.data()));
+}
+
+/**
+ * @brief Get integer attribute
+ *
+ * @param ctx compiler context
+ * @param value integer value
+ *
+ * @return Attribute
+ */
+inline attr get_integer_attr(compiler_context const &ctx, std::int64_t value) {
+    attr a;
+    CHECK_STATUS(tinytc_integer_attr_get(&a, ctx.get(), value));
+    return a;
+}
+
+/**
+ * @brief Get string attribute
+ *
+ * @param ctx compiler context
+ * @param str string
+ *
+ * @return Attribute
+ */
+inline attr get_string_attr(compiler_context const &ctx, std::string_view str) {
+    attr a;
+    CHECK_STATUS(tinytc_string_attr_get(&a, ctx.get(), str.size(), str.data()));
+    return a;
+}
+
+////////////////////////////
+///////// Data type ////////
+////////////////////////////
+
+/**
+ * @brief Get the boolean data type
+ *
+ * Cf. \ref tinytc_boolean_type_get
+ *
+ * @param ctx Compiler context
+ *
+ * @return Data type
+ */
+inline data_type get_boolean(compiler_context const &ctx) {
+    tinytc_data_type_t bt;
+    CHECK_STATUS(tinytc_boolean_type_get(&bt, ctx.get()));
+    return bt;
+}
+
+/**
+ * @brief Get a scalar data type
+ *
+ * Cf. \ref tinytc_scalar_type_get
+ *
+ * @param ctx Compiler context
+ * @param scalar_ty Scalar type
+ *
+ * @return Data type
+ */
+inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
+    tinytc_data_type_t st;
+    CHECK_STATUS(
+        tinytc_scalar_type_get(&st, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty)));
+    return st;
+}
+
+/**
+ * @brief Get a memref data type
+ *
+ * Cf. \ref tinytc_memref_type_get
+ *
+ * @param scalar_ty Element type
+ * @param shape Tensor shape
+ * @param stride Tensor stride
+ * @param addrspace Address space
+ * @param loc Source code location
+ *
+ * @return Data type
+ */
+inline data_type get_memref(data_type scalar_ty, array_view<std::int64_t> shape,
+                            array_view<std::int64_t> stride = {},
+                            address_space addrspace = address_space::global,
+                            location const &loc = {}) {
+    tinytc_data_type_t mt;
+    CHECK_STATUS_LOC(tinytc_memref_type_get(&mt, scalar_ty, shape.size(), shape.data(),
+                                            stride.size(), stride.data(),
+                                            static_cast<tinytc_address_space_t>(addrspace), &loc),
+                     loc);
+    return mt;
+}
+
+/**
+ * @brief Get a group data type
+ *
+ * @param memref_ty Memref data type
+ * @param size Size parameter
+ * @param offset Offset parameter
+ * @param loc Source code location
+ *
+ * @return Data type
+ */
+inline data_type get_group(data_type memref_ty, std::int64_t size, std::int64_t offset = 0,
+                           location const &loc = {}) {
+    tinytc_data_type_t gt;
+    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, size, offset, &loc), loc);
+    return gt;
+}
+
+/**
+ * @brief Get a coopmatrix data type
+ *
+ * @param scalar_ty Component type
+ * @param rows Number of rows
+ * @param cols Number of cols
+ * @param use Matrix use
+ * @param loc Source code location
+ *
+ * @return Data type
+ */
+inline data_type get_coopmatrix(data_type scalar_ty, std::int64_t rows, std::int64_t cols,
+                                matrix_use use, location const &loc = {}) {
+    tinytc_data_type_t ct;
+    CHECK_STATUS_LOC(tinytc_coopmatrix_type_get(&ct, scalar_ty, rows, cols,
+                                                static_cast<::tinytc_matrix_use_t>(use), &loc),
+                     loc);
+    return ct;
+}
+
+/**
+ * @brief Get a void data type
+ *
+ * @param ctx Context
+ *
+ * @return Data type
+ */
+inline data_type get_void(compiler_context const &ctx) {
+    tinytc_data_type_t vt;
+    CHECK_STATUS(tinytc_void_type_get(&vt, ctx.get()));
+    return vt;
+}
+
+////////////////////////////
+/////////// Value //////////
+////////////////////////////
+
+//! @brief OO-wrapper for tinytc_value_t
+class value : public handle<tinytc_value_t> {
+  public:
+    using handle::handle;
+
+    /**
+     * @brief Get name
+     *
+     * @return Name as C-string
+     */
+    inline auto get_name() -> char const * {
+        char const *name;
+        CHECK_STATUS(tinytc_value_get_name(obj_, &name));
+        return name;
+    }
+
+    /**
+     * @brief Set value name
+     *
+     * @param name Name
+     */
+    inline void set_name(std::string_view name) {
+        CHECK_STATUS(tinytc_value_set_name_n(obj_, name.size(), name.data()));
+    }
+
+    /**
+     * @brief Get type
+     *
+     * @return Data type
+     */
+    inline auto get_type() -> data_type {
+        tinytc_data_type_t ty;
+        CHECK_STATUS(tinytc_value_get_type(obj_, &ty));
+        return ty;
+    }
+};
+static_assert(std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t));
+
+////////////////////////////
+/////////// Inst ///////////
+////////////////////////////
+
+namespace internal {
+template <> struct unique_handle_traits<tinytc_inst_t> {
+    static void destroy(tinytc_inst_t handle) { return tinytc_inst_destroy(handle); }
+};
+} // namespace internal
+
+class region;
+
+//! @brief Reference-counting wrapper for tinytc_inst_t
+class inst : public unique_handle<tinytc_inst_t> {
+  public:
+    using unique_handle::unique_handle;
+
+    /**
+     * @brief Get result values
+     *
+     * May be called with empty view (vals = {}) to get the number of results.
+     *
+     * @param vals view on buffer that stores results
+     *
+     * @return Minimum of view size and actual number of result values
+     */
+    inline auto get_values(mutable_array_view<value> vals) const -> std::uint32_t {
+        std::uint32_t result_list_size = vals.size();
+        tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
+        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, vs));
+        return result_list_size;
+    }
+
+    /**
+     * @brief Get child regions
+     *
+     * May be called with empty view (vals = {}) to get the number of child regions.
+     *
+     * @param regs view on buffer that stores results
+     *
+     * @return Minimum of view size and actual number of child regions
+     */
+    inline auto get_regions(mutable_array_view<region> regs) const -> std::uint32_t {
+        std::uint32_t result_list_size = regs.size();
+        tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
+        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
+        return result_list_size;
+    }
+
+    /**
+     * @brief Set attribute
+     *
+     * @param a attribute
+     */
+    inline void set_attr(attr a) { CHECK_STATUS(tinytc_inst_set_attr(obj_, a)); }
+};
+
+////////////////////////////
+/////// Instructions ///////
+////////////////////////////
+
+template <typename T> struct creator;
+
+// もち api_builder_hpp "tinytc/instructions.anko"
+
+class constant_inst;
+//! creator specialization for constant_inst
+template <> struct creator<constant_inst> {
+    constexpr static std::int32_t max_returned_values = 1;
+    /**
+     * @brief Make boolean constant
+     *
+     * @param value Constant
+     * @param ty Data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto operator()(bool value, data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_boolean(&instr, value, ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make complex constant
+     *
+     * @param value Complex constant
+     * @param ty Data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto operator()(std::complex<double> value, data_type ty, location const &loc = {})
+        -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(
+            tinytc_constant_inst_create_complex(&instr, value.real(), value.imag(), ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make floating constant
+     *
+     * @param value Constant
+     * @param ty Data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto operator()(double value, data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_float(&instr, value, ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make integer constant
+     *
+     * @param value Constant
+     * @param ty Data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto operator()(std::int32_t value, data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make integer constant
+     *
+     * @param value Constant
+     * @param ty Data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto operator()(std::int64_t value, data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make multiplicative identity constant ("1") for the given data type
+     *
+     * @param ty Scalar data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto one(data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_one(&instr, ty, &loc), loc);
+        return inst(instr);
+    }
+
+    /**
+     * @brief Make additive identity constant ("0") for the given data type
+     *
+     * @param ty Scalar data type
+     * @param loc Source code location
+     *
+     * @return Instruction
+     */
+    inline auto zero(data_type ty, location const &loc = {}) -> inst {
+        tinytc_inst_t instr;
+        CHECK_STATUS_LOC(tinytc_constant_inst_create_zero(&instr, ty, &loc), loc);
+        return inst(instr);
+    }
+};
+
+/**
+ * @brief Create instruction
+ *
+ * @param args Arguments forwarded to creator
+ *
+ * @return Instruction
+ */
+template <typename T, typename... Args> inline auto create(Args &&...args) -> inst {
+    return creator<T>{}(std::forward<Args>(args)...);
+}
+
+////////////////////////////
+////////// Region //////////
+////////////////////////////
+
+//! @brief OO-wrapper for tinytc_region_t
+class region : public handle<tinytc_region_t> {
+  public:
+    using handle::handle;
+
+    /**
+     * @brief Append instruction to region
+     *
+     * @param instruction instruction object
+     */
+    inline void append(inst instruction) {
+        CHECK_STATUS(tinytc_region_append(obj_, instruction.release()));
+    }
+
+    /**
+     * @brief Get iterator pointing to the begin of the region
+     *
+     * @return iterator
+     */
+    inline auto begin() -> tinytc_inst_iterator_t {
+        tinytc_inst_iterator_t it;
+        CHECK_STATUS(tinytc_region_begin(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Get iterator pointing to past the end of the region
+     *
+     * @return iterator
+     */
+    inline auto end() -> tinytc_inst_iterator_t {
+        tinytc_inst_iterator_t it;
+        CHECK_STATUS(tinytc_region_end(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Erase instruction at iterator
+     *
+     * @param iterator Iterator
+     *
+     * @return Iterator pointing to the instruction after the one erased
+     */
+    inline auto erase(tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
+        auto it = iterator;
+        CHECK_STATUS(tinytc_region_erase(obj_, &it));
+        return it;
+    }
+
+    /**
+     * @brief Insert instruction into region before the iterator
+     *
+     * @param iterator Iterator
+     * @param instruction instruction object
+     *
+     * @return Iterator pointing to the newly inserted instruction
+     */
+    inline auto insert(tinytc_inst_iterator_t iterator, inst instruction)
+        -> tinytc_inst_iterator_t {
+        auto it = iterator;
+        CHECK_STATUS(tinytc_region_insert(obj_, &it, instruction.release()));
+        return it;
+    }
+
+    /**
+     *
+     * @brief Get region parameters
+     *
+     * May be called with empty view (vals = {}) to get the number of parameters.
+     *
+     * @param params view on buffer that stores parameters
+     *
+     * @return Minimum of view size and actual number of parameters
+     */
+    inline auto get_parameters(mutable_array_view<value> params) -> std::uint32_t {
+        std::uint32_t result_list_size = params.size();
+        tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
+        CHECK_STATUS(tinytc_region_get_parameters(obj_, &result_list_size, ps));
+        return result_list_size;
+    }
+};
+static_assert(std::is_standard_layout_v<region> && sizeof(region) == sizeof(tinytc_region_t));
+
+/**
+ * @brief Move iterator to next instruction
+ *
+ * @param iterator
+ */
+inline void next(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_next_inst(&iterator)); }
+/**
+ * @brief Move iterator to previous instruction
+ *
+ * @param iterator
+ */
+inline void prev(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_prev_inst(&iterator)); }
+
+////////////////////////////
+/////////// Func ///////////
+////////////////////////////
+
+namespace internal {
+template <> struct unique_handle_traits<tinytc_func_t> {
+    static void destroy(tinytc_func_t handle) { return tinytc_func_destroy(handle); }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_func_t
+class func : public unique_handle<tinytc_func_t> {
+  public:
+    using unique_handle::unique_handle;
+
+    auto get_body() -> region {
+        tinytc_region_t body;
+        CHECK_STATUS(tinytc_func_get_body(obj_, &body));
+        return region{body};
+    }
+
+    void set_attr(attr a) { CHECK_STATUS(tinytc_func_set_attr(obj_, a)); }
+
+    void set_parameter_attr(std::int32_t arg_no, attr a) {
+        CHECK_STATUS(tinytc_func_set_parameter_attr(obj_, arg_no, a));
+    }
+};
+
+/**
+ * @brief Make function
+ *
+ * @param name Function name
+ * @param param_type_list List of parameter types
+ * @param ty Result type (must be void for host-callable function)
+ * @param loc Source code location
+ *
+ * @return Function
+ */
+inline func make_func(std::string_view name, array_view<data_type> param_type_list, data_type ty,
+                      location const &loc = {}) {
+    tinytc_func_t fun;
+    auto len = param_type_list.size();
+    if (len > std::numeric_limits<std::uint32_t>::max()) {
+        throw std::out_of_range("param list too long");
+    }
+    CHECK_STATUS_LOC(
+        tinytc_func_create(&fun, name.size(), name.data(), len, param_type_list.data(), ty, &loc),
+        loc);
+    return func(fun);
+}
+
+////////////////////////////
+/////////// Prog ///////////
+////////////////////////////
+
+/**
+ * @brief Append function to program
+ *
+ * @param prg program
+ * @param fun function
+ */
+inline void add_function(prog &prg, func fun) {
+    CHECK_STATUS(tinytc_prog_add_function(prg.get(), fun.release()));
+}
+
+/**
+ * @brief Make program
+ *
+ * @param ctx Compiler context
+ * @param loc Source code location
+ *
+ * @return Program
+ */
+inline prog make_prog(compiler_context const &ctx, location const &loc = {}) {
+    tinytc_prog_t prg;
+    CHECK_STATUS_LOC(tinytc_prog_create(&prg, ctx.get(), &loc), loc);
+    return prog{prg};
+}
+
+////////////////////////////
+////////// Builder /////////
+////////////////////////////
+
+//! Builder for regions
+class region_builder {
+  public:
+    /**
+     * @brief ctor
+     *
+     * @param reg region object
+     */
+    region_builder(region reg) : reg_{reg}, ip_{reg_.end()} {}
+    /**
+     * @brief ctor
+     *
+     * @param reg region object
+     * @param ip insertion point
+     */
+    region_builder(region reg, tinytc_inst_iterator_t ip) : reg_{reg}, ip_{ip} {}
+
+    /**
+     * @brief Get insertion point
+     *
+     * @return Iterator
+     */
+    inline auto get_insertion_point() const -> tinytc_inst_iterator_t { return ip_; }
+
+    /**
+     * @brief Add instruction
+     *
+     * @param i Instruction
+     *
+     * @return Value returned by instruction; may be empty
+     */
+    [[maybe_unused]] inline auto add(inst i) -> value {
+        auto result = value{};
+        i.get_values(result);
+        reg_.insert(ip_, std::move(i));
+        return result;
+    }
+
+    /**
+     * @brief Add instruction that returns multiple values
+     *
+     * @param i Instruction
+     *
+     * @return Values returned by instruction
+     */
+    [[maybe_unused]] inline auto add_multivalued(inst i) -> std::vector<value> {
+        auto num_results = i.get_values({});
+        auto results = std::vector<value>(static_cast<std::size_t>(num_results));
+        results.resize(i.get_values(results));
+        reg_.insert(ip_, std::move(i));
+        return results;
+    }
+
+    /**
+     * @brief Create and add instruction
+     *
+     * @param args Arguments forwarded to creator
+     *
+     * @return Type is either void (T::num_returned_values==0), value (T::num_returned_values==1),
+     * or std::vector<value> (T::num_returned_values>1)
+     */
+    template <typename T, typename... Args> inline auto create(Args &&...args) {
+        inst i = creator<T>{}(std::forward<Args>(args)...);
+        if constexpr (creator<T>::max_returned_values > 1) {
+            return add_multivalued(std::move(i));
+        } else if constexpr (creator<T>::max_returned_values == 1) {
+            return add(std::move(i));
+        } else {
+            reg_.insert(ip_, std::move(i));
+        }
+    }
+
+    /**
+     * @brief Make multiplicative identity constant ("1") for the given data type
+     *
+     * @param ty Scalar data type
+     * @param loc Source code location
+     *
+     * @return Value returned by instruction
+     */
+    inline auto constant_one(data_type ty, location const &loc = {}) -> value {
+        return add(creator<constant_inst>{}.one(ty, loc));
+    }
+    /**
+     * @brief Make additive identity constant ("0") for the given data type
+     *
+     * @param ty Scalar data type
+     * @param loc Source code location
+     *
+     * @return Value returned by instruction
+     */
+    inline auto constant_zero(data_type ty, location const &loc = {}) -> value {
+        return add(creator<constant_inst>{}.zero(ty, loc));
+    }
+
+    /**
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
+     *
+     * The loop trip count is passed as second argument to the functor.
+     *
+     * @tparam F Functor type
+     * @param from Loop variable start
+     * @param to Loop variable bound
+     * @param f Functor
+     * @param attributes For attributes
+     * @param loc Source code location
+     */
+    template <typename F>
+    void for_loop(value from, value to, F &&f, attr attributes = nullptr,
+                  location const &loc = {}) {
+        for_loop<F>(std::move(from), std::move(to), nullptr, std::forward<F>(f), attributes, loc);
+    }
+    /**
+     * @brief Build for-loop with functor f(region_builder&, value) -> void
+     *
+     * The loop trip count is passed as second argument to the functor.
+     *
+     * @tparam F Functor type
+     * @param from Loop variable start
+     * @param to Loop variable bound
+     * @param step Loop variable step
+     * @param f Functor
+     * @param attributes For attributes
+     * @param loc Source code location
+     */
+    template <typename F>
+    void for_loop(value from, value to, value step, F &&f, attr attributes = nullptr,
+                  location const &loc = {}) {
+        auto fi = creator<for_inst>{}(from, to, step, {}, {}, loc);
+        fi.set_attr(attributes);
+        auto reg = region{};
+        fi.get_regions(reg);
+        auto loop_var = value{};
+        reg.get_parameters(loop_var);
+        if (!reg || !loop_var) {
+            throw status::internal_compiler_error;
+        }
+        reg_.insert(ip_, std::move(fi));
+        auto bb = region_builder{reg};
+        f(bb, loop_var);
+    }
+    /**
+     * @brief Build for-loop with functor f(region_builder&, array_view<value>) -> void
+     *
+     * The loop trip count is the first value in the array_view.
+     * The following values are the loop-carried values.
+     *
+     * @tparam F Functor type
+     * @param from Loop variable start
+     * @param to Loop variable bound
+     * @param step Loop variable step
+     * @param initial_value_list Array of initial values; can be {}
+     * @param return_type_list Array of return types; can be {}
+     * @param f Functor
+     * @param attributes For attributes
+     * @param loc Source code location
+     */
+    template <typename F>
+    auto for_loop(value from, value to, value step, array_view<value> initial_value_list,
+                  array_view<data_type> return_type_list, F &&f, attr attributes = nullptr,
+                  location const &loc = {}) -> std::vector<value> {
+        auto fi = creator<for_inst>{}(from, to, step, initial_value_list, return_type_list, loc);
+        fi.set_attr(attributes);
+        auto reg = region{};
+        fi.get_regions(reg);
+        auto num_params = reg.get_parameters({});
+        auto params = std::vector<value>(num_params);
+        reg.get_parameters(params);
+        if (!reg || num_params != 1 + initial_value_list.size()) {
+            throw status::internal_compiler_error;
+        }
+        auto results = add_multivalued(std::move(fi));
+        auto bb = region_builder{reg};
+        f(bb, array_view<value>(params));
+        return results;
+    }
+    /**
+     * @brief Build foreach-loop with functor f(region_builder&, array_view<value>) -> void
+     *
+     * @tparam F Functor type
+     * @param from Loop variable start list
+     * @param to Loop variable bound list
+     * @param f functor
+     * @param loc Source code location
+     */
+    template <typename F>
+    void foreach_loop(array_view<value> from, array_view<value> to, F &&f,
+                      location const &loc = {}) {
+        auto fi = creator<foreach_inst>{}(std::move(from), std::move(to), loc);
+        auto reg = region{};
+        fi.get_regions(reg);
+        auto num_params = reg.get_parameters({});
+        auto params = std::vector<value>(num_params);
+        reg.get_parameters(params);
+        if (!reg || num_params != from.size() || num_params != to.size()) {
+            throw status::internal_compiler_error;
+        }
+        reg_.insert(ip_, std::move(fi));
+        auto bb = region_builder{reg};
+        f(bb, array_view<value>(params));
+    }
+
+    /**
+     * @brief Build if with functor then(region_builder&) -> void
+     *
+     * Note: If the if instruction returns values then we must have a "yield" instruction in
+     * both the "then" and the "else" branch. So to return values use the "ifelse" function.
+     *
+     * @tparam F Functor type
+     * @param condition Condition value
+     * @param then Then region functor
+     * @param loc Source code location
+     *
+     * @return Returned values
+     */
+    template <typename F> void if_condition(value condition, F &&then, location const &loc = {}) {
+        auto ii = creator<if_inst>{}(std::move(condition), {}, loc);
+        auto reg = region{};
+        ii.get_regions(reg);
+        if (!reg) {
+            throw status::internal_compiler_error;
+        }
+        reg_.insert(ip_, std::move(ii));
+        auto bb = region_builder{reg};
+        then(bb);
+    }
+    /**
+     * @brief Build if/else with functors then(region_builder&) -> void and
+     * otherwise(region_builder&) -> void
+     *
+     * @tparam F "if" functor type
+     * @tparam G "else" functor type
+     * @param condition If condition
+     * @param then "if" functor
+     * @param otherwise "else" functor
+     * @param return_type_list List of types of returned values
+     * @param loc Source code location
+     *
+     * @return Returned values
+     */
+    template <typename F, typename G>
+    auto ifelse(value condition, F &&then, G &&otherwise,
+                array_view<data_type> return_type_list = {}, location const &loc = {})
+        -> std::vector<value> {
+        auto ii = creator<if_inst>{}(std::move(condition), return_type_list, loc);
+        std::array<region, 2u> regs = {};
+        ii.get_regions(regs);
+        if (!regs[0] || !regs[1]) {
+            throw status::internal_compiler_error;
+        }
+        auto results = add_multivalued(std::move(ii));
+        auto bb0 = region_builder{regs[0]};
+        then(bb0);
+        auto bb1 = region_builder{regs[1]};
+        otherwise(bb1);
+        return results;
+    }
+
+    /**
+     * @brief Get region
+     *
+     * @return Region
+     */
+    inline auto get_region() -> region { return reg_; }
+
+  private:
+    region reg_;
+    tinytc_inst_iterator_t ip_;
+};
+
+} // namespace tinytc
+
+#endif // BUILDER_H_20250625

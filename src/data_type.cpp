@@ -4,7 +4,7 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/data_type_node.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/builder.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "util/casting.hpp"

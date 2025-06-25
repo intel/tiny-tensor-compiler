@@ -3,7 +3,6 @@
 
 #include "node/region_node.hpp"
 #include "node/inst_node.hpp"
-#include "tinytc/tinytc.h"
 
 namespace tinytc {
 

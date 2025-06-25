@@ -4,7 +4,6 @@
 #include "object.hpp"
 #include "util/overloaded.hpp"
 
-#include <format>
 #include <sstream>
 #include <stdexcept>
 #include <utility>

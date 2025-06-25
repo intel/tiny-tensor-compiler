@@ -4,6 +4,7 @@
 #include "small_gemm_batched.hpp"
 #include "error.hpp"
 #include "recipe.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -18,6 +19,10 @@
 #include <utility>
 
 namespace tinytc {
+
+class builtin_inst;
+class gemm_inst;
+class subview_inst;
 
 auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const * {
     switch (k) {
@@ -109,30 +114,34 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
                 auto bb = region_builder{fn_body};
 
-                auto gid = bb.add(make_builtin(builtin::group_id_x, index_ty, my_loc()));
+                auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
                 auto at = get_memref(ty_, array_view(A_static_sizes.data(), 2), {1, ldA},
                                      address_space::global, my_loc());
                 auto bt = get_memref(ty_, array_view(B_static_sizes.data(), 2), {1, ldB},
                                      address_space::global, my_loc());
                 auto ct = get_memref(ty_, array_view(C_static_sizes.data(), 2), {1, ldC},
                                      address_space::global, my_loc());
-                auto a = bb.add(make_subview(static_offsets, A_static_sizes, params[1],
-                                             array_view<value>{gid}, {}, at, my_loc()));
-                auto b = bb.add(make_subview(static_offsets, B_static_sizes, params[2],
-                                             array_view<value>{gid}, {}, bt, my_loc()));
-                auto c = bb.add(make_subview(static_offsets, C_static_sizes, params[4],
-                                             array_view<value>{gid}, {}, ct, my_loc()));
-                auto beta = is_beta_nonzero ? params[3] : bb.add(make_constant_zero(ty_, my_loc()));
-                bb.add(make_gemm(false, tA_, tB_, params[0], std::move(a), std::move(b), beta,
-                                 std::move(c), my_loc()));
+                auto a =
+                    bb.create<subview_inst>(static_offsets, A_static_sizes, params[1],
+                                            array_view{gid}, array_view<value>{}, at, my_loc());
+                auto b =
+                    bb.create<subview_inst>(static_offsets, B_static_sizes, params[2],
+                                            array_view{gid}, array_view<value>{}, bt, my_loc());
+                auto c =
+                    bb.create<subview_inst>(static_offsets, C_static_sizes, params[4],
+                                            array_view{gid}, array_view<value>{}, ct, my_loc());
+                auto beta = is_beta_nonzero ? params[3] : bb.constant_zero(ty_, my_loc());
+                bb.create<gemm_inst>(false, tA_, tB_, params[0], std::move(a), std::move(b), beta,
+                                     std::move(c), my_loc());
 
                 return f;
             };
             auto p = make_prog(ctx_, my_loc());
-            p.add_function(
-                kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));
-            p.add_function(kernel(
-                small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0), false));
+            add_function(
+                p, kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));
+            add_function(
+                p, kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm_beta0),
+                          false));
             tinytc_binary_t bin;
             CHECK_STATUS(tinytc_prog_compile_to_spirv_and_assemble(&bin, p.get(), info));
             *recipe = std::make_unique<small_gemm_batched_recipe>(std::move(p), binary(bin),

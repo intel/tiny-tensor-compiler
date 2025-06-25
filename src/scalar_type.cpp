@@ -3,8 +3,8 @@
 
 #include "scalar_type.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/builder.h"
+#include "tinytc/builder.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
