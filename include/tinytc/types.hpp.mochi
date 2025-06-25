@@ -1,0 +1,40 @@
+// Copyright (C) 2024 Intel Corporation
+// SPDX-License-Identifier: BSD-3-Clause
+
+#ifndef TYPES_20240410_HPP
+#define TYPES_20240410_HPP
+
+#include "tinytc/types.h"
+
+#include <cstdint>
+
+namespace tinytc {
+
+////////////////////////////
+///////// Constants ////////
+////////////////////////////
+
+constexpr static std::int64_t dynamic = TINYTC_DYNAMIC;
+
+////////////////////////////
+/////// Enumerations ///////
+////////////////////////////
+
+// もち enum_hpp "tinytc/enums.anko"
+
+////////////////////////////
+/////// Type aliases ///////
+////////////////////////////
+
+//! @brief Alias for tinytc_named_attr in namespace tinytc
+using named_attr = ::tinytc_named_attr;
+//! @brief Alias for tinytc_position in namespace tinytc
+using position = ::tinytc_position;
+//! @brief Alias for tinytc_location in namespace tinytc
+using location = ::tinytc_location;
+//! @brief Alias for tinytc_error_reporter_t in namespace tinytc
+using error_reporter_t = ::tinytc_error_reporter_t;
+
+} // namespace tinytc
+
+#endif // TYPES_20240410_HPP

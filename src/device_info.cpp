@@ -338,48 +338,4 @@ tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj) {
     obj->inc_ref();
     return tinytc_status_success;
 }
-
-char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f) {
-    switch (f) {
-    case tinytc_spirv_feature_float16:
-        return "float16";
-    case tinytc_spirv_feature_float64:
-        return "float64";
-    case tinytc_spirv_feature_int64_atomics:
-        return "int64_atomics";
-    case tinytc_spirv_feature_groups:
-        return "groups";
-    case tinytc_spirv_feature_subgroup_dispatch:
-        return "subgroup_dispatch";
-    case tinytc_spirv_feature_atomic_float16_add_local:
-        return "atomic_float16_add_local";
-    case tinytc_spirv_feature_atomic_float16_add_global:
-        return "atomic_float16_add_global";
-    case tinytc_spirv_feature_atomic_float32_add_local:
-        return "atomic_float32_add_local";
-    case tinytc_spirv_feature_atomic_float32_add_global:
-        return "atomic_float32_add_global";
-    case tinytc_spirv_feature_atomic_float64_add_local:
-        return "atomic_float64_add_local";
-    case tinytc_spirv_feature_atomic_float64_add_global:
-        return "atomic_float64_add_global";
-    case tinytc_spirv_feature_atomic_float16_min_max_local:
-        return "atomic_float16_min_max_local";
-    case tinytc_spirv_feature_atomic_float16_min_max_global:
-        return "atomic_float16_min_max_global";
-    case tinytc_spirv_feature_atomic_float32_min_max_local:
-        return "atomic_float32_min_max_local";
-    case tinytc_spirv_feature_atomic_float32_min_max_global:
-        return "atomic_float32_min_max_global";
-    case tinytc_spirv_feature_atomic_float64_min_max_local:
-        return "atomic_float64_min_max_local";
-    case tinytc_spirv_feature_atomic_float64_min_max_global:
-        return "atomic_float64_min_max_global";
-    case tinytc_spirv_feature_bfloat16_conversion:
-        return "bfloat16_conversion";
-    case tinytc_spirv_feature_subgroup_buffer_block_io:
-        return "subgroup_buffer_block_io";
-    }
-    return "unknown";
-}
 }

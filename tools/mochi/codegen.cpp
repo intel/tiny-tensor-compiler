@@ -37,7 +37,7 @@ auto to_c_type(builtin_type ty) -> char const * {
         return "tinytc_value_t";
     }
 }
-auto to_cxx_type(builtin_type ty) -> char const * {
+auto to_cxx_type(builtin_type ty, bool pub) -> char const * {
     switch (ty) {
     case builtin_type::bool_:
         return "bool";
@@ -46,9 +46,9 @@ auto to_cxx_type(builtin_type ty) -> char const * {
     case builtin_type::i64:
         return "std::int64_t";
     case builtin_type::type:
-        return "data_type";
+        return pub ? "data_type" : "tinytc_data_type_t";
     case builtin_type::value:
-        return "value";
+        return pub ? "value" : "tinytc_value_t";
     }
 }
 
@@ -58,8 +58,8 @@ void generate_c_type(std::ostream &os, data_type const &ty) {
                           [&](std::string const &ty) { os << ty; }},
                ty);
 }
-void generate_cxx_type(std::ostream &os, data_type const &ty) {
-    std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty); },
+void generate_cxx_type(std::ostream &os, data_type const &ty, bool pub) {
+    std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty, pub); },
                           [&](enum_ *const &ty) { os << ty->name(); },
                           [&](std::string const &ty) { os << ty; }},
                ty);
@@ -118,9 +118,8 @@ void generate_docstring(std::ostream &os, std::string const &doc) {
 }
 
 void generate_params(
-    std::ostream &os, inst *in,
-    std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
-        format_arg) {
+    inst *in, std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
+                  format_arg) {
     walk_up<walk_order::post_order>(in, [&](inst *in) {
         for (auto &p : in->props()) {
             if (!p.private_) {
@@ -142,7 +141,7 @@ void generate_params(
 void generate_c_params(std::ostream &os, inst *in) {
     os << "tinytc_inst_t *instr, ";
     generate_params(
-        os, in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+        in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
             const auto type = to_c_type(ty);
             if (q == quantifier::many) {
                 os << std::format("size_t {1}_size, const {0} *{1}, ", type, name);
@@ -152,10 +151,10 @@ void generate_c_params(std::ostream &os, inst *in) {
         });
     os << "const tinytc_location_t *loc";
 }
-void generate_cxx_params(std::ostream &os, inst *in) {
+void generate_cxx_params(std::ostream &os, inst *in, bool pub) {
     generate_params(
-        os, in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
-            const auto type = to_cxx_type(ty);
+        in, [&](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+            const auto type = to_cxx_type(ty, pub);
             if (q == quantifier::many) {
                 os << std::format("array_view<{0}> {1}, ", type, name);
             } else {
@@ -176,12 +175,11 @@ void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
                       "exception_to_status_code([&] "
                       "{\n";
                 os << std::format("*instr = {}::create(", in->class_name());
-                generate_params(os, in,
-                                [&os](quantifier q, data_type const &ty, std::string_view name,
-                                      std::string_view) {
-                                    generate_c_to_cxx_cast(os, q, ty, name);
-                                    os << ", ";
-                                });
+                generate_params(in, [&os](quantifier q, data_type const &ty, std::string_view name,
+                                          std::string_view) {
+                    generate_c_to_cxx_cast(os, q, ty, name);
+                    os << ", ";
+                });
                 os << "get_optional(loc));\n});\n}\n\n";
             }
         });
@@ -195,22 +193,20 @@ void generate_api_builder_h(std::ostream &os, objects const &obj) {
                 generate_docstring(os, in->doc());
                 os << " *\n";
                 os << " * @param instr [out] pointer to the inst object created\n";
-                generate_params(
-                    os, in,
-                    [&os](quantifier q, data_type const &, std::string_view name,
-                          std::string_view doc) {
-                        if (q == quantifier::many) {
-                            os << std::format(" * @param {0}_size [in] array size of {0}\n"
-                                              " * @param {0} [in][range(0, {0}_size)] {1}; may be "
-                                              "nullptr if {0}_size is 0\n",
-                                              name, doc);
-                        } else if (q == quantifier::optional) {
-                            os << std::format(" * @param {} [in][optional] {}; can be nullptr\n",
-                                              name, doc);
-                        } else {
-                            os << std::format(" * @param {} [in] {}\n", name, doc);
-                        }
-                    });
+                generate_params(in, [&os](quantifier q, data_type const &, std::string_view name,
+                                          std::string_view doc) {
+                    if (q == quantifier::many) {
+                        os << std::format(" * @param {0}_size [in] array size of {0}\n"
+                                          " * @param {0} [in][range(0, {0}_size)] {1}; may be "
+                                          "nullptr if {0}_size is 0\n",
+                                          name, doc);
+                    } else if (q == quantifier::optional) {
+                        os << std::format(" * @param {} [in][optional] {}; can be nullptr\n", name,
+                                          doc);
+                    } else {
+                        os << std::format(" * @param {} [in] {}\n", name, doc);
+                    }
+                });
                 os << " * @param loc [in][optional] Source code location; can be nullptr\n *\n";
                 os << " * @return tinytc_status_success on success and error otherwise\n */\n";
                 os << "TINYTC_EXPORT tinytc_status_t tinytc_" << in->class_name() << "_create(";
@@ -227,30 +223,27 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                 os << "/*\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
-                generate_params(os, in,
-                                [&os](quantifier q, data_type const &, std::string_view name,
-                                      std::string_view doc) {
-                                    if (q == quantifier::optional || q == quantifier::many) {
-                                        os << std::format(" * @param {} {}; can be {{}}\n", name,
-                                                          doc);
-                                    } else {
-                                        os << std::format(" * @param {} {}\n", name, doc);
-                                    }
-                                });
+                generate_params(in, [&os](quantifier q, data_type const &, std::string_view name,
+                                          std::string_view doc) {
+                    if (q == quantifier::optional || q == quantifier::many) {
+                        os << std::format(" * @param {} {}; can be {{}}\n", name, doc);
+                    } else {
+                        os << std::format(" * @param {} {}\n", name, doc);
+                    }
+                });
                 os << " * @param loc Source code location; can be {}\n *\n";
                 os << " * @return Instruction\n */\n";
                 os << "inline auto make_" << in->class_name() << "(";
-                generate_cxx_params(os, in);
+                generate_cxx_params(os, in, true);
                 os << ") -> inst {\n";
                 os << "tinytc_inst_t instr;\n";
                 os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",
                                   in->class_name());
-                generate_params(os, in,
-                                [&os](quantifier q, data_type const &ty, std::string_view name,
-                                      std::string_view) {
-                                    generate_cxx_to_c_cast(os, q, ty, name);
-                                    os << ", ";
-                                });
+                generate_params(in, [&os](quantifier q, data_type const &ty, std::string_view name,
+                                          std::string_view) {
+                    generate_cxx_to_c_cast(os, q, ty, name);
+                    os << ", ";
+                });
                 os << "&loc), loc);\nreturn inst(instr);\n}\n\n";
             }
         });
@@ -283,8 +276,9 @@ void generate_enum_h(std::ostream &os, objects const &obj) {
         std::string uname = e->name();
         std::transform(uname.begin(), uname.end(), uname.begin(),
                        [](auto c) { return std::toupper(c); });
-        os << std::format("#define TINYTC_ENUM_NUM_{} {}\n\n", uname, i);
-        os << std::format("TINYTC_EXPORT char const* tinytc_{0}_to_string(tinytc_{0}_t val);\n\n",
+        os << std::format("#define TINYTC_ENUM_NUM_{} {}\n", uname, i);
+        os << std::format("//! Convert {0} to string\nTINYTC_EXPORT char const* "
+                          "tinytc_{0}_to_string(tinytc_{0}_t val);\n\n",
                           e->name());
     }
 }
@@ -294,12 +288,18 @@ void generate_enum_hpp(std::ostream &os, objects const &obj) {
         generate_docstring(os, e->doc());
         os << std::format(" */\nenum class {} {{", e->name());
         for (auto &c : e->cases()) {
-            os << std::format("{0} = {1}, ///< {2}\n", c.name, c.value, c.doc);
+            auto name = c.name;
+            // \todo remove when unnecessary
+            if (name == "and" || name == "or" || name == "xor" || name == "not") {
+                name += "_";
+            }
+            os << std::format("{0} = {1}, ///< {2}\n", name, c.value, c.doc);
         }
-        os << "};\n\n";
-        os << std::format("inline auto to_string({0} val) -> char const* {{ return "
-                          "::tinytc_{0}_to_string(static_cast<tinytc_{0}_t>(val)); }}\n\n",
-                          e->name());
+        os << "};\n";
+        os << std::format(
+            "//! Convert {0} to string\ninline auto to_string({0} val) -> char const* {{ return "
+            "::tinytc_{0}_to_string(static_cast<tinytc_{0}_t>(val)); }}\n\n",
+            e->name());
     }
 }
 

@@ -73,7 +73,7 @@ auto convert_prog_to_spirv(tinytc_prog &p, tinytc_core_info const &info) -> ::ti
         }
     }
 
-    for (int i = 0; i < TINYTC_NUMBER_OF_SPIRV_FEATURES; ++i) {
+    for (int i = 0; i < TINYTC_ENUM_NUM_SPIRV_FEATURE; ++i) {
         const auto feature = enum_cast<spirv_feature>(i);
         if (cx.requires_feature(feature) && !info.have_spirv_feature(feature)) {
             throw compilation_error(p.loc(), status::spirv_required_feature_unavailable,

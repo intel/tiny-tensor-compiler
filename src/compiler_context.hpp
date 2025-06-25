@@ -25,8 +25,8 @@ void default_error_reporter(char const *what, const tinytc_location_t *location,
 struct tinytc_compiler_context : tinytc::reference_counted {
   public:
     constexpr static const char unavailable_source_name[] = "Source name unavailable";
-    constexpr static std::array<std::array<bool, TINYTC_NUMBER_OF_OPTFLAGS>, 3u> default_opt_flags =
-        {{{false}, {false}, {true}}};
+    constexpr static std::array<std::array<bool, TINYTC_ENUM_NUM_OPTFLAG>, 3u> default_opt_flags = {
+        {{false}, {false}, {true}}};
 
     tinytc_compiler_context();
 
@@ -77,7 +77,7 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     tinytc::error_reporter_t reporter_ = &tinytc::default_error_reporter;
     void *user_data_ = nullptr;
     std::vector<source_input> sources_;
-    std::array<std::int32_t, TINYTC_NUMBER_OF_OPTFLAGS> opt_flags_;
+    std::array<std::int32_t, TINYTC_ENUM_NUM_OPTFLAG> opt_flags_;
     std::int32_t opt_level_ = 2;
 };
 

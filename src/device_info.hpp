@@ -64,7 +64,7 @@ class core_info_common : public ::tinytc_core_info {
     inline void alignment(std::int32_t alignment) override { alignment_ = alignment; }
 
   private:
-    std::array<bool, TINYTC_NUMBER_OF_SPIRV_FEATURES> spv_feature_ = {};
+    std::array<bool, TINYTC_ENUM_NUM_SPIRV_FEATURE> spv_feature_ = {};
     std::int32_t alignment_ = 128;
 };
 

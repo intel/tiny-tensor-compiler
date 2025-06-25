@@ -59,7 +59,7 @@ class compiler_context_cache {
     compiler_context_cache &operator=(compiler_context_cache const &) = delete;
 
     std::unique_ptr<tinytc_data_type> void_ty, bool_ty;
-    std::array<std::unique_ptr<tinytc_data_type>, TINYTC_NUMBER_OF_SCALAR_TYPES> scalar_tys;
+    std::array<std::unique_ptr<tinytc_data_type>, TINYTC_ENUM_NUM_SCALAR_TYPE> scalar_tys;
     unique_storage<tinytc_data_type_t> coopmatrix_tys, group_tys, memref_tys;
 
     unique_storage<tinytc_attr_t> array_attrs, dictionary_attrs, integer_attrs, string_attrs;

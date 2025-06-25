@@ -316,8 +316,9 @@ enum @reduce_mode "Reduce mode" {
 }
 
 enum @transpose "Transpose" {
-    case %N => 0 "No transpose"
-    case %T => 1 "Transpose"
+    doc_to_string
+    case %N => 0 "n"
+    case %T => 1 "t"
 }
 
 enum @address_space "Address space" {
@@ -348,6 +349,7 @@ enum @store_flag "Store flag" {
 }
 
 enum @matrix_use "Matrix use" {
+    doc_to_string
     case %a   => 0 "matrix_a"
     case %b   => 1 "matrix_b"
     case %acc => 2 "matrix_acc"

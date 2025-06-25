@@ -99,20 +99,23 @@ add_re2c_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/lexer.re
 add_bison_or_pregenerated_to_target(TARGET tinytc-objects SOURCES parser/parser_impl.yy)
 add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                     SOURCES
+                                        enums.cpp.mochi
                                         node/inst_view.cpp.mochi
                                         node/inst_view.hpp.mochi
                                         node/visit.hpp.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.h.mochi
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.hpp.mochi
                                     DEPENDS
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/enums.anko
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/instructions.anko
                                     SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS
-    tinytc.h
-    tinytc.hpp
-    types.h
-    types.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.hpp
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.h
+    ${PROJECT_BINARY_DIR}/include/tinytc/types.hpp
 )
-list(TRANSFORM PUBLIC_HEADERS PREPEND "${PROJECT_SOURCE_DIR}/include/tinytc/")
 
 set_cxx_common_options(tinytc-objects)
 target_compile_definitions(tinytc-objects PUBLIC

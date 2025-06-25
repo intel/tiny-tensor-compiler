@@ -124,33 +124,6 @@ auto is_cast_allowed(scalar_type from_ty, scalar_type to_ty) -> bool {
 
 } // namespace tinytc
 
-char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty) {
-    switch (ty) {
-    case tinytc_scalar_type_i8:
-        return "i8";
-    case tinytc_scalar_type_i16:
-        return "i16";
-    case tinytc_scalar_type_i32:
-        return "i32";
-    case tinytc_scalar_type_i64:
-        return "i64";
-    case tinytc_scalar_type_index:
-        return "index";
-    case tinytc_scalar_type_bf16:
-        return "bf16";
-    case tinytc_scalar_type_f16:
-        return "f16";
-    case tinytc_scalar_type_f32:
-        return "f32";
-    case tinytc_scalar_type_f64:
-        return "f64";
-    case tinytc_scalar_type_c32:
-        return "c32";
-    case tinytc_scalar_type_c64:
-        return "c64";
-    }
-    return "unknown";
-}
 size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty) {
     switch (ty) {
     case tinytc_scalar_type_i8:

@@ -21,18 +21,6 @@ using namespace tinytc;
 
 extern "C" {
 
-char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u) {
-    switch (u) {
-    case tinytc_matrix_use_a:
-        return "matrix_a";
-    case tinytc_matrix_use_b:
-        return "matrix_b";
-    case tinytc_matrix_use_acc:
-        return "matrix_acc";
-    }
-    return "unknown";
-}
-
 tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx) {
     if (dt == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;

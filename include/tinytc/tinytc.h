@@ -182,8 +182,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
 //////// Scalar type ///////
 ////////////////////////////
 
-//! Convert scalar type to string
-TINYTC_EXPORT char const *tinytc_scalar_type_to_string(tinytc_scalar_type_t ty);
 //! Size of scalar type in bytes
 TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
 
@@ -338,33 +336,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl,
 ////////////////////////////
 /////// Instructions ///////
 ////////////////////////////
-
-//! Convert address space to string
-TINYTC_EXPORT char const *tinytc_address_space_to_string(tinytc_address_space_t as);
-//! Convert arithmetic operation type to string
-TINYTC_EXPORT char const *tinytc_arithmetic_to_string(tinytc_arithmetic_t op);
-//! Convert arithmetic operation type to string (unary)
-TINYTC_EXPORT char const *tinytc_arithmetic_unary_to_string(tinytc_arithmetic_unary_t op);
-//! Convert builtin type to string
-TINYTC_EXPORT char const *tinytc_builtin_to_string(tinytc_builtin_t b);
-//! Convert checked flag to string
-TINYTC_EXPORT char const *tinytc_checked_flag_to_string(tinytc_checked_flag_t flag);
-//! Convert cmp condition to string
-TINYTC_EXPORT char const *tinytc_cmp_condition_to_string(tinytc_cmp_condition_t cond);
-//! Convert subgroup arithmmetic to string
-TINYTC_EXPORT char const *tinytc_group_arithmetic_to_string(tinytc_group_arithmetic_t op);
-//! Convert subgroup op to string
-TINYTC_EXPORT char const *tinytc_group_operation_to_string(tinytc_group_operation_t op);
-//! Convert reduce mode to string
-TINYTC_EXPORT char const *tinytc_reduce_mode_to_string(tinytc_reduce_mode_t m);
-//! Convert math operation type to string (unary)
-TINYTC_EXPORT char const *tinytc_math_unary_to_string(tinytc_math_unary_t op);
-//! Convert matrix use to string
-TINYTC_EXPORT char const *tinytc_matrix_use_to_string(tinytc_matrix_use_t u);
-//! Convert store flag to string
-TINYTC_EXPORT char const *tinytc_store_flag_to_string(tinytc_store_flag_t flag);
-//! Convert transpose to string
-TINYTC_EXPORT char const *tinytc_transpose_to_string(tinytc_transpose_t t);
 
 /**
  * @brief Create arithmetic instruction (binary)
@@ -1762,9 +1733,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_release(tinytc_core_info_t obj);
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_retain(tinytc_core_info_t obj);
-
-//! Convert SPIR-V feature to string
-TINYTC_EXPORT char const *tinytc_spirv_feature_to_string(tinytc_spirv_feature_t f);
 
 ////////////////////////////
 ////////// Parser //////////

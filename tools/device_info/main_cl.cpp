@@ -77,7 +77,7 @@ int main() {
                 std::cout << std::endl;
                 std::cout << "\t\tRegister space  : " << info.get_register_space() << std::endl;
                 std::cout << "\t\tSPIR-V features : " << std::endl;
-                for (int i = 0; i < TINYTC_NUMBER_OF_SPIRV_FEATURES; ++i) {
+                for (int i = 0; i < TINYTC_ENUM_NUM_SPIRV_FEATURE; ++i) {
                     const auto feature = spirv_feature{std::underlying_type_t<spirv_feature>(i)};
                     std::cout << "\t\t\t" << std::setw(width) << std::left << to_string(feature)
                               << ": ";

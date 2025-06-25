@@ -250,8 +250,6 @@ char const *tinytc_error_string(tinytc_status_t status) {
     case tinytc_status_ir_init_return_type_mismatch:
         return "Type of initializer does not match return type or the number of return types is "
                "not equal the number of initializers";
-    case tinytc_status_ir_invalid_alignment:
-        return "Invalid alignment, must be a positive power of two";
     case tinytc_status_ir_value_still_has_uses:
         return "A value shall be erased that still has uses";
     case tinytc_status_ir_expected_array_attribute:

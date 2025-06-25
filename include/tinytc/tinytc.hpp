@@ -376,10 +376,6 @@ using half = lp_float<std::uint16_t, f16_format>;
 //////// Scalar type ///////
 ////////////////////////////
 
-//! Convert scalar type to string
-inline char const *to_string(scalar_type ty) {
-    return ::tinytc_scalar_type_to_string(static_cast<tinytc_scalar_type_t>(ty));
-}
 //! Size of scalar type in bytes
 inline std::size_t size(scalar_type ty) {
     return ::tinytc_scalar_type_size(static_cast<tinytc_scalar_type_t>(ty));
@@ -1135,149 +1131,6 @@ static_assert(std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc
 ////////////////////////////
 /////////// Inst ///////////
 ////////////////////////////
-
-/**
- * @brief Convert address space to string
- *
- * @param as Address space
- *
- * @return C-string
- */
-inline char const *to_string(address_space as) {
-    return ::tinytc_address_space_to_string(static_cast<::tinytc_address_space_t>(as));
-}
-
-/**
- * @brief Convert arithmetic operation type to string
- *
- * @param op Arithmetic operation type
- *
- * @return C-string
- */
-inline char const *to_string(arithmetic op) {
-    return ::tinytc_arithmetic_to_string(static_cast<::tinytc_arithmetic_t>(op));
-}
-
-/**
- * @brief Convert arithmetic operation type to string (unary)
- *
- * @param op Arithmetic operation type
- *
- * @return C-string
- */
-inline char const *to_string(arithmetic_unary op) {
-    return ::tinytc_arithmetic_unary_to_string(static_cast<::tinytc_arithmetic_unary_t>(op));
-}
-
-/**
- * @brief Convert builtin type to string
- *
- * @param b Builtin type
- *
- * @return C-string
- */
-inline char const *to_string(builtin b) {
-    return ::tinytc_builtin_to_string(static_cast<::tinytc_builtin_t>(b));
-}
-
-/**
- * @brief Convert checked flag string
- *
- * @param flag Flag
- *
- * @return C-string
- */
-inline char const *to_string(checked_flag flag) {
-    return ::tinytc_checked_flag_to_string(static_cast<::tinytc_checked_flag_t>(flag));
-}
-
-/**
- * @brief Convert cmp condition to string
- *
- * @param cond Condition
- *
- * @return C-string
- */
-inline char const *to_string(cmp_condition cond) {
-    return ::tinytc_cmp_condition_to_string(static_cast<::tinytc_cmp_condition_t>(cond));
-}
-
-/**
- * @brief Convert subgroup arithmetic to string
- *
- * @param op Operation type
- *
- * @return C-string
- */
-inline char const *to_string(group_arithmetic op) {
-    return ::tinytc_group_arithmetic_to_string(static_cast<::tinytc_group_arithmetic_t>(op));
-}
-
-/**
- * @brief Convert subgroup operation to string
- *
- * @param op Operation type
- *
- * @return C-string
- */
-inline char const *to_string(group_operation op) {
-    return ::tinytc_group_operation_to_string(static_cast<::tinytc_group_operation_t>(op));
-}
-
-/**
- * @brief Convert reduce mode to string
- *
- * @param m Reduce mode
- *
- * @return C-string
- */
-inline char const *to_string(reduce_mode m) {
-    return ::tinytc_reduce_mode_to_string(static_cast<::tinytc_reduce_mode_t>(m));
-}
-
-/**
- * @brief Convert math operation type to string (unary)
- *
- * @param op Math operation type
- *
- * @return C-string
- */
-inline char const *to_string(math_unary op) {
-    return ::tinytc_math_unary_to_string(static_cast<::tinytc_math_unary_t>(op));
-}
-
-/**
- * @brief Convert matrix use to string
- *
- * @param u Matrix use
- *
- * @return C-string
- */
-inline char const *to_string(matrix_use u) {
-    return ::tinytc_matrix_use_to_string(static_cast<::tinytc_matrix_use_t>(u));
-}
-
-/**
- * @brief Convert store flag to string
- *
- * @param flag Store flag
- *
- * @return C-string
- */
-inline char const *to_string(store_flag flag) {
-    return ::tinytc_store_flag_to_string(static_cast<tinytc_store_flag_t>(flag));
-}
-
-/**
- * @brief Convert transpose to string
- *
- * @param t Transpose
- *
- * @return C-string
- */
-inline char const *to_string(transpose t) {
-    return ::tinytc_transpose_to_string(static_cast<tinytc_transpose_t>(t));
-}
 
 namespace internal {
 template <> struct unique_handle_traits<tinytc_inst_t> {
@@ -2866,11 +2719,6 @@ inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
                                                num_threads_per_eu, sgs.size(), sgs.data()));
     return core_info{info};
-}
-
-//! Convert SPIR-V feature to string
-inline char const *to_string(spirv_feature f) {
-    return ::tinytc_spirv_feature_to_string(static_cast<tinytc_spirv_feature_t>(f));
 }
 
 ////////////////////////////
