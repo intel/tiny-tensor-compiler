@@ -20,7 +20,7 @@ namespace tinytc {
 //! Throw exception for unsuccessful call to C-API and convert result code to tinytc status
 inline void ZE_CHECK_STATUS(ze_result_t result) {
     if (result != ZE_RESULT_SUCCESS) {
-        throw status{std::underlying_type_t<status>(::tinytc_ze_convert_status(result))};
+        throw status::compute_runtime_error;
     }
 }
 

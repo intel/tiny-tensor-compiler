@@ -10,7 +10,6 @@ find_package(OpenCL REQUIRED)
 
 set(SOURCES
     device_info.cpp
-    error.cpp
     kernel.cpp
     recipe_handler.cpp
 )

@@ -20,7 +20,7 @@ namespace tinytc {
 //! Throw exception for unsuccessful call to C-API and convert result code to tinytc status
 inline void CL_CHECK_STATUS(cl_int stat) {
     if (stat != CL_SUCCESS) {
-        throw status{std::underlying_type_t<status>(::tinytc_cl_convert_status(stat))};
+        throw status::compute_runtime_error;
     }
 }
 
@@ -59,20 +59,24 @@ inline auto make_core_info(cl_device_id device) -> core_info {
 ////////////////////////////
 
 namespace internal {
+inline auto convert_status(cl_int stat) {
+    return stat != CL_SUCCESS ? tinytc_status_compute_runtime_error : tinytc_status_success;
+}
+
 template <> struct shared_handle_traits<cl_program> {
     static auto retain(cl_program handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clRetainProgram(handle));
+        return convert_status(clRetainProgram(handle));
     }
     static auto release(cl_program handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clReleaseProgram(handle));
+        return convert_status(clReleaseProgram(handle));
     }
 };
 template <> struct shared_handle_traits<cl_kernel> {
     static auto retain(cl_kernel handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clRetainKernel(handle));
+        return convert_status(clRetainKernel(handle));
     }
     static auto release(cl_kernel handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clReleaseKernel(handle));
+        return convert_status(clReleaseKernel(handle));
     }
 };
 } // namespace internal
@@ -164,10 +168,10 @@ inline auto get_global_size(std::array<std::size_t, 3u> const &num_groups,
 namespace internal {
 template <> struct shared_handle_traits<cl_event> {
     static auto retain(cl_event handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clRetainEvent(handle));
+        return convert_status(clRetainEvent(handle));
     }
     static auto release(cl_event handle) -> tinytc_status_t {
-        return ::tinytc_cl_convert_status(clReleaseEvent(handle));
+        return convert_status(clReleaseEvent(handle));
     }
 };
 } // namespace internal

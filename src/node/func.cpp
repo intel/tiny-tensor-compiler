@@ -28,17 +28,17 @@ tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t
     body_.set_params(std::move(params));
 }
 
-void tinytc_func::param_attr(std::int32_t param_no, tinytc_attr_t a) {
-    if (param_no < 0 || param_no >= num_params()) {
+void tinytc_func::param_attr(std::size_t param_no, tinytc_attr_t a) {
+    if (param_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
-    if (static_cast<std::int64_t>(param_attr_.size()) != num_params()) {
+    if (param_attr_.size() != num_params()) {
         param_attr_.resize(num_params(), nullptr);
     }
     param_attr_[param_no] = a;
 }
-auto tinytc_func::param_attr(std::int32_t param_no) const -> tinytc_attr_t {
-    if (param_no < 0 || param_no >= num_params()) {
+auto tinytc_func::param_attr(std::size_t param_no) const -> tinytc_attr_t {
+    if (param_no >= num_params()) {
         throw compilation_error(loc(), status::invalid_arguments);
     }
     if (param_attr_.empty()) {
@@ -92,8 +92,8 @@ tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length, char 
     });
 }
 
-tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, int32_t arg_no, attr a) {
-    if (fun == nullptr || arg_no < 0 || arg_no >= fun->num_params()) {
+tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, size_t arg_no, attr a) {
+    if (fun == nullptr || arg_no >= fun->num_params()) {
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] { fun->param_attr(arg_no, a); });

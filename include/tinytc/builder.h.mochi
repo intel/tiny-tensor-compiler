@@ -576,7 +576,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_func_set_attr(tinytc_func_t fun, tinytc_att
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, int32_t param_no,
+TINYTC_EXPORT tinytc_status_t tinytc_func_set_parameter_attr(tinytc_func_t fun, size_t param_no,
                                                              tinytc_attr_t a);
 
 /**

@@ -17,13 +17,11 @@ extern "C" {
 /////////// Error //////////
 ////////////////////////////
 
-TINYTC_EXPORT tinytc_status_t tinytc_cl_convert_status(cl_int status);
-
 #define TINYTC_CL_CHECK_STATUS(X)                                                                  \
     do {                                                                                           \
         cl_int stat = X;                                                                           \
         if (stat != CL_SUCCESS) {                                                                  \
-            return tinytc_cl_convert_status(stat);                                                 \
+            return tinytc_status_compute_runtime_error;                                            \
         }                                                                                          \
     } while (0)
 

@@ -23,8 +23,7 @@
     do {                                                                                           \
         ze_result_t result = X;                                                                    \
         if (result != ZE_RESULT_SUCCESS) {                                                         \
-            status = tinytc_ze_convert_status(result);                                             \
-            printf("Error (%d): %s\n", status, tinytc_status_to_string(status));                   \
+            printf("Level Zero error (%d)\n", result);                                             \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
             goto err;                                                                              \
         }                                                                                          \

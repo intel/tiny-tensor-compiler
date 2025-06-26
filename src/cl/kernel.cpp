@@ -123,9 +123,9 @@ tinytc_status_t tinytc_cl_get_group_size(cl_kernel kernel, size_t *local_size) {
             p, CL_PROGRAM_DEVICES, num_devices * sizeof(cl_device_id), dbuf.data(), nullptr));
         d = dbuf[0];
     }
-    return tinytc_cl_convert_status(
-        clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
-                                 3 * sizeof(std::size_t), local_size, nullptr));
+    TINYTC_CL_CHECK_STATUS(clGetKernelWorkGroupInfo(kernel, d, CL_KERNEL_COMPILE_WORK_GROUP_SIZE,
+                                                    3 * sizeof(std::size_t), local_size, nullptr));
+    return tinytc_status_success;
 }
 
 void tinytc_cl_get_global_size(const size_t *num_groups, const size_t *local_size,

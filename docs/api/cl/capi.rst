@@ -7,23 +7,6 @@
 C-API
 =====
 
-Common
-======
-
-* Functions
-
-  * :ref:`tinytc_cl_convert_status`
-
-Common Functions
-----------------
-
-.. _tinytc_cl_convert_status:
-
-tinytc_cl_convert_status
-........................
-
-.. doxygenfunction:: tinytc_cl_convert_status
-
 Device Info
 ===========
 

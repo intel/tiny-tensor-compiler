@@ -121,10 +121,10 @@ tinytc_status_t tinytc_ze_get_group_size(ze_kernel_handle_t kernel, uint32_t *x,
     auto props = ze_kernel_properties_t{};
     props.stype = ZE_STRUCTURE_TYPE_KERNEL_PROPERTIES;
     props.pNext = nullptr;
-    auto status = zeKernelGetProperties(kernel, &props);
+    TINYTC_ZE_CHECK_STATUS(zeKernelGetProperties(kernel, &props));
     *x = props.requiredGroupSizeX;
     *y = props.requiredGroupSizeY;
     *z = props.requiredGroupSizeZ;
-    return tinytc_ze_convert_status(status);
+    return tinytc_status_success;
 }
 }

@@ -659,7 +659,7 @@ inline void set_attr(func &f, attr a) { CHECK_STATUS(tinytc_func_set_attr(f.get(
  * @param param_no parameter number
  * @param a attribute
  */
-inline void set_parameter_attr(func &f, std::int32_t param_no, attr a) {
+inline void set_parameter_attr(func &f, std::size_t param_no, attr a) {
     CHECK_STATUS(tinytc_func_set_parameter_attr(f.get(), param_no, a));
 }
 

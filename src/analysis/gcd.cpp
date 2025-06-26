@@ -355,7 +355,7 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
         return memref_info(alignment / size(mr->element_ty()), std::move(shape_gcd),
                            std::move(stride_gcd));
     };
-    for (std::int32_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
+    for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();
         if (auto g = dyn_cast<group_data_type>(ty); g) {
             ty = g->ty();

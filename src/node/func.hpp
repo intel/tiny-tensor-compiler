@@ -35,8 +35,8 @@ struct tinytc_func final {
     inline void attr(tinytc_attr_t a) { attr_ = a; }
     inline auto attr() const -> tinytc_attr_t { return attr_; }
 
-    void param_attr(std::int32_t param_no, tinytc_attr_t a);
-    auto param_attr(std::int32_t param_no) const -> tinytc_attr_t;
+    void param_attr(std::size_t param_no, tinytc_attr_t a);
+    auto param_attr(std::size_t param_no) const -> tinytc_attr_t;
 
     auto subgroup_size() const -> std::int32_t;
     auto work_group_size() const -> std::array<std::int32_t, 2u>;
