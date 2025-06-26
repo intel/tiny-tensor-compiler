@@ -3,6 +3,8 @@
 
 #include "pass/check_ir.hpp"
 #include "error.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"

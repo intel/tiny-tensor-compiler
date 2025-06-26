@@ -8,7 +8,6 @@
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
 #include "node/data_type.hpp"
-#include "node/func.hpp"
 #include "node/inst.hpp"
 #include "node/inst_view.hpp"
 #include "node/region.hpp"

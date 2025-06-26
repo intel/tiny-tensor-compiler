@@ -8,6 +8,7 @@
 #include "node/region.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
+#include "tinytc/types.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 

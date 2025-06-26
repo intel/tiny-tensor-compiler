@@ -4,7 +4,6 @@
 #ifndef GCD_20241203_HPP
 #define GCD_20241203_HPP
 
-#include "node/func.hpp"
 #include "tinytc/types.h"
 
 #include <cstddef>

@@ -54,8 +54,9 @@ void generate_enum_hpp(std::ostream &os, objects const &obj);
 void generate_inst_class(std::ostream &os, inst *in);
 void generate_inst_create(std::ostream &os, inst *in);
 
-void generate_inst_hpp(std::ostream &os, objects const &obj);
 void generate_inst_cpp(std::ostream &os, objects const &obj);
+void generate_inst_hpp(std::ostream &os, objects const &obj);
+void generate_inst_forward_hpp(std::ostream &os, objects const &obj);
 
 void generate_inst_visit_hpp(std::ostream &os, objects const &obj);
 

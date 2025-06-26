@@ -9,7 +9,6 @@
 #include "device_info.hpp"
 #include "node/data_type.hpp"
 #include "node/inst_view.hpp"
-#include "node/value.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/instructions.hpp"

@@ -17,8 +17,6 @@
 
 namespace tinytc {
 
-class recipe;
-
 struct cl_recipe_handler : ::tinytc_recipe_handler {
   public:
     cl_recipe_handler(cl_context context, cl_device_id device, recipe rec);

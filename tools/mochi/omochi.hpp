@@ -19,8 +19,9 @@ enum class generator {
     enum_cpp,
     enum_h,
     enum_hpp,
-    inst_hpp,
     inst_cpp,
+    inst_hpp,
+    inst_forward_hpp,
     inst_visit_hpp,
     template_,
     NUM_GENERATORS

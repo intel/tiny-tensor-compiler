@@ -6,7 +6,6 @@
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "location.hpp"
-#include "node/data_type.hpp"
 #include "scalar_type.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 #include "tinytc/builder.h"

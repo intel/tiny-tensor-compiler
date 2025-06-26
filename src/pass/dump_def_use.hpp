@@ -4,7 +4,7 @@
 #ifndef DUMP_DEF_USE_20241002_HPP
 #define DUMP_DEF_USE_20241002_HPP
 
-#include "node/func.hpp"
+#include "tinytc/types.h"
 
 #include <iosfwd>
 

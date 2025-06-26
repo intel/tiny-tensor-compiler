@@ -5,7 +5,6 @@
 #include "error.hpp"
 #include "node/inst.hpp"
 #include "node/inst.hpp" // IWYU pragma: keep
-#include "node/region.hpp"
 #include "tinytc/builder.h"
 #include "tinytc/types.h"
 #include "util/ilist.hpp"

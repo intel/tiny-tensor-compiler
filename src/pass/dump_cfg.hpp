@@ -4,7 +4,7 @@
 #ifndef DUMP_BACKWARD_CFG_20240919_HPP
 #define DUMP_BACKWARD_CFG_20240919_HPP
 
-#include "node/func.hpp"
+#include "tinytc/types.h"
 
 #include <iosfwd>
 

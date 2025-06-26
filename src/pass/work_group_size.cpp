@@ -7,7 +7,7 @@
 #include "error.hpp"
 #include "node/attr.hpp"
 #include "node/data_type.hpp"
-#include "node/inst.hpp"
+#include "node/func.hpp"
 #include "node/inst_view.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"

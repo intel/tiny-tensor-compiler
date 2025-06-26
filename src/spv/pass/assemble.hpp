@@ -4,8 +4,8 @@
 #ifndef ASSEMBLE_20241111_HPP
 #define ASSEMBLE_20241111_HPP
 
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 namespace tinytc::spv {
 

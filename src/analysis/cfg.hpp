@@ -6,6 +6,7 @@
 
 #include "node/inst.hpp"
 #include "node/region.hpp"
+#include "tinytc/types.h"
 #include "util/iterator.hpp"
 
 #include <queue>

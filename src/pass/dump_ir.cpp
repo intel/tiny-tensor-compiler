@@ -2,6 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_ir.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "node/visit.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"

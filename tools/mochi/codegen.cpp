@@ -68,7 +68,7 @@ void generate_cxx_type(std::ostream &os, data_type const &ty, bool pub) {
 }
 void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
                             std::string_view name) {
-    std::visit(overloaded{[&](builtin_type const &ty) {
+    std::visit(overloaded{[&](builtin_type const &) {
                               if (q == quantifier::many) {
                                   os << std::format("{}.size(), ", name);
                                   os << std::format("{}.data()", name);
@@ -215,14 +215,6 @@ void generate_api_builder_h(std::ostream &os, objects const &obj) {
     }
 }
 void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
-    for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
-            if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
-                os << std::format("class {0};\n", in->class_name());
-            }
-        });
-    }
-    os << "\n";
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
@@ -562,6 +554,13 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
     os << "}\n\n";
 }
 
+void generate_inst_cpp(std::ostream &os, objects const &obj) {
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order, true>(i.get(),
+                                               [&os](inst *in) { generate_inst_create(os, in); });
+    }
+}
+
 void generate_inst_hpp(std::ostream &os, objects const &obj) {
     os << "enum class IK {\n";
     for (auto &i : obj.insts()) {
@@ -582,11 +581,15 @@ void generate_inst_hpp(std::ostream &os, objects const &obj) {
     }
 }
 
-void generate_inst_cpp(std::ostream &os, objects const &obj) {
+void generate_inst_forward_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(),
-                                               [&os](inst *in) { generate_inst_create(os, in); });
+        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+            if (!in->has_children()) {
+                os << std::format("class {0}; // IWYU pragma: export\n", in->class_name());
+            }
+        });
     }
+    os << "\n";
 }
 
 void generate_inst_visit_hpp(std::ostream &os, objects const &obj) {

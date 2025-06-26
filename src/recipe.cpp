@@ -4,6 +4,7 @@
 #include "recipe.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>

@@ -22,13 +22,6 @@
 #include <utility>
 
 namespace tinytc {
-class arith_inst;
-class builtin_inst;
-class compare_inst;
-class constant_inst;
-class gemm_inst;
-class size_inst;
-class subview_inst;
 
 auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const * {
     switch (k) {

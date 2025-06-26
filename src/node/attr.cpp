@@ -5,7 +5,6 @@
 #include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
-#include "node/attr.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 #include "tinytc/builder.h"
 #include "tinytc/tinytc.h"

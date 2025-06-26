@@ -4,7 +4,6 @@
 #ifndef ZE_TEST_RUNTIME_20240314_HPP
 #define ZE_TEST_RUNTIME_20240314_HPP
 
-#include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"

@@ -2,8 +2,10 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/slot_tracker.hpp"
+#include "node/func.hpp"
 #include "node/inst.hpp"
 #include "node/region.hpp"
+#include "node/value.hpp"
 #include "support/walk.hpp"
 #include "util/iterator.hpp"
 

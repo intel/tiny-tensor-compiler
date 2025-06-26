@@ -20,10 +20,6 @@
 
 namespace tinytc {
 
-class builtin_inst;
-class gemm_inst;
-class subview_inst;
-
 auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const * {
     switch (k) {
     case small_gemm_batched_kernel::gemm:

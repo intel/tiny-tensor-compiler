@@ -7,6 +7,7 @@
 #include "node/func.hpp"
 #include "node/inst.hpp"
 #include "node/region.hpp"
+#include "tinytc/types.h"
 #include "util/ilist_base.hpp"
 
 #include <functional>

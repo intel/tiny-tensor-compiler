@@ -4,7 +4,6 @@
 #include "node/prog.hpp"
 #include "error.hpp"
 #include "location.hpp"
-#include "node/prog.hpp"
 #include "pass/dump_ir.hpp"
 #include "passes.hpp"
 #include "tinytc/builder.h"

@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/clone.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
 #include "node/visit.hpp"
 #include "tinytc/types.hpp"
 #include "util/ilist.hpp"

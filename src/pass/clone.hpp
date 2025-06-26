@@ -4,11 +4,9 @@
 #ifndef CLONE_20241118_HPP
 #define CLONE_20241118_HPP
 
-#include "node/inst.hpp"
-#include "node/region.hpp"
 #include "node/value.hpp"
-#include "tinytc/builder.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <unordered_map>
 #include <vector>

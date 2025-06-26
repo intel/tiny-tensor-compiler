@@ -5,7 +5,6 @@
 #define CODEGEN_TOOLS_20240229_HPP
 
 #include "device_info.hpp"
-#include "node/func.hpp"
 #include "node/inst_view.hpp"
 #include "tiling.hpp"
 #include "tinytc/builder.hpp"

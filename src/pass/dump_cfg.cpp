@@ -3,6 +3,7 @@
 
 #include "pass/dump_cfg.hpp"
 #include "analysis/cfg.hpp"
+#include "node/func.hpp"
 #include "pass/dump_ir.hpp"
 #include "util/iterator.hpp"
 

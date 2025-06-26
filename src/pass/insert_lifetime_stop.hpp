@@ -4,9 +4,8 @@
 #ifndef INSERT_LIFETIME_STOP_20240912_HPP
 #define INSERT_LIFETIME_STOP_20240912_HPP
 
-#include "node/func.hpp"
-#include "node/region.hpp"
 #include "node/value.hpp"
+#include "tinytc/types.h"
 
 #include <unordered_set>
 

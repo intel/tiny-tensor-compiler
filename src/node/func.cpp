@@ -5,7 +5,6 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/attr.hpp"
-#include "node/func.hpp"
 #include "tinytc/builder.h"
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"

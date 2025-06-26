@@ -4,7 +4,7 @@
 #ifndef STACK_20241112_HPP
 #define STACK_20241112_HPP
 
-#include "node/func.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 

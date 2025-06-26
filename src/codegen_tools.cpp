@@ -5,6 +5,7 @@
 #include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/data_type.hpp"
+#include "node/func.hpp"
 #include "node/inst.hpp"
 #include "node/region.hpp"
 #include "node/value.hpp"

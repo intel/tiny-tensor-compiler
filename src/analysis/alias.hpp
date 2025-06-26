@@ -5,7 +5,7 @@
 #define ALIAS_20240912_HPP
 
 #include "analysis/aa_results.hpp"
-#include "node/func.hpp"
+#include "tinytc/types.h"
 
 namespace tinytc {
 

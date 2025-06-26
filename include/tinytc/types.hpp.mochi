@@ -230,6 +230,8 @@ class inst : public unique_handle<tinytc_inst_t> {
     using unique_handle::unique_handle;
 };
 
+// もち inst_forward_hpp "tinytc/instructions.anko"
+
 ////////////////////////////
 /////////// Func ///////////
 ////////////////////////////

@@ -8,22 +8,11 @@
 #include "coopmatrix_layout.hpp" // IWYU pragma: keep
 #include "device_info.hpp"
 #include "spv/defs.hpp"
+#include "tinytc/types.hpp"
 
 #include <utility>
 
 namespace tinytc {
-class arith_inst;
-class arith_unary_inst;
-class cast_inst;
-class constant_inst;
-class cooperative_matrix_extract_inst;
-class cooperative_matrix_insert_inst;
-class cooperative_matrix_load_inst;
-class cooperative_matrix_mul_add_inst;
-class cooperative_matrix_prefetch_inst;
-class cooperative_matrix_reduce_inst;
-class cooperative_matrix_scale_inst;
-class cooperative_matrix_store_inst;
 class coopmatrix_data_type;
 } // namespace tinytc
 

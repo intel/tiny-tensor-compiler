@@ -4,8 +4,7 @@
 #ifndef SLOT_TRACKER_20240418_HPP
 #define SLOT_TRACKER_20240418_HPP
 
-#include "node/func.hpp"
-#include "node/value.hpp"
+#include "tinytc/types.h"
 
 #include <cstdint>
 #include <unordered_map>
