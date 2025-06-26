@@ -8,5 +8,5 @@ func @kernel(%K0: memref<f32x32>, %x: index, %y: index) {
   %1 = subview %0[0:%y] : memref<f32x?>
   %2 = load %1[%z] : f64
   %3 = load %1[%z] : f64
-; CHECK: 9.8-24: Type of operand must match return type
+; CHECK: 9.8-24: Operand type must match return type
 }
