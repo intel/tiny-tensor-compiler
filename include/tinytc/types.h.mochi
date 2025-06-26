@@ -286,6 +286,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_handler_release(tinytc_recipe_handle
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_handler_retain(tinytc_recipe_handler_t obj);
 
+/**
+ * @brief Delete a (non-const) string returned from tinytc API
+ *
+ * @param str [in] string
+ */
+TINYTC_EXPORT void tinytc_string_destroy(char *str);
+
 ////////////////////////////
 ////////// Structs /////////
 ////////////////////////////

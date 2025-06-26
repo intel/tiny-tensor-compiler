@@ -39,7 +39,7 @@ void add_optflag_states(arg_parser &parser, optflag_states &flags) {
 
 void set_optflags(compiler_context &ctx, optflag_states const &flags) {
     for (auto const &flag : flags) {
-        ctx.set_optimization_flag(flag.first, flag.second);
+        set_optimization_flag(ctx, flag.first, flag.second);
     }
 }
 

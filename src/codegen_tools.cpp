@@ -205,7 +205,7 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
                  array_view<value> index_list, location const &loc) {
     memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
     if (ct == nullptr) {
-        throw compilation_error(loc, {C.get()}, status::ir_expected_scalar);
+        throw compilation_error(loc, {C}, status::ir_expected_scalar);
     }
     auto alpha_ab =
         mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, alpha, ab, loc);

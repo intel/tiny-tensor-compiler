@@ -4,7 +4,6 @@
 #ifndef PARSE_CONTEXT_20231221_HPP
 #define PARSE_CONTEXT_20231221_HPP
 
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
@@ -26,8 +25,8 @@ class parse_context {
 
     void val(std::variant<std::int64_t, std::string> const &id, tinytc_value &val,
              location const &l);
-    auto val(std::variant<std::int64_t, std::string> const &id,
-             location const &l) -> tinytc_value_t;
+    auto val(std::variant<std::int64_t, std::string> const &id, location const &l)
+        -> tinytc_value_t;
 
     void report_error(location const &loc, std::string const &what);
 

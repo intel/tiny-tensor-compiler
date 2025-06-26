@@ -4,7 +4,7 @@
 #ifndef PARSER_20230614_HPP
 #define PARSER_20230614_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <cstdint>
 

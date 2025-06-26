@@ -103,7 +103,7 @@ template <typename T> void test(queue q, args &a) {
         auto beta = a.update ? T{1} : T{0};
         try {
             auto info = make_core_info(q.get_device());
-            info.set_core_features(tinytc_core_feature_flag_large_register_file);
+            set_core_features(info, tinytc_core_feature_flag_large_register_file);
 
             std::int64_t M = a.specialize_M ? c.m : dynamic;
             std::int64_t ldA = dynamic, ldB = dynamic, ldC = dynamic;
@@ -113,14 +113,14 @@ template <typename T> void test(queue q, args &a) {
                 ldC = c.m;
             }
             auto ctx = make_compiler_context();
-            ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
-                                      void *) { std::cerr << what << std::endl; },
-                                   nullptr);
+            set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+                std::cerr << what << std::endl;
+            });
             auto r = make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
                                                       a.alignment, a.alignment, a.alignment,
                                                       a.M_block_size, ctx);
             if (a.dump) {
-                r.get_prog().dump();
+                dump(get_prog(r));
             }
             auto tas = make_recipe_handler(q, r);
 

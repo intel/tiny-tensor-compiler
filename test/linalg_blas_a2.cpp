@@ -32,16 +32,16 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
             named_attr{get_string_attr(ctx, "work_group_size"),
                        get_array_attr(ctx, {get_integer_attr(ctx, work_group_size),
                                             get_integer_attr(ctx, 1)})};
-        f.set_attr(get_dictionary_attr_with_sorted(ctx, wgs_attr));
+        set_attr(f, get_dictionary_attr_with_sorted(ctx, wgs_attr));
     }
 
-    auto fn_body = f.get_body();
+    auto fn_body = get_body(f);
     auto params = std::array<value, 4u>{};
-    fn_body.get_parameters(params);
-    params[0].set_name("alpha");
-    params[1].set_name("A");
-    params[2].set_name("beta");
-    params[3].set_name("B");
+    get_parameters(fn_body, params);
+    set_name(params[0], "alpha");
+    set_name(params[1], "A");
+    set_name(params[2], "beta");
+    set_name(params[3], "B");
 
     auto bb = region_builder{fn_body};
 

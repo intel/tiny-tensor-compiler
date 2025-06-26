@@ -7,9 +7,7 @@
 #include "pass/dump_ir.hpp"
 #include "passes.hpp"
 #include "tinytc/builder.h"
-#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

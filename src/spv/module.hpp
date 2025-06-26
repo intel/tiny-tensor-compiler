@@ -6,8 +6,8 @@
 
 #include "reference_counted.hpp"
 #include "spv/defs.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 #include "util/ilist.hpp"
 
 #include <array>

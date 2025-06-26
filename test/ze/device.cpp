@@ -36,14 +36,14 @@ TEST_CASE("device (Level Zero)") {
     if (dev_ip_ver.ipVersion >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
         auto info = make_core_info(device);
 
-        const auto sgs = info.get_subgroup_sizes();
+        const auto sgs = get_subgroup_sizes(info);
         REQUIRE(sgs.size() == 2u);
         CHECK(sgs[0] == 16);
         CHECK(sgs[1] == 32);
 
-        CHECK(info.get_register_space() == 64 * 128);
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
-        CHECK(info.get_register_space() == 64 * 256);
+        CHECK(get_register_space(info) == 64 * 128);
+        set_core_features(info, tinytc_core_feature_flag_large_register_file);
+        CHECK(get_register_space(info) == 64 * 256);
     } else {
         WARN_MESSAGE(false, "Device test only works on PVC");
     }

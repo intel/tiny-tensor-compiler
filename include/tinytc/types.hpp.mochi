@@ -7,6 +7,7 @@
 #include "tinytc/types.h"
 
 #include <cstdint>
+#include <type_traits>
 
 namespace tinytc {
 
@@ -39,6 +40,354 @@ using location = ::tinytc_location;
 using error_reporter_t = ::tinytc_error_reporter_t;
 //! Alias for tinytc_data_type_t
 using data_type = tinytc_data_type_t;
+//! Alias for tinytc_value_t
+using value = tinytc_value_t;
+//! Alias for tinytc_region_t
+using region = tinytc_region_t;
+
+////////////////////////////
+/////////// Error //////////
+////////////////////////////
+
+//! Throw exception for unsuccessful call to C-API
+inline void CHECK_STATUS(tinytc_status_t code) {
+    if (code != tinytc_status_success) {
+        throw status{std::underlying_type_t<status>(code)};
+    }
+}
+
+////////////////////////////
+// Shared / unique handle //
+////////////////////////////
+
+namespace internal {
+//! Wraps retain / release calls for type T
+template <typename T> struct shared_handle_traits {};
+
+//! Wraps destroy calls for type T
+template <typename T> struct unique_handle_traits {};
+} // namespace internal
+
+/**
+ * @brief Wraps a C handle in a reference-counted object
+ *
+ * @tparam T C handle type (handle type = pointer to opaque struct)
+ */
+template <typename T> class shared_handle {
+  public:
+    //! Traits shortcut
+    using traits = internal::shared_handle_traits<T>;
+    //! Typedef for native C handle
+    using native_type = T;
+
+    //! Create empty (invalid) handle
+    shared_handle() : obj_{nullptr} {}
+    //! Create handle from C handle
+    explicit shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
+        if (needs_retain) {
+            CHECK_STATUS(c_retain());
+        }
+    }
+    //! Decrease reference count
+    ~shared_handle() { c_release(); }
+    //! Copy ctor
+    shared_handle(shared_handle const &other) : obj_(other.obj_) { CHECK_STATUS(c_retain()); }
+    //! Move ctor
+    shared_handle(shared_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
+    //! Copy operator
+    shared_handle &operator=(shared_handle const &other) {
+        if (obj_ != other.obj_) {
+            CHECK_STATUS(c_release());
+            obj_ = other.obj_;
+            CHECK_STATUS(c_retain());
+        }
+        return *this;
+    }
+    //! Move operator
+    shared_handle &operator=(shared_handle &&other) {
+        if (obj_ != other.obj_) {
+            CHECK_STATUS(c_release());
+            obj_ = other.obj_;
+            other.obj_ = nullptr;
+        }
+        return *this;
+    }
+
+    //! Dereference C handle and get reference to underlying type
+    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
+    //! Convert handle to C handle
+    auto operator->() const -> T { return obj_; }
+    //! Returns C handle
+    auto get() const -> T { return obj_; }
+    //! Returns C handle and releases the ownership of the managed object
+    auto release() -> T {
+        auto tmp = obj_;
+        obj_ = nullptr;
+        return tmp;
+    }
+
+    //! Check whether handle is non-empty (valid)
+    explicit operator bool() const noexcept { return obj_ != nullptr; }
+
+    //! Check equality
+    bool operator==(shared_handle<T> const &other) const { return obj_ == other.obj_; }
+    //! Check inequality
+    bool operator!=(shared_handle<T> const &other) const { return !(*this == other); }
+
+  protected:
+    //! Call retain in C-API if C handle is not NULL
+    auto c_retain() -> tinytc_status_t {
+        if (obj_ != nullptr) {
+            return traits::retain(obj_);
+        }
+        return tinytc_status_success;
+    }
+    //! Call release in C-API if C handle is not NULL
+    auto c_release() -> tinytc_status_t {
+        if (obj_ != nullptr) {
+            return traits::release(obj_);
+        }
+        return tinytc_status_success;
+    }
+    //! The C handle
+    T obj_;
+};
+
+/**
+ * @brief Wraps a C handle in a unique_ptr-alike object
+ *
+ * @tparam T C handle type (handle type = pointer to opaque struct)
+ */
+template <typename T> class unique_handle {
+  public:
+    //! Traits shortcut
+    using traits = internal::unique_handle_traits<T>;
+    //! Typedef for native C handle
+    using native_type = T;
+
+    //! Create empty (invalid) handle
+    unique_handle() : obj_{nullptr} {}
+    //! Create handle from C handle
+    explicit unique_handle(T obj) : obj_(obj) {}
+    //! Destroy object
+    ~unique_handle() {
+        if (obj_) {
+            traits::destroy(obj_);
+        }
+    }
+    //! Copy ctor
+    unique_handle(unique_handle const &other) = delete;
+    //! Move ctor
+    unique_handle(unique_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
+    //! Copy operator
+    unique_handle &operator=(unique_handle const &other) = delete;
+    //! Move operator
+    unique_handle &operator=(unique_handle &&other) {
+        obj_ = other.obj_;
+        other.obj_ = nullptr;
+        return *this;
+    }
+
+    //! Dereference C handle and get reference to underlying type
+    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
+    //! Convert handle to C handle
+    auto operator->() const -> T { return obj_; }
+    //! Returns C handle
+    auto get() const -> T { return obj_; }
+    //! Returns C handle and releases the ownership of the managed object
+    auto release() -> T {
+        auto tmp = obj_;
+        obj_ = nullptr;
+        return tmp;
+    }
+
+    //! Check whether handle is non-empty (valid)
+    explicit operator bool() const noexcept { return obj_ != nullptr; }
+
+    //! Check equality
+    bool operator==(unique_handle<T> const &other) const { return obj_ == other.obj_; }
+    //! Check inequality
+    bool operator!=(unique_handle<T> const &other) const { return !(*this == other); }
+
+  protected:
+    //! The C handle
+    T obj_;
+};
+
+////////////////////////////
+/////////// Inst ///////////
+////////////////////////////
+
+namespace internal {
+template <> struct unique_handle_traits<tinytc_inst_t> {
+    static void destroy(tinytc_inst_t handle) { return tinytc_inst_destroy(handle); }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_inst_t
+class inst : public unique_handle<tinytc_inst_t> {
+  public:
+    using unique_handle::unique_handle;
+};
+
+////////////////////////////
+/////////// Func ///////////
+////////////////////////////
+
+namespace internal {
+template <> struct unique_handle_traits<tinytc_func_t> {
+    static void destroy(tinytc_func_t handle) { return tinytc_func_destroy(handle); }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_func_t
+class func : public unique_handle<tinytc_func_t> {
+  public:
+    using unique_handle::unique_handle;
+};
+
+////////////////////////////
+/////////// Prog ///////////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_prog_t> {
+    static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
+        return tinytc_prog_retain(handle);
+    }
+    static auto release(tinytc_prog_t handle) -> tinytc_status_t {
+        return tinytc_prog_release(handle);
+    }
+};
+template <> struct unique_handle_traits<char *> {
+    static void destroy(char *obj) { tinytc_string_destroy(obj); }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_prog_t
+class prog : public shared_handle<tinytc_prog_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+////////////////////////////
+///// Compiler context /////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_compiler_context_t> {
+    static auto retain(tinytc_compiler_context_t handle) -> tinytc_status_t {
+        return tinytc_compiler_context_retain(handle);
+    }
+    static auto release(tinytc_compiler_context_t handle) -> tinytc_status_t {
+        return tinytc_compiler_context_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_compiler_context_t
+class compiler_context : public shared_handle<tinytc_compiler_context_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+////////////////////////////
+/////// SPIR-V Module //////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_spv_mod_t> {
+    static auto retain(tinytc_spv_mod_t handle) -> tinytc_status_t {
+        return tinytc_spv_mod_retain(handle);
+    }
+    static auto release(tinytc_spv_mod_t handle) -> tinytc_status_t {
+        return tinytc_spv_mod_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_spv_mod_t
+class spv_mod : public shared_handle<tinytc_spv_mod_t> {
+  public:
+    using shared_handle<tinytc_spv_mod_t>::shared_handle;
+};
+
+////////////////////////////
+//////// Device info ///////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_core_info_t> {
+    static auto retain(tinytc_core_info_t handle) -> tinytc_status_t {
+        return tinytc_core_info_retain(handle);
+    }
+    static auto release(tinytc_core_info_t handle) -> tinytc_status_t {
+        return tinytc_core_info_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_core_info_t
+class core_info : public shared_handle<tinytc_core_info_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+////////////////////////////
+///////// Compiler /////////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_binary_t> {
+    static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
+        return tinytc_binary_retain(handle);
+    }
+    static auto release(tinytc_binary_t handle) -> tinytc_status_t {
+        return tinytc_binary_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_binary_t
+class binary : public shared_handle<tinytc_binary_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+////////////////////////////
+////////// Recipe //////////
+////////////////////////////
+
+namespace internal {
+template <> struct shared_handle_traits<tinytc_recipe_t> {
+    static auto retain(tinytc_recipe_t handle) -> tinytc_status_t {
+        return tinytc_recipe_retain(handle);
+    }
+    static auto release(tinytc_recipe_t handle) -> tinytc_status_t {
+        return tinytc_recipe_release(handle);
+    }
+};
+template <> struct shared_handle_traits<tinytc_recipe_handler_t> {
+    static auto retain(tinytc_recipe_handler_t handle) -> tinytc_status_t {
+        return tinytc_recipe_handler_retain(handle);
+    }
+    static auto release(tinytc_recipe_handler_t handle) -> tinytc_status_t {
+        return tinytc_recipe_handler_release(handle);
+    }
+};
+} // namespace internal
+
+//! @brief Reference-counting wrapper for tinytc_recipe_t
+class recipe : public shared_handle<tinytc_recipe_t> {
+  public:
+    using shared_handle::shared_handle;
+};
+
+//! @brief Reference-counting wrapper for tinytc_recipe_handler_t
+class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
+  public:
+    using shared_handle::shared_handle;
+};
 
 } // namespace tinytc
 

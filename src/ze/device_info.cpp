@@ -4,10 +4,10 @@
 #include "../device_info.hpp"
 #include "error.hpp"
 #include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <level_zero/ze_api.h>
 #include <vector>

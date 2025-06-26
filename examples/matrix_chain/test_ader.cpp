@@ -60,7 +60,7 @@ template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
 }
 
 template <typename T>
-auto test_ader<T>::make_optimized_kernel(bool dump)
+auto test_ader<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
     auto opt_kernel = [&](compiler_context const &ctx) {
@@ -77,23 +77,23 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
 
         auto f = make_func("ader_kernel", param_types, get_void(ctx));
-        auto fn_body = f.get_body();
+        auto fn_body = get_body(f);
 
         std::array<value, 2 * dim + 3> params;
-        fn_body.get_parameters(params);
+        get_parameters(fn_body, params);
 
         auto dt = params[0];
-        dt.set_name("dt");
+        set_name(dt, "dt");
         auto A = [&params](std::size_t i) -> value & { return params[1 + i]; };
         auto K = [&params](std::size_t i) -> value & { return params[1 + dim + i]; };
         auto Q = params[1 + 2 * dim + 0];
         auto I = params[1 + 2 * dim + 1];
         for (std::size_t i = 0; i < dim; ++i) {
-            A(i).set_name((std::ostringstream{} << 'A' << i).str());
-            K(i).set_name((std::ostringstream{} << 'K' << i).str());
+            set_name(A(i), (std::ostringstream{} << 'A' << i).str());
+            set_name(K(i), (std::ostringstream{} << 'K' << i).str());
         }
-        Q.set_name("Q");
-        I.set_name("I");
+        set_name(Q, "Q");
+        set_name(I, "I");
 
         auto bb = region_builder{fn_body};
         auto const c0 = bb.constant_zero(element_ty);
@@ -125,10 +125,10 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         auto cnum = c1;
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         for (std::int64_t n = 1; n <= N_; ++n) {
-            cnum = bb.create<arith_inst>(arithmetic::mul, cnum, dt, dt.get_type());
+            cnum = bb.create<arith_inst>(arithmetic::mul, cnum, dt, get_type(dt));
             denom *= n + 1;
             auto cdenom = bb.create<constant_inst>(static_cast<double>(denom), element_ty);
-            auto cfactor = bb.create<arith_inst>(arithmetic::div, cnum, cdenom, cnum.get_type());
+            auto cfactor = bb.create<arith_inst>(arithmetic::div, cnum, cdenom, get_type(cnum));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.create<alloca_inst>(dQ_[n].local_type(element_ty));
             auto dq_nextvt = get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local);
@@ -156,13 +156,13 @@ auto test_ader<T>::make_optimized_kernel(bool dump)
         return f;
     };
     auto ctx = make_compiler_context();
-    ctx.set_error_reporter(
-        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
-        nullptr);
+    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
     auto p = make_prog(ctx);
     add_function(p, opt_kernel(ctx));
-    if (dump) {
-        p.dump();
+    if (dump_code) {
+        dump(p);
     }
     return make_kernel_bundle(q_.get_context(), q_.get_device(),
                               compile_to_spirv_and_assemble(p, dev_info_));

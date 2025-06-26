@@ -3,9 +3,9 @@
 
 #include "../compiler_options.hpp"
 #include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <CL/cl_platform.h>

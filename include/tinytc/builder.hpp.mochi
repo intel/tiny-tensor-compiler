@@ -297,100 +297,87 @@ inline data_type get_void(compiler_context const &ctx) {
 /////////// Value //////////
 ////////////////////////////
 
-//! @brief OO-wrapper for tinytc_value_t
-class value : public handle<tinytc_value_t> {
-  public:
-    using handle::handle;
+/**
+ * @brief Get name
+ *
+ * @param val Value
+ *
+ * @return Name as C-string
+ */
+inline auto get_name(value val) -> char const * {
+    char const *name;
+    CHECK_STATUS(tinytc_value_get_name(val, &name));
+    return name;
+}
 
-    /**
-     * @brief Get name
-     *
-     * @return Name as C-string
-     */
-    inline auto get_name() -> char const * {
-        char const *name;
-        CHECK_STATUS(tinytc_value_get_name(obj_, &name));
-        return name;
-    }
+/**
+ * @brief Set value name
+ *
+ * @param val Value
+ * @param name Name
+ */
+inline void set_name(value val, std::string_view name) {
+    CHECK_STATUS(tinytc_value_set_name_n(val, name.size(), name.data()));
+}
 
-    /**
-     * @brief Set value name
-     *
-     * @param name Name
-     */
-    inline void set_name(std::string_view name) {
-        CHECK_STATUS(tinytc_value_set_name_n(obj_, name.size(), name.data()));
-    }
-
-    /**
-     * @brief Get type
-     *
-     * @return Data type
-     */
-    inline auto get_type() -> data_type {
-        tinytc_data_type_t ty;
-        CHECK_STATUS(tinytc_value_get_type(obj_, &ty));
-        return ty;
-    }
-};
-static_assert(std::is_standard_layout_v<value> && sizeof(value) == sizeof(tinytc_value_t));
+/**
+ * @brief Get type
+ *
+ * @param val Value
+ *
+ * @return Data type
+ */
+inline auto get_type(value val) -> data_type {
+    tinytc_data_type_t ty;
+    CHECK_STATUS(tinytc_value_get_type(val, &ty));
+    return ty;
+}
 
 ////////////////////////////
 /////////// Inst ///////////
 ////////////////////////////
 
-namespace internal {
-template <> struct unique_handle_traits<tinytc_inst_t> {
-    static void destroy(tinytc_inst_t handle) { return tinytc_inst_destroy(handle); }
-};
-} // namespace internal
+/**
+ * @brief Get result values
+ *
+ * May be called with empty view (vals = {}) to get the number of results.
+ *
+ * @param in Instruction
+ * @param vals view on buffer that stores results
+ *
+ * @return Minimum of view size and actual number of result values
+ */
+inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::uint32_t {
+    std::uint32_t result_list_size = vals.size();
+    tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
+    CHECK_STATUS(tinytc_inst_get_values(in.get(), &result_list_size, vs));
+    return result_list_size;
+}
 
-class region;
+/**
+ * @brief Get child regions
+ *
+ * May be called with empty view (vals = {}) to get the number of child regions.
+ *
+ * @param in Instruction
+ * @param regs view on buffer that stores results
+ *
+ * @return Minimum of view size and actual number of child regions
+ */
+inline auto get_regions(inst const &in, mutable_array_view<region> regs) -> std::uint32_t {
+    std::uint32_t result_list_size = regs.size();
+    tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
+    CHECK_STATUS(tinytc_inst_get_regions(in.get(), &result_list_size, rl));
+    return result_list_size;
+}
 
-//! @brief Reference-counting wrapper for tinytc_inst_t
-class inst : public unique_handle<tinytc_inst_t> {
-  public:
-    using unique_handle::unique_handle;
-
-    /**
-     * @brief Get result values
-     *
-     * May be called with empty view (vals = {}) to get the number of results.
-     *
-     * @param vals view on buffer that stores results
-     *
-     * @return Minimum of view size and actual number of result values
-     */
-    inline auto get_values(mutable_array_view<value> vals) const -> std::uint32_t {
-        std::uint32_t result_list_size = vals.size();
-        tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
-        CHECK_STATUS(tinytc_inst_get_values(obj_, &result_list_size, vs));
-        return result_list_size;
-    }
-
-    /**
-     * @brief Get child regions
-     *
-     * May be called with empty view (vals = {}) to get the number of child regions.
-     *
-     * @param regs view on buffer that stores results
-     *
-     * @return Minimum of view size and actual number of child regions
-     */
-    inline auto get_regions(mutable_array_view<region> regs) const -> std::uint32_t {
-        std::uint32_t result_list_size = regs.size();
-        tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
-        CHECK_STATUS(tinytc_inst_get_regions(obj_, &result_list_size, rl));
-        return result_list_size;
-    }
-
-    /**
-     * @brief Set attribute
-     *
-     * @param a attribute
-     */
-    inline void set_attr(attr a) { CHECK_STATUS(tinytc_inst_set_attr(obj_, a)); }
-};
+/**
+ * @brief Set attribute
+ *
+ * @param in Instruction
+ * @param a attribute
+ */
+inline void set_attr(inst &in, attr a) { CHECK_STATUS(tinytc_inst_set_attr(in.get(), a)); }
 
 ////////////////////////////
 /////// Instructions ///////
@@ -525,88 +512,89 @@ template <typename T, typename... Args> inline auto create(Args &&...args) -> in
 ////////// Region //////////
 ////////////////////////////
 
-//! @brief OO-wrapper for tinytc_region_t
-class region : public handle<tinytc_region_t> {
-  public:
-    using handle::handle;
+/**
+ * @brief Append instruction to region
+ *
+ * @param reg Region
+ * @param instruction instruction object
+ */
+inline void append(region reg, inst instruction) {
+    CHECK_STATUS(tinytc_region_append(reg, instruction.release()));
+}
 
-    /**
-     * @brief Append instruction to region
-     *
-     * @param instruction instruction object
-     */
-    inline void append(inst instruction) {
-        CHECK_STATUS(tinytc_region_append(obj_, instruction.release()));
-    }
+/**
+ * @brief Get iterator pointing to the begin of the region
+ *
+ * @param reg Region
+ *
+ * @return iterator
+ */
+inline auto begin(region reg) -> tinytc_inst_iterator_t {
+    tinytc_inst_iterator_t it;
+    CHECK_STATUS(tinytc_region_begin(reg, &it));
+    return it;
+}
 
-    /**
-     * @brief Get iterator pointing to the begin of the region
-     *
-     * @return iterator
-     */
-    inline auto begin() -> tinytc_inst_iterator_t {
-        tinytc_inst_iterator_t it;
-        CHECK_STATUS(tinytc_region_begin(obj_, &it));
-        return it;
-    }
+/**
+ * @brief Get iterator pointing to past the end of the region
+ *
+ * @param reg Region
+ *
+ * @return iterator
+ */
+inline auto end(region reg) -> tinytc_inst_iterator_t {
+    tinytc_inst_iterator_t it;
+    CHECK_STATUS(tinytc_region_end(reg, &it));
+    return it;
+}
 
-    /**
-     * @brief Get iterator pointing to past the end of the region
-     *
-     * @return iterator
-     */
-    inline auto end() -> tinytc_inst_iterator_t {
-        tinytc_inst_iterator_t it;
-        CHECK_STATUS(tinytc_region_end(obj_, &it));
-        return it;
-    }
+/**
+ * @brief Erase instruction at iterator
+ *
+ * @param reg Region
+ * @param iterator Iterator
+ *
+ * @return Iterator pointing to the instruction after the one erased
+ */
+inline auto erase(region reg, tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
+    auto it = iterator;
+    CHECK_STATUS(tinytc_region_erase(reg, &it));
+    return it;
+}
 
-    /**
-     * @brief Erase instruction at iterator
-     *
-     * @param iterator Iterator
-     *
-     * @return Iterator pointing to the instruction after the one erased
-     */
-    inline auto erase(tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
-        auto it = iterator;
-        CHECK_STATUS(tinytc_region_erase(obj_, &it));
-        return it;
-    }
+/**
+ * @brief Insert instruction into region before the iterator
+ *
+ * @param reg Region
+ * @param iterator Iterator
+ * @param instruction instruction object
+ *
+ * @return Iterator pointing to the newly inserted instruction
+ */
+inline auto insert(region reg, tinytc_inst_iterator_t iterator, inst instruction)
+    -> tinytc_inst_iterator_t {
+    auto it = iterator;
+    CHECK_STATUS(tinytc_region_insert(reg, &it, instruction.release()));
+    return it;
+}
 
-    /**
-     * @brief Insert instruction into region before the iterator
-     *
-     * @param iterator Iterator
-     * @param instruction instruction object
-     *
-     * @return Iterator pointing to the newly inserted instruction
-     */
-    inline auto insert(tinytc_inst_iterator_t iterator, inst instruction)
-        -> tinytc_inst_iterator_t {
-        auto it = iterator;
-        CHECK_STATUS(tinytc_region_insert(obj_, &it, instruction.release()));
-        return it;
-    }
-
-    /**
-     *
-     * @brief Get region parameters
-     *
-     * May be called with empty view (vals = {}) to get the number of parameters.
-     *
-     * @param params view on buffer that stores parameters
-     *
-     * @return Minimum of view size and actual number of parameters
-     */
-    inline auto get_parameters(mutable_array_view<value> params) -> std::uint32_t {
-        std::uint32_t result_list_size = params.size();
-        tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
-        CHECK_STATUS(tinytc_region_get_parameters(obj_, &result_list_size, ps));
-        return result_list_size;
-    }
-};
-static_assert(std::is_standard_layout_v<region> && sizeof(region) == sizeof(tinytc_region_t));
+/**
+ *
+ * @brief Get region parameters
+ *
+ * May be called with empty view (vals = {}) to get the number of parameters.
+ *
+ * @param reg Region
+ * @param params view on buffer that stores parameters
+ *
+ * @return Minimum of view size and actual number of parameters
+ */
+inline auto get_parameters(region reg, mutable_array_view<value> params) -> std::uint32_t {
+    std::uint32_t result_list_size = params.size();
+    tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
+    CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, ps));
+    return result_list_size;
+}
 
 /**
  * @brief Move iterator to next instruction
@@ -625,29 +613,18 @@ inline void prev(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_prev_in
 /////////// Func ///////////
 ////////////////////////////
 
-namespace internal {
-template <> struct unique_handle_traits<tinytc_func_t> {
-    static void destroy(tinytc_func_t handle) { return tinytc_func_destroy(handle); }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_func_t
-class func : public unique_handle<tinytc_func_t> {
-  public:
-    using unique_handle::unique_handle;
-
-    auto get_body() -> region {
-        tinytc_region_t body;
-        CHECK_STATUS(tinytc_func_get_body(obj_, &body));
-        return region{body};
-    }
-
-    void set_attr(attr a) { CHECK_STATUS(tinytc_func_set_attr(obj_, a)); }
-
-    void set_parameter_attr(std::int32_t arg_no, attr a) {
-        CHECK_STATUS(tinytc_func_set_parameter_attr(obj_, arg_no, a));
-    }
-};
+/**
+ * @brief Get function body
+ *
+ * @param f function
+ *
+ * @return Region
+ */
+inline auto get_body(func const &f) -> region {
+    tinytc_region_t body;
+    CHECK_STATUS(tinytc_func_get_body(f.get(), &body));
+    return region{body};
+}
 
 /**
  * @brief Make function
@@ -670,6 +647,25 @@ inline func make_func(std::string_view name, array_view<data_type> param_type_li
         tinytc_func_create(&fun, name.size(), name.data(), len, param_type_list.data(), ty, &loc),
         loc);
     return func(fun);
+}
+
+/**
+ * @brief Set function attributes
+ *
+ * @param f function
+ * @param a attribute
+ */
+inline void set_attr(func &f, attr a) { CHECK_STATUS(tinytc_func_set_attr(f.get(), a)); }
+
+/**
+ * @brief Set attribute of function parameter
+ *
+ * @param f function
+ * @param param_no parameter number
+ * @param a attribute
+ */
+inline void set_parameter_attr(func &f, std::int32_t param_no, attr a) {
+    CHECK_STATUS(tinytc_func_set_parameter_attr(f.get(), param_no, a));
 }
 
 ////////////////////////////
@@ -712,7 +708,7 @@ class region_builder {
      *
      * @param reg region object
      */
-    region_builder(region reg) : reg_{reg}, ip_{reg_.end()} {}
+    region_builder(region reg) : reg_{reg}, ip_{end(reg_)} {}
     /**
      * @brief ctor
      *
@@ -738,7 +734,7 @@ class region_builder {
     [[maybe_unused]] inline auto add(inst i) -> value {
         auto result = value{};
         i.get_values(result);
-        reg_.insert(ip_, std::move(i));
+        insert(reg_, ip_, std::move(i));
         return result;
     }
 
@@ -753,7 +749,7 @@ class region_builder {
         auto num_results = i.get_values({});
         auto results = std::vector<value>(static_cast<std::size_t>(num_results));
         results.resize(i.get_values(results));
-        reg_.insert(ip_, std::move(i));
+        insert(reg_, ip_, std::move(i));
         return results;
     }
 
@@ -772,7 +768,7 @@ class region_builder {
         } else if constexpr (creator<T>::max_returned_values == 1) {
             return add(std::move(i));
         } else {
-            reg_.insert(ip_, std::move(i));
+            insert(reg_, ip_, std::move(i));
         }
     }
 
@@ -837,11 +833,11 @@ class region_builder {
         auto reg = region{};
         fi.get_regions(reg);
         auto loop_var = value{};
-        reg.get_parameters(loop_var);
+        get_parameters(reg, loop_var);
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
         }
-        reg_.insert(ip_, std::move(fi));
+        insert(reg_, ip_, std::move(fi));
         auto bb = region_builder{reg};
         f(bb, loop_var);
     }
@@ -869,9 +865,9 @@ class region_builder {
         fi.set_attr(attributes);
         auto reg = region{};
         fi.get_regions(reg);
-        auto num_params = reg.get_parameters({});
+        auto num_params = get_parameters(reg, {});
         auto params = std::vector<value>(num_params);
-        reg.get_parameters(params);
+        get_parameters(reg, params);
         if (!reg || num_params != 1 + initial_value_list.size()) {
             throw status::internal_compiler_error;
         }
@@ -895,13 +891,13 @@ class region_builder {
         auto fi = creator<foreach_inst>{}(std::move(from), std::move(to), loc);
         auto reg = region{};
         fi.get_regions(reg);
-        auto num_params = reg.get_parameters({});
+        auto num_params = get_parameters(reg, {});
         auto params = std::vector<value>(num_params);
-        reg.get_parameters(params);
+        get_parameters(reg, params);
         if (!reg || num_params != from.size() || num_params != to.size()) {
             throw status::internal_compiler_error;
         }
-        reg_.insert(ip_, std::move(fi));
+        insert(reg_, ip_, std::move(fi));
         auto bb = region_builder{reg};
         f(bb, array_view<value>(params));
     }
@@ -926,7 +922,7 @@ class region_builder {
         if (!reg) {
             throw status::internal_compiler_error;
         }
-        reg_.insert(ip_, std::move(ii));
+        insert(reg_, ip_, std::move(ii));
         auto bb = region_builder{reg};
         then(bb);
     }

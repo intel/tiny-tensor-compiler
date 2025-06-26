@@ -48,14 +48,14 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
 
 template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_context {
     auto ctx = ::tinytc::make_compiler_context();
-    ctx.set_error_reporter(
-        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
-        nullptr);
+    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
     return ctx;
 }
 
 template <typename T>
-auto test_volume<T>::make_optimized_kernel(bool dump)
+auto test_volume<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
     // Optimized kernel
@@ -72,10 +72,10 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         param_types[2 * dim + 1] = I_.type(element_ty);
 
         auto f = make_func("volume_kernel", param_types, get_void(ctx));
-        auto fn_body = f.get_body();
+        auto fn_body = get_body(f);
 
         std::array<value, 2 * dim + 2> params;
-        fn_body.get_parameters(params);
+        get_parameters(fn_body, params);
 
         auto A = [&params](std::size_t i) -> value & { return params[i]; };
         auto K = [&params](std::size_t i) -> value & { return params[dim + i]; };
@@ -83,11 +83,11 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
         auto I = params[2 * dim + 1];
 
         for (std::size_t i = 0; i < dim; ++i) {
-            A(i).set_name((std::ostringstream{} << 'A' << i).str());
-            K(i).set_name((std::ostringstream{} << 'K' << i).str());
+            set_name(A(i), (std::ostringstream{} << 'A' << i).str());
+            set_name(K(i), (std::ostringstream{} << 'K' << i).str());
         }
-        Q.set_name("Q");
-        I.set_name("I");
+        set_name(Q, "Q");
+        set_name(I, "I");
 
         auto bb = region_builder{fn_body};
         auto gid =
@@ -147,8 +147,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump)
     };
     auto p = make_prog(ctx_);
     add_function(p, opt_kernel(ctx_));
-    if (dump) {
-        p.dump();
+    if (dump_code) {
+        dump(p);
     }
     return make_kernel_bundle(q_.get_context(), q_.get_device(),
                               compile_to_spirv_and_assemble(p, dev_info_));

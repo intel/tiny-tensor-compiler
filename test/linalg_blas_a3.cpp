@@ -99,14 +99,14 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
         get_memref(ct, layoutC.static_shape(), layoutC.static_stride(), address_space::global);
 
     auto f = make_func(name, {alphat, At, Bt, betat, Ct}, get_void(ctx));
-    auto fn_body = f.get_body();
+    auto fn_body = get_body(f);
     auto params = std::array<value, 5u>{};
-    fn_body.get_parameters(params);
-    params[0].set_name("alpha");
-    params[1].set_name("A");
-    params[2].set_name("B");
-    params[3].set_name("beta");
-    params[4].set_name("C");
+    get_parameters(fn_body, params);
+    set_name(params[0], "alpha");
+    set_name(params[1], "A");
+    set_name(params[2], "B");
+    set_name(params[3], "beta");
+    set_name(params[4], "C");
 
     auto bb = region_builder{fn_body};
 

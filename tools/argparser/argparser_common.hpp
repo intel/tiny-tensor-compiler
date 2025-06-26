@@ -12,10 +12,6 @@
 #include <utility>
 #include <vector>
 
-namespace tinytc {
-class compiler_context;
-}
-
 namespace tinytc::cmd {
 class arg_parser;
 

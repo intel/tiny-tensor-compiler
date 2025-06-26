@@ -70,12 +70,12 @@ int main(int argc, char **argv) {
     auto ctx = compiler_context{};
     try {
         ctx = make_compiler_context();
-        ctx.set_error_reporter([](char const *what, const tinytc_location_t *,
-                                  void *) { std::cerr << what << std::endl; },
-                               nullptr);
-        ctx.set_optimization_level(opt_level);
+        set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+            std::cerr << what << std::endl;
+        });
+        set_optimization_level(ctx, opt_level);
         cmd::set_optflags(ctx, flags);
-        info.set_core_features(core_features);
+        set_core_features(info, core_features);
         auto p = prog{};
         if (!filename) {
             p = parse_stdin(ctx);
@@ -85,11 +85,11 @@ int main(int argc, char **argv) {
 
         if (emit_asm) {
             auto mod = compile_to_spirv(std::move(p), info);
-            auto spvasm = mod.print_to_string();
+            auto spvasm = print_to_string(mod);
             std::cout << spvasm.get();
         } else {
             auto bin = compile_to_spirv_and_assemble(std::move(p), info);
-            auto raw_data = bin.get_raw();
+            auto raw_data = get_raw(bin);
             std::cout.write(reinterpret_cast<char const *>(raw_data.data), raw_data.data_size);
         }
     } catch (status const &st) {

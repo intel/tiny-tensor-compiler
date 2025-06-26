@@ -8,14 +8,11 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <cstddef>
 #include <cstdint>
-
-namespace tinytc {
-enum class mem_type;
-}
 
 class opencl_test_runtime {
   public:

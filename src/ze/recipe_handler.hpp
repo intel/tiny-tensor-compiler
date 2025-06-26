@@ -5,8 +5,8 @@
 #define ZE_RECIPE_HANDLER_20240419_HPP
 
 #include "../recipe.hpp"
-#include <tinytc/tinytc.hpp>
 #include <tinytc/types.h>
+#include <tinytc/types.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -14,6 +14,8 @@
 #include <vector>
 
 namespace tinytc {
+
+class recipe;
 
 struct ze_recipe_handler : ::tinytc_recipe_handler {
   public:

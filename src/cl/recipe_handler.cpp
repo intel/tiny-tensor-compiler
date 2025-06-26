@@ -19,7 +19,7 @@ namespace tinytc {
 cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device, recipe rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_recipe().get_binary());
+    module_ = make_kernel_bundle(context, device, get_binary(get_recipe()));
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);

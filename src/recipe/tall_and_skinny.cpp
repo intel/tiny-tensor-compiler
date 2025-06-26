@@ -119,7 +119,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                                   bool is_beta_nonzero, value beta_arg, value C) {
                 auto c_M_block_size = bb.create<constant_inst>(M_block_size, index_ty, my_loc());
                 auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
-                auto m = bb.create<arith_inst>(arithmetic::mul, gid, c_M_block_size, gid.get_type(),
+                auto m = bb.create<arith_inst>(arithmetic::mul, gid, c_M_block_size, get_type(gid),
                                                my_loc());
                 auto beta = is_beta_nonzero ? beta_arg : bb.constant_zero(ty_, my_loc());
 
@@ -162,7 +162,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
                     auto M_val = bb.create<size_inst>(0, C, index_ty, my_loc());
                     auto M_val_sub_m =
-                        bb.create<arith_inst>(arithmetic::sub, M_val, m, m.get_type(), my_loc());
+                        bb.create<arith_inst>(arithmetic::sub, M_val, m, get_type(m), my_loc());
                     auto cond = bb.create<compare_inst>(cmp_condition::lt, M_val_sub_m,
                                                         c_M_block_size, bool_ty, my_loc());
                     bb.ifelse(
@@ -183,25 +183,25 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 for (auto &[param_no, alignment] : alignments) {
                     if (alignment > 0) {
                         align_attr.attr = get_integer_attr(ctx_, alignment);
-                        f.set_parameter_attr(param_no,
-                                             get_dictionary_attr_with_sorted(ctx_, align_attr));
+                        set_parameter_attr(f, param_no,
+                                           get_dictionary_attr_with_sorted(ctx_, align_attr));
                     }
                 }
 
-                auto fn_body = f.get_body();
+                auto fn_body = get_body(f);
                 auto params = std::array<value, 5u>{};
-                fn_body.get_parameters(params);
-                params[0].set_name("alpha");
-                params[1].set_name("A");
-                params[2].set_name("B");
-                params[3].set_name("beta");
-                params[4].set_name("C");
+                get_parameters(fn_body, params);
+                set_name(params[0], "alpha");
+                set_name(params[1], "A");
+                set_name(params[2], "B");
+                set_name(params[3], "beta");
+                set_name(params[4], "C");
                 auto const wgs = tiling.work_group_size(sgs);
                 auto const wgs_attr =
                     named_attr{get_string_attr(ctx_, "work_group_size"),
                                get_array_attr(ctx_, {get_integer_attr(ctx_, wgs[0]),
                                                      get_integer_attr(ctx_, wgs[1])})};
-                f.set_attr(get_dictionary_attr_with_sorted(ctx_, wgs_attr));
+                set_attr(f, get_dictionary_attr_with_sorted(ctx_, wgs_attr));
 
                 auto bb = region_builder{fn_body};
                 body(bb, params[0], params[1], params[2], is_beta_nonzero, params[3], params[4]);

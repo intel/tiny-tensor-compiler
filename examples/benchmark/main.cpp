@@ -58,13 +58,14 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride, bool update,
                                        std::array<std::int64_t, 2> C_stride, std::int32_t alignment,
-                                       std::int32_t repetitions, bool dump, queue q) -> binary {
+                                       std::int32_t repetitions, bool dump_code, queue q)
+    -> binary {
     auto ctx = make_compiler_context();
-    ctx.set_error_reporter(
-        [](char const *what, const tinytc_location_t *, void *) { std::cerr << what << std::endl; },
-        nullptr);
+    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
     char const *file_name = std::source_location::current().file_name();
-    auto const source_id = ctx.add_source(file_name, "");
+    auto const source_id = add_source(ctx, file_name, "");
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -98,13 +99,13 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
                 ctx, named_attr{get_string_attr(ctx, "align"), get_integer_attr(ctx, alignment)});
-            f.set_parameter_attr(0, align_attr);
-            f.set_parameter_attr(1, align_attr);
-            f.set_parameter_attr(2, align_attr);
+            set_parameter_attr(f, 0, align_attr);
+            set_parameter_attr(f, 1, align_attr);
+            set_parameter_attr(f, 2, align_attr);
         }
-        auto fn_body = f.get_body();
+        auto fn_body = get_body(f);
         auto params = std::array<value, 3u>{};
-        fn_body.get_parameters(params);
+        get_parameters(fn_body, params);
 
         auto bb = region_builder{fn_body};
         auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
@@ -129,15 +130,15 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
     try {
         auto p = make_prog(ctx, my_loc());
         add_function(p, kernel(ctx));
-        if (dump) {
-            p.dump();
+        if (dump_code) {
+            dump(p);
         }
 
         auto info = make_core_info(q.get_device());
-        info.set_core_features(tinytc_core_feature_flag_large_register_file);
+        set_core_features(info, tinytc_core_feature_flag_large_register_file);
         return compile_to_spirv_and_assemble(std::move(p), info);
     } catch (builder_error const &e) {
-        ctx.report_error(e.loc(), e.what());
+        report_error(ctx, e.loc(), e.what());
         std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << error_string(e.code())
                   << std::endl;
     } catch (status const &st) {

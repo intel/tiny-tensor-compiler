@@ -103,14 +103,14 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto C_ty = get_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
                                        address_space::global, my_loc());
                 auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, get_void(ctx_), my_loc());
-                auto fn_body = f.get_body();
+                auto fn_body = get_body(f);
                 auto params = std::array<value, 5u>{};
-                fn_body.get_parameters(params);
-                params[0].set_name("alpha");
-                params[1].set_name("A");
-                params[2].set_name("B");
-                params[3].set_name("beta");
-                params[4].set_name("C");
+                get_parameters(fn_body, params);
+                set_name(params[0], "alpha");
+                set_name(params[1], "A");
+                set_name(params[2], "B");
+                set_name(params[3], "beta");
+                set_name(params[4], "C");
 
                 auto bb = region_builder{fn_body};
 

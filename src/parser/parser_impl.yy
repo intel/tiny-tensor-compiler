@@ -6,7 +6,6 @@
 
 %code requires {
     #include "tinytc/builder.hpp"
-    #include "tinytc/tinytc.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
     #include <cstddef>
@@ -45,6 +44,7 @@
     #include "node/value_node.hpp"
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
+    #include "tinytc/tinytc.hpp"
     #include "util/ilist.hpp"
     #include "util/iterator.hpp"
     #include "util/overloaded.hpp"

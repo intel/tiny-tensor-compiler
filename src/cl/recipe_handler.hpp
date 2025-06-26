@@ -6,8 +6,8 @@
 
 #include "../recipe.hpp"
 #include "argument_handler.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <CL/cl.h>
 #include <array>
@@ -16,6 +16,8 @@
 #include <vector>
 
 namespace tinytc {
+
+class recipe;
 
 struct cl_recipe_handler : ::tinytc_recipe_handler {
   public:

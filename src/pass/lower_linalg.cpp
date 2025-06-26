@@ -314,7 +314,7 @@ void linalg_generator::operator()(axpby_inst in) {
         auto c_shape0 =
             instant_constant_fold_add(bb_, create<size_inst>(0, &in.B(), index_ty, in.loc()));
         bb_.foreach_loop(
-            {c0.get()}, {c_shape0.get()},
+            {c0}, {c_shape0},
             [&](region_builder &bb, auto loop_vars) {
                 auto a = bb.create<load_inst>(&in.A(), array_view{loop_vars[0]},
                                               at->element_data_ty(), in.loc());
@@ -329,7 +329,7 @@ void linalg_generator::operator()(axpby_inst in) {
         auto c_shape1 =
             instant_constant_fold_add(bb_, create<size_inst>(1, &in.B(), index_ty, in.loc()));
         bb_.foreach_loop(
-            {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
+            {c0, c0}, {c_shape0, c_shape1},
             [&](region_builder &bb, auto loop_vars) {
                 auto a_idx = std::array<value, 2u>{loop_vars[0], loop_vars[1]};
                 if (in.tA() == transpose::T) {
@@ -643,7 +643,7 @@ void linalg_generator::operator()(gemv_inst in) {
         instant_constant_fold_add(bb_, create<size_inst>(0, &in.C(), index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
     bb_.foreach_loop(
-        {c0.get()}, {c_shape0.get()},
+        {c0}, {c_shape0},
         [&](region_builder &bb, auto loop_vars) {
             auto c_init = bb.constant_zero(ct->element_data_ty());
             auto K =
@@ -680,7 +680,7 @@ void linalg_generator::operator()(ger_inst in) {
     auto c_shape1 =
         instant_constant_fold_add(bb_, create<size_inst>(1, &in.C(), index_ty, in.loc()));
     bb_.foreach_loop(
-        {c0.get(), c0.get()}, {c_shape0.get(), c_shape1.get()},
+        {c0, c0}, {c_shape0, c_shape1},
         [&](region_builder &bb, auto loop_vars) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
@@ -783,7 +783,7 @@ void linalg_generator::operator()(sum_inst in) {
         auto c_shape0 =
             instant_constant_fold_add(bb_, create<size_inst>(0, &in.B(), index_ty, in.loc()));
         bb_.foreach_loop(
-            array_view<value>{c0.get()}, array_view<value>{c_shape0.get()},
+            array_view<value>{c0}, array_view<value>{c_shape0},
             [&](region_builder &bb, auto loop_vars) {
                 auto K = bb.create<size_inst>(in.tA() == transpose::T ? 0 : 1, &in.A(), index_ty,
                                               in.loc());

@@ -160,13 +160,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_print_to_file(const_tinytc_spv_mod_
 TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_print_to_string(const_tinytc_spv_mod_t mod,
                                                              char **str);
 
-/**
- * @brief Delete a (non-const) string returned from tinytc API
- *
- * @param str [in] string
- */
-TINYTC_EXPORT void tinytc_string_destroy(char *str);
-
 ////////////////////////////
 //////// Device info ///////
 ////////////////////////////

@@ -36,13 +36,6 @@ inline char const *error_string(status code) {
     return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
 }
 
-//! Throw exception for unsuccessful call to C-API
-inline void CHECK_STATUS(tinytc_status_t code) {
-    if (code != tinytc_status_success) {
-        throw status{std::underlying_type_t<status>(code)};
-    }
-}
-
 //! Builder exception enhanced with location
 class builder_error : public std::exception {
   public:
@@ -373,192 +366,6 @@ using bfloat16 = lp_float<std::uint16_t, bf16_format>;
 using half = lp_float<std::uint16_t, f16_format>;
 
 ////////////////////////////
-// Shared / unique handle //
-////////////////////////////
-
-template <typename T> class handle {
-  public:
-    //! Create empty (invalid) handle
-    handle() : obj_{nullptr} {}
-    //! Create handle from C handle
-    handle(T obj) : obj_(obj) {}
-
-    //! Dereference C handle and get reference to underlying type
-    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
-    //! Convert handle to C handle
-    auto operator->() const -> T { return obj_; }
-    //! Returns C handle
-    auto get() const -> T { return obj_; }
-
-    //! Check whether handle is non-empty (valid)
-    explicit operator bool() const noexcept { return obj_ != nullptr; }
-
-    //! Check equality
-    bool operator==(handle<T> const &other) const { return obj_ == other.obj_; }
-    //! Check inequality
-    bool operator!=(handle<T> const &other) const { return !(*this == other); }
-
-    operator T() const { return obj_; }
-
-  protected:
-    T obj_;
-};
-
-namespace internal {
-//! Wraps retain / release calls for type T
-template <typename T> struct shared_handle_traits {};
-
-//! Wraps destroy calls for type T
-template <typename T> struct unique_handle_traits {};
-} // namespace internal
-
-/**
- * @brief Wraps a C handle in a reference-counted object
- *
- * @tparam T C handle type (handle type = pointer to opaque struct)
- */
-template <typename T> class shared_handle {
-  public:
-    //! Traits shortcut
-    using traits = internal::shared_handle_traits<T>;
-    //! Typedef for native C handle
-    using native_type = T;
-
-    //! Create empty (invalid) handle
-    shared_handle() : obj_{nullptr} {}
-    //! Create handle from C handle
-    explicit shared_handle(T obj, bool needs_retain = false) : obj_(obj) {
-        if (needs_retain) {
-            CHECK_STATUS(c_retain());
-        }
-    }
-    //! Decrease reference count
-    ~shared_handle() { c_release(); }
-    //! Copy ctor
-    shared_handle(shared_handle const &other) : obj_(other.obj_) { CHECK_STATUS(c_retain()); }
-    //! Move ctor
-    shared_handle(shared_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
-    //! Copy operator
-    shared_handle &operator=(shared_handle const &other) {
-        if (obj_ != other.obj_) {
-            CHECK_STATUS(c_release());
-            obj_ = other.obj_;
-            CHECK_STATUS(c_retain());
-        }
-        return *this;
-    }
-    //! Move operator
-    shared_handle &operator=(shared_handle &&other) {
-        if (obj_ != other.obj_) {
-            CHECK_STATUS(c_release());
-            obj_ = other.obj_;
-            other.obj_ = nullptr;
-        }
-        return *this;
-    }
-
-    //! Dereference C handle and get reference to underlying type
-    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
-    //! Convert handle to C handle
-    auto operator->() const -> T { return obj_; }
-    //! Returns C handle
-    auto get() const -> T { return obj_; }
-    //! Returns C handle and releases the ownership of the managed object
-    auto release() -> T {
-        auto tmp = obj_;
-        obj_ = nullptr;
-        return tmp;
-    }
-
-    //! Check whether handle is non-empty (valid)
-    explicit operator bool() const noexcept { return obj_ != nullptr; }
-
-    //! Check equality
-    bool operator==(shared_handle<T> const &other) const { return obj_ == other.obj_; }
-    //! Check inequality
-    bool operator!=(shared_handle<T> const &other) const { return !(*this == other); }
-
-  protected:
-    //! Call retain in C-API if C handle is not NULL
-    auto c_retain() -> tinytc_status_t {
-        if (obj_ != nullptr) {
-            return traits::retain(obj_);
-        }
-        return tinytc_status_success;
-    }
-    //! Call release in C-API if C handle is not NULL
-    auto c_release() -> tinytc_status_t {
-        if (obj_ != nullptr) {
-            return traits::release(obj_);
-        }
-        return tinytc_status_success;
-    }
-    //! The C handle
-    T obj_;
-};
-
-/**
- * @brief Wraps a C handle in a unique_ptr-alike object
- *
- * @tparam T C handle type (handle type = pointer to opaque struct)
- */
-template <typename T> class unique_handle {
-  public:
-    //! Traits shortcut
-    using traits = internal::unique_handle_traits<T>;
-    //! Typedef for native C handle
-    using native_type = T;
-
-    //! Create empty (invalid) handle
-    unique_handle() : obj_{nullptr} {}
-    //! Create handle from C handle
-    explicit unique_handle(T obj) : obj_(obj) {}
-    //! Destroy object
-    ~unique_handle() {
-        if (obj_) {
-            traits::destroy(obj_);
-        }
-    }
-    //! Copy ctor
-    unique_handle(unique_handle const &other) = delete;
-    //! Move ctor
-    unique_handle(unique_handle &&other) noexcept : obj_(other.obj_) { other.obj_ = nullptr; }
-    //! Copy operator
-    unique_handle &operator=(unique_handle const &other) = delete;
-    //! Move operator
-    unique_handle &operator=(unique_handle &&other) {
-        obj_ = other.obj_;
-        other.obj_ = nullptr;
-        return *this;
-    }
-
-    //! Dereference C handle and get reference to underlying type
-    auto operator*() const -> std::remove_pointer_t<T> & { return *obj_; }
-    //! Convert handle to C handle
-    auto operator->() const -> T { return obj_; }
-    //! Returns C handle
-    auto get() const -> T { return obj_; }
-    //! Returns C handle and releases the ownership of the managed object
-    auto release() -> T {
-        auto tmp = obj_;
-        obj_ = nullptr;
-        return tmp;
-    }
-
-    //! Check whether handle is non-empty (valid)
-    explicit operator bool() const noexcept { return obj_ != nullptr; }
-
-    //! Check equality
-    bool operator==(unique_handle<T> const &other) const { return obj_ == other.obj_; }
-    //! Check inequality
-    bool operator!=(unique_handle<T> const &other) const { return !(*this == other); }
-
-  protected:
-    //! The C handle
-    T obj_;
-};
-
-////////////////////////////
 //////// Array view ////////
 ////////////////////////////
 
@@ -710,81 +517,20 @@ template <typename T> mutable_array_view(T *, T *) -> mutable_array_view<T>;
 ///// Compiler context /////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_compiler_context_t> {
-    static auto retain(tinytc_compiler_context_t handle) -> tinytc_status_t {
-        return tinytc_compiler_context_retain(handle);
-    }
-    static auto release(tinytc_compiler_context_t handle) -> tinytc_status_t {
-        return tinytc_compiler_context_release(handle);
-    }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_compiler_context_t
-class compiler_context : public shared_handle<tinytc_compiler_context_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Add compiler to context
-     *
-     * @param name File name
-     * @param text Source text
-     *
-     * @return Source id (should be set in position.source_id)
-     */
-    inline auto add_source(char const *name, char const *text) -> std::int32_t {
-        std::int32_t source_id;
-        CHECK_STATUS(tinytc_compiler_context_add_source(obj_, name, text, &source_id));
-        return source_id;
-    }
-    /**
-     * @brief Set error reporter
-     *
-     * Error reporting function that is called whenever an error occurs in the parser or the
-     * builder.
-     *
-     * @param reporter error reporting callback
-     * @param user_data pointer to user data that is passed to the callback
-     *
-     * @return tinytc_status_success on success and error otherwise
-     */
-    inline void set_error_reporter(error_reporter_t reporter, void *user_data) {
-        CHECK_STATUS(tinytc_compiler_context_set_error_reporter(obj_, reporter, user_data));
-    }
-
-    /**
-     * @brief Sets an optimization flag
-     *
-     * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization
-     * level).
-     *
-     * @param flag optimization flag
-     * @param state flag state
-     */
-    inline void set_optimization_flag(optflag flag, std::int32_t state) {
-        CHECK_STATUS(tinytc_compiler_context_set_optimization_flag(
-            obj_, static_cast<tinytc_optflag_t>(flag), state));
-    }
-    /**
-     * @brief Set optimization level
-     *
-     * @param level optimization level
-     */
-    inline void set_optimization_level(std::int32_t level) {
-        CHECK_STATUS(tinytc_compiler_context_set_optimization_level(obj_, level));
-    }
-    /**
-     * @brief Enhance error message with compiler context; useful when builder is used
-     *
-     * @param loc Source location
-     * @param what Error description
-     */
-    inline void report_error(location const &loc, char const *what) {
-        CHECK_STATUS(tinytc_compiler_context_report_error(obj_, &loc, what));
-    }
-};
+/**
+ * @brief Add compiler to context
+ *
+ * @param ctx compiler context
+ * @param name File name
+ * @param text Source text
+ *
+ * @return Source id (should be set in position.source_id)
+ */
+inline auto add_source(compiler_context &ctx, char const *name, char const *text) -> std::int32_t {
+    std::int32_t source_id;
+    CHECK_STATUS(tinytc_compiler_context_add_source(ctx.get(), name, text, &source_id));
+    return source_id;
+}
 
 /**
  * @brief Create compiler context
@@ -797,215 +543,238 @@ inline auto make_compiler_context() -> compiler_context {
     return compiler_context{ctx};
 }
 
+/**
+ * @brief Set error reporter
+ *
+ * Error reporting function that is called whenever an error occurs in the parser or the
+ * builder.
+ *
+ * @param ctx compiler context
+ * @param reporter error reporting callback
+ * @param user_data pointer to user data that is passed to the callback
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+inline void set_error_reporter(compiler_context &ctx, error_reporter_t reporter,
+                               void *user_data = nullptr) {
+    CHECK_STATUS(tinytc_compiler_context_set_error_reporter(ctx.get(), reporter, user_data));
+}
+
+/**
+ * @brief Sets an optimization flag
+ *
+ * The state can be 0 (disabled), 1 (enabled), or -1 (use default according to optimization
+ * level).
+ *
+ * @param ctx compiler context
+ * @param flag optimization flag
+ * @param state flag state
+ */
+inline void set_optimization_flag(compiler_context &ctx, optflag flag, std::int32_t state) {
+    CHECK_STATUS(tinytc_compiler_context_set_optimization_flag(
+        ctx.get(), static_cast<tinytc_optflag_t>(flag), state));
+}
+/**
+ * @brief Set optimization level
+ *
+ * @param ctx compiler context
+ * @param level optimization level
+ */
+inline void set_optimization_level(compiler_context &ctx, std::int32_t level) {
+    CHECK_STATUS(tinytc_compiler_context_set_optimization_level(ctx.get(), level));
+}
+/**
+ * @brief Enhance error message with compiler context; useful when builder is used
+ *
+ * @param ctx compiler context
+ * @param loc Source location
+ * @param what Error description
+ */
+inline void report_error(compiler_context const &ctx, location const &loc, char const *what) {
+    CHECK_STATUS(tinytc_compiler_context_report_error(ctx.get(), &loc, what));
+}
+
 ////////////////////////////
-//////// Prog handle ///////
+/////////// Prog ///////////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_prog_t> {
-    static auto retain(tinytc_prog_t handle) -> tinytc_status_t {
-        return tinytc_prog_retain(handle);
-    }
-    static auto release(tinytc_prog_t handle) -> tinytc_status_t {
-        return tinytc_prog_release(handle);
-    }
-};
-template <> struct unique_handle_traits<char *> {
-    static void destroy(char *obj) { tinytc_string_destroy(obj); }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_prog_t
-class prog : public shared_handle<tinytc_prog_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Dump program to stderr
-     */
-    void dump() const { CHECK_STATUS(tinytc_prog_dump(obj_)); }
-    /**
-     * @brief Get context
-     *
-     * @return Compiler context
-     */
-    auto get_compiler_context() const -> compiler_context {
-        tinytc_compiler_context_t ctx;
-        CHECK_STATUS(tinytc_prog_get_compiler_context(obj_, &ctx));
-        return compiler_context{ctx, true};
-    }
-    /**
-     * @brief Dump program to file
-     *
-     * @param filename Path to file
-     */
-    void print_to_file(char const *filename) const {
-        CHECK_STATUS(tinytc_prog_print_to_file(obj_, filename));
-    }
-    /**
-     * @brief Dump program to string
-     *
-     * @return C-string (unique handle)
-     */
-    auto print_to_string() const -> unique_handle<char *> {
-        char *str;
-        CHECK_STATUS(tinytc_prog_print_to_string(obj_, &str));
-        return unique_handle<char *>{str};
-    }
-};
+/**
+ * @brief Dump program to stderr
+ *
+ * @param p program
+ */
+inline void dump(prog const &p) { CHECK_STATUS(tinytc_prog_dump(p.get())); }
+/**
+ * @brief Get context
+ *
+ * @param p program
+ *
+ * @return Compiler context
+ */
+inline auto get_compiler_context(prog const &p) -> compiler_context {
+    tinytc_compiler_context_t ctx;
+    CHECK_STATUS(tinytc_prog_get_compiler_context(p.get(), &ctx));
+    return compiler_context{ctx, true};
+}
+/**
+ * @brief Dump program to file
+ *
+ * @param p program
+ * @param filename Path to file
+ */
+inline void print_to_file(prog const &p, char const *filename) {
+    CHECK_STATUS(tinytc_prog_print_to_file(p.get(), filename));
+}
+/**
+ * @brief Dump program to string
+ *
+ * @param p program
+ *
+ * @return C-string (unique handle)
+ */
+inline auto print_to_string(prog const &p) -> unique_handle<char *> {
+    char *str;
+    CHECK_STATUS(tinytc_prog_print_to_string(p.get(), &str));
+    return unique_handle<char *>{str};
+}
 
 ////////////////////////////
 /////// SPIR-V Module //////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_spv_mod_t> {
-    static auto retain(tinytc_spv_mod_t handle) -> tinytc_status_t {
-        return tinytc_spv_mod_retain(handle);
-    }
-    static auto release(tinytc_spv_mod_t handle) -> tinytc_status_t {
-        return tinytc_spv_mod_release(handle);
-    }
-};
-} // namespace internal
-
-//! @brief Reference-counting wrapper for tinytc_spv_mod_t
-class spv_mod : public shared_handle<tinytc_spv_mod_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Dump module to stderr
-     */
-    void dump() const { CHECK_STATUS(tinytc_spv_mod_dump(obj_)); }
-    /**
-     * @brief Dump module to file
-     *
-     * @param filename Path to file
-     */
-    void print_to_file(char const *filename) const {
-        CHECK_STATUS(tinytc_spv_mod_print_to_file(obj_, filename));
-    }
-    /**
-     * @brief Dump module to string
-     *
-     * @return C-string (unique handle)
-     */
-    auto print_to_string() const -> unique_handle<char *> {
-        char *str;
-        CHECK_STATUS(tinytc_spv_mod_print_to_string(obj_, &str));
-        return unique_handle<char *>{str};
-    }
-};
+/**
+ * @brief Dump module to stderr
+ *
+ * @param mod SPIR-V module
+ */
+inline void dump(spv_mod const &mod) { CHECK_STATUS(tinytc_spv_mod_dump(mod.get())); }
+/**
+ * @brief Dump module to file
+ *
+ * @param mod SPIR-V module
+ * @param filename Path to file
+ */
+inline void print_to_file(spv_mod const &mod, char const *filename) {
+    CHECK_STATUS(tinytc_spv_mod_print_to_file(mod.get(), filename));
+}
+/**
+ * @brief Dump module to string
+ *
+ * @param mod SPIR-V module
+ *
+ * @return C-string (unique handle)
+ */
+inline auto print_to_string(spv_mod &mod) -> unique_handle<char *> {
+    char *str;
+    CHECK_STATUS(tinytc_spv_mod_print_to_string(mod.get(), &str));
+    return unique_handle<char *>{str};
+}
 
 ////////////////////////////
 //////// Device info ///////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_core_info_t> {
-    static auto retain(tinytc_core_info_t handle) -> tinytc_status_t {
-        return tinytc_core_info_retain(handle);
-    }
-    static auto release(tinytc_core_info_t handle) -> tinytc_status_t {
-        return tinytc_core_info_release(handle);
-    }
-};
-} // namespace internal
+/**
+ * @brief Get subgroup sizes
+ *
+ * @param info Core info
+ *
+ * @return Subgroup sizes
+ */
+inline auto get_subgroup_sizes(core_info const &info) -> array_view<std::int32_t> {
+    std::uint32_t sgs_size = 0;
+    std::int32_t const *sgs = nullptr;
+    CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(info.get(), &sgs_size, &sgs));
+    return array_view(sgs, static_cast<std::size_t>(sgs_size));
+}
 
-//! @brief Reference-counting wrapper for tinytc_core_info_t
-class core_info : public shared_handle<tinytc_core_info_t> {
-  public:
-    using shared_handle::shared_handle;
+/**
+ * @brief Get register space per subgroup in bytes
+ *
+ * @param info Core info
+ *
+ * @return Register space
+ */
+inline auto get_register_space(core_info const &info) -> std::int32_t {
+    std::int32_t space;
+    CHECK_STATUS(tinytc_core_info_get_register_space(info.get(), &space));
+    return space;
+}
 
-    /**
-     * @brief Get subgroup sizes
-     *
-     * @return Subgroup sizes
-     */
-    auto get_subgroup_sizes() const -> array_view<std::int32_t> {
-        std::uint32_t sgs_size = 0;
-        std::int32_t const *sgs = nullptr;
-        CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(obj_, &sgs_size, &sgs));
-        return array_view(sgs, static_cast<std::size_t>(sgs_size));
-    }
+/**
+ * @brief Set core features
+ *
+ * @param info Core info
+ *
+ * @param flags set core features; must be 0 or a combination of tinytc_core_feature_flag_t
+ */
+inline void set_core_features(core_info &info, tinytc_core_feature_flags_t flags) {
+    CHECK_STATUS(tinytc_core_info_set_core_features(info.get(), flags));
+}
 
-    /**
-     * @brief Get register space per subgroup in bytes
-     *
-     * @return Register space
-     */
-    auto get_register_space() const -> std::int32_t {
-        std::int32_t space;
-        CHECK_STATUS(tinytc_core_info_get_register_space(obj_, &space));
-        return space;
-    }
+/**
+ * @brief Get core features
+ *
+ * @param info Core info
+ *
+ * @return Core features
+ */
+inline auto get_core_features(core_info const &info) -> tinytc_core_feature_flags_t {
+    tinytc_core_feature_flags_t flags;
+    CHECK_STATUS(tinytc_core_info_get_core_features(info.get(), &flags));
+    return flags;
+}
 
-    /**
-     * @brief Set core features
-     *
-     * @param flags set core features; must be 0 or a combination of tinytc_core_feature_flag_t
-     */
-    void set_core_features(tinytc_core_feature_flags_t flags) {
-        CHECK_STATUS(tinytc_core_info_set_core_features(obj_, flags));
-    }
+/**
+ * @brief Set SPIR-V feature
+ *
+ * @param info Core info
+ * @param feature SPIR-V feature
+ * @param available true if feature is available and false otherwise
+ */
+inline void set_spirv_feature(core_info &info, spirv_feature feature, bool available) {
+    CHECK_STATUS(tinytc_core_info_set_spirv_feature(
+        info.get(), static_cast<tinytc_spirv_feature_t>(feature), available));
+}
 
-    /**
-     * @brief Get core features
-     *
-     * @return Core features
-     */
-    auto get_core_features() const -> tinytc_core_feature_flags_t {
-        tinytc_core_feature_flags_t flags;
-        CHECK_STATUS(tinytc_core_info_get_core_features(obj_, &flags));
-        return flags;
-    }
+/**
+ * @brief Get SPIR-V feature
+ *
+ * @param info Core info
+ * @param feature SPIR-V feature
+ *
+ * @return true if feature is available and false otherwise
+ */
+inline auto have_spirv_feature(core_info const &info, spirv_feature feature) -> bool {
+    tinytc_bool_t available;
+    CHECK_STATUS(tinytc_core_info_have_spirv_feature(
+        info.get(), static_cast<tinytc_spirv_feature_t>(feature), &available));
+    return available;
+}
 
-    /**
-     * @brief Set SPIR-V feature
-     *
-     * @param feature SPIR-V feature
-     * @param available true if feature is available and false otherwise
-     */
-    void set_spirv_feature(spirv_feature feature, bool available) {
-        CHECK_STATUS(tinytc_core_info_set_spirv_feature(
-            obj_, static_cast<tinytc_spirv_feature_t>(feature), available));
-    }
+/**
+ * @brief Get default alignment
+ *
+ * @param info Core info
+ *
+ * @return alignment in bytes
+ */
+inline auto get_default_alignment(core_info const &info) -> std::int32_t {
+    std::int32_t alignment;
+    CHECK_STATUS(tinytc_core_info_get_default_alignment(info.get(), &alignment));
+    return alignment;
+}
 
-    /**
-     * @brief Get SPIR-V feature
-     *
-     * @param feature SPIR-V feature
-     *
-     * @return true if feature is available and false otherwise
-     */
-    auto have_spirv_feature(spirv_feature feature) const -> bool {
-        tinytc_bool_t available;
-        CHECK_STATUS(tinytc_core_info_have_spirv_feature(
-            obj_, static_cast<tinytc_spirv_feature_t>(feature), &available));
-        return available;
-    }
-
-    /**
-     * @brief Get default alignment
-     *
-     * @return alignment in bytes
-     */
-    auto get_default_alignment() const -> std::int32_t {
-        std::int32_t alignment;
-        CHECK_STATUS(tinytc_core_info_get_default_alignment(obj_, &alignment));
-        return alignment;
-    }
-
-    /**
-     * @brief Set default alignment
-     *
-     * @param alignment alignment in bytes
-     */
-    void set_default_alignment(std::int32_t alignment) {
-        CHECK_STATUS(tinytc_core_info_set_default_alignment(obj_, alignment));
-    }
-};
+/**
+ * @brief Set default alignment
+ *
+ * @param info Core info
+ *
+ * @param alignment alignment in bytes
+ */
+inline void set_default_alignment(core_info &info, std::int32_t alignment) {
+    CHECK_STATUS(tinytc_core_info_set_default_alignment(info.get(), alignment));
+}
 
 /**
  * @brief Create core info for generic GPUs manually
@@ -1118,62 +887,51 @@ inline auto parse_string(std::string const &src, compiler_context const &ctx = {
 ///////// Compiler /////////
 ////////////////////////////
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_binary_t> {
-    static auto retain(tinytc_binary_t handle) -> tinytc_status_t {
-        return tinytc_binary_retain(handle);
-    }
-    static auto release(tinytc_binary_t handle) -> tinytc_status_t {
-        return tinytc_binary_release(handle);
-    }
+//! Container for raw data
+struct raw_binary {
+    bundle_format format;     ///< Bundle format
+    std::size_t data_size;    ///< Size of binary data in bytes
+    std::uint8_t const *data; ///< Pointer to binary data
 };
-} // namespace internal
 
-//! @brief Reference-counting wrapper for tinytc_binary_t
-class binary : public shared_handle<tinytc_binary_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    //! Container for raw data
-    struct raw {
-        bundle_format format;     ///< Bundle format
-        std::size_t data_size;    ///< Size of binary data in bytes
-        std::uint8_t const *data; ///< Pointer to binary data
-    };
-
-    /**
-     * @brief Get raw data
-     *
-     * @return Raw data
-     */
-    inline auto get_raw() const -> raw {
-        raw r;
-        tinytc_bundle_format_t f;
-        CHECK_STATUS(tinytc_binary_get_raw(obj_, &f, &r.data_size, &r.data));
-        r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
-        return r;
-    }
-    /**
-     * @brief Get compiler context
-     *
-     * @return Compiler context
-     */
-    inline auto get_compiler_context() const -> compiler_context {
-        tinytc_compiler_context_t ctx;
-        CHECK_STATUS(tinytc_binary_get_compiler_context(obj_, &ctx));
-        return compiler_context{ctx, true};
-    }
-    /**
-     * @brief Get core features
-     *
-     * @return Core features
-     */
-    inline auto get_core_features() const -> tinytc_core_feature_flags_t {
-        tinytc_core_feature_flags_t cf;
-        CHECK_STATUS(tinytc_binary_get_core_features(obj_, &cf));
-        return cf;
-    }
-};
+/**
+ * @brief Get raw data
+ *
+ * @param bin Binary
+ *
+ * @return Raw data
+ */
+inline auto get_raw(binary const &bin) -> raw_binary {
+    raw_binary r;
+    tinytc_bundle_format_t f;
+    CHECK_STATUS(tinytc_binary_get_raw(bin.get(), &f, &r.data_size, &r.data));
+    r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
+    return r;
+}
+/**
+ * @brief Get compiler context
+ *
+ * @param bin Binary
+ *
+ * @return Compiler context
+ */
+inline auto get_compiler_context(binary const &bin) -> compiler_context {
+    tinytc_compiler_context_t ctx;
+    CHECK_STATUS(tinytc_binary_get_compiler_context(bin.get(), &ctx));
+    return compiler_context{ctx, true};
+}
+/**
+ * @brief Get core features
+ *
+ * @param bin Binary
+ *
+ * @return Core features
+ */
+inline auto get_core_features(binary const &bin) -> tinytc_core_feature_flags_t {
+    tinytc_core_feature_flags_t cf;
+    CHECK_STATUS(tinytc_binary_get_core_features(bin.get(), &cf));
+    return cf;
+}
 
 /**
  * @brief Make binary
@@ -1332,69 +1090,44 @@ struct mem {
     mem_type type;     ///< Memory object type
 };
 
-namespace internal {
-template <> struct shared_handle_traits<tinytc_recipe_t> {
-    static auto retain(tinytc_recipe_t handle) -> tinytc_status_t {
-        return tinytc_recipe_retain(handle);
-    }
-    static auto release(tinytc_recipe_t handle) -> tinytc_status_t {
-        return tinytc_recipe_release(handle);
-    }
-};
-template <> struct shared_handle_traits<tinytc_recipe_handler_t> {
-    static auto retain(tinytc_recipe_handler_t handle) -> tinytc_status_t {
-        return tinytc_recipe_handler_retain(handle);
-    }
-    static auto release(tinytc_recipe_handler_t handle) -> tinytc_status_t {
-        return tinytc_recipe_handler_release(handle);
-    }
-};
-} // namespace internal
+/**
+ * @brief Get program
+ *
+ * @param rec Recipe
+ *
+ * @return Program
+ */
+inline auto get_prog(recipe const &rec) -> prog {
+    tinytc_prog_t prg;
+    CHECK_STATUS(tinytc_recipe_get_prog(rec.get(), &prg));
+    return prog{prg};
+}
 
-//! @brief Reference-counting wrapper for tinytc_recipe_t
-class recipe : public shared_handle<tinytc_recipe_t> {
-  public:
-    using shared_handle::shared_handle;
+/**
+ * @brief Get binary
+ *
+ * @param rec Recipe
+ *
+ * @return Binary
+ */
+inline auto get_binary(recipe const &rec) -> binary {
+    tinytc_binary_t bin;
+    CHECK_STATUS(tinytc_recipe_get_binary(rec.get(), &bin));
+    return binary{bin};
+}
 
-    /**
-     * @brief Get program
-     *
-     * @return Program
-     */
-    auto get_prog() const -> prog {
-        tinytc_prog_t prg;
-        CHECK_STATUS(tinytc_recipe_get_prog(obj_, &prg));
-        return prog{prg};
-    }
-
-    /**
-     * @brief Get binary
-     *
-     * @return Binary
-     */
-    auto get_binary() const -> binary {
-        tinytc_binary_t bin;
-        CHECK_STATUS(tinytc_recipe_get_binary(obj_, &bin));
-        return binary{bin};
-    }
-};
-
-//! @brief Reference-counting wrapper for tinytc_recipe_handler_t
-class recipe_handler : public shared_handle<tinytc_recipe_handler_t> {
-  public:
-    using shared_handle::shared_handle;
-
-    /**
-     * @brief Get recipe
-     *
-     * @return Recipe
-     */
-    auto get_recipe() const -> recipe {
-        tinytc_recipe_t rec;
-        CHECK_STATUS(tinytc_recipe_handler_get_recipe(obj_, &rec));
-        return recipe{rec};
-    }
-};
+/**
+ * @brief Get recipe
+ *
+ * @param handler Recipe handler
+ *
+ * @return Recipe
+ */
+inline auto get_recipe(recipe_handler const &handler) -> recipe {
+    tinytc_recipe_t rec;
+    CHECK_STATUS(tinytc_recipe_handler_get_recipe(handler.get(), &rec));
+    return recipe{rec};
+}
 
 //! @brief Reference-counting wrapper for tinytc_recipe_t
 class small_gemm_batched : public recipe {

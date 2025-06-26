@@ -9,6 +9,7 @@
 #include "parser/parse_context.hpp"
 #include "parser/parser_impl.hpp"
 #include "tinytc/tinytc.h"
+#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

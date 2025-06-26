@@ -24,9 +24,9 @@ int main() {
 
         auto f = make_func("copy", {ty, ty}, get_void(ctx));
 
-        auto body = f.get_body();
+        auto body = get_body(f);
         std::array<value, 2u> params;
-        body.get_parameters(params);
+        get_parameters(body, params);
 
         auto bb = region_builder{body};
         auto alpha = bb.constant_one(element_ty);
@@ -36,7 +36,7 @@ int main() {
         auto p = make_prog(ctx);
         add_function(p, std::move(f));
 
-        p.dump();
+        dump(p);
     } catch (builder_error const &e) {
         std::cerr << "Error  " << static_cast<int>(e.code()) << std::endl;
     } catch (status const &st) {

@@ -88,7 +88,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
 
     if (in.dim() > 1) {
         auto const make_inner_loop_nest = [&](region_builder &bb, value from1, value to1) {
-            tinytc_region_t current_region = bb.get_region().get();
+            tinytc_region_t current_region = bb.get_region();
             for (std::int64_t i = in.dim() - 1; i > 1; --i) {
                 auto for_i =
                     inst{for_inst::create(&from[i], &to[i], nullptr, array_view<tinytc_value_t>{},
@@ -102,7 +102,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
             region_builder{current_region}.for_loop(
                 from1, to1,
                 [&](region_builder &bb, value loop_var1) {
-                    cloner.set_subs(&loop_vars[1], loop_var1.get());
+                    cloner.set_subs(&loop_vars[1], loop_var1);
                     cloner.clone_region(in.body(), *bb.get_region());
                 },
                 nullptr, in.loc());
@@ -121,7 +121,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                 make_loop0(
                     bb, &from[0], &to[0], sg_id0, block_size0, tiling_.m_tiles(),
                     [&](region_builder &bb, value loop_var0) {
-                        cloner.set_subs(&loop_vars[0], loop_var0.get());
+                        cloner.set_subs(&loop_vars[0], loop_var0);
                         make_inner_loop_nest(bb, from1, to1);
                     },
                     in.loc());
@@ -131,7 +131,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
         make_loop0(
             bb, &from[0], &to[0], sg_id, block_size0, tiling_.m_tiles() * tiling_.n_tiles(),
             [&](region_builder &bb, value loop_var0) {
-                cloner.set_subs(&loop_vars[0], loop_var0.get());
+                cloner.set_subs(&loop_vars[0], loop_var0);
                 cloner.clone_region(in.body(), *bb.get_region());
             },
             in.loc());
