@@ -4,7 +4,7 @@
 #ifndef CONVERT_TO_SPIRV_20241029_HPP
 #define CONVERT_TO_SPIRV_20241029_HPP
 
-#include "node/program_node.hpp"
+#include "node/prog.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 

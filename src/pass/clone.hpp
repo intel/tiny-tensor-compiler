@@ -4,9 +4,9 @@
 #ifndef CLONE_20241118_HPP
 #define CLONE_20241118_HPP
 
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/types.h"
 

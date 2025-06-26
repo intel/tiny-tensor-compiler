@@ -6,7 +6,7 @@
 
 #include "device_info.hpp"
 #include "node/inst_view.hpp"
-#include "node/region_node.hpp"
+#include "node/region.hpp"
 #include "spv/coopmatrix_impl.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"

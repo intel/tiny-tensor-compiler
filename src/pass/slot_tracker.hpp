@@ -4,8 +4,8 @@
 #ifndef SLOT_TRACKER_20240418_HPP
 #define SLOT_TRACKER_20240418_HPP
 
-#include "node/function_node.hpp"
-#include "node/value_node.hpp"
+#include "node/func.hpp"
+#include "node/value.hpp"
 
 #include <cstdint>
 #include <unordered_map>

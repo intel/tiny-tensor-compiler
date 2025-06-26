@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef PROGRAM_NODE_20240208_HPP
-#define PROGRAM_NODE_20240208_HPP
+#ifndef PROG_20250626_HPP
+#define PROG_20250626_HPP
 
 #include "reference_counted.hpp"
 #include "tinytc/types.h"
@@ -44,4 +44,4 @@ using program_node = ::tinytc_prog;
 
 } // namespace tinytc
 
-#endif // PROGRAM_NODE_20240208_HPP
+#endif // PROG_20250626_HPP

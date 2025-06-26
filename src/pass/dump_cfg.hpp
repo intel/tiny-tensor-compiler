@@ -4,7 +4,7 @@
 #ifndef DUMP_BACKWARD_CFG_20240919_HPP
 #define DUMP_BACKWARD_CFG_20240919_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 
 #include <iosfwd>
 

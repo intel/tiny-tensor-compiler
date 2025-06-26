@@ -19,30 +19,26 @@ set(SOURCES
     analysis/cfg.cpp
     analysis/gcd.cpp
     analysis/stack.cpp
-    attribute.cpp
     binary.cpp
     codegen_tools.cpp
     compiler.cpp
     compiler_context.cpp
     compiler_context_cache.cpp
     coopmatrix_layout.cpp
-    data_type.cpp
     device_info.cpp
     error.cpp
-    func.cpp
     gemm_tools.cpp
     half.cpp
-    inst.cpp
     location.cpp
     matrix_ext_info.cpp
-    node/attr_node.cpp
-    node/data_type_node.cpp
-    node/function_node.cpp
-    node/inst_node.cpp
+    node/attr.cpp
+    node/data_type.cpp
+    node/func.cpp
+    node/inst.cpp
     node/inst_view_impl.cpp
-    node/region_node.cpp
-    node/program_node.cpp
-    node/value_node.cpp
+    node/region.cpp
+    node/prog.cpp
+    node/value.cpp
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp
@@ -63,11 +59,9 @@ set(SOURCES
     pass/slot_tracker.cpp
     pass/stack.cpp
     pass/work_group_size.cpp
-    prog.cpp
     recipe.cpp
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
-    region.cpp
     scalar_type.cpp
     spv/block2d_diy.cpp
     spv/capex_util.cpp
@@ -89,7 +83,6 @@ set(SOURCES
     spv/uniquifier.cpp
     support/temp_counter.cpp
     tiling.cpp
-    value.cpp
     support/walk.cpp
 )
 

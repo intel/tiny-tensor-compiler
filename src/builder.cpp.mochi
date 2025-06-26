@@ -3,7 +3,7 @@
 
 #include "error.hpp"
 #include "location.hpp"
-#include "node/data_type_node.hpp"
+#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
 #include "tinytc/builder.h"
 #include "tinytc/tinytc.hpp"

@@ -2,9 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dump_def_use.hpp"
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "node/visit.hpp"
 #include "pass/dump_ir.hpp"
 #include "support/walk.hpp"

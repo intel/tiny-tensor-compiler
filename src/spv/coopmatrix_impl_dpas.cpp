@@ -7,7 +7,7 @@
 #include "coopmatrix_layout.hpp"
 #include "device_info.hpp"
 #include "matrix_ext_info.hpp"
-#include "node/data_type_node.hpp"
+#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
 #include "spv/block2d_diy.hpp"
 #include "spv/coopmatrix_impl.hpp"

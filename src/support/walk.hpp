@@ -4,9 +4,9 @@
 #ifndef WALK_20240911_HPP
 #define WALK_20240911_HPP
 
-#include "node/function_node.hpp"
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
 #include "util/ilist_base.hpp"
 
 #include <functional>

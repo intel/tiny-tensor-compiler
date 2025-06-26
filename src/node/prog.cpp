@@ -1,9 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include "node/prog.hpp"
 #include "error.hpp"
 #include "location.hpp"
-#include "node/program_node.hpp"
+#include "node/prog.hpp"
 #include "pass/dump_ir.hpp"
 #include "passes.hpp"
 #include "tinytc/builder.h"
@@ -20,6 +21,11 @@
 #include <utility>
 
 using namespace tinytc;
+
+tinytc_prog::tinytc_prog(tinytc::compiler_context ctx, tinytc_location const &lc)
+    : ctx_{std::move(ctx)} {
+    loc(lc);
+}
 
 extern "C" {
 

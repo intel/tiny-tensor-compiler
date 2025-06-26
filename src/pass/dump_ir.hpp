@@ -4,13 +4,13 @@
 #ifndef DUMP_IR_20230330_HPP
 #define DUMP_IR_20230330_HPP
 
-#include "node/attr_node.hpp" // IWYU pragma: keep
-#include "node/data_type_node.hpp"
-#include "node/function_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/attr.hpp" // IWYU pragma: keep
+#include "node/data_type.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "pass/slot_tracker.hpp"
 
 #include <limits>

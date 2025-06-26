@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "error.hpp"
-#include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/data_type.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"

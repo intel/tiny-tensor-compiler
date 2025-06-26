@@ -4,7 +4,7 @@
 #ifndef STACK_20241112_HPP
 #define STACK_20241112_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 
 #include <cstdint>
 

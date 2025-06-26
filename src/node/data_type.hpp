@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef DATA_TYPE_NODE_20230309_HPP
-#define DATA_TYPE_NODE_20230309_HPP
+#ifndef DATA_TYPE_20250626_HPP
+#define DATA_TYPE_20250626_HPP
 
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -169,4 +169,4 @@ class void_data_type : public tinytc_data_type {
 
 } // namespace tinytc
 
-#endif // DATA_TYPE_NODE_20230309_HPP
+#endif // DATA_TYPE_20250626_HPP

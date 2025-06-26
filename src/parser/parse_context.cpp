@@ -4,7 +4,7 @@
 #include "parse_context.hpp"
 #include "compiler_context.hpp"
 #include "location.hpp"
-#include "node/value_node.hpp"
+#include "node/value.hpp"
 #include "parser/parser_impl.hpp"
 
 #include <sstream>
@@ -64,8 +64,8 @@ void parse_context::val(std::variant<std::int64_t, std::string> const &id, tinyt
     }
 }
 
-auto parse_context::val(std::variant<std::int64_t, std::string> const &id,
-                        location const &l) -> tinytc_value_t {
+auto parse_context::val(std::variant<std::int64_t, std::string> const &id, location const &l)
+    -> tinytc_value_t {
     const auto handle_val =
         [&l]<typename KeyT>(KeyT const &id,
                             std::vector<std::unordered_map<KeyT, tinytc_value_t>> &map) {

@@ -3,10 +3,10 @@
 
 #include "analysis/stack.hpp"
 #include "error.hpp"
-#include "node/data_type_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/data_type.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
-#include "node/value_node.hpp"
+#include "node/value.hpp"
 #include "support/walk.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

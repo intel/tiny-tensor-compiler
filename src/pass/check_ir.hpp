@@ -4,10 +4,10 @@
 #ifndef CHECK_IR_20240222_HPP
 #define CHECK_IR_20240222_HPP
 
-#include "node/function_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
-#include "node/region_node.hpp"
+#include "node/region.hpp"
 #include "tinytc/types.hpp"
 
 namespace tinytc {

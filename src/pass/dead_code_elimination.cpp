@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "pass/dead_code_elimination.hpp"
-#include "node/function_node.hpp"
-#include "node/inst_node.hpp"
+#include "node/func.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "node/visit.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"

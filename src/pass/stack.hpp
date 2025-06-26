@@ -4,7 +4,7 @@
 #ifndef STACK_20230413_HPP
 #define STACK_20230413_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 
 namespace tinytc {
 

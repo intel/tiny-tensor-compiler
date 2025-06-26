@@ -4,7 +4,7 @@
 #ifndef WORK_GROUP_SIZE_20240311_HPP
 #define WORK_GROUP_SIZE_20240311_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 #include "tinytc/types.h"
 
 namespace tinytc {

@@ -4,7 +4,7 @@
 #ifndef PASSES_20240314_HPP
 #define PASSES_20240314_HPP
 
-#include "node/program_node.hpp"
+#include "node/prog.hpp"
 #include "tinytc/types.h"
 
 namespace tinytc {

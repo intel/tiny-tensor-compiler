@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/cfg.hpp"
-#include "node/inst_node.hpp"
+#include "node/inst.hpp"
 #include "node/inst_view.hpp"
 #include "util/ilist_base.hpp"
 

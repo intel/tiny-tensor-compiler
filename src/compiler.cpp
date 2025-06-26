@@ -3,7 +3,7 @@
 
 #include "compiler_context.hpp"
 #include "error.hpp"
-#include "node/program_node.hpp"
+#include "node/prog.hpp"
 // IWYU pragma: begin_keep
 #include "pass/dump_cfg.hpp"
 #include "pass/dump_def_use.hpp"

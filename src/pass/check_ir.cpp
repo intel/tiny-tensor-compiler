@@ -3,7 +3,7 @@
 
 #include "pass/check_ir.hpp"
 #include "error.hpp"
-#include "node/value_node.hpp"
+#include "node/value.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"

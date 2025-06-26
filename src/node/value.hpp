@@ -1,10 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef VALUE_NODE_20230309_HPP
-#define VALUE_NODE_20230309_HPP
+#ifndef VALUE_20250626_HPP
+#define VALUE_20250626_HPP
 
-#include "node/data_type_node.hpp"
+#include "node/data_type.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/iterator.hpp"
@@ -138,4 +138,4 @@ static_assert(std::forward_iterator<const_use_iterator>);
 
 } // namespace tinytc
 
-#endif // VALUE_NODE_20230309_HPP
+#endif // VALUE_20250626_HPP

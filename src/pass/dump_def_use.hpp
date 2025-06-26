@@ -4,7 +4,7 @@
 #ifndef DUMP_DEF_USE_20241002_HPP
 #define DUMP_DEF_USE_20241002_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 
 #include <iosfwd>
 

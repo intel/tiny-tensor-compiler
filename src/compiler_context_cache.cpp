@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "compiler_context_cache.hpp"
-#include "node/attr_node.hpp"
-#include "node/data_type_node.hpp"
+#include "node/attr.hpp"
+#include "node/data_type.hpp"
 #include "util/casting.hpp"
 
 namespace tinytc {

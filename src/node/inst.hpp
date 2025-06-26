@@ -1,11 +1,11 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef INST_NODE_20230327_HPP
-#define INST_NODE_20230327_HPP
+#ifndef INST_20250626_HPP
+#define INST_20250626_HPP
 
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/ilist_base.hpp"
@@ -131,4 +131,4 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     tinytc_attr_t attr_ = nullptr;
 };
 
-#endif // INST_NODE_20230327_HPP
+#endif // INST_20250626_HPP

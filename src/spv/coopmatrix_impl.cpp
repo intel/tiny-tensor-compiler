@@ -5,7 +5,7 @@
 #include "codegen_tools.hpp"
 #include "converter_aux.hpp"
 #include "error.hpp"
-#include "node/data_type_node.hpp"
+#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
 #include "scalar_type.hpp"
 #include "spv/dope_vector.hpp"

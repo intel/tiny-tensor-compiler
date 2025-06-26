@@ -1,10 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef FUNCTION_NODE_20230310_HPP
-#define FUNCTION_NODE_20230310_HPP
+#ifndef FUNC_20250626_HPP
+#define FUNC_20250626_HPP
 
-#include "node/region_node.hpp"
+#include "node/region.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 
@@ -50,4 +50,4 @@ struct tinytc_func final {
     std::vector<tinytc_attr_t> param_attr_;
 };
 
-#endif // FUNCTION_NODE_20230310_HPP
+#endif // FUNC_20250626_HPP

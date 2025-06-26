@@ -1,10 +1,10 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef REGION_NODE_20230908_HPP
-#define REGION_NODE_20230908_HPP
+#ifndef REGION_20250626_HPP
+#define REGION_20250626_HPP
 
-#include "node/value_node.hpp"
+#include "node/value.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -91,4 +91,4 @@ struct alignas(8) tinytc_region final {
     tinytc::ilist<tinytc_inst> insts_;
 };
 
-#endif // REGION_NODE_20230908_HPP
+#endif // REGION_20250626_HPP

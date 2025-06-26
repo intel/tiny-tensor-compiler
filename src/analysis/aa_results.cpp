@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "analysis/aa_results.hpp"
-#include "node/value_node.hpp"
+#include "node/value.hpp"
 
 #include <utility>
 

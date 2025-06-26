@@ -4,8 +4,8 @@
 #ifndef CFG_20240919_HPP
 #define CFG_20240919_HPP
 
-#include "node/inst_node.hpp"
-#include "node/region_node.hpp"
+#include "node/inst.hpp"
+#include "node/region.hpp"
 #include "util/iterator.hpp"
 
 #include <queue>

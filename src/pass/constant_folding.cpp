@@ -3,8 +3,8 @@
 
 #include "pass/constant_folding.hpp"
 #include "error.hpp"
-#include "node/data_type_node.hpp"
-#include "node/value_node.hpp"
+#include "node/data_type.hpp"
+#include "node/value.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 #include "util/casting.hpp"

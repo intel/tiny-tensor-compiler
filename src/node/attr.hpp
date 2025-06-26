@@ -1,8 +1,8 @@
 // Copyright (C) 2025 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef ATTR_NODE_20250205_HPP
-#define ATTR_NODE_20250205_HPP
+#ifndef ATTR_20250626_HPP
+#define ATTR_20250626_HPP
 
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -147,4 +147,4 @@ template <std::integral T> auto get_array_attr_as(tinytc_attr_t a) -> std::vecto
 
 } // namespace tinytc
 
-#endif // ATTR_NODE_20250205_HPP
+#endif // ATTR_20250626_HPP

@@ -4,7 +4,7 @@
 #ifndef DUMP_GCD_20241203_HPP
 #define DUMP_GCD_20241203_HPP
 
-#include "node/function_node.hpp"
+#include "node/func.hpp"
 #include "tinytc/types.h"
 
 #include <iosfwd>

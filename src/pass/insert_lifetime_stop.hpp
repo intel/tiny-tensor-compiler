@@ -4,9 +4,9 @@
 #ifndef INSERT_LIFETIME_STOP_20240912_HPP
 #define INSERT_LIFETIME_STOP_20240912_HPP
 
-#include "node/function_node.hpp"
-#include "node/region_node.hpp"
-#include "node/value_node.hpp"
+#include "node/func.hpp"
+#include "node/region.hpp"
+#include "node/value.hpp"
 
 #include <unordered_set>
 

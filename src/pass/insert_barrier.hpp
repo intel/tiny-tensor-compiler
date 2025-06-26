@@ -4,8 +4,8 @@
 #ifndef INSERT_BARRIER_20230310_HPP
 #define INSERT_BARRIER_20230310_HPP
 
-#include "node/function_node.hpp"
-#include "node/region_node.hpp"
+#include "node/func.hpp"
+#include "node/region.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
