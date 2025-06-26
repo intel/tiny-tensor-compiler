@@ -14,15 +14,15 @@ namespace tinytc {
 
 class slot_tracker {
   public:
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
-    auto get_slot(value_node const &v) -> std::int64_t;
+    auto get_slot(tinytc_value const &v) -> std::int64_t;
 
   private:
-    void set_slot(value_node const &v);
+    void set_slot(tinytc_value const &v);
 
     std::int64_t slot_ = 0;
-    std::unordered_map<value_node const *, std::int64_t> slot_map_;
+    std::unordered_map<const_tinytc_value_t, std::int64_t> slot_map_;
 };
 
 } // namespace tinytc

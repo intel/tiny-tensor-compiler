@@ -29,8 +29,8 @@ class alias_analysis_visitor {
     auto get_result() && -> aa_results { return aa_results(std::move(alias_), std::move(allocs_)); }
 
   private:
-    std::unordered_map<value_node const *, aa_results::allocation> allocs_;
-    std::unordered_map<value_node const *, value_node const *> alias_;
+    std::unordered_map<const_tinytc_value_t, aa_results::allocation> allocs_;
+    std::unordered_map<const_tinytc_value_t, const_tinytc_value_t> alias_;
 };
 
 void alias_analysis_visitor::operator()(inst_view) {}
@@ -45,14 +45,14 @@ void alias_analysis_visitor::operator()(alloca_inst a) {
     }
 }
 void alias_analysis_visitor::operator()(expand_inst e) {
-    value_node const *source = &e.operand();
+    const_tinytc_value_t source = &e.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
     alias_[&e.result()] = source;
 }
 void alias_analysis_visitor::operator()(fuse_inst f) {
-    value_node const *source = &f.operand();
+    const_tinytc_value_t source = &f.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
@@ -60,17 +60,17 @@ void alias_analysis_visitor::operator()(fuse_inst f) {
 }
 
 void alias_analysis_visitor::operator()(subview_inst s) {
-    value_node const *source = &s.operand();
+    const_tinytc_value_t source = &s.operand();
     while (alias_.find(source) != alias_.end()) {
         source = alias_[source];
     }
     alias_[&s.result()] = source;
 }
 
-auto alias_analysis::run_on_function(function_node &fn) -> aa_results {
+auto alias_analysis::run_on_function(tinytc_func &fn) -> aa_results {
     auto visitor = alias_analysis_visitor{};
 
-    walk<walk_order::pre_order>(fn, [&visitor](inst_node &i) { visit(visitor, i); });
+    walk<walk_order::pre_order>(fn, [&visitor](tinytc_inst &i) { visit(visitor, i); });
 
     return std::move(visitor).get_result();
 }

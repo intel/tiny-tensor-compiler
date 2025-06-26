@@ -16,44 +16,44 @@ namespace tinytc {
 
 class control_flow_graph {
   public:
-    inline void add_node(inst_node *a, region_kind kind_max) {
+    inline void add_node(tinytc_inst_t a, region_kind kind_max) {
         adj_[a] = adjacency_list{};
         adj_[a].kind_max = kind_max;
     }
-    inline void add_edge(inst_node *a, inst_node *b) {
+    inline void add_edge(tinytc_inst_t a, tinytc_inst_t b) {
         adj_[a].succ.push_back(b);
         adj_[b].pred.push_back(a);
     }
-    void insert_before(inst_node *before_inst, inst_node *new_inst);
+    void insert_before(tinytc_inst_t before_inst, tinytc_inst_t new_inst);
 
-    auto node_queue() const -> std::queue<inst_node *>;
+    auto node_queue() const -> std::queue<tinytc_inst_t>;
 
-    inline auto kind_max(inst_node *a) -> region_kind { return adj_[a].kind_max; }
+    inline auto kind_max(tinytc_inst_t a) -> region_kind { return adj_[a].kind_max; }
 
-    inline auto pred_begin(inst_node *a) { return adj_[a].pred.begin(); }
-    inline auto pred_end(inst_node *a) { return adj_[a].pred.end(); }
-    inline auto predecessors(inst_node *a)
-        -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
+    inline auto pred_begin(tinytc_inst_t a) { return adj_[a].pred.begin(); }
+    inline auto pred_end(tinytc_inst_t a) { return adj_[a].pred.end(); }
+    inline auto predecessors(tinytc_inst_t a)
+        -> iterator_range_wrapper<std::vector<tinytc_inst_t>::iterator> {
         return {pred_begin(a), pred_end(a)};
     }
 
-    inline auto succ_begin(inst_node *a) { return adj_[a].succ.begin(); }
-    inline auto succ_end(inst_node *a) { return adj_[a].succ.end(); }
-    inline auto successors(inst_node *a)
-        -> iterator_range_wrapper<std::vector<inst_node *>::iterator> {
+    inline auto succ_begin(tinytc_inst_t a) { return adj_[a].succ.begin(); }
+    inline auto succ_end(tinytc_inst_t a) { return adj_[a].succ.end(); }
+    inline auto successors(tinytc_inst_t a)
+        -> iterator_range_wrapper<std::vector<tinytc_inst_t>::iterator> {
         return {succ_begin(a), succ_end(a)};
     }
 
   private:
     struct adjacency_list {
         region_kind kind_max = region_kind::mixed;
-        std::vector<inst_node *> pred;
-        std::vector<inst_node *> succ;
+        std::vector<tinytc_inst_t> pred;
+        std::vector<tinytc_inst_t> succ;
     };
-    std::unordered_map<inst_node *, adjacency_list> adj_;
+    std::unordered_map<tinytc_inst_t, adjacency_list> adj_;
 };
 
-auto get_control_flow_graph(region_node &reg) -> control_flow_graph;
+auto get_control_flow_graph(tinytc_region &reg) -> control_flow_graph;
 
 } // namespace tinytc
 

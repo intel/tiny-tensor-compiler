@@ -131,10 +131,4 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     tinytc_attr_t attr_ = nullptr;
 };
 
-namespace tinytc {
-
-using inst_node = ::tinytc_inst;
-
-} // namespace tinytc
-
 #endif // INST_NODE_20230327_HPP

@@ -50,10 +50,4 @@ struct tinytc_func final {
     std::vector<tinytc_attr_t> param_attr_;
 };
 
-namespace tinytc {
-
-using function_node = ::tinytc_func;
-
-} // namespace tinytc
-
 #endif // FUNCTION_NODE_20230310_HPP

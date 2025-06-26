@@ -8,18 +8,18 @@
 
 namespace tinytc {
 
-aa_results::aa_results(std::unordered_map<value_node const *, value_node const *> alias,
-                       std::unordered_map<value_node const *, allocation> allocs)
+aa_results::aa_results(std::unordered_map<const_tinytc_value_t, const_tinytc_value_t> alias,
+                       std::unordered_map<const_tinytc_value_t, allocation> allocs)
     : alias_(std::move(alias)), allocs_(std::move(allocs)) {}
 
-auto aa_results::root(value_node const &a) const -> value_node const * {
+auto aa_results::root(tinytc_value const &a) const -> const_tinytc_value_t {
     auto root = &a;
     if (auto it = alias_.find(root); it != alias_.end()) {
         root = it->second;
     }
     return root;
 }
-bool aa_results::alias(value_node const &a, value_node const &b) const {
+bool aa_results::alias(tinytc_value const &a, tinytc_value const &b) const {
     auto ra = root(a);
     auto rb = root(b);
     if (ra == rb) {

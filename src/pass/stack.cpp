@@ -21,14 +21,14 @@
 
 namespace tinytc {
 
-void set_stack_ptr_pass::run_on_function(function_node &fn) {
+void set_stack_ptr_pass::run_on_function(tinytc_func &fn) {
     struct allocation {
-        value_node *value;
+        tinytc_value_t value;
         std::int64_t start, stop;
     };
     std::list<allocation> allocs;
 
-    walk<walk_order::pre_order>(fn, [&allocs](inst_node &i) {
+    walk<walk_order::pre_order>(fn, [&allocs](tinytc_inst &i) {
         visit(overloaded{
                   [&allocs](alloca_inst a) {
                       auto t = dyn_cast<memref_data_type>(a.result().ty());

@@ -11,32 +11,32 @@
 
 namespace tinytc {
 
-void control_flow_graph::insert_before(inst_node *before_inst, inst_node *new_inst) {
+void control_flow_graph::insert_before(tinytc_inst_t before_inst, tinytc_inst_t new_inst) {
     add_node(new_inst, adj_[before_inst].kind_max);
     adj_[new_inst].pred = std::move(adj_[before_inst].pred);
     add_edge(new_inst, before_inst);
 }
 
-auto control_flow_graph::node_queue() const -> std::queue<inst_node *> {
-    auto q = std::queue<inst_node *>{};
+auto control_flow_graph::node_queue() const -> std::queue<tinytc_inst_t> {
+    auto q = std::queue<tinytc_inst_t>{};
     for (auto &[key, neighbors] : adj_) {
         q.push(key);
     }
     return q;
 }
 
-auto get_control_flow_graph(region_node &topreg) -> control_flow_graph {
+auto get_control_flow_graph(tinytc_region &topreg) -> control_flow_graph {
     auto cfg = control_flow_graph{};
 
     const auto add_region =
-        [&cfg](region_node &reg, region_kind kind_max,
-               auto &add_region_ref) -> std::pair<inst_node *, std::queue<inst_node *>> {
+        [&cfg](tinytc_region &reg, region_kind kind_max,
+               auto &add_region_ref) -> std::pair<tinytc_inst_t, std::queue<tinytc_inst_t>> {
         if (reg.empty()) {
             return {};
         }
 
-        auto pred_nodes = std::queue<inst_node *>{};
-        const auto visit_inst = [&](inst_node *node) {
+        auto pred_nodes = std::queue<tinytc_inst_t>{};
+        const auto visit_inst = [&](tinytc_inst_t node) {
             bool empty_child_regions = true;
             if (node->num_child_regions() > 0) {
                 for (auto &subreg : node->child_regions()) {
@@ -68,7 +68,7 @@ auto get_control_flow_graph(region_node &topreg) -> control_flow_graph {
         visit_inst(start);
 
         for (auto it = ++reg.begin(); it != reg.end(); ++it) {
-            inst_node *node = it.get();
+            tinytc_inst_t node = it.get();
             cfg.add_node(node, kind_max);
 
             for (; !pred_nodes.empty(); pred_nodes.pop()) {

@@ -122,19 +122,19 @@ auto insert_barrier_pass::reads_writes::address_space_to_index(address_space as)
     throw internal_compiler_error{};
 }
 
-void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) {
+void insert_barrier_pass::run_on_region(tinytc_region &reg, aa_results const &aa) {
     // irw = reads and writes invisible to other threads
-    auto irw_in = std::unordered_map<inst_node *, reads_writes>{};
-    auto irw_out = std::unordered_map<inst_node *, reads_writes>{};
+    auto irw_in = std::unordered_map<tinytc_inst_t, reads_writes>{};
+    auto irw_out = std::unordered_map<tinytc_inst_t, reads_writes>{};
 
-    auto const get_rw = [](inst_node &in) -> reads_writes {
+    auto const get_rw = [](tinytc_inst &in) -> reads_writes {
         auto rw = reads_writes{};
-        auto const emplace_read = [&rw](value_node const &v) {
+        auto const emplace_read = [&rw](tinytc_value const &v) {
             if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
                 rw.emplace_read(m->addrspace(), &v);
             }
         };
-        auto const emplace_write = [&rw](value_node const &v) {
+        auto const emplace_write = [&rw](tinytc_value const &v) {
             if (auto *m = dyn_cast<memref_data_type>(v.ty()); m) {
                 rw.emplace_write(m->addrspace(), &v);
             }
@@ -217,7 +217,7 @@ void insert_barrier_pass::run_on_region(region_node &reg, aa_results const &aa) 
 }
 
 /* Function nodes */
-void insert_barrier_pass::run_on_function(function_node &fn) {
+void insert_barrier_pass::run_on_function(tinytc_func &fn) {
     auto aa = alias_analysis{}.run_on_function(fn);
     run_on_region(fn.body(), aa);
 }

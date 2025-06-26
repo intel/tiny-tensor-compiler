@@ -91,10 +91,4 @@ struct alignas(8) tinytc_region final {
     tinytc::ilist<tinytc_inst> insts_;
 };
 
-namespace tinytc {
-
-using region_node = ::tinytc_region;
-
-} // namespace tinytc
-
 #endif // REGION_NODE_20230908_HPP

@@ -21,8 +21,8 @@ class inst_cloner {
     void set_subs(tinytc_value_t in_val, tinytc_value_t out_val);
     auto subs(tinytc_value_t val) -> tinytc_value_t;
 
-    auto clone_instruction(inst_node &in) -> inst;
-    void clone_region(region_node &source, region_node &target);
+    auto clone_instruction(tinytc_inst &in) -> inst;
+    void clone_region(tinytc_region &source, tinytc_region &target);
 
   private:
     template <typename T> auto subs_value_range(T &&range) {

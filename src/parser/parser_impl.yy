@@ -265,7 +265,7 @@
 %%
 prog:
     func_list {
-        auto p = prog { std::make_unique<program_node>(ctx.cctx(), @prog).release() };
+        auto p = prog { std::make_unique<tinytc_prog>(ctx.cctx(), @prog).release() };
         ctx.program(p);
         $$ = std::move(p);
         for (auto& f : $func_list) {
@@ -284,8 +284,8 @@ func:
         loc.end = @RPAREN.end;
         try {
             ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
-            auto func_node = std::make_unique<function_node>($GLOBAL_IDENTIFIER, $parameters.second,
-                                                             get_void(ctx.cctx()), loc);
+            auto func_node = std::make_unique<tinytc_func>($GLOBAL_IDENTIFIER, $parameters.second,
+                                                           get_void(ctx.cctx()), loc);
             func_node->attr($function_attributes);
             ctx.push_scope();
             auto name_it = $parameters.first.begin();

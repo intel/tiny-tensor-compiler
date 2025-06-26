@@ -15,7 +15,7 @@
 
 namespace tinytc {
 
-void check_ir_pass::check_yield(region_node &reg, inst_node &in, status yield_missing_status) {
+void check_ir_pass::check_yield(tinytc_region &reg, tinytc_inst &in, status yield_missing_status) {
     auto last_inst = --reg.end();
     if (last_inst == reg.end()) {
         throw compilation_error(reg.loc(), yield_missing_status);
@@ -47,8 +47,8 @@ void check_ir_pass::operator()(if_inst in) {
     }
 }
 
-void check_ir_pass::run_on_function(function_node &fn) {
-    walk(fn, [this](inst_node &i, walk_stage const &stage) {
+void check_ir_pass::run_on_function(tinytc_func &fn) {
+    walk(fn, [this](tinytc_inst &i, walk_stage const &stage) {
         const bool child_region_is_spmd_region =
             i.num_child_regions() > 0 && i.child_region(0).kind() == region_kind::spmd;
 

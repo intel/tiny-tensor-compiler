@@ -266,8 +266,8 @@ auto coopmatrix_impl_block::get_io_sty(scalar_type sty) -> scalar_type {
     return sty;
 }
 
-auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, value_node const &operand,
-                                       value_node const &pos0) -> bool {
+auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, tinytc_value const &operand,
+                                       tinytc_value const &pos0) -> bool {
     auto const mt = get_memref_type(operand);
     const auto sty_size = size(mt->element_ty());
     if (sty_size >= static_cast<std::size_t>(alignment)) {

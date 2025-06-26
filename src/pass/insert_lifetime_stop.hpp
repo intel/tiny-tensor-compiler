@@ -16,11 +16,11 @@ class aa_results;
 
 class insert_lifetime_stop_pass {
   public:
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
-    auto run_on_region(region_node &reg,
-                       aa_results const &aa) -> std::unordered_set<::tinytc_value const *>;
+    auto run_on_region(tinytc_region &reg, aa_results const &aa)
+        -> std::unordered_set<::tinytc_value const *>;
 };
 
 } // namespace tinytc

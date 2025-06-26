@@ -13,7 +13,7 @@ class work_group_size_pass {
   public:
     work_group_size_pass(tinytc_core_info const *info);
 
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     tinytc_core_info const *info_;

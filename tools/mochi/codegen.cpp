@@ -71,12 +71,7 @@ void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
     std::visit(overloaded{[&](builtin_type const &ty) {
                               if (q == quantifier::many) {
                                   os << std::format("{}.size(), ", name);
-                                  if (ty == builtin_type::value) {
-                                      os << std::format("reinterpret_cast<const {}*>({}.data())",
-                                                        to_c_type(ty), name);
-                                  } else {
-                                      os << std::format("{}.data()", name);
-                                  }
+                                  os << std::format("{}.data()", name);
                               } else {
                                   os << name;
                               }
@@ -361,7 +356,7 @@ public:
     os << "};\n";
 
     // classof function
-    os << "inline static bool classof(inst_node const& i) {\n";
+    os << "inline static bool classof(tinytc_inst const& i) {\n";
     if (in->has_children()) {
         os << std::format("return IK::{} <= i.type_id() && i.type_id() < IK::{};\n", in->ik_name(),
                           in->ik_name(true));

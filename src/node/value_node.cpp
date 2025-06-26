@@ -36,12 +36,12 @@ use::~use() {
     }
 }
 
-use &use::operator=(value_node *val) {
+use &use::operator=(tinytc_value_t val) {
     set(val);
     return *this;
 }
 
-void use::set(value_node *value) {
+void use::set(tinytc_value_t value) {
     if (value_) {
         remove_use_from_current_list();
     }

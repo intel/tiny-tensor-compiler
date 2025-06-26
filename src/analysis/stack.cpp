@@ -16,10 +16,10 @@
 
 namespace tinytc {
 
-auto stack_high_water_mark::run_on_function(function_node &fn) -> std::int64_t {
+auto stack_high_water_mark::run_on_function(tinytc_func &fn) -> std::int64_t {
     std::int64_t high_water_mark = 0;
 
-    walk<walk_order::pre_order>(fn, [&high_water_mark](inst_node &i) {
+    walk<walk_order::pre_order>(fn, [&high_water_mark](tinytc_inst &i) {
         if (auto a = dyn_cast<alloca_inst>(&i); a) {
             auto t = dyn_cast<memref_data_type>(a.result().ty());
             if (t == nullptr) {

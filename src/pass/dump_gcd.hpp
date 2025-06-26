@@ -15,7 +15,7 @@ class dump_gcd_pass {
   public:
     dump_gcd_pass(std::ostream &os, ::tinytc_core_info const *info);
 
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     std::ostream *os_;

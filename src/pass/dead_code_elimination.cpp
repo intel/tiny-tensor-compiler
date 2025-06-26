@@ -65,9 +65,9 @@ auto dead_code_analysis::operator()(for_inst in) -> bool {
     return false;
 }
 
-void dead_code_elimination_pass::run_on_function(function_node &fn) { run_on_region(fn.body()); }
+void dead_code_elimination_pass::run_on_function(tinytc_func &fn) { run_on_region(fn.body()); }
 
-void dead_code_elimination_pass::run_on_region(region_node &reg) {
+void dead_code_elimination_pass::run_on_region(tinytc_region &reg) {
     auto prev_it = reg.end();
     while (prev_it != reg.begin()) {
         auto it = --prev_it;

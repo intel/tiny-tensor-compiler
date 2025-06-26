@@ -24,7 +24,7 @@ namespace tinytc {
 dump_gcd_pass::dump_gcd_pass(std::ostream &os, ::tinytc_core_info const *info)
     : os_(&os), info_{info} {}
 
-void dump_gcd_pass::run_on_function(function_node &fn) {
+void dump_gcd_pass::run_on_function(tinytc_func &fn) {
     auto dump_ir = dump_ir_pass(*os_, 0);
     dump_ir.init_slot_tracker(fn);
     auto gcd = gcd_analysis{info_->alignment()}.run_on_function(fn);
@@ -39,7 +39,7 @@ void dump_gcd_pass::run_on_function(function_node &fn) {
         }
         *os_ << "]";
     };
-    auto const dump_gcd = [&](value_node const &v) {
+    auto const dump_gcd = [&](tinytc_value const &v) {
         auto g = gcd.get_if(v);
         if (g) {
             *os_ << "  gcd(";
@@ -67,7 +67,7 @@ void dump_gcd_pass::run_on_function(function_node &fn) {
     for (auto &p : fn.params()) {
         dump_gcd(p);
     }
-    walk<walk_order::pre_order>(fn, [&](inst_node &i) {
+    walk<walk_order::pre_order>(fn, [&](tinytc_inst &i) {
         if (i.num_results() > 0 || i.num_child_regions() > 0) {
             *os_ << "> ";
             visit(dump_ir, i);

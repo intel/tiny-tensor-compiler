@@ -94,8 +94,8 @@ auto inst_converter::get_dope_vector(tinytc_value const &v) -> dope_vector * {
     return nullptr;
 }
 
-auto inst_converter::declare(value_node const &v, spv_inst *in) { vals_[&v] = in; }
-auto inst_converter::val(value_node const &v) -> spv_inst * {
+auto inst_converter::declare(tinytc_value const &v, spv_inst *in) { vals_[&v] = in; }
+auto inst_converter::val(tinytc_value const &v) -> spv_inst * {
     if (auto it = vals_.find(&v); it != vals_.end()) {
         return it->second;
     }
@@ -1022,13 +1022,13 @@ void inst_converter::operator()(yield_inst in) {
     }
 }
 
-void inst_converter::run_on_region(region_node &reg) {
+void inst_converter::run_on_region(tinytc_region &reg) {
     for (auto &i : reg) {
         visit(*this, i);
     }
 }
 
-auto inst_converter::run_on_region_with_yield(region_node &reg, std::int64_t num_results)
+auto inst_converter::run_on_region_with_yield(tinytc_region &reg, std::int64_t num_results)
     -> std::vector<spv_inst *> {
     yielded_vals_.push(std::vector<spv_inst *>(num_results, nullptr));
     run_on_region(reg);
@@ -1042,7 +1042,7 @@ auto inst_converter::run_on_region_with_yield(region_node &reg, std::int64_t num
     return yielded_vals;
 }
 
-void inst_converter::run_on_function(function_node &fn) {
+void inst_converter::run_on_function(tinytc_func &fn) {
     try {
         core_cfg_ = info_->get_core_config(fn.subgroup_size());
     } catch (std::out_of_range const &e) {

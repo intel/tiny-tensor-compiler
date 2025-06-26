@@ -146,7 +146,7 @@ lower_foreach_pass::lower_foreach_pass(::tinytc_core_info const *info) : info_(s
     }
 }
 
-void lower_foreach_pass::run_on_function(function_node &fn) {
+void lower_foreach_pass::run_on_function(tinytc_func &fn) {
     auto const subgroup_size = fn.subgroup_size();
     core_config core_cfg = {};
     try {
@@ -159,7 +159,7 @@ void lower_foreach_pass::run_on_function(function_node &fn) {
     tiling[0] = work_group_size[0] / subgroup_size;
     tiling[1] = work_group_size[1];
 
-    walk<walk_order::post_order>(fn, [&](region_node &reg) {
+    walk<walk_order::post_order>(fn, [&](tinytc_region &reg) {
         for (auto it = reg.begin(); it != reg.end(); ++it) {
             auto lowered_inst = visit(foreach_generator{tiling, core_cfg}, *it);
             if (lowered_inst) {

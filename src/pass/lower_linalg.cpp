@@ -251,7 +251,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
 class linalg_generator {
   public:
-    linalg_generator(local_tiling const &tiling, core_config const &core_cfg, region_node &reg,
+    linalg_generator(local_tiling const &tiling, core_config const &core_cfg, tinytc_region &reg,
                      tinytc_inst_iterator_t ip)
         : tiling_{tiling}, core_cfg_{core_cfg}, bb_{&reg, ip} {}
     inline void operator()(inst_view in) {
@@ -268,14 +268,14 @@ class linalg_generator {
     inline auto insertion_point() -> tinytc_inst_iterator_t { return bb_.get_insertion_point(); }
 
   private:
-    auto get_memref_type(value_node const &v) const -> const memref_data_type *;
+    auto get_memref_type(tinytc_value const &v) const -> const memref_data_type *;
 
     local_tiling const &tiling_;
     core_config const &core_cfg_;
     region_builder bb_;
 };
 
-auto linalg_generator::get_memref_type(value_node const &v) const -> const memref_data_type * {
+auto linalg_generator::get_memref_type(tinytc_value const &v) const -> const memref_data_type * {
     auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
@@ -814,10 +814,10 @@ lower_linalg_pass::lower_linalg_pass(::tinytc_core_info const *info) : info_(std
     }
 }
 
-void lower_linalg_pass::run_on_function(function_node &fn) {
+void lower_linalg_pass::run_on_function(tinytc_func &fn) {
     auto [core_cfg, tiling] = get_core_config_and_tiling(fn, info_);
 
-    walk<walk_order::post_order>(fn, [&](region_node &reg) {
+    walk<walk_order::post_order>(fn, [&](tinytc_region &reg) {
         auto it = reg.begin();
         while (it != reg.end()) {
             if (isa<blas_a2_inst>(*it) || isa<blas_a3_inst>(*it)) {

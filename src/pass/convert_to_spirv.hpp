@@ -14,7 +14,7 @@ class convert_to_spirv_pass {
   public:
     convert_to_spirv_pass(::tinytc_core_info const *info);
 
-    auto run_on_program(program_node &p) -> spv_mod;
+    auto run_on_program(tinytc_prog &p) -> spv_mod;
 
   private:
     ::tinytc_core_info const *info_;

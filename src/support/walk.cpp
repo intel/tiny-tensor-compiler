@@ -5,9 +5,9 @@
 
 namespace tinytc {
 
-walk_stage::walk_stage(inst_node &i) : num_regions_(i.num_child_regions()) {}
+walk_stage::walk_stage(tinytc_inst &i) : num_regions_(i.num_child_regions()) {}
 
-void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage)> callback) {
+void walk(tinytc_inst &i, std::function<void(tinytc_inst &i, walk_stage const &stage)> callback) {
     auto stage = walk_stage(i);
 
     for (auto &reg : i.child_regions()) {

@@ -24,9 +24,9 @@ tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length, cha
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *fun = std::make_unique<function_node>(std::string(name, name_length),
-                                               array_view(param_type_list, num_params), ty,
-                                               get_optional(loc))
+        *fun = std::make_unique<tinytc_func>(std::string(name, name_length),
+                                             array_view(param_type_list, num_params), ty,
+                                             get_optional(loc))
                    .release();
     });
 }

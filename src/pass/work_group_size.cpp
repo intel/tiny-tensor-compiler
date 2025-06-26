@@ -27,10 +27,10 @@
 
 namespace tinytc {
 
-auto get_shapes(function_node &fn) -> std::vector<blas_shape> {
+auto get_shapes(tinytc_func &fn) -> std::vector<blas_shape> {
     auto shape_set = std::unordered_set<blas_shape>{};
 
-    walk<walk_order::pre_order>(fn, [&shape_set](inst_node &i) {
+    walk<walk_order::pre_order>(fn, [&shape_set](tinytc_inst &i) {
         visit(overloaded{[&](blas_a2_inst in) {
                              auto aty = get_memref_type(in.A())->element_ty();
                              auto b = get_memref_type(in.B());
@@ -69,7 +69,7 @@ work_group_size_pass::work_group_size_pass(::tinytc_core_info const *info)
     }
 }
 
-void work_group_size_pass::run_on_function(function_node &fn) {
+void work_group_size_pass::run_on_function(tinytc_func &fn) {
     auto sgs_attr = get_attr(fn.attr(), "subgroup_size");
     auto wgs_attr = get_attr(fn.attr(), "work_group_size");
 

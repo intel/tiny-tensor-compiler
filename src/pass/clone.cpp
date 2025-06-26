@@ -24,7 +24,7 @@ auto inst_cloner::subs(tinytc_value_t val) -> tinytc_value_t {
     return val;
 }
 
-auto inst_cloner::clone_instruction(inst_node &in) -> inst {
+auto inst_cloner::clone_instruction(tinytc_inst &in) -> inst {
     auto cloned = visit(
         [&](auto view) {
             auto tid = view.get().type_id();
@@ -32,7 +32,8 @@ auto inst_cloner::clone_instruction(inst_node &in) -> inst {
             auto lc = view.get().loc();
             auto clone = inst{tinytc_inst::create(tid, layout, lc)};
             for (std::int32_t ret_no = 0; ret_no < layout.num_results; ++ret_no) {
-                clone->result(ret_no) = value_node{view.get().result(ret_no).ty(), clone.get(), lc};
+                clone->result(ret_no) =
+                    tinytc_value{view.get().result(ret_no).ty(), clone.get(), lc};
             }
             for (std::int32_t op_no = 0; op_no < layout.num_operands; ++op_no) {
                 clone->op(op_no, subs(&view.get().op(op_no)));
@@ -64,7 +65,7 @@ auto inst_cloner::clone_instruction(inst_node &in) -> inst {
     return cloned;
 }
 
-void inst_cloner::clone_region(region_node &source, region_node &target) {
+void inst_cloner::clone_region(tinytc_region &source, tinytc_region &target) {
     for (auto &in_orig : source.insts()) {
         target.insts().push_back(clone_instruction(in_orig).release());
     }

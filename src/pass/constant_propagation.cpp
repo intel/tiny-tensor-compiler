@@ -20,9 +20,9 @@
 
 namespace tinytc {
 
-void constant_propagation_pass::run_on_function(function_node &fn) { run_on_region(fn.body()); }
+void constant_propagation_pass::run_on_function(tinytc_func &fn) { run_on_region(fn.body()); }
 
-void constant_propagation_pass::run_on_region(region_node &reg) {
+void constant_propagation_pass::run_on_region(tinytc_region &reg) {
     for (auto it = reg.begin(); it != reg.end(); ++it) {
         for (auto &subreg : it->child_regions()) {
             run_on_region(subreg);

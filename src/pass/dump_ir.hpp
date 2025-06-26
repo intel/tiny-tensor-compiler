@@ -79,15 +79,15 @@ class dump_ir_pass {
     void operator()(sum_inst s);
     void operator()(yield_inst y);
 
-    void run_on_function(function_node &fn);
-    void run_on_region(region_node &reg);
-    void run_on_instruction(inst_node &in);
+    void run_on_function(tinytc_func &fn);
+    void run_on_region(tinytc_region &reg);
+    void run_on_instruction(tinytc_inst &in);
 
-    void dump_val(value_node const &v);
-    void init_slot_tracker(function_node &fn);
+    void dump_val(tinytc_value const &v);
+    void init_slot_tracker(tinytc_func &fn);
 
   private:
-    void dump_region(region_node &reg);
+    void dump_region(tinytc_region &reg);
     void dump_blas_a2(blas_a2_inst g);
     void dump_blas_a3(blas_a3_inst g);
 

@@ -120,7 +120,7 @@ void dump_ir_pass::operator()(memref_data_type const &d) {
 void dump_ir_pass::operator()(scalar_data_type const &s) { *os_ << to_string(s.ty()); }
 
 /* Value nodes */
-void dump_ir_pass::dump_val(value_node const &v) {
+void dump_ir_pass::dump_val(tinytc_value const &v) {
     *os_ << "%" << v.name();
     auto const slot = tracker_.get_slot(v);
     if (slot >= 0) {
@@ -625,7 +625,7 @@ void dump_ir_pass::operator()(yield_inst y) {
     *os_ << ")";
 }
 
-void dump_ir_pass::dump_region(region_node &reg) {
+void dump_ir_pass::dump_region(tinytc_region &reg) {
     if (lvl_ < lvl_limit_) {
         *os_ << "{" << std::endl;
         ++lvl_;
@@ -642,7 +642,7 @@ void dump_ir_pass::dump_region(region_node &reg) {
     }
 }
 
-void dump_ir_pass::run_on_function(function_node &fn) {
+void dump_ir_pass::run_on_function(tinytc_func &fn) {
     init_slot_tracker(fn);
 
     *os_ << "func @" << fn.name() << "(";
@@ -670,10 +670,10 @@ void dump_ir_pass::run_on_function(function_node &fn) {
     *os_ << std::endl;
 }
 
-void dump_ir_pass::run_on_region(region_node &reg) { dump_region(reg); }
-void dump_ir_pass::run_on_instruction(inst_node &in) { visit(*this, in); }
+void dump_ir_pass::run_on_region(tinytc_region &reg) { dump_region(reg); }
+void dump_ir_pass::run_on_instruction(tinytc_inst &in) { visit(*this, in); }
 
-void dump_ir_pass::init_slot_tracker(function_node &fn) {
+void dump_ir_pass::init_slot_tracker(tinytc_func &fn) {
     tracker_ = slot_tracker{};
     tracker_.run_on_function(fn);
 }

@@ -17,7 +17,7 @@ enum class walk_order { pre_order, post_order };
 
 class walk_stage {
   public:
-    walk_stage(inst_node &i);
+    walk_stage(tinytc_inst &i);
 
     inline bool is_before_all_regions() const { return next_region_ == 0; }
     inline bool is_after_all_regions() const { return next_region_ == num_regions_; }
@@ -29,7 +29,8 @@ class walk_stage {
     int next_region_ = 0;
 };
 
-template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node &i)> callback) {
+template <walk_order Order>
+void walk(tinytc_inst &i, std::function<void(tinytc_inst &i)> callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(i);
     }
@@ -44,7 +45,7 @@ template <walk_order Order> void walk(inst_node &i, std::function<void(inst_node
 }
 
 template <walk_order Order>
-void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
+void walk(tinytc_inst &i, std::function<void(tinytc_region &reg)> callback) {
     for (auto &reg : i.child_regions()) {
         if constexpr (Order == walk_order::pre_order) {
             callback(reg);
@@ -58,17 +59,17 @@ void walk(inst_node &i, std::function<void(region_node &reg)> callback) {
     }
 }
 
-void walk(inst_node &i, std::function<void(inst_node &i, walk_stage const &stage)> callback);
+void walk(tinytc_inst &i, std::function<void(tinytc_inst &i, walk_stage const &stage)> callback);
 
 template <walk_order Order>
-void walk(function_node &fn, std::function<void(inst_node &i)> callback) {
+void walk(tinytc_func &fn, std::function<void(tinytc_inst &i)> callback) {
     for (auto &i : fn.body()) {
         walk<Order>(i, callback);
     }
 }
 
 template <walk_order Order>
-void walk(function_node &fn, std::function<void(region_node &reg)> callback) {
+void walk(tinytc_func &fn, std::function<void(tinytc_region &reg)> callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(fn.body());
     }
@@ -80,8 +81,8 @@ void walk(function_node &fn, std::function<void(region_node &reg)> callback) {
     }
 }
 
-inline void walk(function_node &fn,
-                 std::function<void(inst_node &i, walk_stage const &stage)> callback) {
+inline void walk(tinytc_func &fn,
+                 std::function<void(tinytc_inst &i, walk_stage const &stage)> callback) {
     for (auto &i : fn.body()) {
         walk(i, callback);
     }

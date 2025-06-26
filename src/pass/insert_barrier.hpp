@@ -19,7 +19,7 @@ class aa_results;
 
 class insert_barrier_pass {
   public:
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
     class reads_writes {
@@ -48,7 +48,7 @@ class insert_barrier_pass {
         std::array<std::unordered_set<::tinytc_value const *>, address_spaces.size()> reads, writes;
     };
 
-    void run_on_region(region_node &reg, aa_results const &aa);
+    void run_on_region(tinytc_region &reg, aa_results const &aa);
 };
 
 } // namespace tinytc

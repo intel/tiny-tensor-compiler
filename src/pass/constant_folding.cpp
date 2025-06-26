@@ -134,7 +134,7 @@ template <typename F> class binary_op_dispatcher {
 
 constant_folding::constant_folding(bool unsafe_fp_math) : unsafe_fp_math_(unsafe_fp_math) {}
 
-auto constant_folding::get_memref_type(value_node const &v) const -> const memref_data_type * {
+auto constant_folding::get_memref_type(tinytc_value const &v) const -> const memref_data_type * {
     auto t = dyn_cast<memref_data_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);

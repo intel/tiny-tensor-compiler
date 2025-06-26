@@ -31,16 +31,16 @@ namespace tinytc {
 
 class coopmatrix_code_generator {
   public:
-    coopmatrix_code_generator(core_config core_cfg, region_node &reg)
+    coopmatrix_code_generator(core_config core_cfg, tinytc_region &reg)
         : core_cfg_{std::move(core_cfg)}, bb_{&reg} {}
     // Returns true if instruction was replaced
     bool operator()(inst_view in);
     bool operator()(cooperative_matrix_apply_inst in);
 
-    void run_on_region(region_node &reg);
+    void run_on_region(tinytc_region &reg);
 
   private:
-    auto needs_coopmatrix_vector_impl(inst_node &in);
+    auto needs_coopmatrix_vector_impl(tinytc_inst &in);
 
     core_config core_cfg_;
     region_builder bb_;
@@ -135,7 +135,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     return true;
 }
 
-void coopmatrix_code_generator::run_on_region(region_node &reg) {
+void coopmatrix_code_generator::run_on_region(tinytc_region &reg) {
     // Move all instructions to a temporary ilist.
     // We later move the instructions back, except those that are lowered remain in old_ilist
     // and are cleaned up at the end of the function.
@@ -179,7 +179,7 @@ lower_coopmatrix_pass::lower_coopmatrix_pass(::tinytc_core_info const *info)
     }
 }
 
-void lower_coopmatrix_pass::run_on_function(function_node &fn) {
+void lower_coopmatrix_pass::run_on_function(tinytc_func &fn) {
     auto const subgroup_size = fn.subgroup_size();
     core_config core_cfg = {};
     try {

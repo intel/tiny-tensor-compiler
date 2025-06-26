@@ -67,8 +67,6 @@ struct alignas(8) tinytc_value final {
 
 namespace tinytc {
 
-using value_node = ::tinytc_value;
-
 class alignas(8) use final {
   public:
     use() = default;
@@ -80,11 +78,11 @@ class alignas(8) use final {
     use &operator=(use &&other) = delete;
     use &operator=(use const &other) = delete;
 
-    use &operator=(value_node *val);
+    use &operator=(tinytc_value_t val);
 
-    inline auto get() -> value_node * { return value_; }
-    inline auto get() const -> value_node const * { return value_; }
-    void set(value_node *value);
+    inline auto get() -> tinytc_value_t { return value_; }
+    inline auto get() const -> const_tinytc_value_t { return value_; }
+    void set(tinytc_value_t value);
 
     inline auto owner() const -> tinytc_inst_t { return owner_; }
     inline void owner(tinytc_inst_t owner) { owner_ = owner; }
@@ -97,7 +95,7 @@ class alignas(8) use final {
     void remove_use_from_current_list();
 
     tinytc_inst_t owner_ = nullptr;
-    value_node *value_ = nullptr;
+    tinytc_value_t value_ = nullptr;
     use **prev_ = nullptr;
     use *next_ = nullptr;
 };

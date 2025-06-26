@@ -43,7 +43,7 @@ auto coopmatrix_data_type::get(tinytc_data_type_t component_ty, std::int64_t row
 
 coopmatrix_data_type::coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t rows0,
                                            std::int64_t cols0, matrix_use use, location const &lc)
-    : data_type_node(DTK::coopmatrix, ty->context()), ty_(std::move(ty)), shape_{rows0, cols0},
+    : tinytc_data_type(DTK::coopmatrix, ty->context()), ty_(std::move(ty)), shape_{rows0, cols0},
       use_(use) {
     if (!isa<scalar_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
@@ -78,7 +78,8 @@ auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t size, std::
 
 group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t size, std::int64_t offset,
                                  location const &lc)
-    : data_type_node(DTK::group, ty->context()), ty_(std::move(ty)), size_(size), offset_(offset) {
+    : tinytc_data_type(DTK::group, ty->context()), ty_(std::move(ty)), size_(size),
+      offset_(offset) {
     if (!isa<memref_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_memref);
     }
@@ -93,7 +94,7 @@ group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t size, std::
 memref_data_type::memref_data_type(tinytc_data_type_t element_ty, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, address_space addrspace,
                                    location const &lc)
-    : data_type_node(DTK::memref, element_ty->context()), element_ty_(element_ty),
+    : tinytc_data_type(DTK::memref, element_ty->context()), element_ty_(element_ty),
       shape_(std::move(shape)), stride_(std::move(stride)), addrspace_(addrspace) {
     if (!isa<scalar_data_type>(*element_ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);

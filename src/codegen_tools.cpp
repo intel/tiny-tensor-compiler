@@ -24,7 +24,7 @@
 
 namespace tinytc {
 
-auto get_core_config_and_tiling(function_node const &fn, const_tinytc_core_info_t info)
+auto get_core_config_and_tiling(tinytc_func const &fn, const_tinytc_core_info_t info)
     -> std::pair<core_config, local_tiling> {
     const auto get_core_config = [&]() -> core_config {
         try {

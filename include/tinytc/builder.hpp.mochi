@@ -733,7 +733,7 @@ class region_builder {
      */
     [[maybe_unused]] inline auto add(inst i) -> value {
         auto result = value{};
-        i.get_values(result);
+        get_values(i, result);
         insert(reg_, ip_, std::move(i));
         return result;
     }
@@ -746,9 +746,9 @@ class region_builder {
      * @return Values returned by instruction
      */
     [[maybe_unused]] inline auto add_multivalued(inst i) -> std::vector<value> {
-        auto num_results = i.get_values({});
+        auto num_results = get_values(i, {});
         auto results = std::vector<value>(static_cast<std::size_t>(num_results));
-        results.resize(i.get_values(results));
+        results.resize(get_values(i, results));
         insert(reg_, ip_, std::move(i));
         return results;
     }
@@ -829,9 +829,9 @@ class region_builder {
     void for_loop(value from, value to, value step, F &&f, attr attributes = nullptr,
                   location const &loc = {}) {
         auto fi = creator<for_inst>{}(from, to, step, {}, {}, loc);
-        fi.set_attr(attributes);
+        set_attr(fi, attributes);
         auto reg = region{};
-        fi.get_regions(reg);
+        get_regions(fi, reg);
         auto loop_var = value{};
         get_parameters(reg, loop_var);
         if (!reg || !loop_var) {
@@ -862,9 +862,9 @@ class region_builder {
                   array_view<data_type> return_type_list, F &&f, attr attributes = nullptr,
                   location const &loc = {}) -> std::vector<value> {
         auto fi = creator<for_inst>{}(from, to, step, initial_value_list, return_type_list, loc);
-        fi.set_attr(attributes);
+        set_attr(fi, attributes);
         auto reg = region{};
-        fi.get_regions(reg);
+        get_regions(fi, reg);
         auto num_params = get_parameters(reg, {});
         auto params = std::vector<value>(num_params);
         get_parameters(reg, params);
@@ -890,7 +890,7 @@ class region_builder {
                       location const &loc = {}) {
         auto fi = creator<foreach_inst>{}(std::move(from), std::move(to), loc);
         auto reg = region{};
-        fi.get_regions(reg);
+        get_regions(fi, reg);
         auto num_params = get_parameters(reg, {});
         auto params = std::vector<value>(num_params);
         get_parameters(reg, params);
@@ -918,7 +918,7 @@ class region_builder {
     template <typename F> void if_condition(value condition, F &&then, location const &loc = {}) {
         auto ii = creator<if_inst>{}(std::move(condition), {}, loc);
         auto reg = region{};
-        ii.get_regions(reg);
+        get_regions(ii, reg);
         if (!reg) {
             throw status::internal_compiler_error;
         }
@@ -946,7 +946,7 @@ class region_builder {
         -> std::vector<value> {
         auto ii = creator<if_inst>{}(std::move(condition), return_type_list, loc);
         std::array<region, 2u> regs = {};
-        ii.get_regions(regs);
+        get_regions(ii, regs);
         if (!regs[0] || !regs[1]) {
             throw status::internal_compiler_error;
         }

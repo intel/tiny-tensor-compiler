@@ -63,7 +63,7 @@ class inst_converter {
     void operator()(yield_inst in);
 
     void run_on_region(tinytc_region &reg);
-    auto run_on_region_with_yield(region_node &reg, std::int64_t num_results)
+    auto run_on_region_with_yield(tinytc_region &reg, std::int64_t num_results)
         -> std::vector<spv_inst *>;
     void run_on_function(tinytc_func &fn);
 

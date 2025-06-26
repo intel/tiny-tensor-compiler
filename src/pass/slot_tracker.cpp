@@ -14,18 +14,18 @@
 
 namespace tinytc {
 
-void slot_tracker::set_slot(value_node const &v) {
+void slot_tracker::set_slot(tinytc_value const &v) {
     if (!v.has_name()) {
         slot_map_[&v] = slot_++;
     }
 }
 
-void slot_tracker::run_on_function(function_node &fn) {
+void slot_tracker::run_on_function(tinytc_func &fn) {
     slot_ = 0;
     for (auto const &arg : fn.params()) {
         set_slot(arg);
     }
-    walk<walk_order::pre_order>(fn, [this](inst_node &i) {
+    walk<walk_order::pre_order>(fn, [this](tinytc_inst &i) {
         for (auto const &reg : i.child_regions()) {
             for (auto const &p : reg.params()) {
                 set_slot(p);
@@ -37,7 +37,7 @@ void slot_tracker::run_on_function(function_node &fn) {
     });
 }
 
-auto slot_tracker::get_slot(value_node const &v) -> std::int64_t {
+auto slot_tracker::get_slot(tinytc_value const &v) -> std::int64_t {
     auto it = slot_map_.find(&v);
     return it != slot_map_.end() ? it->second : -1;
 }

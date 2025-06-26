@@ -18,10 +18,10 @@ class check_ir_pass {
     void operator()(for_inst in);
     void operator()(if_inst in);
 
-    void run_on_function(function_node &fn);
+    void run_on_function(tinytc_func &fn);
 
   private:
-    void check_yield(region_node &reg, inst_node &in,
+    void check_yield(tinytc_region &reg, tinytc_inst &in,
                      status yield_missing_status = status::ir_must_have_yield);
 
     bool inside_spmd_region_ = false;

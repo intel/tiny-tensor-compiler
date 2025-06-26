@@ -79,7 +79,7 @@ class gcd_helper {
     void operator()(subgroup_broadcast_inst in);
     void operator()(subview_inst in);
 
-    void set_from_attributes(function_node &fn);
+    void set_from_attributes(tinytc_func &fn);
 
     auto get_result() && { return std::move(gcd_); }
 
@@ -303,7 +303,7 @@ void gcd_helper::operator()(subview_inst in) {
     }
 }
 
-void gcd_helper::set_from_attributes(function_node &fn) {
+void gcd_helper::set_from_attributes(tinytc_func &fn) {
     auto known_memref_info = [&](memref_data_type *mr, tinytc_attr_t dict) -> memref_info {
         const std::int64_t alignment = [&]() -> std::int64_t {
             if (auto alignment_attr = get_attr(dict, "alignment"); alignment_attr) {
@@ -365,11 +365,11 @@ void gcd_helper::set_from_attributes(function_node &fn) {
     }
 }
 
-auto gcd_analysis::run_on_function(function_node &fn) -> gcd_analysis_result {
+auto gcd_analysis::run_on_function(tinytc_func &fn) -> gcd_analysis_result {
     auto visitor = gcd_helper{default_alignment_};
     visitor.set_from_attributes(fn);
 
-    walk<walk_order::pre_order>(fn, [&visitor](inst_node &i) { visit(visitor, i); });
+    walk<walk_order::pre_order>(fn, [&visitor](tinytc_inst &i) { visit(visitor, i); });
 
     return std::move(visitor).get_result();
 }

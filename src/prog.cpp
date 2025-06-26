@@ -29,8 +29,8 @@ tinytc_status_t tinytc_prog_create(tinytc_prog_t *prg, tinytc_compiler_context_t
         return tinytc_status_invalid_arguments;
     }
     return exception_to_status_code([&] {
-        *prg = std::make_unique<program_node>(compiler_context{ctx, true}, get_optional(loc))
-                   .release();
+        *prg =
+            std::make_unique<tinytc_prog>(compiler_context{ctx, true}, get_optional(loc)).release();
     });
 }
 
