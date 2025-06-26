@@ -68,56 +68,57 @@ Builder C++-API:
       - tinytc::to_scalar_type_v
   Function:
     function:
+      - tinytc::get_body
       - tinytc::make_func
+      - tinytc::set_attr(func&,attr)
+      - tinytc::set_parameter_attr
     class:
       - tinytc::func
   Instruction:
     function:
-      - tinytc::make_alloca
-      - tinytc::make_axpby
-      - tinytc::make_arith(arithmetic,value,value,data_type,location const&)
-      - tinytc::make_arith(arithmetic_unary,value,data_type,location const&)
-      - tinytc::make_barrier
-      - tinytc::make_builtin
-      - tinytc::make_cast
-      - tinytc::make_cmp
-      - tinytc::make_constant(bool,data_type,location const&)
-      - tinytc::make_constant(std::complex<double>,data_type,location const&)
-      - tinytc::make_constant(double,data_type,location const&)
-      - tinytc::make_constant(std::int32_t,data_type,location const&)
-      - tinytc::make_constant(std::int64_t,data_type,location const&)
-      - tinytc::make_constant_one
-      - tinytc::make_constant_zero
-      - tinytc::make_cooperative_matrix_apply
-      - tinytc::make_cooperative_matrix_extract
-      - tinytc::make_cooperative_matrix_insert
-      - tinytc::make_cooperative_matrix_load
-      - tinytc::make_cooperative_matrix_mul_add
-      - tinytc::make_cooperative_matrix_prefetch
-      - tinytc::make_cooperative_matrix_scale
-      - tinytc::make_cooperative_matrix_store
-      - tinytc::make_cumsum
-      - tinytc::make_expand
-      - tinytc::make_for
-      - tinytc::make_foreach
-      - tinytc::make_fuse
-      - tinytc::make_gemm
-      - tinytc::make_gemv
-      - tinytc::make_ger
-      - tinytc::make_hadamard
-      - tinytc::make_if
-      - tinytc::make_load
-      - tinytc::make_math(math_unary,value,data_type,location const&)
-      - tinytc::make_parallel
-      - tinytc::make_size
-      - tinytc::make_store
-      - tinytc::make_subgroup_broadcast
-      - tinytc::make_subgroup_operation
-      - tinytc::make_subview
-      - tinytc::make_sum
-      - tinytc::make_yield
+      - tinytc::create
     class:
       - tinytc::inst
+    struct:
+      - tinytc::creator< alloca_inst >
+      - tinytc::creator< arith_inst >
+      - tinytc::creator< arith_unary_inst >
+      - tinytc::creator< axpby_inst >
+      - tinytc::creator< barrier_inst >
+      - tinytc::creator< builtin_inst >
+      - tinytc::creator< cast_inst >
+      - tinytc::creator< compare_inst >
+      - tinytc::creator< constant_inst >
+      - tinytc::creator< cooperative_matrix_apply_inst >
+      - tinytc::creator< cooperative_matrix_extract_inst >
+      - tinytc::creator< cooperative_matrix_insert_inst >
+      - tinytc::creator< cooperative_matrix_load_inst >
+      - tinytc::creator< cooperative_matrix_mul_add_inst >
+      - tinytc::creator< cooperative_matrix_prefetch_inst >
+      - tinytc::creator< cooperative_matrix_reduce_inst >
+      - tinytc::creator< cooperative_matrix_scale_inst >
+      - tinytc::creator< cooperative_matrix_store_inst >
+      - tinytc::creator< cumsum_inst >
+      - tinytc::creator< expand_inst >
+      - tinytc::creator< for_inst >
+      - tinytc::creator< foreach_inst >
+      - tinytc::creator< fuse_inst >
+      - tinytc::creator< gemm_inst >
+      - tinytc::creator< gemv_inst >
+      - tinytc::creator< ger_inst >
+      - tinytc::creator< hadamard_inst >
+      - tinytc::creator< if_inst >
+      - tinytc::creator< lifetime_stop_inst >
+      - tinytc::creator< load_inst >
+      - tinytc::creator< math_unary_inst >
+      - tinytc::creator< parallel_inst >
+      - tinytc::creator< size_inst >
+      - tinytc::creator< subgroup_broadcast_inst >
+      - tinytc::creator< subgroup_operation_inst >
+      - tinytc::creator< subview_inst >
+      - tinytc::creator< sum_inst >
+      - tinytc::creator< store_inst >
+      - tinytc::creator< yield_inst >
   Program:
     function:
       - tinytc::add_function
@@ -127,8 +128,9 @@ Builder C++-API:
       - tinytc::next
       - tinytc::prev
     class:
-      - tinytc::region
       - tinytc::region_builder
+    typedef:
+      - tinytc::region
   Value:
-    class:
+    typedef:
       - tinytc::value

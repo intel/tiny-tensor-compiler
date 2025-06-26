@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
         parser.parse(argc, argv);
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
         return -1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
             run_function_pass(pass_name, p, info);
         }
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

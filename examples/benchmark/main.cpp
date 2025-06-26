@@ -139,10 +139,10 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         return compile_to_spirv_and_assemble(std::move(p), info);
     } catch (builder_error const &e) {
         report_error(ctx, e.loc(), e.what());
-        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << error_string(e.code())
+        std::cerr << "Error  (" << static_cast<int>(e.code()) << "): " << to_string(e.code())
                   << std::endl;
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
     }
     return binary{nullptr};
 }
@@ -260,7 +260,7 @@ template <typename T> void test(queue q, args &a) {
                           << "%," << a.internal_repetitions << std::endl;
             }
         } catch (status const &st) {
-            std::cerr << "Error: " << error_string(st) << std::endl;
+            std::cerr << "Error: " << to_string(st) << std::endl;
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;
         }

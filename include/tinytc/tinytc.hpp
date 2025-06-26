@@ -31,11 +31,6 @@ namespace tinytc {
 /////////// Error //////////
 ////////////////////////////
 
-//! Convert error code to string
-inline char const *error_string(status code) {
-    return ::tinytc_error_string(static_cast<::tinytc_status_t>(code));
-}
-
 //! Builder exception enhanced with location
 class builder_error : public std::exception {
   public:
@@ -46,7 +41,7 @@ class builder_error : public std::exception {
     //! Get location
     inline auto loc() const noexcept -> location const & { return loc_; }
     //! Get explanatory string
-    inline char const *what() const noexcept override { return error_string(code_); }
+    inline char const *what() const noexcept override { return to_string(code_); }
 
   private:
     status code_;
@@ -552,8 +547,6 @@ inline auto make_compiler_context() -> compiler_context {
  * @param ctx compiler context
  * @param reporter error reporting callback
  * @param user_data pointer to user data that is passed to the callback
- *
- * @return tinytc_status_success on success and error otherwise
  */
 inline void set_error_reporter(compiler_context &ctx, error_reporter_t reporter,
                                void *user_data = nullptr) {
@@ -664,7 +657,7 @@ inline void print_to_file(spv_mod const &mod, char const *filename) {
  *
  * @return C-string (unique handle)
  */
-inline auto print_to_string(spv_mod &mod) -> unique_handle<char *> {
+inline auto print_to_string(spv_mod const &mod) -> unique_handle<char *> {
     char *str;
     CHECK_STATUS(tinytc_spv_mod_print_to_string(mod.get(), &str));
     return unique_handle<char *>{str};
@@ -887,27 +880,6 @@ inline auto parse_string(std::string const &src, compiler_context const &ctx = {
 ///////// Compiler /////////
 ////////////////////////////
 
-//! Container for raw data
-struct raw_binary {
-    bundle_format format;     ///< Bundle format
-    std::size_t data_size;    ///< Size of binary data in bytes
-    std::uint8_t const *data; ///< Pointer to binary data
-};
-
-/**
- * @brief Get raw data
- *
- * @param bin Binary
- *
- * @return Raw data
- */
-inline auto get_raw(binary const &bin) -> raw_binary {
-    raw_binary r;
-    tinytc_bundle_format_t f;
-    CHECK_STATUS(tinytc_binary_get_raw(bin.get(), &f, &r.data_size, &r.data));
-    r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
-    return r;
-}
 /**
  * @brief Get compiler context
  *
@@ -931,6 +903,28 @@ inline auto get_core_features(binary const &bin) -> tinytc_core_feature_flags_t 
     tinytc_core_feature_flags_t cf;
     CHECK_STATUS(tinytc_binary_get_core_features(bin.get(), &cf));
     return cf;
+}
+
+//! Container for raw data
+struct raw_binary {
+    bundle_format format;     ///< Bundle format
+    std::size_t data_size;    ///< Size of binary data in bytes
+    std::uint8_t const *data; ///< Pointer to binary data
+};
+
+/**
+ * @brief Get raw data
+ *
+ * @param bin Binary
+ *
+ * @return Raw data
+ */
+inline auto get_raw(binary const &bin) -> raw_binary {
+    raw_binary r;
+    tinytc_bundle_format_t f;
+    CHECK_STATUS(tinytc_binary_get_raw(bin.get(), &f, &r.data_size, &r.data));
+    r.format = bundle_format{std::underlying_type_t<bundle_format>(f)};
+    return r;
 }
 
 /**

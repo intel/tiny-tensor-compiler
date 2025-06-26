@@ -90,7 +90,7 @@ Builder C-API:
       - tinytc_barrier_inst_create
       - tinytc_builtin_inst_create
       - tinytc_cast_inst_create
-      - tinytc_cmp_inst_create
+      - tinytc_compare_inst_create
       - tinytc_constant_inst_create_boolean
       - tinytc_constant_inst_create_complex
       - tinytc_constant_inst_create_float
@@ -102,6 +102,7 @@ Builder C-API:
       - tinytc_cooperative_matrix_insert_inst_create
       - tinytc_cooperative_matrix_load_inst_create
       - tinytc_cooperative_matrix_mul_add_inst_create
+      - tinytc_cooperative_matrix_reduce_inst_create
       - tinytc_cooperative_matrix_prefetch_inst_create
       - tinytc_cooperative_matrix_scale_inst_create
       - tinytc_cooperative_matrix_store_inst_create
@@ -115,6 +116,7 @@ Builder C-API:
       - tinytc_ger_inst_create
       - tinytc_hadamard_inst_create
       - tinytc_if_inst_create
+      - tinytc_lifetime_stop_inst_create
       - tinytc_load_inst_create
       - tinytc_math_unary_inst_create
       - tinytc_parallel_inst_create

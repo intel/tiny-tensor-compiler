@@ -18,11 +18,13 @@ Common
 
 * Functions
 
-  * :ref:`tinytc::error_string`
-
   * :ref:`tinytc::CHECK_STATUS`
 
   * :ref:`tinytc::CHECK_STATUS_LOC`
+
+  * :ref:`tinytc::to_string(status)`
+
+  * :ref:`tinytc::to_string(support_level)`
 
 * Classes
 
@@ -31,8 +33,6 @@ Common
   * :ref:`tinytc::array_view`
 
   * :ref:`tinytc::mutable_array_view`
-
-  * :ref:`tinytc::handle`
 
   * :ref:`tinytc::shared_handle`
 
@@ -62,13 +62,6 @@ support_level
 Common Functions
 ----------------
 
-.. _tinytc::error_string:
-
-error_string
-............
-
-.. doxygenfunction:: tinytc::error_string
-
 .. _tinytc::CHECK_STATUS:
 
 CHECK_STATUS
@@ -82,6 +75,20 @@ CHECK_STATUS_LOC
 ................
 
 .. doxygenfunction:: tinytc::CHECK_STATUS_LOC
+
+.. _tinytc::to_string(status):
+
+to_string(status)
+.................
+
+.. doxygenfunction:: tinytc::to_string(status)
+
+.. _tinytc::to_string(support_level):
+
+to_string(support_level)
+........................
+
+.. doxygenfunction:: tinytc::to_string(support_level)
 
 Common Classes
 --------------
@@ -106,13 +113,6 @@ mutable_array_view
 ..................
 
 .. doxygenclass:: tinytc::mutable_array_view
-
-.. _tinytc::handle:
-
-handle
-......
-
-.. doxygenclass:: tinytc::handle
 
 .. _tinytc::shared_handle:
 
@@ -147,11 +147,23 @@ Binary
 
 * Functions
 
+  * :ref:`tinytc::get_compiler_context(binary const&)`
+
+  * :ref:`tinytc::get_core_features(binary const&)`
+
+  * :ref:`tinytc::get_raw`
+
   * :ref:`tinytc::make_binary`
+
+  * :ref:`tinytc::to_string(bundle_format)`
 
 * Classes
 
   * :ref:`tinytc::binary`
+
+* Structures
+
+  * :ref:`tinytc::raw_binary`
 
 Binary Enumerations
 -------------------
@@ -166,12 +178,40 @@ bundle_format
 Binary Functions
 ----------------
 
+.. _tinytc::get_compiler_context(binary const&):
+
+get_compiler_context(binary const&)
+...................................
+
+.. doxygenfunction:: tinytc::get_compiler_context(binary const&)
+
+.. _tinytc::get_core_features(binary const&):
+
+get_core_features(binary const&)
+................................
+
+.. doxygenfunction:: tinytc::get_core_features(binary const&)
+
+.. _tinytc::get_raw:
+
+get_raw
+.......
+
+.. doxygenfunction:: tinytc::get_raw
+
 .. _tinytc::make_binary:
 
 make_binary
 ...........
 
 .. doxygenfunction:: tinytc::make_binary
+
+.. _tinytc::to_string(bundle_format):
+
+to_string(bundle_format)
+........................
+
+.. doxygenfunction:: tinytc::to_string(bundle_format)
 
 Binary Classes
 --------------
@@ -182,6 +222,16 @@ binary
 ......
 
 .. doxygenclass:: tinytc::binary
+
+Binary Structures
+-----------------
+
+.. _tinytc::raw_binary:
+
+raw_binary
+..........
+
+.. doxygenstruct:: tinytc::raw_binary
 
 Compiler
 ========
@@ -239,16 +289,49 @@ spirv_assemble
 Compiler Context
 ================
 
+* Enumerations
+
+  * :ref:`tinytc::optflag`
+
 * Functions
 
+  * :ref:`tinytc::add_source`
+
   * :ref:`tinytc::make_compiler_context`
+
+  * :ref:`tinytc::set_error_reporter`
+
+  * :ref:`tinytc::set_optimization_flag`
+
+  * :ref:`tinytc::set_optimization_level`
+
+  * :ref:`tinytc::report_error`
+
+  * :ref:`tinytc::to_string(optflag)`
 
 * Classes
 
   * :ref:`tinytc::compiler_context`
 
+Compiler Context Enumerations
+-----------------------------
+
+.. _tinytc::optflag:
+
+optflag
+.......
+
+.. doxygenenum:: tinytc::optflag
+
 Compiler Context Functions
 --------------------------
+
+.. _tinytc::add_source:
+
+add_source
+..........
+
+.. doxygenfunction:: tinytc::add_source
 
 .. _tinytc::make_compiler_context:
 
@@ -256,6 +339,41 @@ make_compiler_context
 .....................
 
 .. doxygenfunction:: tinytc::make_compiler_context
+
+.. _tinytc::set_error_reporter:
+
+set_error_reporter
+..................
+
+.. doxygenfunction:: tinytc::set_error_reporter
+
+.. _tinytc::set_optimization_flag:
+
+set_optimization_flag
+.....................
+
+.. doxygenfunction:: tinytc::set_optimization_flag
+
+.. _tinytc::set_optimization_level:
+
+set_optimization_level
+......................
+
+.. doxygenfunction:: tinytc::set_optimization_level
+
+.. _tinytc::report_error:
+
+report_error
+............
+
+.. doxygenfunction:: tinytc::report_error
+
+.. _tinytc::to_string(optflag):
+
+to_string(optflag)
+..................
+
+.. doxygenfunction:: tinytc::to_string(optflag)
 
 Compiler Context Classes
 ------------------------
@@ -280,6 +398,14 @@ Device Info
 
 * Functions
 
+  * :ref:`tinytc::get_core_features(core_info const&)`
+
+  * :ref:`tinytc::get_subgroup_sizes`
+
+  * :ref:`tinytc::get_register_space`
+
+  * :ref:`tinytc::have_spirv_feature`
+
   * :ref:`tinytc::make_core_info_generic`
 
   * :ref:`tinytc::make_core_info_intel`
@@ -287,6 +413,16 @@ Device Info
   * :ref:`tinytc::make_core_info_intel_from_arch`
 
   * :ref:`tinytc::make_core_info_intel_from_name`
+
+  * :ref:`tinytc::set_core_features`
+
+  * :ref:`tinytc::set_default_alignment`
+
+  * :ref:`tinytc::set_spirv_feature`
+
+  * :ref:`tinytc::to_string(core_feature_flag)`
+
+  * :ref:`tinytc::to_string(intel_gpu_architecture)`
 
   * :ref:`tinytc::to_string(spirv_feature)`
 
@@ -321,6 +457,34 @@ spirv_feature
 Device Info Functions
 ---------------------
 
+.. _tinytc::get_core_features(core_info const&):
+
+get_core_features(core_info const&)
+...................................
+
+.. doxygenfunction:: tinytc::get_core_features(core_info const&)
+
+.. _tinytc::get_subgroup_sizes:
+
+get_subgroup_sizes
+..................
+
+.. doxygenfunction:: tinytc::get_subgroup_sizes
+
+.. _tinytc::get_register_space:
+
+get_register_space
+..................
+
+.. doxygenfunction:: tinytc::get_register_space
+
+.. _tinytc::have_spirv_feature:
+
+have_spirv_feature
+..................
+
+.. doxygenfunction:: tinytc::have_spirv_feature
+
 .. _tinytc::make_core_info_generic:
 
 make_core_info_generic
@@ -348,6 +512,41 @@ make_core_info_intel_from_name
 ..............................
 
 .. doxygenfunction:: tinytc::make_core_info_intel_from_name
+
+.. _tinytc::set_core_features:
+
+set_core_features
+.................
+
+.. doxygenfunction:: tinytc::set_core_features
+
+.. _tinytc::set_default_alignment:
+
+set_default_alignment
+.....................
+
+.. doxygenfunction:: tinytc::set_default_alignment
+
+.. _tinytc::set_spirv_feature:
+
+set_spirv_feature
+.................
+
+.. doxygenfunction:: tinytc::set_spirv_feature
+
+.. _tinytc::to_string(core_feature_flag):
+
+to_string(core_feature_flag)
+............................
+
+.. doxygenfunction:: tinytc::to_string(core_feature_flag)
+
+.. _tinytc::to_string(intel_gpu_architecture):
+
+to_string(intel_gpu_architecture)
+.................................
+
+.. doxygenfunction:: tinytc::to_string(intel_gpu_architecture)
 
 .. _tinytc::to_string(spirv_feature):
 
@@ -505,6 +704,64 @@ parse_string
 
 .. doxygenfunction:: tinytc::parse_string
 
+Program
+=======
+
+* Functions
+
+  * :ref:`tinytc::dump(prog const&)`
+
+  * :ref:`tinytc::get_compiler_context(prog const&)`
+
+  * :ref:`tinytc::print_to_file(prog const&, char const\*)`
+
+  * :ref:`tinytc::print_to_string(prog const&)`
+
+* Classes
+
+  * :ref:`tinytc::prog`
+
+Program Functions
+-----------------
+
+.. _tinytc::dump(prog const&):
+
+dump(prog const&)
+.................
+
+.. doxygenfunction:: tinytc::dump(prog const&)
+
+.. _tinytc::get_compiler_context(prog const&):
+
+get_compiler_context(prog const&)
+.................................
+
+.. doxygenfunction:: tinytc::get_compiler_context(prog const&)
+
+.. _tinytc::print_to_file(prog const&, char const\*):
+
+print_to_file(prog const&, char const\*)
+........................................
+
+.. doxygenfunction:: tinytc::print_to_file(prog const&, char const*)
+
+.. _tinytc::print_to_string(prog const&):
+
+print_to_string(prog const&)
+............................
+
+.. doxygenfunction:: tinytc::print_to_string(prog const&)
+
+Program Classes
+---------------
+
+.. _tinytc::prog:
+
+prog
+....
+
+.. doxygenclass:: tinytc::prog
+
 Recipe
 ======
 
@@ -514,11 +771,19 @@ Recipe
 
 * Functions
 
+  * :ref:`tinytc::get_prog`
+
+  * :ref:`tinytc::get_binary`
+
+  * :ref:`tinytc::get_recipe`
+
   * :ref:`tinytc::make_small_gemm_batched`
 
   * :ref:`tinytc::make_tall_and_skinny`
 
   * :ref:`tinytc::make_tall_and_skinny_specialized`
+
+  * :ref:`tinytc::to_string(mem_type)`
 
 * Classes
 
@@ -559,6 +824,27 @@ mem_type
 Recipe Functions
 ----------------
 
+.. _tinytc::get_prog:
+
+get_prog
+........
+
+.. doxygenfunction:: tinytc::get_prog
+
+.. _tinytc::get_binary:
+
+get_binary
+..........
+
+.. doxygenfunction:: tinytc::get_binary
+
+.. _tinytc::get_recipe:
+
+get_recipe
+..........
+
+.. doxygenfunction:: tinytc::get_recipe
+
 .. _tinytc::make_small_gemm_batched:
 
 make_small_gemm_batched
@@ -579,6 +865,13 @@ make_tall_and_skinny_specialized
 ................................
 
 .. doxygenfunction:: tinytc::make_tall_and_skinny_specialized
+
+.. _tinytc::to_string(mem_type):
+
+to_string(mem_type)
+...................
+
+.. doxygenfunction:: tinytc::to_string(mem_type)
 
 Recipe Classes
 --------------
@@ -662,9 +955,41 @@ is_usm_pointer_type
 SPIR-V module
 =============
 
+* Functions
+
+  * :ref:`tinytc::dump(spv_mod const&)`
+
+  * :ref:`tinytc::print_to_file(spv_mod const&, char const\*)`
+
+  * :ref:`tinytc::print_to_string(spv_mod const&)`
+
 * Classes
 
   * :ref:`tinytc::spv_mod`
+
+SPIR-V module Functions
+-----------------------
+
+.. _tinytc::dump(spv_mod const&):
+
+dump(spv_mod const&)
+....................
+
+.. doxygenfunction:: tinytc::dump(spv_mod const&)
+
+.. _tinytc::print_to_file(spv_mod const&, char const\*):
+
+print_to_file(spv_mod const&, char const\*)
+...........................................
+
+.. doxygenfunction:: tinytc::print_to_file(spv_mod const&, char const*)
+
+.. _tinytc::print_to_string(spv_mod const&):
+
+print_to_string(spv_mod const&)
+...............................
+
+.. doxygenfunction:: tinytc::print_to_string(spv_mod const&)
 
 SPIR-V module Classes
 ---------------------

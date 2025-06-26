@@ -27,15 +27,6 @@ extern "C" {
         }                                                                                          \
     } while (0)
 
-/**
- * @brief Translate status code to textual description
- *
- * @param status [in] status code
- *
- * @return String
- */
-TINYTC_EXPORT char const *tinytc_error_string(tinytc_status_t status);
-
 ////////////////////////////
 ////////// FP math /////////
 ////////////////////////////

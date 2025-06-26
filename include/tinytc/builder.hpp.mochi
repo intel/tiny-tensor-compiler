@@ -387,7 +387,6 @@ template <typename T> struct creator;
 
 // もち api_builder_hpp "tinytc/instructions.anko"
 
-class constant_inst;
 //! creator specialization for constant_inst
 template <> struct creator<constant_inst> {
     constexpr static std::int32_t max_returned_values = 1;
@@ -912,8 +911,6 @@ class region_builder {
      * @param condition Condition value
      * @param then Then region functor
      * @param loc Source code location
-     *
-     * @return Returned values
      */
     template <typename F> void if_condition(value condition, F &&then, location const &loc = {}) {
         auto ii = creator<if_inst>{}(std::move(condition), {}, loc);

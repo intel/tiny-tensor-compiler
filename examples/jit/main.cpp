@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
         }
         compile_to_spirv_and_assemble(std::move(prog), info);
     } catch (status const &st) {
-        std::cerr << "Error (" << static_cast<int>(st) << "): " << error_string(st) << std::endl;
+        std::cerr << "Error (" << static_cast<int>(st) << "): " << to_string(st) << std::endl;
         return 1;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;

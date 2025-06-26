@@ -187,7 +187,7 @@ void generate_api_builder_h(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
-                os << "/*\n";
+                os << "/**\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
                 os << " * @param instr [out] pointer to the inst object created\n";
@@ -237,9 +237,10 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
 
                 os << std::format("//! creator specialization for {0}\n"
                                   "template<> struct creator<{0}> {{\n"
+                                  "//! Maximum number of results of {0} instruction\n"
                                   "constexpr static std::int32_t max_returned_values = {1};\n",
                                   in->class_name(), ret_count);
-                os << "/*\n";
+                os << "/**\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
                 generate_params(in, [&os](quantifier q, data_type const &, std::string_view name,

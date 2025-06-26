@@ -99,8 +99,6 @@ typedef const struct tinytc_func *const_tinytc_func_t;
  * @brief Delete function object
  *
  * @param fun [inout] function object
- *
- * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT void tinytc_func_destroy(tinytc_func_t fun);
 

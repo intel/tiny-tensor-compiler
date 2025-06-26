@@ -6,14 +6,14 @@ Core C++-API:
       - tinytc::status
       - tinytc::support_level
     function:
-      - tinytc::error_string
       - tinytc::CHECK_STATUS
       - tinytc::CHECK_STATUS_LOC
+      - tinytc::to_string(status)
+      - tinytc::to_string(support_level)
     class:
       - tinytc::array_view_base
       - tinytc::array_view
       - tinytc::mutable_array_view
-      - tinytc::handle
       - tinytc::shared_handle
       - tinytc::unique_handle
     typedef:
@@ -22,9 +22,15 @@ Core C++-API:
     enum:
       - tinytc::bundle_format
     function:
+      - tinytc::get_compiler_context(binary const&)
+      - tinytc::get_core_features(binary const&)
+      - tinytc::get_raw
       - tinytc::make_binary
+      - tinytc::to_string(bundle_format)
     class:
       - tinytc::binary
+    struct:
+      - tinytc::raw_binary
   Compiler:
     function:
       - tinytc::run_function_pass
@@ -33,8 +39,16 @@ Core C++-API:
       - tinytc::compile_to_spirv_and_assemble
       - tinytc::spirv_assemble
   Compiler Context:
+    enum:
+      - tinytc::optflag
     function:
+      - tinytc::add_source
       - tinytc::make_compiler_context
+      - tinytc::set_error_reporter
+      - tinytc::set_optimization_flag
+      - tinytc::set_optimization_level
+      - tinytc::report_error
+      - tinytc::to_string(optflag)
     class:
       - tinytc::compiler_context
   Device Info:
@@ -43,10 +57,19 @@ Core C++-API:
       - tinytc::intel_gpu_architecture
       - tinytc::spirv_feature
     function:
+      - tinytc::get_core_features(core_info const&)
+      - tinytc::get_subgroup_sizes
+      - tinytc::get_register_space
+      - tinytc::have_spirv_feature
       - tinytc::make_core_info_generic
       - tinytc::make_core_info_intel
       - tinytc::make_core_info_intel_from_arch
       - tinytc::make_core_info_intel_from_name
+      - tinytc::set_core_features
+      - tinytc::set_default_alignment
+      - tinytc::set_spirv_feature
+      - tinytc::to_string(core_feature_flag)
+      - tinytc::to_string(intel_gpu_architecture)
       - tinytc::to_string(spirv_feature)
     class:
       - tinytc::core_info
@@ -70,15 +93,24 @@ Core C++-API:
       - tinytc::parse_stdin
       - tinytc::parse_string
   Program:
+    function:
+      - tinytc::dump(prog const&)
+      - tinytc::get_compiler_context(prog const&)
+      - tinytc::print_to_file(prog const&, char const*)
+      - tinytc::print_to_string(prog const&) 
     class:
       - tinytc::prog
   Recipe:
     enum:
       - tinytc::mem_type
     function:
+      - tinytc::get_prog
+      - tinytc::get_binary
+      - tinytc::get_recipe
       - tinytc::make_small_gemm_batched
       - tinytc::make_tall_and_skinny
       - tinytc::make_tall_and_skinny_specialized
+      - tinytc::to_string(mem_type)
     class:
       - tinytc::recipe
       - tinytc::recipe_handler
@@ -93,5 +125,9 @@ Core C++-API:
       - tinytc::is_supported_scalar_type
       - tinytc::is_usm_pointer_type
   SPIR-V module:
+    function:
+      - tinytc::dump(spv_mod const&)
+      - tinytc::print_to_file(spv_mod const&, char const*)
+      - tinytc::print_to_string(spv_mod const&)
     class:
       - tinytc::spv_mod

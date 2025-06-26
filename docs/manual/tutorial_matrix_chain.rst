@@ -118,7 +118,7 @@ When using SYCL, we can run the kernel using the following pseudo-code:
         }
     } catch (tinytc::status const& st) {
         std::cerr << "Error (" << static_cast<int>(st) << "): "
-                  << tinytc::error_string(st) << std::endl;
+                  << tinytc::to_string(st) << std::endl;
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
     }

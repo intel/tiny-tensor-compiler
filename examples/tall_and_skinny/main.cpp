@@ -151,7 +151,7 @@ template <typename T> void test(queue q, args &a) {
                       << a.update << "," << min_exec_time_ns / 1e9 << "," << bw << "," << gflops
                       << std::endl;
         } catch (status const &st) {
-            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::error_string(st)
+            std::cerr << "Error (" << static_cast<int>(st) << "): " << tinytc::to_string(st)
                       << std::endl;
         } catch (std::exception const &e) {
             std::cerr << "Error: " << e.what() << std::endl;

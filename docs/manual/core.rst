@@ -113,7 +113,7 @@ The C-API returns error codes, the C++-API throws exceptions.
           try {
               ...
           } catch (tinytc::status const& st) {
-              std::cerr << static_cast<int>(st) << ": " << tinytc::error_string(st) << std::endl;
+              std::cerr << static_cast<int>(st) << ": " << tinytc::to_string(st) << std::endl;
           } catch (std::exception const& e) {
               std::cerr << e.what() << std::endl;
           }
@@ -184,7 +184,7 @@ For example:
                                      nullptr);
               auto program = tinytc::parse_file("test/lit/opt/check-ir/type_mismatch0.ir", ctx);
           } catch (tinytc::status const& st) {
-              std::cerr << "Error: " << tinytc::error_string(st) << std::endl;
+              std::cerr << "Error: " << tinytc::to_string(st) << std::endl;
           } catch (std::exception const &e) {
               std::cerr << e.what() << std::endl;
           }

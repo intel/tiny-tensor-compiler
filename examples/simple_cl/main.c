@@ -14,7 +14,7 @@
     do {                                                                                           \
         status = X;                                                                                \
         if (status != tinytc_status_success) {                                                     \
-            printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
+            printf("Error (%d): %s\n", status, tinytc_status_to_string(status));                   \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
             goto err;                                                                              \
         }                                                                                          \
@@ -25,7 +25,7 @@
         cl_int result = X;                                                                         \
         if (result != CL_SUCCESS) {                                                                \
             status = tinytc_cl_convert_status(result);                                             \
-            printf("Error (%d): %s\n", status, tinytc_error_string(status));                       \
+            printf("Error (%d): %s\n", status, tinytc_status_to_string(status));                   \
             printf("in %s:%d: \"%s\"\n", __FILE__, __LINE__, #X);                                  \
             goto err;                                                                              \
         }                                                                                          \

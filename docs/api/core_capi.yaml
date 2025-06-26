@@ -13,8 +13,9 @@ Core C-API:
       - TINYTC_VERSION_NUMBER_OF_COMMITS_SINCE_RELEASE
       - TINYTC_VERSION_DESCRIPTION
     function:
-      - tinytc_error_string
+      - tinytc_status_to_string
       - tinytc_string_destroy
+      - tinytc_support_level_to_string
     typedef:
       - tinytc_binary_t
       - tinytc_bool_t
@@ -33,6 +34,8 @@ Core C-API:
       - const_tinytc_compiler_context_t
       - tinytc_error_reporter_t
   Binary:
+    enum:
+      - tinytc_bundle_format_t
     function:
       - tinytc_binary_create
       - tinytc_binary_get_compiler_context
@@ -40,15 +43,16 @@ Core C-API:
       - tinytc_binary_get_raw
       - tinytc_binary_release
       - tinytc_binary_retain
+      - tinytc_optflag_to_string
   Compiler:
     enum:
-      - tinytc_bundle_format_t
       - tinytc_optflag_t
     function:
-      - tinytc_run_function_pass
+      - tinytc_bundle_format_to_string
       - tinytc_list_function_passes
       - tinytc_prog_compile_to_spirv
       - tinytc_prog_compile_to_spirv_and_assemble
+      - tinytc_run_function_pass
       - tinytc_spirv_assemble
   Compiler Context:
     function:
@@ -66,6 +70,7 @@ Core C-API:
       - tinytc_intel_gpu_architecture_t
       - tinytc_spirv_feature_t
     function:
+      - tinytc_core_feature_flag_to_string
       - tinytc_core_info_generic_create
       - tinytc_core_info_get_core_features
       - tinytc_core_info_get_default_alignment
@@ -80,6 +85,7 @@ Core C-API:
       - tinytc_core_info_set_core_features
       - tinytc_core_info_set_default_alignment
       - tinytc_core_info_set_spirv_feature
+      - tinytc_intel_gpu_architecture_to_string
       - tinytc_spirv_feature_to_string
     typedef:
       - tinytc_core_feature_flags_t
@@ -106,6 +112,7 @@ Core C-API:
     enum:
       - tinytc_mem_type_t
     function:
+      - tinytc_mem_type_to_string
       - tinytc_recipe_get_binary
       - tinytc_recipe_get_prog
       - tinytc_recipe_handler_get_recipe
