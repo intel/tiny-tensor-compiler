@@ -30,8 +30,7 @@ extern "C" {
  */
 TINYTC_EXPORT tinytc_status_t tinytc_array_attr_get(tinytc_attr_t *attr,
                                                     tinytc_compiler_context_t ctx,
-                                                    uint32_t array_size,
-                                                    const tinytc_attr_t *array);
+                                                    size_t array_size, const tinytc_attr_t *array);
 
 /**
  * @brief Get boolean attribute
@@ -60,7 +59,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_boolean_attr_get(tinytc_attr_t *attr,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_get(tinytc_attr_t *attr,
                                                          tinytc_compiler_context_t ctx,
-                                                         uint32_t items_size,
+                                                         size_t items_size,
                                                          tinytc_named_attr_t *items);
 
 /**
@@ -77,7 +76,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_get(tinytc_attr_t *attr,
  */
 TINYTC_EXPORT tinytc_status_t
 tinytc_dictionary_attr_get_with_sorted(tinytc_attr_t *attr, tinytc_compiler_context_t ctx,
-                                       uint32_t items_size, const tinytc_named_attr_t *items);
+                                       size_t items_size, const tinytc_named_attr_t *items);
 
 /**
  * @brief Sort items array by name
@@ -87,7 +86,7 @@ tinytc_dictionary_attr_get_with_sorted(tinytc_attr_t *attr, tinytc_compiler_cont
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_sort(uint32_t items_size,
+TINYTC_EXPORT tinytc_status_t tinytc_dictionary_attr_sort(size_t items_size,
                                                           tinytc_named_attr_t *items);
 
 /**
@@ -114,7 +113,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_integer_attr_get(tinytc_attr_t *attr,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
                                                      tinytc_compiler_context_t ctx,
-                                                     uint32_t str_length, char const *str);
+                                                     size_t str_length, char const *str);
 
 ////////////////////////////
 //////// Scalar type ///////
@@ -171,8 +170,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
                                                      tinytc_data_type_t scalar_ty,
-                                                     uint32_t shape_size, const int64_t *shape,
-                                                     uint32_t stride_size, const int64_t *stride,
+                                                     size_t shape_size, const int64_t *shape,
+                                                     size_t stride_size, const int64_t *stride,
                                                      tinytc_address_space_t addrspace,
                                                      const tinytc_location_t *loc);
 
@@ -244,7 +243,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_set_name(tinytc_value_t vl, char cons
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_value_set_name_n(tinytc_value_t vl, uint32_t name_length,
+TINYTC_EXPORT tinytc_status_t tinytc_value_set_name_n(tinytc_value_t vl, size_t name_length,
                                                       char const *name);
 
 /**
@@ -366,7 +365,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *in
 /////// Instructions ///////
 ////////////////////////////
 
-
 /**
  * @brief Get parent region of instruction
  *
@@ -393,8 +391,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_parent_region(tinytc_inst_t instr,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr,
-                                                      uint32_t *result_list_size,
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, size_t *result_list_size,
                                                       tinytc_region_t *result_list);
 
 /**
@@ -412,8 +409,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr,
-                                                     uint32_t *result_list_size,
+TINYTC_EXPORT tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, size_t *result_list_size,
                                                      tinytc_value_t *result_list);
 
 /**
@@ -532,7 +528,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_prev_inst(tinytc_inst_iterator_t *iterator)
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
-                                                           uint32_t *result_list_size,
+                                                           size_t *result_list_size,
                                                            tinytc_value_t *result_list);
 
 ////////////////////////////
@@ -555,8 +551,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length,
-                                                 char const *name, uint32_t num_params,
+TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length,
+                                                 char const *name, size_t num_params,
                                                  const tinytc_data_type_t *param_type_list,
                                                  tinytc_data_type_t ty,
                                                  const tinytc_location_t *loc);

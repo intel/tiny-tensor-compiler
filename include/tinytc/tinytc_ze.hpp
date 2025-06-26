@@ -111,8 +111,8 @@ inline auto make_kernel_bundle(ze_context_handle_t context, ze_device_handle_t d
  *
  * @return Level Zero kernel (unique handle)
  */
-inline auto make_kernel(ze_module_handle_t mod,
-                        char const *name) -> unique_handle<ze_kernel_handle_t> {
+inline auto make_kernel(ze_module_handle_t mod, char const *name)
+    -> unique_handle<ze_kernel_handle_t> {
     ze_kernel_handle_t obj;
     CHECK_STATUS(tinytc_ze_kernel_create(&obj, mod, name));
     return unique_handle<ze_kernel_handle_t>{obj};

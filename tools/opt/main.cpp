@@ -59,12 +59,12 @@ int main(int argc, char **argv) {
     if (help) {
         parser.print_help(std::cout, "tinytc-opt", "");
 
-        std::uint32_t names_size = 0;
+        std::size_t names_size = 0;
         char const *const *names = nullptr;
         list_function_passes(names_size, names);
 
         std::cout << std::endl << "Passes:" << std::endl;
-        for (std::uint32_t i = 0; i < names_size; ++i) {
+        for (std::size_t i = 0; i < names_size; ++i) {
             for (int i = 0; i < cmd::arg_parser::optindent; ++i) {
                 std::cout << ' ';
             }

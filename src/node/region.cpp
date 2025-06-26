@@ -119,15 +119,7 @@ tinytc_status_t tinytc_prev_inst(tinytc_inst_iterator_t *iterator) {
         [&] { *iterator = static_cast<tinytc_inst_iterator_t>((*iterator)->prev()); });
 }
 
-tinytc_status_t tinytc_region_get_parameter(tinytc_region_t reg, uint32_t param_no,
-                                            tinytc_value_t *result) {
-    if (reg == nullptr || result == nullptr || param_no >= reg->num_params()) {
-        return tinytc_status_invalid_arguments;
-    }
-    return exception_to_status_code([&] { *result = &reg->param(param_no); });
-}
-
-tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, uint32_t *result_list_size,
+tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, size_t *result_list_size,
                                              tinytc_value_t *result_list) {
 
     if (reg == nullptr || result_list_size == nullptr ||
@@ -136,14 +128,14 @@ tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg, uint32_t *resu
     }
     return exception_to_status_code([&] {
         auto const num_results = reg->num_params();
-        if (num_results > std::numeric_limits<std::uint32_t>::max()) {
-            throw std::out_of_range("too many results");
+        if (num_results < 0) {
+            throw std::out_of_range("number of results must not be negative");
         }
-        auto num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::size_t>(num_results);
         if (*result_list_size > 0) {
             auto results = reg->param_begin();
             num = std::min(num, *result_list_size);
-            for (uint32_t i = 0; i < num; ++i) {
+            for (size_t i = 0; i < num; ++i) {
                 result_list[i] = &results[i];
             }
         }

@@ -220,7 +220,7 @@ tinytc_status_t tinytc_inst_get_parent_region(tinytc_inst_t instr, tinytc_region
     return exception_to_status_code([&] { *parent = instr->parent(); });
 }
 
-tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_list_size,
+tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, size_t *result_list_size,
                                        tinytc_value_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||
         (*result_list_size > 0 && result_list == nullptr)) {
@@ -228,10 +228,10 @@ tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_lis
     }
     return exception_to_status_code([&] {
         auto const num_results = instr->num_results();
-        if (num_results > std::numeric_limits<std::uint32_t>::max()) {
-            throw std::out_of_range("too many results");
+        if (num_results < 0) {
+            throw std::out_of_range("Number of results must not be negative");
         }
-        auto num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::size_t>(num_results);
         if (*result_list_size > 0) {
             num = std::min(num, *result_list_size);
             auto results = instr->result_begin();
@@ -243,7 +243,7 @@ tinytc_status_t tinytc_inst_get_values(tinytc_inst_t instr, uint32_t *result_lis
     });
 }
 
-tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_list_size,
+tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, size_t *result_list_size,
                                         tinytc_region_t *result_list) {
     if (instr == nullptr || result_list_size == nullptr ||
         (*result_list_size > 0 && result_list == nullptr)) {
@@ -251,10 +251,10 @@ tinytc_status_t tinytc_inst_get_regions(tinytc_inst_t instr, uint32_t *result_li
     }
     return exception_to_status_code([&] {
         auto const num_results = instr->num_child_regions();
-        if (num_results > std::numeric_limits<std::uint32_t>::max()) {
-            throw std::out_of_range("too many results");
+        if (num_results < 0) {
+            throw std::out_of_range("Number of results must not be negative");
         }
-        auto num = static_cast<std::uint32_t>(num_results);
+        auto num = static_cast<std::size_t>(num_results);
         if (*result_list_size > 0) {
             auto results = instr->child_regions_begin();
             num = std::min(num, *result_list_size);

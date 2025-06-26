@@ -347,8 +347,8 @@ inline auto get_type(value val) -> data_type {
  *
  * @return Minimum of view size and actual number of result values
  */
-inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::uint32_t {
-    std::uint32_t result_list_size = vals.size();
+inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::size_t {
+    std::size_t result_list_size = vals.size();
     tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
     CHECK_STATUS(tinytc_inst_get_values(in.get(), &result_list_size, vs));
     return result_list_size;
@@ -364,8 +364,8 @@ inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::u
  *
  * @return Minimum of view size and actual number of child regions
  */
-inline auto get_regions(inst const &in, mutable_array_view<region> regs) -> std::uint32_t {
-    std::uint32_t result_list_size = regs.size();
+inline auto get_regions(inst const &in, mutable_array_view<region> regs) -> std::size_t {
+    std::size_t result_list_size = regs.size();
     tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
     CHECK_STATUS(tinytc_inst_get_regions(in.get(), &result_list_size, rl));
     return result_list_size;
@@ -588,8 +588,8 @@ inline auto insert(region reg, tinytc_inst_iterator_t iterator, inst instruction
  *
  * @return Minimum of view size and actual number of parameters
  */
-inline auto get_parameters(region reg, mutable_array_view<value> params) -> std::uint32_t {
-    std::uint32_t result_list_size = params.size();
+inline auto get_parameters(region reg, mutable_array_view<value> params) -> std::size_t {
+    std::size_t result_list_size = params.size();
     tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
     CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, ps));
     return result_list_size;
@@ -638,13 +638,9 @@ inline auto get_body(func const &f) -> region {
 inline func make_func(std::string_view name, array_view<data_type> param_type_list, data_type ty,
                       location const &loc = {}) {
     tinytc_func_t fun;
-    auto len = param_type_list.size();
-    if (len > std::numeric_limits<std::uint32_t>::max()) {
-        throw std::out_of_range("param list too long");
-    }
-    CHECK_STATUS_LOC(
-        tinytc_func_create(&fun, name.size(), name.data(), len, param_type_list.data(), ty, &loc),
-        loc);
+    CHECK_STATUS_LOC(tinytc_func_create(&fun, name.size(), name.data(), param_type_list.size(),
+                                        param_type_list.data(), ty, &loc),
+                     loc);
     return func(fun);
 }
 

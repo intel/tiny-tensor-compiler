@@ -112,7 +112,7 @@ tinytc_status_t tinytc_run_function_pass(char const *pass_name, tinytc_prog_t pr
         prg->context());
 }
 
-tinytc_status_t tinytc_list_function_passes(uint32_t *names_size, char const *const **names) {
+tinytc_status_t tinytc_list_function_passes(size_t *names_size, char const *const **names) {
     if (names_size == nullptr || names == nullptr) {
         return tinytc_status_invalid_arguments;
     }

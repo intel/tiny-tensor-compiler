@@ -169,8 +169,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_spv_mod_print_to_string(const_tinytc_spv_mo
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_generic_create(tinytc_core_info_t *info,
                                                               int32_t register_space,
                                                               int32_t max_work_group_size,
-                                                              uint32_t sgs_size,
-                                                              int32_t const *sgs);
+                                                              size_t sgs_size, int32_t const *sgs);
 
 /**
  * @brief Look up core info for Intel GPU architecture
@@ -211,7 +210,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *
                                                             uint32_t ip_version,
                                                             int32_t num_eus_per_subslice,
                                                             int32_t num_threads_per_eu,
-                                                            uint32_t sgs_size, int32_t const *sgs);
+                                                            size_t sgs_size, int32_t const *sgs);
 
 /**
  * @brief Returns available subgroup sizes
@@ -223,7 +222,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_core_info_intel_create(tinytc_core_info_t *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_core_info_get_subgroup_sizes(const_tinytc_core_info_t info,
-                                                                  uint32_t *sgs_size,
+                                                                  size_t *sgs_size,
                                                                   int32_t const **sgs);
 
 /**
@@ -452,7 +451,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_run_function_pass(char const *pass_name, ti
  *
  * @return
  */
-TINYTC_EXPORT tinytc_status_t tinytc_list_function_passes(uint32_t *names_size,
+TINYTC_EXPORT tinytc_status_t tinytc_list_function_passes(size_t *names_size,
                                                           char const *const **names);
 
 /**

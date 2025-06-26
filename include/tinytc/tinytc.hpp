@@ -675,10 +675,10 @@ inline auto print_to_string(spv_mod const &mod) -> unique_handle<char *> {
  * @return Subgroup sizes
  */
 inline auto get_subgroup_sizes(core_info const &info) -> array_view<std::int32_t> {
-    std::uint32_t sgs_size = 0;
+    std::size_t sgs_size = 0;
     std::int32_t const *sgs = nullptr;
     CHECK_STATUS(tinytc_core_info_get_subgroup_sizes(info.get(), &sgs_size, &sgs));
-    return array_view(sgs, static_cast<std::size_t>(sgs_size));
+    return array_view(sgs, sgs_size);
 }
 
 /**
@@ -965,7 +965,7 @@ inline void run_function_pass(char const *pass_name, prog prg, core_info info = 
  * @param names_size Number of function pass names
  * @param names Array of function pass names
  */
-inline void list_function_passes(std::uint32_t &names_size, char const *const *&names) {
+inline void list_function_passes(std::size_t &names_size, char const *const *&names) {
     CHECK_STATUS(tinytc_list_function_passes(&names_size, &names));
 }
 

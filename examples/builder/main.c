@@ -12,8 +12,8 @@ int main(void) {
     int64_t N = 32;
 
     char const *copy_fun_name = "copy";
-    uint32_t num_results;
-    uint32_t num_params;
+    size_t num_results;
+    size_t num_params;
     tinytc_compiler_context_t ctx;
     tinytc_prog_t program;
     tinytc_data_type_t void_ty, element_ty, ty;

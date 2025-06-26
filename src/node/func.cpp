@@ -78,8 +78,8 @@ auto tinytc_func::work_group_size() const -> std::array<std::int32_t, 2u> {
 
 extern "C" {
 
-tinytc_status_t tinytc_func_create(tinytc_func_t *fun, uint32_t name_length, char const *name,
-                                   uint32_t num_params, const tinytc_data_type_t *param_type_list,
+tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length, char const *name,
+                                   size_t num_params, const tinytc_data_type_t *param_type_list,
                                    tinytc_data_type_t ty, const tinytc_location_t *loc) {
     if (fun == nullptr || (num_params > 0 && param_type_list == nullptr) || ty == nullptr) {
         return tinytc_status_invalid_arguments;
