@@ -131,9 +131,9 @@ void gcd_helper::operator()(arith_inst in) {
 }
 void gcd_helper::operator()(arith_unary_inst in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
-        switch (in.operation()) {
-        case arithmetic_unary::abs:
-        case arithmetic_unary::not_:
+        switch (in.get().type_id()) {
+        case IK::IK_abs:
+        case IK::IK_not:
             return gcd_.get(in.a());
         default:
             break;

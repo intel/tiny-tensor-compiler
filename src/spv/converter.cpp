@@ -228,9 +228,9 @@ void inst_converter::operator()(arith_inst in) {
 }
 
 void inst_converter::operator()(arith_unary_inst in) {
-    auto const make_boolean = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+    auto const make_boolean = [&](IK op, spv_inst *ty, spv_inst *a) -> spv_inst * {
         switch (op) {
-        case arithmetic_unary::not_:
+        case IK::IK_not:
             return mod_->add<OpLogicalNot>(ty, a);
         default:
             break;
@@ -240,10 +240,10 @@ void inst_converter::operator()(arith_unary_inst in) {
     if (isa<boolean_data_type>(*in.a().ty())) {
         auto ty = unique_.bool_ty();
         auto av = val(in.a());
-        declare(in.result(), make_boolean(in.operation(), ty, av));
+        declare(in.result(), make_boolean(in.get().type_id(), ty, av));
     } else if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
         auto av = val(in.a());
-        declare(in.result(), make_unary_op(unique_, st->ty(), in.operation(), av, in.loc()));
+        declare(in.result(), make_unary_op(unique_, st->ty(), in.get().type_id(), av, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
         auto av = val(in.a());
         declare(in.result(), matrix_impl().arith_unary(in, av));

@@ -172,7 +172,6 @@ auto tinytc_inst::kind() -> inst_execution_kind {
     case IK::IK_hadamard:
     case IK::IKEND_blas_a3:
         return inst_execution_kind::collective;
-    case IK::IK_arith_unary:
     case IK::IK_barrier:
     case IK::IK_cast:
     case IK::IK_compare:
@@ -200,6 +199,14 @@ auto tinytc_inst::kind() -> inst_execution_kind {
     case IK::IK_or:
     case IK::IK_xor:
     case IK::IKEND_arith:
+    case IK::IK_arith_unary:
+    case IK::IK_abs:
+    case IK::IK_neg:
+    case IK::IK_not:
+    case IK::IK_conj:
+    case IK::IK_im:
+    case IK::IK_re:
+    case IK::IKEND_arith_unary:
     case IK::IK_loop:
     case IK::IK_for:
     case IK::IKEND_loop:

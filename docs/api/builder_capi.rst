@@ -14,8 +14,6 @@ Common
 
   * :ref:`tinytc_address_space_t`
 
-  * :ref:`tinytc_arithmetic_unary_t`
-
   * :ref:`tinytc_builtin_t`
 
   * :ref:`tinytc_checked_flag_t`
@@ -45,8 +43,6 @@ Common
 * Functions
 
   * :ref:`tinytc_address_space_to_string`
-
-  * :ref:`tinytc_arithmetic_unary_to_string`
 
   * :ref:`tinytc_builtin_to_string`
 
@@ -125,13 +121,6 @@ tinytc_address_space_t
 ......................
 
 .. doxygenenum:: tinytc_address_space_t
-
-.. _tinytc_arithmetic_unary_t:
-
-tinytc_arithmetic_unary_t
-.........................
-
-.. doxygenenum:: tinytc_arithmetic_unary_t
 
 .. _tinytc_builtin_t:
 
@@ -229,13 +218,6 @@ tinytc_address_space_to_string
 ..............................
 
 .. doxygenfunction:: tinytc_address_space_to_string
-
-.. _tinytc_arithmetic_unary_to_string:
-
-tinytc_arithmetic_unary_to_string
-.................................
-
-.. doxygenfunction:: tinytc_arithmetic_unary_to_string
 
 .. _tinytc_builtin_to_string:
 
@@ -660,8 +642,6 @@ Instruction
 
   * :ref:`tinytc_alloca_inst_create`
 
-  * :ref:`tinytc_arith_unary_inst_create`
-
   * :ref:`tinytc_barrier_inst_create`
 
   * :ref:`tinytc_builtin_inst_create`
@@ -750,6 +730,18 @@ Instruction
 
   * :ref:`tinytc_max_inst_create`
 
+  * :ref:`tinytc_abs_inst_create`
+
+  * :ref:`tinytc_neg_inst_create`
+
+  * :ref:`tinytc_not_inst_create`
+
+  * :ref:`tinytc_conj_inst_create`
+
+  * :ref:`tinytc_im_inst_create`
+
+  * :ref:`tinytc_re_inst_create`
+
   * :ref:`tinytc_axpby_inst_create`
 
   * :ref:`tinytc_cumsum_inst_create`
@@ -787,13 +779,6 @@ tinytc_alloca_inst_create
 .........................
 
 .. doxygenfunction:: tinytc_alloca_inst_create
-
-.. _tinytc_arith_unary_inst_create:
-
-tinytc_arith_unary_inst_create
-..............................
-
-.. doxygenfunction:: tinytc_arith_unary_inst_create
 
 .. _tinytc_barrier_inst_create:
 
@@ -1102,6 +1087,48 @@ tinytc_max_inst_create
 ......................
 
 .. doxygenfunction:: tinytc_max_inst_create
+
+.. _tinytc_abs_inst_create:
+
+tinytc_abs_inst_create
+......................
+
+.. doxygenfunction:: tinytc_abs_inst_create
+
+.. _tinytc_neg_inst_create:
+
+tinytc_neg_inst_create
+......................
+
+.. doxygenfunction:: tinytc_neg_inst_create
+
+.. _tinytc_not_inst_create:
+
+tinytc_not_inst_create
+......................
+
+.. doxygenfunction:: tinytc_not_inst_create
+
+.. _tinytc_conj_inst_create:
+
+tinytc_conj_inst_create
+.......................
+
+.. doxygenfunction:: tinytc_conj_inst_create
+
+.. _tinytc_im_inst_create:
+
+tinytc_im_inst_create
+.....................
+
+.. doxygenfunction:: tinytc_im_inst_create
+
+.. _tinytc_re_inst_create:
+
+tinytc_re_inst_create
+.....................
+
+.. doxygenfunction:: tinytc_re_inst_create
 
 .. _tinytc_axpby_inst_create:
 

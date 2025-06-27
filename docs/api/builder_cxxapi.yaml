@@ -4,7 +4,6 @@ Builder C++-API:
   Common:
     enum:
       - tinytc::address_space
-      - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
       - tinytc::group_arithmetic
@@ -18,7 +17,6 @@ Builder C++-API:
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
-      - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
@@ -79,7 +77,6 @@ Builder C++-API:
       - tinytc::inst
     struct:
       - tinytc::creator< alloca_inst >
-      - tinytc::creator< arith_unary_inst >
       - tinytc::creator< barrier_inst >
       - tinytc::creator< builtin_inst >
       - tinytc::creator< cast_inst >
@@ -119,6 +116,12 @@ Builder C++-API:
       - tinytc::createo< xor_inst >
       - tinytc::createo< min_inst >
       - tinytc::createo< max_inst >
+      - tinytc::create< abs >
+      - tinytc::create< neg >
+      - tinytc::create< not >
+      - tinytc::create< conj >
+      - tinytc::create< im >
+      - tinytc::create< re >
       - tinytc::creator< axpby_inst >
       - tinytc::creator< cumsum_inst >
       - tinytc::creator< sum_inst >

@@ -200,12 +200,12 @@ lex:
         "max"          { adv_loc(); return parser::make_MAX(loc_); }
 
         // unary op
-        "abs"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
-        "neg"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
-        "not"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
-        "conj"         { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
-        "im"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
-        "re"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
+        "abs"          { adv_loc(); return parser::make_ABS(loc_); }
+        "neg"          { adv_loc(); return parser::make_NEG(loc_); }
+        "not"          { adv_loc(); return parser::make_NOT(loc_); }
+        "conj"         { adv_loc(); return parser::make_CONJ(loc_); }
+        "im"           { adv_loc(); return parser::make_IM(loc_); }
+        "re"           { adv_loc(); return parser::make_RE(loc_); }
 
         // builtin
         "builtin.group_id.x"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_x, loc_); }

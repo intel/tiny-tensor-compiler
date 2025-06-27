@@ -211,7 +211,7 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
         if (!std::holds_alternative<bool>(a_const.value())) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
-        return compute_unary_op{in.operation(), op_a.ty(),
+        return compute_unary_op{in.get().type_id(), op_a.ty(),
                                 in.loc()}(std::get<bool>(a_const.value()));
     }
 
@@ -227,7 +227,7 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
         at = dyn_cast<scalar_data_type>(ct->ty());
     }
 
-    auto computer = compute_unary_op{in.operation(), op_a.ty(), in.loc()};
+    auto computer = compute_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
     auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value());
 }

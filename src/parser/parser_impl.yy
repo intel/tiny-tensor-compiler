@@ -165,6 +165,12 @@
     XOR                         "xor"
     MIN                         "min"
     MAX                         "max"
+    ABS                         "abs"
+    NEG                         "neg"
+    NOT                         "not"
+    CONJ                        "conj"
+    IM                          "im"
+    RE                          "re"
     AXPBY                       "axpby"
     CUMSUM                      "cumsum"
     SUM                         "sum"
@@ -184,7 +190,6 @@
 %token <double> FLOATING_CONSTANT
 %token <scalar_type> INTEGER_TYPE
 %token <scalar_type> FLOATING_TYPE
-%token <arithmetic_unary> ARITHMETIC_UNARY
 %token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
 %token <std::pair<group_arithmetic,reduce_mode>> COOPERATIVE_MATRIX_REDUCE
@@ -760,19 +765,12 @@ valued_inst: XOR var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ =
 valued_inst: MIN var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = min_inst::create($a, $b, $ty, @valued_inst); }); };
 valued_inst: MAX var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = max_inst::create($a, $b, $ty, @valued_inst); }); };
 
-valued_inst:
-    ARITHMETIC_UNARY var[a] COLON data_type[ty] {
-        try {
-            $$ = inst {
-                arith_unary_inst::create($ARITHMETIC_UNARY, std::move($a), std::move($ty),
-                                         @valued_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: ABS  var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =  abs_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NEG  var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =  neg_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NOT  var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =  not_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: CONJ var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = conj_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: IM   var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =   im_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: RE   var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =   re_inst::create($a, $ty, @valued_inst); }); };
 
 valued_inst:
     BUILTIN COLON data_type[ty] {

@@ -14,8 +14,6 @@ Common
 
   * :ref:`tinytc::address_space`
 
-  * :ref:`tinytc::arithmetic_unary`
-
   * :ref:`tinytc::builtin`
 
   * :ref:`tinytc::cmp_condition`
@@ -41,8 +39,6 @@ Common
   * :ref:`tinytc::is_dynamic_value`
 
   * :ref:`tinytc::to_string(address_space)`
-
-  * :ref:`tinytc::to_string(arithmetic_unary)`
 
   * :ref:`tinytc::to_string(builtin)`
 
@@ -91,13 +87,6 @@ address_space
 .............
 
 .. doxygenenum:: tinytc::address_space
-
-.. _tinytc::arithmetic_unary:
-
-arithmetic_unary
-................
-
-.. doxygenenum:: tinytc::arithmetic_unary
 
 .. _tinytc::builtin:
 
@@ -185,13 +174,6 @@ to_string(address_space)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(address_space)
-
-.. _tinytc::to_string(arithmetic_unary):
-
-to_string(arithmetic_unary)
-...........................
-
-.. doxygenfunction:: tinytc::to_string(arithmetic_unary)
 
 .. _tinytc::to_string(builtin):
 
@@ -585,8 +567,6 @@ Instruction
 
   * :ref:`tinytc::creator\< alloca_inst \>`
 
-  * :ref:`tinytc::creator\< arith_unary_inst \>`
-
   * :ref:`tinytc::creator\< barrier_inst \>`
 
   * :ref:`tinytc::creator\< builtin_inst \>`
@@ -665,6 +645,18 @@ Instruction
 
   * :ref:`tinytc::createo\< max_inst \>`
 
+  * :ref:`tinytc::create\< abs \>`
+
+  * :ref:`tinytc::create\< neg \>`
+
+  * :ref:`tinytc::create\< not \>`
+
+  * :ref:`tinytc::create\< conj \>`
+
+  * :ref:`tinytc::create\< im \>`
+
+  * :ref:`tinytc::create\< re \>`
+
   * :ref:`tinytc::creator\< axpby_inst \>`
 
   * :ref:`tinytc::creator\< cumsum_inst \>`
@@ -712,13 +704,6 @@ creator<alloca_inst>
 ....................
 
 .. doxygenstruct:: tinytc::creator< alloca_inst >
-
-.. _tinytc::creator\< arith_unary_inst \>:
-
-creator<arith_unary_inst>
-.........................
-
-.. doxygenstruct:: tinytc::creator< arith_unary_inst >
 
 .. _tinytc::creator\< barrier_inst \>:
 
@@ -992,6 +977,48 @@ createo<max_inst>
 .................
 
 .. doxygenstruct:: tinytc::createo< max_inst >
+
+.. _tinytc::create\< abs \>:
+
+create<abs>
+...........
+
+.. doxygenstruct:: tinytc::create< abs >
+
+.. _tinytc::create\< neg \>:
+
+create<neg>
+...........
+
+.. doxygenstruct:: tinytc::create< neg >
+
+.. _tinytc::create\< not \>:
+
+create<not>
+...........
+
+.. doxygenstruct:: tinytc::create< not >
+
+.. _tinytc::create\< conj \>:
+
+create<conj>
+............
+
+.. doxygenstruct:: tinytc::create< conj >
+
+.. _tinytc::create\< im \>:
+
+create<im>
+..........
+
+.. doxygenstruct:: tinytc::create< im >
+
+.. _tinytc::create\< re \>:
+
+create<re>
+..........
+
+.. doxygenstruct:: tinytc::create< re >
 
 .. _tinytc::creator\< axpby_inst \>:
 

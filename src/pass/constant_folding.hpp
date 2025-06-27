@@ -50,14 +50,14 @@ class constant_folding {
 };
 
 struct compute_unary_op {
-    arithmetic_unary operation;
+    IK operation;
     data_type ty;
     location const &loc;
 
     auto operator()(bool a) -> fold_result {
         bool val = false;
         switch (operation) {
-        case arithmetic_unary::not_:
+        case IK::IK_not:
             val = !a;
             break;
         default:
@@ -71,13 +71,13 @@ struct compute_unary_op {
     auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
-        case arithmetic_unary::abs:
+        case IK::IK_abs:
             val = a < 0 ? -a : a;
             break;
-        case arithmetic_unary::neg:
+        case IK::IK_neg:
             val = -a;
             break;
-        case arithmetic_unary::not_:
+        case IK::IK_not:
             val = ~a;
             break;
         default:
@@ -91,10 +91,10 @@ struct compute_unary_op {
     auto operator()(T a) -> fold_result {
         T val = 0;
         switch (operation) {
-        case arithmetic_unary::abs:
+        case IK::IK_abs:
             val = a < T{0} ? -a : a;
             break;
-        case arithmetic_unary::neg:
+        case IK::IK_neg:
             val = -a;
             break;
         default:
@@ -109,10 +109,10 @@ struct compute_unary_op {
         const auto neg_conj = [&](T const &a) {
             T val = {};
             switch (operation) {
-            case arithmetic_unary::neg:
+            case IK::IK_neg:
                 val = -a;
                 break;
-            case arithmetic_unary::conj:
+            case IK::IK_conj:
                 val = std::conj(a);
                 break;
             default:
@@ -123,13 +123,13 @@ struct compute_unary_op {
         const auto abs_im_re = [&](T const &a) -> inst {
             typename T::value_type val = {};
             switch (operation) {
-            case arithmetic_unary::abs:
+            case IK::IK_abs:
                 val = std::abs(a);
                 break;
-            case arithmetic_unary::im:
+            case IK::IK_im:
                 val = std::imag(a);
                 break;
-            case arithmetic_unary::re:
+            case IK::IK_re:
                 val = std::real(a);
                 break;
             default:

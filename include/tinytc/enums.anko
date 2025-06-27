@@ -131,15 +131,6 @@ enum @scalar_type "Scalar types" {
     case %c64   => 10 "Double precision complex (2x64 bit)"
 }
 
-enum @arithmetic_unary "Arithmetic operations (unary)" {
-    case %neg  => 0 "negation"
-    case %not  => 1 "bitwise not"
-    case %abs  => 2 "absolute value"
-    case %conj => 3 "complex conjugate"
-    case %im   => 4 "imaginary part"
-    case %re   => 5 "real part"
-}
-
 enum @builtin "Builtin values" {
     case %group_id_x         => 0  "group_id.x"
     case %group_id_y         => 1  "group_id.y"

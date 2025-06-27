@@ -4,7 +4,6 @@ Builder C-API:
   Common:
     enum:
       - tinytc_address_space_t
-      - tinytc_arithmetic_unary_t
       - tinytc_builtin_t
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
@@ -20,7 +19,6 @@ Builder C-API:
       - TINYTC_DYNAMIC
     function:
       - tinytc_address_space_to_string
-      - tinytc_arithmetic_unary_to_string
       - tinytc_builtin_to_string
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
@@ -82,7 +80,6 @@ Builder C-API:
   Instruction:
     function:
       - tinytc_alloca_inst_create
-      - tinytc_arith_unary_inst_create
       - tinytc_barrier_inst_create
       - tinytc_builtin_inst_create
       - tinytc_cast_inst_create
@@ -127,6 +124,12 @@ Builder C-API:
       - tinytc_xor_inst_create
       - tinytc_min_inst_create
       - tinytc_max_inst_create
+      - tinytc_abs_inst_create
+      - tinytc_neg_inst_create
+      - tinytc_not_inst_create
+      - tinytc_conj_inst_create
+      - tinytc_im_inst_create
+      - tinytc_re_inst_create
       - tinytc_axpby_inst_create
       - tinytc_cumsum_inst_create
       - tinytc_sum_inst_create

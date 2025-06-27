@@ -439,7 +439,7 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, v);
-        auto r_v = make_unary_op(*unique_, sty, in.operation(), a_v, in.loc());
+        auto r_v = make_unary_op(*unique_, sty, in.get().type_id(), a_v, in.loc());
         result = insert(rl, r_v, result, v);
     }
 

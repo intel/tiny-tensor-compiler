@@ -8,12 +8,6 @@ inst @alloca "Alloca instruction" {
     ret %result "memref type of allocated variable"
 }
 
-inst @arith_unary "Arithmetic instruction (unary)" {
-    prop %operation => @arithmetic_unary "unary arithmetic operation type"
-    op %a                                "operand"
-    ret %result                          "result type"
-}
-
 inst @barrier "Barrier instruction" {
     prop %fence_flags => "tinytc_address_spaces_t" "address space(s) of memory fence; "
                                                    "set to 0 for no fence"
@@ -221,6 +215,19 @@ inst @shr : @arith "Shift-right instruction" {}
 inst @and : @arith "Bitwise and instruction" {}
 inst @or  : @arith "Bitwise or instruction" {}
 inst @xor : @arith "Bitwise xor instruction" {}
+
+inst @arith_unary "Arithmetic instruction (unary)" {
+    op %a                                "operand"
+    ret %result                          "result type"
+    cxx "void setup_and_check(support_flags support, bool component_type_match = false);"
+}
+inst @neg  : @arith_unary "Negation instruction" {}
+inst @not  : @arith_unary "Bitwise not instruction" {}
+inst @abs  : @arith_unary "Absolute value instruction" {}
+inst @conj : @arith_unary "Complex conjugate instruction" {}
+inst @im   : @arith_unary "Imaginary part instruction" {}
+inst @re   : @arith_unary "Real part instruction" {}
+
 
 
 inst @blas_a2 "BLAS instruction with 2 tensor arguments" {

@@ -114,74 +114,6 @@ void alloca_inst::setup_and_check() {
     stack_ptr(-1);
 }
 
-void arith_unary_inst::setup_and_check() {
-    auto ty = result().ty();
-
-    if (isa<boolean_data_type>(*ty)) {
-        if (operation() != arithmetic_unary::not_) {
-            throw compilation_error(loc(), status::ir_boolean_unsupported);
-        }
-    } else {
-        auto const check_scalar_ty = [&](scalar_type a_ty, scalar_type r_ty) {
-            // Check if inst is supported for combination of a type and result type
-            switch (operation()) {
-            case arithmetic_unary::abs:
-            case arithmetic_unary::im:
-            case arithmetic_unary::re: {
-                if (r_ty != component_type(a_ty)) {
-                    throw compilation_error(loc(), {&a()},
-                                            status::ir_operand_type_must_match_return_type);
-                }
-                break;
-            }
-            default:
-                if (a_ty != r_ty) {
-                    throw compilation_error(loc(), {&a()},
-                                            status::ir_operand_type_must_match_return_type);
-                }
-                break;
-            }
-
-            bool inst_supports_int = true;
-            bool inst_supports_fp = true;
-            bool inst_supports_complex = true;
-            switch (operation()) {
-            case arithmetic_unary::abs:
-            case arithmetic_unary::neg:
-                break;
-            case arithmetic_unary::not_:
-                inst_supports_fp = false;
-                inst_supports_complex = false;
-                break;
-            case arithmetic_unary::conj:
-            case arithmetic_unary::im:
-            case arithmetic_unary::re:
-                inst_supports_int = false;
-                inst_supports_fp = false;
-                break;
-            }
-            if (!inst_supports_int && is_integer_type(a_ty)) {
-                throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
-            }
-            if (!inst_supports_fp && is_floating_type(a_ty)) {
-                throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
-            }
-            if (!inst_supports_complex && is_complex_type(a_ty)) {
-                throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
-            }
-        };
-
-        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
-        auto rt = dyn_cast<coopmatrix_data_type>(ty);
-        if (ct && rt) {
-            check_scalar_ty(ct->component_ty(), rt->component_ty());
-        } else {
-            check_scalar_ty(get_scalar_type(loc(), a())->ty(),
-                            get_scalar_type(loc(), result())->ty());
-        }
-    }
-}
-
 void barrier_inst::setup_and_check() {}
 
 auto barrier_inst::has_fence(address_space as) -> bool {
@@ -827,6 +759,61 @@ void shr_inst::setup_and_check() { arith_inst::setup_and_check(supports_int); }
 void and_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
 void or_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
 void xor_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
+
+void arith_unary_inst::setup_and_check() {}
+void arith_unary_inst::setup_and_check(support_flags support, bool component_type_match) {
+    auto ty = result().ty();
+
+    if (isa<boolean_data_type>(*ty)) {
+        if (!(support & supports_bool)) {
+            throw compilation_error(loc(), status::ir_boolean_unsupported);
+        }
+    } else {
+        auto const check_scalar_ty = [&](scalar_type a_ty, scalar_type r_ty) {
+            if (component_type_match) {
+                if (r_ty != component_type(a_ty)) {
+                    throw compilation_error(loc(), {&a()},
+                                            status::ir_operand_type_must_match_return_type);
+                }
+            } else {
+                if (a_ty != r_ty) {
+                    throw compilation_error(loc(), {&a()},
+                                            status::ir_operand_type_must_match_return_type);
+                }
+            }
+            if (!(support & supports_int) && is_integer_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
+            }
+            if (!(support & supports_float) && is_floating_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
+            }
+            if (!(support & supports_complex) && is_complex_type(a_ty)) {
+                throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+            }
+        };
+
+        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
+        auto rt = dyn_cast<coopmatrix_data_type>(ty);
+        if (ct && rt) {
+            check_scalar_ty(ct->component_ty(), rt->component_ty());
+        } else {
+            check_scalar_ty(get_scalar_type(loc(), a())->ty(),
+                            get_scalar_type(loc(), result())->ty());
+        }
+    }
+}
+void abs_inst::setup_and_check() {
+    arith_unary_inst::setup_and_check(supports_int | supports_float | supports_complex, true);
+}
+void neg_inst::setup_and_check() {
+    arith_unary_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void not_inst::setup_and_check() {
+    arith_unary_inst::setup_and_check(supports_bool | supports_int);
+}
+void conj_inst::setup_and_check() { arith_unary_inst::setup_and_check(supports_complex); }
+void im_inst::setup_and_check() { arith_unary_inst::setup_and_check(supports_complex, true); }
+void re_inst::setup_and_check() { arith_unary_inst::setup_and_check(supports_complex, true); }
 
 void blas_a2_inst::setup_and_check() {
     auto At = get_memref_type(loc(), A());

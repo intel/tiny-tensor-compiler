@@ -531,42 +531,41 @@ void make_store(uniquifier &unique, store_flag flag, scalar_type sty, address_sp
     }
 }
 
-auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv_inst *a,
-                   location const &loc) -> spv_inst * {
+auto make_unary_op(uniquifier &unique, scalar_type sty, IK op, spv_inst *a, location const &loc)
+    -> spv_inst * {
     auto &mod = unique.mod();
-    auto const make_int = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+    auto const make_int = [&](IK op, spv_inst *ty, spv_inst *a) -> spv_inst * {
         switch (op) {
-        case arithmetic_unary::abs:
+        case IK::IK_abs:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::s_abs),
                                       std::vector<IdRef>{a});
-        case arithmetic_unary::neg:
+        case IK::IK_neg:
             return mod.add<OpSNegate>(ty, a);
-        case arithmetic_unary::not_:
+        case IK::IK_not:
             return mod.add<OpNot>(ty, a);
         default:
             break;
         }
         throw compilation_error(loc, status::internal_compiler_error);
     };
-    auto const make_float = [&](arithmetic_unary op, spv_inst *ty, spv_inst *a) -> spv_inst * {
+    auto const make_float = [&](IK op, spv_inst *ty, spv_inst *a) -> spv_inst * {
         switch (op) {
-        case arithmetic_unary::abs:
+        case IK::IK_abs:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::fabs),
                                       std::vector<IdRef>{a});
-        case arithmetic_unary::neg:
+        case IK::IK_neg:
             return mod.add<OpFNegate>(ty, a);
         default:
             break;
         }
         throw compilation_error(loc, status::internal_compiler_error);
     };
-    auto const make_complex = [&](arithmetic_unary op, scalar_type sty, spv_inst *ty,
-                                  spv_inst *a) -> spv_inst * {
+    auto const make_complex = [&](IK op, scalar_type sty, spv_inst *ty, spv_inst *a) -> spv_inst * {
         auto float_ty = unique.scalar_ty(component_type(sty));
         switch (op) {
-        case arithmetic_unary::abs: {
+        case IK::IK_abs: {
             auto a2 = mod.add<OpFMul>(ty, a, a);
             auto a2_0 = mod.add<OpCompositeExtract>(float_ty, a2, std::vector<LiteralInteger>{0});
             auto a2_1 = mod.add<OpCompositeExtract>(float_ty, a2, std::vector<LiteralInteger>{1});
@@ -575,16 +574,16 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, arithmetic_unary op, spv
                                       static_cast<std::int32_t>(OpenCLEntrypoint::sqrt),
                                       std::vector<IdRef>{a2_0p1});
         }
-        case arithmetic_unary::neg:
+        case IK::IK_neg:
             return mod.add<OpFNegate>(ty, a);
-        case arithmetic_unary::conj: {
+        case IK::IK_conj: {
             auto a_im = mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{1});
             auto neg_a_im = mod.add<OpFNegate>(float_ty, a_im);
             return mod.add<OpCompositeInsert>(ty, neg_a_im, a, std::vector<LiteralInteger>{1});
         }
-        case arithmetic_unary::im:
+        case IK::IK_im:
             return mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{1});
-        case arithmetic_unary::re:
+        case IK::IK_re:
             return mod.add<OpCompositeExtract>(float_ty, a, std::vector<LiteralInteger>{0});
         default:
             break;
