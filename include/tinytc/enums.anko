@@ -131,22 +131,6 @@ enum @scalar_type "Scalar types" {
     case %c64   => 10 "Double precision complex (2x64 bit)"
 }
 
-enum @builtin "Builtin values" {
-    case %group_id_x         => 0  "group_id.x"
-    case %group_id_y         => 1  "group_id.y"
-    case %group_id_z         => 2  "group_id.z"
-    case %num_groups_x       => 3  "num_groups.x"
-    case %num_groups_y       => 4  "num_groups.y"
-    case %num_groups_z       => 5  "num_groups.z"
-    case %num_subgroups_x    => 6  "num_subgroups.x"
-    case %num_subgroups_y    => 7  "num_subgroups.y"
-    case %subgroup_size      => 8  "subgroup_size"
-    case %subgroup_id_x      => 9  "subgroup_id.x"
-    case %subgroup_id_y      => 10 "subgroup_id.y"
-    case %subgroup_linear_id => 11 "subgroup_linear_id"
-    case %subgroup_local_id  => 12 "subgroup_local_id"
-}
-
 enum @cmp_condition "Compare operation" {
     case %eq => 0 "equals"
     case %ne => 1 "not equal"
@@ -166,6 +150,13 @@ enum @math_unary "Math operations (unary)" {
     case %native_exp  => 6 "Native base-e exponential"
     case %native_exp2 => 7 "Native base-2 exponential"
 }
+
+enum @comp3 "Named components of 3d vector" {
+    case %x => 0  ".x"
+    case %y => 1  ".y"
+    case %z => 2  ".z"
+}
+
 
 enum @group_arithmetic "Group arithmetic" {
     case %add => 0 "Group add"

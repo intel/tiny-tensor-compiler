@@ -61,7 +61,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     auto ct = get_coopmatrix_type(in.a());
     auto cl = get_layout(core_cfg_, ct);
 
-    auto p = bb_.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, in.loc());
+    auto p = bb_.create<subgroup_local_id_inst>(i32_ty, in.loc());
     auto i = p;
     auto j0 = value{nullptr};
     if (cl.rows < core_cfg_.subgroup_size) {

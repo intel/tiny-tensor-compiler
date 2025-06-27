@@ -99,6 +99,9 @@ lex:
         "global"            { adv_loc(); return parser::make_GLOBAL(loc_); }
         ".local"            { adv_loc(); return parser::make_LOCAL_ATTR(loc_); }
         ".global"           { adv_loc(); return parser::make_GLOBAL_ATTR(loc_); }
+        ".x"                { adv_loc(); return parser::make_COMP3(comp3::x, loc_); }
+        ".y"                { adv_loc(); return parser::make_COMP3(comp3::y, loc_); }
+        ".z"                { adv_loc(); return parser::make_COMP3(comp3::z, loc_); }
 
         // constants
         "true"              { adv_loc(); return parser::make_BOOLEAN_CONSTANT(true, loc_); }
@@ -116,7 +119,7 @@ lex:
 
         // attributes
         "attributes"        { return parser::make_ATTRIBUTES(loc_); }
-        "alignment" | "shape_gcd" | "stride_gcd" | "subgroup_size" | "unroll" | "work_group_size" {
+        "alignment" | "shape_gcd" | "stride_gcd" | "unroll" | "work_group_size" {
             adv_loc(); return parser::make_ATTR_NAME(std::string(b, YYCURSOR), loc_);
         }
 
@@ -208,19 +211,13 @@ lex:
         "re"           { adv_loc(); return parser::make_RE(loc_); }
 
         // builtin
-        "builtin.group_id.x"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_x, loc_); }
-        "builtin.group_id.y"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_y, loc_); }
-        "builtin.group_id.z"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_z, loc_); }
-        "builtin.num_groups.x"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_x, loc_); }
-        "builtin.num_groups.y"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_y, loc_); }
-        "builtin.num_groups.z"       { adv_loc(); return parser::make_BUILTIN(builtin::num_groups_z, loc_); }
-        "builtin.num_subgroups.x"    { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups_x, loc_); }
-        "builtin.num_subgroups.y"    { adv_loc(); return parser::make_BUILTIN(builtin::num_subgroups_y, loc_); }
-        "builtin.subgroup_size"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_size, loc_); }
-        "builtin.subgroup_id.x"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id_x, loc_); }
-        "builtin.subgroup_id.y"      { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_id_y, loc_); }
-        "builtin.subgroup_linear_id" { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_linear_id, loc_); }
-        "builtin.subgroup_local_id"  { adv_loc(); return parser::make_BUILTIN(builtin::subgroup_local_id, loc_); }
+        "group_id"           { adv_loc(); return parser::make_GROUP_ID(loc_); }
+        "num_groups"         { adv_loc(); return parser::make_NUM_GROUPS(loc_); }
+        "num_subgroups"      { adv_loc(); return parser::make_NUM_SUBGROUPS(loc_); }
+        "subgroup_size"      { adv_loc(); return parser::make_SUBGROUP_SIZE(loc_); }
+        "subgroup_id"        { adv_loc(); return parser::make_SUBGROUP_ID(loc_); }
+        "subgroup_linear_id" { adv_loc(); return parser::make_SUBGROUP_LINEAR_ID(loc_); }
+        "subgroup_local_id"  { adv_loc(); return parser::make_SUBGROUP_LOCAL_ID(loc_); }
 
         // comparison condition
         "cmp.eq"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }

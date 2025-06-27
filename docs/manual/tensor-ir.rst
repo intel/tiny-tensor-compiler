@@ -1042,15 +1042,11 @@ Builtin (mixed)
 
 .. code:: abnf
 
-    mixed-builtin-type      =  "builtin.group_id.x"       /
-                               "builtin.group_id.y"       /
-                               "builtin.group_id.z"       /
-                               "builtin.num_groups.x"     /
-                               "builtin.num_groups.y"     /
-                               "builtin.num_groups.z"     /
-                               "builtin.num_subgroups.x"  /
-                               "builtin.num_subgroups.y"  /
-                               "builtin.subgroup_size"
+    mixed-builtin-type      =  "group_id" comp3      /
+                               "num_groups" comp3    /
+                               "num_subgroups" comp3 /
+                               "subgroup_size"
+    comp3                   = ".x" / ".y" / ".z"
     value-instruction       =/ mixed-builtin-type ":" integer-type
 
 Overview
@@ -1065,25 +1061,26 @@ Each mode starts with zero and is limited by the corresponding num_groups mode. 
 
     \forall d \in \{x,y,z\} : 0 \leq \text{group_id}_d < \text{num_groups}_d
 
-The number of subgroups is two dimensional and is related to the work-group size as following:
+The number of subgroups is related to the 2-dimensional work-group size as following:
 
 .. math::
 
     \begin{aligned}
     \text{num_subgroups}_x &= \frac{\text{work_group_size[0]}}{\text{subgroup_size}} \\
-    \text{num_subgroups}_y &= \text{work_group_size[1]}
+    \text{num_subgroups}_y &= \text{work_group_size[1]} \\
+    \text{num_subgroups}_z &= 1
     \end{aligned}
 
 The following table shows the builtins' description and the types that are returned.
 
-=================== ===== ====================== ====================================================
-Builtin             Type  OpenCL analogue        Description
-=================== ===== ====================== ====================================================
-group_id.(x/y/z)    index get_group_id           Returns the x, y, or z mode of the group id
-num_groups.(x/y/z)  index get_num_groups         Returns number of groups in the x, y, or z mode
-num_subgroups.(x/y) i32   N/A                    Returns the number of subgroups in the x or y mode 
-subgroup_size       i32   get_max_sub_group_size Returns the subgroup size
-=================== ===== ====================== ====================================================
+============= ===== ====================== ======================================================
+Builtin       Type  OpenCL analogue        Description
+============= ===== ====================== ======================================================
+group_id      index get_group_id           Returns the x, y, or z mode of the group id
+num_groups    index get_num_groups         Returns number of groups in the x, y, or z mode
+num_subgroups i32   N/A                    Returns the number of subgroups in the x, y, or z mode 
+subgroup_size i32   get_max_sub_group_size Returns the subgroup size
+============= ===== ====================== ======================================================
 
 Cast
 ....
@@ -1661,10 +1658,9 @@ Builtin (SPMD)
 
 .. code:: abnf
 
-    spmd-builtin-type       =  "builtin.subgroup_id.x"      /
-                               "builtin.subgroup_id.y"      /
-                               "builtin.subgroup_linear_id" /
-                               "builtin.subgroup_local_id"
+    spmd-builtin-type       =  "subgroup_id" comp3 /
+                               "subgroup_linear_id"     /
+                               "subgroup_local_id"
     value-instruction       =/ spmd-builtin-type ":" integer-type
 
 Overview
@@ -1672,30 +1668,33 @@ Overview
 
 Returns a builtin value.
 
-The subgroup id is two dimensional; the mode is selected with the .x and .y suffix.
+The mode of the subgroup id is selected with the .x, .y, and .z suffix.
 Each mode starts with zero and is limited by the corresponding num_subgroups mode. That is,
 
 .. math::
 
-    \forall d \in \{x,y\} : 0 \leq \text{subgroup_id}_d < \text{num_subgroups}_d
+    \forall d \in \{x,y,z\} : 0 \leq \text{subgroup_id}_d < \text{num_subgroups}_d
 
-The subgroup linear id combines the x and y modes of the subgroup id as following:
+The subgroup linear id combines the x, y, and z modes of the subgroup id as following (note that
+that :math:`\text{subgroup_id}_z = 0` due to :math:`\text{num_subgroups}_z = 1`):
 
 .. math::
 
-    \text{subgroup_linear_id} = \text{subgroup_id}_x + \text{subgroup_id}_y\cdot \text{num_subgroups}_x
+    \text{subgroup_linear_id} = \text{subgroup_id}_x +
+                                \text{subgroup_id}_y\cdot \text{num_subgroups}_x
+
 
 The subgroup local id is the invocation id within the subgroup and ranges from 0 to subgroup_size-1.
 
 The following table shows the builtins' description and the types that are returned.
 
-=================== ===== ====================== ====================================================
-Builtin             Type  OpenCL analogue        Description
-=================== ===== ====================== ====================================================
-subgroup_id.(x/y)   i32   N/A                    Returns the x or y mode of the subgroup id
-subgroup_linear_id  i32   get_sub_group_id       Returns linear subgroup id
-subgroup_local_id   i32   get_sub_group_local_id Returns the local invocation id in the subgroup
-=================== ===== ====================== ====================================================
+================== ===== ====================== ====================================================
+Builtin            Type  OpenCL analogue        Description
+================== ===== ====================== ====================================================
+subgroup_id        i32   N/A                    Returns the x, y, or z mode of the subgroup id
+subgroup_linear_id i32   get_sub_group_id       Returns linear subgroup id
+subgroup_local_id  i32   get_sub_group_local_id Returns the local invocation id in the subgroup
+================== ===== ====================== ====================================================
 
 Cooperative matrix apply
 ........................

@@ -111,7 +111,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             auto const body = [&](region_builder &bb, value alpha, value A, value B,
                                   bool is_beta_nonzero, value beta_arg, value C) {
                 auto c_M_block_size = bb.create<constant_inst>(M_block_size, index_ty, my_loc());
-                auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
+                auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
                 auto m = bb.create<mul_inst>(gid, c_M_block_size, get_type(gid), my_loc());
                 auto beta = is_beta_nonzero ? beta_arg : bb.constant_zero(ty_, my_loc());
 

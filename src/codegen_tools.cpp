@@ -313,8 +313,8 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
         auto i32_ty = get_scalar(ctx, scalar_type::i32);
         auto index_ty = get_scalar(ctx, scalar_type::index);
 
-        auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, loc);
-        auto sglid = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, loc);
+        auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
+        auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
         auto c_zero = bb.constant_zero(i32_ty, loc);
         auto is_sglid_0 = bb.create<compare_inst>(cmp_condition::eq, sglid, c_zero, bool_ty, loc);
         bb.if_condition(
@@ -364,8 +364,8 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
         auto bool_ty = get_boolean(ctx);
         auto index_ty = get_scalar(ctx, scalar_type::index);
 
-        auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, loc);
-        auto sglid = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, loc);
+        auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
+        auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
 
         auto c_sgs_1 = bb.create<constant_inst>(subgroup_size_ - 1, i32_ty, loc);
         auto is_last_sglid =

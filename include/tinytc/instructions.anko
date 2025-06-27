@@ -14,12 +14,6 @@ inst @barrier "Barrier instruction" {
     cxx "auto has_fence(address_space as) -> bool;"
 }
 
-inst @builtin "Builtin instruction" {
-    prop %builtin_type => @builtin "builtin type"
-    ret %result                    "result type"
-    cxx "auto kind() -> inst_execution_kind;"
-}
-
 inst @cast "Cast instruction" {
     op %a       "operand"
     ret %result "target type"
@@ -197,6 +191,8 @@ inst @yield "Yield instruction" {
 }
 
 
+; Binary aritmetic
+
 inst @arith "Arithmetic instruction (binary)" {
     op %a                          "left-hand operand"
     op %b                          "right-hand operand"
@@ -216,6 +212,9 @@ inst @and : @arith "Bitwise and instruction" {}
 inst @or  : @arith "Bitwise or instruction" {}
 inst @xor : @arith "Bitwise xor instruction" {}
 
+
+; Unary aritmetic
+
 inst @arith_unary "Arithmetic instruction (unary)" {
     op %a                                "operand"
     ret %result                          "result type"
@@ -229,8 +228,9 @@ inst @im   : @arith_unary "Imaginary part instruction" {}
 inst @re   : @arith_unary "Real part instruction" {}
 
 
+; BLAS with 2 tensor operands
 
-inst @blas_a2 "BLAS instruction with 2 tensor arguments" {
+inst @blas_a2 "BLAS instruction with 2 tensor operands" {
     prop %atomic => bool "atomic flag"
     op %alpha            "alpha scalar"
     op %A                "A tensor"
@@ -250,7 +250,10 @@ inst @sum : @blas_a2 "Sum instruction" {
     prop %tA => @transpose "transpose A"
 }
 
-inst @blas_a3 "BLAS instruction with 3 tensor arguments" {
+
+; BLAS with 3 tensor operands
+
+inst @blas_a3 "BLAS instruction with 3 tensor operands" {
     prop %atomic => bool "atomic flag"
     op %alpha            "alpha scalar"
     op %A                "A tensor"
@@ -271,6 +274,32 @@ inst @gemv : @blas_a3 "GEMV instruction" {
 inst @ger : @blas_a3 "GER instruction" {}
 
 inst @hadamard : @blas_a3 "Hadamard instruction" {}
+
+
+; Built-in functions
+
+inst @builtin "Builtin instruction" {
+    ret %result "result type"
+    cxx "void setup_and_check(scalar_type expected_ret_ty, status err);"
+}
+inst @group_id : @builtin "Group ID instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @num_groups : @builtin "Number of groups instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @num_subgroups : @builtin "Number of subgroups instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @subgroup_size : @builtin "Subgroup size instruction" {}
+inst @subgroup_id : @builtin "Subgroup id instruction" {
+    prop %mode => @comp3 "mode"
+}
+inst @subgroup_linear_id : @builtin "Subgroup linear id instruction" {}
+inst @subgroup_local_id : @builtin "Subgroup local id instruction" {}
+
+
+; Loops
 
 inst @loop "Loop instruction" {
     reg %body "loop body"

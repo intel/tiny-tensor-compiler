@@ -178,6 +178,13 @@
     GEMV                        "gemv"
     GER                         "ger"
     HADAMARD                    "hadamard"
+    GROUP_ID                    "group_id"
+    NUM_GROUPS                  "num_groups"
+    NUM_SUBGROUPS               "num_subgroups"
+    SUBGROUP_SIZE               "subgroup_size"
+    SUBGROUP_ID                 "subgroup_id"
+    SUBGROUP_LINEAR_ID          "subgroup_linear_id"
+    SUBGROUP_LOCAL_ID           "subgroup_local_id"
     FOR                         "for"
     FOREACH                     "foreach"
 ;
@@ -190,7 +197,7 @@
 %token <double> FLOATING_CONSTANT
 %token <scalar_type> INTEGER_TYPE
 %token <scalar_type> FLOATING_TYPE
-%token <builtin> BUILTIN
+%token <comp3> COMP3
 %token <cmp_condition> CMP_CONDITION
 %token <std::pair<group_arithmetic,reduce_mode>> COOPERATIVE_MATRIX_REDUCE
 %token <std::pair<group_arithmetic,group_operation>> SUBGROUP_OPERATION
@@ -361,8 +368,9 @@ named_attribute:
 ;
 
 attribute_name:
-    ATTR_NAME { $$ = string_attr::get(ctx.cctx().get(), $ATTR_NAME); }
-  | STRING { $$ = string_attr::get(ctx.cctx().get(), $STRING); }
+    ATTR_NAME     { $$ = string_attr::get(ctx.cctx().get(), $ATTR_NAME); }
+  | SUBGROUP_SIZE { $$ = string_attr::get(ctx.cctx().get(), "subgroup_size"); }
+  | STRING        { $$ = string_attr::get(ctx.cctx().get(), $STRING); }
 
 optional_dictionary_attribute:
     %empty { $$ = nullptr; }
@@ -772,16 +780,13 @@ valued_inst: CONJ var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = conj_inst::
 valued_inst: IM   var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =   im_inst::create($a, $ty, @valued_inst); }); };
 valued_inst: RE   var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ =   re_inst::create($a, $ty, @valued_inst); }); };
 
-valued_inst:
-    BUILTIN COLON data_type[ty] {
-        try {
-            $$ = inst { builtin_inst::create($BUILTIN, $ty, @valued_inst) };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: GROUP_ID COMP3      COLON data_type[ty] { yytry(ctx, [&] { $$ = group_id_inst::create($COMP3, $ty, @valued_inst); }); };
+valued_inst: NUM_GROUPS COMP3    COLON data_type[ty] { yytry(ctx, [&] { $$ = num_groups_inst::create($COMP3, $ty, @valued_inst); }); };
+valued_inst: NUM_SUBGROUPS COMP3 COLON data_type[ty] { yytry(ctx, [&] { $$ = num_subgroups_inst::create($COMP3, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_SIZE       COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_size_inst::create($ty, @valued_inst); }); };
+valued_inst: SUBGROUP_ID COMP3   COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_id_inst::create($COMP3, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_LINEAR_ID  COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_linear_id_inst::create($ty, @valued_inst); }); };
+valued_inst: SUBGROUP_LOCAL_ID   COLON data_type[ty] { yytry(ctx, [&] { $$ = subgroup_local_id_inst::create($ty, @valued_inst); }); };
 
 valued_inst:
     CAST var[a] COLON data_type[to] {

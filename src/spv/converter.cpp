@@ -267,62 +267,6 @@ void inst_converter::operator()(barrier_inst in) {
     mod_->add<OpControlBarrier>(scope, scope, memory_semantics);
 }
 
-void inst_converter::operator()(builtin_inst in) {
-    switch (in.builtin_type()) {
-    case builtin::group_id_x:
-    case builtin::group_id_y:
-    case builtin::group_id_z: {
-        auto gid = unique_.load_builtin(BuiltIn::WorkgroupId);
-        auto index_ty = unique_.scalar_ty(scalar_type::index);
-        const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
-                                  static_cast<std::int32_t>(builtin::group_id_x);
-        declare(in.result(),
-                mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{mode}));
-        break;
-    }
-    case builtin::num_groups_x:
-    case builtin::num_groups_y:
-    case builtin::num_groups_z: {
-        auto ng = unique_.load_builtin(BuiltIn::NumWorkgroups);
-        auto index_ty = unique_.scalar_ty(scalar_type::index);
-        const std::int32_t mode = static_cast<std::int32_t>(in.builtin_type()) -
-                                  static_cast<std::int32_t>(builtin::num_groups_x);
-        declare(in.result(),
-                mod_->add<OpCompositeExtract>(index_ty, ng, std::vector<LiteralInteger>{mode}));
-        break;
-    }
-    case builtin::num_subgroups_x:
-        declare(in.result(), unique_.constant(tiling_.m_tiles()));
-        break;
-    case builtin::num_subgroups_y:
-        declare(in.result(), unique_.constant(tiling_.n_tiles()));
-        break;
-    case builtin::subgroup_size:
-        declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupSize));
-        break;
-    case builtin::subgroup_id_x: {
-        auto i32_ty = unique_.scalar_ty(scalar_type::i32);
-        auto m_tiles = unique_.constant(tiling_.m_tiles());
-        auto sgid = unique_.load_builtin(BuiltIn::SubgroupId);
-        declare(in.result(), mod_->add<OpSRem>(i32_ty, sgid, m_tiles));
-        break;
-    }
-    case builtin::subgroup_id_y: {
-        auto i32_ty = unique_.scalar_ty(scalar_type::i32);
-        auto m_tiles = unique_.constant(tiling_.m_tiles());
-        auto sgid = unique_.load_builtin(BuiltIn::SubgroupId);
-        declare(in.result(), mod_->add<OpSDiv>(i32_ty, sgid, m_tiles));
-        break;
-    }
-    case builtin::subgroup_linear_id:
-        declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupId));
-        break;
-    case builtin::subgroup_local_id:
-        declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupLocalInvocationId));
-        break;
-    }
-}
-
 void inst_converter::operator()(cast_inst in) {
     if (auto st = dyn_cast<scalar_data_type>(in.result().ty()); st) {
         auto av = val(in.a());
@@ -1020,6 +964,65 @@ void inst_converter::operator()(yield_inst in) {
     for (auto &op : in.yielded_vals()) {
         top[i++] = val(op);
     }
+}
+
+void inst_converter::operator()(group_id_inst in) {
+    auto gid = unique_.load_builtin(BuiltIn::WorkgroupId);
+    auto index_ty = unique_.scalar_ty(scalar_type::index);
+    const std::int32_t mode =
+        static_cast<std::int32_t>(in.mode()) - static_cast<std::int32_t>(comp3::x);
+    declare(in.result(),
+            mod_->add<OpCompositeExtract>(index_ty, gid, std::vector<LiteralInteger>{mode}));
+}
+void inst_converter::operator()(num_groups_inst in) {
+    auto ng = unique_.load_builtin(BuiltIn::NumWorkgroups);
+    auto index_ty = unique_.scalar_ty(scalar_type::index);
+    const std::int32_t mode =
+        static_cast<std::int32_t>(in.mode()) - static_cast<std::int32_t>(comp3::x);
+    declare(in.result(),
+            mod_->add<OpCompositeExtract>(index_ty, ng, std::vector<LiteralInteger>{mode}));
+}
+void inst_converter::operator()(num_subgroups_inst in) {
+    auto make_constant = [&](comp3 c) -> std::int32_t {
+        switch (c) {
+        case comp3::x:
+            return tiling_.m_tiles();
+        case comp3::y:
+            return tiling_.n_tiles();
+        default:
+            break;
+        }
+        return 1;
+    };
+    auto cst = make_constant(in.mode());
+    declare(in.result(), unique_.constant(cst));
+}
+void inst_converter::operator()(subgroup_size_inst in) {
+    declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupSize));
+}
+void inst_converter::operator()(subgroup_id_inst in) {
+    const auto i32_ty = [&] { return unique_.scalar_ty(scalar_type::i32); };
+    const auto m_tiles = [&] { return unique_.constant(tiling_.m_tiles()); };
+    const auto sgid = [&] { return unique_.load_builtin(BuiltIn::SubgroupId); };
+
+    auto make_value = [&](comp3 c) -> spv_inst * {
+        switch (c) {
+        case comp3::x:
+            return mod_->add<OpSRem>(i32_ty(), sgid(), m_tiles());
+        case comp3::y:
+            return mod_->add<OpSDiv>(i32_ty(), sgid(), m_tiles());
+        default:
+            break;
+        }
+        return unique_.constant(std::int32_t{0});
+    };
+    declare(in.result(), make_value(in.mode()));
+}
+void inst_converter::operator()(subgroup_linear_id_inst in) {
+    declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupId));
+}
+void inst_converter::operator()(subgroup_local_id_inst in) {
+    declare(in.result(), unique_.load_builtin(BuiltIn::SubgroupLocalInvocationId));
 }
 
 void inst_converter::run_on_region(tinytc_region &reg) {

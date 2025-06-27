@@ -108,7 +108,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         get_parameters(fn_body, params);
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
+        auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
         auto from = bb.constant_zero(index_ty, my_loc());
         auto to = bb.create<constant_inst>(repetitions, index_ty, my_loc());
         auto calpha = bb.constant_one(element_ty, my_loc());

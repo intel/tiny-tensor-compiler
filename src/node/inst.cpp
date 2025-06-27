@@ -223,8 +223,15 @@ auto tinytc_inst::kind() -> inst_execution_kind {
     case IK::IK_subgroup_broadcast:
     case IK::IK_subgroup_operation:
         return inst_execution_kind::spmd;
-    case IK::IK_builtin:
-        return dyn_cast<builtin_inst>(this).kind();
+    case IK::IK_group_id:
+    case IK::IK_num_groups:
+    case IK::IK_num_subgroups:
+    case IK::IK_subgroup_size:
+        return inst_execution_kind::mixed;
+    case IK::IK_subgroup_id:
+    case IK::IK_subgroup_linear_id:
+    case IK::IK_subgroup_local_id:
+        return inst_execution_kind::spmd;
     };
     throw internal_compiler_error();
 }

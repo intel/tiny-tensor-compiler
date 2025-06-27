@@ -4,8 +4,9 @@ Builder C++-API:
   Common:
     enum:
       - tinytc::address_space
-      - tinytc::builtin
+      - tinytc::checked_flag
       - tinytc::cmp_condition
+      - tinytc::comp3
       - tinytc::group_arithmetic
       - tinytc::group_operation
       - tinytc::math_unary
@@ -17,9 +18,9 @@ Builder C++-API:
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
-      - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
+      - tinytc::to_string(comp3)
       - tinytc::to_string(group_arithmetic)
       - tinytc::to_string(group_operation)
       - tinytc::to_string(math_unary)
@@ -78,7 +79,6 @@ Builder C++-API:
     struct:
       - tinytc::creator< alloca_inst >
       - tinytc::creator< barrier_inst >
-      - tinytc::creator< builtin_inst >
       - tinytc::creator< cast_inst >
       - tinytc::creator< compare_inst >
       - tinytc::creator< constant_inst >
@@ -116,12 +116,12 @@ Builder C++-API:
       - tinytc::createo< xor_inst >
       - tinytc::createo< min_inst >
       - tinytc::createo< max_inst >
-      - tinytc::create< abs >
-      - tinytc::create< neg >
-      - tinytc::create< not >
-      - tinytc::create< conj >
-      - tinytc::create< im >
-      - tinytc::create< re >
+      - tinytc::create< abs_inst >
+      - tinytc::create< neg_inst >
+      - tinytc::create< not_inst >
+      - tinytc::create< conj_inst >
+      - tinytc::create< im_inst >
+      - tinytc::create< re_inst >
       - tinytc::creator< axpby_inst >
       - tinytc::creator< cumsum_inst >
       - tinytc::creator< sum_inst >
@@ -129,6 +129,13 @@ Builder C++-API:
       - tinytc::creator< gemv_inst >
       - tinytc::creator< ger_inst >
       - tinytc::creator< hadamard_inst >
+      - tinytc::creator< group_id_inst >
+      - tinytc::creator< num_groups_inst >
+      - tinytc::creator< num_subgroups_inst >
+      - tinytc::creator< subgroup_size_inst >
+      - tinytc::creator< subgroup_id_inst >
+      - tinytc::creator< subgroup_linear_id_inst >
+      - tinytc::creator< subgroup_local_id_inst >
       - tinytc::creator< for_inst >
       - tinytc::creator< foreach_inst >
   Program:

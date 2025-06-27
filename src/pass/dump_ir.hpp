@@ -41,7 +41,6 @@ class dump_ir_pass {
     void operator()(arith_inst a);
     void operator()(arith_unary_inst a);
     void operator()(barrier_inst b);
-    void operator()(builtin_inst in);
     void operator()(cast_inst c);
     void operator()(compare_inst c);
     void operator()(constant_inst c);
@@ -75,6 +74,13 @@ class dump_ir_pass {
     void operator()(store_inst s);
     void operator()(sum_inst s);
     void operator()(yield_inst y);
+    void operator()(group_id_inst in);
+    void operator()(num_groups_inst in);
+    void operator()(num_subgroups_inst in);
+    void operator()(subgroup_size_inst in);
+    void operator()(subgroup_id_inst in);
+    void operator()(subgroup_linear_id_inst in);
+    void operator()(subgroup_local_id_inst in);
 
     void run_on_function(tinytc_func &fn);
     void run_on_region(tinytc_region &reg);

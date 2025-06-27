@@ -4,9 +4,9 @@ Builder C-API:
   Common:
     enum:
       - tinytc_address_space_t
-      - tinytc_builtin_t
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
+      - tinytc_comp3_t
       - tinytc_group_arithmetic_t
       - tinytc_group_operation_t
       - tinytc_math_unary_t
@@ -19,9 +19,9 @@ Builder C-API:
       - TINYTC_DYNAMIC
     function:
       - tinytc_address_space_to_string
-      - tinytc_builtin_to_string
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
+      - tinytc_comp3_to_string
       - tinytc_group_arithmetic_to_string
       - tinytc_group_operation_to_string
       - tinytc_math_unary_to_string
@@ -81,7 +81,6 @@ Builder C-API:
     function:
       - tinytc_alloca_inst_create
       - tinytc_barrier_inst_create
-      - tinytc_builtin_inst_create
       - tinytc_cast_inst_create
       - tinytc_compare_inst_create
       - tinytc_constant_inst_create_boolean
@@ -137,6 +136,13 @@ Builder C-API:
       - tinytc_gemv_inst_create
       - tinytc_ger_inst_create
       - tinytc_hadamard_inst_create
+      - tinytc_group_id_inst_create
+      - tinytc_num_groups_inst_create
+      - tinytc_num_subgroups_inst_create
+      - tinytc_subgroup_size_inst_create
+      - tinytc_subgroup_id_inst_create
+      - tinytc_subgroup_linear_id_inst_create
+      - tinytc_subgroup_local_id_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create
       - tinytc_inst_get_parent_region

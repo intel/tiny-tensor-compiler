@@ -120,58 +120,6 @@ auto barrier_inst::has_fence(address_space as) -> bool {
     return (fence_flags() & static_cast<tinytc_address_spaces_t>(as)) > 0;
 }
 
-void builtin_inst::setup_and_check() {
-    auto rt = dyn_cast<scalar_data_type>(result().ty());
-    if (!rt) {
-        throw compilation_error(loc(), status::ir_expected_scalar);
-    }
-
-    switch (builtin_type()) {
-    case builtin::group_id_x:
-    case builtin::group_id_y:
-    case builtin::group_id_z:
-    case builtin::num_groups_x:
-    case builtin::num_groups_y:
-    case builtin::num_groups_z:
-        if (rt->ty() != scalar_type::index) {
-            throw compilation_error(loc(), status::ir_expected_index);
-        }
-        break;
-    case builtin::num_subgroups_x:
-    case builtin::num_subgroups_y:
-    case builtin::subgroup_size:
-    case builtin::subgroup_id_x:
-    case builtin::subgroup_id_y:
-    case builtin::subgroup_linear_id:
-    case builtin::subgroup_local_id:
-        if (rt->ty() != scalar_type::i32) {
-            throw compilation_error(loc(), status::ir_expected_i32);
-        }
-        break;
-    }
-}
-
-auto builtin_inst::kind() -> inst_execution_kind {
-    switch (builtin_type()) {
-    case builtin::group_id_x:
-    case builtin::group_id_y:
-    case builtin::group_id_z:
-    case builtin::num_groups_x:
-    case builtin::num_groups_y:
-    case builtin::num_groups_z:
-    case builtin::num_subgroups_x:
-    case builtin::num_subgroups_y:
-    case builtin::subgroup_size:
-        return tinytc::inst_execution_kind::mixed;
-    case builtin::subgroup_id_x:
-    case builtin::subgroup_id_y:
-    case builtin::subgroup_linear_id:
-    case builtin::subgroup_local_id:
-        return tinytc::inst_execution_kind::spmd;
-    }
-    return tinytc::inst_execution_kind::spmd;
-}
-
 void cast_inst::setup_and_check() {
     auto to_ty = result().ty();
 
@@ -1061,6 +1009,40 @@ void hadamard_inst::setup_and_check() {
                                     oss.str());
         }
     }
+}
+
+void builtin_inst::setup_and_check() {}
+void builtin_inst::setup_and_check(scalar_type expected_ret_ty, status err) {
+    auto rt = dyn_cast<scalar_data_type>(result().ty());
+    if (!rt) {
+        throw compilation_error(loc(), status::ir_expected_scalar);
+    }
+
+    if (rt->ty() != expected_ret_ty) {
+        throw compilation_error(loc(), err);
+    }
+}
+
+void group_id_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::index, status::ir_expected_index);
+}
+void num_groups_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::index, status::ir_expected_index);
+}
+void num_subgroups_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
+}
+void subgroup_size_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
+}
+void subgroup_id_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
+}
+void subgroup_linear_id_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
+}
+void subgroup_local_id_inst::setup_and_check() {
+    builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
 }
 
 void loop_inst::setup_and_check() {}

@@ -20,7 +20,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %2 = neg %1 : coopmatrix<f32x16x2,matrix_acc>
     }
 ; CHECK-LABEL: func @tmatrix_acc({{.*}}
-; CHECK:      %1 = builtin.subgroup_local_id : i32
+; CHECK:      %1 = subgroup_local_id : i32
 ; CHECK-NEXT: %2 = constant 0 : i32
 ; CHECK-NEXT: %3 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %4 = cmp.le %1, %2 : bool
@@ -63,7 +63,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %2 = neg %1 : coopmatrix<f32x8x4,matrix_b>
     }
 ; CHECK-LABEL: func @tmatrix_b({{.*}}
-; CHECK:      %1 = builtin.subgroup_local_id : i32
+; CHECK:      %1 = subgroup_local_id : i32
 ; CHECK-NEXT: %2 = constant 8 : i32
 ; CHECK-NEXT: %3 = rem %1, %2 : i32
 ; CHECK-NEXT: %4 = div %1, %2 : i32
@@ -111,7 +111,7 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %2 = neg %1 : coopmatrix<f32x1x17,matrix_b>
     }
 ; CHECK-LABEL: func @tmatrix_b_mask({{.*}}
-; CHECK:      %1 = builtin.subgroup_local_id : i32
+; CHECK:      %1 = subgroup_local_id : i32
 ; CHECK-NEXT: %2 = constant 1 : i32
 ; CHECK-NEXT: %3 = rem %1, %2 : i32
 ; CHECK-NEXT: %4 = div %1, %2 : i32

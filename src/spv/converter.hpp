@@ -34,7 +34,6 @@ class inst_converter {
     void operator()(arith_inst in);
     void operator()(arith_unary_inst in);
     void operator()(barrier_inst in);
-    void operator()(builtin_inst in);
     void operator()(cast_inst in);
     void operator()(compare_inst in);
     void operator()(constant_inst in);
@@ -60,6 +59,13 @@ class inst_converter {
     void operator()(store_inst in);
     void operator()(subview_inst in);
     void operator()(yield_inst in);
+    void operator()(group_id_inst in);
+    void operator()(num_groups_inst in);
+    void operator()(num_subgroups_inst in);
+    void operator()(subgroup_size_inst in);
+    void operator()(subgroup_id_inst in);
+    void operator()(subgroup_linear_id_inst in);
+    void operator()(subgroup_local_id_inst in);
 
     void run_on_region(tinytc_region &reg);
     auto run_on_region_with_yield(tinytc_region &reg, std::int64_t num_results)

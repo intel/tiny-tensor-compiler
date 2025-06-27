@@ -288,8 +288,8 @@ void linalg_generator::operator()(axpby_inst in) {
         auto bb = region_builder{body};
 
         auto i32_ty = get_scalar(ctx, scalar_type::i32);
-        auto sg_id = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, in.loc());
-        auto sg_lid = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, in.loc());
+        auto sg_id = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
+        auto sg_lid = bb.create<subgroup_local_id_inst>(i32_ty, in.loc());
         auto c0 = bb.create<constant_inst>(0, i32_ty);
         auto cond0 = bb.create<compare_inst>(cmp_condition::eq, sg_id, c0, bool_ty, in.loc());
         auto cond1 = bb.create<compare_inst>(cmp_condition::eq, sg_lid, c0, bool_ty, in.loc());
@@ -349,10 +349,10 @@ void linalg_generator::operator()(cumsum_inst in) {
     auto const scan_loop_1d = [&](region_builder &bb, work_group_inclusive_scan &scan, value a_sub,
                                   value b_sub) {
         auto c_sgs = bb.create<constant_inst>(scan.subgroup_size(), i32_ty, loc);
-        auto sglid = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, loc);
+        auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
         auto from_index = [&]() -> value {
             if (scan.num_tiles() > 1) {
-                auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, loc);
+                auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
                 auto from0 = bb.create<mul_inst>(sgid, c_sgs, i32_ty, loc);
                 auto from1 = bb.create<add_inst>(from0, sglid, i32_ty, loc);
                 return bb.create<cast_inst>(from1, index_ty, loc);
@@ -439,7 +439,7 @@ void linalg_generator::operator()(cumsum_inst in) {
         }
 
         auto bb = region_builder{parent_region};
-        auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, loc);
+        auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sgid_index = bb.create<cast_inst>(sgid, index_ty, loc);
 
         auto shape0 = bb.create<size_inst>(0, &in.B(), index_ty, loc);
@@ -524,8 +524,8 @@ void linalg_generator::operator()(gemm_inst in) {
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
     auto index_ty = get_scalar(ctx, scalar_type::index);
 
-    auto sg_m = bb.create<builtin_inst>(builtin::subgroup_id_x, i32_ty, in.loc());
-    auto sg_n = bb.create<builtin_inst>(builtin::subgroup_id_y, i32_ty, in.loc());
+    auto sg_m = bb.create<subgroup_id_inst>(comp3::x, i32_ty, in.loc());
+    auto sg_n = bb.create<subgroup_id_inst>(comp3::y, i32_ty, in.loc());
 
     auto [max_rows, max_cols] = max_register_block_gemm(
         size(at->element_ty()), size(bt->element_ty()), size(acc_type(ct->element_ty())),
@@ -728,8 +728,8 @@ void linalg_generator::operator()(sum_inst in) {
         auto bb = region_builder{body};
 
         auto c_sgs = bb.create<constant_inst>(core_cfg_.subgroup_size, i32_ty, in.loc());
-        auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, in.loc());
-        auto m = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, in.loc());
+        auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
+        auto m = bb.create<subgroup_local_id_inst>(i32_ty, in.loc());
         auto from0 = bb.create<mul_inst>(sgid, c_sgs, i32_ty, in.loc());
         auto from1 = bb.create<add_inst>(from0, m, i32_ty, in.loc());
         auto from_index = bb.create<cast_inst>(from1, index_ty, in.loc());

@@ -39,7 +39,7 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
     auto ctx = compiler_context{sg_id->context(), true};
     auto bool_ty = get_boolean(ctx);
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
-    auto sg_lid_i32 = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, loc);
+    auto sg_lid_i32 = bb.create<subgroup_local_id_inst>(i32_ty, loc);
     auto sg_lid = bb.create<cast_inst>(sg_lid_i32, ity, loc);
     auto size = instant_constant_fold_add(bb, create<sub_inst>(to, from, ity, loc));
     auto work_item_offset = bb.create<add_inst>(from, sg_lid, ity, loc);
@@ -106,8 +106,8 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                 nullptr, in.loc());
         };
 
-        auto sg_id0 = bb.create<builtin_inst>(builtin::subgroup_id_x, i32_ty, in.loc());
-        auto sg_id1 = bb.create<builtin_inst>(builtin::subgroup_id_y, i32_ty, in.loc());
+        auto sg_id0 = bb.create<subgroup_id_inst>(comp3::x, i32_ty, in.loc());
+        auto sg_id1 = bb.create<subgroup_id_inst>(comp3::y, i32_ty, in.loc());
 
         auto size1 = bb.create<sub_inst>(&to[1], &from[1], ity, in.loc());
         tile_loop_uniformly(bb, size1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_id1,
@@ -123,7 +123,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
                                     in.loc());
                             });
     } else if (in.dim() == 1) {
-        auto sg_id = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, in.loc());
+        auto sg_id = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
         make_loop0(
             bb, &from[0], &to[0], sg_id, block_size0, tiling_.m_tiles() * tiling_.n_tiles(),
             [&](region_builder &bb, value loop_var0) {

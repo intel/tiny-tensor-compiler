@@ -203,12 +203,6 @@ void dump_ir_pass::operator()(barrier_inst b) {
     }
 }
 
-void dump_ir_pass::operator()(builtin_inst in) {
-    dump_val(in.result());
-    *os_ << " = builtin." << to_string(in.builtin_type()) << " : ";
-    visit(*this, *in.result().ty());
-}
-
 void dump_ir_pass::operator()(cast_inst c) {
     dump_val(c.result());
     *os_ << " = cast ";
@@ -627,6 +621,42 @@ void dump_ir_pass::operator()(yield_inst y) {
         do_with_infix(vals.begin(), vals.end(), [this](auto const &i) { dump_val(i); }, ", ");
     }
     *os_ << ")";
+}
+
+void dump_ir_pass::operator()(group_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = group_id." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(num_groups_inst in) {
+    dump_val(in.result());
+    *os_ << " = num_groups." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(num_subgroups_inst in) {
+    dump_val(in.result());
+    *os_ << " = num_subgroups." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_size_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_size : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_id." << to_string(in.mode()) << " : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_linear_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_linear_id : ";
+    visit(*this, *in.result().ty());
+}
+void dump_ir_pass::operator()(subgroup_local_id_inst in) {
+    dump_val(in.result());
+    *os_ << " = subgroup_local_id : ";
+    visit(*this, *in.result().ty());
 }
 
 void dump_ir_pass::dump_region(tinytc_region &reg) {

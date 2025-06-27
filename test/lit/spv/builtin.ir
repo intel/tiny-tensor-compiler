@@ -32,22 +32,22 @@
 ; CHECK: %[[#VAR5]] = OpVariable %[[#PTR_TO_I32]] Input
 
 func @tbuiltin() attributes{subgroup_size=32, work_group_size=[64,16]} {
-    %0 = builtin.group_id.x : index
-    %1 = builtin.group_id.y : index
-    %2 = builtin.group_id.z : index
-    %3 = builtin.num_groups.x : index
-    %4 = builtin.num_groups.y : index
-    %5 = builtin.num_groups.z : index
-    %6 = builtin.num_subgroups.x : i32
+    %0 = group_id.x : index
+    %1 = group_id.y : index
+    %2 = group_id.z : index
+    %3 = num_groups.x : index
+    %4 = num_groups.y : index
+    %5 = num_groups.z : index
+    %6 = num_subgroups.x : i32
     %t6 = neg %6 : i32
-    %7 = builtin.num_subgroups.y : i32
+    %7 = num_subgroups.y : i32
     %t7 = neg %7 : i32
-    %9 = builtin.subgroup_size : i32
+    %9 = subgroup_size : i32
     parallel {
-        %10 = builtin.subgroup_id.x : i32
-        %11 = builtin.subgroup_id.y : i32
-        %12 = builtin.subgroup_linear_id : i32
-        %13 = builtin.subgroup_local_id : i32
+        %10 = subgroup_id.x : i32
+        %11 = subgroup_id.y : i32
+        %12 = subgroup_linear_id : i32
+        %13 = subgroup_local_id : i32
     }
 ; CHECK: %[[#VAR1_LOAD1:]] = OpLoad %[[#I64V3]] %[[#VAR1]] Aligned 32
 ; CHECK: %[[#]] = OpCompositeExtract %[[#I64]] %[[#VAR1_LOAD1]] 0

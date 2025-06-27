@@ -14,9 +14,11 @@ Common
 
   * :ref:`tinytc::address_space`
 
-  * :ref:`tinytc::builtin`
+  * :ref:`tinytc::checked_flag`
 
   * :ref:`tinytc::cmp_condition`
+
+  * :ref:`tinytc::comp3`
 
   * :ref:`tinytc::group_arithmetic`
 
@@ -40,11 +42,11 @@ Common
 
   * :ref:`tinytc::to_string(address_space)`
 
-  * :ref:`tinytc::to_string(builtin)`
-
   * :ref:`tinytc::to_string(checked_flag)`
 
   * :ref:`tinytc::to_string(cmp_condition)`
+
+  * :ref:`tinytc::to_string(comp3)`
 
   * :ref:`tinytc::to_string(group_arithmetic)`
 
@@ -88,12 +90,12 @@ address_space
 
 .. doxygenenum:: tinytc::address_space
 
-.. _tinytc::builtin:
+.. _tinytc::checked_flag:
 
-builtin
-.......
+checked_flag
+............
 
-.. doxygenenum:: tinytc::builtin
+.. doxygenenum:: tinytc::checked_flag
 
 .. _tinytc::cmp_condition:
 
@@ -101,6 +103,13 @@ cmp_condition
 .............
 
 .. doxygenenum:: tinytc::cmp_condition
+
+.. _tinytc::comp3:
+
+comp3
+.....
+
+.. doxygenenum:: tinytc::comp3
 
 .. _tinytc::group_arithmetic:
 
@@ -175,13 +184,6 @@ to_string(address_space)
 
 .. doxygenfunction:: tinytc::to_string(address_space)
 
-.. _tinytc::to_string(builtin):
-
-to_string(builtin)
-..................
-
-.. doxygenfunction:: tinytc::to_string(builtin)
-
 .. _tinytc::to_string(checked_flag):
 
 to_string(checked_flag)
@@ -195,6 +197,13 @@ to_string(cmp_condition)
 ........................
 
 .. doxygenfunction:: tinytc::to_string(cmp_condition)
+
+.. _tinytc::to_string(comp3):
+
+to_string(comp3)
+................
+
+.. doxygenfunction:: tinytc::to_string(comp3)
 
 .. _tinytc::to_string(group_arithmetic):
 
@@ -569,8 +578,6 @@ Instruction
 
   * :ref:`tinytc::creator\< barrier_inst \>`
 
-  * :ref:`tinytc::creator\< builtin_inst \>`
-
   * :ref:`tinytc::creator\< cast_inst \>`
 
   * :ref:`tinytc::creator\< compare_inst \>`
@@ -645,17 +652,17 @@ Instruction
 
   * :ref:`tinytc::createo\< max_inst \>`
 
-  * :ref:`tinytc::create\< abs \>`
+  * :ref:`tinytc::create\< abs_inst \>`
 
-  * :ref:`tinytc::create\< neg \>`
+  * :ref:`tinytc::create\< neg_inst \>`
 
-  * :ref:`tinytc::create\< not \>`
+  * :ref:`tinytc::create\< not_inst \>`
 
-  * :ref:`tinytc::create\< conj \>`
+  * :ref:`tinytc::create\< conj_inst \>`
 
-  * :ref:`tinytc::create\< im \>`
+  * :ref:`tinytc::create\< im_inst \>`
 
-  * :ref:`tinytc::create\< re \>`
+  * :ref:`tinytc::create\< re_inst \>`
 
   * :ref:`tinytc::creator\< axpby_inst \>`
 
@@ -670,6 +677,20 @@ Instruction
   * :ref:`tinytc::creator\< ger_inst \>`
 
   * :ref:`tinytc::creator\< hadamard_inst \>`
+
+  * :ref:`tinytc::creator\< group_id_inst \>`
+
+  * :ref:`tinytc::creator\< num_groups_inst \>`
+
+  * :ref:`tinytc::creator\< num_subgroups_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_size_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_id_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_linear_id_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_local_id_inst \>`
 
   * :ref:`tinytc::creator\< for_inst \>`
 
@@ -711,13 +732,6 @@ creator<barrier_inst>
 .....................
 
 .. doxygenstruct:: tinytc::creator< barrier_inst >
-
-.. _tinytc::creator\< builtin_inst \>:
-
-creator<builtin_inst>
-.....................
-
-.. doxygenstruct:: tinytc::creator< builtin_inst >
 
 .. _tinytc::creator\< cast_inst \>:
 
@@ -978,47 +992,47 @@ createo<max_inst>
 
 .. doxygenstruct:: tinytc::createo< max_inst >
 
-.. _tinytc::create\< abs \>:
+.. _tinytc::create\< abs_inst \>:
 
-create<abs>
-...........
+create<abs_inst>
+................
 
-.. doxygenstruct:: tinytc::create< abs >
+.. doxygenstruct:: tinytc::create< abs_inst >
 
-.. _tinytc::create\< neg \>:
+.. _tinytc::create\< neg_inst \>:
 
-create<neg>
-...........
+create<neg_inst>
+................
 
-.. doxygenstruct:: tinytc::create< neg >
+.. doxygenstruct:: tinytc::create< neg_inst >
 
-.. _tinytc::create\< not \>:
+.. _tinytc::create\< not_inst \>:
 
-create<not>
-...........
+create<not_inst>
+................
 
-.. doxygenstruct:: tinytc::create< not >
+.. doxygenstruct:: tinytc::create< not_inst >
 
-.. _tinytc::create\< conj \>:
+.. _tinytc::create\< conj_inst \>:
 
-create<conj>
-............
+create<conj_inst>
+.................
 
-.. doxygenstruct:: tinytc::create< conj >
+.. doxygenstruct:: tinytc::create< conj_inst >
 
-.. _tinytc::create\< im \>:
+.. _tinytc::create\< im_inst \>:
 
-create<im>
-..........
+create<im_inst>
+...............
 
-.. doxygenstruct:: tinytc::create< im >
+.. doxygenstruct:: tinytc::create< im_inst >
 
-.. _tinytc::create\< re \>:
+.. _tinytc::create\< re_inst \>:
 
-create<re>
-..........
+create<re_inst>
+...............
 
-.. doxygenstruct:: tinytc::create< re >
+.. doxygenstruct:: tinytc::create< re_inst >
 
 .. _tinytc::creator\< axpby_inst \>:
 
@@ -1068,6 +1082,55 @@ creator<hadamard_inst>
 ......................
 
 .. doxygenstruct:: tinytc::creator< hadamard_inst >
+
+.. _tinytc::creator\< group_id_inst \>:
+
+creator<group_id_inst>
+......................
+
+.. doxygenstruct:: tinytc::creator< group_id_inst >
+
+.. _tinytc::creator\< num_groups_inst \>:
+
+creator<num_groups_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< num_groups_inst >
+
+.. _tinytc::creator\< num_subgroups_inst \>:
+
+creator<num_subgroups_inst>
+...........................
+
+.. doxygenstruct:: tinytc::creator< num_subgroups_inst >
+
+.. _tinytc::creator\< subgroup_size_inst \>:
+
+creator<subgroup_size_inst>
+...........................
+
+.. doxygenstruct:: tinytc::creator< subgroup_size_inst >
+
+.. _tinytc::creator\< subgroup_id_inst \>:
+
+creator<subgroup_id_inst>
+.........................
+
+.. doxygenstruct:: tinytc::creator< subgroup_id_inst >
+
+.. _tinytc::creator\< subgroup_linear_id_inst \>:
+
+creator<subgroup_linear_id_inst>
+................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_linear_id_inst >
+
+.. _tinytc::creator\< subgroup_local_id_inst \>:
+
+creator<subgroup_local_id_inst>
+...............................
+
+.. doxygenstruct:: tinytc::creator< subgroup_local_id_inst >
 
 .. _tinytc::creator\< for_inst \>:
 
