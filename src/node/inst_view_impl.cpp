@@ -365,6 +365,15 @@ void cooperative_matrix_reduce_inst::setup_and_check() {
         throw compilation_error(loc(), {&a()}, status::ir_invalid_shape);
     }
 }
+void cooperative_matrix_reduce_add_inst::setup_and_check() {
+    cooperative_matrix_reduce_inst::setup_and_check();
+}
+void cooperative_matrix_reduce_max_inst::setup_and_check() {
+    cooperative_matrix_reduce_inst::setup_and_check();
+}
+void cooperative_matrix_reduce_min_inst::setup_and_check() {
+    cooperative_matrix_reduce_inst::setup_and_check();
+}
 
 void cooperative_matrix_scale_inst::setup_and_check() {
     auto ty = result().ty();
@@ -582,17 +591,6 @@ void subgroup_broadcast_inst::setup_and_check() {
     if (auto idxt = dyn_cast<scalar_data_type>(idx().ty());
         !idxt || idxt->ty() != scalar_type::i32) {
         throw compilation_error(loc(), {&idx()}, status::ir_expected_i32);
-    }
-}
-
-void subgroup_operation_inst::setup_and_check() {
-    auto sty = get_scalar_type(loc(), a());
-    if (arith() != group_arithmetic::add && is_complex_type(sty->ty())) {
-        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
-    }
-
-    if (a().ty() != result().ty()) {
-        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
     }
 }
 
@@ -1110,6 +1108,45 @@ void foreach_inst::setup_and_check() {
         }
         body().set_param(i, from_[i].ty());
     }
+}
+
+void subgroup_operation_inst::setup_and_check() {}
+void subgroup_operation_inst::setup_and_check(support_flags support) {
+    auto sty = get_scalar_type(loc(), a());
+    if (!(support & supports_complex) && is_complex_type(sty->ty())) {
+        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+    }
+
+    if (a().ty() != result().ty()) {
+        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
+    }
+}
+void subgroup_exclusive_scan_add_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void subgroup_exclusive_scan_max_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
+}
+void subgroup_exclusive_scan_min_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
+}
+void subgroup_inclusive_scan_add_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void subgroup_inclusive_scan_max_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
+}
+void subgroup_inclusive_scan_min_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
+}
+void subgroup_reduce_add_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void subgroup_reduce_max_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
+}
+void subgroup_reduce_min_inst::setup_and_check() {
+    subgroup_operation_inst::setup_and_check(supports_int | supports_float);
 }
 
 } // namespace tinytc

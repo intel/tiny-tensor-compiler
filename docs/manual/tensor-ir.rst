@@ -1951,13 +1951,11 @@ Cooperative matrix reduce
 
 .. code:: abnf
 
-    coopmatrix-reduce-type  =  "cooperative_matrix_reduce.add.row" /
-                               "cooperative_matrix_reduce.add.column" /
-                               "cooperative_matrix_reduce.max.row" /
-                               "cooperative_matrix_reduce.max.column" /
-                               "cooperative_matrix_reduce.min.row" /
-                               "cooperative_matrix_reduce.min.column"
-    value-instruction       =/ coopmatrix-reduce-type local-identifier ":" coopmatrix-type
+    coopmatrix-reduce-op    =  "cooperative_matrix_reduce_add" /
+                               "cooperative_matrix_reduce_max" /
+                               "cooperative_matrix_reduce_min" /
+    value-instruction       =/ coopmatrix-reduce-op reduce-mode local-identifier ":" coopmatrix-type
+    reduce-mode             =  ".row" / ".column"
 
 Overview
 ~~~~~~~~
@@ -2105,15 +2103,15 @@ Subgroup operation
 
 .. code:: abnf
 
-    subgroup-operation-type = "subgroup_operation.add.exclusive_scan" /
-                              "subgroup_operation.add.inclusive_scan" /
-                              "subgroup_operation.add.reduce" /
-                              "subgroup_operation.max.exclusive_scan" /
-                              "subgroup_operation.max.inclusive_scan" /
-                              "subgroup_operation.max.reduce" /
-                              "subgroup_operation.min.exclusive_scan" /
-                              "subgroup_operation.min.inclusive_scan" /
-                              "subgroup_operation.min.reduce"
+    subgroup-operation-type = "subgroup_exclusive_scan_add" /
+                              "subgroup_exclusive_scan_max" /
+                              "subgroup_exclusive_scan_min" /
+                              "subgroup_inclusive_scan_add" /
+                              "subgroup_inclusive_scan_max" /
+                              "subgroup_inclusive_scan_min" /
+                              "subgroup_reduce_add" /
+                              "subgroup_reduce_max" /
+                              "subgroup_reduce_min"
     value-instruction       =/ subgroup-operation-type local-identifier ":" scalar-type
 
 Overview

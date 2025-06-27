@@ -327,17 +327,19 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> 
     auto bool_ty = unique_->bool_ty();
     auto i32_ty = unique_->scalar_ty(scalar_type::i32);
 
-    auto const binary_arith = [&](group_arithmetic a) {
-        switch (a) {
-        case group_arithmetic::add:
+    auto const binary_arith = [&in](IK op) {
+        switch (op) {
+        case IK::IK_cooperative_matrix_reduce_add:
             return IK::IK_add;
-        case group_arithmetic::max:
+        case IK::IK_cooperative_matrix_reduce_max:
             return IK::IK_max;
-        case group_arithmetic::min:
+        case IK::IK_cooperative_matrix_reduce_min:
             return IK::IK_min;
+        default:
+            break;
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
-    }(in.arith());
+    }(in.get().type_id());
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(matrix_ty);

@@ -7,8 +7,6 @@ Builder C++-API:
       - tinytc::checked_flag
       - tinytc::cmp_condition
       - tinytc::comp3
-      - tinytc::group_arithmetic
-      - tinytc::group_operation
       - tinytc::math_unary
       - tinytc::matrix_use
       - tinytc::reduce_mode
@@ -21,8 +19,6 @@ Builder C++-API:
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(comp3)
-      - tinytc::to_string(group_arithmetic)
-      - tinytc::to_string(group_operation)
       - tinytc::to_string(math_unary)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(reduce_mode)
@@ -88,7 +84,9 @@ Builder C++-API:
       - tinytc::creator< cooperative_matrix_load_inst >
       - tinytc::creator< cooperative_matrix_mul_add_inst >
       - tinytc::creator< cooperative_matrix_prefetch_inst >
-      - tinytc::creator< cooperative_matrix_reduce_inst >
+      - tinytc::creator< cooperative_matrix_reduce_add_inst >
+      - tinytc::creator< cooperative_matrix_reduce_max_inst >
+      - tinytc::creator< cooperative_matrix_reduce_min_inst >
       - tinytc::creator< cooperative_matrix_scale_inst >
       - tinytc::creator< cooperative_matrix_store_inst >
       - tinytc::creator< expand_inst >
@@ -100,28 +98,27 @@ Builder C++-API:
       - tinytc::creator< parallel_inst >
       - tinytc::creator< size_inst >
       - tinytc::creator< subgroup_broadcast_inst >
-      - tinytc::creator< subgroup_operation_inst >
       - tinytc::creator< subview_inst >
       - tinytc::creator< store_inst >
       - tinytc::creator< yield_inst >
-      - tinytc::createo< add_inst >
-      - tinytc::createo< sub_inst >
-      - tinytc::createo< mul_inst >
-      - tinytc::createo< div_inst >
-      - tinytc::createo< rem_inst >
-      - tinytc::createo< shl_inst >
-      - tinytc::createo< shr_inst >
-      - tinytc::createo< and_inst >
-      - tinytc::createo< or_inst >
-      - tinytc::createo< xor_inst >
-      - tinytc::createo< min_inst >
-      - tinytc::createo< max_inst >
-      - tinytc::create< abs_inst >
-      - tinytc::create< neg_inst >
-      - tinytc::create< not_inst >
-      - tinytc::create< conj_inst >
-      - tinytc::create< im_inst >
-      - tinytc::create< re_inst >
+      - tinytc::creator< add_inst >
+      - tinytc::creator< sub_inst >
+      - tinytc::creator< mul_inst >
+      - tinytc::creator< div_inst >
+      - tinytc::creator< rem_inst >
+      - tinytc::creator< shl_inst >
+      - tinytc::creator< shr_inst >
+      - tinytc::creator< and_inst >
+      - tinytc::creator< or_inst >
+      - tinytc::creator< xor_inst >
+      - tinytc::creator< min_inst >
+      - tinytc::creator< max_inst >
+      - tinytc::creator< abs_inst >
+      - tinytc::creator< neg_inst >
+      - tinytc::creator< not_inst >
+      - tinytc::creator< conj_inst >
+      - tinytc::creator< im_inst >
+      - tinytc::creator< re_inst >
       - tinytc::creator< axpby_inst >
       - tinytc::creator< cumsum_inst >
       - tinytc::creator< sum_inst >
@@ -138,6 +135,15 @@ Builder C++-API:
       - tinytc::creator< subgroup_local_id_inst >
       - tinytc::creator< for_inst >
       - tinytc::creator< foreach_inst >
+      - tinytc::creator< subgroup_exclusive_scan_add_inst >
+      - tinytc::creator< subgroup_exclusive_scan_max_inst >
+      - tinytc::creator< subgroup_exclusive_scan_min_inst >
+      - tinytc::creator< subgroup_inclusive_scan_add_inst >
+      - tinytc::creator< subgroup_inclusive_scan_max_inst >
+      - tinytc::creator< subgroup_inclusive_scan_min_inst >
+      - tinytc::creator< subgroup_reduce_add_inst >
+      - tinytc::creator< subgroup_reduce_max_inst >
+      - tinytc::creator< subgroup_reduce_min_inst >
   Program:
     function:
       - tinytc::add_function

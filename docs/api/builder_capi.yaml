@@ -7,8 +7,6 @@ Builder C-API:
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
       - tinytc_comp3_t
-      - tinytc_group_arithmetic_t
-      - tinytc_group_operation_t
       - tinytc_math_unary_t
       - tinytc_matrix_use_t
       - tinytc_reduce_mode_t
@@ -22,8 +20,6 @@ Builder C-API:
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_comp3_to_string
-      - tinytc_group_arithmetic_to_string
-      - tinytc_group_operation_to_string
       - tinytc_math_unary_to_string
       - tinytc_matrix_use_to_string
       - tinytc_reduce_mode_to_string
@@ -94,7 +90,9 @@ Builder C-API:
       - tinytc_cooperative_matrix_insert_inst_create
       - tinytc_cooperative_matrix_load_inst_create
       - tinytc_cooperative_matrix_mul_add_inst_create
-      - tinytc_cooperative_matrix_reduce_inst_create
+      - tinytc_cooperative_matrix_reduce_add_inst_create
+      - tinytc_cooperative_matrix_reduce_max_inst_create
+      - tinytc_cooperative_matrix_reduce_min_inst_create
       - tinytc_cooperative_matrix_prefetch_inst_create
       - tinytc_cooperative_matrix_scale_inst_create
       - tinytc_cooperative_matrix_store_inst_create
@@ -107,7 +105,6 @@ Builder C-API:
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
       - tinytc_subgroup_broadcast_inst_create
-      - tinytc_subgroup_operation_inst_create
       - tinytc_store_inst_create
       - tinytc_subview_inst_create
       - tinytc_yield_inst_create
@@ -143,6 +140,15 @@ Builder C-API:
       - tinytc_subgroup_id_inst_create
       - tinytc_subgroup_linear_id_inst_create
       - tinytc_subgroup_local_id_inst_create
+      - tinytc_subgroup_exclusive_scan_add_inst_create
+      - tinytc_subgroup_exclusive_scan_max_inst_create
+      - tinytc_subgroup_exclusive_scan_min_inst_create
+      - tinytc_subgroup_inclusive_scan_add_inst_create
+      - tinytc_subgroup_inclusive_scan_max_inst_create
+      - tinytc_subgroup_inclusive_scan_min_inst_create
+      - tinytc_subgroup_reduce_add_inst_create
+      - tinytc_subgroup_reduce_max_inst_create
+      - tinytc_subgroup_reduce_min_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create
       - tinytc_inst_get_parent_region

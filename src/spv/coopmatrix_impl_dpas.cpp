@@ -355,12 +355,11 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
     });
 }
 
-auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
-                                      coopmatrix_data_type const *at,
+auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_data_type const *at,
                                       coopmatrix_data_type const *rt) -> spv_inst * {
-    const auto key = std::make_tuple(sgs, arith, at, rt);
+    const auto key = std::make_tuple(sgs, op, at, rt);
     return lookup(reduce_funs_, key, [&](reduce_key const &key) {
-        auto [sgs, arith, at, rt] = key;
+        auto [sgs, op, at, rt] = key;
         auto rl = get_layout(cfg(), rt);
         auto al = get_layout(cfg(), at);
         auto matrix_ty = spv_ty(rl);
@@ -379,19 +378,19 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
         auto predicate = tmp_("predicate");
         oasm << ".decl " << predicate << " v_type=P num_elts=" << sgs << "\n";
 
-        auto const reduce = [&]() -> char const * {
-            switch (arith) {
-            case group_arithmetic::add:
+        char const *reduce = [](IK op) {
+            switch (op) {
+            case IK::IK_cooperative_matrix_reduce_add:
                 return "add";
-            case group_arithmetic::max:
+            case IK::IK_cooperative_matrix_reduce_max:
                 return "max";
-            case group_arithmetic::min:
+            case IK::IK_cooperative_matrix_reduce_min:
                 return "min";
             default:
                 break;
             }
             throw status::internal_compiler_error;
-        };
+        }(op);
 
         for (std::int32_t offset = 0; offset < al.shape1; offset += sgs) {
             const std::int32_t remainder =
@@ -407,13 +406,13 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
                         region_origin(sty_size, sgs * al.component_no(j0, 0) * sty_size);
                     const auto a2 =
                         region_origin(sty_size, sgs * al.component_no(j0, 1) * sty_size);
-                    oasm << reduce() << " (M1," << sgs << ") " << tmp << "(" << t1[0] << ","
-                         << t1[1] << ")<1> " << aview << "(" << a1[0] << "," << a1[1] << ")<1;1,0> "
-                         << aview << "(" << a2[0] << "," << a2[1] << ")<1;1,0>\n";
+                    oasm << reduce << " (M1," << sgs << ") " << tmp << "(" << t1[0] << "," << t1[1]
+                         << ")<1> " << aview << "(" << a1[0] << "," << a1[1] << ")<1;1,0> " << aview
+                         << "(" << a2[0] << "," << a2[1] << ")<1;1,0>\n";
                     for (std::int32_t b = 2; b < al.blocks; ++b) {
                         const auto a2 =
                             region_origin(sty_size, sgs * al.component_no(j0, b) * sty_size);
-                        oasm << reduce() << " (M1," << sgs << ") " << tmp << "(" << t1[0] << ","
+                        oasm << reduce << " (M1," << sgs << ") " << tmp << "(" << t1[0] << ","
                              << t1[1] << ")<1> " << tmp << "(" << t1[0] << "," << t1[1]
                              << ")<1;1,0> " << aview << "(" << a2[0] << "," << a2[1]
                              << ")<1;1,0>\n";
@@ -458,8 +457,8 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, group_arithmetic arith,
                     oasm << "(" << predicate << ") sel (M1," << sgs << ") " << tmp2 << "(0,0)<1> "
                          << src << "(" << t1down[0] << "," << t1down[1] << ")<1;1,0> " << src << "("
                          << t2[0] << "," << t2[1] << ")<1;1,0>\n";
-                    oasm << reduce() << " (M1," << sgs << ") " << dst << "(" << t0[0] << ","
-                         << t0[1] << ")<1> " << tmp1 << "(0,0)<1;1,0> " << tmp2 << "(0,0)<1;1,0>\n";
+                    oasm << reduce << " (M1," << sgs << ") " << dst << "(" << t0[0] << "," << t0[1]
+                         << ")<1> " << tmp1 << "(0,0)<1;1,0> " << tmp2 << "(0,0)<1;1,0>\n";
                 }
                 src = dst;
             }
@@ -596,7 +595,7 @@ auto coopmatrix_impl_dpas::reduce(cooperative_matrix_reduce_inst in, spv_inst *a
     }
 
     auto rt = get_coopmatrix_type(in.result());
-    auto fun = reduce_fun(sgs, in.arith(), at, rt);
+    auto fun = reduce_fun(sgs, in.get().type_id(), at, rt);
     return unique().mod().add<OpAsmCallINTEL>(spv_ty(rt), fun, array_view<spv_inst *>{a});
 }
 

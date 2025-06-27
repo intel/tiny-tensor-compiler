@@ -130,63 +130,75 @@
     STRIDED         "strided"
 ;
 %token
-    ALLOCA                      "alloca"
-    BARRIER                     "barrier"
-    CAST                        "cast"
-    CONSTANT                    "constant"
-    COOPERATIVE_MATRIX_APPLY    "cooperative_matrix_apply"
-    COOPERATIVE_MATRIX_EXTRACT  "cooperative_matrix_extract"
-    COOPERATIVE_MATRIX_INSERT   "cooperative_matrix_insert"
-    COOPERATIVE_MATRIX_LOAD     "cooperative_matrix_load"
-    COOPERATIVE_MATRIX_MUL_ADD  "cooperative_matrix_mul_add"
-    COOPERATIVE_MATRIX_PREFETCH "cooperative_matrix_prefetch"
-    COOPERATIVE_MATRIX_SCALE    "cooperative_matrix_scale"
-    COOPERATIVE_MATRIX_STORE    "cooperative_matrix_store"
-    EXPAND                      "expand"
-    FUSE                        "fuse"
-    LOAD                        "load"
-    IF                          "if"
-    ELSE                        "else"
-    PARALLEL                    "parallel"
-    SIZE                        "size"
-    SUBGROUP_BROADCAST          "subgroup_broadcast"
-    SUBVIEW                     "subview"
-    STORE                       "store"
-    YIELD                       "yield"
-    ADD                         "add"
-    SUB                         "sub"
-    MUL                         "mul"
-    DIV                         "div"
-    REM                         "rem"
-    SHL                         "shl"
-    SHR                         "shr"
-    AND                         "and"
-    OR                          "or"
-    XOR                         "xor"
-    MIN                         "min"
-    MAX                         "max"
-    ABS                         "abs"
-    NEG                         "neg"
-    NOT                         "not"
-    CONJ                        "conj"
-    IM                          "im"
-    RE                          "re"
-    AXPBY                       "axpby"
-    CUMSUM                      "cumsum"
-    SUM                         "sum"
-    GEMM                        "gemm"
-    GEMV                        "gemv"
-    GER                         "ger"
-    HADAMARD                    "hadamard"
-    GROUP_ID                    "group_id"
-    NUM_GROUPS                  "num_groups"
-    NUM_SUBGROUPS               "num_subgroups"
-    SUBGROUP_SIZE               "subgroup_size"
-    SUBGROUP_ID                 "subgroup_id"
-    SUBGROUP_LINEAR_ID          "subgroup_linear_id"
-    SUBGROUP_LOCAL_ID           "subgroup_local_id"
-    FOR                         "for"
-    FOREACH                     "foreach"
+    ALLOCA                        "alloca"
+    BARRIER                       "barrier"
+    CAST                          "cast"
+    CONSTANT                      "constant"
+    COOPERATIVE_MATRIX_APPLY      "cooperative_matrix_apply"
+    COOPERATIVE_MATRIX_EXTRACT    "cooperative_matrix_extract"
+    COOPERATIVE_MATRIX_INSERT     "cooperative_matrix_insert"
+    COOPERATIVE_MATRIX_LOAD       "cooperative_matrix_load"
+    COOPERATIVE_MATRIX_MUL_ADD    "cooperative_matrix_mul_add"
+    COOPERATIVE_MATRIX_PREFETCH   "cooperative_matrix_prefetch"
+    COOPERATIVE_MATRIX_REDUCE_ADD "cooperative_matrix_reduce_add"
+    COOPERATIVE_MATRIX_REDUCE_MAX "cooperative_matrix_reduce_max"
+    COOPERATIVE_MATRIX_REDUCE_MIN "cooperative_matrix_reduce_min"
+    COOPERATIVE_MATRIX_SCALE      "cooperative_matrix_scale"
+    COOPERATIVE_MATRIX_STORE      "cooperative_matrix_store"
+    EXPAND                        "expand"
+    FUSE                          "fuse"
+    LOAD                          "load"
+    IF                            "if"
+    ELSE                          "else"
+    PARALLEL                      "parallel"
+    SIZE                          "size"
+    SUBGROUP_BROADCAST            "subgroup_broadcast"
+    SUBVIEW                       "subview"
+    STORE                         "store"
+    YIELD                         "yield"
+    ADD                           "add"
+    SUB                           "sub"
+    MUL                           "mul"
+    DIV                           "div"
+    REM                           "rem"
+    SHL                           "shl"
+    SHR                           "shr"
+    AND                           "and"
+    OR                            "or"
+    XOR                           "xor"
+    MIN                           "min"
+    MAX                           "max"
+    ABS                           "abs"
+    NEG                           "neg"
+    NOT                           "not"
+    CONJ                          "conj"
+    IM                            "im"
+    RE                            "re"
+    AXPBY                         "axpby"
+    CUMSUM                        "cumsum"
+    SUM                           "sum"
+    GEMM                          "gemm"
+    GEMV                          "gemv"
+    GER                           "ger"
+    HADAMARD                      "hadamard"
+    GROUP_ID                      "group_id"
+    NUM_GROUPS                    "num_groups"
+    NUM_SUBGROUPS                 "num_subgroups"
+    SUBGROUP_SIZE                 "subgroup_size"
+    SUBGROUP_ID                   "subgroup_id"
+    SUBGROUP_LINEAR_ID            "subgroup_linear_id"
+    SUBGROUP_LOCAL_ID             "subgroup_local_id"
+    FOR                           "for"
+    FOREACH                       "foreach"
+    SUBGROUP_EXCLUSIVE_SCAN_ADD   "subgroup_exclusive_scan_add"
+    SUBGROUP_EXCLUSIVE_SCAN_MAX   "subgroup_exclusive_scan_max"
+    SUBGROUP_EXCLUSIVE_SCAN_MIN   "subgroup_exclusive_scan_min"
+    SUBGROUP_INCLUSIVE_SCAN_ADD   "subgroup_inclusive_scan_add"
+    SUBGROUP_INCLUSIVE_SCAN_MAX   "subgroup_inclusive_scan_max"
+    SUBGROUP_INCLUSIVE_SCAN_MIN   "subgroup_inclusive_scan_min"
+    SUBGROUP_REDUCE_ADD           "subgroup_reduce_add"
+    SUBGROUP_REDUCE_MAX           "subgroup_reduce_max"
+    SUBGROUP_REDUCE_MIN           "subgroup_reduce_min"
 ;
 %token <identifier> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
@@ -199,8 +211,7 @@
 %token <scalar_type> FLOATING_TYPE
 %token <comp3> COMP3
 %token <cmp_condition> CMP_CONDITION
-%token <std::pair<group_arithmetic,reduce_mode>> COOPERATIVE_MATRIX_REDUCE
-%token <std::pair<group_arithmetic,group_operation>> SUBGROUP_OPERATION
+%token <reduce_mode> REDUCE_MODE
 %token <math_unary> MATH_UNARY
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
@@ -953,20 +964,10 @@ instruction:
     }
 ;
 
-valued_inst:
-    COOPERATIVE_MATRIX_REDUCE var[a] COLON data_type[ty] {
-        try {
-            $$ = inst {
-                cooperative_matrix_reduce_inst::create($COOPERATIVE_MATRIX_REDUCE.first,
-                                                       $COOPERATIVE_MATRIX_REDUCE.second, std::move($a),
-                                                       std::move($ty), @valued_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+
+valued_inst: COOPERATIVE_MATRIX_REDUCE_ADD REDUCE_MODE var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = cooperative_matrix_reduce_add_inst::create($REDUCE_MODE, $a, $ty, @valued_inst); }); };
+valued_inst: COOPERATIVE_MATRIX_REDUCE_MAX REDUCE_MODE var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = cooperative_matrix_reduce_max_inst::create($REDUCE_MODE, $a, $ty, @valued_inst); }); };
+valued_inst: COOPERATIVE_MATRIX_REDUCE_MIN REDUCE_MODE var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = cooperative_matrix_reduce_min_inst::create($REDUCE_MODE, $a, $ty, @valued_inst); }); };
 
 valued_inst:
     COOPERATIVE_MATRIX_SCALE var[a] COMMA var[b] COLON data_type[ty] {
@@ -1190,19 +1191,15 @@ valued_inst:
     }
 ;
 
-valued_inst:
-    SUBGROUP_OPERATION var[a] COLON scalar_type {
-        try {
-            $$ = inst {
-                subgroup_operation_inst::create($SUBGROUP_OPERATION.first, $SUBGROUP_OPERATION.second,
-                                                std::move($a), $scalar_type, @valued_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: SUBGROUP_EXCLUSIVE_SCAN_ADD var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_exclusive_scan_add_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_EXCLUSIVE_SCAN_MAX var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_exclusive_scan_max_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_EXCLUSIVE_SCAN_MIN var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_exclusive_scan_min_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_INCLUSIVE_SCAN_ADD var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_inclusive_scan_add_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_INCLUSIVE_SCAN_MAX var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_inclusive_scan_max_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_INCLUSIVE_SCAN_MIN var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_inclusive_scan_min_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_REDUCE_ADD var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_reduce_add_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_REDUCE_MAX var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_reduce_max_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SUBGROUP_REDUCE_MIN var[a] COLON scalar_type[ty] { yytry(ctx, [&] { $$ = subgroup_reduce_min_inst::create($a, $ty, @valued_inst); }); };
 
 valued_inst:
     SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type[ty] {

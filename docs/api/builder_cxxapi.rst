@@ -20,10 +20,6 @@ Common
 
   * :ref:`tinytc::comp3`
 
-  * :ref:`tinytc::group_arithmetic`
-
-  * :ref:`tinytc::group_operation`
-
   * :ref:`tinytc::math_unary`
 
   * :ref:`tinytc::matrix_use`
@@ -47,10 +43,6 @@ Common
   * :ref:`tinytc::to_string(cmp_condition)`
 
   * :ref:`tinytc::to_string(comp3)`
-
-  * :ref:`tinytc::to_string(group_arithmetic)`
-
-  * :ref:`tinytc::to_string(group_operation)`
 
   * :ref:`tinytc::to_string(math_unary)`
 
@@ -110,20 +102,6 @@ comp3
 .....
 
 .. doxygenenum:: tinytc::comp3
-
-.. _tinytc::group_arithmetic:
-
-group_arithmetic
-................
-
-.. doxygenenum:: tinytc::group_arithmetic
-
-.. _tinytc::group_operation:
-
-group_operation
-...............
-
-.. doxygenenum:: tinytc::group_operation
 
 .. _tinytc::math_unary:
 
@@ -204,20 +182,6 @@ to_string(comp3)
 ................
 
 .. doxygenfunction:: tinytc::to_string(comp3)
-
-.. _tinytc::to_string(group_arithmetic):
-
-to_string(group_arithmetic)
-...........................
-
-.. doxygenfunction:: tinytc::to_string(group_arithmetic)
-
-.. _tinytc::to_string(group_operation):
-
-to_string(group_operation)
-..........................
-
-.. doxygenfunction:: tinytc::to_string(group_operation)
 
 .. _tinytc::to_string(math_unary):
 
@@ -596,7 +560,11 @@ Instruction
 
   * :ref:`tinytc::creator\< cooperative_matrix_prefetch_inst \>`
 
-  * :ref:`tinytc::creator\< cooperative_matrix_reduce_inst \>`
+  * :ref:`tinytc::creator\< cooperative_matrix_reduce_add_inst \>`
+
+  * :ref:`tinytc::creator\< cooperative_matrix_reduce_max_inst \>`
+
+  * :ref:`tinytc::creator\< cooperative_matrix_reduce_min_inst \>`
 
   * :ref:`tinytc::creator\< cooperative_matrix_scale_inst \>`
 
@@ -620,49 +588,47 @@ Instruction
 
   * :ref:`tinytc::creator\< subgroup_broadcast_inst \>`
 
-  * :ref:`tinytc::creator\< subgroup_operation_inst \>`
-
   * :ref:`tinytc::creator\< subview_inst \>`
 
   * :ref:`tinytc::creator\< store_inst \>`
 
   * :ref:`tinytc::creator\< yield_inst \>`
 
-  * :ref:`tinytc::createo\< add_inst \>`
+  * :ref:`tinytc::creator\< add_inst \>`
 
-  * :ref:`tinytc::createo\< sub_inst \>`
+  * :ref:`tinytc::creator\< sub_inst \>`
 
-  * :ref:`tinytc::createo\< mul_inst \>`
+  * :ref:`tinytc::creator\< mul_inst \>`
 
-  * :ref:`tinytc::createo\< div_inst \>`
+  * :ref:`tinytc::creator\< div_inst \>`
 
-  * :ref:`tinytc::createo\< rem_inst \>`
+  * :ref:`tinytc::creator\< rem_inst \>`
 
-  * :ref:`tinytc::createo\< shl_inst \>`
+  * :ref:`tinytc::creator\< shl_inst \>`
 
-  * :ref:`tinytc::createo\< shr_inst \>`
+  * :ref:`tinytc::creator\< shr_inst \>`
 
-  * :ref:`tinytc::createo\< and_inst \>`
+  * :ref:`tinytc::creator\< and_inst \>`
 
-  * :ref:`tinytc::createo\< or_inst \>`
+  * :ref:`tinytc::creator\< or_inst \>`
 
-  * :ref:`tinytc::createo\< xor_inst \>`
+  * :ref:`tinytc::creator\< xor_inst \>`
 
-  * :ref:`tinytc::createo\< min_inst \>`
+  * :ref:`tinytc::creator\< min_inst \>`
 
-  * :ref:`tinytc::createo\< max_inst \>`
+  * :ref:`tinytc::creator\< max_inst \>`
 
-  * :ref:`tinytc::create\< abs_inst \>`
+  * :ref:`tinytc::creator\< abs_inst \>`
 
-  * :ref:`tinytc::create\< neg_inst \>`
+  * :ref:`tinytc::creator\< neg_inst \>`
 
-  * :ref:`tinytc::create\< not_inst \>`
+  * :ref:`tinytc::creator\< not_inst \>`
 
-  * :ref:`tinytc::create\< conj_inst \>`
+  * :ref:`tinytc::creator\< conj_inst \>`
 
-  * :ref:`tinytc::create\< im_inst \>`
+  * :ref:`tinytc::creator\< im_inst \>`
 
-  * :ref:`tinytc::create\< re_inst \>`
+  * :ref:`tinytc::creator\< re_inst \>`
 
   * :ref:`tinytc::creator\< axpby_inst \>`
 
@@ -695,6 +661,24 @@ Instruction
   * :ref:`tinytc::creator\< for_inst \>`
 
   * :ref:`tinytc::creator\< foreach_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_exclusive_scan_add_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_exclusive_scan_max_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_exclusive_scan_min_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_inclusive_scan_add_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_inclusive_scan_max_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_inclusive_scan_min_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_reduce_add_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_reduce_max_inst \>`
+
+  * :ref:`tinytc::creator\< subgroup_reduce_min_inst \>`
 
 Instruction Functions
 ---------------------
@@ -796,12 +780,26 @@ creator<cooperative_matrix_prefetch_inst>
 
 .. doxygenstruct:: tinytc::creator< cooperative_matrix_prefetch_inst >
 
-.. _tinytc::creator\< cooperative_matrix_reduce_inst \>:
+.. _tinytc::creator\< cooperative_matrix_reduce_add_inst \>:
 
-creator<cooperative_matrix_reduce_inst>
-.......................................
+creator<cooperative_matrix_reduce_add_inst>
+...........................................
 
-.. doxygenstruct:: tinytc::creator< cooperative_matrix_reduce_inst >
+.. doxygenstruct:: tinytc::creator< cooperative_matrix_reduce_add_inst >
+
+.. _tinytc::creator\< cooperative_matrix_reduce_max_inst \>:
+
+creator<cooperative_matrix_reduce_max_inst>
+...........................................
+
+.. doxygenstruct:: tinytc::creator< cooperative_matrix_reduce_max_inst >
+
+.. _tinytc::creator\< cooperative_matrix_reduce_min_inst \>:
+
+creator<cooperative_matrix_reduce_min_inst>
+...........................................
+
+.. doxygenstruct:: tinytc::creator< cooperative_matrix_reduce_min_inst >
 
 .. _tinytc::creator\< cooperative_matrix_scale_inst \>:
 
@@ -880,13 +878,6 @@ creator<subgroup_broadcast_inst>
 
 .. doxygenstruct:: tinytc::creator< subgroup_broadcast_inst >
 
-.. _tinytc::creator\< subgroup_operation_inst \>:
-
-creator<subgroup_operation_inst>
-................................
-
-.. doxygenstruct:: tinytc::creator< subgroup_operation_inst >
-
 .. _tinytc::creator\< subview_inst \>:
 
 creator<subview_inst>
@@ -908,131 +899,131 @@ creator<yield_inst>
 
 .. doxygenstruct:: tinytc::creator< yield_inst >
 
-.. _tinytc::createo\< add_inst \>:
+.. _tinytc::creator\< add_inst \>:
 
-createo<add_inst>
+creator<add_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< add_inst >
+.. doxygenstruct:: tinytc::creator< add_inst >
 
-.. _tinytc::createo\< sub_inst \>:
+.. _tinytc::creator\< sub_inst \>:
 
-createo<sub_inst>
+creator<sub_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< sub_inst >
+.. doxygenstruct:: tinytc::creator< sub_inst >
 
-.. _tinytc::createo\< mul_inst \>:
+.. _tinytc::creator\< mul_inst \>:
 
-createo<mul_inst>
+creator<mul_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< mul_inst >
+.. doxygenstruct:: tinytc::creator< mul_inst >
 
-.. _tinytc::createo\< div_inst \>:
+.. _tinytc::creator\< div_inst \>:
 
-createo<div_inst>
+creator<div_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< div_inst >
+.. doxygenstruct:: tinytc::creator< div_inst >
 
-.. _tinytc::createo\< rem_inst \>:
+.. _tinytc::creator\< rem_inst \>:
 
-createo<rem_inst>
+creator<rem_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< rem_inst >
+.. doxygenstruct:: tinytc::creator< rem_inst >
 
-.. _tinytc::createo\< shl_inst \>:
+.. _tinytc::creator\< shl_inst \>:
 
-createo<shl_inst>
+creator<shl_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< shl_inst >
+.. doxygenstruct:: tinytc::creator< shl_inst >
 
-.. _tinytc::createo\< shr_inst \>:
+.. _tinytc::creator\< shr_inst \>:
 
-createo<shr_inst>
+creator<shr_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< shr_inst >
+.. doxygenstruct:: tinytc::creator< shr_inst >
 
-.. _tinytc::createo\< and_inst \>:
+.. _tinytc::creator\< and_inst \>:
 
-createo<and_inst>
+creator<and_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< and_inst >
+.. doxygenstruct:: tinytc::creator< and_inst >
 
-.. _tinytc::createo\< or_inst \>:
+.. _tinytc::creator\< or_inst \>:
 
-createo<or_inst>
+creator<or_inst>
 ................
 
-.. doxygenstruct:: tinytc::createo< or_inst >
+.. doxygenstruct:: tinytc::creator< or_inst >
 
-.. _tinytc::createo\< xor_inst \>:
+.. _tinytc::creator\< xor_inst \>:
 
-createo<xor_inst>
+creator<xor_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< xor_inst >
+.. doxygenstruct:: tinytc::creator< xor_inst >
 
-.. _tinytc::createo\< min_inst \>:
+.. _tinytc::creator\< min_inst \>:
 
-createo<min_inst>
+creator<min_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< min_inst >
+.. doxygenstruct:: tinytc::creator< min_inst >
 
-.. _tinytc::createo\< max_inst \>:
+.. _tinytc::creator\< max_inst \>:
 
-createo<max_inst>
+creator<max_inst>
 .................
 
-.. doxygenstruct:: tinytc::createo< max_inst >
+.. doxygenstruct:: tinytc::creator< max_inst >
 
-.. _tinytc::create\< abs_inst \>:
+.. _tinytc::creator\< abs_inst \>:
 
-create<abs_inst>
+creator<abs_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< abs_inst >
+
+.. _tinytc::creator\< neg_inst \>:
+
+creator<neg_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< neg_inst >
+
+.. _tinytc::creator\< not_inst \>:
+
+creator<not_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< not_inst >
+
+.. _tinytc::creator\< conj_inst \>:
+
+creator<conj_inst>
+..................
+
+.. doxygenstruct:: tinytc::creator< conj_inst >
+
+.. _tinytc::creator\< im_inst \>:
+
+creator<im_inst>
 ................
 
-.. doxygenstruct:: tinytc::create< abs_inst >
+.. doxygenstruct:: tinytc::creator< im_inst >
 
-.. _tinytc::create\< neg_inst \>:
+.. _tinytc::creator\< re_inst \>:
 
-create<neg_inst>
+creator<re_inst>
 ................
 
-.. doxygenstruct:: tinytc::create< neg_inst >
-
-.. _tinytc::create\< not_inst \>:
-
-create<not_inst>
-................
-
-.. doxygenstruct:: tinytc::create< not_inst >
-
-.. _tinytc::create\< conj_inst \>:
-
-create<conj_inst>
-.................
-
-.. doxygenstruct:: tinytc::create< conj_inst >
-
-.. _tinytc::create\< im_inst \>:
-
-create<im_inst>
-...............
-
-.. doxygenstruct:: tinytc::create< im_inst >
-
-.. _tinytc::create\< re_inst \>:
-
-create<re_inst>
-...............
-
-.. doxygenstruct:: tinytc::create< re_inst >
+.. doxygenstruct:: tinytc::creator< re_inst >
 
 .. _tinytc::creator\< axpby_inst \>:
 
@@ -1145,6 +1136,69 @@ creator<foreach_inst>
 .....................
 
 .. doxygenstruct:: tinytc::creator< foreach_inst >
+
+.. _tinytc::creator\< subgroup_exclusive_scan_add_inst \>:
+
+creator<subgroup_exclusive_scan_add_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_exclusive_scan_add_inst >
+
+.. _tinytc::creator\< subgroup_exclusive_scan_max_inst \>:
+
+creator<subgroup_exclusive_scan_max_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_exclusive_scan_max_inst >
+
+.. _tinytc::creator\< subgroup_exclusive_scan_min_inst \>:
+
+creator<subgroup_exclusive_scan_min_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_exclusive_scan_min_inst >
+
+.. _tinytc::creator\< subgroup_inclusive_scan_add_inst \>:
+
+creator<subgroup_inclusive_scan_add_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_inclusive_scan_add_inst >
+
+.. _tinytc::creator\< subgroup_inclusive_scan_max_inst \>:
+
+creator<subgroup_inclusive_scan_max_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_inclusive_scan_max_inst >
+
+.. _tinytc::creator\< subgroup_inclusive_scan_min_inst \>:
+
+creator<subgroup_inclusive_scan_min_inst>
+.........................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_inclusive_scan_min_inst >
+
+.. _tinytc::creator\< subgroup_reduce_add_inst \>:
+
+creator<subgroup_reduce_add_inst>
+.................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_reduce_add_inst >
+
+.. _tinytc::creator\< subgroup_reduce_max_inst \>:
+
+creator<subgroup_reduce_max_inst>
+.................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_reduce_max_inst >
+
+.. _tinytc::creator\< subgroup_reduce_min_inst \>:
+
+creator<subgroup_reduce_min_inst>
+.................................
+
+.. doxygenstruct:: tinytc::creator< subgroup_reduce_min_inst >
 
 Program
 =======

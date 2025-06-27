@@ -90,12 +90,13 @@ inst @cooperative_matrix_prefetch "Cooperative matrix prefetch instruction" {
 }
 
 inst @cooperative_matrix_reduce "Cooperative matrix reduce instruction" {
-    spmd
-    prop %arith => @group_arithmetic "reduction operator"
-    prop %mode  => @reduce_mode      "reduction mode"
-    op %a                            "matrix"
-    ret %result                      "result type"
+    prop %mode => @reduce_mode "reduce mode"
+    op %a                      "matrix"
+    ret %result                "result type"
 }
+inst @cooperative_matrix_reduce_add : @cooperative_matrix_reduce "Cooperative matrix reduce add instruction" { spmd }
+inst @cooperative_matrix_reduce_max : @cooperative_matrix_reduce "Cooperative matrix reduce max instruction" { spmd }
+inst @cooperative_matrix_reduce_min : @cooperative_matrix_reduce "Cooperative matrix reduce min instruction" { spmd }
 
 inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
     spmd
@@ -172,14 +173,6 @@ inst @subgroup_broadcast "Subgroup broadcast instruction" {
     op %a       "operand"
     op %idx     "subgroup local index"
     ret %result "result index"
-}
-
-inst @subgroup_operation "Subgroup operation instruction" {
-    spmd
-    prop %arith     => @group_arithmetic "group arithmetic type"
-    prop %operation => @group_operation  "group operation type"
-    op %a                                "operand"
-    ret %result                          "result type"
 }
 
 inst @subview "Subview instruction" {
@@ -350,3 +343,21 @@ inst @foreach : @loop "Create foreach loop" {
     cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
     cxx "inline auto loop_vars() { return body().params(); }"
 }
+
+; Subgroup operation
+
+inst @subgroup_operation "Subgroup operation instruction" {
+    op %a       "operand"
+    ret %result "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @subgroup_exclusive_scan_add : @subgroup_operation "Subgroup exclusive scan add" { spmd }
+inst @subgroup_exclusive_scan_max : @subgroup_operation "Subgroup exclusive scan max" { spmd }
+inst @subgroup_exclusive_scan_min : @subgroup_operation "Subgroup exclusive scan min" { spmd }
+inst @subgroup_inclusive_scan_add : @subgroup_operation "Subgroup inclusive scan add" { spmd }
+inst @subgroup_inclusive_scan_max : @subgroup_operation "Subgroup inclusive scan max" { spmd }
+inst @subgroup_inclusive_scan_min : @subgroup_operation "Subgroup inclusive scan min" { spmd }
+inst @subgroup_reduce_add : @subgroup_operation "Subgroup reduce add" { spmd }
+inst @subgroup_reduce_max : @subgroup_operation "Subgroup reduce max" { spmd }
+inst @subgroup_reduce_min : @subgroup_operation "Subgroup reduce min" { spmd }
+

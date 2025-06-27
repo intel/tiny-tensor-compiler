@@ -849,8 +849,7 @@ void inst_converter::operator()(subgroup_broadcast_inst in) {
 
 void inst_converter::operator()(subgroup_operation_inst in) {
     auto sty = get_scalar_type(in.a());
-    declare(in.result(),
-            make_subgroup_op(unique_, sty, in.arith(), in.operation(), val(in.a()), in.loc()));
+    declare(in.result(), make_subgroup_op(unique_, sty, in.get().type_id(), val(in.a()), in.loc()));
 }
 
 void inst_converter::operator()(store_inst in) {

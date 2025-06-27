@@ -157,22 +157,9 @@ enum @comp3 "Named components of 3d vector" {
     case %z => 2  ".z"
 }
 
-
-enum @group_arithmetic "Group arithmetic" {
-    case %add => 0 "Group add"
-    case %max => 1 "Group max"
-    case %min => 2 "Group min"
-}
-
-enum @group_operation "Group operation" {
-    case %exclusive_scan => 0 "Exclusive scan"
-    case %inclusive_scan => 1 "Inclusive scan"
-    case %reduce         => 2 "Reduction"
-}
-
 enum @reduce_mode "Reduce mode" {
     case %row    => 0 "Reduction over rows"
-    case %column => 1 "Reducation over columns"
+    case %column => 1 "Reduction over columns"
 }
 
 enum @transpose "Transpose" {

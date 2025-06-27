@@ -20,10 +20,6 @@ Common
 
   * :ref:`tinytc_comp3_t`
 
-  * :ref:`tinytc_group_arithmetic_t`
-
-  * :ref:`tinytc_group_operation_t`
-
   * :ref:`tinytc_math_unary_t`
 
   * :ref:`tinytc_matrix_use_t`
@@ -49,10 +45,6 @@ Common
   * :ref:`tinytc_cmp_condition_to_string`
 
   * :ref:`tinytc_comp3_to_string`
-
-  * :ref:`tinytc_group_arithmetic_to_string`
-
-  * :ref:`tinytc_group_operation_to_string`
 
   * :ref:`tinytc_math_unary_to_string`
 
@@ -143,20 +135,6 @@ tinytc_comp3_t
 
 .. doxygenenum:: tinytc_comp3_t
 
-.. _tinytc_group_arithmetic_t:
-
-tinytc_group_arithmetic_t
-.........................
-
-.. doxygenenum:: tinytc_group_arithmetic_t
-
-.. _tinytc_group_operation_t:
-
-tinytc_group_operation_t
-........................
-
-.. doxygenenum:: tinytc_group_operation_t
-
 .. _tinytc_math_unary_t:
 
 tinytc_math_unary_t
@@ -239,20 +217,6 @@ tinytc_comp3_to_string
 ......................
 
 .. doxygenfunction:: tinytc_comp3_to_string
-
-.. _tinytc_group_arithmetic_to_string:
-
-tinytc_group_arithmetic_to_string
-.................................
-
-.. doxygenfunction:: tinytc_group_arithmetic_to_string
-
-.. _tinytc_group_operation_to_string:
-
-tinytc_group_operation_to_string
-................................
-
-.. doxygenfunction:: tinytc_group_operation_to_string
 
 .. _tinytc_math_unary_to_string:
 
@@ -670,7 +634,11 @@ Instruction
 
   * :ref:`tinytc_cooperative_matrix_mul_add_inst_create`
 
-  * :ref:`tinytc_cooperative_matrix_reduce_inst_create`
+  * :ref:`tinytc_cooperative_matrix_reduce_add_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_reduce_max_inst_create`
+
+  * :ref:`tinytc_cooperative_matrix_reduce_min_inst_create`
 
   * :ref:`tinytc_cooperative_matrix_prefetch_inst_create`
 
@@ -695,8 +663,6 @@ Instruction
   * :ref:`tinytc_size_inst_create`
 
   * :ref:`tinytc_subgroup_broadcast_inst_create`
-
-  * :ref:`tinytc_subgroup_operation_inst_create`
 
   * :ref:`tinytc_store_inst_create`
 
@@ -767,6 +733,24 @@ Instruction
   * :ref:`tinytc_subgroup_linear_id_inst_create`
 
   * :ref:`tinytc_subgroup_local_id_inst_create`
+
+  * :ref:`tinytc_subgroup_exclusive_scan_add_inst_create`
+
+  * :ref:`tinytc_subgroup_exclusive_scan_max_inst_create`
+
+  * :ref:`tinytc_subgroup_exclusive_scan_min_inst_create`
+
+  * :ref:`tinytc_subgroup_inclusive_scan_add_inst_create`
+
+  * :ref:`tinytc_subgroup_inclusive_scan_max_inst_create`
+
+  * :ref:`tinytc_subgroup_inclusive_scan_min_inst_create`
+
+  * :ref:`tinytc_subgroup_reduce_add_inst_create`
+
+  * :ref:`tinytc_subgroup_reduce_max_inst_create`
+
+  * :ref:`tinytc_subgroup_reduce_min_inst_create`
 
   * :ref:`tinytc_for_inst_create`
 
@@ -890,12 +874,26 @@ tinytc_cooperative_matrix_mul_add_inst_create
 
 .. doxygenfunction:: tinytc_cooperative_matrix_mul_add_inst_create
 
-.. _tinytc_cooperative_matrix_reduce_inst_create:
+.. _tinytc_cooperative_matrix_reduce_add_inst_create:
 
-tinytc_cooperative_matrix_reduce_inst_create
-............................................
+tinytc_cooperative_matrix_reduce_add_inst_create
+................................................
 
-.. doxygenfunction:: tinytc_cooperative_matrix_reduce_inst_create
+.. doxygenfunction:: tinytc_cooperative_matrix_reduce_add_inst_create
+
+.. _tinytc_cooperative_matrix_reduce_max_inst_create:
+
+tinytc_cooperative_matrix_reduce_max_inst_create
+................................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_reduce_max_inst_create
+
+.. _tinytc_cooperative_matrix_reduce_min_inst_create:
+
+tinytc_cooperative_matrix_reduce_min_inst_create
+................................................
+
+.. doxygenfunction:: tinytc_cooperative_matrix_reduce_min_inst_create
 
 .. _tinytc_cooperative_matrix_prefetch_inst_create:
 
@@ -980,13 +978,6 @@ tinytc_subgroup_broadcast_inst_create
 .....................................
 
 .. doxygenfunction:: tinytc_subgroup_broadcast_inst_create
-
-.. _tinytc_subgroup_operation_inst_create:
-
-tinytc_subgroup_operation_inst_create
-.....................................
-
-.. doxygenfunction:: tinytc_subgroup_operation_inst_create
 
 .. _tinytc_store_inst_create:
 
@@ -1232,6 +1223,69 @@ tinytc_subgroup_local_id_inst_create
 ....................................
 
 .. doxygenfunction:: tinytc_subgroup_local_id_inst_create
+
+.. _tinytc_subgroup_exclusive_scan_add_inst_create:
+
+tinytc_subgroup_exclusive_scan_add_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_exclusive_scan_add_inst_create
+
+.. _tinytc_subgroup_exclusive_scan_max_inst_create:
+
+tinytc_subgroup_exclusive_scan_max_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_exclusive_scan_max_inst_create
+
+.. _tinytc_subgroup_exclusive_scan_min_inst_create:
+
+tinytc_subgroup_exclusive_scan_min_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_exclusive_scan_min_inst_create
+
+.. _tinytc_subgroup_inclusive_scan_add_inst_create:
+
+tinytc_subgroup_inclusive_scan_add_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_inclusive_scan_add_inst_create
+
+.. _tinytc_subgroup_inclusive_scan_max_inst_create:
+
+tinytc_subgroup_inclusive_scan_max_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_inclusive_scan_max_inst_create
+
+.. _tinytc_subgroup_inclusive_scan_min_inst_create:
+
+tinytc_subgroup_inclusive_scan_min_inst_create
+..............................................
+
+.. doxygenfunction:: tinytc_subgroup_inclusive_scan_min_inst_create
+
+.. _tinytc_subgroup_reduce_add_inst_create:
+
+tinytc_subgroup_reduce_add_inst_create
+......................................
+
+.. doxygenfunction:: tinytc_subgroup_reduce_add_inst_create
+
+.. _tinytc_subgroup_reduce_max_inst_create:
+
+tinytc_subgroup_reduce_max_inst_create
+......................................
+
+.. doxygenfunction:: tinytc_subgroup_reduce_max_inst_create
+
+.. _tinytc_subgroup_reduce_min_inst_create:
+
+tinytc_subgroup_reduce_min_inst_create
+......................................
+
+.. doxygenfunction:: tinytc_subgroup_reduce_min_inst_create
 
 .. _tinytc_for_inst_create:
 

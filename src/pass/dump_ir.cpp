@@ -328,8 +328,8 @@ void dump_ir_pass::operator()(cooperative_matrix_prefetch_inst c) {
 
 void dump_ir_pass::operator()(cooperative_matrix_reduce_inst c) {
     dump_val(c.result());
-    *os_ << " = cooperative_matrix_reduce.";
-    *os_ << to_string(c.arith()) << "." << to_string(c.mode()) << " ";
+    *os_ << " = ";
+    *os_ << to_string(c.get().type_id()) << "." << to_string(c.mode()) << " ";
     dump_val(c.a());
     *os_ << " : ";
     visit(*this, *c.result().ty());
@@ -556,7 +556,7 @@ void dump_ir_pass::operator()(subgroup_broadcast_inst in) {
 
 void dump_ir_pass::operator()(subgroup_operation_inst in) {
     dump_val(in.result());
-    *os_ << " = subgroup." << to_string(in.arith()) << "." << to_string(in.operation()) << " ";
+    *os_ << " = " << to_string(in.get().type_id()) << " ";
     dump_val(in.a());
     *os_ << " : ";
     visit(*this, *in.result().ty());

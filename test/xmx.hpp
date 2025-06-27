@@ -714,34 +714,34 @@ func @reduction(%A: memref<i16x128x128>,
     parallel {
         %0 = constant 0 : index
         %1 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x16,matrix_acc>
-        %2 = cooperative_matrix_reduce.add.column %1 : coopmatrix<i16x1x16,matrix_acc>
+        %2 = cooperative_matrix_reduce_add.column %1 : coopmatrix<i16x1x16,matrix_acc>
         cooperative_matrix_store %2, %B[%0,%0]
 
         %c1 = constant 1 : index
         %3 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x7,matrix_acc>
-        %4 = cooperative_matrix_reduce.add.column %3 : coopmatrix<i16x1x7,matrix_acc>
+        %4 = cooperative_matrix_reduce_add.column %3 : coopmatrix<i16x1x7,matrix_acc>
         cooperative_matrix_store %4, %B[%c1,%0]
 
         %c2 = constant 2 : index
         %5 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x32x32,matrix_acc>
-        %6 = cooperative_matrix_reduce.add.column %5 : coopmatrix<i16x1x32,matrix_acc>
+        %6 = cooperative_matrix_reduce_add.column %5 : coopmatrix<i16x1x32,matrix_acc>
         cooperative_matrix_store %6, %B[%c2,%0]
 
         %c3 = constant 3 : index
         %7 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x16,matrix_acc>
-        %8 = cooperative_matrix_reduce.add.row %7 : coopmatrix<i16x16x1,matrix_acc>
+        %8 = cooperative_matrix_reduce_add.row %7 : coopmatrix<i16x16x1,matrix_acc>
         cooperative_matrix_store %8, %B[%c3,%0]
 
         %9 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x16x7,matrix_acc>
-        %10 = cooperative_matrix_reduce.add.row %9 : coopmatrix<i16x16x1,matrix_acc>
+        %10 = cooperative_matrix_reduce_add.row %9 : coopmatrix<i16x16x1,matrix_acc>
         cooperative_matrix_store %10, %B[%c3,%c1]
 
         %11 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x32x32,matrix_acc>
-        %12 = cooperative_matrix_reduce.add.row %11 : coopmatrix<i16x32x1,matrix_acc>
+        %12 = cooperative_matrix_reduce_add.row %11 : coopmatrix<i16x32x1,matrix_acc>
         cooperative_matrix_store %12, %B[%c3,%c2]
 
         ;%13 = cooperative_matrix_load.n %A[%0,%0] : coopmatrix<i16x4x42,matrix_acc>
-        ;%14 = cooperative_matrix_reduce.add.row %13 : coopmatrix<i16x4x1,matrix_acc>
+        ;%14 = cooperative_matrix_reduce_add.row %13 : coopmatrix<i16x4x1,matrix_acc>
         ;cooperative_matrix_store %14, %B[%c3,%c3]
     }
 })TinyTL";

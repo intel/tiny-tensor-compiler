@@ -26,18 +26,6 @@
 
 namespace tinytc::spv {
 
-auto convert_group_operation(group_operation op) -> GroupOperation {
-    switch (op) {
-    case group_operation::exclusive_scan:
-        return GroupOperation::ExclusiveScan;
-    case group_operation::inclusive_scan:
-        return GroupOperation::InclusiveScan;
-    case group_operation::reduce:
-        return GroupOperation::Reduce;
-    }
-    throw status::internal_compiler_error;
-}
-
 auto get_last_label(tinytc_spv_mod &mod) -> spv_inst * {
     auto &insts = mod.insts(section::function);
     auto it = insts.end();
@@ -617,8 +605,8 @@ auto make_unary_op(uniquifier &unique, scalar_type sty, IK op, spv_inst *a, loca
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto make_subgroup_op(uniquifier &unique, scalar_type sty, group_arithmetic arith,
-                      group_operation op, spv_inst *a, location const &loc) -> spv_inst * {
+auto make_subgroup_op(uniquifier &unique, scalar_type sty, IK op, spv_inst *a, location const &loc)
+    -> spv_inst * {
     auto &mod = unique.mod();
     auto const make_impl = [&]<typename Ops>(scalar_type sty, GroupOperation group_op, spv_inst *ty,
                                              spv_inst *operand) -> spv_inst * {
@@ -659,14 +647,27 @@ auto make_subgroup_op(uniquifier &unique, scalar_type sty, group_arithmetic arit
         using i = OpGroupSMin;
         using f = OpGroupFMin;
     };
-    auto spv_op = convert_group_operation(op);
-    switch (arith) {
-    case group_arithmetic::add:
-        return make_impl.template operator()<add_ops>(sty, spv_op, ty, a);
-    case group_arithmetic::max:
-        return make_impl.template operator()<max_ops>(sty, spv_op, ty, a);
-    case group_arithmetic::min:
-        return make_impl.template operator()<min_ops>(sty, spv_op, ty, a);
+    switch (op) {
+    case IK::IK_subgroup_exclusive_scan_add:
+        return make_impl.template operator()<add_ops>(sty, GroupOperation::ExclusiveScan, ty, a);
+    case IK::IK_subgroup_exclusive_scan_max:
+        return make_impl.template operator()<max_ops>(sty, GroupOperation::ExclusiveScan, ty, a);
+    case IK::IK_subgroup_exclusive_scan_min:
+        return make_impl.template operator()<min_ops>(sty, GroupOperation::ExclusiveScan, ty, a);
+    case IK::IK_subgroup_inclusive_scan_add:
+        return make_impl.template operator()<add_ops>(sty, GroupOperation::InclusiveScan, ty, a);
+    case IK::IK_subgroup_inclusive_scan_max:
+        return make_impl.template operator()<max_ops>(sty, GroupOperation::InclusiveScan, ty, a);
+    case IK::IK_subgroup_inclusive_scan_min:
+        return make_impl.template operator()<min_ops>(sty, GroupOperation::InclusiveScan, ty, a);
+    case IK::IK_subgroup_reduce_add:
+        return make_impl.template operator()<add_ops>(sty, GroupOperation::Reduce, ty, a);
+    case IK::IK_subgroup_reduce_max:
+        return make_impl.template operator()<max_ops>(sty, GroupOperation::Reduce, ty, a);
+    case IK::IK_subgroup_reduce_min:
+        return make_impl.template operator()<min_ops>(sty, GroupOperation::Reduce, ty, a);
+    default:
+        break;
     }
     throw compilation_error(loc, status::internal_compiler_error);
 }

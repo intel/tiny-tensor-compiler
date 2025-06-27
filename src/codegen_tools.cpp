@@ -304,8 +304,7 @@ void work_group_op::teardown(region_builder &bb) {
 }
 
 auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -> value {
-    auto a_reduced = bb.create<subgroup_operation_inst>(group_arithmetic::add,
-                                                        group_operation::reduce, a, ty_, loc);
+    auto a_reduced = bb.create<subgroup_reduce_add_inst>(a, ty_, loc);
 
     if (num_tiles_ > 1) {
         auto ctx = compiler_context{a->context(), true};
@@ -343,8 +342,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
                                     auto sum = bb.create<add_inst>(args[1], a_sg_reduced, ty_, loc);
                                     bb.create<yield_inst>(array_view{sum}, loc);
                                 });
-                a_reduced = bb.create<subgroup_operation_inst>(
-                    group_arithmetic::add, group_operation::reduce, acc[0], ty_, loc);
+                a_reduced = bb.create<subgroup_reduce_add_inst>(acc[0], ty_, loc);
                 return a_reduced;
             },
             loc);
@@ -354,8 +352,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
 
 auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_sum,
                                      location const &loc) -> std::pair<value, value> {
-    auto a_scan = bb.create<subgroup_operation_inst>(group_arithmetic::add,
-                                                     group_operation::inclusive_scan, a, ty_, loc);
+    auto a_scan = bb.create<subgroup_inclusive_scan_add_inst>(a, ty_, loc);
 
     auto ctx = compiler_context{a->context(), true};
     auto i32_ty = get_scalar(ctx, scalar_type::i32);
