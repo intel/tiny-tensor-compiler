@@ -49,19 +49,15 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
     auto c0 = bb.create<constant_inst>(0, ity);
     auto c_tiles_1 = bb.create<constant_inst>(num_tiles - 1, ity);
 
-    auto blocks = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::div, loop_trip_count, c_sgs, ity));
-    auto rem = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::rem, loop_trip_count, c_sgs, ity));
+    auto blocks = instant_constant_fold_add(bb, create<div_inst>(loop_trip_count, c_sgs, ity));
+    auto rem = instant_constant_fold_add(bb, create<rem_inst>(loop_trip_count, c_sgs, ity));
 
     auto sg_id_cast = instant_constant_fold_add(bb, create<cast_inst>(sg_id, ity));
     auto is_blocks_gt_0 =
         instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::gt, blocks, c0, bool_ty));
     bb.if_condition(is_blocks_gt_0, [&](region_builder &bb) {
-        auto block_start = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::mul, c_sgs, sg_id_cast, ity));
-        auto block_end =
-            instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, c_sgs, blocks, ity));
+        auto block_start = instant_constant_fold_add(bb, create<mul_inst>(c_sgs, sg_id_cast, ity));
+        auto block_end = instant_constant_fold_add(bb, create<mul_inst>(c_sgs, blocks, ity));
         bb.for_loop(
             std::move(block_start), std::move(block_end), c_sgs_tiles,
             [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); },
@@ -74,8 +70,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
         auto condition1 = instant_constant_fold_add(
             bb, create<compare_inst>(cmp_condition::eq, sg_id_cast, c_tiles_1, bool_ty));
         bb.if_condition(condition1, [&](region_builder &bb) {
-            auto block = instant_constant_fold_add(
-                bb, create<arith_inst>(arithmetic::mul, blocks, c_sgs, ity));
+            auto block = instant_constant_fold_add(bb, create<mul_inst>(blocks, c_sgs, ity));
             body(bb, block, true, rem);
         });
     });
@@ -94,22 +89,15 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     // blocks = ceil(blocks / num_tiles) * num_tiles = (1 + (blocks - 1) / num_tiles) *
     // num_tiles
     auto c_block_size = bb.create<constant_inst>(block_size, ity);
-    auto blocks0 = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::sub, loop_trip_count, c1, ity));
-    auto blocks1 = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::div, blocks0, c_block_size, ity));
-    auto blocks2 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::div, blocks1, c_tiles, ity));
-    auto blocks3 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::add, c1, blocks2, ity));
-    auto blocks =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, blocks3, c_tiles, ity));
+    auto blocks0 = instant_constant_fold_add(bb, create<sub_inst>(loop_trip_count, c1, ity));
+    auto blocks1 = instant_constant_fold_add(bb, create<div_inst>(blocks0, c_block_size, ity));
+    auto blocks2 = instant_constant_fold_add(bb, create<div_inst>(blocks1, c_tiles, ity));
+    auto blocks3 = instant_constant_fold_add(bb, create<add_inst>(c1, blocks2, ity));
+    auto blocks = instant_constant_fold_add(bb, create<mul_inst>(blocks3, c_tiles, ity));
 
-    auto bs = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::div, loop_trip_count, blocks, ity));
-    auto bs_1 = instant_constant_fold_add(bb, create<arith_inst>(arithmetic::add, bs, c1, ity));
-    auto rem = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::rem, loop_trip_count, blocks, ity));
+    auto bs = instant_constant_fold_add(bb, create<div_inst>(loop_trip_count, blocks, ity));
+    auto bs_1 = instant_constant_fold_add(bb, create<add_inst>(bs, c1, ity));
+    auto rem = instant_constant_fold_add(bb, create<rem_inst>(loop_trip_count, blocks, ity));
 
     auto sg_id_cast = instant_constant_fold_add(bb, create<cast_inst>(sg_id, ity));
     // The following if makes it easy to eliminate the remainder handler in optimization if rem
@@ -118,37 +106,28 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     auto is_rem_gt_0 =
         instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::gt, rem, c0, bool_ty));
     bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
-        auto block_start_1 = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::mul, bs_1, sg_id_cast, ity));
-        auto block_end_1 =
-            instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, bs_1, rem, ity));
-        auto step_1 =
-            instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, bs_1, c_tiles, ity));
+        auto block_start_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, sg_id_cast, ity));
+        auto block_end_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, rem, ity));
+        auto step_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, c_tiles, ity));
         bb.for_loop(
             std::move(block_start_1), std::move(block_end_1), std::move(step_1),
             [&](region_builder &bb, value block) { body(bb, block, bs_1); }, for_attributes);
     });
 
-    auto tmp0 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::rem, rem, c_tiles, ity));
-    auto tmp1 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::add, sg_id_cast, tmp0, ity));
-    auto sg_id_1 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::rem, tmp1, c_tiles, ity));
-    auto tmp2 =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, bs, sg_id_1, ity));
-    auto tmp3 = instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, bs_1, rem, ity));
-    auto block_start =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::add, tmp3, tmp2, ity));
-    auto step =
-        instant_constant_fold_add(bb, create<arith_inst>(arithmetic::mul, bs, c_tiles, ity));
+    auto tmp0 = instant_constant_fold_add(bb, create<rem_inst>(rem, c_tiles, ity));
+    auto tmp1 = instant_constant_fold_add(bb, create<add_inst>(sg_id_cast, tmp0, ity));
+    auto sg_id_1 = instant_constant_fold_add(bb, create<rem_inst>(tmp1, c_tiles, ity));
+    auto tmp2 = instant_constant_fold_add(bb, create<mul_inst>(bs, sg_id_1, ity));
+    auto tmp3 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, rem, ity));
+    auto block_start = instant_constant_fold_add(bb, create<add_inst>(tmp3, tmp2, ity));
+    auto step = instant_constant_fold_add(bb, create<mul_inst>(bs, c_tiles, ity));
     bb.for_loop(
         std::move(block_start), loop_trip_count, std::move(step),
         [&](region_builder &bb, value block) { body(bb, block, bs); }, for_attributes);
 }
 
-auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
-                                value a, value b, location const &loc) -> value {
+auto promote_binop_operands(region_builder &bb, scalar_type result_ty, value a, value b,
+                            location const &loc) -> std::pair<value, value> {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     scalar_data_type *bt = dyn_cast<scalar_data_type>(b->ty());
     if (at == nullptr || bt == nullptr) {
@@ -167,9 +146,9 @@ auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arith
             b = bb.create<cast_inst>(b, promoted_ty, loc);
         }
     }
-    return bb.create<arith_inst>(operation, a, b, scalar_data_type::get(at->context(), result_ty),
-                                 loc);
+    return {a, b};
 }
+
 auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
     -> value {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
@@ -208,8 +187,7 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
     if (ct == nullptr) {
         throw compilation_error(loc, {C}, status::ir_expected_scalar);
     }
-    auto alpha_ab =
-        mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, alpha, ab, loc);
+    auto alpha_ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), alpha, ab, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -218,10 +196,9 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
         bb.create<store_inst>(*flag, alpha_ab, C, index_list, loc);
     } else {
         auto c = bb.create<load_inst>(C, index_list, ct->element_data_ty(), loc);
-        auto beta_c =
-            mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, beta, c, loc);
-        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic(
-            bb, ct->element_ty(), arithmetic::add, alpha_ab, beta_c, loc);
+        auto beta_c = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), beta, c, loc);
+        auto alpha_ab_plus_beta_c =
+            mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), alpha_ab, beta_c, loc);
         bb.create<store_inst>(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc);
     }
 }
@@ -363,8 +340,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
                                     auto lv_index = bb.create<cast_inst>(args[0], index_ty, loc);
                                     auto a_sg_reduced =
                                         bb.create<load_inst>(tmp_, array_view{lv_index}, ty_, loc);
-                                    auto sum = bb.create<arith_inst>(arithmetic::add, args[1],
-                                                                     a_sg_reduced, ty_, loc);
+                                    auto sum = bb.create<add_inst>(args[1], a_sg_reduced, ty_, loc);
                                     bb.create<yield_inst>(array_view{sum}, loc);
                                 });
                 a_reduced = bb.create<subgroup_operation_inst>(
@@ -405,22 +381,21 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
         bb.create<barrier_inst>(static_cast<tinytc_address_spaces_t>(address_space::local), loc);
 
         auto c_zero = bb.constant_zero(i32_ty, loc);
-        a_scan = bb.for_loop(
-            c_zero, sgid, nullptr, {a_scan}, {ty_},
-            [&](region_builder &bb, array_view<value> args) {
-                auto lv_index = bb.create<cast_inst>(args[0], index_ty, loc);
-                auto prefix = bb.create<load_inst>(tmp_, array_view{lv_index}, ty_, loc);
-                auto scan = bb.create<arith_inst>(arithmetic::add, args[1], prefix, ty_, loc);
-                bb.create<yield_inst>(array_view{scan}, loc);
-            })[0];
+        a_scan = bb.for_loop(c_zero, sgid, nullptr, {a_scan}, {ty_},
+                             [&](region_builder &bb, array_view<value> args) {
+                                 auto lv_index = bb.create<cast_inst>(args[0], index_ty, loc);
+                                 auto prefix =
+                                     bb.create<load_inst>(tmp_, array_view{lv_index}, ty_, loc);
+                                 auto scan = bb.create<add_inst>(args[1], prefix, ty_, loc);
+                                 bb.create<yield_inst>(array_view{scan}, loc);
+                             })[0];
 
         if (compute_sum) {
             auto c_num_tiles_1 = bb.create<constant_inst>(num_tiles_ - 1, i32_ty, loc);
             auto c_num_tiles_1_index = bb.create<cast_inst>(c_num_tiles_1, index_ty, loc);
             auto is_last_sgid =
                 bb.create<compare_inst>(cmp_condition::eq, sgid, c_num_tiles_1, bool_ty, loc);
-            auto is_last_work_item =
-                bb.create<arith_inst>(arithmetic::and_, is_last_sglid, is_last_sgid, bool_ty, loc);
+            auto is_last_work_item = bb.create<and_inst>(is_last_sglid, is_last_sgid, bool_ty, loc);
             bb.if_condition(
                 is_last_work_item,
                 [&](region_builder &bb) {

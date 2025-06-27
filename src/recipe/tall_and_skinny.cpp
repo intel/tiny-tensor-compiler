@@ -112,8 +112,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                                   bool is_beta_nonzero, value beta_arg, value C) {
                 auto c_M_block_size = bb.create<constant_inst>(M_block_size, index_ty, my_loc());
                 auto gid = bb.create<builtin_inst>(builtin::group_id_x, index_ty, my_loc());
-                auto m = bb.create<arith_inst>(arithmetic::mul, gid, c_M_block_size, get_type(gid),
-                                               my_loc());
+                auto m = bb.create<mul_inst>(gid, c_M_block_size, get_type(gid), my_loc());
                 auto beta = is_beta_nonzero ? beta_arg : bb.constant_zero(ty_, my_loc());
 
                 auto const static_offsets = std::array<std::int64_t, 2u>{dynamic, 0};
@@ -154,8 +153,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 } else {
 
                     auto M_val = bb.create<size_inst>(0, C, index_ty, my_loc());
-                    auto M_val_sub_m =
-                        bb.create<arith_inst>(arithmetic::sub, M_val, m, get_type(m), my_loc());
+                    auto M_val_sub_m = bb.create<sub_inst>(M_val, m, get_type(m), my_loc());
                     auto cond = bb.create<compare_inst>(cmp_condition::lt, M_val_sub_m,
                                                         c_M_block_size, bool_ty, my_loc());
                     bb.ifelse(

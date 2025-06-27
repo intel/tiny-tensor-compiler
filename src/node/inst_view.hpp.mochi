@@ -23,6 +23,14 @@ namespace tinytc {
 
 using constant_value_type = std::variant<bool, std::int64_t, double, std::complex<double>>;
 
+enum support_flag {
+    supports_bool = 0x1,
+    supports_int = 0x2,
+    supports_float = 0x4,
+    supports_complex = 0x8
+};
+using support_flags = std::uint32_t;
+
 class inst_view {
   public:
     struct properties {};

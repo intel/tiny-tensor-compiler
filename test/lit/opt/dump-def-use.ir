@@ -8,14 +8,14 @@ func @foobar() {
     %lb = constant 0 : index
     %ub = constant 5 : index
     for %i=%lb,%ub {
-        %0 = arith.add %i, %one : index
-        %1 = arith.rem %0, %one : index
+        %0 = add %i, %one : index
+        %1 = rem %0, %one : index
     }
 ; CHECK:      Def-use in @foobar
 ; CHECK-NEXT: > %one = constant 1 : index
 ; CHECK-NEXT:   def %one
-; CHECK-NEXT:     > %1 = arith.rem %0, %one : index
-; CHECK-NEXT:     > %0 = arith.add %i, %one : index
+; CHECK-NEXT:     > %1 = rem %0, %one : index
+; CHECK-NEXT:     > %0 = add %i, %one : index
 ; CHECK-NEXT: > %lb = constant 0 : index
 ; CHECK-NEXT:   def %lb
 ; CHECK-NEXT:     > for %i=%lb,%ub {...}
@@ -24,10 +24,10 @@ func @foobar() {
 ; CHECK-NEXT:     > for %i=%lb,%ub {...}
 ; CHECK-NEXT: > for %i=%lb,%ub {...}
 ; CHECK-NEXT:   def %i
-; CHECK-NEXT:     > %0 = arith.add %i, %one : index
-; CHECK-NEXT: > %0 = arith.add %i, %one : index
+; CHECK-NEXT:     > %0 = add %i, %one : index
+; CHECK-NEXT: > %0 = add %i, %one : index
 ; CHECK-NEXT:   def %0
-; CHECK-NEXT:     > %1 = arith.rem %0, %one : index
-; CHECK-NEXT: > %1 = arith.rem %0, %one : index
+; CHECK-NEXT:     > %1 = rem %0, %one : index
+; CHECK-NEXT: > %1 = rem %0, %one : index
 ; CHECK-NEXT:   def %1
 }

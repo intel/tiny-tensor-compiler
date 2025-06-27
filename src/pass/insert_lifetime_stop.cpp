@@ -56,8 +56,8 @@ auto insert_lifetime_stop_pass::run_on_region(tinytc_region &reg, aa_results con
         auto alloca_it = allocas.begin();
         while (alloca_it != allocas.end()) {
             if (rgn_ops.contains(*alloca_it)) {
-                prev_it =
-                    reg.insts().insert_after(prev_it, lifetime_stop_inst::create(*alloca_it, {}));
+                prev_it = reg.insts().insert_after(
+                    prev_it, lifetime_stop_inst::create(*alloca_it, {}).release());
                 --prev_it;
                 alloca_it = allocas.erase(alloca_it);
             } else {

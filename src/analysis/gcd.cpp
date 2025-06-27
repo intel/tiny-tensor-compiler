@@ -111,12 +111,12 @@ void gcd_helper::operator()(arith_inst in) {
     auto compute_gcd = [&]() -> std::optional<std::int64_t> {
         const auto ga = gcd_.get(in.a());
         const auto gb = gcd_.get(in.b());
-        switch (in.operation()) {
-        case arithmetic::add:
+        switch (in.get().type_id()) {
+        case IK::IK_add:
             return std::gcd(ga, gb);
-        case arithmetic::mul:
+        case IK::IK_mul:
             return ga * gb;
-        case arithmetic::div: {
+        case IK::IK_div: {
             return ga % gb == 0 ? ga / gb : 1;
         }
         default:

@@ -17,7 +17,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
             }
             yield (%exp_v_masked)
         }
-        %2 = arith.neg %1 : coopmatrix<f32x16x2,matrix_acc>
+        %2 = neg %1 : coopmatrix<f32x16x2,matrix_acc>
     }
 ; CHECK-LABEL: func @tmatrix_acc({{.*}}
 ; CHECK:      %1 = builtin.subgroup_local_id : i32
@@ -43,7 +43,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT:   yield (%14)
 ; CHECK-NEXT: }
 ; CHECK-NEXT: %15 = cooperative_matrix_insert %12, %8[1] : coopmatrix<f32x16x2,matrix_acc>
-; CHECK-NEXT: %16 = arith.neg %15 : coopmatrix<f32x16x2,matrix_acc>
+; CHECK-NEXT: %16 = neg %15 : coopmatrix<f32x16x2,matrix_acc>
 }
 
 func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
@@ -60,15 +60,15 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
             }
             yield (%exp_v_masked)
         }
-        %2 = arith.neg %1 : coopmatrix<f32x8x4,matrix_b>
+        %2 = neg %1 : coopmatrix<f32x8x4,matrix_b>
     }
 ; CHECK-LABEL: func @tmatrix_b({{.*}}
 ; CHECK:      %1 = builtin.subgroup_local_id : i32
 ; CHECK-NEXT: %2 = constant 8 : i32
-; CHECK-NEXT: %3 = arith.rem %1, %2 : i32
-; CHECK-NEXT: %4 = arith.div %1, %2 : i32
+; CHECK-NEXT: %3 = rem %1, %2 : i32
+; CHECK-NEXT: %4 = div %1, %2 : i32
 ; CHECK-NEXT: %5 = constant 0 : i32
-; CHECK-NEXT: %6 = arith.add %4, %5 : i32
+; CHECK-NEXT: %6 = add %4, %5 : i32
 ; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %8 = cmp.le %3, %6 : bool
 ; CHECK-NEXT: %9 = if %8 -> (f32) {
@@ -80,7 +80,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: }
 ; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x8x4,matrix_b>
 ; CHECK-NEXT: %13 = constant 2 : i32
-; CHECK-NEXT: %14 = arith.add %4, %13 : i32
+; CHECK-NEXT: %14 = add %4, %13 : i32
 ; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
 ; CHECK-NEXT: %16 = cmp.le %3, %14 : bool
 ; CHECK-NEXT: %17 = if %16 -> (f32) {
@@ -91,7 +91,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT:   yield (%19)
 ; CHECK-NEXT: }
 ; CHECK-NEXT: %20 = cooperative_matrix_insert %17, %12[1] : coopmatrix<f32x8x4,matrix_b>
-; CHECK-NEXT: %21 = arith.neg %20 : coopmatrix<f32x8x4,matrix_b>
+; CHECK-NEXT: %21 = neg %20 : coopmatrix<f32x8x4,matrix_b>
 }
 
 func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
@@ -108,15 +108,15 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
             }
             yield (%exp_v_masked)
         }
-        %2 = arith.neg %1 : coopmatrix<f32x1x17,matrix_b>
+        %2 = neg %1 : coopmatrix<f32x1x17,matrix_b>
     }
 ; CHECK-LABEL: func @tmatrix_b_mask({{.*}}
 ; CHECK:      %1 = builtin.subgroup_local_id : i32
 ; CHECK-NEXT: %2 = constant 1 : i32
-; CHECK-NEXT: %3 = arith.rem %1, %2 : i32
-; CHECK-NEXT: %4 = arith.div %1, %2 : i32
+; CHECK-NEXT: %3 = rem %1, %2 : i32
+; CHECK-NEXT: %4 = div %1, %2 : i32
 ; CHECK-NEXT: %5 = constant 0 : i32
-; CHECK-NEXT: %6 = arith.add %4, %5 : i32
+; CHECK-NEXT: %6 = add %4, %5 : i32
 ; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %8 = cmp.le %3, %6 : bool
 ; CHECK-NEXT: %9 = if %8 -> (f32) {
@@ -128,7 +128,7 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: }
 ; CHECK-NEXT: %12 = cooperative_matrix_insert %9, %0[0] : coopmatrix<f32x1x17,matrix_b>
 ; CHECK-NEXT: %13 = constant 16 : i32
-; CHECK-NEXT: %14 = arith.add %4, %13 : i32
+; CHECK-NEXT: %14 = add %4, %13 : i32
 ; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
 ; CHECK-NEXT: %16 = constant 17 : i32
 ; CHECK-NEXT: %17 = cmp.lt %14, %16 : bool
@@ -147,5 +147,5 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT:   yield (%23)
 ; CHECK-NEXT: }
 ; CHECK-NEXT: %24 = cooperative_matrix_insert %18, %12[1] : coopmatrix<f32x1x17,matrix_b>
-; CHECK-NEXT: %25 = arith.neg %24 : coopmatrix<f32x1x17,matrix_b>
+; CHECK-NEXT: %25 = neg %24 : coopmatrix<f32x1x17,matrix_b>
 }

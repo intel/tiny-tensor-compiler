@@ -131,21 +131,6 @@ enum @scalar_type "Scalar types" {
     case %c64   => 10 "Double precision complex (2x64 bit)"
 }
 
-enum @arithmetic "Arithmetic operations" {
-    case %add => 0  "add"
-    case %sub => 1  "subtract"
-    case %mul => 2  "multiply"
-    case %div => 3  "divide"
-    case %rem => 4  "division remainder"
-    case %shl => 5  "left shift"
-    case %shr => 6  "arithmetic right shift"
-    case %and => 7  "bitwise and"
-    case %or  => 8  "bitwise or"
-    case %xor => 9  "bitwise xor"
-    case %min => 10 "minimum"
-    case %max => 11 "maximum"
-}
-
 enum @arithmetic_unary "Arithmetic operations (unary)" {
     case %neg  => 0 "negation"
     case %not  => 1 "bitwise not"

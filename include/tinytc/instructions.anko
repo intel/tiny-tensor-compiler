@@ -8,13 +8,6 @@ inst @alloca "Alloca instruction" {
     ret %result "memref type of allocated variable"
 }
 
-inst @arith "Arithmetic instruction (binary)" {
-    prop %operation => @arithmetic "arithmetic operation type"
-    op %a                          "left-hand operand"
-    op %b                          "right-hand operand"
-    ret %result                    "result type"
-}
-
 inst @arith_unary "Arithmetic instruction (unary)" {
     prop %operation => @arithmetic_unary "unary arithmetic operation type"
     op %a                                "operand"
@@ -208,6 +201,27 @@ inst @store "Store instruction" {
 inst @yield "Yield instruction" {
     op* %yielded_vals "yielded values"
 }
+
+
+inst @arith "Arithmetic instruction (binary)" {
+    op %a                          "left-hand operand"
+    op %b                          "right-hand operand"
+    ret %result                    "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @add : @arith "Addition instruction" {}
+inst @sub : @arith "Subtraction instruction" {}
+inst @mul : @arith "Multiplication instruction" {}
+inst @div : @arith "Division instruction" {}
+inst @rem : @arith "Remainder instruction" {}
+inst @max : @arith "Max instruction" {}
+inst @min : @arith "Min instruction" {}
+inst @shl : @arith "Shift-left instruction" {}
+inst @shr : @arith "Shift-right instruction" {}
+inst @and : @arith "Bitwise and instruction" {}
+inst @or  : @arith "Bitwise or instruction" {}
+inst @xor : @arith "Bitwise xor instruction" {}
+
 
 inst @blas_a2 "BLAS instruction with 2 tensor arguments" {
     prop %atomic => bool "atomic flag"

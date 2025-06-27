@@ -125,10 +125,10 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         auto cnum = c1;
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         for (std::int64_t n = 1; n <= N_; ++n) {
-            cnum = bb.create<arith_inst>(arithmetic::mul, cnum, dt, get_type(dt));
+            cnum = bb.create<mul_inst>(cnum, dt, get_type(dt));
             denom *= n + 1;
             auto cdenom = bb.create<constant_inst>(static_cast<double>(denom), element_ty);
-            auto cfactor = bb.create<arith_inst>(arithmetic::div, cnum, cdenom, get_type(cnum));
+            auto cfactor = bb.create<div_inst>(cnum, cdenom, get_type(cnum));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.create<alloca_inst>(dQ_[n].local_type(element_ty));
             auto dq_nextvt = get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local);

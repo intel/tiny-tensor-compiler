@@ -374,8 +374,8 @@ func @dpas_slm(%B: memref<f16x128x128>,
     %n = constant 32 : index
     %N = constant 128 : index
     foreach (%i,%j)=(%0,%0),(%n,%n) {
-        %1 = arith.mul %j, %n : index
-        %2 = arith.add %i, %1 : index
+        %1 = mul %j, %n : index
+        %2 = add %i, %1 : index
         %3 = cast %2 : f16
         store %3, %A[%i,%j]
     }
@@ -439,8 +439,8 @@ func @dpas_slm(%A: memref<f16x128x128>,
     %n = constant 32 : index
     %N = constant 128 : index
     foreach (%i,%j)=(%0,%0),(%n,%n) {
-        %1 = arith.mul %j, %n : index
-        %2 = arith.add %i, %1 : index
+        %1 = mul %j, %n : index
+        %2 = add %i, %1 : index
         %3 = cast %2 : f16
         store %3, %B[%i,%j]
     }

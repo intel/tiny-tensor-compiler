@@ -39,9 +39,9 @@ func @tbuiltin() attributes{subgroup_size=32, work_group_size=[64,16]} {
     %4 = builtin.num_groups.y : index
     %5 = builtin.num_groups.z : index
     %6 = builtin.num_subgroups.x : i32
-    %t6 = arith.neg %6 : i32
+    %t6 = neg %6 : i32
     %7 = builtin.num_subgroups.y : i32
-    %t7 = arith.neg %7 : i32
+    %t7 = neg %7 : i32
     %9 = builtin.subgroup_size : i32
     parallel {
         %10 = builtin.subgroup_id.x : i32

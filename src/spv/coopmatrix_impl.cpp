@@ -262,21 +262,21 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, s
                             auto b_kn_im = mod.add<OpCompositeExtract>(
                                 spv_b_component_ty, b_kn, std::vector<LiteralInteger>{1});
 
-                            auto ab_mn = make_binary_op_mixed_precision(
-                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_component_ty,
-                                b_kn_re, in.loc());
-                            c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_mn, c_mn,
-                                                  in.loc());
+                            auto ab_mn = make_binary_op_mixed_precision(*unique_, c_ty, IK::IK_mul,
+                                                                        a_ty, a_mk, b_component_ty,
+                                                                        b_kn_re, in.loc());
+                            c_mn =
+                                make_binary_op(*unique_, c_ty, IK::IK_add, ab_mn, c_mn, in.loc());
                             auto ab_im_mn = make_binary_op_mixed_precision(
-                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_component_ty,
-                                b_kn_im, in.loc());
-                            c_im_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_im_mn,
-                                                     c_im_mn, in.loc());
+                                *unique_, c_ty, IK::IK_mul, a_ty, a_mk, b_component_ty, b_kn_im,
+                                in.loc());
+                            c_im_mn = make_binary_op(*unique_, c_ty, IK::IK_add, ab_im_mn, c_im_mn,
+                                                     in.loc());
                         } else {
                             auto ab_mn = make_binary_op_mixed_precision(
-                                *unique_, c_ty, arithmetic::mul, a_ty, a_mk, b_ty, b_kn, in.loc());
-                            c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, ab_mn, c_mn,
-                                                  in.loc());
+                                *unique_, c_ty, IK::IK_mul, a_ty, a_mk, b_ty, b_kn, in.loc());
+                            c_mn =
+                                make_binary_op(*unique_, c_ty, IK::IK_add, ab_mn, c_mn, in.loc());
                         }
                     }
                 }
@@ -286,10 +286,10 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, s
                     if (n < rl.cols) {
                         auto &c_mn = c_block[n - nb];
                         auto &c_im_mn = c_im_block[n - nb];
-                        auto c_im_mn_times_i = make_binary_op(*unique_, c_ty, arithmetic::mul,
-                                                              c_im_mn, imaginary_unit, in.loc());
-                        c_mn = make_binary_op(*unique_, c_ty, arithmetic::add, c_mn,
-                                              c_im_mn_times_i, in.loc());
+                        auto c_im_mn_times_i = make_binary_op(*unique_, c_ty, IK::IK_mul, c_im_mn,
+                                                              imaginary_unit, in.loc());
+                        c_mn = make_binary_op(*unique_, c_ty, IK::IK_add, c_mn, c_im_mn_times_i,
+                                              in.loc());
                     }
                 }
             }
@@ -330,11 +330,11 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> 
     auto const binary_arith = [&](group_arithmetic a) {
         switch (a) {
         case group_arithmetic::add:
-            return arithmetic::add;
+            return IK::IK_add;
         case group_arithmetic::max:
-            return arithmetic::max;
+            return IK::IK_max;
         case group_arithmetic::min:
-            return arithmetic::min;
+            return IK::IK_min;
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     }(in.arith());
@@ -401,7 +401,7 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst in, spv_inst *a, spv_i
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto b_v = extract(bl, b, v);
-        auto r_v = make_binary_op(*unique_, sty, arithmetic::mul, a, b_v, in.loc());
+        auto r_v = make_binary_op(*unique_, sty, IK::IK_mul, a, b_v, in.loc());
         result = insert(rl, r_v, result, v);
     }
 
@@ -421,7 +421,7 @@ auto coopmatrix_impl::arith(arith_inst in, spv_inst *a, spv_inst *b) -> spv_inst
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, v);
         auto b_v = extract(bl, b, v);
-        auto r_v = make_binary_op(*unique_, sty, in.operation(), a_v, b_v, in.loc());
+        auto r_v = make_binary_op(*unique_, sty, in.get().type_id(), a_v, b_v, in.loc());
         result = insert(rl, r_v, result, v);
     }
 

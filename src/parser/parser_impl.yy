@@ -5,6 +5,7 @@
 %language "c++"
 
 %code requires {
+    #include "node/inst_view.hpp"
     #include "tinytc/builder.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
@@ -58,13 +59,21 @@
     #include <vector>
 
     namespace tinytc {
-
     void report_error(compiler_context const& cctx, compilation_error const& e) {
         if (e.extra_info().size() > 0) {
             auto what = (std::ostringstream{} << e.what() << " (" << e.extra_info() << ')').str();
             cctx.get()->report_error(e.loc(), e.ref_values(), what.c_str());
         } else {
             cctx.get()->report_error(e.loc(), e.ref_values(), e.what());
+        }
+    }
+    template <typename F>
+    void yytry(parse_context& ctx, F&& f) {
+        try {
+            f();
+        } catch (compilation_error const &e) {
+            report_error(ctx.cctx(), e);
+            throw parser::syntax_error({}, "");
         }
     }
     } // namespace tinytc
@@ -119,16 +128,12 @@
     GROUP           "group"
     OFFSET          "offset"
     STRIDED         "strided"
-    AXPBY           "axpby"
-    BARRIER         "barrier"
-    CUMSUM          "cumsum"
-    GEMM            "gemm"
-    GEMV            "gemv"
-    GER             "ger"
-    HADAMARD        "hadamard"
-    ALLOCA          "alloca"
-    CAST            "cast"
-    CONSTANT        "constant"
+;
+%token
+    ALLOCA                      "alloca"
+    BARRIER                     "barrier"
+    CAST                        "cast"
+    CONSTANT                    "constant"
     COOPERATIVE_MATRIX_APPLY    "cooperative_matrix_apply"
     COOPERATIVE_MATRIX_EXTRACT  "cooperative_matrix_extract"
     COOPERATIVE_MATRIX_INSERT   "cooperative_matrix_insert"
@@ -137,20 +142,38 @@
     COOPERATIVE_MATRIX_PREFETCH "cooperative_matrix_prefetch"
     COOPERATIVE_MATRIX_SCALE    "cooperative_matrix_scale"
     COOPERATIVE_MATRIX_STORE    "cooperative_matrix_store"
-    EXPAND          "expand"
-    FUSE            "fuse"
-    LOAD            "load"
-    FOR             "for"
-    FOREACH         "foreach"
-    IF              "if"
-    ELSE            "else"
-    PARALLEL        "parallel"
-    SIZE            "size"
-    SUBGROUP_BROADCAST "subgroup_broadcast"
-    SUBVIEW         "subview"
-    STORE           "store"
-    SUM             "sum"
-    YIELD           "yield"
+    EXPAND                      "expand"
+    FUSE                        "fuse"
+    LOAD                        "load"
+    IF                          "if"
+    ELSE                        "else"
+    PARALLEL                    "parallel"
+    SIZE                        "size"
+    SUBGROUP_BROADCAST          "subgroup_broadcast"
+    SUBVIEW                     "subview"
+    STORE                       "store"
+    YIELD                       "yield"
+    ADD                         "add"
+    SUB                         "sub"
+    MUL                         "mul"
+    DIV                         "div"
+    REM                         "rem"
+    SHL                         "shl"
+    SHR                         "shr"
+    AND                         "and"
+    OR                          "or"
+    XOR                         "xor"
+    MIN                         "min"
+    MAX                         "max"
+    AXPBY                       "axpby"
+    CUMSUM                      "cumsum"
+    SUM                         "sum"
+    GEMM                        "gemm"
+    GEMV                        "gemv"
+    GER                         "ger"
+    HADAMARD                    "hadamard"
+    FOR                         "for"
+    FOREACH                     "foreach"
 ;
 %token <identifier> LOCAL_IDENTIFIER
 %token <std::string> GLOBAL_IDENTIFIER
@@ -161,7 +184,6 @@
 %token <double> FLOATING_CONSTANT
 %token <scalar_type> INTEGER_TYPE
 %token <scalar_type> FLOATING_TYPE
-%token <arithmetic> ARITHMETIC
 %token <arithmetic_unary> ARITHMETIC_UNARY
 %token <builtin> BUILTIN
 %token <cmp_condition> CMP_CONDITION
@@ -199,64 +221,27 @@
 %nterm <std::int64_t> group_offset
 %nterm <tinytc_value_t> var
 %nterm <inst> instruction
-%nterm <inst> axpby_inst
 %nterm <bool> atomic
 %nterm <std::vector<tinytc_value_t>> optional_value_list
 %nterm <std::vector<tinytc_value_t>> value_list
-%nterm <inst> barrier_inst
 %nterm <std::int32_t> optional_global_attr
 %nterm <std::int32_t> optional_local_attr
-%nterm <inst> cumsum_inst
-%nterm <inst> gemm_inst
-%nterm <inst> gemv_inst
-%nterm <inst> ger_inst
 %nterm <transpose> transpose
 %nterm <inst> for_inst
 %nterm <std::tuple<std::vector<identifier>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
 %nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
 %nterm <std::pair<identifier, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
-%nterm <inst> foreach_inst
-%nterm <inst> hadamard_inst
 %nterm <inst> if_inst
 %nterm <std::vector<tinytc_data_type_t>> optional_returned_values
 %nterm <std::vector<tinytc_data_type_t>> optional_return_type_list
 %nterm <std::vector<tinytc_data_type_t>> return_type_list
-%nterm <inst> sum_inst
-%nterm <inst> yield_inst
-%nterm <inst> var_definition
 %nterm <std::vector<identifier>> identifier_list
 %nterm <inst> valued_inst
-%nterm <inst> alloca_inst
-%nterm <inst> arith_inst
-%nterm <inst> arith_unary_inst
-%nterm <inst> builtin_inst
-%nterm <inst> cast_inst
-%nterm <inst> compare_inst
-%nterm <inst> constant_inst
-%nterm <inst> cooperative_matrix_apply_inst
-%nterm <inst> cooperative_matrix_extract_inst
-%nterm <inst> cooperative_matrix_insert_inst
-%nterm <inst> cooperative_matrix_load_inst
-%nterm <inst> cooperative_matrix_mul_add_inst
-%nterm <inst> cooperative_matrix_prefetch_inst
-%nterm <inst> cooperative_matrix_reduce_inst
-%nterm <inst> cooperative_matrix_scale_inst
-%nterm <inst> cooperative_matrix_store_inst
 %nterm <checked_flag> checked
-%nterm <inst> expand_inst
 %nterm <int_or_val> integer_constant_or_identifier
 %nterm <std::vector<int_or_val>> expand_shape
-%nterm <inst> fuse_inst
-%nterm <inst> load_inst
-%nterm <inst> math_unary_inst
-%nterm <inst> parallel_inst
-%nterm <inst> size_inst
-%nterm <inst> subgroup_broadcast_inst
-%nterm <inst> subgroup_operation_inst
-%nterm <inst> store_inst
 %nterm <store_flag> store_flag
-%nterm <inst> subview_inst
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> optional_slice_list
 %nterm <std::vector<std::pair<int_or_val,int_or_val>>> slice_list
 %nterm <std::pair<int_or_val,int_or_val>> slice
@@ -491,31 +476,11 @@ instructions:
 ;
 
 instruction:
-    axpby_inst      { $$ = std::move($1); }
-  | barrier_inst    { $$ = std::move($1); }
-  | cooperative_matrix_prefetch_inst { $$ = std::move($1); }
-  | cooperative_matrix_store_inst    { $$ = std::move($1); }
-  | cumsum_inst     { $$ = std::move($1); }
-  | gemm_inst       { $$ = std::move($1); }
-  | gemv_inst       { $$ = std::move($1); }
-  | ger_inst        { $$ = std::move($1); }
-  | for_inst        { $$ = std::move($1); }
-  | foreach_inst    { $$ = std::move($1); }
-  | hadamard_inst   { $$ = std::move($1); }
-  | if_inst         { $$ = std::move($1); }
-  | parallel_inst   { $$ = std::move($1); }
-  | var_definition  { $$ = std::move($1); }
-  | store_inst      { $$ = std::move($1); }
-  | sum_inst        { $$ = std::move($1); }
-  | yield_inst      { $$ = std::move($1); }
-;
-
-axpby_inst:
     AXPBY transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 axpby_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),
-                                   std::move($b), @axpby_inst)
+                                   std::move($b), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -542,13 +507,13 @@ value_list:
     }
 ;
 
-barrier_inst:
+instruction:
     BARRIER optional_global_attr optional_local_attr {
         int32_t fence_flags = 0;
         fence_flags |= $optional_global_attr;
         fence_flags |= $optional_local_attr;
         try {
-            $$ = inst { barrier_inst::create(fence_flags, @barrier_inst) };
+            $$ = inst { barrier_inst::create(fence_flags, @instruction) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -566,12 +531,12 @@ optional_local_attr:
   | LOCAL_ATTR { $$ = tinytc_address_space_local; }
 ;
 
-cumsum_inst:
+instruction:
     CUMSUM atomic var[alpha] COMMA var[a] COMMA INTEGER_CONSTANT[mode] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 cumsum_inst::create($atomic, $mode, std::move($alpha), std::move($a), std::move($beta),
-                                    std::move($b), @cumsum_inst)
+                                    std::move($b), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -580,12 +545,12 @@ cumsum_inst:
     }
 ;
 
-gemm_inst:
+instruction:
     GEMM transpose[ta] transpose[tb] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 gemm_inst::create($atomic, $ta, $tb, std::move($alpha), std::move($a), std::move($b),
-                                  std::move($beta), std::move($c), @gemm_inst)
+                                  std::move($beta), std::move($c), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -594,12 +559,12 @@ gemm_inst:
     }
 ;
 
-gemv_inst:
+instruction:
     GEMV transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 gemv_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($b),
-                                  std::move($beta), std::move($c), @gemv_inst)
+                                  std::move($beta), std::move($c), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -613,12 +578,12 @@ transpose:
   | TRANS { $$ = transpose::T; }
 ;
 
-ger_inst:
+instruction:
     GER atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 ger_inst::create($atomic, std::move($alpha), std::move($a), std::move($b), std::move($beta),
-                                 std::move($c), @ger_inst)
+                                 std::move($c), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -627,6 +592,8 @@ ger_inst:
     }
 ;
 
+instruction: for_inst { $$ = std::move($1); } ;
+valued_inst: for_inst { $$ = std::move($1); } ;
 for_inst:
     FOR LOCAL_IDENTIFIER[loop_var] EQUALS var[from] COMMA var[to] optional_step optional_loop_carried_values[lcv] <inst> {
         try {
@@ -683,7 +650,7 @@ init_value:
     LOCAL_IDENTIFIER EQUALS var { $$ = std::make_pair($LOCAL_IDENTIFIER, $var); }
 ;
 
-foreach_inst:
+instruction:
     FOREACH LPAREN identifier_list[loop_var] RPAREN EQUALS
             LPAREN value_list[from] RPAREN COMMA LPAREN value_list[to] RPAREN[header_end] <inst>{
         try {
@@ -708,7 +675,7 @@ foreach_inst:
     }
 ;
 
-var_definition:
+instruction:
     identifier_list EQUALS valued_inst {
         $$ = std::move($valued_inst);
         if (static_cast<std::int64_t>($identifier_list.size()) != $$->num_results()) {
@@ -729,12 +696,12 @@ identifier_list:
 ;
 
 
-hadamard_inst:
+instruction:
     HADAMARD atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 hadamard_inst::create($atomic, std::move($alpha), std::move($a), std::move($b),
-                                      std::move($beta), std::move($c), @hadamard_inst)
+                                      std::move($beta), std::move($c), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -743,12 +710,12 @@ hadamard_inst:
     }
 ;
 
-sum_inst:
+instruction:
     SUM transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 sum_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),
-                                 std::move($b), @sum_inst)
+                                 std::move($b), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -757,10 +724,10 @@ sum_inst:
     }
 ;
 
-yield_inst:
+instruction:
     YIELD LPAREN optional_value_list[vals] RPAREN {
         try {
-            $$ = inst { yield_inst::create(std::move($vals), @yield_inst) };
+            $$ = inst { yield_inst::create(std::move($vals), @instruction) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -769,36 +736,9 @@ yield_inst:
 ;
 
 valued_inst:
-    alloca_inst             { $$ = std::move($1); }
-  | arith_inst              { $$ = std::move($1); }               
-  | arith_unary_inst        { $$ = std::move($1); }
-  | builtin_inst            { $$ = std::move($1); }
-  | cast_inst               { $$ = std::move($1); }
-  | compare_inst            { $$ = std::move($1); }
-  | constant_inst           { $$ = std::move($1); }
-  | cooperative_matrix_apply_inst   { $$ = std::move($1); }
-  | cooperative_matrix_extract_inst { $$ = std::move($1); }
-  | cooperative_matrix_insert_inst  { $$ = std::move($1); }
-  | cooperative_matrix_load_inst    { $$ = std::move($1); }
-  | cooperative_matrix_mul_add_inst { $$ = std::move($1); }
-  | cooperative_matrix_reduce_inst  { $$ = std::move($1); }
-  | cooperative_matrix_scale_inst   { $$ = std::move($1); }
-  | expand_inst             { $$ = std::move($1); }
-  | for_inst                { $$ = std::move($1); }
-  | fuse_inst               { $$ = std::move($1); }
-  | if_inst                 { $$ = std::move($1); }
-  | load_inst               { $$ = std::move($1); }
-  | math_unary_inst         { $$ = std::move($1); }
-  | size_inst               { $$ = std::move($1); }
-  | subgroup_broadcast_inst { $$ = std::move($1); }
-  | subgroup_operation_inst { $$ = std::move($1); }
-  | subview_inst            { $$ = std::move($1); }
-;
-
-alloca_inst:
     ALLOCA optional_dictionary_attribute[dict] COLON memref_type {
         try {
-            $$ = inst { alloca_inst::create(std::move($memref_type), @alloca_inst) };
+            $$ = inst { alloca_inst::create(std::move($memref_type), @valued_inst) };
             $$->attr($dict);
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -807,25 +747,25 @@ alloca_inst:
     }
 ;
 
-arith_inst:
-    ARITHMETIC var[a] COMMA var[b] COLON data_type[ty] {
-        try {
-            $$ = inst {
-                arith_inst::create($ARITHMETIC, std::move($a), std::move($b), std::move($ty), @arith_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: ADD var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = add_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: SUB var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = sub_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: MUL var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = mul_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: DIV var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = div_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: REM var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = rem_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: SHL var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = shl_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: SHR var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = shr_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: AND var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = and_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: OR  var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ =  or_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: XOR var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = xor_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: MIN var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = min_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: MAX var[a] COMMA var[b] COLON data_type[ty] { yytry(ctx, [&] { $$ = max_inst::create($a, $b, $ty, @valued_inst); }); };
 
-arith_unary_inst:
+valued_inst:
     ARITHMETIC_UNARY var[a] COLON data_type[ty] {
         try {
             $$ = inst {
                 arith_unary_inst::create($ARITHMETIC_UNARY, std::move($a), std::move($ty),
-                                         @arith_unary_inst)
+                                         @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -834,10 +774,10 @@ arith_unary_inst:
     }
 ;
 
-builtin_inst:
+valued_inst:
     BUILTIN COLON data_type[ty] {
         try {
-            $$ = inst { builtin_inst::create($BUILTIN, $ty, @builtin_inst) };
+            $$ = inst { builtin_inst::create($BUILTIN, $ty, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -845,10 +785,10 @@ builtin_inst:
     }
 ;
 
-cast_inst:
+valued_inst:
     CAST var[a] COLON data_type[to] {
         try {
-            $$ = inst { cast_inst::create(std::move($a), $to, @cast_inst) };
+            $$ = inst { cast_inst::create(std::move($a), $to, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -856,12 +796,12 @@ cast_inst:
     }
 ;
 
-compare_inst:
+valued_inst:
     CMP_CONDITION var[a] COMMA var[b] COLON boolean_type {
         try {
             $$ = inst {
                 compare_inst::create($CMP_CONDITION, std::move($a), std::move($b), std::move($boolean_type),
-                                     @compare_inst)
+                                     @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -870,10 +810,10 @@ compare_inst:
     }
 ;
 
-constant_inst:
+valued_inst:
     CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR COLON data_type {
         try {
-            $$ = inst { constant_inst::create(std::complex<double>{$re, $im}, $data_type, @constant_inst) };
+            $$ = inst { constant_inst::create(std::complex<double>{$re, $im}, $data_type, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -881,7 +821,7 @@ constant_inst:
     }
   | CONSTANT FLOATING_CONSTANT COLON data_type {
         try {
-            $$ = inst { constant_inst::create($FLOATING_CONSTANT, $data_type, @constant_inst) };
+            $$ = inst { constant_inst::create($FLOATING_CONSTANT, $data_type, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -889,7 +829,7 @@ constant_inst:
     }
   | CONSTANT INTEGER_CONSTANT COLON data_type {
         try {
-            $$ = inst { constant_inst::create($INTEGER_CONSTANT, $data_type, @constant_inst) };
+            $$ = inst { constant_inst::create($INTEGER_CONSTANT, $data_type, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -897,7 +837,7 @@ constant_inst:
     }
   | CONSTANT BOOLEAN_CONSTANT COLON data_type {
         try {
-            $$ = inst { constant_inst::create($BOOLEAN_CONSTANT, $data_type, @constant_inst) };
+            $$ = inst { constant_inst::create($BOOLEAN_CONSTANT, $data_type, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -905,7 +845,7 @@ constant_inst:
     }
 ;
 
-cooperative_matrix_apply_inst:
+valued_inst:
     COOPERATIVE_MATRIX_APPLY
     LPAREN LOCAL_IDENTIFIER[row] COMMA LOCAL_IDENTIFIER[col] COMMA LOCAL_IDENTIFIER[val] RPAREN
     EQUALS var ARROW data_type[result_ty] <inst> {
@@ -933,12 +873,12 @@ cooperative_matrix_apply_inst:
     }
 ;
 
-cooperative_matrix_extract_inst:
+valued_inst:
     COOPERATIVE_MATRIX_EXTRACT var[mat] LSQBR INTEGER_CONSTANT[index] RSQBR COLON data_type[ty]  {
         try {
             $$ = inst {
                 cooperative_matrix_extract_inst::create($index, std::move($mat), std::move($ty),
-                                                        @cooperative_matrix_extract_inst)
+                                                        @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -947,12 +887,12 @@ cooperative_matrix_extract_inst:
     }
 ;
 
-cooperative_matrix_insert_inst:
+valued_inst:
     COOPERATIVE_MATRIX_INSERT var[val] COMMA var[mat] LSQBR INTEGER_CONSTANT[index] RSQBR COLON data_type[ty]  {
         try {
             $$ = inst {
                 cooperative_matrix_insert_inst::create($index, std::move($val), std::move($mat),
-                                                       std::move($ty), @cooperative_matrix_insert_inst)
+                                                       std::move($ty), @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -961,13 +901,13 @@ cooperative_matrix_insert_inst:
     }
 ;
 
-cooperative_matrix_load_inst:
+valued_inst:
     COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
         try {
             $$ = inst {
                 cooperative_matrix_load_inst::create($transpose, $checked, std::move($op), std::move($p0),
                                                      std::move($p1), std::move($result_ty),
-                                                     @cooperative_matrix_load_inst)
+                                                     @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -981,12 +921,12 @@ checked:
   | CHECKED { $$ = $CHECKED; }
 ;
 
-cooperative_matrix_mul_add_inst:
+valued_inst:
     COOPERATIVE_MATRIX_MUL_ADD var[a] COMMA var[b] COMMA var[c] COLON data_type[to_ty] {
         try {
             $$ = inst {
                 cooperative_matrix_mul_add_inst::create(std::move($a), std::move($b), std::move($c),
-                                                        std::move($to_ty), @cooperative_matrix_mul_add_inst)
+                                                        std::move($to_ty), @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -995,13 +935,13 @@ cooperative_matrix_mul_add_inst:
     }
 ;
 
-cooperative_matrix_prefetch_inst:
+instruction:
     COOPERATIVE_MATRIX_PREFETCH INTEGER_CONSTANT[cache_level] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR COMMA INTEGER_CONSTANT[rows] COMMA INTEGER_CONSTANT[cols] {
         try {
             $$ = inst {
                 cooperative_matrix_prefetch_inst::create($cache_level, $rows, $cols, std::move($op),
                                                          std::move($p0), std::move($p1),
-                                                         @cooperative_matrix_prefetch_inst)
+                                                         @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1010,13 +950,13 @@ cooperative_matrix_prefetch_inst:
     }
 ;
 
-cooperative_matrix_reduce_inst:
+valued_inst:
     COOPERATIVE_MATRIX_REDUCE var[a] COLON data_type[ty] {
         try {
             $$ = inst {
                 cooperative_matrix_reduce_inst::create($COOPERATIVE_MATRIX_REDUCE.first,
                                                        $COOPERATIVE_MATRIX_REDUCE.second, std::move($a),
-                                                       std::move($ty), @cooperative_matrix_reduce_inst)
+                                                       std::move($ty), @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1025,12 +965,12 @@ cooperative_matrix_reduce_inst:
     }
 ;
 
-cooperative_matrix_scale_inst:
+valued_inst:
     COOPERATIVE_MATRIX_SCALE var[a] COMMA var[b] COLON data_type[ty] {
         try {
             $$ = inst {
                 cooperative_matrix_scale_inst::create(std::move($a), std::move($b), std::move($ty),
-                                                      @cooperative_matrix_scale_inst)
+                                                      @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1039,13 +979,13 @@ cooperative_matrix_scale_inst:
     }
 ;
 
-cooperative_matrix_store_inst:
+instruction:
     COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
         try {
             $$ = inst {
                 cooperative_matrix_store_inst::create($checked, $store_flag, std::move($val),
                                                       std::move($op), std::move($p0), std::move($p1),
-                                                      @cooperative_matrix_store_inst)
+                                                      @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1054,7 +994,7 @@ cooperative_matrix_store_inst:
     }
 ;
 
-expand_inst:
+valued_inst:
     EXPAND var LSQBR INTEGER_CONSTANT[expanded_mode] ARROW expand_shape RSQBR COLON memref_type[ty] {
         try {
             auto static_shape = std::vector<std::int64_t>{};
@@ -1073,13 +1013,13 @@ expand_inst:
             }
             $$ = inst {
                 expand_inst::create($expanded_mode, std::move(static_shape), std::move($var),
-                                    std::move(dynamic_shape), $ty, @expand_inst)
+                                    std::move(dynamic_shape), $ty, @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
         } catch (std::exception const &e) {
-            error(@expand_inst, e.what());
+            error(@valued_inst, e.what());
         }
     }
 ;
@@ -1100,10 +1040,10 @@ integer_constant_or_identifier:
     }
 ;
 
-fuse_inst:
+valued_inst:
     FUSE var LSQBR INTEGER_CONSTANT[from] COMMA INTEGER_CONSTANT[to] RSQBR COLON memref_type[ty] {
         try {
-            $$ = inst { fuse_inst::create($from, $to, std::move($var), $ty, @fuse_inst) };
+            $$ = inst { fuse_inst::create($from, $to, std::move($var), $ty, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -1111,12 +1051,12 @@ fuse_inst:
     }
 ;
 
-load_inst:
+valued_inst:
     LOAD var LSQBR optional_value_list RSQBR COLON data_type {
         try {
             $$ = inst {
                 load_inst::create(std::move($var), std::move($optional_value_list), std::move($data_type),
-                                  @load_inst)
+                                  @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1125,12 +1065,12 @@ load_inst:
     }
 ;
 
-store_inst:
+instruction:
     STORE store_flag var[a] COMMA var[b] LSQBR optional_value_list RSQBR {
         try {
             $$ = inst {
                 store_inst::create($store_flag, std::move($a), std::move($b),
-                                   std::move($optional_value_list), @store_inst)
+                                   std::move($optional_value_list), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1147,6 +1087,8 @@ store_flag:
   | ATOMIC_MIN { $$ = store_flag::atomic_min; }
 ;
 
+instruction: if_inst { $$ = std::move($1); } ;
+valued_inst: if_inst { $$ = std::move($1); } ;
 if_inst:
     IF var[condition] optional_returned_values <inst>{
         try {
@@ -1191,11 +1133,11 @@ return_type_list:
     }
 ;
 
-math_unary_inst:
+valued_inst:
     MATH_UNARY var[a] COLON data_type[ty] {
         try {
             $$ = inst {
-                math_unary_inst::create($MATH_UNARY, std::move($a), std::move($ty), @math_unary_inst)
+                math_unary_inst::create($MATH_UNARY, std::move($a), std::move($ty), @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1204,7 +1146,7 @@ math_unary_inst:
     }
 ;
 
-parallel_inst:
+instruction:
     PARALLEL <inst>{
         try {
             $$ = inst { parallel_inst::create(@PARALLEL) };
@@ -1220,10 +1162,10 @@ parallel_inst:
     }
 ;
 
-size_inst:
+valued_inst:
     SIZE var LSQBR INTEGER_CONSTANT[mode] RSQBR COLON scalar_type {
         try {
-            $$ = inst { size_inst::create($mode, std::move($var), $scalar_type, @size_inst) };
+            $$ = inst { size_inst::create($mode, std::move($var), $scalar_type, @valued_inst) };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
@@ -1231,12 +1173,12 @@ size_inst:
     }
 ;
 
-subgroup_broadcast_inst:
+valued_inst:
     SUBGROUP_BROADCAST var[a] COMMA var[idx] COLON scalar_type {
         try {
             $$ = inst {
                 subgroup_broadcast_inst::create(std::move($a), std::move($idx), $scalar_type,
-                                                @subgroup_broadcast_inst)
+                                                @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1245,12 +1187,12 @@ subgroup_broadcast_inst:
     }
 ;
 
-subgroup_operation_inst:
+valued_inst:
     SUBGROUP_OPERATION var[a] COLON scalar_type {
         try {
             $$ = inst {
                 subgroup_operation_inst::create($SUBGROUP_OPERATION.first, $SUBGROUP_OPERATION.second,
-                                                std::move($a), $scalar_type, @subgroup_operation_inst)
+                                                std::move($a), $scalar_type, @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -1259,7 +1201,7 @@ subgroup_operation_inst:
     }
 ;
 
-subview_inst:
+valued_inst:
     SUBVIEW var LSQBR optional_slice_list RSQBR COLON memref_type[ty] {
         try {
             auto static_offsets = std::vector<std::int64_t>{};
@@ -1290,13 +1232,13 @@ subview_inst:
             }
             $$ = inst {
                 subview_inst::create(std::move(static_offsets), std::move(static_sizes), std::move($var),
-                                     std::move(offsets), std::move(sizes), std::move($ty), @subview_inst)
+                                     std::move(offsets), std::move(sizes), std::move($ty), @valued_inst)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             YYERROR;
         } catch (std::exception const &e) {
-            error(@subview_inst, e.what());
+            error(@valued_inst, e.what());
         }
     }
 ;
@@ -1329,6 +1271,8 @@ slice_size:
 
 namespace tinytc {
 void parser::error(location_type const& l, std::string const& m) {
-    ctx.report_error(l, m);
+    if (m.size() > 0 || l.begin.line > 0) {
+        ctx.report_error(l, m);
+    }
 }
 }

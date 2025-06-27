@@ -177,7 +177,7 @@ void dump_ir_pass::operator()(axpby_inst a) {
 
 void dump_ir_pass::operator()(arith_inst a) {
     dump_val(a.result());
-    *os_ << " = arith." << to_string(a.operation()) << " ";
+    *os_ << " = " << to_string(a.get().type_id()) << " ";
     dump_val(a.a());
     *os_ << ", ";
     dump_val(a.b());
@@ -187,7 +187,7 @@ void dump_ir_pass::operator()(arith_inst a) {
 
 void dump_ir_pass::operator()(arith_unary_inst a) {
     dump_val(a.result());
-    *os_ << " = arith." << to_string(a.operation()) << " ";
+    *os_ << " = " << to_string(a.operation()) << " ";
     dump_val(a.a());
     *os_ << " : ";
     visit(*this, *a.result().ty());

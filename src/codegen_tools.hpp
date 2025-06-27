@@ -37,8 +37,14 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
                          value sg_id, uniform_loop_body_builder const &body,
                          attr for_attributes = nullptr);
 
-auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, arithmetic operation,
-                                value a, value b, location const &loc) -> value;
+auto promote_binop_operands(region_builder &bb, scalar_type result_ty, value a, value b,
+                            location const &loc) -> std::pair<value, value>;
+template <typename Binop>
+auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, value a, value b,
+                                location const &loc) -> value {
+    auto [a_p, b_p] = promote_binop_operands(bb, result_ty, a, b, loc);
+    return bb.create<Binop>(a_p, b_p, scalar_data_type::get(a_p->context(), result_ty), loc);
+}
 auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
     -> value;
 

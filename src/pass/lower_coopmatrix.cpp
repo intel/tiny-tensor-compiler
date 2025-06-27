@@ -66,8 +66,8 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     auto j0 = value{nullptr};
     if (cl.rows < core_cfg_.subgroup_size) {
         auto cI = bb_.create<constant_inst>(cl.rows, i32_ty, in.loc());
-        i = bb_.create<arith_inst>(arithmetic::rem, p, cI, i32_ty, in.loc());
-        j0 = bb_.create<arith_inst>(arithmetic::div, p, cI, i32_ty, in.loc());
+        i = bb_.create<rem_inst>(p, cI, i32_ty, in.loc());
+        j0 = bb_.create<div_inst>(p, cI, i32_ty, in.loc());
     }
     const auto col_inc_factor = core_cfg_.subgroup_size / cl.rows;
 
@@ -81,10 +81,10 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         const auto block_offset = k1 * cl.rows + k2 * cl.rows * cl.blocks1;
         if (block_offset) {
             auto cblock_offset = bb_.create<constant_inst>(block_offset, i32_ty, in.loc());
-            row = bb_.create<arith_inst>(arithmetic::add, i, cblock_offset, i32_ty, in.loc());
+            row = bb_.create<add_inst>(i, cblock_offset, i32_ty, in.loc());
         }
         auto j1 = bb_.create<constant_inst>(u * col_inc_factor, i32_ty, in.loc());
-        auto col = j0 ? bb_.create<arith_inst>(arithmetic::add, j0, j1, i32_ty, in.loc()) : j1;
+        auto col = j0 ? bb_.create<add_inst>(j0, j1, i32_ty, in.loc()) : j1;
         auto val = bb_.create<cooperative_matrix_extract_inst>(v, &in.a(), ct->ty(), in.loc());
 
         cloner.set_subs(&in.row(), row);

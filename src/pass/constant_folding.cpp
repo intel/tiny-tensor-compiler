@@ -157,13 +157,13 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
         if (a_const && b_const) {
-            return compute_binary_op{in.operation(), op_a.ty(), in.loc()}(
+            return compute_binary_op{in.get().type_id(), op_a.ty(), in.loc()}(
                 std::get<bool>(a_const.value()), std::get<bool>(b_const.value()));
         } else if (a_const) {
-            return compute_binop_identities{unsafe_fp_math_, in.operation(), op_b, true,
+            return compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_b, true,
                                             in.loc()}(std::get<bool>(a_const.value()));
         } else if (b_const) {
-            return compute_binop_identities{unsafe_fp_math_, in.operation(), op_a, false,
+            return compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_a, false,
                                             in.loc()}(std::get<bool>(b_const.value()));
         }
         return tinytc_value_t{};
@@ -182,17 +182,17 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
     }
 
     if (a_const && b_const) {
-        auto computer = compute_binary_op{in.operation(), op_a.ty(), in.loc()};
+        auto computer = compute_binary_op{in.get().type_id(), op_a.ty(), in.loc()};
         auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value(), b_const.value());
     } else if (a_const) {
         auto computer =
-            compute_binop_identities{unsafe_fp_math_, in.operation(), op_b, true, in.loc()};
+            compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_b, true, in.loc()};
         auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value());
     } else if (b_const) {
         auto computer =
-            compute_binop_identities{unsafe_fp_math_, in.operation(), op_a, false, in.loc()};
+            compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_a, false, in.loc()};
         auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
         return std::visit(std::move(dispatcher), b_const.value());
     }
@@ -289,8 +289,7 @@ auto constant_folding::operator()(cooperative_matrix_scale_inst in) -> fold_resu
     }
 
     if (a_const) {
-        auto computer =
-            compute_binop_identities{unsafe_fp_math_, arithmetic::mul, op_b, true, in.loc()};
+        auto computer = compute_binop_identities{unsafe_fp_math_, IK::IK_mul, op_b, true, in.loc()};
         auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value());
     }

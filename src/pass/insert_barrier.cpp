@@ -200,9 +200,10 @@ void insert_barrier_pass::run_on_region(tinytc_region &reg, aa_results const &aa
             }
             if (fence_flags != 0) {
                 tinytc_region *subreg = n->parent();
-                auto new_barrier = subreg->insts()
-                                       .insert(n->iterator(), barrier_inst::create(fence_flags, {}))
-                                       .get();
+                auto new_barrier =
+                    subreg->insts()
+                        .insert(n->iterator(), barrier_inst::create(fence_flags, {}).release())
+                        .get();
                 // update cfg
                 cfg.insert_before(n, new_barrier);
                 q.push(new_barrier);

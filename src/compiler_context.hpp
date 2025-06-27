@@ -51,6 +51,8 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     void report_error(tinytc_location const &l, char const *what);
     void report_error(tinytc_location const &l,
                       tinytc::array_view<const_tinytc_value_t> const &ref_values, char const *what);
+    void report_error(tinytc_location const &l,
+                      tinytc::array_view<const_tinytc_value_t> const &ref_values);
 
     auto opt_flag(tinytc_optflag_t flag) const -> bool;
     inline void opt_flag(tinytc_optflag_t flag, std::int32_t state) { opt_flags_[flag] = state; }

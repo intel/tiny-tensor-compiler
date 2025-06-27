@@ -37,6 +37,7 @@ class compilation_error : public std::exception {
     inline auto ref_values() const noexcept -> array_view<const_tinytc_value_t> {
         return array_view<const_tinytc_value_t>(ref_values_.data(), num_ref_values_);
     }
+    inline auto num_ref_values() const noexcept -> std::size_t { return num_ref_values_; }
     //! Get explanatory string
     inline char const *what() const noexcept override { return to_string(code_); }
     //! Get additional information

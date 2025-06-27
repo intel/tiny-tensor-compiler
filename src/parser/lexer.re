@@ -186,26 +186,26 @@ lex:
         "yield"              { adv_loc(); return parser::make_YIELD(loc_); }
 
         // binary op
-        "arith.add"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::add, loc_); }
-        "arith.sub"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::sub, loc_); }
-        "arith.mul"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::mul, loc_); }
-        "arith.div"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::div, loc_); }
-        "arith.rem"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::rem, loc_); }
-        "arith.shl"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shl, loc_); }
-        "arith.shr"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::shr, loc_); }
-        "arith.and"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::and_, loc_); }
-        "arith.or"           { adv_loc(); return parser::make_ARITHMETIC(arithmetic::or_, loc_); }
-        "arith.xor"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::xor_, loc_); }
-        "arith.min"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::min, loc_); }
-        "arith.max"          { adv_loc(); return parser::make_ARITHMETIC(arithmetic::max, loc_); }
+        "add"          { adv_loc(); return parser::make_ADD(loc_); }
+        "sub"          { adv_loc(); return parser::make_SUB(loc_); }
+        "mul"          { adv_loc(); return parser::make_MUL(loc_); }
+        "div"          { adv_loc(); return parser::make_DIV(loc_); }
+        "rem"          { adv_loc(); return parser::make_REM(loc_); }
+        "shl"          { adv_loc(); return parser::make_SHL(loc_); }
+        "shr"          { adv_loc(); return parser::make_SHR(loc_); }
+        "and"          { adv_loc(); return parser::make_AND(loc_); }
+        "or"           { adv_loc(); return parser::make_OR (loc_); }
+        "xor"          { adv_loc(); return parser::make_XOR(loc_); }
+        "min"          { adv_loc(); return parser::make_MIN(loc_); }
+        "max"          { adv_loc(); return parser::make_MAX(loc_); }
 
         // unary op
-        "arith.abs"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
-        "arith.neg"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
-        "arith.not"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
-        "arith.conj"         { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
-        "arith.im"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
-        "arith.re"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
+        "abs"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::abs, loc_); }
+        "neg"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::neg, loc_); }
+        "not"          { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::not_, loc_); }
+        "conj"         { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::conj, loc_); }
+        "im"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::im, loc_); }
+        "re"           { adv_loc(); return parser::make_ARITHMETIC_UNARY(arithmetic_unary::re, loc_); }
 
         // builtin
         "builtin.group_id.x"         { adv_loc(); return parser::make_BUILTIN(builtin::group_id_x, loc_); }

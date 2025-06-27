@@ -17,9 +17,9 @@ func @if0(%0: i32) {
     %c42 = constant 42 : i32
     %1 = cmp.lt %0, %c42 : bool
     if %1 {
-        %2 = arith.neg %0 : i32
+        %2 = neg %0 : i32
     } else {
-        %3 = arith.not %0 : i32
+        %3 = not %0 : i32
     }
 ; CHECK:                  %[[#]] = OpFunction {{.*}}
 ; CHECK:       %[[#CONDITION0:]] = OpSLessThan %[[#]] %[[#]] %[[#]] 
@@ -56,10 +56,10 @@ func @if2(%0: i32) {
         }
         yield (%1)
     } else {
-        %1 = arith.not %0 : i32
+        %1 = not %0 : i32
         yield (%1)
     }
-    %y = arith.not %x : i32
+    %y = not %x : i32
 ; CHECK:                         %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:             %[[#PARAM2:]] = OpFunctionParameter %[[#]]
 ; CHECK-NEXT:                    %[[#]] = OpLabel
@@ -92,7 +92,7 @@ func @if3() attributes{subgroup_size=16} {
         %1 = constant 0.0 : coopmatrix<f32x16x4,matrix_a>
         yield (%c1, %1)
     }
-    %z = arith.neg %x : coopmatrix<f32x16x4,matrix_a>
+    %z = neg %x : coopmatrix<f32x16x4,matrix_a>
 ; CHECK:                   %[[#]] = OpFunction {{.*}}
 ; CHECK-NEXT:              %[[#]] = OpLabel
 ; CHECK:       %[[#TRUE_LABEL3:]] = OpLabel

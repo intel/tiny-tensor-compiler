@@ -194,14 +194,13 @@ void inst_converter::operator()(alloca_inst in) {
 }
 
 void inst_converter::operator()(arith_inst in) {
-    auto const make_boolean = [&](arithmetic op, spv_inst *ty, spv_inst *a,
-                                  spv_inst *b) -> spv_inst * {
+    auto const make_boolean = [&](IK op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
         switch (op) {
-        case arithmetic::and_:
+        case IK::IK_and:
             return mod_->add<OpLogicalAnd>(ty, a, b);
-        case arithmetic::or_:
+        case IK::IK_or:
             return mod_->add<OpLogicalOr>(ty, a, b);
-        case arithmetic::xor_:
+        case IK::IK_xor:
             return mod_->add<OpLogicalNotEqual>(ty, a, b);
         default:
             break;
@@ -213,11 +212,12 @@ void inst_converter::operator()(arith_inst in) {
         auto ty = unique_.bool_ty();
         auto av = val(in.a());
         auto bv = val(in.b());
-        declare(in.result(), make_boolean(in.operation(), ty, av, bv));
+        declare(in.result(), make_boolean(in.get().type_id(), ty, av, bv));
     } else if (auto st = dyn_cast<scalar_data_type>(in.result().ty()); st) {
         auto av = val(in.a());
         auto bv = val(in.b());
-        declare(in.result(), make_binary_op(unique_, st->ty(), in.operation(), av, bv, in.loc()));
+        declare(in.result(),
+                make_binary_op(unique_, st->ty(), in.get().type_id(), av, bv, in.loc()));
     } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result().ty()); ct) {
         auto av = val(in.a());
         auto bv = val(in.b());

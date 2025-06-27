@@ -114,73 +114,6 @@ void alloca_inst::setup_and_check() {
     stack_ptr(-1);
 }
 
-void arith_inst::setup_and_check() {
-    auto ty = result().ty();
-
-    if (a().ty() != ty) {
-        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
-    }
-    if (b().ty() != ty) {
-        throw compilation_error(loc(), {&b()}, status::ir_operand_type_must_match_return_type);
-    }
-
-    if (isa<boolean_data_type>(*ty)) {
-        auto const inst_supports_bool = [&] {
-            switch (operation()) {
-            case arithmetic::and_:
-            case arithmetic::or_:
-            case arithmetic::xor_:
-                return true;
-            default:
-                return false;
-            }
-        }();
-        if (!inst_supports_bool) {
-            throw compilation_error(loc(), status::ir_boolean_unsupported);
-        }
-    } else {
-        auto const check_scalar_ty = [&](scalar_type sty) {
-            bool inst_supports_fp = true;
-            bool inst_supports_complex = true;
-            switch (operation()) {
-            case arithmetic::add:
-            case arithmetic::sub:
-            case arithmetic::mul:
-            case arithmetic::div:
-                break;
-            case arithmetic::min:
-            case arithmetic::max:
-            case arithmetic::rem:
-                inst_supports_complex = false;
-                break;
-            case arithmetic::and_:
-            case arithmetic::or_:
-            case arithmetic::xor_:
-                inst_supports_fp = false;
-                inst_supports_complex = false;
-                break;
-            case arithmetic::shl:
-            case arithmetic::shr:
-                inst_supports_fp = false;
-                inst_supports_complex = false;
-                break;
-            }
-            if (!inst_supports_fp && is_floating_type(sty)) {
-                throw compilation_error(loc(), status::ir_fp_unsupported);
-            }
-            if (!inst_supports_complex && is_complex_type(sty)) {
-                throw compilation_error(loc(), status::ir_complex_unsupported);
-            }
-        };
-
-        if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
-            check_scalar_ty(ct->component_ty());
-        } else {
-            check_scalar_ty(get_scalar_type(loc(), ty)->ty());
-        }
-    }
-}
-
 void arith_unary_inst::setup_and_check() {
     auto ty = result().ty();
 
@@ -841,6 +774,59 @@ void store_inst::setup_and_check() {
 }
 
 void yield_inst::setup_and_check() {}
+
+void arith_inst::setup_and_check() {}
+void arith_inst::setup_and_check(support_flags support) {
+    auto ty = result().ty();
+
+    if (a().ty() != ty) {
+        throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
+    }
+    if (b().ty() != ty) {
+        throw compilation_error(loc(), {&b()}, status::ir_operand_type_must_match_return_type);
+    }
+
+    if (isa<boolean_data_type>(*ty)) {
+        if (!(support & supports_bool)) {
+            throw compilation_error(loc(), status::ir_boolean_unsupported);
+        }
+    } else {
+        auto const check_scalar_ty = [&](scalar_type sty) {
+            if (!(support & supports_float) && is_floating_type(sty)) {
+                throw compilation_error(loc(), status::ir_fp_unsupported);
+            }
+            if (!(support & supports_complex) && is_complex_type(sty)) {
+                throw compilation_error(loc(), status::ir_complex_unsupported);
+            }
+        };
+
+        if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
+            check_scalar_ty(ct->component_ty());
+        } else {
+            check_scalar_ty(get_scalar_type(loc(), ty)->ty());
+        }
+    }
+}
+void add_inst::setup_and_check() {
+    arith_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void sub_inst::setup_and_check() {
+    arith_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void mul_inst::setup_and_check() {
+    arith_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void div_inst::setup_and_check() {
+    arith_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void rem_inst::setup_and_check() { arith_inst::setup_and_check(supports_int | supports_float); }
+void max_inst::setup_and_check() { arith_inst::setup_and_check(supports_int | supports_float); }
+void min_inst::setup_and_check() { arith_inst::setup_and_check(supports_int | supports_float); }
+void shl_inst::setup_and_check() { arith_inst::setup_and_check(supports_int); }
+void shr_inst::setup_and_check() { arith_inst::setup_and_check(supports_int); }
+void and_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
+void or_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
+void xor_inst::setup_and_check() { arith_inst::setup_and_check(supports_bool | supports_int); }
 
 void blas_a2_inst::setup_and_check() {
     auto At = get_memref_type(loc(), A());

@@ -157,20 +157,20 @@ struct compute_unary_op {
 };
 
 struct compute_binary_op {
-    arithmetic operation;
+    IK operation;
     data_type ty;
     location const &loc;
 
     auto operator()(bool a, bool b) -> fold_result {
         bool val = false;
         switch (operation) {
-        case arithmetic::and_:
+        case IK::IK_and:
             val = a && b;
             break;
-        case arithmetic::or_:
+        case IK::IK_or:
             val = a || b;
             break;
-        case arithmetic::xor_:
+        case IK::IK_xor:
             val = a != b;
             break;
         default:
@@ -184,42 +184,44 @@ struct compute_binary_op {
     auto operator()(T a, T b) -> fold_result {
         T val = 0;
         switch (operation) {
-        case arithmetic::add:
+        case IK::IK_add:
             val = a + b;
             break;
-        case arithmetic::sub:
+        case IK::IK_sub:
             val = a - b;
             break;
-        case arithmetic::mul:
+        case IK::IK_mul:
             val = a * b;
             break;
-        case arithmetic::div:
+        case IK::IK_div:
             val = a / b;
             break;
-        case arithmetic::rem:
+        case IK::IK_rem:
             val = a % b;
             break;
-        case arithmetic::shl:
+        case IK::IK_shl:
             val = a << b;
             break;
-        case arithmetic::shr:
+        case IK::IK_shr:
             val = a >> b;
             break;
-        case arithmetic::and_:
+        case IK::IK_and:
             val = a & b;
             break;
-        case arithmetic::or_:
+        case IK::IK_or:
             val = a | b;
             break;
-        case arithmetic::xor_:
+        case IK::IK_xor:
             val = a ^ b;
             break;
-        case arithmetic::min:
+        case IK::IK_min:
             val = std::min(a, b);
             break;
-        case arithmetic::max:
+        case IK::IK_max:
             val = std::max(a, b);
             break;
+        default:
+            throw compilation_error(loc, status::internal_compiler_error);
         }
         return create<constant_inst>(val, ty, loc);
     }
@@ -231,33 +233,33 @@ struct compute_binary_op {
         const auto b = static_cast<T>(B);
         T val = {};
         switch (operation) {
-        case arithmetic::add:
+        case IK::IK_add:
             val = a + b;
             break;
-        case arithmetic::sub:
+        case IK::IK_sub:
             val = a - b;
             break;
-        case arithmetic::mul:
+        case IK::IK_mul:
             val = a * b;
             break;
-        case arithmetic::div:
+        case IK::IK_div:
             val = a / b;
             break;
-        case arithmetic::rem:
+        case IK::IK_rem:
             if constexpr (is_complex_v<T>) {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             } else {
                 val = std::fmod(a, b);
             }
             break;
-        case arithmetic::min:
+        case IK::IK_min:
             if constexpr (is_complex_v<T>) {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             } else {
                 val = std::min(a, b);
             }
             break;
-        case arithmetic::max:
+        case IK::IK_max:
             if constexpr (is_complex_v<T>) {
                 throw compilation_error(loc, status::ir_complex_unsupported);
             } else {
@@ -277,20 +279,20 @@ struct compute_binary_op {
 
 struct compute_binop_identities {
     bool unsafe_fp_math;
-    arithmetic operation;
+    IK operation;
     tinytc_value &operand;
     bool is_second_operand;
     location const &loc;
 
     auto operator()(bool a) -> fold_result {
         switch (operation) {
-        case arithmetic::and_:
+        case IK::IK_and:
             if (!a) {
                 return create<constant_inst>(false, operand.ty(), loc);
             }
             break;
-        case arithmetic::or_:
-        case arithmetic::xor_:
+        case IK::IK_or:
+        case IK::IK_xor:
             if (!a) {
                 return &operand;
             }
@@ -305,35 +307,35 @@ struct compute_binop_identities {
     requires(std::is_integral_v<T> && !std::is_same_v<T, bool>)
     auto operator()(T a) -> fold_result {
         switch (operation) {
-        case arithmetic::add:
+        case IK::IK_add:
             if (a == T{0}) { // operand + 0 or 0 + operand
                 return &operand;
             }
             break;
-        case arithmetic::sub:
+        case IK::IK_sub:
             if (a == T{0} && !is_second_operand) { // operand - 0
                 return &operand;
             }
             break;
-        case arithmetic::mul:
+        case IK::IK_mul:
             if (a == T{0}) { // operand * 0 or 0 * operand
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
             }
             break;
-        case arithmetic::div:
+        case IK::IK_div:
             if (a == T{1} && !is_second_operand) { // operand / 1
                 return &operand;
             }
             break;
-        case arithmetic::rem:
+        case IK::IK_rem:
             if (a == T{1} && !is_second_operand) { // operand % 1
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             }
             break;
-        case arithmetic::shl:
-        case arithmetic::shr:
+        case IK::IK_shl:
+        case IK::IK_shr:
             if (a == T{0}) {
                 if (is_second_operand) { // 0 << operand
                     return create<constant_inst>(T{0}, operand.ty(), loc);
@@ -342,13 +344,13 @@ struct compute_binop_identities {
                 }
             }
             break;
-        case arithmetic::and_:
+        case IK::IK_and:
             if (a == T{0}) {
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             }
             break;
-        case arithmetic::or_:
-        case arithmetic::xor_:
+        case IK::IK_or:
+        case IK::IK_xor:
             if (a == T{0}) {
                 return &operand;
             }
@@ -364,24 +366,24 @@ struct compute_binop_identities {
     auto operator()(U const &A) -> fold_result {
         const auto a = static_cast<T>(A);
         switch (operation) {
-        case arithmetic::add:
+        case IK::IK_add:
             if (a == T{0}) { // operand + 0 or 0 + operand
                 return &operand;
             }
             break;
-        case arithmetic::sub:
+        case IK::IK_sub:
             if (a == T{0} && !is_second_operand) { // operand - 0
                 return &operand;
             }
             break;
-        case arithmetic::mul:
+        case IK::IK_mul:
             if (unsafe_fp_math && a == T{0}) { // operand * 0 or 0 * operand
                 return create<constant_inst>(T{0}, operand.ty(), loc);
             } else if (a == T{1}) { // operand * 1 or 1 * operand
                 return &operand;
             }
             break;
-        case arithmetic::div:
+        case IK::IK_div:
             if (a == T{1} && !is_second_operand) { // operand / 1
                 return &operand;
             }

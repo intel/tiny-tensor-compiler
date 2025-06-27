@@ -7,6 +7,7 @@
 #include "analysis/gcd.hpp"
 #include "coopmatrix_layout.hpp" // IWYU pragma: keep
 #include "device_info.hpp"
+#include "node/inst_view.hpp"
 #include "spv/defs.hpp"
 #include "tinytc/types.hpp"
 

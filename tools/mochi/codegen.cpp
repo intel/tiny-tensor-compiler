@@ -178,7 +178,7 @@ void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
                     generate_c_to_cxx_cast(os, q, ty, name);
                     os << ", ";
                 });
-                os << "get_optional(loc));\n});\n}\n\n";
+                os << "get_optional(loc)).release();\n});\n}\n\n";
             }
         });
     }
@@ -362,7 +362,7 @@ public:
     if (!in->has_children()) {
         os << "static auto create(";
         generate_cxx_params(os, in);
-        os << ") -> tinytc_inst_t;\n\n";
+        os << ") -> inst;\n\n";
     }
     os << "\n";
 
@@ -455,7 +455,7 @@ public:
 void generate_inst_create(std::ostream &os, inst *in) {
     os << "auto " << in->class_name() << "::create(";
     generate_cxx_params(os, in);
-    os << ") -> tinytc_inst_t {\n";
+    os << ") -> inst {\n";
 
     os << "std::int32_t num_operands = 0;\n"
        << "std::int32_t num_results = 0;\n";
@@ -551,11 +551,21 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
     os << "\n\n";
 
     os << "view.setup_and_check();\n\n";
-    os << "return in.release();\n";
+    os << "return in;\n";
     os << "}\n\n";
 }
 
 void generate_inst_cpp(std::ostream &os, objects const &obj) {
+    os << "auto to_string(IK ik) -> char const* {\n"
+          "switch (ik) {\n";
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+            os << std::format("case IK::IK_{0}: return \"{0}\";\n", in->name());
+        });
+    }
+    os << "default: break;\n"
+          "}\nreturn \"unknown\";\n"
+          "}\n\n";
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order, true>(i.get(),
                                                [&os](inst *in) { generate_inst_create(os, in); });
@@ -576,6 +586,7 @@ void generate_inst_hpp(std::ostream &os, objects const &obj) {
         );
     }
     os << "};\n\n";
+    os << "auto to_string(IK ik) -> char const*;\n\n";
 
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) { generate_inst_class(os, in); });
@@ -584,10 +595,8 @@ void generate_inst_hpp(std::ostream &os, objects const &obj) {
 
 void generate_inst_forward_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
-            if (!in->has_children()) {
-                os << std::format("class {0}; // IWYU pragma: export\n", in->class_name());
-            }
+        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+            os << std::format("class {0}; // IWYU pragma: export\n", in->class_name());
         });
     }
     os << "\n";
@@ -597,11 +606,9 @@ void generate_inst_visit_hpp(std::ostream &os, objects const &obj) {
     os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_inst &in) {\n";
     os << "switch(in.type_id()) {\n";
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
-            if (!in->has_children()) {
-                os << std::format("case IK::{}: {{ return visitor({}{{&in}}); }}\n", in->ik_name(),
-                                  in->class_name());
-            }
+        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+            os << std::format("case IK::{}: {{ return visitor({}{{&in}}); }}\n", in->ik_name(),
+                              in->class_name());
         });
     }
     os << "default: break;\n}\nthrow status::internal_compiler_error;\n}\n";

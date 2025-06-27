@@ -18,9 +18,9 @@ class uniquifier;
 
 auto convert_group_operation(group_operation op) -> GroupOperation;
 auto get_last_label(tinytc_spv_mod &mod) -> spv_inst *;
-auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst *a, spv_inst *b,
+auto make_binary_op(uniquifier &unique, scalar_type sty, IK op, spv_inst *a, spv_inst *b,
                     location const &loc) -> spv_inst *;
-auto make_binary_op_mixed_precision(uniquifier &unique, scalar_type result_ty, arithmetic op,
+auto make_binary_op_mixed_precision(uniquifier &unique, scalar_type result_ty, IK op,
                                     scalar_type a_ty, spv_inst *a, scalar_type b_ty, spv_inst *b,
                                     location const &loc) -> spv_inst *;
 auto make_cast(uniquifier &unique, scalar_type to_ty, scalar_type a_ty, spv_inst *a,

@@ -50,60 +50,61 @@ auto get_last_label(tinytc_spv_mod &mod) -> spv_inst * {
     return nullptr;
 }
 
-auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst *a, spv_inst *b,
+auto make_binary_op(uniquifier &unique, scalar_type sty, IK op, spv_inst *a, spv_inst *b,
                     location const &loc) -> spv_inst * {
     auto &mod = unique.mod();
-    auto const make_int = [&](arithmetic op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
+    auto const make_int = [&](IK op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
         switch (op) {
-        case arithmetic::add:
+        case IK::IK_add:
             return mod.add<OpIAdd>(ty, a, b);
-        case arithmetic::sub:
+        case IK::IK_sub:
             return mod.add<OpISub>(ty, a, b);
-        case arithmetic::mul:
+        case IK::IK_mul:
             return mod.add<OpIMul>(ty, a, b);
-        case arithmetic::div:
+        case IK::IK_div:
             return mod.add<OpSDiv>(ty, a, b);
-        case arithmetic::rem:
+        case IK::IK_rem:
             return mod.add<OpSRem>(ty, a, b);
-        case arithmetic::shl:
+        case IK::IK_shl:
             return mod.add<OpShiftLeftLogical>(ty, a, b);
-        case arithmetic::shr:
+        case IK::IK_shr:
             return mod.add<OpShiftRightArithmetic>(ty, a, b);
-        case arithmetic::and_:
+        case IK::IK_and:
             return mod.add<OpBitwiseAnd>(ty, a, b);
-        case arithmetic::or_:
+        case IK::IK_or:
             return mod.add<OpBitwiseOr>(ty, a, b);
-        case arithmetic::xor_:
+        case IK::IK_xor:
             return mod.add<OpBitwiseXor>(ty, a, b);
-        case arithmetic::min:
+        case IK::IK_min:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::s_min),
                                       std::vector<IdRef>{a, b});
-        case arithmetic::max:
+        case IK::IK_max:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::s_max),
                                       std::vector<IdRef>{a, b});
+        default:
+            break;
         }
         throw compilation_error(loc, status::internal_compiler_error);
     };
-    auto const make_float = [&](arithmetic op, spv_inst *ty, spv_inst *a,
-                                spv_inst *b) -> spv_inst * {
+    auto const make_float = [&](IK op, spv_inst *ty, spv_inst *a, spv_inst *b) -> spv_inst * {
         switch (op) {
-        case arithmetic::add:
+        case IK::IK_add:
             return mod.add<OpFAdd>(ty, a, b);
-        case arithmetic::sub:
+        case IK::IK_sub:
             return mod.add<OpFSub>(ty, a, b);
-        case arithmetic::mul:
+        case IK::IK_mul:
             return mod.add<OpFMul>(ty, a, b);
-        case arithmetic::div:
+        case IK::IK_div:
             return mod.add<OpFDiv>(ty, a, b);
-        case arithmetic::rem:
+        case IK::IK_rem:
             return mod.add<OpFRem>(ty, a, b);
-        case arithmetic::min:
+        case IK::IK_min:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::fmin),
                                       std::vector<IdRef>{a, b});
-        case arithmetic::max:
+        case IK::IK_max:
             return mod.add<OpExtInst>(ty, unique.opencl_ext(),
                                       static_cast<std::int32_t>(OpenCLEntrypoint::fmax),
                                       std::vector<IdRef>{a, b});
@@ -112,17 +113,17 @@ auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst
         }
         throw compilation_error(loc, status::ir_fp_unsupported);
     };
-    auto const make_complex = [&](arithmetic op, spv_inst *ty, spv_inst *float_ty, spv_inst *a,
+    auto const make_complex = [&](IK op, spv_inst *ty, spv_inst *float_ty, spv_inst *a,
                                   spv_inst *b) -> spv_inst * {
         switch (op) {
-        case arithmetic::add:
+        case IK::IK_add:
             return mod.add<OpFAdd>(ty, a, b);
-        case arithmetic::sub:
+        case IK::IK_sub:
             return mod.add<OpFSub>(ty, a, b);
-        case arithmetic::mul: {
+        case IK::IK_mul: {
             return make_complex_mul(unique, ty, a, b);
         }
-        case arithmetic::div: {
+        case IK::IK_div: {
             auto a_times_conj_b = make_complex_mul(unique, ty, a, b, true);
 
             auto b_squared = mod.add<OpFMul>(ty, b, b);
@@ -167,7 +168,7 @@ auto make_binary_op(uniquifier &unique, scalar_type sty, arithmetic op, spv_inst
     throw compilation_error(loc, status::internal_compiler_error);
 }
 
-auto make_binary_op_mixed_precision(uniquifier &unique, scalar_type result_ty, arithmetic op,
+auto make_binary_op_mixed_precision(uniquifier &unique, scalar_type result_ty, IK op,
                                     scalar_type a_ty, spv_inst *a, scalar_type b_ty, spv_inst *b,
                                     location const &loc) -> spv_inst * {
     if (!promotable(a_ty, result_ty) || !promotable(b_ty, result_ty)) {

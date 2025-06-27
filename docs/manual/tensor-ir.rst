@@ -930,18 +930,18 @@ Arithmetic (binary)
 
 .. code:: abnf
 
-    arith-binary-type       =  "arith.add" /
-                               "arith.sub" /
-                               "arith.mul" /
-                               "arith.div" /
-                               "arith.rem" /
-                               "arith.min" /
-                               "arith.max" /
-                               "arith.shl" /
-                               "arith.shr" /
-                               "arith.and" /
-                               "arith.or"  /
-                               "arith.xor"
+    arith-binary-type       =  "add" /
+                               "sub" /
+                               "mul" /
+                               "div" /
+                               "rem" /
+                               "max" /
+                               "min" /
+                               "shl" /
+                               "shr" /
+                               "and" /
+                               "or"  /
+                               "xor"
     value-instruction       =/ arith-binary-type local-identifier "," local-identifier
                                ":" (boolean-type / scalar-type / coopmatrix-type)
 
@@ -963,13 +963,13 @@ sub scalar-type                   Difference of operands
 mul scalar-type                   Product of operands
 div scalar-type                   Quotient of operands
 rem scalar-type \\ complex-type   Remainder from the division of operands
+max scalar-type \\ complex-type   Maximum of operands
+min scalar-type \\ complex-type   Minimum of operands
 shl integer-type                  Left shift first operand by second operand
 shr integer-type                  Arithmetic right shift first operand by second operand
 and boolean-type / integer-type   Bitwise and
 or  boolean-type / integer-type   Bitwise or
 xor boolean-type / integer-type   Bitwise xor
-min scalar-type \\ complex-type   Minimum of operands
-max scalar-type \\ complex-type   Maximum of operands
 === ============================= ======================================================
 
 Arithmetic (unary)
@@ -977,12 +977,12 @@ Arithmetic (unary)
 
 .. code:: abnf
 
-    arith-unary-type        =  "arith.abs" /
-                               "arith.neg" /
-                               "arith.not" /
-                               "arith.conj" /
-                               "arith.im" /
-                               "arith.re"
+    arith-unary-type        =  "abs" /
+                               "neg" /
+                               "not" /
+                               "conj" /
+                               "im" /
+                               "re"
     value-instruction       =/ arith-unary-type local-identifier
                                ":" (scalar-type / coopmatrix-type)
 

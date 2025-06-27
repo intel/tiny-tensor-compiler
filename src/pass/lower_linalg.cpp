@@ -89,8 +89,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             a.emplace_back(bb.create<cooperative_matrix_load_inst>(tA, my_check_a, A, pos_a[0],
                                                                    pos_a[1], coopmatrix_a_ty));
             if (i + 1 < num_m_blocks) {
-                pos_a[amode] = bb.create<arith_inst>(arithmetic::add, pos_a[amode], c_m_block_size,
-                                                     index_ty, loc);
+                pos_a[amode] = bb.create<add_inst>(pos_a[amode], c_m_block_size, index_ty, loc);
             }
         }
 
@@ -108,8 +107,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             b.emplace_back(bb.create<cooperative_matrix_load_inst>(tB, my_check_b, B, pos_b[0],
                                                                    pos_b[1], coopmatrix_b_ty));
             if (i + 1 < num_n_blocks) {
-                pos_b[bmode] = bb.create<arith_inst>(arithmetic::add, pos_b[bmode], c_n_block_size,
-                                                     index_ty, loc);
+                pos_b[bmode] = bb.create<add_inst>(pos_b[bmode], c_n_block_size, index_ty, loc);
             }
         }
 
@@ -163,10 +161,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
 
     auto c_zero = bb.constant_zero(index_ty, loc);
     auto c_k_block_size = bb.create<constant_inst>(k_block_size, index_ty, loc);
-    auto tmp = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::div, K, c_k_block_size, index_ty, loc));
-    auto K0 = instant_constant_fold_add(
-        bb, create<arith_inst>(arithmetic::mul, tmp, c_k_block_size, index_ty, loc));
+    auto tmp = instant_constant_fold_add(bb, create<div_inst>(K, c_k_block_size, index_ty, loc));
+    auto K0 = instant_constant_fold_add(bb, create<mul_inst>(tmp, c_k_block_size, index_ty, loc));
     auto needs_remainder =
         instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::lt, K0, K, bool_ty, loc));
     auto r = get_bool_constant(needs_remainder);
@@ -204,11 +200,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         for (std::int32_t n = 0; n < num_n_blocks; ++n) {
             auto pos1_offset = bb.create<constant_inst>(n * n_block_size, index_ty, loc);
-            auto pos1 = bb.create<arith_inst>(arithmetic::add, n_block, pos1_offset, index_ty, loc);
+            auto pos1 = bb.create<add_inst>(n_block, pos1_offset, index_ty, loc);
             for (std::int32_t m = 0; m < num_m_blocks; ++m) {
                 auto pos0_offset = bb.create<constant_inst>(m * m_block_size, index_ty, loc);
-                auto pos0 =
-                    bb.create<arith_inst>(arithmetic::add, m_block, pos0_offset, index_ty, loc);
+                auto pos0 = bb.create<add_inst>(m_block, pos0_offset, index_ty, loc);
                 auto alpha_ab_mn = c_acc[m + n * num_m_blocks];
                 if (needs_final_cast) {
                     alpha_ab_mn = bb.create<cast_inst>(alpha_ab_mn, coopmatrix_c_ty, loc);
@@ -220,11 +215,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     } else {
         for (std::int32_t n = 0; n < num_n_blocks; ++n) {
             auto pos1_offset = bb.create<constant_inst>(n * n_block_size, index_ty, loc);
-            auto pos1 = bb.create<arith_inst>(arithmetic::add, n_block, pos1_offset, index_ty, loc);
+            auto pos1 = bb.create<add_inst>(n_block, pos1_offset, index_ty, loc);
             for (std::int32_t m = 0; m < num_m_blocks; ++m) {
                 auto pos0_offset = bb.create<constant_inst>(m * m_block_size, index_ty, loc);
-                auto pos0 =
-                    bb.create<arith_inst>(arithmetic::add, m_block, pos0_offset, index_ty, loc);
+                auto pos0 = bb.create<add_inst>(m_block, pos0_offset, index_ty, loc);
                 auto c_load = bb.create<cooperative_matrix_load_inst>(transpose::N, check_c, C,
                                                                       pos0, pos1, coopmatrix_c_ty);
                 auto &alpha_ab_mn = c_acc[m + n * num_m_blocks];
@@ -232,13 +226,12 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                     if (needs_final_cast) {
                         auto c_load_acc = bb.create<cast_inst>(c_load, coopmatrix_c_acc_ty, loc);
                         auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load_acc, loc);
-                        auto alpha_ab_plus_beta_c = bb.create<arith_inst>(
-                            arithmetic::add, alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc);
+                        auto alpha_ab_plus_beta_c =
+                            bb.create<add_inst>(alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc);
                         return bb.create<cast_inst>(alpha_ab_plus_beta_c, coopmatrix_c_ty, loc);
                     } else {
                         auto beta_c = mixed_precision_coopmatrix_scale(bb, beta, c_load, loc);
-                        return bb.create<arith_inst>(arithmetic::add, alpha_ab_mn, beta_c,
-                                                     alpha_ab_mn->ty(), loc);
+                        return bb.create<add_inst>(alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc);
                     }
                 }();
                 bb.create<cooperative_matrix_store_inst>(check_c, store_flag::regular,
@@ -300,7 +293,7 @@ void linalg_generator::operator()(axpby_inst in) {
         auto c0 = bb.create<constant_inst>(0, i32_ty);
         auto cond0 = bb.create<compare_inst>(cmp_condition::eq, sg_id, c0, bool_ty, in.loc());
         auto cond1 = bb.create<compare_inst>(cmp_condition::eq, sg_lid, c0, bool_ty, in.loc());
-        auto cond = bb.create<arith_inst>(arithmetic::and_, cond0, cond1, cond0->ty());
+        auto cond = bb.create<and_inst>(cond0, cond1, cond0->ty());
         bb.if_condition(cond, [&](region_builder &bb) {
             auto a =
                 bb.create<load_inst>(&in.A(), array_view<value>{}, at->element_data_ty(), in.loc());
@@ -360,8 +353,8 @@ void linalg_generator::operator()(cumsum_inst in) {
         auto from_index = [&]() -> value {
             if (scan.num_tiles() > 1) {
                 auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, loc);
-                auto from0 = bb.create<arith_inst>(arithmetic::mul, sgid, c_sgs, i32_ty, loc);
-                auto from1 = bb.create<arith_inst>(arithmetic::add, from0, sglid, i32_ty, loc);
+                auto from0 = bb.create<mul_inst>(sgid, c_sgs, i32_ty, loc);
+                auto from1 = bb.create<add_inst>(from0, sglid, i32_ty, loc);
                 return bb.create<cast_inst>(from1, index_ty, loc);
             } else {
                 return bb.create<cast_inst>(sglid, index_ty, loc);
@@ -373,14 +366,11 @@ void linalg_generator::operator()(cumsum_inst in) {
 
         auto c_1 = bb.constant_one(index_ty, loc);
         auto shape0 = instant_constant_fold_add(bb, create<size_inst>(0, a_sub, index_ty, loc));
-        auto tr0 = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::sub, shape0, c_1, index_ty, loc));
-        auto tr1 = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::div, tr0, c_step, index_ty, loc));
-        auto tr2 = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::add, tr1, c_1, index_ty, loc));
-        auto trip_count = instant_constant_fold_add(
-            bb, create<arith_inst>(arithmetic::mul, tr2, c_step, index_ty, loc));
+        auto tr0 = instant_constant_fold_add(bb, create<sub_inst>(shape0, c_1, index_ty, loc));
+        auto tr1 = instant_constant_fold_add(bb, create<div_inst>(tr0, c_step, index_ty, loc));
+        auto tr2 = instant_constant_fold_add(bb, create<add_inst>(tr1, c_1, index_ty, loc));
+        auto trip_count =
+            instant_constant_fold_add(bb, create<mul_inst>(tr2, c_step, index_ty, loc));
 
         auto c_init = bb.constant_zero(bt->element_data_ty(), loc);
         auto a_scan = bb.for_loop(
@@ -401,10 +391,8 @@ void linalg_generator::operator()(cumsum_inst in) {
                     [&](region_builder &bb) { bb.create<yield_inst>(array_view{c_init}, loc); },
                     {bt->element_data_ty()}, loc);
                 auto [a_scan, next_prefix] = scan.make(bb, a[0], true, loc);
-                a_scan = bb.create<arith_inst>(arithmetic::add, args[1], a_scan,
-                                               bt->element_data_ty(), loc);
-                next_prefix = bb.create<arith_inst>(arithmetic::add, args[1], next_prefix,
-                                                    bt->element_data_ty(), loc);
+                a_scan = bb.create<add_inst>(args[1], a_scan, bt->element_data_ty(), loc);
+                next_prefix = bb.create<add_inst>(args[1], next_prefix, bt->element_data_ty(), loc);
                 bb.if_condition(
                     is_in_bounds,
                     [&](region_builder &bb) {
@@ -507,17 +495,17 @@ void linalg_generator::operator()(cumsum_inst in) {
                                                      array_view{J}, b_sub_ty, loc);
 
                 auto c_init = bb.constant_zero(bt->element_data_ty());
-                auto acc =
-                    bb.for_loop(c_zero, J, {}, {c_init}, {bt->element_data_ty()},
-                                [&](region_builder &bb, array_view<value> args) {
-                                    auto a = bb.create<load_inst>(a_sub, array_view{args[0]},
-                                                                  at->element_data_ty(), loc);
-                                    auto prefix = mixed_precision_arithmetic(
-                                        bb, bt->element_ty(), arithmetic::add, args[1], a, loc);
-                                    blas_update(bb, in.atomic(), &in.alpha(), prefix, &in.beta(),
-                                                b_sub, {args[0]}, loc);
-                                    bb.create<yield_inst>(array_view{prefix}, loc);
-                                });
+                auto acc = bb.for_loop(c_zero, J, {}, {c_init}, {bt->element_data_ty()},
+                                       [&](region_builder &bb, array_view<value> args) {
+                                           auto a =
+                                               bb.create<load_inst>(a_sub, array_view{args[0]},
+                                                                    at->element_data_ty(), loc);
+                                           auto prefix = mixed_precision_arithmetic<add_inst>(
+                                               bb, bt->element_ty(), args[1], a, loc);
+                                           blas_update(bb, in.atomic(), &in.alpha(), prefix,
+                                                       &in.beta(), b_sub, {args[0]}, loc);
+                                           bb.create<yield_inst>(array_view{prefix}, loc);
+                                       });
             },
             loc);
     }
@@ -659,10 +647,10 @@ void linalg_generator::operator()(gemv_inst in) {
                     auto a = bb.create<load_inst>(&in.A(), a_idx, at->element_data_ty(), in.loc());
                     auto b = bb.create<load_inst>(&in.B(), array_view{p[0]}, bt->element_data_ty(),
                                                   in.loc());
-                    auto ab = mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a,
-                                                         b, in.loc());
-                    auto ab_c = mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::add,
-                                                           p[1], ab, in.loc());
+                    auto ab =
+                        mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
+                    auto ab_c = mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), p[1], ab,
+                                                                     in.loc());
                     bb.create<yield_inst>(array_view{ab_c}, in.loc());
                 });
             blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {loop_vars[0]},
@@ -688,8 +676,7 @@ void linalg_generator::operator()(ger_inst in) {
                                           in.loc());
             auto b = bb.create<load_inst>(&in.B(), array_view{loop_vars[1]}, bt->element_data_ty(),
                                           in.loc());
-            auto ab =
-                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
+            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
                         {loop_vars[0], loop_vars[1]}, in.loc());
         },
@@ -716,8 +703,7 @@ void linalg_generator::operator()(hadamard_inst in) {
         [&](region_builder &bb, auto loop_vars) {
             auto a = bb.create<load_inst>(&in.A(), loop_vars, at->element_data_ty(), in.loc());
             auto b = bb.create<load_inst>(&in.B(), loop_vars, bt->element_data_ty(), in.loc());
-            auto ab =
-                mixed_precision_arithmetic(bb, ct->element_ty(), arithmetic::mul, a, b, in.loc());
+            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), loop_vars, in.loc());
         },
         in.loc());
@@ -744,8 +730,8 @@ void linalg_generator::operator()(sum_inst in) {
         auto c_sgs = bb.create<constant_inst>(core_cfg_.subgroup_size, i32_ty, in.loc());
         auto sgid = bb.create<builtin_inst>(builtin::subgroup_linear_id, i32_ty, in.loc());
         auto m = bb.create<builtin_inst>(builtin::subgroup_local_id, i32_ty, in.loc());
-        auto from0 = bb.create<arith_inst>(arithmetic::mul, sgid, c_sgs, i32_ty, in.loc());
-        auto from1 = bb.create<arith_inst>(arithmetic::add, from0, m, i32_ty, in.loc());
+        auto from0 = bb.create<mul_inst>(sgid, c_sgs, i32_ty, in.loc());
+        auto from1 = bb.create<add_inst>(from0, m, i32_ty, in.loc());
         auto from_index = bb.create<cast_inst>(from1, index_ty, in.loc());
 
         auto c_trip_count =
@@ -758,8 +744,8 @@ void linalg_generator::operator()(sum_inst in) {
                                [&](region_builder &bb, array_view<value> args) {
                                    auto a = bb.create<load_inst>(&in.A(), array_view{args[0]},
                                                                  at->element_data_ty(), in.loc());
-                                   auto sum = mixed_precision_arithmetic(
-                                       bb, bt->element_ty(), arithmetic::add, args[1], a, in.loc());
+                                   auto sum = mixed_precision_arithmetic<add_inst>(
+                                       bb, bt->element_ty(), args[1], a, in.loc());
                                    bb.create<yield_inst>(array_view{sum}, in.loc());
                                });
         auto acc_reduced = reducer.make(bb, acc[0], in.loc());
@@ -787,19 +773,19 @@ void linalg_generator::operator()(sum_inst in) {
                 auto K = bb.create<size_inst>(in.tA() == transpose::T ? 0 : 1, &in.A(), index_ty,
                                               in.loc());
                 auto c_init = bb.constant_zero(bt->element_data_ty());
-                auto acc = bb.for_loop(
-                    c0, K, {}, {c_init}, {bt->element_data_ty()},
-                    [&](region_builder &bb, array_view<value> args) {
-                        auto index_list = std::array<value, 2u>{loop_vars[0], args[0]};
-                        if (in.tA() == transpose::T) {
-                            std::swap(index_list[0], index_list[1]);
-                        }
-                        auto a = bb.create<load_inst>(&in.A(), index_list, at->element_data_ty(),
-                                                      in.loc());
-                        auto sum = mixed_precision_arithmetic(bb, bt->element_ty(), arithmetic::add,
-                                                              args[1], a, in.loc());
-                        bb.create<yield_inst>(array_view{sum}, in.loc());
-                    });
+                auto acc =
+                    bb.for_loop(c0, K, {}, {c_init}, {bt->element_data_ty()},
+                                [&](region_builder &bb, array_view<value> args) {
+                                    auto index_list = std::array<value, 2u>{loop_vars[0], args[0]};
+                                    if (in.tA() == transpose::T) {
+                                        std::swap(index_list[0], index_list[1]);
+                                    }
+                                    auto a = bb.create<load_inst>(&in.A(), index_list,
+                                                                  at->element_data_ty(), in.loc());
+                                    auto sum = mixed_precision_arithmetic<add_inst>(
+                                        bb, bt->element_ty(), args[1], a, in.loc());
+                                    bb.create<yield_inst>(array_view{sum}, in.loc());
+                                });
                 blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),
                             {loop_vars[0]}, in.loc());
             },

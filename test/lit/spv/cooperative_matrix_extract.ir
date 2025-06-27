@@ -12,7 +12,7 @@ func @textract() attributes{subgroup_size=16} {
     parallel {
         %2 = cooperative_matrix_extract %0[1] : f32
         %3 = cooperative_matrix_extract %1[0] : f32
-        %4 = arith.neg %3 : f32
+        %4 = neg %3 : f32
     }
 ; CHECK-LABEL: %[[#]] = OpFunction {{.*}}
 ; CHECK:       %[[#]] = OpCompositeExtract %[[#F32]] %[[#]] 1 

@@ -47,10 +47,10 @@ func @for2() {
   %f0 = constant 0 : i64
   %f1 = constant 1 : i64
   %fn_1, %fn = for %n=%from,%to init(%fn_2=%f0,%fn_1=%f1) -> (i64,i64) {
-    %fn = arith.add %fn_2, %fn_1 : i64
+    %fn = add %fn_2, %fn_1 : i64
     yield (%fn_1, %fn)
   }
-  %neg_fn = arith.neg %fn : i64
+  %neg_fn = neg %fn : i64
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:         %[[#ENTRY_LABEL2:]] = OpLabel
 ; CHECK-NEXT:                          OpBranch %[[#HEAD_LABEL2:]]
@@ -76,10 +76,10 @@ func @for3() attributes{subgroup_size=16} {
   %to = constant 6 : i16
   %m_init = constant 1 : coopmatrix<i16x16x4,matrix_acc>
   %m = for %n=%from,%to init(%m_iter=%m_init) -> (coopmatrix<i16x16x4,matrix_acc>) {
-    %m_update = arith.add %m_iter, %m_init : coopmatrix<i16x16x4,matrix_acc>
+    %m_update = add %m_iter, %m_init : coopmatrix<i16x16x4,matrix_acc>
     yield (%m_update)
   }
-  %neg_m = arith.neg %m : coopmatrix<i16x16x4,matrix_acc>
+  %neg_m = neg %m : coopmatrix<i16x16x4,matrix_acc>
 ; CHECK-LABEL:                %[[#]] = OpFunction {{.*}}
 ; CHECK:         %[[#ENTRY_LABEL3:]] = OpLabel
 ; CHECK-NEXT:                          OpBranch %[[#HEAD_LABEL3:]]
