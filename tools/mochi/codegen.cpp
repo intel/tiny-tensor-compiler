@@ -566,6 +566,7 @@ void generate_inst_cpp(std::ostream &os, objects const &obj) {
     os << "default: break;\n"
           "}\nreturn \"unknown\";\n"
           "}\n\n";
+
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order, true>(i.get(),
                                                [&os](inst *in) { generate_inst_create(os, in); });
@@ -591,6 +592,27 @@ void generate_inst_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
         walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) { generate_inst_class(os, in); });
     }
+}
+
+void generate_inst_kind_cpp(std::ostream &os, objects const &obj) {
+    os << "auto tinytc_inst::kind() -> inst_execution_kind {\n"
+          "switch (type_id()) {\n";
+    for (auto &i : obj.insts()) {
+        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+            char const *kind = "mixed";
+            if (in->is_set(inst_flag::collective) && !in->is_set(inst_flag::spmd)) {
+                kind = "collective";
+            } else if (!in->is_set(inst_flag::collective) && in->is_set(inst_flag::spmd)) {
+                kind = "spmd";
+            }
+            os << std::format("case IK::IK_{0}: return inst_execution_kind::{1};\n", in->name(),
+                              kind);
+        });
+    }
+    os << "default: break;\n"
+          "};\n"
+          "throw internal_compiler_error();\n"
+          "}\n\n";
 }
 
 void generate_inst_forward_hpp(std::ostream &os, objects const &obj) {

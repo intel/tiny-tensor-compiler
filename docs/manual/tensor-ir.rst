@@ -922,6 +922,14 @@ Restrictions
 * If the atomic flag is set, :math:`\beta` must be constant and :math:`\beta \in \{0,1\}`.
 
 
+Additional instructions
+.......................
+
+.. code:: abnf
+
+    instruction             =/ "lifetime_stop" local-identifier
+
+
 Mixed instructions
 ------------------
 
@@ -1642,13 +1650,6 @@ Op.-No. Type                                         Description
 ======= ============================================ ===========
 1...    boolean-type / scalar-type / coopmatrix-type value
 ======= ============================================ ===========
-
-Additional instructions
-.......................
-
-.. code:: abnf
-
-    instruction             =/ "lifetime_stop" local-identifier
 
 SPMD instructions
 -----------------

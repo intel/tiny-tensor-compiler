@@ -46,19 +46,16 @@
 %define api.token.prefix {TOK_}
 %token
     CASE            "case"
-    COLLECTIVE      "collective"
     CXX             "cxx"
     ENUM            "enum"
     INCLUDE         "include"
     INST            "inst"
-    MIXED           "mixed"
     OP              "op"
     PRIVATE         "private"
     PROP            "prop"
     REG             "reg"
     RET             "ret"
     SKIP_BUILDER    "skip_builder"
-    SPMD            "spmd"
     ARROW           "=>"
     COLON           ":"
     LBRACE          "{"
@@ -72,7 +69,7 @@
 %token <std::int64_t> NUMBER
 %token <builtin_type> BUILTIN_TYPE
 %token <enum_flag> ENUM_FLAG
-%token <inst_flag> INST_FLAG
+%token <std::uint32_t> INST_FLAG
 
 %nterm <std::pair<std::uint32_t, std::vector<case_>>> enum_content
 %nterm <case_> case
@@ -164,7 +161,7 @@ parent:
 
 members:
     %empty {}
-  | members INST_FLAG { $$ = std::move($1); $$.first |= static_cast<std::uint32_t>($INST_FLAG); }
+  | members INST_FLAG { $$ = std::move($1); $$.first |= $INST_FLAG; }
   | members member { $$ = std::move($1); $$.second.emplace_back(std::move($member)); }
 ;
 

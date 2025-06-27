@@ -230,6 +230,7 @@ void cooperative_matrix_apply_inst::setup_and_check() {
     auto i32_ty = scalar_data_type::get(at->context(), scalar_type::i32);
 
     body().loc(loc());
+    body().kind(region_kind::spmd);
     body().set_num_params(3);
     body().set_param(0, i32_ty);
     body().set_param(1, i32_ty);

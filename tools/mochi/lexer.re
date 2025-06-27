@@ -70,24 +70,23 @@ lex:
 
         // keywords
         "case"              { adv_loc(); return parser::make_CASE(loc_); }
-        "collective"        { adv_loc(); return parser::make_COLLECTIVE(loc_); }
         "cxx"               { adv_loc(); return parser::make_CXX(loc_); }
         "enum"              { adv_loc(); return parser::make_ENUM(loc_); }
         "include"           { adv_loc(); return parser::make_INCLUDE(loc_); }
         "inst"              { adv_loc(); return parser::make_INST(loc_); }
-        "mixed"             { adv_loc(); return parser::make_MIXED(loc_); }
         "op"                { adv_loc(); return parser::make_OP(loc_); }
         "private"           { adv_loc(); return parser::make_PRIVATE(loc_); }
         "prop"              { adv_loc(); return parser::make_PROP(loc_); }
         "reg"               { adv_loc(); return parser::make_REG(loc_); }
         "ret"               { adv_loc(); return parser::make_RET(loc_); }
-        "spmd"              { adv_loc(); return parser::make_SPMD(loc_); }
 
         // enum flags
         "doc_to_string"     { adv_loc(); return parser::make_ENUM_FLAG(enum_flag::doc_to_string, loc_); }
 
         // inst flags
-        "skip_builder"      { adv_loc(); return parser::make_INST_FLAG(inst_flag::skip_builder, loc_); }
+        "collective"        { adv_loc(); return parser::make_INST_FLAG(static_cast<std::uint32_t>(inst_flag::collective), loc_); }
+        "skip_builder"      { adv_loc(); return parser::make_INST_FLAG(static_cast<std::uint32_t>(inst_flag::skip_builder), loc_); }
+        "spmd"              { adv_loc(); return parser::make_INST_FLAG(static_cast<std::uint32_t>(inst_flag::spmd), loc_); }
 
         // basic types
         "bool"              { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::bool_, loc_); }

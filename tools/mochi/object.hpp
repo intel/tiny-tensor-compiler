@@ -70,7 +70,7 @@ struct raw_cxx {
     std::string code;
 };
 
-enum class inst_flag { skip_builder = 0x1 };
+enum class inst_flag { skip_builder = 0x1, collective = 0x2, spmd = 0x4 };
 
 using member = std::variant<prop, op, reg, ret, raw_cxx>;
 class inst {

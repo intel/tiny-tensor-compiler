@@ -29,6 +29,8 @@ auto to_string(generator g) -> char const * {
         return "inst_cpp";
     case generator::inst_hpp:
         return "inst_hpp";
+    case generator::inst_kind_cpp:
+        return "inst_hpp";
     case generator::inst_forward_hpp:
         return "inst_forward_hpp";
     case generator::inst_visit_hpp:
@@ -71,6 +73,9 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
                 break;
             case generator::inst_hpp:
                 generate_inst_hpp(os, *obj);
+                break;
+            case generator::inst_kind_cpp:
+                generate_inst_kind_cpp(os, *obj);
                 break;
             case generator::inst_forward_hpp:
                 generate_inst_forward_hpp(os, *obj);

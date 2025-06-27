@@ -4,6 +4,7 @@
 include "tinytc/enums.anko"
 
 inst @alloca "Alloca instruction" {
+    collective
     prop %stack_ptr private => i64
     ret %result "memref type of allocated variable"
 }
@@ -35,6 +36,7 @@ inst @constant "Constant instruction" {
 }
 
 inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
+    spmd
     op %a       "matrix"
     reg %body   "instructions to apply to coopmatrix entries"
     ret %result "result type"
@@ -44,12 +46,14 @@ inst @cooperative_matrix_apply "Cooperative matrix apply instruction" {
 }
 
 inst @cooperative_matrix_extract "Cooperative matrix extract instruction" {
+    spmd
     prop %index => i64 "index"
     op %mat            "matrix"
     ret %result        "result type"
 }
 
 inst @cooperative_matrix_insert "Cooperative matrix insert instruction" {
+    spmd
     prop %index => i64 "index"
     op %val            "value to insert"
     op %mat            "matrix"
@@ -57,6 +61,7 @@ inst @cooperative_matrix_insert "Cooperative matrix insert instruction" {
 }
 
 inst @cooperative_matrix_load "Cooperative matrix load instruction" {
+    spmd
     prop %t       => @transpose    "transposed load"
     prop %checked => @checked_flag "boundary check"
     op %operand                    "matrix"
@@ -66,6 +71,7 @@ inst @cooperative_matrix_load "Cooperative matrix load instruction" {
 }
 
 inst @cooperative_matrix_mul_add "Cooperative matrix mul add instruction" {
+    spmd
     op %a       "a matrix"
     op %b       "b matrix"
     op %c       "c matrix"
@@ -74,6 +80,7 @@ inst @cooperative_matrix_mul_add "Cooperative matrix mul add instruction" {
 }
 
 inst @cooperative_matrix_prefetch "Cooperative matrix prefetch instruction" {
+    spmd
     prop %cache_level => i32 "cache level; 0 is closest to the core"
     prop %rows        => i32 "number of rows"
     prop %cols        => i32 "number of columns"
@@ -83,6 +90,7 @@ inst @cooperative_matrix_prefetch "Cooperative matrix prefetch instruction" {
 }
 
 inst @cooperative_matrix_reduce "Cooperative matrix reduce instruction" {
+    spmd
     prop %arith => @group_arithmetic "reduction operator"
     prop %mode  => @reduce_mode      "reduction mode"
     op %a                            "matrix"
@@ -90,12 +98,14 @@ inst @cooperative_matrix_reduce "Cooperative matrix reduce instruction" {
 }
 
 inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
+    spmd
     op %a       "scalar"
     op %b       "matrix"
     ret %result "result type"
 }
 
 inst @cooperative_matrix_store "Cooperative matrix store instruction" {
+    spmd
     prop %checked => @checked_flag "boundary check"
     prop %flag    => @store_flag   "store mode"
     op %val                        "value to store"
@@ -129,6 +139,7 @@ inst @if "If instruction"{
 }
 
 inst @lifetime_stop "Lifetime stop instruction" {
+    collective
     op %object "stack object whose lifetime ends"
 }
 
@@ -146,6 +157,7 @@ inst @math_unary "Math instruction" {
 }
 
 inst @parallel "Parallel instruction" {
+    collective
     reg %body "parallel region"
 }
 
@@ -156,12 +168,14 @@ inst @size "Size instruction" {
 }
 
 inst @subgroup_broadcast "Subgroup broadcast instruction" {
+    spmd
     op %a       "operand"
     op %idx     "subgroup local index"
     ret %result "result index"
 }
 
 inst @subgroup_operation "Subgroup operation instruction" {
+    spmd
     prop %arith     => @group_arithmetic "group arithmetic type"
     prop %operation => @group_operation  "group operation type"
     op %a                                "operand"
@@ -239,14 +253,17 @@ inst @blas_a2 "BLAS instruction with 2 tensor operands" {
 }
 
 inst @axpby : @blas_a2 "AXPBY instruction" {
+    collective
     prop %tA => @transpose "transpose A"
 }
 
 inst @cumsum : @blas_a2 "Cumsum instruction" {
+    collective
     prop %mode => i64 "sum mode"
 }
 
 inst @sum : @blas_a2 "Sum instruction" {
+    collective
     prop %tA => @transpose "transpose A"
 }
 
@@ -263,17 +280,23 @@ inst @blas_a3 "BLAS instruction with 3 tensor operands" {
 }
 
 inst @gemm : @blas_a3 "GEMM instruction" {
+    collective
     prop %tA => @transpose "transpose A"
     prop %tB => @transpose "transpose B"
 }
 
 inst @gemv : @blas_a3 "GEMV instruction" {
+    collective
     prop %tA => @transpose "transpose A"
 }
 
-inst @ger : @blas_a3 "GER instruction" {}
+inst @ger : @blas_a3 "GER instruction" {
+    collective
+}
 
-inst @hadamard : @blas_a3 "Hadamard instruction" {}
+inst @hadamard : @blas_a3 "Hadamard instruction" {
+    collective
+}
 
 
 ; Built-in functions
@@ -293,10 +316,15 @@ inst @num_subgroups : @builtin "Number of subgroups instruction" {
 }
 inst @subgroup_size : @builtin "Subgroup size instruction" {}
 inst @subgroup_id : @builtin "Subgroup id instruction" {
+    spmd
     prop %mode => @comp3 "mode"
 }
-inst @subgroup_linear_id : @builtin "Subgroup linear id instruction" {}
-inst @subgroup_local_id : @builtin "Subgroup local id instruction" {}
+inst @subgroup_linear_id : @builtin "Subgroup linear id instruction" {
+    spmd
+}
+inst @subgroup_local_id : @builtin "Subgroup local id instruction" {
+    spmd
+}
 
 
 ; Loops
@@ -316,6 +344,7 @@ inst @for : @loop "Create for loop" {
 }
 
 inst @foreach : @loop "Create foreach loop" {
+    collective
     op* %from "array of loop begin (inclusive)"
     op* %to   "array of loop end (exclusive)"
     cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"

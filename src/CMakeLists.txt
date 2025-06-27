@@ -94,6 +94,7 @@ add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                     SOURCES
                                         builder.cpp.mochi
                                         enums.cpp.mochi
+                                        node/inst_kind.cpp.mochi
                                         node/inst_view.cpp.mochi
                                         node/inst_view.hpp.mochi
                                         node/visit.hpp.mochi

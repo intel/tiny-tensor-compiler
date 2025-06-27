@@ -21,6 +21,7 @@ enum class generator {
     enum_hpp,
     inst_cpp,
     inst_hpp,
+    inst_kind_cpp,
     inst_forward_hpp,
     inst_visit_hpp,
     template_,
