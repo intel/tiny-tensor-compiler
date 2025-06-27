@@ -20,13 +20,6 @@ inst @cast "Cast instruction" {
     ret %result "target type"
 }
 
-inst @compare "Comparison instruction" {
-    prop %cond => @cmp_condition "comparison type"
-    op %a                        "left-hand operand"
-    op %b                        "right-hand operand"
-    ret %result                  "result type"
-}
-
 inst @constant "Constant instruction" {
     skip_builder
     prop %value => "constant_value_type" "constant value"
@@ -312,6 +305,21 @@ inst @subgroup_linear_id : @builtin "Subgroup linear id instruction" {
 inst @subgroup_local_id : @builtin "Subgroup local id instruction" {
     spmd
 }
+
+; Comparison
+
+inst @compare "Comparison instruction" {
+    op %a                        "left-hand operand"
+    op %b                        "right-hand operand"
+    ret %result                  "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @equal : @compare "Equal instruction" {}
+inst @not_equal : @compare "Not equal instruction" {}
+inst @greater_than : @compare "Greater instruction" {}
+inst @greater_than_equal : @compare "Greater than or equal instruction" {}
+inst @less_than : @compare "Less than instruction" {}
+inst @less_than_equal : @compare "Less than or equal instruction" {}
 
 
 ; Loops

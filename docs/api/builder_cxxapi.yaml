@@ -5,7 +5,6 @@ Builder C++-API:
     enum:
       - tinytc::address_space
       - tinytc::checked_flag
-      - tinytc::cmp_condition
       - tinytc::comp3
       - tinytc::matrix_use
       - tinytc::reduce_mode
@@ -16,7 +15,6 @@ Builder C++-API:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
       - tinytc::to_string(checked_flag)
-      - tinytc::to_string(cmp_condition)
       - tinytc::to_string(comp3)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(reduce_mode)
@@ -74,7 +72,6 @@ Builder C++-API:
       - tinytc::creator< alloca_inst >
       - tinytc::creator< barrier_inst >
       - tinytc::creator< cast_inst >
-      - tinytc::creator< compare_inst >
       - tinytc::creator< constant_inst >
       - tinytc::creator< cooperative_matrix_apply_inst >
       - tinytc::creator< cooperative_matrix_extract_inst >
@@ -92,7 +89,6 @@ Builder C++-API:
       - tinytc::creator< if_inst >
       - tinytc::creator< lifetime_stop_inst >
       - tinytc::creator< load_inst >
-      - tinytc::creator< math_unary_inst >
       - tinytc::creator< parallel_inst >
       - tinytc::creator< size_inst >
       - tinytc::creator< subgroup_broadcast_inst >
@@ -131,6 +127,12 @@ Builder C++-API:
       - tinytc::creator< subgroup_id_inst >
       - tinytc::creator< subgroup_linear_id_inst >
       - tinytc::creator< subgroup_local_id_inst >
+      - tinytc::creator< equal_inst >
+      - tinytc::creator< not_equal_inst >
+      - tinytc::creator< greater_than_inst >
+      - tinytc::creator< greater_than_equal_inst >
+      - tinytc::creator< less_than_inst >
+      - tinytc::creator< less_than_equal_inst >
       - tinytc::creator< for_inst >
       - tinytc::creator< foreach_inst >
       - tinytc::creator< cos_inst >

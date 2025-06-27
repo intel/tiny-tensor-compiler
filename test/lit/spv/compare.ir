@@ -7,12 +7,12 @@
 ; CHECK: %[[#BOOL2:]] = OpTypeVector %[[#BOOL]] 2
 
 func @tint(%a: i64, %b: i64) {
-    %0 = cmp.eq %a, %b : bool
-    %1 = cmp.ne %a, %b : bool
-    %2 = cmp.gt %a, %b : bool
-    %3 = cmp.ge %a, %b : bool
-    %4 = cmp.lt %a, %b : bool
-    %5 = cmp.le %a, %b : bool
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
 ; CHECK:      %[[#]] = OpIEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpINotEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpSGreaterThan %[[#BOOL]] %[[#]] %[[#]]
@@ -22,12 +22,12 @@ func @tint(%a: i64, %b: i64) {
 }
 
 func @tfloat(%a: f32, %b: f32) {
-    %0 = cmp.eq %a, %b : bool
-    %1 = cmp.ne %a, %b : bool
-    %2 = cmp.gt %a, %b : bool
-    %3 = cmp.ge %a, %b : bool
-    %4 = cmp.lt %a, %b : bool
-    %5 = cmp.le %a, %b : bool
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
 ; CHECK:      %[[#]] = OpFOrdEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFUnordNotEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFOrdGreaterThan %[[#BOOL]] %[[#]] %[[#]]
@@ -37,12 +37,12 @@ func @tfloat(%a: f32, %b: f32) {
 }
 
 func @thalf(%a: f16, %b: f16) {
-    %0 = cmp.eq %a, %b : bool
-    %1 = cmp.ne %a, %b : bool
-    %2 = cmp.gt %a, %b : bool
-    %3 = cmp.ge %a, %b : bool
-    %4 = cmp.lt %a, %b : bool
-    %5 = cmp.le %a, %b : bool
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
+    %2 = greater_than %a, %b : bool
+    %3 = greater_than_equal %a, %b : bool
+    %4 = less_than %a, %b : bool
+    %5 = less_than_equal %a, %b : bool
 ; CHECK:      %[[#]] = OpFOrdEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFUnordNotEqual %[[#BOOL]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpFOrdGreaterThan %[[#BOOL]] %[[#]] %[[#]]
@@ -52,8 +52,8 @@ func @thalf(%a: f16, %b: f16) {
 }
 
 func @tcomplex(%a: c32, %b: c32) {
-    %0 = cmp.eq %a, %b : bool
-    %1 = cmp.ne %a, %b : bool
+    %0 = equal %a, %b : bool
+    %1 = not_equal %a, %b : bool
 ; CHECK:      %[[#COMPONENTS_EQUAL:]] = OpFOrdEqual %[[#BOOL2]] %[[#]] %[[#]]
 ; CHECK-NEXT: %[[#]] = OpAll %[[#BOOL]] %[[#COMPONENTS_EQUAL]]
 ; CHECK-NEXT: %[[#COMPONENTS_NOT_EQUAL:]] = OpFUnordNotEqual %[[#BOOL2]] %[[#]] %[[#]]

@@ -48,8 +48,7 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
         [&](region_builder &bb, value block, bool is_remainder, value trip_count) {
             auto loop_var0 = bb.create<add_inst>(block, work_item_offset, ity, loc);
             if (is_remainder) {
-                auto cond =
-                    bb.create<compare_inst>(cmp_condition::lt, sg_lid, trip_count, bool_ty, loc);
+                auto cond = bb.create<less_than_inst>(sg_lid, trip_count, bool_ty, loc);
                 bb.if_condition(cond, [&](region_builder &bb) { make_body(bb, loop_var0); }, loc);
             } else {
                 make_body(bb, loop_var0);

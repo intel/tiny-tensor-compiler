@@ -154,37 +154,6 @@ void cast_inst::setup_and_check() {
     }
 }
 
-void compare_inst::setup_and_check() {
-    auto ty = result().ty();
-
-    if (!isa<boolean_data_type>(*ty)) {
-        throw compilation_error(loc(), status::ir_expected_boolean);
-    }
-
-    auto at = get_scalar_type(loc(), a());
-    auto bt = get_scalar_type(loc(), b());
-
-    if (at->ty() != bt->ty()) {
-        throw compilation_error(loc(), {&a(), &b()}, status::ir_scalar_mismatch);
-    }
-
-    bool inst_supports_complex = true;
-    switch (cond()) {
-    case cmp_condition::eq:
-    case cmp_condition::ne:
-        break;
-    case cmp_condition::gt:
-    case cmp_condition::ge:
-    case cmp_condition::lt:
-    case cmp_condition::le:
-        inst_supports_complex = false;
-        break;
-    }
-    if (!inst_supports_complex && is_complex_type(at->ty())) {
-        throw compilation_error(loc(), {&a(), &b()}, status::ir_complex_unsupported);
-    }
-}
-
 void constant_inst::setup_and_check() {
     auto ty = result().ty();
 
@@ -1019,6 +988,44 @@ void subgroup_linear_id_inst::setup_and_check() {
 }
 void subgroup_local_id_inst::setup_and_check() {
     builtin_inst::setup_and_check(scalar_type::i32, status::ir_expected_i32);
+}
+
+void compare_inst::setup_and_check() {}
+void compare_inst::setup_and_check(support_flags support) {
+    auto ty = result().ty();
+
+    if (!isa<boolean_data_type>(*ty)) {
+        throw compilation_error(loc(), status::ir_expected_boolean);
+    }
+
+    auto at = get_scalar_type(loc(), a());
+    auto bt = get_scalar_type(loc(), b());
+
+    if (at->ty() != bt->ty()) {
+        throw compilation_error(loc(), {&a(), &b()}, status::ir_scalar_mismatch);
+    }
+
+    if (!(support & supports_complex) && is_complex_type(at->ty())) {
+        throw compilation_error(loc(), {&a(), &b()}, status::ir_complex_unsupported);
+    }
+}
+void equal_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void not_equal_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float | supports_complex);
+}
+void greater_than_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float);
+}
+void greater_than_equal_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float);
+}
+void less_than_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float);
+}
+void less_than_equal_inst::setup_and_check() {
+    compare_inst::setup_and_check(supports_int | supports_float);
 }
 
 void loop_inst::setup_and_check() {}

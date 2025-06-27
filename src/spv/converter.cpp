@@ -280,50 +280,54 @@ void inst_converter::operator()(cast_inst in) {
 }
 
 void inst_converter::operator()(compare_inst in) {
-    auto const compare_int = [&](cmp_condition cond, spv_inst *spv_to_ty, spv_inst *a,
+    auto const compare_int = [&](IK cond, spv_inst *spv_to_ty, spv_inst *a,
                                  spv_inst *b) -> spv_inst * {
         switch (cond) {
-        case cmp_condition::eq:
+        case IK::IK_equal:
             return mod_->add<OpIEqual>(spv_to_ty, a, b);
-        case cmp_condition::ne:
+        case IK::IK_not_equal:
             return mod_->add<OpINotEqual>(spv_to_ty, a, b);
-        case cmp_condition::gt:
+        case IK::IK_greater_than:
             return mod_->add<OpSGreaterThan>(spv_to_ty, a, b);
-        case cmp_condition::ge:
+        case IK::IK_greater_than_equal:
             return mod_->add<OpSGreaterThanEqual>(spv_to_ty, a, b);
-        case cmp_condition::lt:
+        case IK::IK_less_than:
             return mod_->add<OpSLessThan>(spv_to_ty, a, b);
-        case cmp_condition::le:
+        case IK::IK_less_than_equal:
             return mod_->add<OpSLessThanEqual>(spv_to_ty, a, b);
+        default:
+            break;
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
-    auto const compare_float = [&](cmp_condition cond, spv_inst *spv_to_ty, spv_inst *a,
+    auto const compare_float = [&](IK cond, spv_inst *spv_to_ty, spv_inst *a,
                                    spv_inst *b) -> spv_inst * {
         switch (cond) {
-        case cmp_condition::eq:
+        case IK::IK_equal:
             return mod_->add<OpFOrdEqual>(spv_to_ty, a, b);
-        case cmp_condition::ne:
+        case IK::IK_not_equal:
             return mod_->add<OpFUnordNotEqual>(spv_to_ty, a, b);
-        case cmp_condition::gt:
+        case IK::IK_greater_than:
             return mod_->add<OpFOrdGreaterThan>(spv_to_ty, a, b);
-        case cmp_condition::ge:
+        case IK::IK_greater_than_equal:
             return mod_->add<OpFOrdGreaterThanEqual>(spv_to_ty, a, b);
-        case cmp_condition::lt:
+        case IK::IK_less_than:
             return mod_->add<OpFOrdLessThan>(spv_to_ty, a, b);
-        case cmp_condition::le:
+        case IK::IK_less_than_equal:
             return mod_->add<OpFOrdLessThanEqual>(spv_to_ty, a, b);
+        default:
+            break;
         }
         throw compilation_error(in.loc(), status::internal_compiler_error);
     };
-    auto const compare_complex = [&](cmp_condition cond, spv_inst *spv_to_ty, spv_inst *a,
+    auto const compare_complex = [&](IK cond, spv_inst *spv_to_ty, spv_inst *a,
                                      spv_inst *b) -> spv_inst * {
         switch (cond) {
-        case cmp_condition::eq: {
+        case IK::IK_equal: {
             auto components_equal = mod_->add<OpFOrdEqual>(unique_.bool2_ty(), a, b);
             return mod_->add<OpAll>(spv_to_ty, components_equal);
         }
-        case cmp_condition::ne: {
+        case IK::IK_not_equal: {
             auto components_not_equal = mod_->add<OpFUnordNotEqual>(unique_.bool2_ty(), a, b);
             return mod_->add<OpAll>(spv_to_ty, components_not_equal);
         }
@@ -331,7 +335,7 @@ void inst_converter::operator()(compare_inst in) {
             throw compilation_error(in.loc(), status::ir_complex_unsupported);
         }
     };
-    auto const make = [&](scalar_type a_ty, cmp_condition cond, spv_inst *spv_to_ty, spv_inst *a,
+    auto const make = [&](scalar_type a_ty, IK cond, spv_inst *spv_to_ty, spv_inst *a,
                           spv_inst *b) -> spv_inst * {
         switch (a_ty) {
         case scalar_type::i8:
@@ -362,7 +366,7 @@ void inst_converter::operator()(compare_inst in) {
     auto av = val(in.a());
     auto bv = val(in.b());
     auto a_ty = get_scalar_type(in.a());
-    declare(in.result(), make(a_ty, in.cond(), spv_to_ty, av, bv));
+    declare(in.result(), make(a_ty, in.get().type_id(), spv_to_ty, av, bv));
 }
 
 void inst_converter::operator()(constant_inst in) {

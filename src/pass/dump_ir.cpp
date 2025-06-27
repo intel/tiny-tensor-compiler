@@ -213,7 +213,7 @@ void dump_ir_pass::operator()(cast_inst c) {
 
 void dump_ir_pass::operator()(compare_inst a) {
     dump_val(a.result());
-    *os_ << " = cmp." << to_string(a.cond()) << " ";
+    *os_ << " = " << to_string(a.get().type_id()) << " ";
     dump_val(a.a());
     *os_ << ", ";
     dump_val(a.b());

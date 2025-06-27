@@ -94,8 +94,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         auto modified_val = value{};
         if ((u + 1) * col_inc_factor > cl.shape1) {
             auto cshape1 = bb_.create<constant_inst>(cl.shape1, i32_ty, in.loc());
-            auto cond =
-                bb_.create<compare_inst>(cmp_condition::lt, col, cshape1, bool_ty, in.loc());
+            auto cond = bb_.create<less_than_inst>(col, cshape1, bool_ty, in.loc());
             modified_val = bb_.ifelse(
                                   cond,
                                   [&](region_builder &bb) {

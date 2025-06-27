@@ -1132,13 +1132,13 @@ Comparison
 
 .. code:: abnf
 
-    cmp-type                =  "cmp.eq" /
-                               "cmp.ne" /
-                               "cmp.gt" /
-                               "cmp.ge" /
-                               "cmp.lt" /
-                               "cmp.le"
-    value-instruction       =/ cmp-type local-identifier "," local-identifier ":" "bool"
+    comparison-type         =  "equal" /
+                               "not_equal" /
+                               "greater_than" /
+                               "greater_than_equal" /
+                               "less_than" /
+                               "less_than_equal"
+    value-instruction       =/ comparison-type local-identifier "," local-identifier ":" "bool"
 
 Overview
 ~~~~~~~~
@@ -1149,16 +1149,16 @@ Both operands must have the same scalar type and the returned value has boolean 
 The following table shows the comparisons' description and the types that are allowed for the comparison.
 The backslash "\\" is used to exclude types from the list of allowed types.
 
-==== =========================== =====================
-Cond Allowed type Description
-==== =========================== =====================
-eq   scalar-type                 Equal
-ne   scalar-type                 Not equal
-gt   scalar-type \\ complex-type Greater than
-ge   scalar-type \\ complex-type Greater than or equal
-lt   scalar-type \\ complex-type Less than
-le   scalar-type \\ complex-type Less than or equal
-==== =========================== =====================
+=================== =========================== =====================
+Cond                Allowed type                Description
+=================== =========================== =====================
+equal               scalar-type                 Equal
+not_equal           scalar-type                 Not equal
+greater_than        scalar-type \\ complex-type Greater than
+greather_than_equal scalar-type \\ complex-type Greater than or equal
+less_than           scalar-type \\ complex-type Less than
+less_than_equal     scalar-type \\ complex-type Less than or equal
+=================== =========================== =====================
 
 Constant
 ........

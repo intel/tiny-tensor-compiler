@@ -114,13 +114,13 @@ func @known_cast() {
 func @known_compare() {
     %0 = constant 1.0 : f32
     %1 = constant 2.0 : f32
-    %2 = cmp.eq %0, %0 : bool
-    %3 = cmp.eq %0, %1 : bool
+    %2 = equal %0, %0 : bool
+    %3 = equal %0, %1 : bool
 ; CHECK-LABEL: func @known_compare({{.*}}
 ; CHECK:       %2 = constant true : bool
-; CHECK-NEXT:  %3 = cmp.eq %0, %0 : bool
+; CHECK-NEXT:  %3 = equal %0, %0 : bool
 ; CHECK-NEXT:  %4 = constant false : bool
-; CHECK-NEXT:  %5 = cmp.eq %0, %1 : bool
+; CHECK-NEXT:  %5 = equal %0, %1 : bool
 }
 
 func @known_math() {

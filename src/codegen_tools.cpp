@@ -54,7 +54,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
 
     auto sg_id_cast = instant_constant_fold_add(bb, create<cast_inst>(sg_id, ity));
     auto is_blocks_gt_0 =
-        instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::gt, blocks, c0, bool_ty));
+        instant_constant_fold_add(bb, create<greater_than_inst>(blocks, c0, bool_ty));
     bb.if_condition(is_blocks_gt_0, [&](region_builder &bb) {
         auto block_start = instant_constant_fold_add(bb, create<mul_inst>(c_sgs, sg_id_cast, ity));
         auto block_end = instant_constant_fold_add(bb, create<mul_inst>(c_sgs, blocks, ity));
@@ -64,11 +64,10 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
             for_attributes);
     });
 
-    auto condition0 =
-        instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::gt, rem, c0, bool_ty));
+    auto condition0 = instant_constant_fold_add(bb, create<greater_than_inst>(rem, c0, bool_ty));
     bb.if_condition(condition0, [&](region_builder &bb) {
-        auto condition1 = instant_constant_fold_add(
-            bb, create<compare_inst>(cmp_condition::eq, sg_id_cast, c_tiles_1, bool_ty));
+        auto condition1 =
+            instant_constant_fold_add(bb, create<equal_inst>(sg_id_cast, c_tiles_1, bool_ty));
         bb.if_condition(condition1, [&](region_builder &bb) {
             auto block = instant_constant_fold_add(bb, create<mul_inst>(blocks, c_sgs, ity));
             body(bb, block, true, rem);
@@ -103,8 +102,7 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     // The following if makes it easy to eliminate the remainder handler in optimization if rem
     // == 0 is known at compile time. Without the if, we would need to prove that block_start_1
     // is non-negative to eliminate the for-loop.
-    auto is_rem_gt_0 =
-        instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::gt, rem, c0, bool_ty));
+    auto is_rem_gt_0 = instant_constant_fold_add(bb, create<greater_than_inst>(rem, c0, bool_ty));
     bb.if_condition(is_rem_gt_0, [&](region_builder &bb) {
         auto block_start_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, sg_id_cast, ity));
         auto block_end_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, rem, ity));
@@ -315,7 +313,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
         auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
         auto c_zero = bb.constant_zero(i32_ty, loc);
-        auto is_sglid_0 = bb.create<compare_inst>(cmp_condition::eq, sglid, c_zero, bool_ty, loc);
+        auto is_sglid_0 = bb.create<equal_inst>(sglid, c_zero, bool_ty, loc);
         bb.if_condition(
             is_sglid_0,
             [&](region_builder &bb) {
@@ -326,7 +324,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
             loc);
         bb.create<barrier_inst>(static_cast<tinytc_address_spaces_t>(address_space::local), loc);
 
-        auto is_lid_0 = bb.create<compare_inst>(cmp_condition::eq, sgid, c_zero, bool_ty, loc);
+        auto is_lid_0 = bb.create<equal_inst>(sgid, c_zero, bool_ty, loc);
         bb.if_condition(
             is_lid_0,
             [&](region_builder &bb) {
@@ -365,8 +363,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
 
         auto c_sgs_1 = bb.create<constant_inst>(subgroup_size_ - 1, i32_ty, loc);
-        auto is_last_sglid =
-            bb.create<compare_inst>(cmp_condition::eq, sglid, c_sgs_1, bool_ty, loc);
+        auto is_last_sglid = bb.create<equal_inst>(sglid, c_sgs_1, bool_ty, loc);
         bb.if_condition(
             is_last_sglid,
             [&](region_builder &bb) {
@@ -390,8 +387,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
         if (compute_sum) {
             auto c_num_tiles_1 = bb.create<constant_inst>(num_tiles_ - 1, i32_ty, loc);
             auto c_num_tiles_1_index = bb.create<cast_inst>(c_num_tiles_1, index_ty, loc);
-            auto is_last_sgid =
-                bb.create<compare_inst>(cmp_condition::eq, sgid, c_num_tiles_1, bool_ty, loc);
+            auto is_last_sgid = bb.create<equal_inst>(sgid, c_num_tiles_1, bool_ty, loc);
             auto is_last_work_item = bb.create<and_inst>(is_last_sglid, is_last_sgid, bool_ty, loc);
             bb.if_condition(
                 is_last_work_item,

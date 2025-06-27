@@ -272,7 +272,7 @@ auto constant_folding::operator()(compare_inst in) -> fold_result {
         throw compilation_error(op_a.loc(), status::ir_expected_scalar);
     }
 
-    auto computer = compute_compare{in.cond(), in.result().ty(), in.loc()};
+    auto computer = compute_compare{in.get().type_id(), in.result().ty(), in.loc()};
     auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value(), b_const.value());
 }

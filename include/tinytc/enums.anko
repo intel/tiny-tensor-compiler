@@ -131,15 +131,6 @@ enum @scalar_type "Scalar types" {
     case %c64   => 10 "Double precision complex (2x64 bit)"
 }
 
-enum @cmp_condition "Compare operation" {
-    case %eq => 0 "equals"
-    case %ne => 1 "not equal"
-    case %gt => 2 "greater than"
-    case %ge => 3 "greather or equal than"
-    case %lt => 4 "less than"
-    case %le => 5 "less or equal than"
-}
-
 enum @comp3 "Named components of 3d vector" {
     case %x => 0  ".x"
     case %y => 1  ".y"

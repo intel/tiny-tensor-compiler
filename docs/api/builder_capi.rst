@@ -16,8 +16,6 @@ Common
 
   * :ref:`tinytc_checked_flag_t`
 
-  * :ref:`tinytc_cmp_condition_t`
-
   * :ref:`tinytc_comp3_t`
 
   * :ref:`tinytc_matrix_use_t`
@@ -39,8 +37,6 @@ Common
   * :ref:`tinytc_address_space_to_string`
 
   * :ref:`tinytc_checked_flag_to_string`
-
-  * :ref:`tinytc_cmp_condition_to_string`
 
   * :ref:`tinytc_comp3_to_string`
 
@@ -117,13 +113,6 @@ tinytc_checked_flag_t
 
 .. doxygenenum:: tinytc_checked_flag_t
 
-.. _tinytc_cmp_condition_t:
-
-tinytc_cmp_condition_t
-......................
-
-.. doxygenenum:: tinytc_cmp_condition_t
-
 .. _tinytc_comp3_t:
 
 tinytc_comp3_t
@@ -192,13 +181,6 @@ tinytc_checked_flag_to_string
 .............................
 
 .. doxygenfunction:: tinytc_checked_flag_to_string
-
-.. _tinytc_cmp_condition_to_string:
-
-tinytc_cmp_condition_to_string
-..............................
-
-.. doxygenfunction:: tinytc_cmp_condition_to_string
 
 .. _tinytc_comp3_to_string:
 
@@ -592,8 +574,6 @@ Instruction
 
   * :ref:`tinytc_cast_inst_create`
 
-  * :ref:`tinytc_compare_inst_create`
-
   * :ref:`tinytc_constant_inst_create_boolean`
 
   * :ref:`tinytc_constant_inst_create_complex`
@@ -748,6 +728,18 @@ Instruction
 
   * :ref:`tinytc_subgroup_reduce_min_inst_create`
 
+  * :ref:`tinytc_equal_inst_create`
+
+  * :ref:`tinytc_not_equal_inst_create`
+
+  * :ref:`tinytc_greater_than_inst_create`
+
+  * :ref:`tinytc_greater_than_equal_inst_create`
+
+  * :ref:`tinytc_less_than_inst_create`
+
+  * :ref:`tinytc_less_than_equal_inst_create`
+
   * :ref:`tinytc_for_inst_create`
 
   * :ref:`tinytc_foreach_inst_create`
@@ -785,13 +777,6 @@ tinytc_cast_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_cast_inst_create
-
-.. _tinytc_compare_inst_create:
-
-tinytc_compare_inst_create
-..........................
-
-.. doxygenfunction:: tinytc_compare_inst_create
 
 .. _tinytc_constant_inst_create_boolean:
 
@@ -1331,6 +1316,48 @@ tinytc_subgroup_reduce_min_inst_create
 ......................................
 
 .. doxygenfunction:: tinytc_subgroup_reduce_min_inst_create
+
+.. _tinytc_equal_inst_create:
+
+tinytc_equal_inst_create
+........................
+
+.. doxygenfunction:: tinytc_equal_inst_create
+
+.. _tinytc_not_equal_inst_create:
+
+tinytc_not_equal_inst_create
+............................
+
+.. doxygenfunction:: tinytc_not_equal_inst_create
+
+.. _tinytc_greater_than_inst_create:
+
+tinytc_greater_than_inst_create
+...............................
+
+.. doxygenfunction:: tinytc_greater_than_inst_create
+
+.. _tinytc_greater_than_equal_inst_create:
+
+tinytc_greater_than_equal_inst_create
+.....................................
+
+.. doxygenfunction:: tinytc_greater_than_equal_inst_create
+
+.. _tinytc_less_than_inst_create:
+
+tinytc_less_than_inst_create
+............................
+
+.. doxygenfunction:: tinytc_less_than_inst_create
+
+.. _tinytc_less_than_equal_inst_create:
+
+tinytc_less_than_equal_inst_create
+..................................
+
+.. doxygenfunction:: tinytc_less_than_equal_inst_create
 
 .. _tinytc_for_inst_create:
 

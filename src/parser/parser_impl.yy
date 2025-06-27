@@ -188,6 +188,12 @@
     SUBGROUP_ID                   "subgroup_id"
     SUBGROUP_LINEAR_ID            "subgroup_linear_id"
     SUBGROUP_LOCAL_ID             "subgroup_local_id"
+    EQUAL                         "equal"
+    NOT_EQUAL                     "not_equal"
+    GREATER_THAN                  "greater_than"
+    GREATER_THAN_EQUAL            "greater_than_equal"
+    LESS_THAN                     "less_than"
+    LESS_THAN_EQUAL               "less_than_equal"
     FOR                           "for"
     FOREACH                       "foreach"
     COS                           "cos"
@@ -218,7 +224,6 @@
 %token <scalar_type> INTEGER_TYPE
 %token <scalar_type> FLOATING_TYPE
 %token <comp3> COMP3
-%token <cmp_condition> CMP_CONDITION
 %token <reduce_mode> REDUCE_MODE
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
@@ -817,19 +822,12 @@ valued_inst:
     }
 ;
 
-valued_inst:
-    CMP_CONDITION var[a] COMMA var[b] COLON boolean_type {
-        try {
-            $$ = inst {
-                compare_inst::create($CMP_CONDITION, std::move($a), std::move($b), std::move($boolean_type),
-                                     @valued_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: EQUAL              var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = equal_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: NOT_EQUAL          var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = not_equal_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: GREATER_THAN       var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = greater_than_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: GREATER_THAN_EQUAL var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = greater_than_equal_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: LESS_THAN          var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = less_than_inst::create($a, $b, $ty, @valued_inst); }); };
+valued_inst: LESS_THAN_EQUAL    var[a] COMMA var[b] COLON boolean_type[ty] { yytry(ctx, [&] { $$ = less_than_equal_inst::create($a, $b, $ty, @valued_inst); }); };
 
 valued_inst:
     CONSTANT LSQBR FLOATING_CONSTANT[re] COMMA FLOATING_CONSTANT[im] RSQBR COLON data_type {

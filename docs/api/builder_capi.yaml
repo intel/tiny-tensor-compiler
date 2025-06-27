@@ -5,7 +5,6 @@ Builder C-API:
     enum:
       - tinytc_address_space_t
       - tinytc_checked_flag_t
-      - tinytc_cmp_condition_t
       - tinytc_comp3_t
       - tinytc_matrix_use_t
       - tinytc_reduce_mode_t
@@ -17,7 +16,6 @@ Builder C-API:
     function:
       - tinytc_address_space_to_string
       - tinytc_checked_flag_to_string
-      - tinytc_cmp_condition_to_string
       - tinytc_comp3_to_string
       - tinytc_matrix_use_to_string
       - tinytc_reduce_mode_to_string
@@ -76,7 +74,6 @@ Builder C-API:
       - tinytc_alloca_inst_create
       - tinytc_barrier_inst_create
       - tinytc_cast_inst_create
-      - tinytc_compare_inst_create
       - tinytc_constant_inst_create_boolean
       - tinytc_constant_inst_create_complex
       - tinytc_constant_inst_create_float
@@ -154,6 +151,12 @@ Builder C-API:
       - tinytc_subgroup_reduce_add_inst_create
       - tinytc_subgroup_reduce_max_inst_create
       - tinytc_subgroup_reduce_min_inst_create
+      - tinytc_equal_inst_create
+      - tinytc_not_equal_inst_create
+      - tinytc_greater_than_inst_create
+      - tinytc_greater_than_equal_inst_create
+      - tinytc_less_than_inst_create
+      - tinytc_less_than_equal_inst_create
       - tinytc_for_inst_create
       - tinytc_foreach_inst_create
       - tinytc_inst_get_parent_region

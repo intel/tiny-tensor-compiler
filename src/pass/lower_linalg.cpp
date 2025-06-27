@@ -164,7 +164,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto tmp = instant_constant_fold_add(bb, create<div_inst>(K, c_k_block_size, index_ty, loc));
     auto K0 = instant_constant_fold_add(bb, create<mul_inst>(tmp, c_k_block_size, index_ty, loc));
     auto needs_remainder =
-        instant_constant_fold_add(bb, create<compare_inst>(cmp_condition::lt, K0, K, bool_ty, loc));
+        instant_constant_fold_add(bb, create<less_than_inst>(K0, K, bool_ty, loc));
     auto r = get_bool_constant(needs_remainder);
     if (r) {
         if (*r != 0) {
@@ -291,8 +291,8 @@ void linalg_generator::operator()(axpby_inst in) {
         auto sg_id = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
         auto sg_lid = bb.create<subgroup_local_id_inst>(i32_ty, in.loc());
         auto c0 = bb.create<constant_inst>(0, i32_ty);
-        auto cond0 = bb.create<compare_inst>(cmp_condition::eq, sg_id, c0, bool_ty, in.loc());
-        auto cond1 = bb.create<compare_inst>(cmp_condition::eq, sg_lid, c0, bool_ty, in.loc());
+        auto cond0 = bb.create<equal_inst>(sg_id, c0, bool_ty, in.loc());
+        auto cond1 = bb.create<equal_inst>(sg_lid, c0, bool_ty, in.loc());
         auto cond = bb.create<and_inst>(cond0, cond1, cond0->ty());
         bb.if_condition(cond, [&](region_builder &bb) {
             auto a =
@@ -376,8 +376,7 @@ void linalg_generator::operator()(cumsum_inst in) {
         auto a_scan = bb.for_loop(
             from_index, trip_count, c_step, {c_init}, {bt->element_data_ty()},
             [&](region_builder &bb, array_view<value> args) {
-                auto is_in_bounds =
-                    bb.create<compare_inst>(cmp_condition::lt, args[0], shape0, bool_ty, loc);
+                auto is_in_bounds = bb.create<less_than_inst>(args[0], shape0, bool_ty, loc);
                 auto a = bb.ifelse(
                     is_in_bounds,
                     [&](region_builder &bb) {
@@ -751,8 +750,7 @@ void linalg_generator::operator()(sum_inst in) {
         auto acc_reduced = reducer.make(bb, acc[0], in.loc());
 
         auto c_zero = bb.constant_zero(i32_ty, in.loc());
-        auto is_first_work_item =
-            bb.create<compare_inst>(cmp_condition::eq, from1, c_zero, bool_ty, in.loc());
+        auto is_first_work_item = bb.create<equal_inst>(from1, c_zero, bool_ty, in.loc());
         bb.if_condition(
             is_first_work_item,
             [&](region_builder &bb) {

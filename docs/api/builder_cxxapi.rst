@@ -16,8 +16,6 @@ Common
 
   * :ref:`tinytc::checked_flag`
 
-  * :ref:`tinytc::cmp_condition`
-
   * :ref:`tinytc::comp3`
 
   * :ref:`tinytc::matrix_use`
@@ -37,8 +35,6 @@ Common
   * :ref:`tinytc::to_string(address_space)`
 
   * :ref:`tinytc::to_string(checked_flag)`
-
-  * :ref:`tinytc::to_string(cmp_condition)`
 
   * :ref:`tinytc::to_string(comp3)`
 
@@ -84,13 +80,6 @@ checked_flag
 ............
 
 .. doxygenenum:: tinytc::checked_flag
-
-.. _tinytc::cmp_condition:
-
-cmp_condition
-.............
-
-.. doxygenenum:: tinytc::cmp_condition
 
 .. _tinytc::comp3:
 
@@ -157,13 +146,6 @@ to_string(checked_flag)
 .......................
 
 .. doxygenfunction:: tinytc::to_string(checked_flag)
-
-.. _tinytc::to_string(cmp_condition):
-
-to_string(cmp_condition)
-........................
-
-.. doxygenfunction:: tinytc::to_string(cmp_condition)
 
 .. _tinytc::to_string(comp3):
 
@@ -526,8 +508,6 @@ Instruction
 
   * :ref:`tinytc::creator\< cast_inst \>`
 
-  * :ref:`tinytc::creator\< compare_inst \>`
-
   * :ref:`tinytc::creator\< constant_inst \>`
 
   * :ref:`tinytc::creator\< cooperative_matrix_apply_inst \>`
@@ -561,8 +541,6 @@ Instruction
   * :ref:`tinytc::creator\< lifetime_stop_inst \>`
 
   * :ref:`tinytc::creator\< load_inst \>`
-
-  * :ref:`tinytc::creator\< math_unary_inst \>`
 
   * :ref:`tinytc::creator\< parallel_inst \>`
 
@@ -639,6 +617,18 @@ Instruction
   * :ref:`tinytc::creator\< subgroup_linear_id_inst \>`
 
   * :ref:`tinytc::creator\< subgroup_local_id_inst \>`
+
+  * :ref:`tinytc::creator\< equal_inst \>`
+
+  * :ref:`tinytc::creator\< not_equal_inst \>`
+
+  * :ref:`tinytc::creator\< greater_than_inst \>`
+
+  * :ref:`tinytc::creator\< greater_than_equal_inst \>`
+
+  * :ref:`tinytc::creator\< less_than_inst \>`
+
+  * :ref:`tinytc::creator\< less_than_equal_inst \>`
 
   * :ref:`tinytc::creator\< for_inst \>`
 
@@ -721,13 +711,6 @@ creator<cast_inst>
 ..................
 
 .. doxygenstruct:: tinytc::creator< cast_inst >
-
-.. _tinytc::creator\< compare_inst \>:
-
-creator<compare_inst>
-.....................
-
-.. doxygenstruct:: tinytc::creator< compare_inst >
 
 .. _tinytc::creator\< constant_inst \>:
 
@@ -847,13 +830,6 @@ creator<load_inst>
 ..................
 
 .. doxygenstruct:: tinytc::creator< load_inst >
-
-.. _tinytc::creator\< math_unary_inst \>:
-
-creator<math_unary_inst>
-........................
-
-.. doxygenstruct:: tinytc::creator< math_unary_inst >
 
 .. _tinytc::creator\< parallel_inst \>:
 
@@ -1120,6 +1096,48 @@ creator<subgroup_local_id_inst>
 ...............................
 
 .. doxygenstruct:: tinytc::creator< subgroup_local_id_inst >
+
+.. _tinytc::creator\< equal_inst \>:
+
+creator<equal_inst>
+...................
+
+.. doxygenstruct:: tinytc::creator< equal_inst >
+
+.. _tinytc::creator\< not_equal_inst \>:
+
+creator<not_equal_inst>
+.......................
+
+.. doxygenstruct:: tinytc::creator< not_equal_inst >
+
+.. _tinytc::creator\< greater_than_inst \>:
+
+creator<greater_than_inst>
+..........................
+
+.. doxygenstruct:: tinytc::creator< greater_than_inst >
+
+.. _tinytc::creator\< greater_than_equal_inst \>:
+
+creator<greater_than_equal_inst>
+................................
+
+.. doxygenstruct:: tinytc::creator< greater_than_equal_inst >
+
+.. _tinytc::creator\< less_than_inst \>:
+
+creator<less_than_inst>
+.......................
+
+.. doxygenstruct:: tinytc::creator< less_than_inst >
+
+.. _tinytc::creator\< less_than_equal_inst \>:
+
+creator<less_than_equal_inst>
+.............................
+
+.. doxygenstruct:: tinytc::creator< less_than_equal_inst >
 
 .. _tinytc::creator\< for_inst \>:
 

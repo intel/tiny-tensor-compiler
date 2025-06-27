@@ -396,7 +396,7 @@ struct compute_binop_identities {
 };
 
 struct compute_compare {
-    cmp_condition cond;
+    IK cond;
     data_type ty;
     location const &loc;
 
@@ -405,24 +405,26 @@ struct compute_compare {
     auto operator()(T a, T b) -> fold_result {
         bool val = false;
         switch (cond) {
-        case cmp_condition::eq:
+        case IK::IK_equal:
             val = (a == b);
             break;
-        case cmp_condition::ne:
+        case IK::IK_not_equal:
             val = (a != b);
             break;
-        case cmp_condition::gt:
+        case IK::IK_greater_than:
             val = (a > b);
             break;
-        case cmp_condition::ge:
+        case IK::IK_greater_than_equal:
             val = (a >= b);
             break;
-        case cmp_condition::lt:
+        case IK::IK_less_than:
             val = (a < b);
             break;
-        case cmp_condition::le:
+        case IK::IK_less_than_equal:
             val = (a <= b);
             break;
+        default:
+            throw compilation_error(loc, status::internal_compiler_error);
         };
         return create<constant_inst>(val, ty, loc);
     }
@@ -433,10 +435,10 @@ struct compute_compare {
         const auto b = static_cast<T>(B);
         bool val = false;
         switch (cond) {
-        case cmp_condition::eq:
+        case IK::IK_equal:
             val = (a == b);
             break;
-        case cmp_condition::ne:
+        case IK::IK_not_equal:
             val = (a != b);
             break;
         default:

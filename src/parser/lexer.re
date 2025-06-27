@@ -222,12 +222,12 @@ lex:
         "subgroup_local_id"  { adv_loc(); return parser::make_SUBGROUP_LOCAL_ID(loc_); }
 
         // comparison condition
-        "cmp.eq"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::eq, loc_); }
-        "cmp.ne"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ne, loc_); }
-        "cmp.gt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::gt, loc_); }
-        "cmp.ge"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::ge, loc_); }
-        "cmp.lt"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::lt, loc_); }
-        "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
+        "equal"              { adv_loc(); return parser::make_EQUAL(loc_); }
+        "not_equal"          { adv_loc(); return parser::make_NOT_EQUAL(loc_); }
+        "greater_than"       { adv_loc(); return parser::make_GREATER_THAN(loc_); }
+        "greater_than_equal" { adv_loc(); return parser::make_GREATER_THAN_EQUAL(loc_); }
+        "less_than"          { adv_loc(); return parser::make_LESS_THAN(loc_); }
+        "less_than_equal"    { adv_loc(); return parser::make_LESS_THAN_EQUAL(loc_); }
 
         // math op
         "cos"          { adv_loc(); return parser::make_COS(loc_); }

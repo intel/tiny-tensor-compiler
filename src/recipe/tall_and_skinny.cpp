@@ -154,8 +154,8 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
                     auto M_val = bb.create<size_inst>(0, C, index_ty, my_loc());
                     auto M_val_sub_m = bb.create<sub_inst>(M_val, m, get_type(m), my_loc());
-                    auto cond = bb.create<compare_inst>(cmp_condition::lt, M_val_sub_m,
-                                                        c_M_block_size, bool_ty, my_loc());
+                    auto cond =
+                        bb.create<less_than_inst>(M_val_sub_m, c_M_block_size, bool_ty, my_loc());
                     bb.ifelse(
                         cond, [&](region_builder &bb) { dynamic_gemm(bb, M_val_sub_m); },
                         [&](region_builder &bb) { static_gemm(bb); }, {}, my_loc());
