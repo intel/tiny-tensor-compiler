@@ -512,7 +512,7 @@ instructions:
 ;
 
 instruction:
-    AXPBY transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
+    AXPBY atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 axpby_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),
@@ -582,7 +582,7 @@ instruction:
 ;
 
 instruction:
-    GEMM transpose[ta] transpose[tb] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
+    GEMM atomic transpose[ta] transpose[tb] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 gemm_inst::create($atomic, $ta, $tb, std::move($alpha), std::move($a), std::move($b),
@@ -596,7 +596,7 @@ instruction:
 ;
 
 instruction:
-    GEMV transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
+    GEMV atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 gemv_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($b),
@@ -747,7 +747,7 @@ instruction:
 ;
 
 instruction:
-    SUM transpose[ta] atomic var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
+    SUM atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 sum_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),

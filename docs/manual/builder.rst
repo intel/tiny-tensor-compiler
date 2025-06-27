@@ -86,7 +86,7 @@ by actual values:
           tinytc_inst_get_values(tmp, &num_results, &beta);
           tinytc_region_append(copy_body, tmp);
 
-          tinytc_axpby_inst_create(&tmp, tinytc_transpose_N, 0, alpha, params[0], beta, params[1], NULL);
+          tinytc_axpby_inst_create(&tmp, 0, tinytc_transpose_N, alpha, params[0], beta, params[1], NULL);
           tinytc_region_append(copy_body, tmp);
 
           // Dump program
@@ -117,7 +117,7 @@ by actual values:
           auto bb = region_builder{body};
           auto alpha = bb.add(make_constant_one(element_ty));
           auto beta = bb.add(make_constant_zero(element_ty));
-          bb.add(make_axpby(transpose::N, false, alpha, params[0], beta, params[1]));
+          bb.add(make_axpby(false, transpose::N, alpha, params[0], beta, params[1]));
 
           auto p = make_prog(ctx);
           p.add_function(std::move(f));

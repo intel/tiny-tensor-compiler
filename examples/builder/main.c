@@ -58,7 +58,7 @@ int main(void) {
     tinytc_inst_get_values(tmp, &num_results, &beta);
     tinytc_region_append(copy_body, tmp);
 
-    tinytc_axpby_inst_create(&tmp, tinytc_transpose_N, 0, alpha, params[0], beta, params[1], NULL);
+    tinytc_axpby_inst_create(&tmp, 0, tinytc_transpose_N, alpha, params[0], beta, params[1], NULL);
     tinytc_region_append(copy_body, tmp);
 
     // Dump program

@@ -531,7 +531,7 @@ Axpby
 .. code:: abnf
 
     transpose       =  ".t" / ".n"
-    instruction     =/ "axpby" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "axpby" [".atomic"] [transpose] local-identifier "," local-identifier ","
                                local-identifier "," local-identifier
 
 Overview
@@ -671,7 +671,7 @@ GEMM
 
 .. code:: abnf
 
-    instruction     =/ "gemm" transpose transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "gemm" [".atomic"] transpose transpose local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -727,7 +727,7 @@ GEMV
 
 .. code:: abnf
 
-    instruction     =/ "gemv" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "gemv" [".atomic"] transpose local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -876,7 +876,7 @@ Sum
 
 .. code:: abnf
 
-    instruction     =/ "sum" transpose [".atomic"] local-identifier "," local-identifier ","
+    instruction     =/ "sum" [".atomic"] transpose local-identifier "," local-identifier ","
                              local-identifier "," local-identifier
 
 Overview
