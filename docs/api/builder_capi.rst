@@ -14,8 +14,6 @@ Common
 
   * :ref:`tinytc_address_space_t`
 
-  * :ref:`tinytc_arithmetic_t`
-
   * :ref:`tinytc_arithmetic_unary_t`
 
   * :ref:`tinytc_builtin_t`
@@ -47,8 +45,6 @@ Common
 * Functions
 
   * :ref:`tinytc_address_space_to_string`
-
-  * :ref:`tinytc_arithmetic_to_string`
 
   * :ref:`tinytc_arithmetic_unary_to_string`
 
@@ -129,13 +125,6 @@ tinytc_address_space_t
 ......................
 
 .. doxygenenum:: tinytc_address_space_t
-
-.. _tinytc_arithmetic_t:
-
-tinytc_arithmetic_t
-...................
-
-.. doxygenenum:: tinytc_arithmetic_t
 
 .. _tinytc_arithmetic_unary_t:
 
@@ -240,13 +229,6 @@ tinytc_address_space_to_string
 ..............................
 
 .. doxygenfunction:: tinytc_address_space_to_string
-
-.. _tinytc_arithmetic_to_string:
-
-tinytc_arithmetic_to_string
-...........................
-
-.. doxygenfunction:: tinytc_arithmetic_to_string
 
 .. _tinytc_arithmetic_unary_to_string:
 
@@ -678,10 +660,6 @@ Instruction
 
   * :ref:`tinytc_alloca_inst_create`
 
-  * :ref:`tinytc_axpby_inst_create`
-
-  * :ref:`tinytc_arith_inst_create`
-
   * :ref:`tinytc_arith_unary_inst_create`
 
   * :ref:`tinytc_barrier_inst_create`
@@ -722,23 +700,9 @@ Instruction
 
   * :ref:`tinytc_cooperative_matrix_store_inst_create`
 
-  * :ref:`tinytc_cumsum_inst_create`
-
   * :ref:`tinytc_expand_inst_create`
 
-  * :ref:`tinytc_for_inst_create`
-
-  * :ref:`tinytc_foreach_inst_create`
-
   * :ref:`tinytc_fuse_inst_create`
-
-  * :ref:`tinytc_gemm_inst_create`
-
-  * :ref:`tinytc_gemv_inst_create`
-
-  * :ref:`tinytc_ger_inst_create`
-
-  * :ref:`tinytc_hadamard_inst_create`
 
   * :ref:`tinytc_if_inst_create`
 
@@ -760,9 +724,49 @@ Instruction
 
   * :ref:`tinytc_subview_inst_create`
 
+  * :ref:`tinytc_yield_inst_create`
+
+  * :ref:`tinytc_add_inst_create`
+
+  * :ref:`tinytc_sub_inst_create`
+
+  * :ref:`tinytc_mul_inst_create`
+
+  * :ref:`tinytc_div_inst_create`
+
+  * :ref:`tinytc_rem_inst_create`
+
+  * :ref:`tinytc_shl_inst_create`
+
+  * :ref:`tinytc_shr_inst_create`
+
+  * :ref:`tinytc_and_inst_create`
+
+  * :ref:`tinytc_or_inst_create`
+
+  * :ref:`tinytc_xor_inst_create`
+
+  * :ref:`tinytc_min_inst_create`
+
+  * :ref:`tinytc_max_inst_create`
+
+  * :ref:`tinytc_axpby_inst_create`
+
+  * :ref:`tinytc_cumsum_inst_create`
+
   * :ref:`tinytc_sum_inst_create`
 
-  * :ref:`tinytc_yield_inst_create`
+  * :ref:`tinytc_gemm_inst_create`
+
+  * :ref:`tinytc_gemv_inst_create`
+
+  * :ref:`tinytc_ger_inst_create`
+
+  * :ref:`tinytc_hadamard_inst_create`
+
+  * :ref:`tinytc_for_inst_create`
+
+  * :ref:`tinytc_foreach_inst_create`
 
   * :ref:`tinytc_inst_get_parent_region`
 
@@ -783,20 +787,6 @@ tinytc_alloca_inst_create
 .........................
 
 .. doxygenfunction:: tinytc_alloca_inst_create
-
-.. _tinytc_axpby_inst_create:
-
-tinytc_axpby_inst_create
-........................
-
-.. doxygenfunction:: tinytc_axpby_inst_create
-
-.. _tinytc_arith_inst_create:
-
-tinytc_arith_inst_create
-........................
-
-.. doxygenfunction:: tinytc_arith_inst_create
 
 .. _tinytc_arith_unary_inst_create:
 
@@ -938,13 +928,6 @@ tinytc_cooperative_matrix_store_inst_create
 
 .. doxygenfunction:: tinytc_cooperative_matrix_store_inst_create
 
-.. _tinytc_cumsum_inst_create:
-
-tinytc_cumsum_inst_create
-.........................
-
-.. doxygenfunction:: tinytc_cumsum_inst_create
-
 .. _tinytc_expand_inst_create:
 
 tinytc_expand_inst_create
@@ -952,54 +935,12 @@ tinytc_expand_inst_create
 
 .. doxygenfunction:: tinytc_expand_inst_create
 
-.. _tinytc_for_inst_create:
-
-tinytc_for_inst_create
-......................
-
-.. doxygenfunction:: tinytc_for_inst_create
-
-.. _tinytc_foreach_inst_create:
-
-tinytc_foreach_inst_create
-..........................
-
-.. doxygenfunction:: tinytc_foreach_inst_create
-
 .. _tinytc_fuse_inst_create:
 
 tinytc_fuse_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_fuse_inst_create
-
-.. _tinytc_gemm_inst_create:
-
-tinytc_gemm_inst_create
-.......................
-
-.. doxygenfunction:: tinytc_gemm_inst_create
-
-.. _tinytc_gemv_inst_create:
-
-tinytc_gemv_inst_create
-.......................
-
-.. doxygenfunction:: tinytc_gemv_inst_create
-
-.. _tinytc_ger_inst_create:
-
-tinytc_ger_inst_create
-......................
-
-.. doxygenfunction:: tinytc_ger_inst_create
-
-.. _tinytc_hadamard_inst_create:
-
-tinytc_hadamard_inst_create
-...........................
-
-.. doxygenfunction:: tinytc_hadamard_inst_create
 
 .. _tinytc_if_inst_create:
 
@@ -1071,6 +1012,111 @@ tinytc_subview_inst_create
 
 .. doxygenfunction:: tinytc_subview_inst_create
 
+.. _tinytc_yield_inst_create:
+
+tinytc_yield_inst_create
+........................
+
+.. doxygenfunction:: tinytc_yield_inst_create
+
+.. _tinytc_add_inst_create:
+
+tinytc_add_inst_create
+......................
+
+.. doxygenfunction:: tinytc_add_inst_create
+
+.. _tinytc_sub_inst_create:
+
+tinytc_sub_inst_create
+......................
+
+.. doxygenfunction:: tinytc_sub_inst_create
+
+.. _tinytc_mul_inst_create:
+
+tinytc_mul_inst_create
+......................
+
+.. doxygenfunction:: tinytc_mul_inst_create
+
+.. _tinytc_div_inst_create:
+
+tinytc_div_inst_create
+......................
+
+.. doxygenfunction:: tinytc_div_inst_create
+
+.. _tinytc_rem_inst_create:
+
+tinytc_rem_inst_create
+......................
+
+.. doxygenfunction:: tinytc_rem_inst_create
+
+.. _tinytc_shl_inst_create:
+
+tinytc_shl_inst_create
+......................
+
+.. doxygenfunction:: tinytc_shl_inst_create
+
+.. _tinytc_shr_inst_create:
+
+tinytc_shr_inst_create
+......................
+
+.. doxygenfunction:: tinytc_shr_inst_create
+
+.. _tinytc_and_inst_create:
+
+tinytc_and_inst_create
+......................
+
+.. doxygenfunction:: tinytc_and_inst_create
+
+.. _tinytc_or_inst_create:
+
+tinytc_or_inst_create
+.....................
+
+.. doxygenfunction:: tinytc_or_inst_create
+
+.. _tinytc_xor_inst_create:
+
+tinytc_xor_inst_create
+......................
+
+.. doxygenfunction:: tinytc_xor_inst_create
+
+.. _tinytc_min_inst_create:
+
+tinytc_min_inst_create
+......................
+
+.. doxygenfunction:: tinytc_min_inst_create
+
+.. _tinytc_max_inst_create:
+
+tinytc_max_inst_create
+......................
+
+.. doxygenfunction:: tinytc_max_inst_create
+
+.. _tinytc_axpby_inst_create:
+
+tinytc_axpby_inst_create
+........................
+
+.. doxygenfunction:: tinytc_axpby_inst_create
+
+.. _tinytc_cumsum_inst_create:
+
+tinytc_cumsum_inst_create
+.........................
+
+.. doxygenfunction:: tinytc_cumsum_inst_create
+
 .. _tinytc_sum_inst_create:
 
 tinytc_sum_inst_create
@@ -1078,12 +1124,47 @@ tinytc_sum_inst_create
 
 .. doxygenfunction:: tinytc_sum_inst_create
 
-.. _tinytc_yield_inst_create:
+.. _tinytc_gemm_inst_create:
 
-tinytc_yield_inst_create
-........................
+tinytc_gemm_inst_create
+.......................
 
-.. doxygenfunction:: tinytc_yield_inst_create
+.. doxygenfunction:: tinytc_gemm_inst_create
+
+.. _tinytc_gemv_inst_create:
+
+tinytc_gemv_inst_create
+.......................
+
+.. doxygenfunction:: tinytc_gemv_inst_create
+
+.. _tinytc_ger_inst_create:
+
+tinytc_ger_inst_create
+......................
+
+.. doxygenfunction:: tinytc_ger_inst_create
+
+.. _tinytc_hadamard_inst_create:
+
+tinytc_hadamard_inst_create
+...........................
+
+.. doxygenfunction:: tinytc_hadamard_inst_create
+
+.. _tinytc_for_inst_create:
+
+tinytc_for_inst_create
+......................
+
+.. doxygenfunction:: tinytc_for_inst_create
+
+.. _tinytc_foreach_inst_create:
+
+tinytc_foreach_inst_create
+..........................
+
+.. doxygenfunction:: tinytc_foreach_inst_create
 
 .. _tinytc_inst_get_parent_region:
 

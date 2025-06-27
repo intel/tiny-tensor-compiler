@@ -4,7 +4,6 @@ Builder C++-API:
   Common:
     enum:
       - tinytc::address_space
-      - tinytc::arithmetic
       - tinytc::arithmetic_unary
       - tinytc::builtin
       - tinytc::cmp_condition
@@ -19,7 +18,6 @@ Builder C++-API:
     function:
       - tinytc::is_dynamic_value
       - tinytc::to_string(address_space)
-      - tinytc::to_string(arithmetic)
       - tinytc::to_string(arithmetic_unary)
       - tinytc::to_string(builtin)
       - tinytc::to_string(checked_flag)
@@ -81,9 +79,7 @@ Builder C++-API:
       - tinytc::inst
     struct:
       - tinytc::creator< alloca_inst >
-      - tinytc::creator< arith_inst >
       - tinytc::creator< arith_unary_inst >
-      - tinytc::creator< axpby_inst >
       - tinytc::creator< barrier_inst >
       - tinytc::creator< builtin_inst >
       - tinytc::creator< cast_inst >
@@ -98,15 +94,8 @@ Builder C++-API:
       - tinytc::creator< cooperative_matrix_reduce_inst >
       - tinytc::creator< cooperative_matrix_scale_inst >
       - tinytc::creator< cooperative_matrix_store_inst >
-      - tinytc::creator< cumsum_inst >
       - tinytc::creator< expand_inst >
-      - tinytc::creator< for_inst >
-      - tinytc::creator< foreach_inst >
       - tinytc::creator< fuse_inst >
-      - tinytc::creator< gemm_inst >
-      - tinytc::creator< gemv_inst >
-      - tinytc::creator< ger_inst >
-      - tinytc::creator< hadamard_inst >
       - tinytc::creator< if_inst >
       - tinytc::creator< lifetime_stop_inst >
       - tinytc::creator< load_inst >
@@ -116,9 +105,29 @@ Builder C++-API:
       - tinytc::creator< subgroup_broadcast_inst >
       - tinytc::creator< subgroup_operation_inst >
       - tinytc::creator< subview_inst >
-      - tinytc::creator< sum_inst >
       - tinytc::creator< store_inst >
       - tinytc::creator< yield_inst >
+      - tinytc::createo< add_inst >
+      - tinytc::createo< sub_inst >
+      - tinytc::createo< mul_inst >
+      - tinytc::createo< div_inst >
+      - tinytc::createo< rem_inst >
+      - tinytc::createo< shl_inst >
+      - tinytc::createo< shr_inst >
+      - tinytc::createo< and_inst >
+      - tinytc::createo< or_inst >
+      - tinytc::createo< xor_inst >
+      - tinytc::createo< min_inst >
+      - tinytc::createo< max_inst >
+      - tinytc::creator< axpby_inst >
+      - tinytc::creator< cumsum_inst >
+      - tinytc::creator< sum_inst >
+      - tinytc::creator< gemm_inst >
+      - tinytc::creator< gemv_inst >
+      - tinytc::creator< ger_inst >
+      - tinytc::creator< hadamard_inst >
+      - tinytc::creator< for_inst >
+      - tinytc::creator< foreach_inst >
   Program:
     function:
       - tinytc::add_function
