@@ -20,8 +20,6 @@ Common
 
   * :ref:`tinytc::comp3`
 
-  * :ref:`tinytc::math_unary`
-
   * :ref:`tinytc::matrix_use`
 
   * :ref:`tinytc::reduce_mode`
@@ -43,8 +41,6 @@ Common
   * :ref:`tinytc::to_string(cmp_condition)`
 
   * :ref:`tinytc::to_string(comp3)`
-
-  * :ref:`tinytc::to_string(math_unary)`
 
   * :ref:`tinytc::to_string(matrix_use)`
 
@@ -102,13 +98,6 @@ comp3
 .....
 
 .. doxygenenum:: tinytc::comp3
-
-.. _tinytc::math_unary:
-
-math_unary
-..........
-
-.. doxygenenum:: tinytc::math_unary
 
 .. _tinytc::matrix_use:
 
@@ -182,13 +171,6 @@ to_string(comp3)
 ................
 
 .. doxygenfunction:: tinytc::to_string(comp3)
-
-.. _tinytc::to_string(math_unary):
-
-to_string(math_unary)
-.....................
-
-.. doxygenfunction:: tinytc::to_string(math_unary)
 
 .. _tinytc::to_string(matrix_use):
 
@@ -661,6 +643,22 @@ Instruction
   * :ref:`tinytc::creator\< for_inst \>`
 
   * :ref:`tinytc::creator\< foreach_inst \>`
+
+  * :ref:`tinytc::creator\< cos_inst \>`
+
+  * :ref:`tinytc::creator\< sin_inst \>`
+
+  * :ref:`tinytc::creator\< exp_inst \>`
+
+  * :ref:`tinytc::creator\< exp2_inst \>`
+
+  * :ref:`tinytc::creator\< native_cos_inst \>`
+
+  * :ref:`tinytc::creator\< native_sin_inst \>`
+
+  * :ref:`tinytc::creator\< native_exp_inst \>`
+
+  * :ref:`tinytc::creator\< native_exp2_inst \>`
 
   * :ref:`tinytc::creator\< subgroup_exclusive_scan_add_inst \>`
 
@@ -1136,6 +1134,62 @@ creator<foreach_inst>
 .....................
 
 .. doxygenstruct:: tinytc::creator< foreach_inst >
+
+.. _tinytc::creator\< cos_inst \>:
+
+creator<cos_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< cos_inst >
+
+.. _tinytc::creator\< sin_inst \>:
+
+creator<sin_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< sin_inst >
+
+.. _tinytc::creator\< exp_inst \>:
+
+creator<exp_inst>
+.................
+
+.. doxygenstruct:: tinytc::creator< exp_inst >
+
+.. _tinytc::creator\< exp2_inst \>:
+
+creator<exp2_inst>
+..................
+
+.. doxygenstruct:: tinytc::creator< exp2_inst >
+
+.. _tinytc::creator\< native_cos_inst \>:
+
+creator<native_cos_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< native_cos_inst >
+
+.. _tinytc::creator\< native_sin_inst \>:
+
+creator<native_sin_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< native_sin_inst >
+
+.. _tinytc::creator\< native_exp_inst \>:
+
+creator<native_exp_inst>
+........................
+
+.. doxygenstruct:: tinytc::creator< native_exp_inst >
+
+.. _tinytc::creator\< native_exp2_inst \>:
+
+creator<native_exp2_inst>
+.........................
+
+.. doxygenstruct:: tinytc::creator< native_exp2_inst >
 
 .. _tinytc::creator\< subgroup_exclusive_scan_add_inst \>:
 

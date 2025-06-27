@@ -309,7 +309,7 @@ auto constant_folding::operator()(math_unary_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    auto computer = compute_math_unary_op{in.operation(), op_a.ty(), in.loc()};
+    auto computer = compute_math_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
     auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value());
 }

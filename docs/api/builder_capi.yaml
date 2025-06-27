@@ -7,7 +7,6 @@ Builder C-API:
       - tinytc_checked_flag_t
       - tinytc_cmp_condition_t
       - tinytc_comp3_t
-      - tinytc_math_unary_t
       - tinytc_matrix_use_t
       - tinytc_reduce_mode_t
       - tinytc_scalar_type_t
@@ -20,7 +19,6 @@ Builder C-API:
       - tinytc_checked_flag_to_string
       - tinytc_cmp_condition_to_string
       - tinytc_comp3_to_string
-      - tinytc_math_unary_to_string
       - tinytc_matrix_use_to_string
       - tinytc_reduce_mode_to_string
       - tinytc_scalar_type_size
@@ -101,7 +99,6 @@ Builder C-API:
       - tinytc_if_inst_create
       - tinytc_lifetime_stop_inst_create
       - tinytc_load_inst_create
-      - tinytc_math_unary_inst_create
       - tinytc_parallel_inst_create
       - tinytc_size_inst_create
       - tinytc_subgroup_broadcast_inst_create
@@ -140,6 +137,14 @@ Builder C-API:
       - tinytc_subgroup_id_inst_create
       - tinytc_subgroup_linear_id_inst_create
       - tinytc_subgroup_local_id_inst_create
+      - tinytc_cos_inst_create
+      - tinytc_sin_inst_create
+      - tinytc_exp_inst_create
+      - tinytc_exp2_inst_create
+      - tinytc_native_cos_inst_create
+      - tinytc_native_sin_inst_create
+      - tinytc_native_exp_inst_create
+      - tinytc_native_exp2_inst_create
       - tinytc_subgroup_exclusive_scan_add_inst_create
       - tinytc_subgroup_exclusive_scan_max_inst_create
       - tinytc_subgroup_exclusive_scan_min_inst_create

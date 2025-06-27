@@ -7,7 +7,6 @@ Builder C++-API:
       - tinytc::checked_flag
       - tinytc::cmp_condition
       - tinytc::comp3
-      - tinytc::math_unary
       - tinytc::matrix_use
       - tinytc::reduce_mode
       - tinytc::scalar_type
@@ -19,7 +18,6 @@ Builder C++-API:
       - tinytc::to_string(checked_flag)
       - tinytc::to_string(cmp_condition)
       - tinytc::to_string(comp3)
-      - tinytc::to_string(math_unary)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(reduce_mode)
       - tinytc::to_string(scalar_type)
@@ -135,6 +133,14 @@ Builder C++-API:
       - tinytc::creator< subgroup_local_id_inst >
       - tinytc::creator< for_inst >
       - tinytc::creator< foreach_inst >
+      - tinytc::creator< cos_inst >
+      - tinytc::creator< sin_inst >
+      - tinytc::creator< exp_inst >
+      - tinytc::creator< exp2_inst >
+      - tinytc::creator< native_cos_inst >
+      - tinytc::creator< native_sin_inst >
+      - tinytc::creator< native_exp_inst >
+      - tinytc::creator< native_exp2_inst >
       - tinytc::creator< subgroup_exclusive_scan_add_inst >
       - tinytc::creator< subgroup_exclusive_scan_max_inst >
       - tinytc::creator< subgroup_exclusive_scan_min_inst >

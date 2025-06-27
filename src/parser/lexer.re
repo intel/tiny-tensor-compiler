@@ -230,14 +230,14 @@ lex:
         "cmp.le"            { adv_loc(); return parser::make_CMP_CONDITION(cmp_condition::le, loc_); }
 
         // math op
-        "math.cos"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::cos, loc_); }
-        "math.sin"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::sin, loc_); }
-        "math.exp"          { adv_loc(); return parser::make_MATH_UNARY(math_unary::exp, loc_); }
-        "math.exp2"         { adv_loc(); return parser::make_MATH_UNARY(math_unary::exp2, loc_); }
-        "math.native_cos"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_cos, loc_); }
-        "math.native_sin"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_sin, loc_); }
-        "math.native_exp"   { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp, loc_); }
-        "math.native_exp2"  { adv_loc(); return parser::make_MATH_UNARY(math_unary::native_exp2, loc_); }
+        "cos"          { adv_loc(); return parser::make_COS(loc_); }
+        "sin"          { adv_loc(); return parser::make_SIN(loc_); }
+        "exp"          { adv_loc(); return parser::make_EXP(loc_); }
+        "exp2"         { adv_loc(); return parser::make_EXP2(loc_); }
+        "native_cos"   { adv_loc(); return parser::make_NATIVE_COS(loc_); }
+        "native_sin"   { adv_loc(); return parser::make_NATIVE_SIN(loc_); }
+        "native_exp"   { adv_loc(); return parser::make_NATIVE_EXP(loc_); }
+        "native_exp2"  { adv_loc(); return parser::make_NATIVE_EXP2(loc_); }
 
         // coopmatrix reduce
         "cooperative_matrix_reduce_add" { adv_loc(); return parser::make_COOPERATIVE_MATRIX_REDUCE_ADD(loc_); }

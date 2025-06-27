@@ -140,17 +140,6 @@ enum @cmp_condition "Compare operation" {
     case %le => 5 "less or equal than"
 }
 
-enum @math_unary "Math operations (unary)" {
-    case %cos         => 0 "Cosine"
-    case %sin         => 1 "Sine"
-    case %exp         => 2 "Base-e exponential"
-    case %exp2        => 3 "Base-2 exponential"
-    case %native_cos  => 4 "Native cosine"
-    case %native_sin  => 5 "Native sine"
-    case %native_exp  => 6 "Native base-e exponential"
-    case %native_exp2 => 7 "Native base-2 exponential"
-}
-
 enum @comp3 "Named components of 3d vector" {
     case %x => 0  ".x"
     case %y => 1  ".y"

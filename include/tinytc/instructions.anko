@@ -151,12 +151,6 @@ inst @load "Load instruction" {
     ret %result     "result type"
 }
 
-inst @math_unary "Math instruction" {
-    prop %operation => @math_unary "function"
-    op %a                          "argument"
-    ret %result                    "result type"
-}
-
 inst @parallel "Parallel instruction" {
     collective
     reg %body "parallel region"
@@ -343,6 +337,23 @@ inst @foreach : @loop "Create foreach loop" {
     cxx "inline auto dim() -> std::int32_t { return get().num_operands() / 2; }"
     cxx "inline auto loop_vars() { return body().params(); }"
 }
+
+; Math
+
+inst @math_unary "Math instruction" {
+    op %a       "argument"
+    ret %result "result type"
+    cxx "void setup_and_check(support_flags support);"
+}
+inst @cos : @math_unary "Cosine instruction" {}
+inst @sin : @math_unary "Sine instruction" {}
+inst @exp : @math_unary "Base-e exponential instruction" {}
+inst @exp2 : @math_unary "Base-2 exponential instruction" {}
+inst @native_cos : @math_unary "Cosine instruction (native)" {}
+inst @native_sin : @math_unary "Sine instruction (native)" {}
+inst @native_exp : @math_unary "Base-e exponential instruction (native)" {}
+inst @native_exp2 : @math_unary "Base-2 exponential instruction (native)" {}
+
 
 ; Subgroup operation
 

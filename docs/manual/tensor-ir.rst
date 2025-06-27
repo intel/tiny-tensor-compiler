@@ -1461,10 +1461,14 @@ Math (unary)
 
 .. code:: abnf
 
-    math-unary-type         =  "math.exp" /
-                               "math.exp2" /
-                               "math.native_exp" /
-                               "math.native_exp2"
+    math-unary-type         =  "cos" /
+                               "sin" /
+                               "exp" /
+                               "exp2" /
+                               "native_cos" /
+                               "native_sin"
+                               "native_exp" /
+                               "native_exp2"
     value-instruction       =/ math-unary-type local-identifier ":" scalar-type
 
 Overview

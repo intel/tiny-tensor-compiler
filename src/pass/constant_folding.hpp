@@ -503,7 +503,7 @@ auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_res
 };
 
 struct compute_math_unary_op {
-    math_unary operation;
+    IK operation;
     data_type ty;
     location const &loc;
 
@@ -518,20 +518,20 @@ struct compute_math_unary_op {
     auto operator()(T a) -> fold_result {
         T val = {};
         switch (operation) {
-        case math_unary::cos:
-        case math_unary::native_cos:
+        case IK::IK_cos:
+        case IK::IK_native_cos:
             val = std::cos(a);
             break;
-        case math_unary::sin:
-        case math_unary::native_sin:
+        case IK::IK_sin:
+        case IK::IK_native_sin:
             val = std::sin(a);
             break;
-        case math_unary::exp:
-        case math_unary::native_exp:
+        case IK::IK_exp:
+        case IK::IK_native_exp:
             val = std::exp(a);
             break;
-        case math_unary::exp2:
-        case math_unary::native_exp2:
+        case IK::IK_exp2:
+        case IK::IK_native_exp2:
             val = std::exp2(a);
             break;
         default:
@@ -545,12 +545,12 @@ struct compute_math_unary_op {
     auto operator()(U const &a) -> fold_result {
         T val = {};
         switch (operation) {
-        case math_unary::exp:
-        case math_unary::native_exp:
+        case IK::IK_exp:
+        case IK::IK_native_exp:
             val = std::exp(a);
             break;
-        case math_unary::exp2:
-        case math_unary::native_exp2:
+        case IK::IK_exp2:
+        case IK::IK_native_exp2:
             val = std::pow(T{std::complex<double>{2.0, 0.0}}, a);
             break;
         default:

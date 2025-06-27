@@ -9,7 +9,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x16x2,matrix_acc> {
             %mask = cmp.le %i, %j : bool
             %exp_v_masked = if %mask -> (f32) {
-                %exp_v = math.native_exp %v : f32
+                %exp_v = native_exp %v : f32
                 yield (%exp_v)
             } else {
                 %zero = constant 0.0 : f32
@@ -25,7 +25,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %3 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %4 = cmp.le %1, %2 : bool
 ; CHECK-NEXT: %5 = if %4 -> (f32) {
-; CHECK-NEXT:   %6 = math.native_exp %3 : f32
+; CHECK-NEXT:   %6 = native_exp %3 : f32
 ; CHECK-NEXT:   yield (%6)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %7 = constant 0x0p+0 : f32
@@ -36,7 +36,7 @@ func @tmatrix_acc(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %10 = cooperative_matrix_extract %0[1] : f32
 ; CHECK-NEXT: %11 = cmp.le %1, %9 : bool
 ; CHECK-NEXT: %12 = if %11 -> (f32) {
-; CHECK-NEXT:   %13 = math.native_exp %10 : f32
+; CHECK-NEXT:   %13 = native_exp %10 : f32
 ; CHECK-NEXT:   yield (%13)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %14 = constant 0x0p+0 : f32
@@ -52,7 +52,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x8x4,matrix_b> {
             %mask = cmp.le %i, %j : bool
             %exp_v_masked = if %mask -> (f32) {
-                %exp_v = math.native_exp %v : f32
+                %exp_v = native_exp %v : f32
                 yield (%exp_v)
             } else {
                 %zero = constant 0.0 : f32
@@ -72,7 +72,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %8 = cmp.le %3, %6 : bool
 ; CHECK-NEXT: %9 = if %8 -> (f32) {
-; CHECK-NEXT:   %10 = math.native_exp %7 : f32
+; CHECK-NEXT:   %10 = native_exp %7 : f32
 ; CHECK-NEXT:   yield (%10)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
@@ -84,7 +84,7 @@ func @tmatrix_b(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %15 = cooperative_matrix_extract %0[1] : f32
 ; CHECK-NEXT: %16 = cmp.le %3, %14 : bool
 ; CHECK-NEXT: %17 = if %16 -> (f32) {
-; CHECK-NEXT:   %18 = math.native_exp %15 : f32
+; CHECK-NEXT:   %18 = native_exp %15 : f32
 ; CHECK-NEXT:   yield (%18)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %19 = constant 0x0p+0 : f32
@@ -100,7 +100,7 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
         %1 = cooperative_matrix_apply (%i,%j,%v)=%0 -> coopmatrix<f32x1x17,matrix_b> {
             %mask = cmp.le %i, %j : bool
             %exp_v_masked = if %mask -> (f32) {
-                %exp_v = math.native_exp %v : f32
+                %exp_v = native_exp %v : f32
                 yield (%exp_v)
             } else {
                 %zero = constant 0.0 : f32
@@ -120,7 +120,7 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %7 = cooperative_matrix_extract %0[0] : f32
 ; CHECK-NEXT: %8 = cmp.le %3, %6 : bool
 ; CHECK-NEXT: %9 = if %8 -> (f32) {
-; CHECK-NEXT:   %10 = math.native_exp %7 : f32
+; CHECK-NEXT:   %10 = native_exp %7 : f32
 ; CHECK-NEXT:   yield (%10)
 ; CHECK-NEXT: } else {
 ; CHECK-NEXT:   %11 = constant 0x0p+0 : f32
@@ -135,7 +135,7 @@ func @tmatrix_b_mask(%A: memref<i32x64x48>) attributes{subgroup_size=16} {
 ; CHECK-NEXT: %18 = if %17 -> (f32) {
 ; CHECK-NEXT:   %19 = cmp.le %3, %14 : bool
 ; CHECK-NEXT:   %20 = if %19 -> (f32) {
-; CHECK-NEXT:     %21 = math.native_exp %15 : f32
+; CHECK-NEXT:     %21 = native_exp %15 : f32
 ; CHECK-NEXT:     yield (%21)
 ; CHECK-NEXT:   } else {
 ; CHECK-NEXT:     %22 = constant 0x0p+0 : f32

@@ -532,29 +532,6 @@ void load_inst::setup_and_check() {
           *operand().ty());
 }
 
-void math_unary_inst::setup_and_check() {
-    // Check if inst is supported for combination of a type and result type
-    auto a_ty = get_scalar_type(loc(), a());
-
-    const auto complex_supported = [](math_unary op) {
-        switch (op) {
-        case math_unary::exp:
-        case math_unary::exp2:
-        case math_unary::native_exp:
-        case math_unary::native_exp2:
-            return true;
-        default:
-            return false;
-        }
-    }(operation());
-
-    if (is_integer_type(a_ty->ty())) {
-        throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
-    } else if (is_complex_type(a_ty->ty()) && !complex_supported) {
-        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
-    }
-}
-
 void parallel_inst::setup_and_check() {
     body().kind(region_kind::spmd);
     body().loc(loc());
@@ -1108,6 +1085,35 @@ void foreach_inst::setup_and_check() {
         }
         body().set_param(i, from_[i].ty());
     }
+}
+
+void math_unary_inst::setup_and_check() {}
+void math_unary_inst::setup_and_check(support_flags support) {
+    auto a_ty = get_scalar_type(loc(), a());
+
+    if (!(support & supports_int) && is_integer_type(a_ty->ty())) {
+        throw compilation_error(loc(), {&a()}, status::ir_int_unsupported);
+    } else if (!(support & supports_float) && is_floating_type(a_ty->ty())) {
+        throw compilation_error(loc(), {&a()}, status::ir_fp_unsupported);
+    } else if (!(support & supports_complex) && is_complex_type(a_ty->ty())) {
+        throw compilation_error(loc(), {&a()}, status::ir_complex_unsupported);
+    }
+}
+void cos_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void sin_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void exp_inst::setup_and_check() {
+    math_unary_inst::setup_and_check(supports_float | supports_complex);
+}
+void exp2_inst::setup_and_check() {
+    math_unary_inst::setup_and_check(supports_float | supports_complex);
+}
+void native_cos_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void native_sin_inst::setup_and_check() { math_unary_inst::setup_and_check(supports_float); }
+void native_exp_inst::setup_and_check() {
+    math_unary_inst::setup_and_check(supports_float | supports_complex);
+}
+void native_exp2_inst::setup_and_check() {
+    math_unary_inst::setup_and_check(supports_float | supports_complex);
 }
 
 void subgroup_operation_inst::setup_and_check() {}

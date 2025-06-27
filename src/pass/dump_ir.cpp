@@ -524,7 +524,7 @@ void dump_ir_pass::operator()(if_inst in) {
 
 void dump_ir_pass::operator()(math_unary_inst in) {
     dump_val(in.result());
-    *os_ << " = math." << to_string(in.operation()) << " ";
+    *os_ << " = " << to_string(in.get().type_id()) << " ";
     dump_val(in.a());
     *os_ << " : ";
     visit(*this, *in.result().ty());

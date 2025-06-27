@@ -20,8 +20,6 @@ Common
 
   * :ref:`tinytc_comp3_t`
 
-  * :ref:`tinytc_math_unary_t`
-
   * :ref:`tinytc_matrix_use_t`
 
   * :ref:`tinytc_reduce_mode_t`
@@ -45,8 +43,6 @@ Common
   * :ref:`tinytc_cmp_condition_to_string`
 
   * :ref:`tinytc_comp3_to_string`
-
-  * :ref:`tinytc_math_unary_to_string`
 
   * :ref:`tinytc_matrix_use_to_string`
 
@@ -135,13 +131,6 @@ tinytc_comp3_t
 
 .. doxygenenum:: tinytc_comp3_t
 
-.. _tinytc_math_unary_t:
-
-tinytc_math_unary_t
-...................
-
-.. doxygenenum:: tinytc_math_unary_t
-
 .. _tinytc_matrix_use_t:
 
 tinytc_matrix_use_t
@@ -217,13 +206,6 @@ tinytc_comp3_to_string
 ......................
 
 .. doxygenfunction:: tinytc_comp3_to_string
-
-.. _tinytc_math_unary_to_string:
-
-tinytc_math_unary_to_string
-...........................
-
-.. doxygenfunction:: tinytc_math_unary_to_string
 
 .. _tinytc_matrix_use_to_string:
 
@@ -656,8 +638,6 @@ Instruction
 
   * :ref:`tinytc_load_inst_create`
 
-  * :ref:`tinytc_math_unary_inst_create`
-
   * :ref:`tinytc_parallel_inst_create`
 
   * :ref:`tinytc_size_inst_create`
@@ -733,6 +713,22 @@ Instruction
   * :ref:`tinytc_subgroup_linear_id_inst_create`
 
   * :ref:`tinytc_subgroup_local_id_inst_create`
+
+  * :ref:`tinytc_cos_inst_create`
+
+  * :ref:`tinytc_sin_inst_create`
+
+  * :ref:`tinytc_exp_inst_create`
+
+  * :ref:`tinytc_exp2_inst_create`
+
+  * :ref:`tinytc_native_cos_inst_create`
+
+  * :ref:`tinytc_native_sin_inst_create`
+
+  * :ref:`tinytc_native_exp_inst_create`
+
+  * :ref:`tinytc_native_exp2_inst_create`
 
   * :ref:`tinytc_subgroup_exclusive_scan_add_inst_create`
 
@@ -950,13 +946,6 @@ tinytc_load_inst_create
 .......................
 
 .. doxygenfunction:: tinytc_load_inst_create
-
-.. _tinytc_math_unary_inst_create:
-
-tinytc_math_unary_inst_create
-.............................
-
-.. doxygenfunction:: tinytc_math_unary_inst_create
 
 .. _tinytc_parallel_inst_create:
 
@@ -1223,6 +1212,62 @@ tinytc_subgroup_local_id_inst_create
 ....................................
 
 .. doxygenfunction:: tinytc_subgroup_local_id_inst_create
+
+.. _tinytc_cos_inst_create:
+
+tinytc_cos_inst_create
+......................
+
+.. doxygenfunction:: tinytc_cos_inst_create
+
+.. _tinytc_sin_inst_create:
+
+tinytc_sin_inst_create
+......................
+
+.. doxygenfunction:: tinytc_sin_inst_create
+
+.. _tinytc_exp_inst_create:
+
+tinytc_exp_inst_create
+......................
+
+.. doxygenfunction:: tinytc_exp_inst_create
+
+.. _tinytc_exp2_inst_create:
+
+tinytc_exp2_inst_create
+.......................
+
+.. doxygenfunction:: tinytc_exp2_inst_create
+
+.. _tinytc_native_cos_inst_create:
+
+tinytc_native_cos_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_native_cos_inst_create
+
+.. _tinytc_native_sin_inst_create:
+
+tinytc_native_sin_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_native_sin_inst_create
+
+.. _tinytc_native_exp_inst_create:
+
+tinytc_native_exp_inst_create
+.............................
+
+.. doxygenfunction:: tinytc_native_exp_inst_create
+
+.. _tinytc_native_exp2_inst_create:
+
+tinytc_native_exp2_inst_create
+..............................
+
+.. doxygenfunction:: tinytc_native_exp2_inst_create
 
 .. _tinytc_subgroup_exclusive_scan_add_inst_create:
 

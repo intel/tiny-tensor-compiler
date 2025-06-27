@@ -190,6 +190,14 @@
     SUBGROUP_LOCAL_ID             "subgroup_local_id"
     FOR                           "for"
     FOREACH                       "foreach"
+    COS                           "cos"
+    SIN                           "sin"
+    EXP                           "exp"
+    EXP2                          "exp2"
+    NATIVE_COS                    "native_cos"
+    NATIVE_SIN                    "native_sin"
+    NATIVE_EXP                    "native_exp"
+    NATIVE_EXP2                   "native_exp2"
     SUBGROUP_EXCLUSIVE_SCAN_ADD   "subgroup_exclusive_scan_add"
     SUBGROUP_EXCLUSIVE_SCAN_MAX   "subgroup_exclusive_scan_max"
     SUBGROUP_EXCLUSIVE_SCAN_MIN   "subgroup_exclusive_scan_min"
@@ -212,7 +220,6 @@
 %token <comp3> COMP3
 %token <cmp_condition> CMP_CONDITION
 %token <reduce_mode> REDUCE_MODE
-%token <math_unary> MATH_UNARY
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
 
@@ -1137,18 +1144,14 @@ return_type_list:
     }
 ;
 
-valued_inst:
-    MATH_UNARY var[a] COLON data_type[ty] {
-        try {
-            $$ = inst {
-                math_unary_inst::create($MATH_UNARY, std::move($a), std::move($ty), @valued_inst)
-            };
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
-    }
-;
+valued_inst: COS var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = cos_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: SIN var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = sin_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: EXP var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = exp_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: EXP2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = exp2_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_COS var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_cos_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_SIN var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_sin_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_EXP var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_exp_inst::create($a, $ty, @valued_inst); }); };
+valued_inst: NATIVE_EXP2 var[a] COLON data_type[ty] { yytry(ctx, [&] { $$ = native_exp2_inst::create($a, $ty, @valued_inst); }); };
 
 instruction:
     PARALLEL <inst>{
