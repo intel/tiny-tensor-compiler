@@ -5,8 +5,8 @@
 #define DUMP_IR_20230330_HPP
 
 #include "node/attr.hpp" // IWYU pragma: keep
-#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
+#include "node/type.hpp"
 #include "pass/slot_tracker.hpp"
 #include "tinytc/types.h"
 

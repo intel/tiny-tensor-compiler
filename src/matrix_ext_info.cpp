@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "matrix_ext_info.hpp"
-#include "node/data_type.hpp"
+#include "node/type.hpp"
 #include "tinytc/types.hpp"
 
 #include <algorithm>

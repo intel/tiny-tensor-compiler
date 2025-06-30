@@ -3,8 +3,8 @@
 
 #include "analysis/alias.hpp"
 #include "error.hpp"
-#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
+#include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"

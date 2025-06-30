@@ -3,7 +3,7 @@
 
 #include "coopmatrix_layout.hpp"
 #include "device_info.hpp"
-#include "node/data_type.hpp"
+#include "node/type.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
 

@@ -32,12 +32,12 @@ set(SOURCES
     location.cpp
     matrix_ext_info.cpp
     node/attr.cpp
-    node/data_type.cpp
     node/func.cpp
     node/inst.cpp
     node/inst_view_impl.cpp
     node/region.cpp
     node/prog.cpp
+    node/type.cpp
     node/value.cpp
     parser/parse_context.cpp
     parser.cpp

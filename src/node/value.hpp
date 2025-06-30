@@ -4,7 +4,7 @@
 #ifndef VALUE_20250626_HPP
 #define VALUE_20250626_HPP
 
-#include "node/data_type.hpp"
+#include "node/type.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/iterator.hpp"

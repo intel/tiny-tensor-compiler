@@ -3,7 +3,7 @@
 
 #include "pass/constant_folding.hpp"
 #include "error.hpp"
-#include "node/data_type.hpp"
+#include "node/type.hpp"
 #include "node/value.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"

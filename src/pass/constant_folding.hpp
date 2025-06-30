@@ -5,8 +5,8 @@
 #define CONSTANT_FOLDING_HELPER_20241011_HPP
 
 #include "error.hpp"
-#include "node/data_type.hpp"
 #include "node/inst_view.hpp"
+#include "node/type.hpp"
 #include "node/value.hpp"
 #include "scalar_type.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep

@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#ifndef DATA_TYPE_20250626_HPP
-#define DATA_TYPE_20250626_HPP
+#ifndef TYPE_20250626_HPP
+#define TYPE_20250626_HPP
 
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -16,14 +16,14 @@
 
 namespace tinytc {
 enum class DTK { bool_, coopmatrix, group, memref, scalar, void_ };
-using data_type_nodes =
+using type_nodes =
     type_list<class boolean_data_type, class coopmatrix_data_type, class group_data_type,
               class memref_data_type, class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
 struct tinytc_type {
   public:
-    using leaves = tinytc::data_type_nodes;
+    using leaves = tinytc::type_nodes;
 
     inline tinytc_type(tinytc::DTK tid, tinytc_compiler_context_t ctx) : tid_(tid), ctx_(ctx) {}
     virtual ~tinytc_type() = default;
@@ -168,4 +168,4 @@ class void_data_type : public tinytc_type {
 
 } // namespace tinytc
 
-#endif // DATA_TYPE_20250626_HPP
+#endif // TYPE_20250626_HPP

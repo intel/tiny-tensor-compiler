@@ -3,7 +3,7 @@
 
 #include "compiler_context_cache.hpp"
 #include "node/attr.hpp"
-#include "node/data_type.hpp"
+#include "node/type.hpp"
 #include "util/casting.hpp"
 
 namespace tinytc {
