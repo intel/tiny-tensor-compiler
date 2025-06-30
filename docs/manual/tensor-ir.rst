@@ -671,7 +671,7 @@ GEMM
 
 .. code:: abnf
 
-    instruction     =/ "gemm" [".atomic"] transpose transpose local-identifier "," local-identifier ","
+    instruction     =/ "gemm" [".atomic"] [transpose] [transpose] local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -690,7 +690,7 @@ The functions :math:`\text{op}_1` and :math:`\text{op}_2` are defined as
     \text{op}_i(X) := \left\{
                       \begin{array}{rcl}
                         X^T & \text{ if } & \text{transpose}_i = \text{".t"},\\
-                        X   & \text{ if } & \text{transpose}_i = \text{".n"}.
+                        X   & \text{ else. }
                       \end{array}
                       \right.
 
@@ -727,7 +727,7 @@ GEMV
 
 .. code:: abnf
 
-    instruction     =/ "gemv" [".atomic"] transpose local-identifier "," local-identifier ","
+    instruction     =/ "gemv" [".atomic"] [transpose] local-identifier "," local-identifier ","
                               local-identifier "," local-identifier "," local-identifier
 
 Overview
@@ -876,7 +876,7 @@ Sum
 
 .. code:: abnf
 
-    instruction     =/ "sum" [".atomic"] transpose local-identifier "," local-identifier ","
+    instruction     =/ "sum" [".atomic"] [transpose] local-identifier "," local-identifier ","
                              local-identifier "," local-identifier
 
 Overview
@@ -1806,7 +1806,7 @@ Cooperative matrix load
 
 .. code:: abnf
 
-    value-instruction           =/ "cooperative_matrix_load" transpose [checked-flag]
+    value-instruction           =/ "cooperative_matrix_load" [transpose] [checked-flag]
                                    local-identifier "[" local-identifier "," local-identifier "]"
                                    ":" coopmatrix-type
     checked-flag                = ".rows_checked" / ".cols_checked" / ".both_checked"

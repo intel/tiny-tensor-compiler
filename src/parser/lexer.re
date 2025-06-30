@@ -88,8 +88,8 @@ lex:
         "func"              { adv_loc(); return parser::make_FUNC(loc_); }
         "->"                { adv_loc(); return parser::make_ARROW(loc_); }
         "?"                 { adv_loc(); return parser::make_DYNAMIC(loc_); }
-        ".n"                { adv_loc(); return parser::make_NOTRANS(loc_); }
-        ".t"                { adv_loc(); return parser::make_TRANS(loc_); }
+        ".n"                { adv_loc(); return parser::make_TRANSPOSE(transpose::N, loc_); }
+        ".t"                { adv_loc(); return parser::make_TRANSPOSE(transpose::T, loc_); }
         ".atomic"           { adv_loc(); return parser::make_ATOMIC(loc_); }
         ".atomic_add"       { adv_loc(); return parser::make_ATOMIC_ADD(loc_); }
         ".atomic_max"       { adv_loc(); return parser::make_ATOMIC_MAX(loc_); }

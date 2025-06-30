@@ -111,8 +111,6 @@
     ATTRIBUTES      "attributes"
     ARROW           "->"
     DYNAMIC         "?"
-    NOTRANS         ".n"
-    TRANS           ".t"
     ATOMIC          ".atomic"
     ATOMIC_ADD      ".atomic_add"
     ATOMIC_MAX      ".atomic_max"
@@ -227,6 +225,7 @@
 %token <reduce_mode> REDUCE_MODE
 %token <matrix_use> MATRIX_USE
 %token <checked_flag> CHECKED
+%token <transpose> TRANSPOSE
 
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
@@ -261,7 +260,8 @@
 %nterm <std::vector<tinytc_value_t>> value_list
 %nterm <std::int32_t> optional_global_attr
 %nterm <std::int32_t> optional_local_attr
-%nterm <transpose> transpose
+%nterm <transpose> transpose_opt
+%nterm <std::pair<transpose,transpose>> transpose_opt2
 %nterm <inst> for_inst
 %nterm <std::tuple<std::vector<identifier>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
 %nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
@@ -512,7 +512,7 @@ instructions:
 ;
 
 instruction:
-    AXPBY atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
+    AXPBY atomic transpose_opt[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 axpby_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),
@@ -582,11 +582,11 @@ instruction:
 ;
 
 instruction:
-    GEMM atomic transpose[ta] transpose[tb] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
+    GEMM atomic transpose_opt2[tr] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
-                gemm_inst::create($atomic, $ta, $tb, std::move($alpha), std::move($a), std::move($b),
-                                  std::move($beta), std::move($c), @instruction)
+                gemm_inst::create($atomic, $tr.first, $tr.second, std::move($alpha), std::move($a),
+                                  std::move($b), std::move($beta), std::move($c), @instruction)
             };
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
@@ -596,7 +596,7 @@ instruction:
 ;
 
 instruction:
-    GEMV atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
+    GEMV atomic transpose_opt[ta] var[alpha] COMMA var[a] COMMA var[b] COMMA var[beta] COMMA var[c] {
         try {
             $$ = inst {
                 gemv_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($b),
@@ -609,9 +609,14 @@ instruction:
     }
 ;
 
-transpose:
-    NOTRANS { $$ = transpose::N; }
-  | TRANS { $$ = transpose::T; }
+transpose_opt:
+    %empty { $$ = transpose::N; }
+  | TRANSPOSE { $$ = $TRANSPOSE; }
+;
+
+transpose_opt2:
+    %empty { $$ = std::make_pair(transpose::N, transpose::N); }
+  | TRANSPOSE transpose_opt { $$ = std::make_pair($TRANSPOSE, $transpose_opt); }
 ;
 
 instruction:
@@ -747,7 +752,7 @@ instruction:
 ;
 
 instruction:
-    SUM atomic transpose[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
+    SUM atomic transpose_opt[ta] var[alpha] COMMA var[a] COMMA var[beta] COMMA var[b] {
         try {
             $$ = inst {
                 sum_inst::create($atomic, $ta, std::move($alpha), std::move($a), std::move($beta),
@@ -921,10 +926,10 @@ valued_inst:
 ;
 
 valued_inst:
-    COOPERATIVE_MATRIX_LOAD transpose checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
+    COOPERATIVE_MATRIX_LOAD transpose_opt[ta] checked var[op] LSQBR var[p0] COMMA var[p1] RSQBR COLON data_type[result_ty]  {
         try {
             $$ = inst {
-                cooperative_matrix_load_inst::create($transpose, $checked, std::move($op), std::move($p0),
+                cooperative_matrix_load_inst::create($ta, $checked, std::move($op), std::move($p0),
                                                      std::move($p1), std::move($result_ty),
                                                      @valued_inst)
             };

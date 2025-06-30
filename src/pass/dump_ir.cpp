@@ -168,7 +168,9 @@ void dump_ir_pass::operator()(axpby_inst a) {
     if (a.atomic()) {
         *os_ << ".atomic";
     }
-    *os_ << "." << to_string(a.tA());
+    if (a.tA() != transpose::N) {
+        *os_ << "." << to_string(a.tA());
+    }
     dump_blas_a2(static_cast<blas_a2_inst>(a));
 }
 
@@ -282,7 +284,9 @@ void dump_ir_pass::operator()(cooperative_matrix_insert_inst c) {
 void dump_ir_pass::operator()(cooperative_matrix_load_inst c) {
     dump_val(c.result());
     *os_ << " = cooperative_matrix_load";
-    *os_ << "." << to_string(c.t());
+    if (c.t() != transpose::N) {
+        *os_ << "." << to_string(c.t());
+    }
     if (c.checked() != checked_flag::none) {
         *os_ << "." << to_string(c.checked());
     }
@@ -427,8 +431,12 @@ void dump_ir_pass::operator()(gemm_inst g) {
     if (g.atomic()) {
         *os_ << ".atomic";
     }
-    *os_ << "." << to_string(g.tA());
-    *os_ << "." << to_string(g.tB());
+    if (g.tA() != transpose::N || g.tB() != transpose::N) {
+        *os_ << "." << to_string(g.tA());
+    }
+    if (g.tB() != transpose::N) {
+        *os_ << "." << to_string(g.tB());
+    }
     dump_blas_a3(static_cast<blas_a3_inst>(g));
 }
 
@@ -437,7 +445,9 @@ void dump_ir_pass::operator()(gemv_inst g) {
     if (g.atomic()) {
         *os_ << ".atomic";
     }
-    *os_ << "." << to_string(g.tA());
+    if (g.tA() != transpose::N) {
+        *os_ << "." << to_string(g.tA());
+    }
     dump_blas_a3(static_cast<blas_a3_inst>(g));
 }
 
@@ -622,7 +632,9 @@ void dump_ir_pass::operator()(sum_inst a) {
     if (a.atomic()) {
         *os_ << ".atomic";
     }
-    *os_ << "." << to_string(a.tA());
+    if (a.tA() != transpose::N) {
+        *os_ << "." << to_string(a.tA());
+    }
     dump_blas_a2(static_cast<blas_a2_inst>(a));
 }
 

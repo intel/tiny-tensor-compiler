@@ -68,9 +68,9 @@ func @unused_alloca(%a: memref<f64x4>) {
     %0 = alloca : memref<f64x8,local>
     %1 = alloca : memref<f64x4,local>
     %one = constant 1.0 : f64
-    axpby.n %one, %1, %one, %a
+    axpby %one, %1, %one, %a
 ; CHECK-LABEL: func @unused_alloca({{.*}}
 ; CHECK-NEXT: %0 = alloca : memref<f64x4,local>
 ; CHECK-NEXT: %one{{.*}}
-; CHECK-NEXT: axpby.n %one, %0{{.*}}
+; CHECK-NEXT: axpby %one, %0{{.*}}
 }

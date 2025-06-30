@@ -3,126 +3,126 @@
 
 ; RUN: %tinytc-opt -pinsert-barrier < %s | filecheck %s
 func @rar(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
-    gemm.n.n %a, %A, %B, %b, %C
-    gemm.n.n %a, %A, %B, %b, %D
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %D
 ; CHECK-LABEL: func @rar({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
-; CHECK-NEXT:  gemm.n.n %a, %A, %B, %b, %D
+; CHECK:       gemm %a, %A, %B, %b, %C
+; CHECK-NEXT:  gemm %a, %A, %B, %b, %D
 }
 
 func @raw(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
-    gemm.n.n %a, %A, %B, %b, %C
-    gemm.n.n %a, %C, %B, %b, %D
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %D
 ; CHECK-LABEL: func @raw({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
+; CHECK:       gemm %a, %A, %B, %b, %C
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  gemm.n.n %a, %C, %B, %b, %D
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %D
 }
 
 func @war(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
-    gemm.n.n %a, %C, %B, %b, %A
-    gemm.n.n %a, %D, %B, %b, %C
+    gemm %a, %C, %B, %b, %A
+    gemm %a, %D, %B, %b, %C
 ; CHECK-LABEL: func @war({{.*}}
-; CHECK:       gemm.n.n %a, %C, %B, %b, %A
+; CHECK:       gemm %a, %C, %B, %b, %A
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  gemm.n.n %a, %D, %B, %b, %C
+; CHECK-NEXT:  gemm %a, %D, %B, %b, %C
 }
 
 func @waw(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %C: memref<f32x4x4>, %D: memref<f32x4x4>) {
-    gemm.n.n %a, %A, %B, %b, %C
-    gemm.n.n %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %C
 ; CHECK-LABEL: func @waw({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
+; CHECK:       gemm %a, %A, %B, %b, %C
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  gemm.n.n %a, %A, %B, %b, %C
+; CHECK-NEXT:  gemm %a, %A, %B, %b, %C
 }
 
 func @raw_local(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
     %C = alloca : memref<f32x4x4,local>
-    gemm.n.n %a, %A, %B, %b, %C
-    gemm.n.n %a, %C, %B, %b, %D
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %D
 ; CHECK-LABEL: func @raw_local({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
+; CHECK:       gemm %a, %A, %B, %b, %C
 ; CHECK-NEXT:  barrier.local
-; CHECK-NEXT:  gemm.n.n %a, %C, %B, %b, %D
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %D
 }
 
 func @raw_local_war_global(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
     %C = alloca : memref<f32x4x4,local>
-    gemm.n.n %a, %A, %B, %b, %C
-    gemm.n.n %a, %C, %B, %b, %A
+    gemm %a, %A, %B, %b, %C
+    gemm %a, %C, %B, %b, %A
 ; CHECK-LABEL: func @raw_local_war_global({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
+; CHECK:       gemm %a, %A, %B, %b, %C
 ; CHECK-NEXT:  barrier.global.local
-; CHECK-NEXT:  gemm.n.n %a, %C, %B, %b, %A
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %A
 }
 
 func @respect_manual_barrier(%a: f32, %b: f32, %A: memref<f32x4x4>, %B: memref<f32x4x4>, %D: memref<f32x4x4>) {
     %C = alloca : memref<f32x4x4,local>
-    gemm.n.n %a, %A, %B, %b, %C
+    gemm %a, %A, %B, %b, %C
     barrier.global.local
-    gemm.n.n %a, %C, %B, %b, %A
+    gemm %a, %C, %B, %b, %A
 ; CHECK-LABEL: func @respect_manual_barrier({{.*}}
-; CHECK:       gemm.n.n %a, %A, %B, %b, %C
+; CHECK:       gemm %a, %A, %B, %b, %C
 ; CHECK-NEXT:  barrier.global.local
-; CHECK-NEXT:  gemm.n.n %a, %C, %B, %b, %A
+; CHECK-NEXT:  gemm %a, %C, %B, %b, %A
 }
 
 func @war_alias(%a: f32, %b: f32, %A: memref<f32x8x8>, %C: memref<f32x8x12>) {
     %B = alloca : memref<f32x8x12,local>
     %0 = subview %B[0:8,0:8] : memref<f32x8x8,local>
-    axpby.n %a, %B, %b, %C
-    axpby.n %a, %A, %b, %0
+    axpby %a, %B, %b, %C
+    axpby %a, %A, %b, %0
 ; CHECK-LABEL: func @war_alias({{.*}}
-; CHECK:      axpby.n %a, %B, %b, %C{{.*}}
+; CHECK:      axpby %a, %B, %b, %C{{.*}}
 ; CHECK-NEXT: barrier.local
-; CHECK-NEXT: axpby.n %a, %A, %b, %0{{.*}}
+; CHECK-NEXT: axpby %a, %A, %b, %0{{.*}}
 }
 
 func @if(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
     %c42 = constant 42.0 : f32
     %0 = greater_than %a, %c42 : bool
     if %0 {
-        axpby.n %a, %A, %b, %B
-        axpby.n %a, %B, %b, %C
+        axpby %a, %A, %b, %B
+        axpby %a, %B, %b, %C
     } else {
-        axpby.n %a, %C, %b, %D
+        axpby %a, %C, %b, %D
     }
-    axpby.n %a, %A, %b, %B
+    axpby %a, %A, %b, %B
 ; CHECK-LABEL: func @if({{.*}}
 ; CHECK:       if %0 {
-; CHECK-NEXT:      axpby.n %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:      axpby %a, %A, %b, %B{{.*}}
 ; CHECK-NEXT:      barrier.global
-; CHECK-NEXT:      axpby.n %a, %B, %b, %C{{.*}}
+; CHECK-NEXT:      axpby %a, %B, %b, %C{{.*}}
 ; CHECK-NEXT:  } else {
-; CHECK-NEXT:      axpby.n %a, %C, %b, %D{{.*}}
+; CHECK-NEXT:      axpby %a, %C, %b, %D{{.*}}
 ; CHECK-NEXT:  }
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  axpby.n %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:  axpby %a, %A, %b, %B{{.*}}
 }
 
 func @if2(%a: f32, %b: f32, %A: memref<f32x8x8>, %B: memref<f32x8x8>, %C: memref<f32x8x8>, %D: memref<f32x8x8>) {
     %c42 = constant 42.0 : f32
     %0 = greater_than %a, %c42 : bool
-    axpby.n %a, %B, %b, %A
+    axpby %a, %B, %b, %A
     if %0 {
-        axpby.n %a, %A, %b, %B
-        axpby.n %a, %B, %b, %C
+        axpby %a, %A, %b, %B
+        axpby %a, %B, %b, %C
     } else {
-        axpby.n %a, %C, %b, %D
+        axpby %a, %C, %b, %D
     }
-    axpby.n %a, %A, %b, %B
+    axpby %a, %A, %b, %B
 ; CHECK-LABEL: func @if2({{.*}}
 ; CHECK:       if %0 {
 ; CHECK-NEXT:      barrier.global
-; CHECK-NEXT:      axpby.n %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:      axpby %a, %A, %b, %B{{.*}}
 ; CHECK-NEXT:      barrier.global
-; CHECK-NEXT:      axpby.n %a, %B, %b, %C{{.*}}
+; CHECK-NEXT:      axpby %a, %B, %b, %C{{.*}}
 ; CHECK-NEXT:  } else {
-; CHECK-NEXT:      axpby.n %a, %C, %b, %D{{.*}}
+; CHECK-NEXT:      axpby %a, %C, %b, %D{{.*}}
 ; CHECK-NEXT:  }
 ; CHECK-NEXT:  barrier.global
-; CHECK-NEXT:  axpby.n %a, %A, %b, %B{{.*}}
+; CHECK-NEXT:  axpby %a, %A, %b, %B{{.*}}
 }
 
 func @region1() {
@@ -135,10 +135,10 @@ func @region1() {
         %1 = alloca : memref<f32x8x8,local>
         for %k=%lb,%ub {
             %2 = alloca : memref<f32x8x8,local>
-            gemm.n.n %one, %0, %1, %zero, %2
-            axpby.n %one, %1, %zero, %0
+            gemm %one, %0, %1, %zero, %2
+            axpby %one, %1, %zero, %0
         }
-        axpby.n %one, %0, %zero, %1
+        axpby %one, %0, %zero, %1
     }
 ; CHECK-LABEL: func @region1({{.*}}
 ; CHECK:       for %i=%lb,%ub {
@@ -146,12 +146,12 @@ func @region1() {
 ; CHECK-NEXT:    for %k=%lb,%ub {
 ; CHECK-NEXT:      %2 = alloca : memref<f32x8x8,local>
 ; CHECK-NEXT:      barrier.local
-; CHECK-NEXT:      gemm.n.n %one, %0, %1, %zero, %2
+; CHECK-NEXT:      gemm %one, %0, %1, %zero, %2
 ; CHECK-NEXT:      barrier.local
-; CHECK-NEXT:      axpby.n %one, %1, %zero, %0{{.*}}
+; CHECK-NEXT:      axpby %one, %1, %zero, %0{{.*}}
 ; CHECK-NEXT:    }
 ; CHECK-NEXT:    barrier.local
-; CHECK-NEXT:    axpby.n %one, %0, %zero, %1{{.*}}
+; CHECK-NEXT:    axpby %one, %0, %zero, %1{{.*}}
 ; CHECK-NEXT:  }
 }
 
