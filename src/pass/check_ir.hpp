@@ -21,8 +21,6 @@ class check_ir_pass {
   private:
     void check_yield(tinytc_region &reg, tinytc_inst &in,
                      status yield_missing_status = status::ir_must_have_yield);
-
-    bool inside_spmd_region_ = false;
 };
 
 } // namespace tinytc

@@ -78,6 +78,8 @@ endfunction()
 function(add_mochi_or_pregenerated_to_target)
     cmake_parse_arguments(PARSE_ARGV 0 ARG "" "FLAGS;TARGET" "DEPENDS;SEARCH_PATHS;SOURCES")
 
+    find_package(ClangFormat)
+
     set(search_paths "")
     foreach(search_path IN LISTS ARG_SEARCH_PATHS)
         list(APPEND search_paths "-I\"${search_path}\"")
@@ -90,7 +92,6 @@ function(add_mochi_or_pregenerated_to_target)
             message(STATUS "Pre-generated ${OUTPUT_REL_PATH} available -- skipping mochi dependency")
             target_sources(${ARG_TARGET} PRIVATE ${PROJECT_SOURCE_DIR}/${OUTPUT_REL_PATH})
         else()
-            find_package(ClangFormat)
             if(ClangFormat_FOUND)
                 add_custom_command(
                     OUTPUT ${OUTPUT_PATH}

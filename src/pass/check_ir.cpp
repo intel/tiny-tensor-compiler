@@ -14,6 +14,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <stack>
 
 namespace tinytc {
 
@@ -50,24 +51,26 @@ void check_ir_pass::operator()(if_inst in) {
 }
 
 void check_ir_pass::run_on_function(tinytc_func &fn) {
-    walk(fn, [this](tinytc_inst &i, walk_stage const &stage) {
+    auto inside_spmd_region = std::stack<bool>{};
+    inside_spmd_region.push(false);
+    walk(fn, [&](tinytc_inst &i, walk_stage const &stage) {
         const bool child_region_is_spmd_region =
             i.num_child_regions() > 0 && i.child_region(0).kind() == region_kind::spmd;
 
         if (stage.is_before_all_regions()) {
-            if (i.kind() == inst_execution_kind::collective && inside_spmd_region_) {
+            if (i.kind() == inst_execution_kind::collective && inside_spmd_region.top()) {
                 throw compilation_error(i.loc(), status::ir_collective_called_from_spmd);
-            } else if (i.kind() == inst_execution_kind::spmd && !inside_spmd_region_) {
+            } else if (i.kind() == inst_execution_kind::spmd && !inside_spmd_region.top()) {
                 throw compilation_error(i.loc(), status::ir_spmd_called_from_collective);
             }
 
             if (child_region_is_spmd_region) {
-                inside_spmd_region_ = true;
+                inside_spmd_region.push(true);
             }
         }
 
         if (child_region_is_spmd_region && stage.is_after_all_regions()) {
-            inside_spmd_region_ = false;
+            inside_spmd_region.pop();
         }
 
         visit(*this, i);
