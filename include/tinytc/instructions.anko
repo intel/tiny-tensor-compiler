@@ -100,6 +100,7 @@ inst @cooperative_matrix_scale "Cooperative matrix scale instruction" {
 
 inst @cooperative_matrix_store "Cooperative matrix store instruction" {
     spmd
+    prop %t       => @transpose    "transposed store"
     prop %checked => @checked_flag "boundary check"
     prop %flag    => @store_flag   "store mode"
     op %val                        "value to store"

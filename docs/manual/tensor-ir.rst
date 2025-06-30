@@ -1833,16 +1833,16 @@ When the transpose modifier ".t" is given, we have
 When the checked flag is set, the following out-of-bound checks are added
 (with memref shape :math:`s_1\times s_2`):
 
-=============== ===================================================================
+=============== =====================================================================
 Flag            Description
-=============== ===================================================================
+=============== =====================================================================
 .n.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+i < s_1 \text{ else } 0`
 .t.rows_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+i < s_2 \text{ else } 0`
 .n.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq y+j < s_2 \text{ else } 0`
 .t.cols_checked :math:`A_{ij} := M[...] \text{ if } 0 \leq x+j < s_1 \text{ else } 0`
 .n.both_checked .n.rows_checked.n and .n.cols_checked
 .t.both_checked .t.rows_checked.t and .t.cols_checked
-=============== ===================================================================
+=============== =====================================================================
 
 Operands
 ~~~~~~~~
@@ -2022,8 +2022,9 @@ Cooperative matrix store
 
 .. code:: abnf
 
-    instruction     =/ "cooperative_matrix_store" [checked-flag] [store-flag] local-identifier ","
-                       local-identifier "[" local-identifier "," local-identifier "]"
+    instruction     =/ "cooperative_matrix_store" [transpose] [checked-flag] [store-flag]
+                       local-identifier "," local-identifier
+                       "[" local-identifier "," local-identifier "]"
 
 Overview
 ~~~~~~~~
@@ -2038,16 +2039,25 @@ position :math:`x, y`, then the components :math:`A_{ij}` of the coopmatrix are 
     \forall i \in [0,X), j \in [0,Y): M[(x + i) S_1 + (y + j) S_2] := A_{ij},
 
 where :math:`S_1` and :math:`S_2` are the entries of the memref's stride array.
+When the transpose modifier ".t" is given, we have
+
+.. math::
+
+    \forall i \in [0,X), j \in [0,Y): M[(x + j) S_1 + (y + i) S_2] := A_{ij}
+
 When the checked flag is set, the following out-of-bound checks are added
 (with memref shape :math:`s_1\times s_2`):
 
-============= =======================================================================================================
+=============== ==============================================
 Flag            Description
-============= =======================================================================================================
-.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
-.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
-.both_checked .rows_checked + .cols_checked
-============= =======================================================================================================
+=============== ==============================================
+.n.rows_checked Only execute store if :math:`0 \leq x+i < s_1`
+.t.rows_checked Only execute store if :math:`0 \leq y+i < s_2`
+.n.cols_checked Only execute store if :math:`0 \leq y+j < s_2`
+.t.cols_checked Only execute store if :math:`0 \leq x+j < s_1`
+.n.both_checked .n.rows_checked + .n.cols_checked
+.t.both_checked .t.rows_checked + .t.cols_checked
+=============== ==============================================
 
 The store is atomic when the atomic flag is set with relaxed memory ordering.
 When the atomic_add flag is set, the coopmatrix is added to the memref atomically.

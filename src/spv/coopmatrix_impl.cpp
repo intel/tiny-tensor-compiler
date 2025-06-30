@@ -128,24 +128,67 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
                             spv_inst *operand, spv_inst *pos0, spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
     auto vt = get_coopmatrix_type(in.val());
-    auto pointer_ty = unique_->pointer_ty(ot);
 
     auto layout = get_layout(cfg(), vt);
 
-    auto walker = matrix_walker(*unique_, cfg().subgroup_size, layout, pos0, pos1, odv.shape(0),
-                                odv.shape(1), odv.stride(0), odv.stride(1), in.checked());
+    auto shape = std::array<spv_inst *, 2u>{odv.shape(0), odv.shape(1)};
+    auto stride = std::array<spv_inst *, 2u>{odv.stride(0), odv.stride(1)};
+    if (in.t() == transpose::T) {
+        std::swap(pos0, pos1);
+        std::swap(shape[0], shape[1]);
+        std::swap(stride[0], stride[1]);
+    }
+
+    auto walker = matrix_walker(*unique_, cfg().subgroup_size, layout, pos0, pos1, shape[0],
+                                shape[1], stride[0], stride[1], in.checked());
+
+    const std::int32_t cols_per_store = [&]() -> std::int32_t {
+        std::int32_t cols_per_store = 1;
+        const std::int32_t max_cols_per_store = 16;
+        const bool sty_ok = layout.sty != scalar_type::c64;
+        const bool transpose_ok = in.t() == transpose::T;
+        const bool checked_ok =
+            in.checked() != checked_flag::cols && in.checked() != checked_flag::both;
+        const bool layout_ok = layout.blocks1 == 1 && layout.rows >= cfg().subgroup_size;
+        if (sty_ok && transpose_ok && checked_ok && layout_ok) {
+            const std::int32_t num_cols = layout.length / layout.blocks;
+            while (2 * cols_per_store <= max_cols_per_store &&
+                   num_cols % (2 * cols_per_store) == 0) {
+                cols_per_store *= 2;
+            }
+        }
+        return cols_per_store;
+    }();
+    spv_inst *io_ty = unique().scalar_ty(layout.sty);
+    spv_inst *io_vec_ty = cols_per_store > 1 ? unique().vec_ty(io_ty, cols_per_store) : io_ty;
+    const auto pointer_ty = [&] {
+        const auto storage_cls = address_space_to_storage_class(ot->addrspace());
+        const auto align = ot->element_alignment();
+        return unique_->pointer_ty(storage_cls, io_vec_ty, align);
+    }();
 
     auto &mod = unique_->mod();
     const auto st = [&](tinytc_spv_mod &mod) {
         auto pointer = mod.add<OpInBoundsPtrAccessChain>(pointer_ty, operand, walker.offset(),
                                                          std::vector<spv_inst *>{});
-        auto val_ij = extract(layout, val, walker.component_no());
+        spv_inst *val_ij = nullptr;
+        if (cols_per_store > 1) {
+            val_ij = mod.add<OpUndef>(io_vec_ty);
+            for (std::int32_t c = 0; c < cols_per_store; ++c) {
+                const auto comp_no = layout.component_no(walker.col_no() + c, walker.block_no());
+                spv_inst *v = extract(layout, val, comp_no);
+                val_ij = mod.add<OpCompositeInsert>(io_vec_ty, v, val_ij,
+                                                    std::vector<LiteralInteger>{c});
+            }
+        } else {
+            val_ij = extract(layout, val, walker.component_no());
+        }
 
         make_store(*unique_, in.flag(), ot->element_ty(), ot->addrspace(), pointer, val_ij,
                    in.loc());
     };
     auto const st_block = [&](tinytc_spv_mod &mod) {
-        for (std::int64_t u = 0; u < layout.length / layout.blocks; ++u) {
+        for (std::int64_t u = 0; u < layout.length / layout.blocks; u += cols_per_store) {
             if (walker.needs_mask() || walker.cols_checked()) {
                 make_conditional_execution(*unique_, walker.col_ok(), st);
             } else {
@@ -153,7 +196,9 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
             }
 
             if (u < layout.cols - 1) {
-                walker.advance_column();
+                for (std::int32_t c = 0; c < cols_per_store; ++c) {
+                    walker.advance_column();
+                }
             }
         }
     };

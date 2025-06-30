@@ -151,12 +151,13 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst in, dope_vector 
     auto sty = vt->component_ty();
 
     const bool layout_ok = layout.rows >= cfg().subgroup_size;
+    const bool transpose_ok = in.t() == transpose::N;
     const bool flag_ok = in.flag() == store_flag::regular;
     const bool alignment_ok = is_aligned(required_alignment, in.operand(), in.pos0());
     const bool checked_ok =
         in.checked() == checked_flag::none || in.checked() == checked_flag::cols;
     const bool sty_ok = sty != scalar_type::c64; // We do not have 16 byte/lane block writes
-    if (!layout_ok || !flag_ok || !alignment_ok || !checked_ok || !sty_ok) {
+    if (!layout_ok || !transpose_ok || !flag_ok || !alignment_ok || !checked_ok || !sty_ok) {
         coopmatrix_impl::store(in, odv, val, operand, pos0, pos1);
         return;
     }

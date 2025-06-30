@@ -208,8 +208,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                 if (needs_final_cast) {
                     alpha_ab_mn = bb.create<cast_inst>(alpha_ab_mn, coopmatrix_c_ty, loc);
                 }
-                bb.create<cooperative_matrix_store_inst>(check_c, *flag, alpha_ab_mn, C, pos0, pos1,
-                                                         loc);
+                bb.create<cooperative_matrix_store_inst>(transpose::N, check_c, *flag, alpha_ab_mn,
+                                                         C, pos0, pos1, loc);
             }
         }
     } else {
@@ -234,7 +234,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                         return bb.create<add_inst>(alpha_ab_mn, beta_c, alpha_ab_mn->ty(), loc);
                     }
                 }();
-                bb.create<cooperative_matrix_store_inst>(check_c, store_flag::regular,
+                bb.create<cooperative_matrix_store_inst>(transpose::N, check_c, store_flag::regular,
                                                          alpha_ab_plus_beta_c, C, pos0, pos1, loc);
             }
         }

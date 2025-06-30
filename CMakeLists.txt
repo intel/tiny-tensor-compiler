@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 cmake_minimum_required(VERSION 3.23)
-cmake_policy(VERSION 3.31)
 
 project(tiny-tensor-compiler VERSION 0.3.1 LANGUAGES C CXX)
 

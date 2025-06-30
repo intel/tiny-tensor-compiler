@@ -994,10 +994,10 @@ valued_inst:
 ;
 
 instruction:
-    COOPERATIVE_MATRIX_STORE checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
+    COOPERATIVE_MATRIX_STORE transpose_opt[ta] checked store_flag var[val] COMMA var[op] LSQBR var[p0] COMMA var[p1] RSQBR {
         try {
             $$ = inst {
-                cooperative_matrix_store_inst::create($checked, $store_flag, std::move($val),
+                cooperative_matrix_store_inst::create($ta, $checked, $store_flag, std::move($val),
                                                       std::move($op), std::move($p0), std::move($p1),
                                                       @instruction)
             };

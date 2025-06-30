@@ -348,6 +348,9 @@ void dump_ir_pass::operator()(cooperative_matrix_scale_inst c) {
 
 void dump_ir_pass::operator()(cooperative_matrix_store_inst c) {
     *os_ << "cooperative_matrix_store";
+    if (c.t() != transpose::N) {
+        *os_ << "." << to_string(c.t());
+    }
     if (c.checked() != checked_flag::none) {
         *os_ << "." << to_string(c.checked());
     }

@@ -164,6 +164,51 @@ func @load_block2d(%A: memref<f16x128x128> {alignment=128},
     }
 }
 
+TEST_CASE(RUNTIME_NAME " store transposed f16") {
+    const std::string code = R"TinyTL(
+func @store_block2d(%A: memref<f16x128x128> {alignment=128},
+                    %B: memref<f16x128x128> {alignment=128})
+    attributes{subgroup_size=16,work_group_size=[16,1]} {
+    parallel {
+        %0 = constant 4 : index
+        %1 = constant 8 : index
+        %2 = cooperative_matrix_load %A[%0,%1] : coopmatrix<f16x16x8,matrix_acc>
+        cooperative_matrix_store.t %2, %B[%0,%1]
+        %3 = constant 62 : index
+        %4 = constant 17 : index
+        %5 = cooperative_matrix_load %A[%3,%4] : coopmatrix<f16x32x16,matrix_acc>
+        cooperative_matrix_store.t %5, %B[%3,%4]
+    }
+})TinyTL";
+
+    constexpr std::int64_t N = 128;
+
+    const auto A = [] {
+        auto A = test_matrix<half>(N, N);
+        for (std::int64_t j = 0; j < N; ++j) {
+            for (std::int64_t i = 0; i < N; ++i) {
+                A(i, j) = half(static_cast<float>(i + j * A.rows()));
+            }
+        }
+        return A;
+    }();
+    auto B = test_matrix<half>(N, N);
+
+    run_custom_test_case(code, "store_block2d", A, B);
+
+    for (std::int64_t j = 0; j < B.cols(); ++j) {
+        for (std::int64_t i = 0; i < B.rows(); ++i) {
+            if (i >= 4 && i < 12 && j >= 8 && j < 24) {
+                REQUIRE(B(i, j) == A(4 + j - 8, 8 + i - 4));
+            } else if (i >= 62 && i < 78 && j >= 17 && j < 49) {
+                REQUIRE(B(i, j) == A(62 + j - 17, 17 + i - 62));
+            } else {
+                REQUIRE(B(i, j) == B.poison);
+            }
+        }
+    }
+}
+
 TEST_CASE(RUNTIME_NAME " matmul dpas f16") {
     auto gpu_rt = std::make_shared<runtime_class>();
 

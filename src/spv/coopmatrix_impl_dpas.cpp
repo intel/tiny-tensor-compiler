@@ -558,11 +558,12 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst in, dope_ve
 void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst in, dope_vector const &odv,
                                  spv_inst *val, spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ct = get_coopmatrix_type(in.val());
+    const bool transpose_ok = in.t() == transpose::N;
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const auto type_ok = cfg().matrix->have_type(ct);
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
-    if (!sgs_ok || !type_ok || !block_io_ok) {
+    if (!transpose_ok || !sgs_ok || !type_ok || !block_io_ok) {
         coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
     } else {
         auto ot = get_memref_type(in.operand());
