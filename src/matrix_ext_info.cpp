@@ -73,9 +73,9 @@ auto matrix_ext_type::K_block_sizes(std::int32_t M, std::int32_t N) const
 
 auto matrix_ext_info::get_precision(scalar_type a, scalar_type b, scalar_type acc) const
     -> matrix_ext_type const * {
-    for (auto const &type : types_) {
-        if (type.a() == a && type.b() == b && type.have_acc(acc)) {
-            return &type;
+    for (auto const &mat_type : mat_types_) {
+        if (mat_type.a() == a && mat_type.b() == b && mat_type.have_acc(acc)) {
+            return &mat_type;
         }
     }
     return nullptr;
@@ -83,9 +83,11 @@ auto matrix_ext_info::get_precision(scalar_type a, scalar_type b, scalar_type ac
 
 auto matrix_ext_info::have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d,
                                 std::int64_t M, std::int64_t N, std::int64_t K) const -> bool {
-    for (auto const &type : types_) {
-        if (type.have_type(a, M, K, matrix_use::a) && type.have_type(b, K, N, matrix_use::b) &&
-            type.have_type(c, M, N, matrix_use::acc) && type.have_type(d, M, N, matrix_use::acc)) {
+    for (auto const &mat_type : mat_types_) {
+        if (mat_type.have_type(a, M, K, matrix_use::a) &&
+            mat_type.have_type(b, K, N, matrix_use::b) &&
+            mat_type.have_type(c, M, N, matrix_use::acc) &&
+            mat_type.have_type(d, M, N, matrix_use::acc)) {
             return true;
         }
     }
@@ -98,8 +100,8 @@ auto matrix_ext_info::have_precision(scalar_type a, scalar_type b, scalar_type a
 
 auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
                                 matrix_use use) const -> bool {
-    for (auto const &type : types_) {
-        if (type.have_type(sty, rows, cols, use)) {
+    for (auto const &mat_type : mat_types_) {
+        if (mat_type.have_type(sty, rows, cols, use)) {
             return true;
         }
     }

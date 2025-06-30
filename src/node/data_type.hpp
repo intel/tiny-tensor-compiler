@@ -21,13 +21,12 @@ using data_type_nodes =
               class memref_data_type, class scalar_data_type, class void_data_type>;
 } // namespace tinytc
 
-struct tinytc_data_type {
+struct tinytc_type {
   public:
     using leaves = tinytc::data_type_nodes;
 
-    inline tinytc_data_type(tinytc::DTK tid, tinytc_compiler_context_t ctx)
-        : tid_(tid), ctx_(ctx) {}
-    virtual ~tinytc_data_type() = default;
+    inline tinytc_type(tinytc::DTK tid, tinytc_compiler_context_t ctx) : tid_(tid), ctx_(ctx) {}
+    virtual ~tinytc_type() = default;
     inline auto type_id() const -> tinytc::DTK { return tid_; }
     inline auto context() const -> tinytc_compiler_context_t { return ctx_; }
 
@@ -38,23 +37,39 @@ struct tinytc_data_type {
 
 namespace tinytc {
 
-class boolean_data_type : public tinytc_data_type {
+class boolean_data_type : public tinytc_type {
   public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::bool_; }
-    static auto get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t;
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::bool_; }
+    static auto get(tinytc_compiler_context_t ctx) -> tinytc_type_t;
 
   protected:
-    inline boolean_data_type(tinytc_compiler_context_t ctx) : tinytc_data_type(DTK::bool_, ctx) {}
+    inline boolean_data_type(tinytc_compiler_context_t ctx) : tinytc_type(DTK::bool_, ctx) {}
     friend class compiler_context_cache;
 };
 
-class coopmatrix_data_type : public tinytc_data_type {
+class scalar_data_type : public tinytc_type {
   public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::coopmatrix; }
-    static auto get(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols, matrix_use use,
-                    location const &lc = {}) -> tinytc_data_type_t;
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::scalar; }
+    static auto get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_type_t;
 
-    inline auto ty() const -> tinytc_data_type_t { return ty_; }
+    inline scalar_type ty() const { return ty_; }
+
+  protected:
+    inline scalar_data_type(tinytc_compiler_context_t ctx, scalar_type ty)
+        : tinytc_type(DTK::scalar, ctx), ty_(ty) {}
+    friend class compiler_context_cache;
+
+  private:
+    scalar_type ty_;
+};
+
+class coopmatrix_data_type : public tinytc_type {
+  public:
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::coopmatrix; }
+    static auto get(tinytc_type_t ty, std::int64_t rows, std::int64_t cols, matrix_use use,
+                    location const &lc = {}) -> tinytc_type_t;
+
+    inline auto ty() const -> tinytc_type_t { return ty_; }
     auto component_ty() const -> scalar_type;
     inline auto shape() const -> std::array<std::int64_t, 2u> { return shape_; }
     inline auto shape(int mode) const -> std::int64_t { return shape_[mode]; }
@@ -71,46 +86,46 @@ class coopmatrix_data_type : public tinytc_data_type {
     }
 
   protected:
-    coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t rows, std::int64_t cols,
-                         matrix_use use, location const &lc = {});
+    coopmatrix_data_type(tinytc_type_t ty, std::int64_t rows, std::int64_t cols, matrix_use use,
+                         location const &lc = {});
 
   private:
-    tinytc_data_type_t ty_;
+    tinytc_type_t ty_;
     std::array<std::int64_t, 2u> shape_;
     matrix_use use_;
 };
 
-class group_data_type : public tinytc_data_type {
+class group_data_type : public tinytc_type {
   public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::group; }
-    static auto get(tinytc_data_type_t ty, std::int64_t size, std::int64_t offset,
-                    location const &lc = {}) -> tinytc_data_type_t;
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::group; }
+    static auto get(tinytc_type_t ty, std::int64_t size, std::int64_t offset,
+                    location const &lc = {}) -> tinytc_type_t;
 
-    inline auto ty() const -> tinytc_data_type_t { return ty_; }
+    inline auto ty() const -> tinytc_type_t { return ty_; }
     inline auto size() const -> std::int64_t { return size_; }
     inline auto offset() const -> std::int64_t { return offset_; }
 
   protected:
-    group_data_type(tinytc_data_type_t memref_ty, std::int64_t size, std::int64_t offset = 0,
+    group_data_type(tinytc_type_t memref_ty, std::int64_t size, std::int64_t offset = 0,
                     location const &lc = {});
 
   private:
-    tinytc_data_type_t ty_;
+    tinytc_type_t ty_;
     std::int64_t size_;
     std::int64_t offset_;
 };
 
-class memref_data_type : public tinytc_data_type {
+class memref_data_type : public tinytc_type {
   public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::memref; }
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::memref; }
     static auto canonical_stride(array_view<std::int64_t> shape) -> std::vector<std::int64_t>;
-    static auto get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
+    static auto get(tinytc_type_t element_ty, array_view<std::int64_t> shape,
                     array_view<std::int64_t> stride,
                     address_space addrspace = address_space::global, location const &lc = {})
-        -> tinytc_data_type_t;
+        -> tinytc_type_t;
 
     scalar_type element_ty() const;
-    inline tinytc_data_type_t element_data_ty() const { return element_ty_; }
+    inline tinytc_type_t element_data_ty() const { return element_ty_; }
     inline std::int64_t dim() const { return shape_.size(); }
     inline auto const &shape() const { return shape_; }
     inline std::int64_t shape(std::int64_t i) const { return shape_[i]; }
@@ -132,38 +147,22 @@ class memref_data_type : public tinytc_data_type {
     auto size_in_bytes() const -> std::int64_t;
 
   protected:
-    memref_data_type(tinytc_data_type_t element_ty, std::vector<std::int64_t> shape,
+    memref_data_type(tinytc_type_t element_ty, std::vector<std::int64_t> shape,
                      std::vector<std::int64_t> stride,
                      address_space addrspace = address_space::global, location const &lc = {});
 
-    tinytc_data_type_t element_ty_;
+    tinytc_type_t element_ty_;
     std::vector<std::int64_t> shape_, stride_;
     address_space addrspace_ = address_space::global;
 };
 
-class scalar_data_type : public tinytc_data_type {
+class void_data_type : public tinytc_type {
   public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::scalar; }
-    static auto get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_data_type_t;
-
-    inline scalar_type ty() const { return ty_; }
+    inline static bool classof(tinytc_type const &d) { return d.type_id() == DTK::void_; }
+    static auto get(tinytc_compiler_context_t ctx) -> tinytc_type_t;
 
   protected:
-    inline scalar_data_type(tinytc_compiler_context_t ctx, scalar_type type)
-        : tinytc_data_type(DTK::scalar, ctx), ty_(type) {}
-    friend class compiler_context_cache;
-
-  private:
-    scalar_type ty_;
-};
-
-class void_data_type : public tinytc_data_type {
-  public:
-    inline static bool classof(tinytc_data_type const &d) { return d.type_id() == DTK::void_; }
-    static auto get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t;
-
-  protected:
-    inline void_data_type(tinytc_compiler_context_t ctx) : tinytc_data_type(DTK::void_, ctx) {}
+    inline void_data_type(tinytc_compiler_context_t ctx) : tinytc_type(DTK::void_, ctx) {}
     friend class compiler_context_cache;
 };
 

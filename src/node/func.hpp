@@ -16,13 +16,13 @@
 
 struct tinytc_func final {
   public:
-    tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
-                tinytc_data_type_t ty, tinytc_location const &lc = {});
+    tinytc_func(std::string name, tinytc::array_view<tinytc_type_t> params, tinytc_type_t ty,
+                tinytc_location const &lc = {});
 
     inline auto loc() const noexcept -> tinytc_location const & { return loc_; }
     inline void loc(tinytc_location const &loc) noexcept { loc_ = loc; }
 
-    inline auto ty() const noexcept -> tinytc_data_type_t { return ty_; }
+    inline auto ty() const noexcept -> tinytc_type_t { return ty_; }
 
     inline auto params() { return body_.params(); }
     inline auto params() const { return body_.params(); }
@@ -43,7 +43,7 @@ struct tinytc_func final {
 
   private:
     std::string name_;
-    tinytc_data_type_t ty_;
+    tinytc_type_t ty_;
     tinytc_region body_;
     tinytc_location loc_;
     tinytc_attr_t attr_ = nullptr;

@@ -85,7 +85,7 @@ void check_memref_mode(memref_data_type *rt, std::int64_t ri, memref_data_type *
     check_memref_stride(rt, ri, ot, oi, loc);
 }
 
-auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_data_type_t ty,
+auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_type_t ty,
                                          location const &loc)
     -> std::pair<memref_data_type *, memref_data_type *> {
     auto rt = dyn_cast<memref_data_type>(ty);

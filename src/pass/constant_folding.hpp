@@ -51,7 +51,7 @@ class constant_folding {
 
 struct compute_unary_op {
     IK operation;
-    data_type ty;
+    tinytc_type_t ty;
     location const &loc;
 
     auto operator()(bool a) -> fold_result {
@@ -158,7 +158,7 @@ struct compute_unary_op {
 
 struct compute_binary_op {
     IK operation;
-    data_type ty;
+    tinytc_type_t ty;
     location const &loc;
 
     auto operator()(bool a, bool b) -> fold_result {
@@ -397,7 +397,7 @@ struct compute_binop_identities {
 
 struct compute_compare {
     IK cond;
-    data_type ty;
+    tinytc_type_t ty;
     location const &loc;
 
     template <typename T>
@@ -506,7 +506,7 @@ auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_res
 
 struct compute_math_unary_op {
     IK operation;
-    data_type ty;
+    tinytc_type_t ty;
     location const &loc;
 
     template <typename T>

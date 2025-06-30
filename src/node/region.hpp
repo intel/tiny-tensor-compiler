@@ -72,9 +72,9 @@ struct alignas(8) tinytc_region final {
         return tinytc::iterator_range_wrapper{param_begin(), param_end()};
     }
     inline auto num_params() const noexcept -> std::size_t { return params_.size(); }
-    void set_params(tinytc::array_view<tinytc_data_type_t> param_types);
+    void set_params(tinytc::array_view<tinytc_type_t> param_types);
     void set_num_params(std::size_t num_params);
-    void set_param(std::size_t idx, tinytc_data_type_t param_type);
+    void set_param(std::size_t idx, tinytc_type_t param_type);
 
   private:
     static auto inst_list_offset() -> std::size_t {

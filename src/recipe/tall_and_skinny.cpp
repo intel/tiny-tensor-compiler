@@ -108,15 +108,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 tiling[1] /= 2;
             }
 
-            auto const body = [&](region_builder &bb, value alpha, value A, value B,
-                                  bool is_beta_nonzero, value beta_arg, value C) {
+            auto const body = [&](region_builder &bb, tinytc_value_t alpha, tinytc_value_t A,
+                                  tinytc_value_t B, bool is_beta_nonzero, tinytc_value_t beta_arg,
+                                  tinytc_value_t C) {
                 auto c_M_block_size = bb.create<constant_inst>(M_block_size, index_ty, my_loc());
                 auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
                 auto m = bb.create<mul_inst>(gid, c_M_block_size, get_type(gid), my_loc());
                 auto beta = is_beta_nonzero ? beta_arg : bb.constant_zero(ty_, my_loc());
 
                 auto const static_offsets = std::array<std::int64_t, 2u>{dynamic, 0};
-                auto const offsets = array_view<value>(m);
+                auto const offsets = array_view<tinytc_value_t>(m);
 
                 auto const static_gemm = [&](region_builder &bb) {
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{M_block_size, K};
@@ -126,16 +127,16 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto ct =
                         get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
                     auto a = bb.create<subview_inst>(static_offsets, A_static_sizes, A, offsets,
-                                                     array_view<value>{}, at, my_loc());
+                                                     array_view<tinytc_value_t>{}, at, my_loc());
                     auto c = bb.create<subview_inst>(static_offsets, C_static_sizes, C, offsets,
-                                                     array_view<value>{}, ct, my_loc());
+                                                     array_view<tinytc_value_t>{}, ct, my_loc());
                     bb.create<gemm_inst>(false, transpose::N, transpose::N, alpha, a, B, beta, c,
                                          my_loc());
                 };
-                auto const dynamic_gemm = [&](region_builder &bb, value dyn_block_size) {
+                auto const dynamic_gemm = [&](region_builder &bb, tinytc_value_t dyn_block_size) {
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{dynamic, K};
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{dynamic, N};
-                    auto const sizes = array_view<value>(dyn_block_size);
+                    auto const sizes = array_view<tinytc_value_t>(dyn_block_size);
                     auto at =
                         get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
                     auto ct =
@@ -180,7 +181,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 }
 
                 auto fn_body = get_body(f);
-                auto params = std::array<value, 5u>{};
+                auto params = std::array<tinytc_value_t, 5u>{};
                 get_parameters(fn_body, params);
                 set_name(params[0], "alpha");
                 set_name(params[1], "A");

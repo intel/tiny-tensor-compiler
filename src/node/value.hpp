@@ -23,7 +23,7 @@ class const_use_iterator;
 
 struct alignas(8) tinytc_value final {
   public:
-    tinytc_value(tinytc_data_type_t ty = nullptr, tinytc_inst_t def_inst_ = nullptr,
+    tinytc_value(tinytc_type_t ty = nullptr, tinytc_inst_t def_inst_ = nullptr,
                  tinytc::location const &lc = {});
     ~tinytc_value();
 
@@ -35,7 +35,7 @@ struct alignas(8) tinytc_value final {
     inline auto loc() const noexcept -> tinytc::location const & { return loc_; }
     inline void loc(tinytc::location const &loc) noexcept { loc_ = loc; }
 
-    inline auto ty() const -> tinytc_data_type_t { return ty_; }
+    inline auto ty() const -> tinytc_type_t { return ty_; }
 
     inline auto context() const -> tinytc_compiler_context_t { return ty_->context(); }
 
@@ -56,7 +56,7 @@ struct alignas(8) tinytc_value final {
     inline void defining_inst(tinytc_inst_t def_inst) { def_inst_ = def_inst; }
 
   private:
-    tinytc_data_type_t ty_;
+    tinytc_type_t ty_;
     tinytc::location loc_;
     tinytc_inst_t def_inst_ = nullptr;
     std::string name_;

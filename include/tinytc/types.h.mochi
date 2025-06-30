@@ -42,18 +42,18 @@ typedef uint8_t tinytc_bool_t;
 //! @struct tinytc_attr
 //! @brief Opaque struct for an attribute
 struct tinytc_attr; // IWYU pragma: export
-//! @brief data_type handle
+//! @brief attribute handle
 typedef struct tinytc_attr *tinytc_attr_t;
-//! @brief const data_type handle
+//! @brief const attribute handle
 typedef const struct tinytc_attr *const_tinytc_attr_t;
 
-//! @struct tinytc_data_type
+//! @struct tinytc_type
 //! @brief Opaque struct for a data type
-struct tinytc_data_type; // IWYU pragma: export
-//! @brief data_type handle
-typedef struct tinytc_data_type *tinytc_data_type_t;
-//! @brief const data_type handle
-typedef const struct tinytc_data_type *const_tinytc_data_type_t;
+struct tinytc_type; // IWYU pragma: export
+//! @brief type handle
+typedef struct tinytc_type *tinytc_type_t;
+//! @brief const type handle
+typedef const struct tinytc_type *const_tinytc_type_t;
 
 //! @struct tinytc_value
 //! @brief Opaque struct for a value

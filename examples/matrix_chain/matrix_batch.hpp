@@ -32,14 +32,14 @@ template <typename T> class matrix_batch {
     inline void fill(T const &v) { data_.fill(v); }
     inline void random() { data_.random(); }
 
-    inline auto type(tinytc::data_type element_ty) -> tinytc::data_type {
+    inline auto type(tinytc_type_t element_ty) -> tinytc_type_t {
         if (howmany_ == 1) {
             return tinytc::get_memref(element_ty, {nrows(), ncols()}, {1, ld()});
         }
         return tinytc::get_memref(element_ty, {nrows(), ncols(), tinytc::dynamic},
                                   {1, ld(), stride()});
     }
-    inline auto local_type(tinytc::data_type element_ty) -> tinytc::data_type {
+    inline auto local_type(tinytc_type_t element_ty) -> tinytc_type_t {
         return tinytc::get_memref(element_ty, {nrows(), ncols()}, {1, ld()},
                                   tinytc::address_space::local);
     }

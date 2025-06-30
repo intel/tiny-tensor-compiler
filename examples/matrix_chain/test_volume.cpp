@@ -61,7 +61,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
     // Optimized kernel
     auto opt_kernel = [&](compiler_context const &ctx) {
         auto element_ty = get_scalar(ctx, real_t);
-        std::array<data_type, 2 * dim + 2> param_types;
+        std::array<tinytc_type_t, 2 * dim + 2> param_types;
         for (std::size_t i = 0; i < dim; ++i) {
             param_types[i] = A_[i].type(element_ty);
         }
@@ -74,11 +74,11 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         auto f = make_func("volume_kernel", param_types, get_void(ctx));
         auto fn_body = get_body(f);
 
-        std::array<value, 2 * dim + 2> params;
+        std::array<tinytc_value_t, 2 * dim + 2> params;
         get_parameters(fn_body, params);
 
-        auto A = [&params](std::size_t i) -> value & { return params[i]; };
-        auto K = [&params](std::size_t i) -> value & { return params[dim + i]; };
+        auto A = [&params](std::size_t i) -> tinytc_value_t & { return params[i]; };
+        auto K = [&params](std::size_t i) -> tinytc_value_t & { return params[dim + i]; };
         auto Q = params[2 * dim + 0];
         auto I = params[2 * dim + 1];
 
@@ -99,7 +99,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
         };
-        auto const offsets3 = array_view<value>(gid);
+        auto const offsets3 = array_view<tinytc_value_t>(gid);
         auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
         auto tmp = bb.create<alloca_inst>(
             get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local));
@@ -114,25 +114,29 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
         auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
         auto a0 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[0]), A(0), offsets3,
-                                          array_view<value>{}, a0t);
+                                          array_view<tinytc_value_t>{}, a0t);
         auto a1 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[1]), A(1), offsets3,
-                                          array_view<value>{}, a1t);
+                                          array_view<tinytc_value_t>{}, a1t);
         auto a2 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[2]), A(2), offsets3,
-                                          array_view<value>{}, a2t);
-        auto k0 = bb.create<subview_inst>(static_offsets2, sizeK2, K(0), array_view<value>{},
-                                          array_view<value>{}, k0t);
-        auto k1 = bb.create<subview_inst>(static_offsets2, sizeK2, K(1), array_view<value>{},
-                                          array_view<value>{}, k1t);
-        auto k2 = bb.create<subview_inst>(static_offsets2, sizeK2, K(2), array_view<value>{},
-                                          array_view<value>{}, k2t);
+                                          array_view<tinytc_value_t>{}, a2t);
+        auto k0 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(0), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k0t);
+        auto k1 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(1), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k1t);
+        auto k2 =
+            bb.create<subview_inst>(static_offsets2, sizeK2, K(2), array_view<tinytc_value_t>{},
+                                    array_view<tinytc_value_t>{}, k2t);
         auto qv =
             bb.create<subview_inst>(static_offsets3, array_view{B3_aligned_, P_, std::int64_t{0}},
-                                    Q, offsets3, array_view<value>{}, qvt);
+                                    Q, offsets3, array_view<tinytc_value_t>{}, qvt);
         auto iv =
             bb.create<subview_inst>(static_offsets3, array_view{B2_aligned_, P_, std::int64_t{0}},
-                                    I, offsets3, array_view<value>{}, ivt);
+                                    I, offsets3, array_view<tinytc_value_t>{}, ivt);
         auto tmpv = bb.create<subview_inst>(static_offsets2, array_view{B2_, P_}, tmp,
-                                            array_view<value>{}, array_view<value>{}, tmpvt);
+                                            array_view<tinytc_value_t>{},
+                                            array_view<tinytc_value_t>{}, tmpvt);
         auto const c0 = bb.constant_zero(element_ty);
         auto const c1 = bb.constant_one(element_ty);
         bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, iv, a0, c0, tmp);

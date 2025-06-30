@@ -195,8 +195,8 @@ inline attr get_string_attr(compiler_context const &ctx, std::string_view str) {
  *
  * @return Data type
  */
-inline data_type get_boolean(compiler_context const &ctx) {
-    tinytc_data_type_t bt;
+inline tinytc_type_t get_boolean(compiler_context const &ctx) {
+    tinytc_type_t bt;
     CHECK_STATUS(tinytc_boolean_type_get(&bt, ctx.get()));
     return bt;
 }
@@ -211,8 +211,8 @@ inline data_type get_boolean(compiler_context const &ctx) {
  *
  * @return Data type
  */
-inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
-    tinytc_data_type_t st;
+inline tinytc_type_t get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
+    tinytc_type_t st;
     CHECK_STATUS(
         tinytc_scalar_type_get(&st, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty)));
     return st;
@@ -231,11 +231,11 @@ inline data_type get_scalar(compiler_context const &ctx, scalar_type scalar_ty) 
  *
  * @return Data type
  */
-inline data_type get_memref(data_type scalar_ty, array_view<std::int64_t> shape,
-                            array_view<std::int64_t> stride = {},
-                            address_space addrspace = address_space::global,
-                            location const &loc = {}) {
-    tinytc_data_type_t mt;
+inline tinytc_type_t get_memref(tinytc_type_t scalar_ty, array_view<std::int64_t> shape,
+                                array_view<std::int64_t> stride = {},
+                                address_space addrspace = address_space::global,
+                                location const &loc = {}) {
+    tinytc_type_t mt;
     CHECK_STATUS_LOC(tinytc_memref_type_get(&mt, scalar_ty, shape.size(), shape.data(),
                                             stride.size(), stride.data(),
                                             static_cast<tinytc_address_space_t>(addrspace), &loc),
@@ -253,9 +253,9 @@ inline data_type get_memref(data_type scalar_ty, array_view<std::int64_t> shape,
  *
  * @return Data type
  */
-inline data_type get_group(data_type memref_ty, std::int64_t size, std::int64_t offset = 0,
-                           location const &loc = {}) {
-    tinytc_data_type_t gt;
+inline tinytc_type_t get_group(tinytc_type_t memref_ty, std::int64_t size, std::int64_t offset = 0,
+                               location const &loc = {}) {
+    tinytc_type_t gt;
     CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, size, offset, &loc), loc);
     return gt;
 }
@@ -271,9 +271,9 @@ inline data_type get_group(data_type memref_ty, std::int64_t size, std::int64_t 
  *
  * @return Data type
  */
-inline data_type get_coopmatrix(data_type scalar_ty, std::int64_t rows, std::int64_t cols,
-                                matrix_use use, location const &loc = {}) {
-    tinytc_data_type_t ct;
+inline tinytc_type_t get_coopmatrix(tinytc_type_t scalar_ty, std::int64_t rows, std::int64_t cols,
+                                    matrix_use use, location const &loc = {}) {
+    tinytc_type_t ct;
     CHECK_STATUS_LOC(tinytc_coopmatrix_type_get(&ct, scalar_ty, rows, cols,
                                                 static_cast<::tinytc_matrix_use_t>(use), &loc),
                      loc);
@@ -287,8 +287,8 @@ inline data_type get_coopmatrix(data_type scalar_ty, std::int64_t rows, std::int
  *
  * @return Data type
  */
-inline data_type get_void(compiler_context const &ctx) {
-    tinytc_data_type_t vt;
+inline tinytc_type_t get_void(compiler_context const &ctx) {
+    tinytc_type_t vt;
     CHECK_STATUS(tinytc_void_type_get(&vt, ctx.get()));
     return vt;
 }
@@ -304,7 +304,7 @@ inline data_type get_void(compiler_context const &ctx) {
  *
  * @return Name as C-string
  */
-inline auto get_name(value val) -> char const * {
+inline auto get_name(tinytc_value_t val) -> char const * {
     char const *name;
     CHECK_STATUS(tinytc_value_get_name(val, &name));
     return name;
@@ -316,7 +316,7 @@ inline auto get_name(value val) -> char const * {
  * @param val Value
  * @param name Name
  */
-inline void set_name(value val, std::string_view name) {
+inline void set_name(tinytc_value_t val, std::string_view name) {
     CHECK_STATUS(tinytc_value_set_name_n(val, name.size(), name.data()));
 }
 
@@ -327,8 +327,8 @@ inline void set_name(value val, std::string_view name) {
  *
  * @return Data type
  */
-inline auto get_type(value val) -> data_type {
-    tinytc_data_type_t ty;
+inline auto get_type(tinytc_value_t val) -> tinytc_type_t {
+    tinytc_type_t ty;
     CHECK_STATUS(tinytc_value_get_type(val, &ty));
     return ty;
 }
@@ -347,7 +347,7 @@ inline auto get_type(value val) -> data_type {
  *
  * @return Minimum of view size and actual number of result values
  */
-inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::size_t {
+inline auto get_values(inst const &in, mutable_array_view<tinytc_value_t> vals) -> std::size_t {
     std::size_t result_list_size = vals.size();
     tinytc_value_t *vs = reinterpret_cast<tinytc_value_t *>(vals.data());
     CHECK_STATUS(tinytc_inst_get_values(in.get(), &result_list_size, vs));
@@ -364,7 +364,7 @@ inline auto get_values(inst const &in, mutable_array_view<value> vals) -> std::s
  *
  * @return Minimum of view size and actual number of child regions
  */
-inline auto get_regions(inst const &in, mutable_array_view<region> regs) -> std::size_t {
+inline auto get_regions(inst const &in, mutable_array_view<tinytc_region_t> regs) -> std::size_t {
     std::size_t result_list_size = regs.size();
     tinytc_region_t *rl = reinterpret_cast<tinytc_region_t *>(regs.data());
     CHECK_STATUS(tinytc_inst_get_regions(in.get(), &result_list_size, rl));
@@ -399,7 +399,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto operator()(bool value, data_type ty, location const &loc = {}) -> inst {
+    inline auto operator()(bool value, tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_boolean(&instr, value, ty, &loc), loc);
         return inst(instr);
@@ -414,7 +414,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto operator()(std::complex<double> value, data_type ty, location const &loc = {})
+    inline auto operator()(std::complex<double> value, tinytc_type_t ty, location const &loc = {})
         -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(
@@ -431,7 +431,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto operator()(double value, data_type ty, location const &loc = {}) -> inst {
+    inline auto operator()(double value, tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_float(&instr, value, ty, &loc), loc);
         return inst(instr);
@@ -446,7 +446,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto operator()(std::int32_t value, data_type ty, location const &loc = {}) -> inst {
+    inline auto operator()(std::int32_t value, tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
         return inst(instr);
@@ -461,7 +461,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto operator()(std::int64_t value, data_type ty, location const &loc = {}) -> inst {
+    inline auto operator()(std::int64_t value, tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_int(&instr, value, ty, &loc), loc);
         return inst(instr);
@@ -475,7 +475,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto one(data_type ty, location const &loc = {}) -> inst {
+    inline auto one(tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_one(&instr, ty, &loc), loc);
         return inst(instr);
@@ -489,7 +489,7 @@ template <> struct creator<constant_inst> {
      *
      * @return Instruction
      */
-    inline auto zero(data_type ty, location const &loc = {}) -> inst {
+    inline auto zero(tinytc_type_t ty, location const &loc = {}) -> inst {
         tinytc_inst_t instr;
         CHECK_STATUS_LOC(tinytc_constant_inst_create_zero(&instr, ty, &loc), loc);
         return inst(instr);
@@ -517,7 +517,7 @@ template <typename T, typename... Args> inline auto create(Args &&...args) -> in
  * @param reg Region
  * @param instruction instruction object
  */
-inline void append(region reg, inst instruction) {
+inline void append(tinytc_region_t reg, inst instruction) {
     CHECK_STATUS(tinytc_region_append(reg, instruction.release()));
 }
 
@@ -528,7 +528,7 @@ inline void append(region reg, inst instruction) {
  *
  * @return iterator
  */
-inline auto begin(region reg) -> tinytc_inst_iterator_t {
+inline auto begin(tinytc_region_t reg) -> tinytc_inst_iterator_t {
     tinytc_inst_iterator_t it;
     CHECK_STATUS(tinytc_region_begin(reg, &it));
     return it;
@@ -541,7 +541,7 @@ inline auto begin(region reg) -> tinytc_inst_iterator_t {
  *
  * @return iterator
  */
-inline auto end(region reg) -> tinytc_inst_iterator_t {
+inline auto end(tinytc_region_t reg) -> tinytc_inst_iterator_t {
     tinytc_inst_iterator_t it;
     CHECK_STATUS(tinytc_region_end(reg, &it));
     return it;
@@ -555,7 +555,7 @@ inline auto end(region reg) -> tinytc_inst_iterator_t {
  *
  * @return Iterator pointing to the instruction after the one erased
  */
-inline auto erase(region reg, tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
+inline auto erase(tinytc_region_t reg, tinytc_inst_iterator_t iterator) -> tinytc_inst_iterator_t {
     auto it = iterator;
     CHECK_STATUS(tinytc_region_erase(reg, &it));
     return it;
@@ -570,7 +570,7 @@ inline auto erase(region reg, tinytc_inst_iterator_t iterator) -> tinytc_inst_it
  *
  * @return Iterator pointing to the newly inserted instruction
  */
-inline auto insert(region reg, tinytc_inst_iterator_t iterator, inst instruction)
+inline auto insert(tinytc_region_t reg, tinytc_inst_iterator_t iterator, inst instruction)
     -> tinytc_inst_iterator_t {
     auto it = iterator;
     CHECK_STATUS(tinytc_region_insert(reg, &it, instruction.release()));
@@ -588,7 +588,8 @@ inline auto insert(region reg, tinytc_inst_iterator_t iterator, inst instruction
  *
  * @return Minimum of view size and actual number of parameters
  */
-inline auto get_parameters(region reg, mutable_array_view<value> params) -> std::size_t {
+inline auto get_parameters(tinytc_region_t reg, mutable_array_view<tinytc_value_t> params)
+    -> std::size_t {
     std::size_t result_list_size = params.size();
     tinytc_value_t *ps = reinterpret_cast<tinytc_value_t *>(params.data());
     CHECK_STATUS(tinytc_region_get_parameters(reg, &result_list_size, ps));
@@ -619,10 +620,10 @@ inline void prev(tinytc_inst_iterator_t &iterator) { CHECK_STATUS(tinytc_prev_in
  *
  * @return Region
  */
-inline auto get_body(func const &f) -> region {
+inline auto get_body(func const &f) -> tinytc_region_t {
     tinytc_region_t body;
     CHECK_STATUS(tinytc_func_get_body(f.get(), &body));
-    return region{body};
+    return body;
 }
 
 /**
@@ -635,8 +636,8 @@ inline auto get_body(func const &f) -> region {
  *
  * @return Function
  */
-inline func make_func(std::string_view name, array_view<data_type> param_type_list, data_type ty,
-                      location const &loc = {}) {
+inline func make_func(std::string_view name, array_view<tinytc_type_t> param_type_list,
+                      tinytc_type_t ty, location const &loc = {}) {
     tinytc_func_t fun;
     CHECK_STATUS_LOC(tinytc_func_create(&fun, name.size(), name.data(), param_type_list.size(),
                                         param_type_list.data(), ty, &loc),
@@ -703,14 +704,14 @@ class region_builder {
      *
      * @param reg region object
      */
-    region_builder(region reg) : reg_{reg}, ip_{end(reg_)} {}
+    region_builder(tinytc_region_t reg) : reg_{reg}, ip_{end(reg_)} {}
     /**
      * @brief ctor
      *
      * @param reg region object
      * @param ip insertion point
      */
-    region_builder(region reg, tinytc_inst_iterator_t ip) : reg_{reg}, ip_{ip} {}
+    region_builder(tinytc_region_t reg, tinytc_inst_iterator_t ip) : reg_{reg}, ip_{ip} {}
 
     /**
      * @brief Get insertion point
@@ -726,8 +727,8 @@ class region_builder {
      *
      * @return Value returned by instruction; may be empty
      */
-    [[maybe_unused]] inline auto add(inst i) -> value {
-        auto result = value{};
+    [[maybe_unused]] inline auto add(inst i) -> tinytc_value_t {
+        auto result = tinytc_value_t{};
         get_values(i, result);
         insert(reg_, ip_, std::move(i));
         return result;
@@ -740,9 +741,9 @@ class region_builder {
      *
      * @return Values returned by instruction
      */
-    [[maybe_unused]] inline auto add_multivalued(inst i) -> std::vector<value> {
+    [[maybe_unused]] inline auto add_multivalued(inst i) -> std::vector<tinytc_value_t> {
         auto num_results = get_values(i, {});
-        auto results = std::vector<value>(static_cast<std::size_t>(num_results));
+        auto results = std::vector<tinytc_value_t>(static_cast<std::size_t>(num_results));
         results.resize(get_values(i, results));
         insert(reg_, ip_, std::move(i));
         return results;
@@ -754,7 +755,7 @@ class region_builder {
      * @param args Arguments forwarded to creator
      *
      * @return Type is either void (T::num_returned_values==0), value (T::num_returned_values==1),
-     * or std::vector<value> (T::num_returned_values>1)
+     * or std::vector<tinytc_value_t> (T::num_returned_values>1)
      */
     template <typename T, typename... Args> inline auto create(Args &&...args) {
         inst i = creator<T>{}(std::forward<Args>(args)...);
@@ -775,7 +776,7 @@ class region_builder {
      *
      * @return Value returned by instruction
      */
-    inline auto constant_one(data_type ty, location const &loc = {}) -> value {
+    inline auto constant_one(tinytc_type_t ty, location const &loc = {}) -> tinytc_value_t {
         return add(creator<constant_inst>{}.one(ty, loc));
     }
     /**
@@ -786,7 +787,7 @@ class region_builder {
      *
      * @return Value returned by instruction
      */
-    inline auto constant_zero(data_type ty, location const &loc = {}) -> value {
+    inline auto constant_zero(tinytc_type_t ty, location const &loc = {}) -> tinytc_value_t {
         return add(creator<constant_inst>{}.zero(ty, loc));
     }
 
@@ -803,7 +804,7 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, F &&f, attr attributes = nullptr,
+    void for_loop(tinytc_value_t from, tinytc_value_t to, F &&f, attr attributes = nullptr,
                   location const &loc = {}) {
         for_loop<F>(std::move(from), std::move(to), nullptr, std::forward<F>(f), attributes, loc);
     }
@@ -821,13 +822,13 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void for_loop(value from, value to, value step, F &&f, attr attributes = nullptr,
-                  location const &loc = {}) {
+    void for_loop(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step, F &&f,
+                  attr attributes = nullptr, location const &loc = {}) {
         auto fi = creator<for_inst>{}(from, to, step, {}, {}, loc);
         set_attr(fi, attributes);
-        auto reg = region{};
+        auto reg = tinytc_region_t{};
         get_regions(fi, reg);
-        auto loop_var = value{};
+        auto loop_var = tinytc_value_t{};
         get_parameters(reg, loop_var);
         if (!reg || !loop_var) {
             throw status::internal_compiler_error;
@@ -837,7 +838,7 @@ class region_builder {
         f(bb, loop_var);
     }
     /**
-     * @brief Build for-loop with functor f(region_builder&, array_view<value>) -> void
+     * @brief Build for-loop with functor f(region_builder&, array_view<tinytc_value_t>) -> void
      *
      * The loop trip count is the first value in the array_view.
      * The following values are the loop-carried values.
@@ -853,26 +854,27 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    auto for_loop(value from, value to, value step, array_view<value> initial_value_list,
-                  array_view<data_type> return_type_list, F &&f, attr attributes = nullptr,
-                  location const &loc = {}) -> std::vector<value> {
+    auto for_loop(tinytc_value_t from, tinytc_value_t to, tinytc_value_t step,
+                  array_view<tinytc_value_t> initial_value_list,
+                  array_view<tinytc_type_t> return_type_list, F &&f, attr attributes = nullptr,
+                  location const &loc = {}) -> std::vector<tinytc_value_t> {
         auto fi = creator<for_inst>{}(from, to, step, initial_value_list, return_type_list, loc);
         set_attr(fi, attributes);
-        auto reg = region{};
+        auto reg = tinytc_region_t{};
         get_regions(fi, reg);
         auto num_params = get_parameters(reg, {});
-        auto params = std::vector<value>(num_params);
+        auto params = std::vector<tinytc_value_t>(num_params);
         get_parameters(reg, params);
         if (!reg || num_params != 1 + initial_value_list.size()) {
             throw status::internal_compiler_error;
         }
         auto results = add_multivalued(std::move(fi));
         auto bb = region_builder{reg};
-        f(bb, array_view<value>(params));
+        f(bb, array_view<tinytc_value_t>(params));
         return results;
     }
     /**
-     * @brief Build foreach-loop with functor f(region_builder&, array_view<value>) -> void
+     * @brief Build foreach-loop with functor f(region_builder&, array_view<tinytc_value_t>) -> void
      *
      * @tparam F Functor type
      * @param from Loop variable start list
@@ -881,20 +883,20 @@ class region_builder {
      * @param loc Source code location
      */
     template <typename F>
-    void foreach_loop(array_view<value> from, array_view<value> to, F &&f,
+    void foreach_loop(array_view<tinytc_value_t> from, array_view<tinytc_value_t> to, F &&f,
                       location const &loc = {}) {
         auto fi = creator<foreach_inst>{}(std::move(from), std::move(to), loc);
-        auto reg = region{};
+        auto reg = tinytc_region_t{};
         get_regions(fi, reg);
         auto num_params = get_parameters(reg, {});
-        auto params = std::vector<value>(num_params);
+        auto params = std::vector<tinytc_value_t>(num_params);
         get_parameters(reg, params);
         if (!reg || num_params != from.size() || num_params != to.size()) {
             throw status::internal_compiler_error;
         }
         insert(reg_, ip_, std::move(fi));
         auto bb = region_builder{reg};
-        f(bb, array_view<value>(params));
+        f(bb, array_view<tinytc_value_t>(params));
     }
 
     /**
@@ -908,9 +910,10 @@ class region_builder {
      * @param then Then region functor
      * @param loc Source code location
      */
-    template <typename F> void if_condition(value condition, F &&then, location const &loc = {}) {
+    template <typename F>
+    void if_condition(tinytc_value_t condition, F &&then, location const &loc = {}) {
         auto ii = creator<if_inst>{}(std::move(condition), {}, loc);
-        auto reg = region{};
+        auto reg = tinytc_region_t{};
         get_regions(ii, reg);
         if (!reg) {
             throw status::internal_compiler_error;
@@ -934,11 +937,11 @@ class region_builder {
      * @return Returned values
      */
     template <typename F, typename G>
-    auto ifelse(value condition, F &&then, G &&otherwise,
-                array_view<data_type> return_type_list = {}, location const &loc = {})
-        -> std::vector<value> {
+    auto ifelse(tinytc_value_t condition, F &&then, G &&otherwise,
+                array_view<tinytc_type_t> return_type_list = {}, location const &loc = {})
+        -> std::vector<tinytc_value_t> {
         auto ii = creator<if_inst>{}(std::move(condition), return_type_list, loc);
-        std::array<region, 2u> regs = {};
+        std::array<tinytc_region_t, 2u> regs = {};
         get_regions(ii, regs);
         if (!regs[0] || !regs[1]) {
             throw status::internal_compiler_error;
@@ -956,10 +959,10 @@ class region_builder {
      *
      * @return Region
      */
-    inline auto get_region() -> region { return reg_; }
+    inline auto get_region() -> tinytc_region_t { return reg_; }
 
   private:
-    region reg_;
+    tinytc_region_t reg_;
     tinytc_inst_iterator_t ip_;
 };
 

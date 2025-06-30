@@ -20,8 +20,8 @@
 
 using namespace tinytc;
 
-tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_data_type_t> params,
-                         tinytc_data_type_t ty, tinytc_location const &lc)
+tinytc_func::tinytc_func(std::string name, tinytc::array_view<tinytc_type_t> params,
+                         tinytc_type_t ty, tinytc_location const &lc)
     : name_(std::move(name)), ty_{ty}, loc_{lc} {
     body_.kind(tinytc::region_kind::collective);
     body_.loc(loc_);
@@ -79,8 +79,8 @@ auto tinytc_func::work_group_size() const -> std::array<std::int32_t, 2u> {
 extern "C" {
 
 tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length, char const *name,
-                                   size_t num_params, const tinytc_data_type_t *param_type_list,
-                                   tinytc_data_type_t ty, const tinytc_location_t *loc) {
+                                   size_t num_params, const tinytc_type_t *param_type_list,
+                                   tinytc_type_t ty, const tinytc_location_t *loc) {
     if (fun == nullptr || (num_params > 0 && param_type_list == nullptr) || ty == nullptr) {
         return tinytc_status_invalid_arguments;
     }

@@ -34,12 +34,12 @@ auto to_c_type(builtin_type ty) -> char const * {
     case builtin_type::i64:
         return "int64_t";
     case builtin_type::type:
-        return "tinytc_data_type_t";
+        return "tinytc_type_t";
     case builtin_type::value:
         return "tinytc_value_t";
     }
 }
-auto to_cxx_type(builtin_type ty, bool pub) -> char const * {
+auto to_cxx_type(builtin_type ty) -> char const * {
     switch (ty) {
     case builtin_type::bool_:
         return "bool";
@@ -48,9 +48,9 @@ auto to_cxx_type(builtin_type ty, bool pub) -> char const * {
     case builtin_type::i64:
         return "std::int64_t";
     case builtin_type::type:
-        return pub ? "data_type" : "tinytc_data_type_t";
+        return "tinytc_type_t";
     case builtin_type::value:
-        return pub ? "value" : "tinytc_value_t";
+        return "tinytc_value_t";
     }
 }
 
@@ -60,8 +60,8 @@ void generate_c_type(std::ostream &os, data_type const &ty) {
                           [&](std::string const &ty) { os << ty; }},
                ty);
 }
-void generate_cxx_type(std::ostream &os, data_type const &ty, bool pub) {
-    std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty, pub); },
+void generate_cxx_type(std::ostream &os, data_type const &ty) {
+    std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty); },
                           [&](enum_ *const &ty) { os << ty->name(); },
                           [&](std::string const &ty) { os << ty; }},
                ty);
@@ -149,10 +149,10 @@ void generate_c_params(std::ostream &os, inst *in) {
         });
     os << "const tinytc_location_t *loc";
 }
-void generate_cxx_params(std::ostream &os, inst *in, bool pub) {
+void generate_cxx_params(std::ostream &os, inst *in) {
     generate_params(
         in, [&](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
-            const auto type = to_cxx_type(ty, pub);
+            const auto type = to_cxx_type(ty);
             if (q == quantifier::many) {
                 os << std::format("array_view<{0}> {1}, ", type, name);
             } else {
@@ -254,7 +254,7 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                 os << " * @param loc Source code location; can be {}\n *\n";
                 os << " * @return Instruction\n */\n";
                 os << "inline auto operator()(";
-                generate_cxx_params(os, in, true);
+                generate_cxx_params(os, in);
                 os << "= {}) -> inst {\n";
                 os << "tinytc_inst_t instr;\n";
                 os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",

@@ -33,7 +33,7 @@ spv_defs_includes = [
 ]
 spv_ops = 'instructions.hpp'
 spv_visitor = 'visit.hpp'
-spv_visitor_includes = [spv_defs, spv_enums, spv_ops]
+spv_visitor_includes = [spv_defs, spv_enums, spv_ops, 'util/overloaded.hpp']
 spv_ops_includes = [
     spv_defs, spv_enums, 'error.hpp', 'util/ilist_base.hpp', None,
     '<array>', '<cstdint>', '<optional>', '<string>', '<utility>', '<variant>',
@@ -306,12 +306,6 @@ def generate_op_classes(f, grammar):
 
 def generate_visitor(f, grammar):
     format_call = lambda op: f'static_cast<Derived*>(this)->operator()({op});'
-
-    print("""template <class... Ts> struct overloaded : Ts... {
-    using Ts::operator()...;
-};
-template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;""",
-          file=f)
 
     for const in ["", "const"]:
         print('template <typename Visitor>', file=f)

@@ -30,7 +30,6 @@ Builder C-API:
     typedef:
       - tinytc_address_spaces_t
       - tinytc_attr_t
-      - tinytc_data_type_t
       - tinytc_func_t
       - tinytc_named_attr_t
       - tinytc_location_t
@@ -38,12 +37,13 @@ Builder C-API:
       - tinytc_inst_t
       - tinytc_inst_iterator_t
       - tinytc_region_t
+      - tinytc_type_t
       - tinytc_value_t
       - const_tinytc_attr_t
-      - const_tinytc_data_type_t
       - const_tinytc_func_t
       - const_tinytc_inst_t
       - const_tinytc_region_t
+      - const_tinytc_type_t
       - const_tinytc_value_t
   Attribute:
     function:

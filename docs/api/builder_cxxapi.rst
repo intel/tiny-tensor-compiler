@@ -348,10 +348,6 @@ Data Type
 
   * :ref:`tinytc::to_scalar_type`
 
-* Typedefs
-
-  * :ref:`tinytc::data_type`
-
 * Variables
 
   * :ref:`tinytc::to_scalar_type_v`
@@ -410,16 +406,6 @@ to_scalar_type
 ..............
 
 .. doxygenstruct:: tinytc::to_scalar_type
-
-Data Type Typedefs
-------------------
-
-.. _tinytc::data_type:
-
-data_type
-.........
-
-.. doxygentypedef:: tinytc::data_type
 
 Data Type Variables
 -------------------
@@ -1311,10 +1297,6 @@ Region
 
   * :ref:`tinytc::region_builder`
 
-* Typedefs
-
-  * :ref:`tinytc::region`
-
 Region Functions
 ----------------
 
@@ -1341,31 +1323,4 @@ region_builder
 ..............
 
 .. doxygenclass:: tinytc::region_builder
-
-Region Typedefs
----------------
-
-.. _tinytc::region:
-
-region
-......
-
-.. doxygentypedef:: tinytc::region
-
-Value
-=====
-
-* Typedefs
-
-  * :ref:`tinytc::value`
-
-Value Typedefs
---------------
-
-.. _tinytc::value:
-
-value
-.....
-
-.. doxygentypedef:: tinytc::value
 

@@ -102,7 +102,7 @@ auto inst_converter::val(tinytc_value const &v) -> spv_inst * {
     throw compilation_error(v.loc(), status::spirv_undefined_value);
 }
 
-auto inst_converter::spv_ty(const_tinytc_data_type_t ty) -> spv_inst * {
+auto inst_converter::spv_ty(const_tinytc_type_t ty) -> spv_inst * {
     return tinytc::visit(
         overloaded{
             [&](void_data_type const &) -> spv_inst * { return unique_.void_ty(); },

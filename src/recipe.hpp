@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace tinytc {
-auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool;
+auto is_argument_zero(scalar_type sty, std::size_t arg_size, const void *arg_value) -> bool;
 } // namespace tinytc
 
 struct tinytc_recipe : tinytc::reference_counted {
@@ -42,7 +42,7 @@ struct tinytc_recipe_handler : tinytc::reference_counted {
 
     virtual void active_kernel(int kernel_num) = 0;
     virtual void arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) = 0;
-    virtual void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t type) = 0;
+    virtual void mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t ty) = 0;
     virtual void howmany(std::int64_t num) = 0;
 
   private:

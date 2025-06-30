@@ -230,8 +230,8 @@
 %nterm <prog> prog
 %nterm <std::vector<func>> func_list
 %nterm <func> func
-%nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_data_type_t>>> parameters
-%nterm <std::pair<param_attrs,tinytc_data_type_t>> parameter
+%nterm <std::pair<std::vector<param_attrs>,std::vector<tinytc_type_t>>> parameters
+%nterm <std::pair<param_attrs,tinytc_type_t>> parameter
 %nterm <tinytc_attr_t> function_attributes
 %nterm <tinytc_attr_t> attribute
 %nterm <tinytc_attr_t> array_attribute
@@ -241,17 +241,17 @@
 %nterm <named_attr> named_attribute
 %nterm <tinytc_attr_t> attribute_name
 %nterm <tinytc_attr_t> optional_dictionary_attribute
-%nterm <tinytc_data_type_t> data_type
-%nterm <tinytc_data_type_t> boolean_type
-%nterm <tinytc_data_type_t> scalar_type
-%nterm <tinytc_data_type_t> coopmatrix_type
-%nterm <tinytc_data_type_t> memref_type
+%nterm <tinytc_type_t> data_type
+%nterm <tinytc_type_t> boolean_type
+%nterm <tinytc_type_t> scalar_type
+%nterm <tinytc_type_t> coopmatrix_type
+%nterm <tinytc_type_t> memref_type
 %nterm <address_space> optional_address_space
 %nterm <std::vector<std::int64_t>> mode_list
 %nterm <std::vector<std::int64_t>> optional_stride_list
 %nterm <std::vector<std::int64_t>> stride_list
 %nterm <std::int64_t> constant_or_dynamic
-%nterm <tinytc_data_type_t> group_type
+%nterm <tinytc_type_t> group_type
 %nterm <std::int64_t> group_offset
 %nterm <tinytc_value_t> var
 %nterm <inst> instruction
@@ -263,14 +263,14 @@
 %nterm <transpose> transpose_opt
 %nterm <std::pair<transpose,transpose>> transpose_opt2
 %nterm <inst> for_inst
-%nterm <std::tuple<std::vector<identifier>, std::vector<tinytc_value_t>, std::vector<tinytc_data_type_t>>> optional_loop_carried_values
+%nterm <std::tuple<std::vector<identifier>, std::vector<tinytc_value_t>, std::vector<tinytc_type_t>>> optional_loop_carried_values
 %nterm <std::pair<std::vector<identifier>, std::vector<tinytc_value_t>>> init_value_list
 %nterm <std::pair<identifier, tinytc_value_t>> init_value
 %nterm <tinytc_value_t> optional_step
 %nterm <inst> if_inst
-%nterm <std::vector<tinytc_data_type_t>> optional_returned_values
-%nterm <std::vector<tinytc_data_type_t>> optional_return_type_list
-%nterm <std::vector<tinytc_data_type_t>> return_type_list
+%nterm <std::vector<tinytc_type_t>> optional_returned_values
+%nterm <std::vector<tinytc_type_t>> optional_return_type_list
+%nterm <std::vector<tinytc_type_t>> return_type_list
 %nterm <std::vector<identifier>> identifier_list
 %nterm <inst> valued_inst
 %nterm <checked_flag> checked

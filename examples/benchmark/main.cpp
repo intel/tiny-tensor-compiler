@@ -76,7 +76,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         ++l.end.column;
         return l;
     };
-    auto const make_memref = [](data_type element_ty, transpose t, int64_t A, std::int64_t B,
+    auto const make_memref = [](tinytc_type_t element_ty, transpose t, int64_t A, std::int64_t B,
                                 std::array<std::int64_t, 2u> const &stride, location const &loc) {
         auto s = std::array<std::int64_t, 2u>{A, B};
         if (t == transpose::T) {
@@ -104,7 +104,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
             set_parameter_attr(f, 2, align_attr);
         }
         auto fn_body = get_body(f);
-        auto params = std::array<value, 3u>{};
+        auto params = std::array<tinytc_value_t, 3u>{};
         get_parameters(fn_body, params);
 
         auto bb = region_builder{fn_body};
@@ -119,7 +119,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         auto c = bb.create<load_inst>(params[2], array_view{gid}, C_ty, my_loc());
         bb.for_loop(
             from, to,
-            [&](region_builder &bb, value const &) {
+            [&](region_builder &bb, tinytc_value_t const &) {
                 bb.create<gemm_inst>(atomic, tA, tB, calpha, a, b, cbeta, c, my_loc());
             },
             nullptr, my_loc());

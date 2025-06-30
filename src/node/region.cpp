@@ -52,7 +52,7 @@ void tinytc_region::defining_inst(tinytc_inst_t def_inst) {
     }
 }
 
-void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types) {
+void tinytc_region::set_params(array_view<tinytc_type_t> param_types) {
     params_.resize(param_types.size());
     for (std::size_t i = 0; i < param_types.size(); ++i) {
         set_param(i, param_types[i]);
@@ -60,7 +60,7 @@ void tinytc_region::set_params(array_view<tinytc_data_type_t> param_types) {
 }
 
 void tinytc_region::set_num_params(std::size_t num_params) { params_.resize(num_params); }
-void tinytc_region::set_param(std::size_t idx, tinytc_data_type_t param_type) {
+void tinytc_region::set_param(std::size_t idx, tinytc_type_t param_type) {
     params_[idx] = tinytc_value{param_type, def_inst_, loc_};
 }
 

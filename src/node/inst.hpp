@@ -84,7 +84,7 @@ struct alignas(8) tinytc_inst : tinytc::ilist_node_with_parent<tinytc_inst, tiny
     inline auto results() -> tinytc::result_range { return {result_begin(), result_end()}; }
     inline auto result(std::size_t pos) -> tinytc_value & { return *result_ptr(pos); }
     inline auto num_results() const -> std::int32_t { return layout_.num_results; }
-    void result(std::size_t pos, tinytc_data_type_t ty);
+    void result(std::size_t pos, tinytc_type_t ty);
 
     // Properties
     inline auto props() -> void * { return use_ptr(layout_.num_operands); }

@@ -134,7 +134,7 @@ TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt,
+TINYTC_EXPORT tinytc_status_t tinytc_boolean_type_get(tinytc_type_t *dt,
                                                       tinytc_compiler_context_t ctx);
 
 /**
@@ -146,7 +146,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
+TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_type_t *dt,
                                                      tinytc_compiler_context_t ctx,
                                                      tinytc_scalar_type_t type);
 
@@ -168,8 +168,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
-                                                     tinytc_data_type_t scalar_ty,
+TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_type_t *dt, tinytc_type_t scalar_ty,
                                                      size_t shape_size, const int64_t *shape,
                                                      size_t stride_size, const int64_t *stride,
                                                      tinytc_address_space_t addrspace,
@@ -188,9 +187,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
-                                                    tinytc_data_type_t memref_ty, int64_t size,
-                                                    int64_t offset, const tinytc_location_t *loc);
+TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_type_t *dt, tinytc_type_t memref_ty,
+                                                    int64_t size, int64_t offset,
+                                                    const tinytc_location_t *loc);
 /**
  * @brief Get coopmatrix data type
  *
@@ -205,9 +204,9 @@ TINYTC_EXPORT tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt,
-                                                         tinytc_data_type_t scalar_ty, int64_t rows,
-                                                         int64_t cols, tinytc_matrix_use_t use,
+TINYTC_EXPORT tinytc_status_t tinytc_coopmatrix_type_get(tinytc_type_t *dt, tinytc_type_t scalar_ty,
+                                                         int64_t rows, int64_t cols,
+                                                         tinytc_matrix_use_t use,
                                                          const tinytc_location_t *loc);
 /**
  * @brief Get void data type
@@ -217,7 +216,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt,
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_void_type_get(tinytc_data_type_t *dt,
+TINYTC_EXPORT tinytc_status_t tinytc_void_type_get(tinytc_type_t *dt,
                                                    tinytc_compiler_context_t ctx);
 
 ////////////////////////////
@@ -267,8 +266,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, cha
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl,
-                                                    tinytc_data_type_t *ty);
+TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl, tinytc_type_t *ty);
 
 ////////////////////////////
 /////// Instructions ///////
@@ -288,7 +286,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr,
                                                                   tinytc_bool_t value,
-                                                                  tinytc_data_type_t ty,
+                                                                  tinytc_type_t ty,
                                                                   const tinytc_location_t *loc);
 
 /**
@@ -304,7 +302,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t 
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr,
                                                                   double value_re, double value_im,
-                                                                  tinytc_data_type_t ty,
+                                                                  tinytc_type_t ty,
                                                                   const tinytc_location_t *loc);
 
 /**
@@ -318,7 +316,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t 
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
-                                                                tinytc_data_type_t ty,
+                                                                tinytc_type_t ty,
                                                                 const tinytc_location_t *loc);
 
 /**
@@ -332,7 +330,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *i
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
-                                                              tinytc_data_type_t ty,
+                                                              tinytc_type_t ty,
                                                               const tinytc_location_t *loc);
 
 /**
@@ -345,7 +343,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *ins
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr,
-                                                              tinytc_data_type_t ty,
+                                                              tinytc_type_t ty,
                                                               const tinytc_location_t *loc);
 
 /**
@@ -358,7 +356,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *ins
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr,
-                                                               tinytc_data_type_t ty,
+                                                               tinytc_type_t ty,
                                                                const tinytc_location_t *loc);
 
 ////////////////////////////
@@ -553,9 +551,8 @@ TINYTC_EXPORT tinytc_status_t tinytc_region_get_parameters(tinytc_region_t reg,
  */
 TINYTC_EXPORT tinytc_status_t tinytc_func_create(tinytc_func_t *fun, size_t name_length,
                                                  char const *name, size_t num_params,
-                                                 const tinytc_data_type_t *param_type_list,
-                                                 tinytc_data_type_t ty,
-                                                 const tinytc_location_t *loc);
+                                                 const tinytc_type_t *param_type_list,
+                                                 tinytc_type_t ty, const tinytc_location_t *loc);
 
 /**
  * @brief Set function attributes

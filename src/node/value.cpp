@@ -12,7 +12,7 @@
 
 using namespace tinytc;
 
-tinytc_value::tinytc_value(tinytc_data_type_t ty, tinytc_inst_t def_inst, location const &lc)
+tinytc_value::tinytc_value(tinytc_type_t ty, tinytc_inst_t def_inst, location const &lc)
     : ty_{std::move(ty)}, loc_{lc}, def_inst_{def_inst} {}
 
 tinytc_value::~tinytc_value() {
@@ -128,7 +128,7 @@ tinytc_status_t tinytc_value_get_name(const_tinytc_value_t vl, char const **name
     return exception_to_status_code([&] { *name = vl->name(); });
 }
 
-tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl, tinytc_data_type_t *ty) {
+tinytc_status_t tinytc_value_get_type(const_tinytc_value_t vl, tinytc_type_t *ty) {
     if (vl == nullptr || ty == nullptr) {
         return tinytc_status_invalid_arguments;
     }

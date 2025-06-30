@@ -80,7 +80,8 @@ auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout c
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        tensor_layout const &layoutC, scalar_type alpha_ty, scalar_type A_ty,
                        scalar_type B_ty, scalar_type beta_ty, scalar_type C_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op) -> prog {
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
+    -> prog {
     auto ctx = make_compiler_context();
 
     auto const alphat = get_scalar(ctx, alpha_ty);
@@ -100,7 +101,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
 
     auto f = make_func(name, {alphat, At, Bt, betat, Ct}, get_void(ctx));
     auto fn_body = get_body(f);
-    auto params = std::array<value, 5u>{};
+    auto params = std::array<tinytc_value_t, 5u>{};
     get_parameters(fn_body, params);
     set_name(params[0], "alpha");
     set_name(params[1], "A");

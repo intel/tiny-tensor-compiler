@@ -16,7 +16,7 @@ int main(void) {
     size_t num_params;
     tinytc_compiler_context_t ctx;
     tinytc_prog_t program;
-    tinytc_data_type_t void_ty, element_ty, ty;
+    tinytc_type_t void_ty, element_ty, ty;
     tinytc_func_t copy_fun;
     tinytc_region_t copy_body;
     tinytc_inst_t tmp;
@@ -37,7 +37,7 @@ int main(void) {
     tinytc_void_type_get(&void_ty, ctx);
 
     // Create function
-    tinytc_data_type_t param_types[2] = {ty, ty};
+    tinytc_type_t param_types[2] = {ty, ty};
     tinytc_func_create(&copy_fun, sizeof(copy_fun_name) - 1, copy_fun_name, 2, param_types, void_ty,
                        NULL);
     tinytc_prog_add_function(program, copy_fun);

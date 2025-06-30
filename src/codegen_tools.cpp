@@ -40,8 +40,9 @@ auto get_core_config_and_tiling(tinytc_func const &fn, const_tinytc_core_info_t 
     return {core_cfg, tiling};
 }
 
-void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int num_tiles,
-                      value sg_id, sgs_loop_body_builder const &body, attr for_attributes) {
+void tile_loop_by_sgs(region_builder &bb, tinytc_value_t loop_trip_count, int sgs, int num_tiles,
+                      tinytc_value_t sg_id, sgs_loop_body_builder const &body,
+                      attr for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c_sgs = bb.create<constant_inst>(sgs, ity);
@@ -60,7 +61,7 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
         auto block_end = instant_constant_fold_add(bb, create<mul_inst>(c_sgs, blocks, ity));
         bb.for_loop(
             std::move(block_start), std::move(block_end), c_sgs_tiles,
-            [&](region_builder &bb, value block) { body(bb, block, false, c_sgs); },
+            [&](region_builder &bb, tinytc_value_t block) { body(bb, block, false, c_sgs); },
             for_attributes);
     });
 
@@ -75,8 +76,9 @@ void tile_loop_by_sgs(region_builder &bb, value loop_trip_count, int sgs, int nu
     });
 }
 
-void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_size, int num_tiles,
-                         value sg_id, uniform_loop_body_builder const &body, attr for_attributes) {
+void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int block_size,
+                         int num_tiles, tinytc_value_t sg_id, uniform_loop_body_builder const &body,
+                         attr for_attributes) {
     auto ity = loop_trip_count->ty();
     auto bool_ty = boolean_data_type::get(ity->context());
     auto c0 = bb.create<constant_inst>(0, ity);
@@ -109,7 +111,8 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
         auto step_1 = instant_constant_fold_add(bb, create<mul_inst>(bs_1, c_tiles, ity));
         bb.for_loop(
             std::move(block_start_1), std::move(block_end_1), std::move(step_1),
-            [&](region_builder &bb, value block) { body(bb, block, bs_1); }, for_attributes);
+            [&](region_builder &bb, tinytc_value_t block) { body(bb, block, bs_1); },
+            for_attributes);
     });
 
     auto tmp0 = instant_constant_fold_add(bb, create<rem_inst>(rem, c_tiles, ity));
@@ -121,11 +124,12 @@ void tile_loop_uniformly(region_builder &bb, value loop_trip_count, int block_si
     auto step = instant_constant_fold_add(bb, create<mul_inst>(bs, c_tiles, ity));
     bb.for_loop(
         std::move(block_start), loop_trip_count, std::move(step),
-        [&](region_builder &bb, value block) { body(bb, block, bs); }, for_attributes);
+        [&](region_builder &bb, tinytc_value_t block) { body(bb, block, bs); }, for_attributes);
 }
 
-auto promote_binop_operands(region_builder &bb, scalar_type result_ty, value a, value b,
-                            location const &loc) -> std::pair<value, value> {
+auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_value_t a,
+                            tinytc_value_t b, location const &loc)
+    -> std::pair<tinytc_value_t, tinytc_value_t> {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     scalar_data_type *bt = dyn_cast<scalar_data_type>(b->ty());
     if (at == nullptr || bt == nullptr) {
@@ -147,8 +151,8 @@ auto promote_binop_operands(region_builder &bb, scalar_type result_ty, value a, 
     return {a, b};
 }
 
-auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, location const &loc)
-    -> value {
+auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tinytc_value_t b,
+                                      location const &loc) -> tinytc_value_t {
     scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
     if (at == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
@@ -168,7 +172,7 @@ auto mixed_precision_coopmatrix_scale(region_builder &bb, value a, value b, loca
     return bb.create<cooperative_matrix_scale_inst>(a, b, bt, loc);
 }
 
-auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {
+auto get_atomic_store_flag(tinytc_value_t beta) -> std::optional<store_flag> {
     constant_inst beta_cst = dyn_cast<constant_inst>(beta->defining_inst());
     if (beta_cst) {
         if (beta_cst.is_zero()) {
@@ -179,8 +183,9 @@ auto get_atomic_store_flag(value beta) -> std::optional<store_flag> {
     }
     return std::nullopt;
 }
-void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value beta, value C,
-                 array_view<value> index_list, location const &loc) {
+void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_value_t ab,
+                 tinytc_value_t beta, tinytc_value_t C, array_view<tinytc_value_t> index_list,
+                 location const &loc) {
     memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
     if (ct == nullptr) {
         throw compilation_error(loc, {C}, status::ir_expected_scalar);
@@ -201,7 +206,7 @@ void blas_update(region_builder &bb, bool atomic, value alpha, value ab, value b
     }
 }
 
-auto instant_constant_fold_add(region_builder &bb, inst i) -> value {
+auto instant_constant_fold_add(region_builder &bb, inst i) -> tinytc_value_t {
     auto ctx = i->context();
     if (!ctx) {
         throw compilation_error(i->loc(), status::internal_compiler_error);
@@ -285,7 +290,7 @@ auto add_check(checked_flag flag, checked_flag new_flag) -> checked_flag {
                         std::underlying_type_t<checked_flag>(new_flag)};
 }
 
-work_group_op::work_group_op(std::int32_t num_tiles, std::int32_t subgroup_size, data_type ty)
+work_group_op::work_group_op(std::int32_t num_tiles, std::int32_t subgroup_size, tinytc_type_t ty)
     : num_tiles_{num_tiles}, subgroup_size_{subgroup_size}, ty_{ty}, tmp_{nullptr} {}
 
 void work_group_op::setup(region_builder &bb, location const &loc) {
@@ -301,7 +306,8 @@ void work_group_op::teardown(region_builder &bb) {
     }
 }
 
-auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -> value {
+auto work_group_reduce::make(region_builder &bb, tinytc_value_t a, location const &loc)
+    -> tinytc_value_t {
     auto a_reduced = bb.create<subgroup_reduce_add_inst>(a, ty_, loc);
 
     if (num_tiles_ > 1) {
@@ -333,7 +339,7 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
                 auto c_init = bb.constant_zero(ty_, loc);
                 auto acc =
                     bb.for_loop(sglid, c_num_tiles, c_sgs, {c_init}, {ty_},
-                                [&](region_builder &bb, array_view<value> args) {
+                                [&](region_builder &bb, array_view<tinytc_value_t> args) {
                                     auto lv_index = bb.create<cast_inst>(args[0], index_ty, loc);
                                     auto a_sg_reduced =
                                         bb.create<load_inst>(tmp_, array_view{lv_index}, ty_, loc);
@@ -348,8 +354,9 @@ auto work_group_reduce::make(region_builder &bb, value a, location const &loc) -
     return a_reduced;
 }
 
-auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_sum,
-                                     location const &loc) -> std::pair<value, value> {
+auto work_group_inclusive_scan::make(region_builder &bb, tinytc_value_t a, bool compute_sum,
+                                     location const &loc)
+    -> std::pair<tinytc_value_t, tinytc_value_t> {
     auto a_scan = bb.create<subgroup_inclusive_scan_add_inst>(a, ty_, loc);
 
     auto ctx = compiler_context{a->context(), true};
@@ -376,7 +383,7 @@ auto work_group_inclusive_scan::make(region_builder &bb, value a, bool compute_s
 
         auto c_zero = bb.constant_zero(i32_ty, loc);
         a_scan = bb.for_loop(c_zero, sgid, nullptr, {a_scan}, {ty_},
-                             [&](region_builder &bb, array_view<value> args) {
+                             [&](region_builder &bb, array_view<tinytc_value_t> args) {
                                  auto lv_index = bb.create<cast_inst>(args[0], index_ty, loc);
                                  auto prefix =
                                      bb.create<load_inst>(tmp_, array_view{lv_index}, ty_, loc);

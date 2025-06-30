@@ -147,7 +147,7 @@ void tinytc_inst::op(std::size_t pos, tinytc_value_t val) {
     *use_ptr(pos) = val;
 }
 
-void tinytc_inst::result(std::size_t pos, tinytc_data_type_t ty) {
+void tinytc_inst::result(std::size_t pos, tinytc_type_t ty) {
     if (ty == nullptr) {
         throw compilation_error(loc(), status::invalid_arguments);
     }

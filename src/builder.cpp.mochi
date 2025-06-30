@@ -20,7 +20,7 @@ extern "C" {
 // もち api_builder_cpp "tinytc/instructions.anko"
 
 tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr, tinytc_bool_t value,
-                                                    tinytc_data_type_t ty,
+                                                    tinytc_type_t ty,
                                                     const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -30,7 +30,7 @@ tinytc_status_t tinytc_constant_inst_create_boolean(tinytc_inst_t *instr, tinytc
 }
 
 tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr, double value_re,
-                                                    double value_im, tinytc_data_type_t ty,
+                                                    double value_im, tinytc_type_t ty,
                                                     const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -43,8 +43,7 @@ tinytc_status_t tinytc_constant_inst_create_complex(tinytc_inst_t *instr, double
 }
 
 tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double value,
-                                                  tinytc_data_type_t ty,
-                                                  const tinytc_location_t *loc) {
+                                                  tinytc_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -53,8 +52,7 @@ tinytc_status_t tinytc_constant_inst_create_float(tinytc_inst_t *instr, double v
 }
 
 tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t value,
-                                                tinytc_data_type_t ty,
-                                                const tinytc_location_t *loc) {
+                                                tinytc_type_t ty, const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -62,7 +60,7 @@ tinytc_status_t tinytc_constant_inst_create_int(tinytc_inst_t *instr, int64_t va
         [&] { *instr = constant_inst::create(value, ty, get_optional(loc)).release(); });
 }
 
-tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_data_type_t ty,
+tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_type_t ty,
                                                 const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -106,7 +104,7 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_dat
     });
 }
 
-tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_data_type_t ty,
+tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_type_t ty,
                                                  const tinytc_location_t *loc) {
     if (instr == nullptr) {
         return tinytc_status_invalid_arguments;

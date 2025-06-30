@@ -18,8 +18,8 @@ template <typename T> bool is_argument_zero(std::size_t arg_size, const void *ar
     return v == T(0);
 }
 
-auto is_argument_zero(scalar_type type, std::size_t arg_size, const void *arg_value) -> bool {
-    switch (type) {
+auto is_argument_zero(scalar_type sty, std::size_t arg_size, const void *arg_value) -> bool {
+    switch (sty) {
     case scalar_type::index:
         return is_argument_zero<std::int64_t>(arg_size, arg_value);
     case scalar_type::i8:

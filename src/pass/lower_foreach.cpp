@@ -33,8 +33,8 @@
 namespace tinytc {
 
 template <typename F>
-void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, int num_tiles,
-                F &&make_body, location const &loc) {
+void make_loop0(region_builder &bb, tinytc_value_t from, tinytc_value_t to, tinytc_value_t sg_id,
+                int sgs, int num_tiles, F &&make_body, location const &loc) {
     auto ity = from->ty();
     auto ctx = compiler_context{sg_id->context(), true};
     auto bool_ty = get_boolean(ctx);
@@ -45,7 +45,8 @@ void make_loop0(region_builder &bb, value from, value to, value sg_id, int sgs, 
     auto work_item_offset = bb.create<add_inst>(from, sg_lid, ity, loc);
     tile_loop_by_sgs(
         bb, size, sgs, num_tiles, sg_id,
-        [&](region_builder &bb, value block, bool is_remainder, value trip_count) {
+        [&](region_builder &bb, tinytc_value_t block, bool is_remainder,
+            tinytc_value_t trip_count) {
             auto loop_var0 = bb.create<add_inst>(block, work_item_offset, ity, loc);
             if (is_remainder) {
                 auto cond = bb.create<less_than_inst>(sg_lid, trip_count, bool_ty, loc);
@@ -84,12 +85,13 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
     auto ity = (*from).ty();
 
     if (in.dim() > 1) {
-        auto const make_inner_loop_nest = [&](region_builder &bb, value from1, value to1) {
+        auto const make_inner_loop_nest = [&](region_builder &bb, tinytc_value_t from1,
+                                              tinytc_value_t to1) {
             tinytc_region_t current_region = bb.get_region();
             for (std::int64_t i = in.dim() - 1; i > 1; --i) {
                 auto for_i =
                     inst{for_inst::create(&from[i], &to[i], nullptr, array_view<tinytc_value_t>{},
-                                          array_view<tinytc_data_type_t>{}, in.loc())};
+                                          array_view<tinytc_type_t>{}, in.loc())};
                 auto for_i_view = for_inst(for_i.get());
                 cloner.set_subs(&loop_vars[i], &for_i_view.loop_var());
                 tinytc_region_t next_region = &for_i_view.body();
@@ -98,7 +100,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
             }
             region_builder{current_region}.for_loop(
                 from1, to1,
-                [&](region_builder &bb, value loop_var1) {
+                [&](region_builder &bb, tinytc_value_t loop_var1) {
                     cloner.set_subs(&loop_vars[1], loop_var1);
                     cloner.clone_region(in.body(), *bb.get_region());
                 },
@@ -109,23 +111,24 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
         auto sg_id1 = bb.create<subgroup_id_inst>(comp3::y, i32_ty, in.loc());
 
         auto size1 = bb.create<sub_inst>(&to[1], &from[1], ity, in.loc());
-        tile_loop_uniformly(bb, size1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_id1,
-                            [&](region_builder &bb, value block, value trip_count1) {
-                                auto from1 = bb.create<add_inst>(&from[1], block, ity, in.loc());
-                                auto to1 = bb.create<add_inst>(from1, trip_count1, ity, in.loc());
-                                make_loop0(
-                                    bb, &from[0], &to[0], sg_id0, block_size0, tiling_.m_tiles(),
-                                    [&](region_builder &bb, value loop_var0) {
-                                        cloner.set_subs(&loop_vars[0], loop_var0);
-                                        make_inner_loop_nest(bb, from1, to1);
-                                    },
-                                    in.loc());
-                            });
+        tile_loop_uniformly(
+            bb, size1, core_cfg_.subgroup_size, tiling_.n_tiles(), sg_id1,
+            [&](region_builder &bb, tinytc_value_t block, tinytc_value_t trip_count1) {
+                auto from1 = bb.create<add_inst>(&from[1], block, ity, in.loc());
+                auto to1 = bb.create<add_inst>(from1, trip_count1, ity, in.loc());
+                make_loop0(
+                    bb, &from[0], &to[0], sg_id0, block_size0, tiling_.m_tiles(),
+                    [&](region_builder &bb, tinytc_value_t loop_var0) {
+                        cloner.set_subs(&loop_vars[0], loop_var0);
+                        make_inner_loop_nest(bb, from1, to1);
+                    },
+                    in.loc());
+            });
     } else if (in.dim() == 1) {
         auto sg_id = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
         make_loop0(
             bb, &from[0], &to[0], sg_id, block_size0, tiling_.m_tiles() * tiling_.n_tiles(),
-            [&](region_builder &bb, value loop_var0) {
+            [&](region_builder &bb, tinytc_value_t loop_var0) {
                 cloner.set_subs(&loop_vars[0], loop_var0);
                 cloner.clone_region(in.body(), *bb.get_region());
             },

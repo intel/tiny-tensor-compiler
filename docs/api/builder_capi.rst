@@ -66,8 +66,6 @@ Common
 
   * :ref:`tinytc_attr_t`
 
-  * :ref:`tinytc_data_type_t`
-
   * :ref:`tinytc_func_t`
 
   * :ref:`tinytc_named_attr_t`
@@ -82,17 +80,19 @@ Common
 
   * :ref:`tinytc_region_t`
 
+  * :ref:`tinytc_type_t`
+
   * :ref:`tinytc_value_t`
 
   * :ref:`const_tinytc_attr_t`
-
-  * :ref:`const_tinytc_data_type_t`
 
   * :ref:`const_tinytc_func_t`
 
   * :ref:`const_tinytc_inst_t`
 
   * :ref:`const_tinytc_region_t`
+
+  * :ref:`const_tinytc_type_t`
 
   * :ref:`const_tinytc_value_t`
 
@@ -272,13 +272,6 @@ tinytc_attr_t
 
 .. doxygentypedef:: tinytc_attr_t
 
-.. _tinytc_data_type_t:
-
-tinytc_data_type_t
-..................
-
-.. doxygentypedef:: tinytc_data_type_t
-
 .. _tinytc_func_t:
 
 tinytc_func_t
@@ -328,6 +321,13 @@ tinytc_region_t
 
 .. doxygentypedef:: tinytc_region_t
 
+.. _tinytc_type_t:
+
+tinytc_type_t
+.............
+
+.. doxygentypedef:: tinytc_type_t
+
 .. _tinytc_value_t:
 
 tinytc_value_t
@@ -341,13 +341,6 @@ const_tinytc_attr_t
 ...................
 
 .. doxygentypedef:: const_tinytc_attr_t
-
-.. _const_tinytc_data_type_t:
-
-const_tinytc_data_type_t
-........................
-
-.. doxygentypedef:: const_tinytc_data_type_t
 
 .. _const_tinytc_func_t:
 
@@ -369,6 +362,13 @@ const_tinytc_region_t
 .....................
 
 .. doxygentypedef:: const_tinytc_region_t
+
+.. _const_tinytc_type_t:
+
+const_tinytc_type_t
+...................
+
+.. doxygentypedef:: const_tinytc_type_t
 
 .. _const_tinytc_value_t:
 

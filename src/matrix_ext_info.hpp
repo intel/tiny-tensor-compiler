@@ -58,8 +58,9 @@ class matrix_ext_info {
   public:
     matrix_ext_info() = default;
     inline matrix_ext_info(std::int32_t required_subgroup_size, matrix_ext_block_io_info block_io,
-                           array_view<matrix_ext_type> types)
-        : required_sgs_{required_subgroup_size}, block_io_{block_io}, types_(std::move(types)) {}
+                           array_view<matrix_ext_type> mat_types)
+        : required_sgs_{required_subgroup_size}, block_io_{block_io},
+          mat_types_(std::move(mat_types)) {}
 
     auto get_precision(scalar_type a, scalar_type b, scalar_type acc) const
         -> matrix_ext_type const *;
@@ -73,12 +74,12 @@ class matrix_ext_info {
     inline auto required_subgroup_size() const -> std::int32_t { return required_sgs_; }
     inline auto block_io() const -> matrix_ext_block_io_info const & { return block_io_; }
 
-    inline auto have_dpas() const { return types_.size() > 0; }
+    inline auto have_dpas() const { return mat_types_.size() > 0; }
 
   private:
     std::int32_t required_sgs_;
     matrix_ext_block_io_info block_io_;
-    array_view<matrix_ext_type> types_;
+    array_view<matrix_ext_type> mat_types_;
 };
 
 extern const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types;

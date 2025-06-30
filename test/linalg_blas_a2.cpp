@@ -10,7 +10,7 @@ namespace tinytc::test {
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
                        scalar_type B_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op,
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
                        std::int32_t work_group_size) -> prog {
     auto ctx = make_compiler_context();
 
@@ -36,7 +36,7 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
     }
 
     auto fn_body = get_body(f);
-    auto params = std::array<value, 4u>{};
+    auto params = std::array<tinytc_value_t, 4u>{};
     get_parameters(fn_body, params);
     set_name(params[0], "alpha");
     set_name(params[1], "A");

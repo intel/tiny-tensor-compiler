@@ -28,15 +28,14 @@ using namespace tinytc;
 
 namespace tinytc {
 
-auto boolean_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t {
+auto boolean_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
     return ctx->cache()->bool_ty.get();
 }
 
-auto coopmatrix_data_type::get(tinytc_data_type_t component_ty, std::int64_t rows,
-                               std::int64_t cols, matrix_use use, location const &lc)
-    -> tinytc_data_type_t {
+auto coopmatrix_data_type::get(tinytc_type_t component_ty, std::int64_t rows, std::int64_t cols,
+                               matrix_use use, location const &lc) -> tinytc_type_t {
     const auto hash = fnv1a_combine(component_ty, rows, cols, use);
-    const auto is_equal = [&](tinytc_data_type_t ty) {
+    const auto is_equal = [&](tinytc_type_t ty) {
         const auto ct = dyn_cast<coopmatrix_data_type>(ty);
         return ct && component_ty == ct->ty() && rows == ct->rows() && cols == ct->cols() &&
                use == ct->use();
@@ -47,9 +46,9 @@ auto coopmatrix_data_type::get(tinytc_data_type_t component_ty, std::int64_t row
     return tys.get(hash, is_equal, make);
 }
 
-coopmatrix_data_type::coopmatrix_data_type(tinytc_data_type_t ty, std::int64_t rows0,
-                                           std::int64_t cols0, matrix_use use, location const &lc)
-    : tinytc_data_type(DTK::coopmatrix, ty->context()), ty_(std::move(ty)), shape_{rows0, cols0},
+coopmatrix_data_type::coopmatrix_data_type(tinytc_type_t ty, std::int64_t rows0, std::int64_t cols0,
+                                           matrix_use use, location const &lc)
+    : tinytc_type(DTK::coopmatrix, ty->context()), ty_(std::move(ty)), shape_{rows0, cols0},
       use_(use) {
     if (!isa<scalar_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
@@ -69,10 +68,10 @@ auto coopmatrix_data_type::component_ty() const -> scalar_type {
     return dyn_cast<scalar_data_type>(ty_)->ty();
 }
 
-auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t size, std::int64_t offset,
-                          location const &lc) -> tinytc_data_type_t {
+auto group_data_type::get(tinytc_type_t memref_ty, std::int64_t size, std::int64_t offset,
+                          location const &lc) -> tinytc_type_t {
     const auto hash = fnv1a_combine(memref_ty, size, offset);
-    const auto is_equal = [&](tinytc_data_type_t ty) {
+    const auto is_equal = [&](tinytc_type_t ty) {
         const auto gt = dyn_cast<group_data_type>(ty);
         return gt && memref_ty == gt->ty() && size == gt->size() && offset == gt->offset();
     };
@@ -82,10 +81,9 @@ auto group_data_type::get(tinytc_data_type_t memref_ty, std::int64_t size, std::
     return tys.get(hash, std::move(is_equal), std::move(make));
 }
 
-group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t size, std::int64_t offset,
+group_data_type::group_data_type(tinytc_type_t ty, std::int64_t size, std::int64_t offset,
                                  location const &lc)
-    : tinytc_data_type(DTK::group, ty->context()), ty_(std::move(ty)), size_(size),
-      offset_(offset) {
+    : tinytc_type(DTK::group, ty->context()), ty_(std::move(ty)), size_(size), offset_(offset) {
     if (!isa<memref_data_type>(*ty_)) {
         throw compilation_error(lc, status::ir_expected_memref);
     }
@@ -97,10 +95,10 @@ group_data_type::group_data_type(tinytc_data_type_t ty, std::int64_t size, std::
     }
 }
 
-memref_data_type::memref_data_type(tinytc_data_type_t element_ty, std::vector<std::int64_t> shape,
+memref_data_type::memref_data_type(tinytc_type_t element_ty, std::vector<std::int64_t> shape,
                                    std::vector<std::int64_t> stride, address_space addrspace,
                                    location const &lc)
-    : tinytc_data_type(DTK::memref, element_ty->context()), element_ty_(element_ty),
+    : tinytc_type(DTK::memref, element_ty->context()), element_ty_(element_ty),
       shape_(std::move(shape)), stride_(std::move(stride)), addrspace_(addrspace) {
     if (!isa<scalar_data_type>(*element_ty_)) {
         throw compilation_error(lc, status::ir_expected_scalar);
@@ -138,9 +136,9 @@ auto memref_data_type::size_in_bytes() const -> std::int64_t {
     return s;
 }
 
-auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_t> shape,
+auto memref_data_type::get(tinytc_type_t element_ty, array_view<std::int64_t> shape,
                            array_view<std::int64_t> stride, address_space addrspace,
-                           location const &lc) -> tinytc_data_type_t {
+                           location const &lc) -> tinytc_type_t {
 
     auto stride_buffer = std::vector<std::int64_t>{};
     if (stride.empty()) {
@@ -149,7 +147,7 @@ auto memref_data_type::get(tinytc_data_type_t element_ty, array_view<std::int64_
     }
 
     const auto hash = fnv1a_combine(element_ty, shape, stride, addrspace);
-    const auto is_equal = [&](tinytc_data_type_t ty) {
+    const auto is_equal = [&](tinytc_type_t ty) {
         const auto mt = dyn_cast<memref_data_type>(ty);
         return mt && element_ty == mt->element_data_ty() && addrspace == mt->addrspace() &&
                std::equal(shape.begin(), shape.end(), mt->shape().begin(), mt->shape().end()) &&
@@ -179,11 +177,11 @@ auto memref_data_type::canonical_stride(array_view<std::int64_t> shape)
     return stride;
 }
 
-auto scalar_data_type::get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_data_type_t {
+auto scalar_data_type::get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_type_t {
     return ctx->cache()->scalar_tys[static_cast<tinytc_scalar_type_t>(ty)].get();
 }
 
-auto void_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t {
+auto void_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
     return ctx->cache()->void_ty.get();
 }
 
@@ -191,7 +189,7 @@ auto void_data_type::get(tinytc_compiler_context_t ctx) -> tinytc_data_type_t {
 
 extern "C" {
 
-tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx) {
+tinytc_status_t tinytc_boolean_type_get(tinytc_type_t *dt, tinytc_compiler_context_t ctx) {
     if (dt == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -199,17 +197,17 @@ tinytc_status_t tinytc_boolean_type_get(tinytc_data_type_t *dt, tinytc_compiler_
     return exception_to_status_code([&] { *dt = boolean_data_type::get(ctx); });
 }
 
-tinytc_status_t tinytc_scalar_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx,
-                                       tinytc_scalar_type_t type) {
+tinytc_status_t tinytc_scalar_type_get(tinytc_type_t *dt, tinytc_compiler_context_t ctx,
+                                       tinytc_scalar_type_t ty) {
     if (dt == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }
 
     return exception_to_status_code(
-        [&] { *dt = scalar_data_type::get(ctx, enum_cast<scalar_type>(type)); });
+        [&] { *dt = scalar_data_type::get(ctx, enum_cast<scalar_type>(ty)); });
 }
 
-tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_data_type_t scalar_ty,
+tinytc_status_t tinytc_memref_type_get(tinytc_type_t *dt, tinytc_type_t scalar_ty,
                                        size_t shape_size, const int64_t *shape, size_t stride_size,
                                        const int64_t *stride, tinytc_address_space_t addrspace,
                                        const tinytc_location_t *loc) {
@@ -225,8 +223,8 @@ tinytc_status_t tinytc_memref_type_get(tinytc_data_type_t *dt, tinytc_data_type_
     });
 }
 
-tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_data_type_t memref_ty,
-                                      int64_t size, int64_t offset, const tinytc_location_t *loc) {
+tinytc_status_t tinytc_group_type_get(tinytc_type_t *dt, tinytc_type_t memref_ty, int64_t size,
+                                      int64_t offset, const tinytc_location_t *loc) {
     if (dt == nullptr) {
         return tinytc_status_invalid_arguments;
     }
@@ -235,8 +233,8 @@ tinytc_status_t tinytc_group_type_get(tinytc_data_type_t *dt, tinytc_data_type_t
         [&] { *dt = group_data_type::get(memref_ty, size, offset, get_optional(loc)); });
 }
 
-tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt, tinytc_data_type_t scalar_ty,
-                                           int64_t rows, int64_t cols, tinytc_matrix_use_t use,
+tinytc_status_t tinytc_coopmatrix_type_get(tinytc_type_t *dt, tinytc_type_t scalar_ty, int64_t rows,
+                                           int64_t cols, tinytc_matrix_use_t use,
                                            const tinytc_location_t *loc) {
     if (dt == nullptr || scalar_ty == nullptr) {
         return tinytc_status_invalid_arguments;
@@ -248,7 +246,7 @@ tinytc_status_t tinytc_coopmatrix_type_get(tinytc_data_type_t *dt, tinytc_data_t
     });
 }
 
-tinytc_status_t tinytc_void_type_get(tinytc_data_type_t *dt, tinytc_compiler_context_t ctx) {
+tinytc_status_t tinytc_void_type_get(tinytc_type_t *dt, tinytc_compiler_context_t ctx) {
     if (dt == nullptr || ctx == nullptr) {
         return tinytc_status_invalid_arguments;
     }

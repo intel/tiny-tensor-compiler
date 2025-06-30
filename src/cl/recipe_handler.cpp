@@ -44,9 +44,8 @@ void cl_recipe_handler::active_kernel(int kernel_num) {
 void cl_recipe_handler::arg(std::uint32_t arg_index, std::size_t arg_size, const void *arg_value) {
     arg_handler_.set_arg(kernel(), arg_index, arg_size, arg_value);
 }
-void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value,
-                                tinytc_mem_type_t type) {
-    arg_handler_.set_mem_arg(kernel(), arg_index, value, type);
+void cl_recipe_handler::mem_arg(std::uint32_t arg_index, const void *value, tinytc_mem_type_t ty) {
+    arg_handler_.set_mem_arg(kernel(), arg_index, value, ty);
 }
 
 void cl_recipe_handler::howmany(std::int64_t num) {

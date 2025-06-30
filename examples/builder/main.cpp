@@ -25,7 +25,7 @@ int main() {
         auto f = make_func("copy", {ty, ty}, get_void(ctx));
 
         auto body = get_body(f);
-        std::array<value, 2u> params;
+        std::array<tinytc_value_t, 2u> params;
         get_parameters(body, params);
 
         auto bb = region_builder{body};

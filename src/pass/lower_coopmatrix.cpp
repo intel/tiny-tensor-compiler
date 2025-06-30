@@ -63,7 +63,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
 
     auto p = bb_.create<subgroup_local_id_inst>(i32_ty, in.loc());
     auto i = p;
-    auto j0 = value{nullptr};
+    auto j0 = tinytc_value_t{nullptr};
     if (cl.rows < core_cfg_.subgroup_size) {
         auto cI = bb_.create<constant_inst>(cl.rows, i32_ty, in.loc());
         i = bb_.create<rem_inst>(p, cI, i32_ty, in.loc());
@@ -71,7 +71,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     }
     const auto col_inc_factor = core_cfg_.subgroup_size / cl.rows;
 
-    auto copy = value{&in.a()};
+    auto copy = &in.a();
     for (std::int64_t v = 0; v < cl.length; ++v) {
         const auto k1 = v % cl.blocks1;
         const auto u = v / cl.blocks1 % cl.cols;
@@ -91,7 +91,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         cloner.set_subs(&in.col(), col);
         cloner.set_subs(&in.val(), val);
 
-        auto modified_val = value{};
+        auto modified_val = tinytc_value_t{};
         if ((u + 1) * col_inc_factor > cl.shape1) {
             auto cshape1 = bb_.create<constant_inst>(cl.shape1, i32_ty, in.loc());
             auto cond = bb_.create<less_than_inst>(col, cshape1, bool_ty, in.loc());

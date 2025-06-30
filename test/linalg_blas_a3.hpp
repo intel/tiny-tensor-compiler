@@ -30,7 +30,8 @@ auto hadamard_mn(tensor_layout const &A, tensor_layout const &B, tensor_layout c
 auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        tensor_layout const &layoutC, scalar_type alpha_ty, scalar_type A_ty,
                        scalar_type B_ty, scalar_type beta_ty, scalar_type C_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op) -> prog;
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
+    -> prog;
 
 template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT> class gemm {
   public:
@@ -54,7 +55,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
         return make_blas_a3_prog(kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>,
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
-                                 [&](region_builder &bb, array_view<value> params) {
+                                 [&](region_builder &bb, array_view<tinytc_value_t> params) {
                                      bb.create<gemm_inst>(false, tA_, tB_, params[0], params[1],
                                                           params[2], params[3], params[4]);
                                  });
@@ -99,7 +100,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
         return make_blas_a3_prog(kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>,
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
-                                 [&](region_builder &bb, array_view<value> params) {
+                                 [&](region_builder &bb, array_view<tinytc_value_t> params) {
                                      bb.create<gemv_inst>(false, tA_, params[0], params[1],
                                                           params[2], params[3], params[4]);
                                  });
@@ -142,7 +143,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
         return make_blas_a3_prog(
             kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BT>, to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
-            [&](region_builder &bb, array_view<value> params) {
+            [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<ger_inst>(false, params[0], params[1], params[2], params[3], params[4]);
             });
     }
@@ -181,7 +182,7 @@ template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT
         return make_blas_a3_prog(kernel_name, lA_, lB_, lC_, to_scalar_type_v<AlphaT>,
                                  to_scalar_type_v<AT>, to_scalar_type_v<BT>,
                                  to_scalar_type_v<BetaT>, to_scalar_type_v<CT>,
-                                 [&](region_builder &bb, array_view<value> params) {
+                                 [&](region_builder &bb, array_view<tinytc_value_t> params) {
                                      bb.create<hadamard_inst>(false, params[0], params[1],
                                                               params[2], params[3], params[4]);
                                  });

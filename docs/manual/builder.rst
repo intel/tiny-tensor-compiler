@@ -111,7 +111,7 @@ by actual values:
           auto f = make_func("copy", {ty, ty}, get_void(ctx));
 
           auto body = f.get_body();
-          std::array<value, 2u> params;
+          std::array<tinytc_value_t, 2u> params;
           body.get_parameters(params);
 
           auto bb = region_builder{body};

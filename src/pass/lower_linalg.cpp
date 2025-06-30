@@ -35,12 +35,14 @@
 
 namespace tinytc {
 
-void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomic, value alpha,
-                      value A, value B, value beta, value C, value K, value m_block,
+void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomic,
+                      tinytc_value_t alpha, tinytc_value_t A, tinytc_value_t B, tinytc_value_t beta,
+                      tinytc_value_t C, tinytc_value_t K, tinytc_value_t m_block,
                       std::int32_t m_block_size, std::int32_t num_m_blocks, bool m_check,
-                      value n_block, std::int32_t n_block_size, std::int32_t num_n_blocks,
-                      bool n_check, array_view<std::int32_t> K_block_sizes, data_type a_ty,
-                      data_type b_ty, data_type c_ty, attr for_attributes, location const &loc) {
+                      tinytc_value_t n_block, std::int32_t n_block_size, std::int32_t num_n_blocks,
+                      bool n_check, array_view<std::int32_t> K_block_sizes, tinytc_type_t a_ty,
+                      tinytc_type_t b_ty, tinytc_type_t c_ty, attr for_attributes,
+                      location const &loc) {
     auto ctx = m_block->context();
     auto bool_ty = boolean_data_type::get(ctx);
     auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
@@ -71,11 +73,11 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto coopmatrix_c_ty = get_coopmatrix(c_ty, m_block_size, n_block_size, matrix_use::acc, loc);
     auto coopmatrix_c_acc_ty =
         get_coopmatrix(c_acc_ty, m_block_size, n_block_size, matrix_use::acc, loc);
-    auto const compute_c_step = [&](region_builder &bb, std::int32_t k_block_size, value k,
-                                    array_view<value> const &c_acc,
-                                    array_view<tinytc_data_type_t> const &c_acc_tys,
+    auto const compute_c_step = [&](region_builder &bb, std::int32_t k_block_size, tinytc_value_t k,
+                                    array_view<tinytc_value_t> const &c_acc,
+                                    array_view<tinytc_type_t> const &c_acc_tys,
                                     bool check_k = false) {
-        value pos_a[2] = {m_block, k};
+        tinytc_value_t pos_a[2] = {m_block, k};
         int amode = 0;
         if (tA == transpose::T) {
             std::swap(pos_a[0], pos_a[1]);
@@ -83,7 +85,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         auto coopmatrix_a_ty = get_coopmatrix(a_ty, m_block_size, k_block_size, matrix_use::a, loc);
         const auto my_check_a = check_k ? add_check(check_a, checked_flag::cols) : check_a;
-        auto a = std::vector<value>{};
+        auto a = std::vector<tinytc_value_t>{};
         a.reserve(num_m_blocks);
         for (std::int32_t i = 0; i < num_m_blocks; ++i) {
             a.emplace_back(bb.create<cooperative_matrix_load_inst>(tA, my_check_a, A, pos_a[0],
@@ -93,7 +95,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             }
         }
 
-        value pos_b[2] = {k, n_block};
+        tinytc_value_t pos_b[2] = {k, n_block};
         int bmode = 1;
         if (tB == transpose::T) {
             std::swap(pos_b[0], pos_b[1]);
@@ -101,7 +103,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         auto coopmatrix_b_ty = get_coopmatrix(b_ty, k_block_size, n_block_size, matrix_use::b, loc);
         const auto my_check_b = check_k ? add_check(check_b, checked_flag::rows) : check_b;
-        auto b = std::vector<value>{};
+        auto b = std::vector<tinytc_value_t>{};
         b.reserve(num_n_blocks);
         for (std::int32_t i = 0; i < num_n_blocks; ++i) {
             b.emplace_back(bb.create<cooperative_matrix_load_inst>(tB, my_check_b, B, pos_b[0],
@@ -111,7 +113,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
             }
         }
 
-        auto c_next = std::vector<value>{};
+        auto c_next = std::vector<tinytc_value_t>{};
         c_next.reserve(num_m_blocks * num_n_blocks);
         for (std::int32_t n = 0; n < num_n_blocks; ++n) {
             for (std::int32_t m = 0; m < num_m_blocks; ++m) {
@@ -121,16 +123,16 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         }
         return c_next;
     };
-    auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, value K0, value K1,
-                               std::vector<value> const &c_acc,
-                               std::vector<tinytc_data_type_t> const &c_acc_tys,
-                               bool check_k = false) -> std::vector<value> {
+    auto const compute_c = [&](region_builder &bb, std::int32_t k_block_size, tinytc_value_t K0,
+                               tinytc_value_t K1, std::vector<tinytc_value_t> const &c_acc,
+                               std::vector<tinytc_type_t> const &c_acc_tys,
+                               bool check_k = false) -> std::vector<tinytc_value_t> {
         auto c_step = bb.create<constant_inst>(k_block_size, index_ty, loc);
         auto return_values = bb.for_loop(
             K0, K1, c_step, c_acc, c_acc_tys,
-            [&](region_builder &bb, array_view<value> p) {
+            [&](region_builder &bb, array_view<tinytc_value_t> p) {
                 const auto k = p[0];
-                auto c_acc_iter = array_view<value>(p.begin() + 1, p.end());
+                auto c_acc_iter = array_view<tinytc_value_t>(p.begin() + 1, p.end());
                 auto c_next = compute_c_step(bb, k_block_size, k, c_acc_iter, c_acc_tys, check_k);
                 bb.create<yield_inst>(c_next, loc);
             },
@@ -138,16 +140,16 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
         return return_values;
     };
 
-    auto c_acc = std::vector<value>{};
+    auto c_acc = std::vector<tinytc_value_t>{};
     c_acc.reserve(num_m_blocks * num_n_blocks);
     for (std::int32_t i = 0; i < num_m_blocks * num_n_blocks; ++i) {
         c_acc.emplace_back(bb.constant_zero(coopmatrix_c_acc_ty, loc));
     }
-    auto c_acc_tys = std::vector<tinytc_data_type_t>(c_acc.size());
+    auto c_acc_tys = std::vector<tinytc_type_t>(c_acc.size());
     for (auto &ty : c_acc_tys) {
         ty = coopmatrix_c_acc_ty;
     }
-    auto c_tys = std::vector<tinytc_data_type_t>(c_acc.size());
+    auto c_tys = std::vector<tinytc_type_t>(c_acc.size());
     for (auto &ty : c_tys) {
         ty = coopmatrix_c_ty;
     }
@@ -295,8 +297,8 @@ void linalg_generator::operator()(axpby_inst in) {
         auto cond1 = bb.create<equal_inst>(sg_lid, c0, bool_ty, in.loc());
         auto cond = bb.create<and_inst>(cond0, cond1, cond0->ty());
         bb.if_condition(cond, [&](region_builder &bb) {
-            auto a =
-                bb.create<load_inst>(&in.A(), array_view<value>{}, at->element_data_ty(), in.loc());
+            auto a = bb.create<load_inst>(&in.A(), array_view<tinytc_value_t>{},
+                                          at->element_data_ty(), in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), a, &in.beta(), &in.B(), {}, in.loc());
         });
 
@@ -323,7 +325,7 @@ void linalg_generator::operator()(axpby_inst in) {
         bb_.foreach_loop(
             {c0, c0}, {c_shape0, c_shape1},
             [&](region_builder &bb, auto loop_vars) {
-                auto a_idx = std::array<value, 2u>{loop_vars[0], loop_vars[1]};
+                auto a_idx = std::array<tinytc_value_t, 2u>{loop_vars[0], loop_vars[1]};
                 if (in.tA() == transpose::T) {
                     std::swap(a_idx[0], a_idx[1]);
                 }
@@ -346,11 +348,11 @@ void linalg_generator::operator()(cumsum_inst in) {
     auto index_ty = get_scalar(ctx, scalar_type::index);
     const auto &loc = in.loc();
 
-    auto const scan_loop_1d = [&](region_builder &bb, work_group_inclusive_scan &scan, value a_sub,
-                                  value b_sub) {
+    auto const scan_loop_1d = [&](region_builder &bb, work_group_inclusive_scan &scan,
+                                  tinytc_value_t a_sub, tinytc_value_t b_sub) {
         auto c_sgs = bb.create<constant_inst>(scan.subgroup_size(), i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
-        auto from_index = [&]() -> value {
+        auto from_index = [&]() -> tinytc_value_t {
             if (scan.num_tiles() > 1) {
                 auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
                 auto from0 = bb.create<mul_inst>(sgid, c_sgs, i32_ty, loc);
@@ -375,7 +377,7 @@ void linalg_generator::operator()(cumsum_inst in) {
         auto c_init = bb.constant_zero(bt->element_data_ty(), loc);
         auto a_scan = bb.for_loop(
             from_index, trip_count, c_step, {c_init}, {bt->element_data_ty()},
-            [&](region_builder &bb, array_view<value> args) {
+            [&](region_builder &bb, array_view<tinytc_value_t> args) {
                 auto is_in_bounds = bb.create<less_than_inst>(args[0], shape0, bool_ty, loc);
                 auto a = bb.ifelse(
                     is_in_bounds,
@@ -424,13 +426,13 @@ void linalg_generator::operator()(cumsum_inst in) {
 
         auto c_zero = bb_.constant_zero(index_ty, loc);
         tinytc_region_t parent_region = &parallel->child_region(0);
-        auto offsets = std::vector<value>(bt->dim() - 1, nullptr);
+        auto offsets = std::vector<tinytc_value_t>(bt->dim() - 1, nullptr);
         for (std::int64_t i = bt->dim() - 1; i > 1; --i) {
             auto bb = region_builder{parent_region};
             auto shape_i = bb.create<size_inst>(i, &in.B(), index_ty, loc);
             auto for_i =
                 inst{for_inst::create(c_zero, shape_i, nullptr, array_view<tinytc_value_t>{},
-                                      array_view<tinytc_data_type_t>{}, loc)};
+                                      array_view<tinytc_type_t>{}, loc)};
             auto for_i_view = for_inst(for_i.get());
             offsets[i - 1] = &for_i_view.body().param(0);
             parent_region = &for_i_view.body();
@@ -444,30 +446,32 @@ void linalg_generator::operator()(cumsum_inst in) {
         auto shape0 = bb.create<size_inst>(0, &in.B(), index_ty, loc);
         auto shape1 = bb.create<size_inst>(1, &in.B(), index_ty, loc);
         auto c_num_tiles = bb.create<constant_inst>(num_tiles, index_ty, loc);
-        bb.for_loop(
-            sgid_index, shape1, c_num_tiles, [&](region_builder &bb, array_view<value> args) {
-                auto static_offset = std::vector<std::int64_t>(bt->dim(), dynamic);
-                auto static_size = std::vector<std::int64_t>(bt->dim(), 0);
-                static_offset[0] = 0;
-                static_size[0] = dynamic;
-                auto a_sub_ty = get_memref(at->element_data_ty(), {dynamic}, {at->stride(0)},
-                                           at->addrspace(), loc);
-                auto b_sub_ty = get_memref(bt->element_data_ty(), {dynamic}, {bt->stride(0)},
-                                           bt->addrspace(), loc);
-                offsets[0] = args[0];
-                auto a_sub = bb.create<subview_inst>(static_offset, static_size, &in.A(), offsets,
-                                                     array_view{shape0}, a_sub_ty, loc);
-                auto b_sub = bb.create<subview_inst>(static_offset, static_size, &in.B(), offsets,
-                                                     array_view{shape0}, b_sub_ty, loc);
-                scan_loop_1d(bb, scan, a_sub, b_sub);
-            });
+        bb.for_loop(sgid_index, shape1, c_num_tiles,
+                    [&](region_builder &bb, array_view<tinytc_value_t> args) {
+                        auto static_offset = std::vector<std::int64_t>(bt->dim(), dynamic);
+                        auto static_size = std::vector<std::int64_t>(bt->dim(), 0);
+                        static_offset[0] = 0;
+                        static_size[0] = dynamic;
+                        auto a_sub_ty = get_memref(at->element_data_ty(), {dynamic},
+                                                   {at->stride(0)}, at->addrspace(), loc);
+                        auto b_sub_ty = get_memref(bt->element_data_ty(), {dynamic},
+                                                   {bt->stride(0)}, bt->addrspace(), loc);
+                        offsets[0] = args[0];
+                        auto a_sub =
+                            bb.create<subview_inst>(static_offset, static_size, &in.A(), offsets,
+                                                    array_view{shape0}, a_sub_ty, loc);
+                        auto b_sub =
+                            bb.create<subview_inst>(static_offset, static_size, &in.B(), offsets,
+                                                    array_view{shape0}, b_sub_ty, loc);
+                        scan_loop_1d(bb, scan, a_sub, b_sub);
+                    });
 
         bb_.add(std::move(parallel));
         scan.teardown(bb_);
     } else if (bt->dim() >= 2) {
         auto c_zero = bb_.constant_zero(index_ty, loc);
-        auto lb = std::vector<value>(bt->dim() - 1, c_zero);
-        auto ub = std::vector<value>{};
+        auto lb = std::vector<tinytc_value_t>(bt->dim() - 1, c_zero);
+        auto ub = std::vector<tinytc_value_t>{};
         ub.reserve(bt->dim() - 1);
         for (std::int64_t i = 0; i < bt->dim(); ++i) {
             if (i != in.mode()) {
@@ -495,7 +499,7 @@ void linalg_generator::operator()(cumsum_inst in) {
 
                 auto c_init = bb.constant_zero(bt->element_data_ty());
                 auto acc = bb.for_loop(c_zero, J, {}, {c_init}, {bt->element_data_ty()},
-                                       [&](region_builder &bb, array_view<value> args) {
+                                       [&](region_builder &bb, array_view<tinytc_value_t> args) {
                                            auto a =
                                                bb.create<load_inst>(a_sub, array_view{args[0]},
                                                                     at->element_data_ty(), loc);
@@ -582,31 +586,31 @@ void linalg_generator::operator()(gemm_inst in) {
     if (do_tile_uniformly) {
         tile_loop_uniformly(
             bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
-            [&](region_builder &bb, value n_block, value trip_count) {
+            [&](region_builder &bb, tinytc_value_t n_block, tinytc_value_t trip_count) {
                 auto const_trip_count = get_int_constant(trip_count);
                 if (!const_trip_count) {
                     throw compilation_error(in.loc(), status::internal_compiler_error);
                 }
-                tile_loop_by_sgs(bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
-                                 [&](region_builder &bb, value m_block, bool m_check, value) {
-                                     gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(),
-                                                      &in.alpha(), &in.A(), &in.B(), &in.beta(),
-                                                      &in.C(), K, m_block, block_size0, num_blocks0,
-                                                      m_check, n_block, *const_trip_count,
-                                                      num_blocks1, false, K_block_sizes,
-                                                      at->element_data_ty(), bt->element_data_ty(),
-                                                      ct->element_data_ty(), nullptr, in.loc());
-                                 });
+                tile_loop_by_sgs(
+                    bb, c_shape0, block_size0, tiling_.m_tiles(), sg_m,
+                    [&](region_builder &bb, tinytc_value_t m_block, bool m_check, tinytc_value_t) {
+                        gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
+                                         &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
+                                         num_blocks0, m_check, n_block, *const_trip_count,
+                                         num_blocks1, false, K_block_sizes, at->element_data_ty(),
+                                         bt->element_data_ty(), ct->element_data_ty(), nullptr,
+                                         in.loc());
+                    });
             });
     } else {
         auto no_unroll = get_dictionary_attr_with_sorted(
             ctx, named_attr{get_string_attr(ctx, "unroll"), get_boolean_attr(ctx, false)});
         tile_loop_by_sgs(
             bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
-            [&](region_builder &bb, value n_block, bool n_check, value) {
+            [&](region_builder &bb, tinytc_value_t n_block, bool n_check, tinytc_value_t) {
                 tile_loop_by_sgs(
                     bb, c_shape0, block_size0 * num_blocks0, tiling_.m_tiles(), sg_m,
-                    [&](region_builder &bb, value m_block, bool m_check, value) {
+                    [&](region_builder &bb, tinytc_value_t m_block, bool m_check, tinytc_value_t) {
                         gemm_microkernel(bb, in.tA(), in.tB(), in.atomic(), &in.alpha(), &in.A(),
                                          &in.B(), &in.beta(), &in.C(), K, m_block, block_size0,
                                          num_blocks0, m_check, n_block, block_size1, num_blocks1,
@@ -636,8 +640,8 @@ void linalg_generator::operator()(gemv_inst in) {
                 bb.create<size_inst>(in.tA() == transpose::T ? 0 : 1, &in.A(), index_ty, in.loc());
             auto c_acc = bb.for_loop(
                 c0, K, {}, {c_init}, {ct->element_data_ty()},
-                [&](region_builder &bb, array_view<value> p) {
-                    auto a_idx = std::array<value, 2u>{loop_vars[0], p[0]};
+                [&](region_builder &bb, array_view<tinytc_value_t> p) {
+                    auto a_idx = std::array<tinytc_value_t, 2u>{loop_vars[0], p[0]};
                     if (in.tA() == transpose::T) {
                         std::swap(a_idx[0], a_idx[1]);
                     }
@@ -688,8 +692,8 @@ void linalg_generator::operator()(hadamard_inst in) {
     auto bt = get_memref_type(in.B());
     auto ct = get_memref_type(in.C());
 
-    auto lb = std::vector<value>(ct->dim());
-    auto ub = std::vector<value>(ct->dim());
+    auto lb = std::vector<tinytc_value_t>(ct->dim());
+    auto ub = std::vector<tinytc_value_t>(ct->dim());
 
     auto c0 = bb_.constant_zero(index_ty, in.loc());
     for (std::int64_t i = 0; i < ct->dim(); ++i) {
@@ -740,7 +744,7 @@ void linalg_generator::operator()(sum_inst in) {
         auto c_init = bb.constant_zero(bt->element_data_ty(), in.loc());
 
         auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, {bt->element_data_ty()},
-                               [&](region_builder &bb, array_view<value> args) {
+                               [&](region_builder &bb, array_view<tinytc_value_t> args) {
                                    auto a = bb.create<load_inst>(&in.A(), array_view{args[0]},
                                                                  at->element_data_ty(), in.loc());
                                    auto sum = mixed_precision_arithmetic<add_inst>(
@@ -766,24 +770,24 @@ void linalg_generator::operator()(sum_inst in) {
         auto c_shape0 =
             instant_constant_fold_add(bb_, create<size_inst>(0, &in.B(), index_ty, in.loc()));
         bb_.foreach_loop(
-            array_view<value>{c0}, array_view<value>{c_shape0},
+            array_view<tinytc_value_t>{c0}, array_view<tinytc_value_t>{c_shape0},
             [&](region_builder &bb, auto loop_vars) {
                 auto K = bb.create<size_inst>(in.tA() == transpose::T ? 0 : 1, &in.A(), index_ty,
                                               in.loc());
                 auto c_init = bb.constant_zero(bt->element_data_ty());
-                auto acc =
-                    bb.for_loop(c0, K, {}, {c_init}, {bt->element_data_ty()},
-                                [&](region_builder &bb, array_view<value> args) {
-                                    auto index_list = std::array<value, 2u>{loop_vars[0], args[0]};
-                                    if (in.tA() == transpose::T) {
-                                        std::swap(index_list[0], index_list[1]);
-                                    }
-                                    auto a = bb.create<load_inst>(&in.A(), index_list,
-                                                                  at->element_data_ty(), in.loc());
-                                    auto sum = mixed_precision_arithmetic<add_inst>(
-                                        bb, bt->element_ty(), args[1], a, in.loc());
-                                    bb.create<yield_inst>(array_view{sum}, in.loc());
-                                });
+                auto acc = bb.for_loop(
+                    c0, K, {}, {c_init}, {bt->element_data_ty()},
+                    [&](region_builder &bb, array_view<tinytc_value_t> args) {
+                        auto index_list = std::array<tinytc_value_t, 2u>{loop_vars[0], args[0]};
+                        if (in.tA() == transpose::T) {
+                            std::swap(index_list[0], index_list[1]);
+                        }
+                        auto a = bb.create<load_inst>(&in.A(), index_list, at->element_data_ty(),
+                                                      in.loc());
+                        auto sum = mixed_precision_arithmetic<add_inst>(bb, bt->element_ty(),
+                                                                        args[1], a, in.loc());
+                        bb.create<yield_inst>(array_view{sum}, in.loc());
+                    });
                 blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),
                             {loop_vars[0]}, in.loc());
             },

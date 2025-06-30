@@ -20,7 +20,7 @@ namespace tinytc::test {
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
                        scalar_type B_ty,
-                       std::function<void(region_builder &, array_view<value>)> make_op,
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
                        std::int32_t work_group_size = 0) -> prog;
 
 template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby {
@@ -41,7 +41,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby
         return make_blas_a2_prog(
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
-            [&](region_builder &bb, array_view<value> params) {
+            [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<axpby_inst>(false, tA_, params[0], params[1], params[2], params[3]);
             });
     }
@@ -100,7 +100,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class cumsu
         return make_blas_a2_prog(
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
-            [&](region_builder &bb, array_view<value> params) {
+            [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<cumsum_inst>(false, mode_, params[0], params[1], params[2], params[3]);
             },
             work_group_size_);
@@ -171,7 +171,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
         return make_blas_a2_prog(
             kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
             to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
-            [&](region_builder &bb, array_view<value> params) {
+            [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<sum_inst>(false, tA_, params[0], params[1], params[2], params[3]);
             },
             work_group_size_);

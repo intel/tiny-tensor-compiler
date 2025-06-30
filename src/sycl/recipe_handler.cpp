@@ -51,8 +51,8 @@ void sycl_recipe_handler_impl::arg(std::uint32_t arg_index, std::size_t arg_size
     arg_handler_->set_arg(kernel(), arg_index, arg_size, arg_value);
 }
 void sycl_recipe_handler_impl::mem_arg(std::uint32_t arg_index, const void *value,
-                                       tinytc_mem_type_t type) {
-    arg_handler_->set_mem_arg(kernel(), arg_index, value, type);
+                                       tinytc_mem_type_t ty) {
+    arg_handler_->set_mem_arg(kernel(), arg_index, value, ty);
 }
 
 void sycl_recipe_handler_impl::howmany(std::int64_t num) {
