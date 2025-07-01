@@ -24,22 +24,28 @@ template <typename F, typename... T> auto to_string(F generator, T &&...args) ->
 
 auto to_c_type(builtin_type ty) -> char const *;
 auto to_cxx_type(builtin_type ty) -> char const *;
-void generate_c_type(std::ostream &os, data_type const &ty);
-void generate_cxx_type(std::ostream &os, data_type const &ty);
-inline auto to_c_type(data_type const &ty) { return to_string(&generate_c_type, ty); }
-inline auto to_cxx_type(data_type const &ty) { return to_string(&generate_cxx_type, ty); }
-void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
+void generate_c_type(std::ostream &os, cxx_type const &ty);
+void generate_cxx_type(std::ostream &os, cxx_type const &ty);
+inline auto to_c_type(cxx_type const &ty) { return to_string(&generate_c_type, ty); }
+inline auto to_cxx_type(cxx_type const &ty) { return to_string(&generate_cxx_type, ty); }
+void generate_cxx_to_c_cast(std::ostream &os, quantifier q, cxx_type const &ty,
                             std::string_view name);
-void generate_c_to_cxx_cast(std::ostream &os, quantifier q, data_type const &ty,
+void generate_c_to_cxx_cast(std::ostream &os, quantifier q, cxx_type const &ty,
                             std::string_view name);
 
 void generate_docstring(std::ostream &os, std::string const &doc);
 
-void generate_params(
-    inst *in, std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
+void generate_inst_params(
+    inst *in, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
                   format_arg);
-void generate_c_params(std::ostream &os, inst *in);
-void generate_cxx_params(std::ostream &os, inst *in);
+void generate_inst_c_params(std::ostream &os, inst *in);
+void generate_inst_cxx_params(std::ostream &os, inst *in);
+
+void generate_type_params(
+    type *ty, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
+                  format_arg);
+void generate_type_c_params(std::ostream &os, type *ty);
+void generate_type_cxx_params(std::ostream &os, type *ty);
 
 void generate_api_builder_cpp(std::ostream &os, objects const &obj);
 void generate_api_builder_h(std::ostream &os, objects const &obj);
@@ -57,7 +63,12 @@ void generate_inst_hpp(std::ostream &os, objects const &obj);
 void generate_inst_kind_cpp(std::ostream &os, objects const &obj);
 void generate_inst_forward_hpp(std::ostream &os, objects const &obj);
 
-void generate_inst_visit_hpp(std::ostream &os, objects const &obj);
+auto needs_context_param(type *ty) -> bool;
+void generate_type_class(std::ostream &os, type *ty);
+
+void generate_type_hpp(std::ostream &os, objects const &obj);
+
+void generate_visit_hpp(std::ostream &os, objects const &obj);
 
 } // namespace mochi
 

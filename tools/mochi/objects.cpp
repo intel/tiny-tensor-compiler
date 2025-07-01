@@ -10,21 +10,23 @@
 
 namespace mochi {
 
-auto find_in_list(std::vector<std::unique_ptr<inst>> const &list, std::string_view name,
-                  std::uint64_t hash) -> inst * {
+template <typename T>
+auto find_in_list(std::vector<std::unique_ptr<T>> const &list, std::string_view name,
+                  std::uint64_t hash) -> T * {
     for (auto it = list.rbegin(); it != list.rend(); ++it) {
         const auto candidate_hash = tinytc::fnv1a((*it)->name());
         if (hash == candidate_hash && name == (*it)->name()) {
             return it->get();
         }
-        if (inst *i = find_in_list((*it)->children(), name, hash); i) {
+        if (T *i = find_in_list((*it)->children(), name, hash); i) {
             return i;
         }
     }
     return nullptr;
 }
 
-auto find_in_list(std::vector<std::unique_ptr<inst>> const &list, std::string_view name) {
+template <typename T>
+auto find_in_list(std::vector<std::unique_ptr<T>> const &list, std::string_view name) {
     return find_in_list(list, name, tinytc::fnv1a(name));
 }
 
@@ -35,12 +37,20 @@ void objects::add(inst *parent, std::unique_ptr<inst> i) {
     parent_list.emplace_back(std::move(i));
 }
 
+void objects::add(type *parent, std::unique_ptr<type> t) {
+    auto &parent_list = parent ? parent->children() : types_;
+    parent_list.emplace_back(std::move(t));
+}
+
 void objects::add(objects &&other) {
     for (auto &&e : std::move(other.enums_)) {
         enums_.emplace_back(std::move(e));
     }
     for (auto &&i : std::move(other.insts_)) {
         insts_.emplace_back(std::move(i));
+    }
+    for (auto &&t : std::move(other.types_)) {
+        types_.emplace_back(std::move(t));
     }
 }
 
@@ -54,5 +64,6 @@ auto objects::find_enum(std::string_view name) -> enum_ * {
     return nullptr;
 }
 auto objects::find_inst(std::string_view name) -> inst * { return find_in_list(insts_, name); }
+auto objects::find_type(std::string_view name) -> type * { return find_in_list(types_, name); }
 
 } // namespace mochi

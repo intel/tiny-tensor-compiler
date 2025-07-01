@@ -1,0 +1,33 @@
+; Copyright (C) 2025 Intel Corporation
+; SPDX-License-Identifier: BSD-3-Clause
+
+include "tinytc/enums.anko"
+
+type @bool "Bool type" {
+}
+
+type @scalar "Scalar type" {
+    prop %ty => @scalar_type
+}
+
+type @coopmatrix "Coopmatrix type" {
+    prop %component_ty => type_t "component type"
+    prop %rows => i64            "number of rows"
+    prop %cols => i64            "number of columns"
+    prop %use => @matrix_use     "matrix use"
+}
+
+type @group "Group type" {
+    prop %ty => type_t  "element type"
+    prop %size => i64   "group size"
+    prop %offset => i64 "offset added on element access"
+}
+
+type @memref "Memref type" {
+    prop %element_ty => type_t        "element type"
+    prop* %shape => i64               "tensor shape"
+    prop* %stride => i64              "tensor stride"
+    prop %addrspace => @address_space "address space"
+}
+
+type @void "Void type" {}

@@ -23,7 +23,8 @@ enum class generator {
     inst_hpp,
     inst_kind_cpp,
     inst_forward_hpp,
-    inst_visit_hpp,
+    type_hpp,
+    visit_hpp,
     template_,
     NUM_GENERATORS
 };

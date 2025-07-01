@@ -12,8 +12,8 @@ namespace mochi {
 
 enum class walk_order { pre_order, post_order };
 
-template <walk_order Order, bool OnlyLeaves = false>
-void walk_down(inst *in, std::function<void(inst *)> callback) {
+template <walk_order Order, typename T, bool OnlyLeaves = false>
+void walk_down(T *in, std::function<void(T *)> callback) {
     const bool invoke_callback = !OnlyLeaves || !in->has_children();
     if constexpr (Order == walk_order::pre_order) {
         if (invoke_callback) {
@@ -30,9 +30,9 @@ void walk_down(inst *in, std::function<void(inst *)> callback) {
     }
 }
 
-template <walk_order Order>
-void walk_down(inst *in, std::function<void(inst *)> callback,
-               std::function<void(inst *)> prepost_callback) {
+template <walk_order Order, typename T>
+void walk_down(T *in, std::function<void(T *)> callback,
+               std::function<void(T *)> prepost_callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(in);
     } else {
@@ -48,7 +48,7 @@ void walk_down(inst *in, std::function<void(inst *)> callback,
     }
 }
 
-template <walk_order Order> void walk_up(inst *in, std::function<void(inst *)> callback) {
+template <walk_order Order, typename T> void walk_up(T *in, std::function<void(T *)> callback) {
     if constexpr (Order == walk_order::pre_order) {
         callback(in);
     }

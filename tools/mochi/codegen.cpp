@@ -23,19 +23,22 @@ using tinytc::overloaded;
 
 namespace mochi {
 
-constexpr std::string base_parent = "inst_view";
+constexpr std::string inst_base_parent = "inst_view";
+constexpr std::string type_base_parent = "tinytc_type";
 
 auto to_c_type(builtin_type ty) -> char const * {
     switch (ty) {
     case builtin_type::bool_:
         return "tinytc_bool_t";
+    case builtin_type::compiler_context_t:
+        return "tinytc_compiler_context_t";
     case builtin_type::i32:
         return "int32_t";
     case builtin_type::i64:
         return "int64_t";
-    case builtin_type::type:
+    case builtin_type::type_t:
         return "tinytc_type_t";
-    case builtin_type::value:
+    case builtin_type::value_t:
         return "tinytc_value_t";
     }
 }
@@ -43,30 +46,32 @@ auto to_cxx_type(builtin_type ty) -> char const * {
     switch (ty) {
     case builtin_type::bool_:
         return "bool";
+    case builtin_type::compiler_context_t:
+        return "tinytc_compiler_context_t";
     case builtin_type::i32:
         return "std::int32_t";
     case builtin_type::i64:
         return "std::int64_t";
-    case builtin_type::type:
+    case builtin_type::type_t:
         return "tinytc_type_t";
-    case builtin_type::value:
+    case builtin_type::value_t:
         return "tinytc_value_t";
     }
 }
 
-void generate_c_type(std::ostream &os, data_type const &ty) {
+void generate_c_type(std::ostream &os, cxx_type const &ty) {
     std::visit(overloaded{[&](builtin_type const &ty) { os << to_c_type(ty); },
                           [&](enum_ *const &ty) { os << std::format("tinytc_{}_t", ty->name()); },
                           [&](std::string const &ty) { os << ty; }},
                ty);
 }
-void generate_cxx_type(std::ostream &os, data_type const &ty) {
+void generate_cxx_type(std::ostream &os, cxx_type const &ty) {
     std::visit(overloaded{[&](builtin_type const &ty) { os << to_cxx_type(ty); },
                           [&](enum_ *const &ty) { os << ty->name(); },
                           [&](std::string const &ty) { os << ty; }},
                ty);
 }
-void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
+void generate_cxx_to_c_cast(std::ostream &os, quantifier q, cxx_type const &ty,
                             std::string_view name) {
     std::visit(overloaded{[&](builtin_type const &) {
                               if (q == quantifier::many) {
@@ -87,7 +92,7 @@ void generate_cxx_to_c_cast(std::ostream &os, quantifier q, data_type const &ty,
                           [&](std::string const &) { os << name; }},
                ty);
 }
-void generate_c_to_cxx_cast(std::ostream &os, quantifier q, data_type const &ty,
+void generate_c_to_cxx_cast(std::ostream &os, quantifier q, cxx_type const &ty,
                             std::string_view name) {
     std::visit(overloaded{[&](builtin_type const &) {
                               if (q == quantifier::many) {
@@ -115,31 +120,31 @@ void generate_docstring(std::ostream &os, std::string const &doc) {
     }
 }
 
-void generate_params(
-    inst *in, std::function<void(quantifier, data_type const &, std::string_view, std::string_view)>
+void generate_inst_params(
+    inst *in, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
                   format_arg) {
-    walk_up<walk_order::post_order>(in, [&](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&](inst *in) {
         for (auto &p : in->props()) {
             if (!p.private_) {
                 format_arg(p.quantity, p.type, p.name, p.doc);
             }
         }
     });
-    walk_up<walk_order::post_order>(in, [&](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&](inst *in) {
         for (auto &o : in->ops()) {
-            format_arg(o.quantity, builtin_type::value, o.name, o.doc);
+            format_arg(o.quantity, builtin_type::value_t, o.name, o.doc);
         }
     });
-    walk_up<walk_order::post_order>(in, [&](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&](inst *in) {
         for (auto &r : in->rets()) {
-            format_arg(r.quantity, builtin_type::type, r.name, r.doc);
+            format_arg(r.quantity, builtin_type::type_t, r.name, r.doc);
         }
     });
 }
-void generate_c_params(std::ostream &os, inst *in) {
+void generate_inst_c_params(std::ostream &os, inst *in) {
     os << "tinytc_inst_t *instr, ";
-    generate_params(
-        in, [&os](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+    generate_inst_params(
+        in, [&os](quantifier q, cxx_type const &ty, std::string_view name, std::string_view) {
             const auto type = to_c_type(ty);
             if (q == quantifier::many) {
                 os << std::format("size_t {1}_size, const {0} *{1}, ", type, name);
@@ -149,9 +154,49 @@ void generate_c_params(std::ostream &os, inst *in) {
         });
     os << "const tinytc_location_t *loc";
 }
-void generate_cxx_params(std::ostream &os, inst *in) {
-    generate_params(
-        in, [&](quantifier q, data_type const &ty, std::string_view name, std::string_view) {
+void generate_inst_cxx_params(std::ostream &os, inst *in) {
+    generate_inst_params(
+        in, [&](quantifier q, cxx_type const &ty, std::string_view name, std::string_view) {
+            const auto type = to_cxx_type(ty);
+            if (q == quantifier::many) {
+                os << std::format("array_view<{0}> {1}, ", type, name);
+            } else {
+                os << std::format("{} {}, ", type, name);
+            }
+        });
+    os << "location const& loc";
+}
+
+void generate_type_params(
+    type *ty, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
+                  format_arg) {
+    if (needs_context_param(ty)) {
+        format_arg(quantifier::single, builtin_type::compiler_context_t, "ctx", "compiler context");
+    }
+    walk_up<walk_order::post_order, type>(ty, [&](type *ty) {
+        for (auto &p : ty->props()) {
+            if (!p.private_) {
+                format_arg(p.quantity, p.type, p.name, p.doc);
+            }
+        }
+    });
+}
+void generate_type_c_params(std::ostream &os, type *ty) {
+    os << "tinytc_type_t *ty, ";
+    generate_type_params(
+        ty, [&os](quantifier q, cxx_type const &ty, std::string_view name, std::string_view) {
+            const auto type = to_c_type(ty);
+            if (q == quantifier::many) {
+                os << std::format("size_t {1}_size, const {0} *{1}, ", type, name);
+            } else {
+                os << std::format("{} {}, ", type, name);
+            }
+        });
+    os << "const tinytc_location_t *loc";
+}
+void generate_type_cxx_params(std::ostream &os, type *ty) {
+    generate_type_params(
+        ty, [&](quantifier q, cxx_type const &ty, std::string_view name, std::string_view) {
             const auto type = to_cxx_type(ty);
             if (q == quantifier::many) {
                 os << std::format("array_view<{0}> {1}, ", type, name);
@@ -164,17 +209,37 @@ void generate_cxx_params(std::ostream &os, inst *in) {
 
 void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst>(i.get(), [&os](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
                 os << "tinytc_status_t tinytc_" << in->class_name() << "_create(";
-                generate_c_params(os, in);
+                generate_inst_c_params(os, in);
                 os << ") {\nif (instr == nullptr) {";
                 os << "return tinytc_status_invalid_arguments; }\nreturn "
                       "exception_to_status_code([&] "
                       "{\n";
                 os << std::format("*instr = {}::create(", in->class_name());
-                generate_params(in, [&os](quantifier q, data_type const &ty, std::string_view name,
-                                          std::string_view) {
+                generate_inst_params(in, [&os](quantifier q, cxx_type const &ty,
+                                               std::string_view name, std::string_view) {
+                    generate_c_to_cxx_cast(os, q, ty, name);
+                    os << ", ";
+                });
+                os << "get_optional(loc)).release();\n});\n}\n\n";
+            }
+        });
+    }
+
+    for (auto &t : obj.types()) {
+        walk_down<walk_order::pre_order, type>(t.get(), [&os](type *ty) {
+            if (!ty->has_children() && !ty->is_set(inst_flag::skip_builder)) {
+                os << "tinytc_status_t tinytc_" << ty->class_name() << "_get(";
+                generate_type_c_params(os, ty);
+                os << ") {\nif (ty == nullptr) {";
+                os << "return tinytc_status_invalid_arguments; }\nreturn "
+                      "exception_to_status_code([&] "
+                      "{\n";
+                os << std::format("*ty = {}::get(", ty->class_name());
+                generate_type_params(ty, [&os](quantifier q, cxx_type const &ty,
+                                               std::string_view name, std::string_view) {
                     generate_c_to_cxx_cast(os, q, ty, name);
                     os << ", ";
                 });
@@ -184,44 +249,68 @@ void generate_api_builder_cpp(std::ostream &os, objects const &obj) {
     }
 }
 void generate_api_builder_h(std::ostream &os, objects const &obj) {
+    const auto param_doc = [&os](quantifier q, cxx_type const &, std::string_view name,
+                                 std::string_view doc) {
+        if (q == quantifier::many) {
+            os << std::format(" * @param {0}_size [in] array size of {0}\n"
+                              " * @param {0} [in][range(0, {0}_size)] {1}; may be "
+                              "nullptr if {0}_size is 0\n",
+                              name, doc);
+        } else if (q == quantifier::optional) {
+            os << std::format(" * @param {} [in][optional] {}; can be nullptr\n", name, doc);
+        } else {
+            os << std::format(" * @param {} [in] {}\n", name, doc);
+        }
+    };
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst>(i.get(), [&os, &param_doc](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
                 os << "/**\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
                 os << " * @param instr [out] pointer to the inst object created\n";
-                generate_params(in, [&os](quantifier q, data_type const &, std::string_view name,
-                                          std::string_view doc) {
-                    if (q == quantifier::many) {
-                        os << std::format(" * @param {0}_size [in] array size of {0}\n"
-                                          " * @param {0} [in][range(0, {0}_size)] {1}; may be "
-                                          "nullptr if {0}_size is 0\n",
-                                          name, doc);
-                    } else if (q == quantifier::optional) {
-                        os << std::format(" * @param {} [in][optional] {}; can be nullptr\n", name,
-                                          doc);
-                    } else {
-                        os << std::format(" * @param {} [in] {}\n", name, doc);
-                    }
-                });
+                generate_inst_params(in, param_doc);
                 os << " * @param loc [in][optional] Source code location; can be nullptr\n *\n";
                 os << " * @return tinytc_status_success on success and error otherwise\n */\n";
                 os << "TINYTC_EXPORT tinytc_status_t tinytc_" << in->class_name() << "_create(";
-                generate_c_params(os, in);
+                generate_inst_c_params(os, in);
+                os << ");\n\n";
+            }
+        });
+    }
+    for (auto &t : obj.types()) {
+        walk_down<walk_order::pre_order, type>(t.get(), [&os, &param_doc](type *ty) {
+            if (!ty->has_children() && !ty->is_set(inst_flag::skip_builder)) {
+                os << "/**\n";
+                generate_docstring(os, ty->doc());
+                os << " *\n";
+                os << " * @param ty [out] pointer to the type object created\n";
+                generate_type_params(ty, param_doc);
+                os << " * @param loc [in][optional] Source code location; can be nullptr\n *\n";
+                os << " * @return tinytc_status_success on success and error otherwise\n */\n";
+                os << "TINYTC_EXPORT tinytc_status_t tinytc_" << ty->class_name() << "_get(";
+                generate_type_c_params(os, ty);
                 os << ");\n\n";
             }
         });
     }
 }
 void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
+    auto const param_doc = [&os](quantifier q, cxx_type const &, std::string_view name,
+                                 std::string_view doc) {
+        if (q == quantifier::optional || q == quantifier::many) {
+            os << std::format(" * @param {} {}; can be {{}}\n", name, doc);
+        } else {
+            os << std::format(" * @param {} {}\n", name, doc);
+        }
+    };
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst>(i.get(), [&os, &param_doc](inst *in) {
             if (!in->has_children() && !in->is_set(inst_flag::skip_builder)) {
                 const auto ret_count = [&]() {
                     std::int32_t ret_count = 0;
 
-                    walk_up<walk_order::post_order>(in, [&](inst *in) {
+                    walk_up<walk_order::post_order, inst>(in, [&](inst *in) {
                         for (auto &r : in->rets()) {
                             if (r.quantity == quantifier::many) {
                                 ret_count = std::numeric_limits<std::int32_t>::max();
@@ -243,28 +332,47 @@ void generate_api_builder_hpp(std::ostream &os, objects const &obj) {
                 os << "/**\n";
                 generate_docstring(os, in->doc());
                 os << " *\n";
-                generate_params(in, [&os](quantifier q, data_type const &, std::string_view name,
-                                          std::string_view doc) {
-                    if (q == quantifier::optional || q == quantifier::many) {
-                        os << std::format(" * @param {} {}; can be {{}}\n", name, doc);
-                    } else {
-                        os << std::format(" * @param {} {}\n", name, doc);
-                    }
-                });
+                generate_inst_params(in, param_doc);
                 os << " * @param loc Source code location; can be {}\n *\n";
                 os << " * @return Instruction\n */\n";
                 os << "inline auto operator()(";
-                generate_cxx_params(os, in);
+                generate_inst_cxx_params(os, in);
                 os << "= {}) -> inst {\n";
                 os << "tinytc_inst_t instr;\n";
                 os << std::format("CHECK_STATUS_LOC(tinytc_{0}_create(&instr, \n",
                                   in->class_name());
-                generate_params(in, [&os](quantifier q, data_type const &ty, std::string_view name,
-                                          std::string_view) {
+                generate_inst_params(in, [&os](quantifier q, cxx_type const &ty,
+                                               std::string_view name, std::string_view) {
                     generate_cxx_to_c_cast(os, q, ty, name);
                     os << ", ";
                 });
                 os << "&loc), loc);\nreturn inst(instr);\n}\n};\n\n";
+            }
+        });
+    }
+    for (auto &t : obj.types()) {
+        walk_down<walk_order::pre_order, type>(t.get(), [&os, &param_doc](type *ty) {
+            if (!ty->has_children() && !ty->is_set(inst_flag::skip_builder)) {
+                os << std::format("//! getter specialization for {0}\n"
+                                  "template<> struct getter<{0}> {{\n",
+                                  ty->class_name());
+                os << "/**\n";
+                generate_docstring(os, ty->doc());
+                os << " *\n";
+                generate_type_params(ty, param_doc);
+                os << " * @param loc Source code location; can be {}\n *\n";
+                os << " * @return Instruction\n */\n";
+                os << "inline auto operator()(";
+                generate_type_cxx_params(os, ty);
+                os << "= {}) -> type {\n";
+                os << "tinytc_type_t ty;\n";
+                os << std::format("CHECK_STATUS_LOC(tinytc_{0}_get(&ty, \n", ty->class_name());
+                generate_type_params(ty, [&os](quantifier q, cxx_type const &ty,
+                                               std::string_view name, std::string_view) {
+                    generate_cxx_to_c_cast(os, q, ty, name);
+                    os << ", ";
+                });
+                os << "&loc), loc);\nreturn ty;\n}\n};\n\n";
             }
         });
     }
@@ -325,7 +433,7 @@ void generate_enum_hpp(std::ostream &os, objects const &obj) {
 
 void generate_inst_class(std::ostream &os, inst *in) {
     inst *parent = in->parent();
-    const auto parent_name = parent ? parent->class_name() : base_parent;
+    const auto parent_name = parent ? parent->class_name() : inst_base_parent;
     os << std::format(R"CXXT(
 class {0} : public {1} {{
 public:
@@ -351,17 +459,17 @@ public:
     // classof function
     os << "inline static bool classof(tinytc_inst const& i) {\n";
     if (in->has_children()) {
-        os << std::format("return IK::{} <= i.type_id() && i.type_id() < IK::{};\n", in->ik_name(),
-                          in->ik_name(true));
+        os << std::format("return IK::{} <= i.type_id() && i.type_id() < IK::{};\n",
+                          in->kind_name(), in->kind_name(true));
     } else {
-        os << std::format("return IK::{} == i.type_id();\n", in->ik_name());
+        os << std::format("return IK::{} == i.type_id();\n", in->kind_name());
     }
     os << "}\n";
 
     // create function
     if (!in->has_children()) {
         os << "static auto create(";
-        generate_cxx_params(os, in);
+        generate_inst_cxx_params(os, in);
         os << ") -> inst;\n\n";
     }
     os << "\n";
@@ -409,8 +517,8 @@ public:
     // region access
     std::int32_t reg_no = 0;
     if (parent) {
-        walk_up<walk_order::post_order>(parent,
-                                        [&reg_no](inst *in) { reg_no += in->regs().size(); });
+        walk_up<walk_order::post_order, inst>(parent,
+                                              [&reg_no](inst *in) { reg_no += in->regs().size(); });
     }
     for (auto &r : in->regs()) {
         os << std::format(
@@ -422,8 +530,8 @@ public:
     // result access
     std::int32_t ret_no = 0;
     if (parent) {
-        walk_up<walk_order::post_order>(parent,
-                                        [&ret_no](inst *in) { ret_no += in->rets().size(); });
+        walk_up<walk_order::post_order, inst>(parent,
+                                              [&ret_no](inst *in) { ret_no += in->rets().size(); });
     }
     for (auto &r : in->rets()) {
         if (r.quantity == quantifier::many) {
@@ -454,13 +562,13 @@ public:
 
 void generate_inst_create(std::ostream &os, inst *in) {
     os << "auto " << in->class_name() << "::create(";
-    generate_cxx_params(os, in);
+    generate_inst_cxx_params(os, in);
     os << ") -> inst {\n";
 
     os << "std::int32_t num_operands = 0;\n"
        << "std::int32_t num_results = 0;\n";
     std::int32_t num_static_operands = 0, num_static_results = 0, num_child_regions = 0;
-    walk_up<walk_order::post_order>(in, [&](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&](inst *in) {
         for (auto &o : in->ops()) {
             switch (o.quantity) {
             case quantifier::single:
@@ -501,9 +609,9 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
 [[maybe_unused]] std::int32_t ret_no = 0;
 [[maybe_unused]] std::int32_t op_no = 0;
 )CXXT",
-        num_child_regions, in->class_name(), in->ik_name());
+        num_child_regions, in->class_name(), in->kind_name());
 
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&os](inst *in) {
         for (auto &r : in->rets()) {
             if (r.quantity == quantifier::many) {
                 os << std::format(R"CXXT(for (auto &r : {}) {{
@@ -516,7 +624,7 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
             }
         }
     });
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
             if (o.has_offset_property) {
                 os << std::format("std::int32_t {} = op_no;\n", o.offset_name());
@@ -536,7 +644,7 @@ auto in = inst{{tinytc_inst::create(IK::{2}, layout, loc)}};
     });
     os << std::format("[[maybe_unused]] auto view = {}(in.get());\n", in->class_name());
     os << std::format("[[maybe_unused]] {}::properties& props = view.props();\n", in->class_name());
-    walk_up<walk_order::post_order>(in, [&os](inst *in) {
+    walk_up<walk_order::post_order, inst>(in, [&os](inst *in) {
         for (auto &o : in->ops()) {
             if (o.has_offset_property) {
                 os << std::format("props.{0} = {0};\n", o.offset_name());
@@ -559,7 +667,7 @@ void generate_inst_cpp(std::ostream &os, objects const &obj) {
     os << "auto to_string(IK ik) -> char const* {\n"
           "switch (ik) {\n";
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst, true>(i.get(), [&os](inst *in) {
             os << std::format("case IK::IK_{0}: return \"{0}\";\n", in->name());
         });
     }
@@ -568,19 +676,19 @@ void generate_inst_cpp(std::ostream &os, objects const &obj) {
           "}\n\n";
 
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(),
-                                               [&os](inst *in) { generate_inst_create(os, in); });
+        walk_down<walk_order::pre_order, inst, true>(
+            i.get(), [&os](inst *in) { generate_inst_create(os, in); });
     }
 }
 
 void generate_inst_hpp(std::ostream &os, objects const &obj) {
     os << "enum class IK {\n";
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(
-            i.get(), [&os](inst *in) { os << in->ik_name() << ",\n"; },
+        walk_down<walk_order::pre_order, inst>(
+            i.get(), [&os](inst *in) { os << in->kind_name() << ",\n"; },
             [&os](inst *in) {
                 if (in->has_children()) {
-                    os << in->ik_name(true) << ",\n";
+                    os << in->kind_name(true) << ",\n";
                 }
             }
 
@@ -590,7 +698,8 @@ void generate_inst_hpp(std::ostream &os, objects const &obj) {
     os << "auto to_string(IK ik) -> char const*;\n\n";
 
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order>(i.get(), [&os](inst *in) { generate_inst_class(os, in); });
+        walk_down<walk_order::pre_order, inst>(i.get(),
+                                               [&os](inst *in) { generate_inst_class(os, in); });
     }
 }
 
@@ -598,7 +707,7 @@ void generate_inst_kind_cpp(std::ostream &os, objects const &obj) {
     os << "auto tinytc_inst::kind() -> inst_execution_kind {\n"
           "switch (type_id()) {\n";
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst, true>(i.get(), [&os](inst *in) {
             char const *kind = "mixed";
             if (in->is_set(inst_flag::collective) && !in->is_set(inst_flag::spmd)) {
                 kind = "collective";
@@ -617,23 +726,127 @@ void generate_inst_kind_cpp(std::ostream &os, objects const &obj) {
 
 void generate_inst_forward_hpp(std::ostream &os, objects const &obj) {
     for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
+        walk_down<walk_order::pre_order, inst, true>(i.get(), [&os](inst *in) {
             os << std::format("class {0}; // IWYU pragma: export\n", in->class_name());
         });
     }
     os << "\n";
 }
 
-void generate_inst_visit_hpp(std::ostream &os, objects const &obj) {
-    os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_inst &in) {\n";
-    os << "switch(in.type_id()) {\n";
-    for (auto &i : obj.insts()) {
-        walk_down<walk_order::pre_order, true>(i.get(), [&os](inst *in) {
-            os << std::format("case IK::{}: {{ return visitor({}{{&in}}); }}\n", in->ik_name(),
-                              in->class_name());
-        });
+auto needs_context_param(type *ty) -> bool {
+    bool needs_ctx = true;
+    walk_up<walk_order::post_order, type>(ty, [&](type *ty) {
+        for (auto &p : ty->props()) {
+            if (const auto *btype = std::get_if<builtin_type>(&p.type); btype) {
+                if (*btype == builtin_type::type_t) {
+                    needs_ctx = false;
+                }
+            }
+        }
+    });
+    return needs_ctx;
+}
+
+void generate_type_class(std::ostream &os, type *ty) {
+    type *parent = ty->parent();
+    const auto parent_name = parent ? parent->class_name() : type_base_parent;
+    os << std::format(R"CXXT(
+class {0} : public {1} {{
+public:
+)CXXT",
+                      ty->class_name(), parent_name);
+
+    // classof function
+    os << "inline static bool classof(tinytc_type const& t) {\n";
+    if (ty->has_children()) {
+        os << std::format("return TK::{} <= t.type_id() && t.type_id() < TK::{};\n",
+                          ty->kind_name(), ty->kind_name(true));
+    } else {
+        os << std::format("return TK::{} == t.type_id();\n", ty->kind_name());
     }
-    os << "default: break;\n}\nthrow status::internal_compiler_error;\n}\n";
+    os << "}\n";
+
+    // property access
+    for (auto &p : ty->props()) {
+        auto type = p.quantity == quantifier::many
+                        ? std::format("array_view<{}>", to_cxx_type(p.type))
+                        : to_cxx_type(p.type);
+        os << std::format("inline auto {0}() -> {1} {{ return {0}_; }}\n", p.name, type);
+    }
+    os << "\n";
+
+    for (auto &code : ty->cxx()) {
+        os << code << "\n";
+    }
+
+    // get function
+    if (!ty->has_children()) {
+        auto oss = std::ostringstream{};
+        generate_type_cxx_params(oss, ty);
+        auto params = std::move(oss).str();
+        os << std::format("static auto get({}) -> type;\n\n", params);
+        os << "protected:\n";
+        os << std::format("{}({});\n", ty->class_name(), params);
+        os << "friend class compiler_context_cache;\n\n";
+    }
+
+    os << "private:\n";
+    // Properties struct
+    for (auto &p : ty->props()) {
+        const auto type = p.quantity == quantifier::many
+                              ? std::format("std::vector<{}>", to_cxx_type(p.type))
+                              : to_cxx_type(p.type);
+        os << std::format("{} {}_;\n", type, p.name);
+    }
+    os << "};\n";
+}
+
+void generate_type_hpp(std::ostream &os, objects const &obj) {
+    os << "enum class TK {\n";
+    for (auto &t : obj.types()) {
+        walk_down<walk_order::pre_order, type>(
+            t.get(), [&os](type *ty) { os << ty->kind_name() << ",\n"; },
+            [&os](type *ty) {
+                if (ty->has_children()) {
+                    os << ty->kind_name(true) << ",\n";
+                }
+            }
+
+        );
+    }
+    os << "};\n\n";
+    os << "auto to_string(TK tk) -> char const*;\n\n";
+
+    for (auto &o : obj.types()) {
+        walk_down<walk_order::pre_order, type>(o.get(),
+                                               [&os](type *ty) { generate_type_class(os, ty); });
+    }
+}
+
+void generate_visit_hpp(std::ostream &os, objects const &obj) {
+    if (!obj.insts().empty()) {
+        os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_inst &in) {\n";
+        os << "switch(in.type_id()) {\n";
+        for (auto &i : obj.insts()) {
+            walk_down<walk_order::pre_order, inst, true>(i.get(), [&os](inst *in) {
+                os << std::format("case IK::{}: {{ return visitor({}{{&in}}); }}\n",
+                                  in->kind_name(), in->class_name());
+            });
+        }
+        os << "default: break;\n}\nthrow status::internal_compiler_error;\n}\n";
+    }
+
+    if (!obj.types().empty()) {
+        os << "template <typename Visitor> auto visit(Visitor && visitor, tinytc_type &ty) {\n";
+        os << "switch(ty.type_id()) {\n";
+        for (auto &t : obj.types()) {
+            walk_down<walk_order::pre_order, type, true>(t.get(), [&os](type *ty) {
+                os << std::format("case TK::{}: {{ return visitor(*static_cast<{}*>{{&ty}}); }}\n",
+                                  ty->kind_name(), ty->class_name());
+            });
+        }
+        os << "default: break;\n}\nthrow status::internal_compiler_error;\n}\n";
+    }
 }
 
 } // namespace mochi

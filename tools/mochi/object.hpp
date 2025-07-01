@@ -43,13 +43,13 @@ class enum_ {
 enum class inst_kind { mixed, collective, spmd };
 enum class quantifier { single, optional, many };
 
-enum class builtin_type { bool_, i32, i64, type, value };
-using data_type = std::variant<builtin_type, enum_ *, std::string>;
+enum class builtin_type { bool_, compiler_context_t, i32, i64, type_t, value_t };
+using cxx_type = std::variant<builtin_type, enum_ *, std::string>;
 
 struct prop {
     quantifier quantity;
     std::string name, doc;
-    data_type type;
+    cxx_type type;
     bool private_;
 };
 struct op {
@@ -72,14 +72,15 @@ struct raw_cxx {
 
 enum class inst_flag { skip_builder = 0x1, collective = 0x2, spmd = 0x4 };
 
-using member = std::variant<prop, op, reg, ret, raw_cxx>;
+using inst_member = std::variant<prop, op, reg, ret, raw_cxx>;
 class inst {
   public:
     inst() = default;
-    inst(std::string name, std::string doc, std::vector<member> members, inst *parent = nullptr);
+    inst(std::string name, std::string doc, std::vector<inst_member> members,
+         inst *parent = nullptr);
 
     auto class_name() const -> std::string;
-    auto ik_name(bool end = false) const -> std::string;
+    auto kind_name(bool end = false) const -> std::string;
 
     inline auto doc() const -> const std::string & { return doc_; }
     inline auto name() const -> const std::string & { return name_; }
@@ -107,6 +108,39 @@ class inst {
     std::vector<ret> rets_;
     std::vector<std::string> cxx_;
     std::vector<std::unique_ptr<inst>> children_;
+    std::uint32_t flags_;
+};
+
+using type_member = std::variant<prop, raw_cxx>;
+class type {
+  public:
+    type() = default;
+    type(std::string name, std::string doc, std::vector<type_member> members,
+         type *parent = nullptr);
+
+    auto class_name() const -> std::string;
+    auto kind_name(bool end = false) const -> std::string;
+
+    inline auto doc() const -> const std::string & { return doc_; }
+    inline auto name() const -> const std::string & { return name_; }
+    inline auto props() const -> std::vector<prop> const & { return props_; }
+    inline auto cxx() const -> std::vector<std::string> const & { return cxx_; }
+    inline auto is_set(inst_flag flag) const -> bool {
+        return flags_ & static_cast<std::uint32_t>(flag);
+    }
+    inline void flags(std::uint32_t f) { flags_ = f; }
+
+    inline auto children() -> auto & { return children_; }
+    inline auto children() const -> const auto & { return children_; }
+    inline auto has_children() const -> bool { return children_.size() > 0; }
+    inline auto parent() const -> type * { return parent_; }
+
+  private:
+    std::string name_, doc_;
+    type *parent_ = nullptr;
+    std::vector<prop> props_;
+    std::vector<std::string> cxx_;
+    std::vector<std::unique_ptr<type>> children_;
     std::uint32_t flags_;
 };
 

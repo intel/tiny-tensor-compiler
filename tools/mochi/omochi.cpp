@@ -33,8 +33,10 @@ auto to_string(generator g) -> char const * {
         return "inst_hpp";
     case generator::inst_forward_hpp:
         return "inst_forward_hpp";
-    case generator::inst_visit_hpp:
-        return "inst_visit_hpp";
+    case generator::type_hpp:
+        return "type_hpp";
+    case generator::visit_hpp:
+        return "visit_hpp";
     case generator::template_:
         return "template";
     case generator::NUM_GENERATORS:
@@ -80,8 +82,11 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
             case generator::inst_forward_hpp:
                 generate_inst_forward_hpp(os, *obj);
                 break;
-            case generator::inst_visit_hpp:
-                generate_inst_visit_hpp(os, *obj);
+            case generator::type_hpp:
+                generate_type_hpp(os, *obj);
+                break;
+            case generator::visit_hpp:
+                generate_visit_hpp(os, *obj);
                 break;
             default:
                 break;

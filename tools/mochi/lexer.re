@@ -79,6 +79,7 @@ lex:
         "prop"              { adv_loc(); return parser::make_PROP(loc_); }
         "reg"               { adv_loc(); return parser::make_REG(loc_); }
         "ret"               { adv_loc(); return parser::make_RET(loc_); }
+        "type"              { adv_loc(); return parser::make_TYPE(loc_); }
 
         // enum flags
         "doc_to_string"     { adv_loc(); return parser::make_ENUM_FLAG(enum_flag::doc_to_string, loc_); }
@@ -92,7 +93,8 @@ lex:
         "bool"              { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::bool_, loc_); }
         "i32"               { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::i32, loc_); }
         "i64"               { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::i64, loc_); }
-        // No lex for: builtin_type::type, builtin_type::value
+        "type_t"            { adv_loc(); return parser::make_BUILTIN_TYPE(builtin_type::type_t, loc_); }
+        // No lex for: builtin_type::value_t
 
         // punctuation
         "=>"                { adv_loc(); return parser::make_ARROW(loc_); }

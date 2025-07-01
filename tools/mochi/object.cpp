@@ -16,7 +16,7 @@ auto op::offset_name() const -> std::string {
     return (std::ostringstream{} << name << "_offset_").str();
 }
 
-inst::inst(std::string name, std::string doc, std::vector<member> members, inst *parent)
+inst::inst(std::string name, std::string doc, std::vector<inst_member> members, inst *parent)
     : name_{std::move(name)}, doc_{std::move(doc)}, parent_{parent} {
     bool needs_offset_property = false;
     bool has_star_ret = false;
@@ -57,9 +57,31 @@ inst::inst(std::string name, std::string doc, std::vector<member> members, inst 
 auto inst::class_name() const -> std::string {
     return (std::ostringstream{} << name_ << "_inst").str();
 }
-auto inst::ik_name(bool end) const -> std::string {
+auto inst::kind_name(bool end) const -> std::string {
     auto oss = std::ostringstream{};
     oss << "IK";
+    if (end) {
+        oss << "END";
+    }
+    oss << "_" << name_;
+    return std::move(oss).str();
+}
+
+type::type(std::string name, std::string doc, std::vector<type_member> members, type *parent)
+    : name_{std::move(name)}, doc_{std::move(doc)}, parent_{parent} {
+    for (auto &&m : members) {
+        std::visit(overloaded{[&](prop &&i) { props_.emplace_back(std::move(i)); },
+                              [&](raw_cxx &&i) { cxx_.emplace_back(std::move(i.code)); }},
+                   std::move(m));
+    }
+}
+
+auto type::class_name() const -> std::string {
+    return (std::ostringstream{} << name_ << "_type").str();
+}
+auto type::kind_name(bool end) const -> std::string {
+    auto oss = std::ostringstream{};
+    oss << "TK";
     if (end) {
         oss << "END";
     }

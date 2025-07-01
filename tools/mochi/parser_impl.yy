@@ -55,6 +55,7 @@
     PROP            "prop"
     REG             "reg"
     RET             "ret"
+    TYPE            "type"
     SKIP_BUILDER    "skip_builder"
     ARROW           "=>"
     COLON           ":"
@@ -73,12 +74,17 @@
 
 %nterm <std::pair<std::uint32_t, std::vector<case_>>> enum_content
 %nterm <case_> case
-%nterm <std::pair<std::uint32_t, std::vector<member>>> members
-%nterm <member> member
+%nterm <std::pair<std::uint32_t, std::vector<inst_member>>> inst_members
+%nterm <inst_member> inst_member
+%nterm <std::pair<std::uint32_t, std::vector<type_member>>> type_members
+%nterm <type_member> type_member
+%nterm <prop> prop
+%nterm <raw_cxx> cxx
 %nterm <quantifier> op_quantifier
 %nterm <quantifier> nonop_quantifier
-%nterm <data_type> data_type
-%nterm <inst*> parent
+%nterm <cxx_type> cxx_type
+%nterm <inst*> parent_inst
+%nterm <type*> parent_type
 %nterm <bool> private
 %nterm <std::string> optstring
 %nterm <std::string> string
@@ -91,6 +97,7 @@ stmt_list:
 stmt:
     enum {}
   | inst {}
+  | type {}
   | INCLUDE STRING {
         try {
             auto included_obj = parse_file($STRING, search_paths);
@@ -134,12 +141,12 @@ case:
 ;
 
 inst:
-    INST GLOBAL_ID parent optstring LBRACE members RBRACE {
+    INST GLOBAL_ID parent_inst optstring LBRACE inst_members RBRACE {
         try {
             auto i = std::make_unique<inst>($GLOBAL_ID, std::move($optstring),
-                                            std::move($members.second), $parent);
-            i->flags($members.first);
-            obj.add($parent, std::move(i));
+                                            std::move($inst_members.second), $parent_inst);
+            i->flags($inst_members.first);
+            obj.add($parent_inst, std::move(i));
         } catch (std::exception const &e) {
             error(@inst, e.what());
             YYERROR;
@@ -147,37 +154,82 @@ inst:
     }
 ;
 
-parent:
+parent_inst:
     %empty { $$ = nullptr; }
   | COLON GLOBAL_ID {
-        auto parent = obj.find_inst($GLOBAL_ID);
-        if (!parent) {
+        auto parent_inst = obj.find_inst($GLOBAL_ID);
+        if (!parent_inst) {
             error(@GLOBAL_ID, "Could not find parent class definition");
             YYERROR;
         }
-        $$ = parent;
+        $$ = parent_inst;
     }
 ;
 
-members:
+inst_members:
     %empty {}
-  | members INST_FLAG { $$ = std::move($1); $$.first |= $INST_FLAG; }
-  | members member { $$ = std::move($1); $$.second.emplace_back(std::move($member)); }
+  | inst_members INST_FLAG { $$ = std::move($1); $$.first |= $INST_FLAG; }
+  | inst_members inst_member { $$ = std::move($1); $$.second.emplace_back(std::move($inst_member)); }
 ;
 
-member:
+inst_member:
     OP op_quantifier LOCAL_ID optstring {
         $$ = op{$op_quantifier, std::move($LOCAL_ID), std::move($optstring)};
     }
-  | PROP nonop_quantifier LOCAL_ID private ARROW data_type optstring {
-        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring),
-                  std::move($data_type), $private};
-    }
+  | prop { $$ = std::move($prop); }
   | RET nonop_quantifier LOCAL_ID optstring {
         $$ = ret{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring)};
     }
   | REG LOCAL_ID optstring { $$ = reg{std::move($LOCAL_ID), std::move($optstring)}; }
-  | CXX string { $$ = raw_cxx{std::move($string)}; }
+  | cxx { $$ = std::move($cxx); }
+;
+
+type:
+    TYPE GLOBAL_ID parent_type optstring LBRACE type_members RBRACE {
+        try {
+            auto t = std::make_unique<type>($GLOBAL_ID, std::move($optstring),
+                                            std::move($type_members.second), $parent_type);
+            t->flags($type_members.first);
+            obj.add($parent_type, std::move(t));
+        } catch (std::exception const &e) {
+            error(@type, e.what());
+            YYERROR;
+        }
+    }
+;
+
+parent_type:
+    %empty { $$ = nullptr; }
+  | COLON GLOBAL_ID {
+        auto parent_type = obj.find_type($GLOBAL_ID);
+        if (!parent_type) {
+            error(@GLOBAL_ID, "Could not find parent class definition");
+            YYERROR;
+        }
+        $$ = parent_type;
+    }
+;
+
+type_members:
+    %empty {}
+  | type_members ENUM_FLAG { $$ = std::move($1); $$.first |= static_cast<std::uint32_t>($ENUM_FLAG); }
+  | type_members type_member { $$ = std::move($1); $$.second.emplace_back(std::move($type_member)); }
+;
+
+type_member:
+    prop { $$ = std::move($prop); }
+  | cxx { $$ = std::move($cxx); }
+;
+
+prop:
+    PROP nonop_quantifier LOCAL_ID private ARROW cxx_type optstring {
+        $$ = prop{$nonop_quantifier, std::move($LOCAL_ID), std::move($optstring),
+                  std::move($cxx_type), $private};
+    }
+;
+
+cxx:
+   CXX string { $$ = raw_cxx{std::move($string)}; }
 ;
 
 op_quantifier:
@@ -191,7 +243,7 @@ nonop_quantifier:
   | STAR     { $$ = quantifier::many; }
 ;
 
-data_type:
+cxx_type:
     BUILTIN_TYPE { $$ = std::move($1); }
   | STRING     { $$ = std::move($1); }
   | GLOBAL_ID  {
