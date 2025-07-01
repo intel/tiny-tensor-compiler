@@ -20,7 +20,7 @@ auto stack_high_water_mark::run_on_function(tinytc_func &fn) -> std::int64_t {
 
     walk<walk_order::pre_order>(fn, [&high_water_mark](tinytc_inst &i) {
         if (auto a = dyn_cast<alloca_inst>(&i); a) {
-            auto t = dyn_cast<memref_data_type>(a.result().ty());
+            auto t = dyn_cast<memref_type>(a.result().ty());
             if (t == nullptr) {
                 throw compilation_error(a.loc(), status::ir_expected_memref);
             }

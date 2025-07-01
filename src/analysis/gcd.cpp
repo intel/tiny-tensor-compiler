@@ -231,17 +231,16 @@ void gcd_helper::operator()(fuse_inst in) {
     }
 }
 void gcd_helper::operator()(load_inst in) {
-    if (auto mi = gcd_.get_memref_if(in.operand());
-        mi && isa<group_data_type>(*in.operand().ty())) {
+    if (auto mi = gcd_.get_memref_if(in.operand()); mi && isa<group_type>(*in.operand().ty())) {
         gcd_.set_memref(in.result(), *mi);
     }
 }
 void gcd_helper::operator()(size_inst in) {
     const auto size =
-        visit(overloaded{[&](group_data_type &g) -> std::int64_t {
+        visit(overloaded{[&](group_type &g) -> std::int64_t {
                              return !is_dynamic_value(g.size()) ? g.size() : 1;
                          },
-                         [&](memref_data_type &m) -> std::int64_t {
+                         [&](memref_type &m) -> std::int64_t {
                              const auto s_i = m.shape(in.mode());
                              if (is_dynamic_value(s_i)) {
                                  if (auto mi = gcd_.get_memref_if(in.operand()); mi) {
@@ -305,7 +304,7 @@ void gcd_helper::operator()(subview_inst in) {
 }
 
 void gcd_helper::set_from_attributes(tinytc_func &fn) {
-    auto known_memref_info = [&](memref_data_type *mr, tinytc_attr_t dict) -> memref_info {
+    auto known_memref_info = [&](memref_type *mr, tinytc_attr_t dict) -> memref_info {
         const std::int64_t alignment = [&]() -> std::int64_t {
             if (auto alignment_attr = get_attr(dict, "alignment"); alignment_attr) {
                 auto ia = dyn_cast<integer_attr>(alignment_attr);
@@ -357,10 +356,10 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
     };
     for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();
-        if (auto g = dyn_cast<group_data_type>(ty); g) {
+        if (auto g = dyn_cast<group_type>(ty); g) {
             ty = g->ty();
         }
-        if (auto mr = dyn_cast<memref_data_type>(ty); mr) {
+        if (auto mr = dyn_cast<memref_type>(ty); mr) {
             gcd_.set_memref(fn.params()[arg_no], known_memref_info(mr, fn.param_attr(arg_no)));
         }
     }

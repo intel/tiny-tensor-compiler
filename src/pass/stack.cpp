@@ -31,7 +31,7 @@ void set_stack_ptr_pass::run_on_function(tinytc_func &fn) {
     walk<walk_order::pre_order>(fn, [&allocs](tinytc_inst &i) {
         visit(overloaded{
                   [&allocs](alloca_inst a) {
-                      auto t = dyn_cast<memref_data_type>(a.result().ty());
+                      auto t = dyn_cast<memref_type>(a.result().ty());
                       if (t == nullptr) {
                           throw compilation_error(a.loc(), status::ir_expected_memref);
                       }

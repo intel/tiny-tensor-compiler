@@ -20,8 +20,8 @@
 
 namespace tinytc {
 
-class coopmatrix_data_type;
-class memref_data_type;
+class coopmatrix_type;
+class memref_type;
 
 auto get_core_config_and_tiling(tinytc_func const &fn, const_tinytc_core_info_t info)
     -> std::pair<core_config, local_tiling>;
@@ -46,7 +46,7 @@ template <typename Binop>
 auto mixed_precision_arithmetic(region_builder &bb, scalar_type result_ty, tinytc_value_t a,
                                 tinytc_value_t b, location const &loc) -> tinytc_value_t {
     auto [a_p, b_p] = promote_binop_operands(bb, result_ty, a, b, loc);
-    return bb.create<Binop>(a_p, b_p, scalar_data_type::get(a_p->context(), result_ty), loc);
+    return bb.create<Binop>(a_p, b_p, number_type::get(a_p->context(), result_ty), loc);
 }
 auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tinytc_value_t b,
                                       location const &loc) -> tinytc_value_t;
@@ -60,8 +60,8 @@ auto instant_constant_fold_add(region_builder &bb, inst i) -> tinytc_value_t;
 auto get_bool_constant(tinytc_value_t val) -> std::optional<bool>;
 auto get_int_constant(const_tinytc_value_t val) -> std::optional<std::int64_t>;
 auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t>;
-auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const *;
-auto get_memref_type(tinytc_value const &v) -> memref_data_type const *;
+auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_type const *;
+auto get_memref_type(tinytc_value const &v) -> memref_type const *;
 auto get_scalar_type(tinytc_value const &v) -> scalar_type;
 auto get_yield(location const &loc, tinytc_region &reg) -> yield_inst;
 

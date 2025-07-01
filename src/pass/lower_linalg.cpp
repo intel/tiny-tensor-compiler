@@ -44,8 +44,8 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                       tinytc_type_t b_ty, tinytc_type_t c_ty, attr for_attributes,
                       location const &loc) {
     auto ctx = m_block->context();
-    auto bool_ty = boolean_data_type::get(ctx);
-    auto index_ty = scalar_data_type::get(ctx, scalar_type::index);
+    auto bool_ty = boolean_type::get(ctx);
+    auto index_ty = number_type::get(ctx, scalar_type::index);
 
     const auto check_a = m_check ? checked_flag::rows : checked_flag::none;
     const auto check_b = n_check ? checked_flag::cols : checked_flag::none;
@@ -63,11 +63,11 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto c_n_block_size = bb.create<constant_inst>(n_block_size, index_ty, loc);
 
     const auto c_acc_ty = [&c_ty, &loc]() {
-        auto ct = dyn_cast<scalar_data_type>(c_ty);
+        auto ct = dyn_cast<number_type>(c_ty);
         if (ct == nullptr) {
             throw compilation_error(loc, status::internal_compiler_error);
         }
-        return scalar_data_type::get(c_ty->context(), acc_type(ct->ty()));
+        return number_type::get(c_ty->context(), acc_type(ct->ty()));
     }();
 
     auto coopmatrix_c_ty = get_coopmatrix(c_ty, m_block_size, n_block_size, matrix_use::acc, loc);
@@ -262,15 +262,15 @@ class linalg_generator {
     inline auto insertion_point() -> tinytc_inst_iterator_t { return bb_.get_insertion_point(); }
 
   private:
-    auto get_memref_type(tinytc_value const &v) const -> const memref_data_type *;
+    auto get_memref_type(tinytc_value const &v) const -> const memref_type *;
 
     local_tiling const &tiling_;
     core_config const &core_cfg_;
     region_builder bb_;
 };
 
-auto linalg_generator::get_memref_type(tinytc_value const &v) const -> const memref_data_type * {
-    auto t = dyn_cast<memref_data_type>(v.ty());
+auto linalg_generator::get_memref_type(tinytc_value const &v) const -> const memref_type * {
+    auto t = dyn_cast<memref_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
@@ -627,7 +627,7 @@ void linalg_generator::operator()(gemm_inst in) {
 }
 
 void linalg_generator::operator()(gemv_inst in) {
-    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = bb_.constant_zero(index_ty, in.loc());
     auto c_shape0 =
         instant_constant_fold_add(bb_, create<size_inst>(0, &in.C(), index_ty, in.loc()));
@@ -663,7 +663,7 @@ void linalg_generator::operator()(gemv_inst in) {
 }
 
 void linalg_generator::operator()(ger_inst in) {
-    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
     auto c0 = bb_.constant_zero(index_ty, in.loc());
     auto c_shape0 =
         instant_constant_fold_add(bb_, create<size_inst>(0, &in.C(), index_ty, in.loc()));
@@ -687,7 +687,7 @@ void linalg_generator::operator()(ger_inst in) {
 }
 
 void linalg_generator::operator()(hadamard_inst in) {
-    auto index_ty = scalar_data_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
     auto ct = get_memref_type(in.C());

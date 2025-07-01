@@ -134,8 +134,8 @@ template <typename F> class binary_op_dispatcher {
 
 constant_folding::constant_folding(bool unsafe_fp_math) : unsafe_fp_math_(unsafe_fp_math) {}
 
-auto constant_folding::get_memref_type(tinytc_value const &v) const -> const memref_data_type * {
-    auto t = dyn_cast<memref_data_type>(v.ty());
+auto constant_folding::get_memref_type(tinytc_value const &v) const -> const memref_type * {
+    auto t = dyn_cast<memref_type>(v.ty());
     if (t == nullptr) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
@@ -151,7 +151,7 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
     constant_inst a_const = dyn_cast<constant_inst>(op_a.defining_inst());
     constant_inst b_const = dyn_cast<constant_inst>(op_b.defining_inst());
 
-    if (isa<boolean_data_type>(*op_a.ty())) {
+    if (isa<boolean_type>(*op_a.ty())) {
         if ((a_const && !std::holds_alternative<bool>(a_const.value())) ||
             (b_const && !std::holds_alternative<bool>(b_const.value()))) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
@@ -169,16 +169,16 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
         // Arithmetic on coopmatrix is component-wise and if a coopmatrix is constant, then all
         // elements have the same value. Thus, constant folding on coopmatrix types is identical to
         // constant folding on scalar types.
-        auto ct = dyn_cast<coopmatrix_data_type>(op_a.ty());
+        auto ct = dyn_cast<coopmatrix_type>(op_a.ty());
         if (ct == nullptr) {
             throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
-        at = dyn_cast<scalar_data_type>(ct->ty());
+        at = dyn_cast<number_type>(ct->ty());
     }
 
     if (a_const && b_const) {
@@ -207,7 +207,7 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    if (isa<boolean_data_type>(*op_a.ty())) {
+    if (isa<boolean_type>(*op_a.ty())) {
         if (!std::holds_alternative<bool>(a_const.value())) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
@@ -215,16 +215,16 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
                                 in.loc()}(std::get<bool>(a_const.value()));
     }
 
-    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
         // Arithmetic on coopmatrix is component-wise and if a coopmatrix is constant, then all
         // elements have the same value. Thus, constant folding on coopmatrix types is identical to
         // constant folding on scalar types.
-        auto ct = dyn_cast<coopmatrix_data_type>(op_a.ty());
+        auto ct = dyn_cast<coopmatrix_type>(op_a.ty());
         if (ct == nullptr) {
             throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
         }
-        at = dyn_cast<scalar_data_type>(ct->ty());
+        at = dyn_cast<number_type>(ct->ty());
     }
 
     auto computer = compute_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
@@ -240,16 +240,16 @@ auto constant_folding::operator()(cast_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    auto rt = dyn_cast<scalar_data_type>(in.result().ty());
+    auto rt = dyn_cast<number_type>(in.result().ty());
     if (rt == nullptr) {
         // Cast on coopmatrix is component-wise and if a coopmatrix is constant, then all
         // elements have the same value. Thus, constant folding on coopmatrix types is identical to
         // constant folding on scalar types.
-        auto ct = dyn_cast<coopmatrix_data_type>(in.result().ty());
+        auto ct = dyn_cast<coopmatrix_type>(in.result().ty());
         if (ct == nullptr) {
             throw compilation_error(in.result().loc(), status::ir_expected_coopmatrix_or_scalar);
         }
-        rt = dyn_cast<scalar_data_type>(ct->ty());
+        rt = dyn_cast<number_type>(ct->ty());
     }
 
     return std::visit(
@@ -267,7 +267,7 @@ auto constant_folding::operator()(compare_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
         throw compilation_error(op_a.loc(), status::ir_expected_scalar);
     }
@@ -283,7 +283,7 @@ auto constant_folding::operator()(cooperative_matrix_scale_inst in) -> fold_resu
 
     constant_inst a_const = dyn_cast<constant_inst>(op_a.defining_inst());
 
-    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
         throw compilation_error(op_a.loc(), status::ir_expected_scalar);
     }
@@ -304,7 +304,7 @@ auto constant_folding::operator()(math_unary_inst in) -> fold_result {
         return tinytc_value_t{};
     }
 
-    auto at = dyn_cast<scalar_data_type>(op_a.ty());
+    auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
         return tinytc_value_t{};
     }
@@ -315,17 +315,17 @@ auto constant_folding::operator()(math_unary_inst in) -> fold_result {
 }
 
 auto constant_folding::operator()(size_inst in) -> fold_result {
-    auto mode_size = visit(
-        overloaded{[&](group_data_type const &g) -> std::int64_t { return g.size(); },
-                   [&](memref_data_type const &m) -> std::int64_t { return m.shape(in.mode()); },
-                   [&](auto const &) -> std::int64_t {
-                       throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
-                   }},
-        *in.operand().ty());
+    auto mode_size =
+        visit(overloaded{[&](group_type const &g) -> std::int64_t { return g.size(); },
+                         [&](memref_type const &m) -> std::int64_t { return m.shape(in.mode()); },
+                         [&](auto const &) -> std::int64_t {
+                             throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
+                         }},
+              *in.operand().ty());
 
     if (!is_dynamic_value(mode_size)) {
         return create<constant_inst>(
-            mode_size, scalar_data_type::get(in.operand().context(), scalar_type::index), in.loc());
+            mode_size, number_type::get(in.operand().context(), scalar_type::index), in.loc());
     }
     return tinytc_value_t{};
 }

@@ -75,14 +75,14 @@ void dump_ir_pass::operator()(integer_attr const &a) { *os_ << a.value(); }
 void dump_ir_pass::operator()(string_attr const &a) { *os_ << "\"" << a.str() << "\""; }
 
 /* Data type nodes */
-void dump_ir_pass::operator()(void_data_type const &) { *os_ << "void"; }
-void dump_ir_pass::operator()(boolean_data_type const &) { *os_ << "bool"; }
-void dump_ir_pass::operator()(coopmatrix_data_type const &ct) {
+void dump_ir_pass::operator()(void_type const &) { *os_ << "void"; }
+void dump_ir_pass::operator()(boolean_type const &) { *os_ << "bool"; }
+void dump_ir_pass::operator()(coopmatrix_type const &ct) {
     *os_ << "coopmatrix<";
     visit(*this, *ct.ty());
     *os_ << "x" << ct.rows() << "x" << ct.cols() << "," << to_string(ct.use()) << ">";
 }
-void dump_ir_pass::operator()(group_data_type const &g) {
+void dump_ir_pass::operator()(group_type const &g) {
     auto const val = [&](std::int64_t v) -> std::ostream & {
         if (is_dynamic_value(v)) {
             return *os_ << "?";
@@ -99,7 +99,7 @@ void dump_ir_pass::operator()(group_data_type const &g) {
     }
     *os_ << ">";
 }
-void dump_ir_pass::operator()(memref_data_type const &d) {
+void dump_ir_pass::operator()(memref_type const &d) {
     auto const val = [&](std::int64_t v) -> std::ostream & {
         if (is_dynamic_value(v)) {
             return *os_ << "?";
@@ -121,7 +121,7 @@ void dump_ir_pass::operator()(memref_data_type const &d) {
     }
     *os_ << ">";
 }
-void dump_ir_pass::operator()(scalar_data_type const &s) { *os_ << to_string(s.ty()); }
+void dump_ir_pass::operator()(number_type const &s) { *os_ << to_string(s.ty()); }
 
 /* Value nodes */
 void dump_ir_pass::dump_val(tinytc_value const &v) {

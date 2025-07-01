@@ -13,7 +13,7 @@
 
 namespace tinytc {
 
-class coopmatrix_data_type;
+class coopmatrix_type;
 enum class matrix_use;
 enum class scalar_type;
 
@@ -69,7 +69,7 @@ class matrix_ext_info {
     auto have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool;
     auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
         -> bool;
-    auto have_type(const coopmatrix_data_type *ty) const -> bool;
+    auto have_type(const coopmatrix_type *ty) const -> bool;
 
     inline auto required_subgroup_size() const -> std::int32_t { return required_sgs_; }
     inline auto block_io() const -> matrix_ext_block_io_info const & { return block_io_; }

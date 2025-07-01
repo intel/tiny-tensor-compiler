@@ -19,7 +19,7 @@
 #include <variant>
 
 namespace tinytc {
-class coopmatrix_data_type;
+class coopmatrix_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -42,7 +42,7 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
 
   private:
     struct mul_add_key {
-        std::array<coopmatrix_data_type const *, 4u> op_ty;
+        std::array<coopmatrix_type const *, 4u> op_ty;
         bool is_c_zero;
 
         auto operator==(mul_add_key const &other) const {
@@ -65,24 +65,24 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
     auto check_2d_block_io(tinytc_value const &operand, tinytc_value const &pos0) -> bool;
     auto load_config(scalar_type sty, std::int32_t rows, std::int32_t cols, matrix_use use,
                      transpose trans, std::int32_t cache_level = -1) -> block_config;
-    auto load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty, transpose trans)
+    auto load_fun(coopmatrix_type const *result_ty, spv_inst *spv_operand_ty, transpose trans)
         -> spv_inst *;
     auto prefetch_fun(std::int32_t cache_level, scalar_type sty, spv_inst *spv_operand_ty,
                       std::int32_t rows, std::int32_t cols) -> spv_inst *;
-    auto store_config(coopmatrix_data_type const *ct) -> block_config;
-    auto store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
-    auto mul_add_fun(coopmatrix_data_type const *at, coopmatrix_data_type const *bt,
-                     coopmatrix_data_type const *ct, coopmatrix_data_type const *rt, bool is_c_zero)
+    auto store_config(coopmatrix_type const *ct) -> block_config;
+    auto store_fun(coopmatrix_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
+    auto mul_add_fun(coopmatrix_type const *at, coopmatrix_type const *bt,
+                     coopmatrix_type const *ct, coopmatrix_type const *rt, bool is_c_zero)
         -> spv_inst *;
-    auto reduce_fun(std::int32_t sgs, IK op, coopmatrix_data_type const *at,
-                    coopmatrix_data_type const *rt) -> spv_inst *;
+    auto reduce_fun(std::int32_t sgs, IK op, coopmatrix_type const *at, coopmatrix_type const *rt)
+        -> spv_inst *;
 
-    using load_key = std::tuple<coopmatrix_data_type const *, spv_inst *, transpose>;
+    using load_key = std::tuple<coopmatrix_type const *, spv_inst *, transpose>;
     using prefetch_key =
         std::tuple<std::int32_t, scalar_type, spv_inst *, std::int32_t, std::int32_t>;
-    using store_key = std::tuple<coopmatrix_data_type const *, spv_inst *>;
+    using store_key = std::tuple<coopmatrix_type const *, spv_inst *>;
     using reduce_key =
-        std::tuple<std::int32_t, IK, coopmatrix_data_type const *, coopmatrix_data_type const *>;
+        std::tuple<std::int32_t, IK, coopmatrix_type const *, coopmatrix_type const *>;
     std::unordered_map<load_key, spv_inst *, tuple_hash<load_key>> load_funs_;
     std::unordered_map<prefetch_key, spv_inst *, tuple_hash<prefetch_key>> prefetch_funs_;
     std::unordered_map<store_key, spv_inst *, tuple_hash<store_key>> store_funs_;

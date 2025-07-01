@@ -44,7 +44,7 @@ void tile_loop_by_sgs(region_builder &bb, tinytc_value_t loop_trip_count, int sg
                       tinytc_value_t sg_id, sgs_loop_body_builder const &body,
                       attr for_attributes) {
     auto ity = loop_trip_count->ty();
-    auto bool_ty = boolean_data_type::get(ity->context());
+    auto bool_ty = boolean_type::get(ity->context());
     auto c_sgs = bb.create<constant_inst>(sgs, ity);
     auto c_sgs_tiles = bb.create<constant_inst>(sgs * num_tiles, ity);
     auto c0 = bb.create<constant_inst>(0, ity);
@@ -80,7 +80,7 @@ void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int
                          int num_tiles, tinytc_value_t sg_id, uniform_loop_body_builder const &body,
                          attr for_attributes) {
     auto ity = loop_trip_count->ty();
-    auto bool_ty = boolean_data_type::get(ity->context());
+    auto bool_ty = boolean_type::get(ity->context());
     auto c0 = bb.create<constant_inst>(0, ity);
     auto c1 = bb.create<constant_inst>(1, ity);
     auto c_tiles = bb.create<constant_inst>(num_tiles, ity);
@@ -130,8 +130,8 @@ void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int
 auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_value_t a,
                             tinytc_value_t b, location const &loc)
     -> std::pair<tinytc_value_t, tinytc_value_t> {
-    scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
-    scalar_data_type *bt = dyn_cast<scalar_data_type>(b->ty());
+    number_type *at = dyn_cast<number_type>(a->ty());
+    number_type *bt = dyn_cast<number_type>(b->ty());
     if (at == nullptr || bt == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
     }
@@ -139,7 +139,7 @@ auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_va
         if (!promotable(at->ty(), result_ty) || !promotable(bt->ty(), result_ty)) {
             throw compilation_error(loc, status::ir_forbidden_promotion);
         }
-        auto promoted_ty = scalar_data_type::get(at->context(), result_ty);
+        auto promoted_ty = number_type::get(at->context(), result_ty);
 
         if (at->ty() != result_ty) {
             a = bb.create<cast_inst>(a, promoted_ty, loc);
@@ -153,11 +153,11 @@ auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_va
 
 auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tinytc_value_t b,
                                       location const &loc) -> tinytc_value_t {
-    scalar_data_type *at = dyn_cast<scalar_data_type>(a->ty());
+    number_type *at = dyn_cast<number_type>(a->ty());
     if (at == nullptr) {
         throw compilation_error(loc, status::ir_expected_scalar);
     }
-    coopmatrix_data_type *bt = dyn_cast<coopmatrix_data_type>(b->ty());
+    coopmatrix_type *bt = dyn_cast<coopmatrix_type>(b->ty());
     if (bt == nullptr) {
         throw compilation_error(loc, status::ir_expected_coopmatrix);
     }
@@ -186,7 +186,7 @@ auto get_atomic_store_flag(tinytc_value_t beta) -> std::optional<store_flag> {
 void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_value_t ab,
                  tinytc_value_t beta, tinytc_value_t C, array_view<tinytc_value_t> index_list,
                  location const &loc) {
-    memref_data_type *ct = dyn_cast<memref_data_type>(C->ty());
+    memref_type *ct = dyn_cast<memref_type>(C->ty());
     if (ct == nullptr) {
         throw compilation_error(loc, {C}, status::ir_expected_scalar);
     }
@@ -253,22 +253,22 @@ auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t> {
     return get_int_constant(&val);
 }
 
-auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_data_type const * {
-    auto ct = dyn_cast<coopmatrix_data_type>(v.ty());
+auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_type const * {
+    auto ct = dyn_cast<coopmatrix_type>(v.ty());
     if (!ct) {
         throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
     }
     return ct;
 }
-auto get_memref_type(tinytc_value const &v) -> memref_data_type const * {
-    auto mt = dyn_cast<memref_data_type>(v.ty());
+auto get_memref_type(tinytc_value const &v) -> memref_type const * {
+    auto mt = dyn_cast<memref_type>(v.ty());
     if (!mt) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
     return mt;
 }
 auto get_scalar_type(tinytc_value const &v) -> scalar_type {
-    auto st = dyn_cast<scalar_data_type>(v.ty());
+    auto st = dyn_cast<number_type>(v.ty());
     if (!st) {
         throw compilation_error(v.loc(), status::ir_expected_scalar);
     }

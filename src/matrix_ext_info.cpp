@@ -108,7 +108,7 @@ auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t
     return false;
 }
 
-auto matrix_ext_info::have_type(const coopmatrix_data_type *ty) const -> bool {
+auto matrix_ext_info::have_type(const coopmatrix_type *ty) const -> bool {
     return have_type(ty->component_ty(), ty->rows(), ty->cols(), ty->use());
 }
 

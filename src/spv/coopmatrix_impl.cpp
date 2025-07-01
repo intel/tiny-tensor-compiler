@@ -647,7 +647,7 @@ auto coopmatrix_impl::spv_ty(coopmatrix_layout const &layout) -> spv_inst * {
     return length > 1 ? unique_->vec_ty(storage_ty, length) : storage_ty;
 }
 
-auto coopmatrix_impl::spv_ty(coopmatrix_data_type const *ct) -> spv_inst * {
+auto coopmatrix_impl::spv_ty(coopmatrix_type const *ct) -> spv_inst * {
     return spv_ty(get_layout(cfg(), ct));
 }
 

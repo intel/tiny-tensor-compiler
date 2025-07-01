@@ -10,7 +10,7 @@
 #include <cstdint>
 
 namespace tinytc {
-class coopmatrix_data_type;
+class coopmatrix_type;
 class core_config;
 enum class scalar_type;
 
@@ -35,7 +35,7 @@ struct coopmatrix_layout {
     }
 };
 
-auto get_layout(core_config const &cfg, coopmatrix_data_type const *ct) -> coopmatrix_layout;
+auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix_layout;
 
 } // namespace tinytc
 

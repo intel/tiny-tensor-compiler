@@ -44,7 +44,7 @@ class constant_folding {
     auto operator()(subgroup_broadcast_inst in) -> fold_result;
 
   private:
-    auto get_memref_type(tinytc_value const &v) const -> const memref_data_type *;
+    auto get_memref_type(tinytc_value const &v) const -> const memref_type *;
 
     bool unsafe_fp_math_;
 };
@@ -135,11 +135,11 @@ struct compute_unary_op {
             default:
                 return inst{nullptr};
             }
-            scalar_data_type *sty = dyn_cast<scalar_data_type>(ty);
+            number_type *sty = dyn_cast<number_type>(ty);
             if (!sty) {
                 throw compilation_error(loc, status::ir_expected_scalar);
             }
-            auto cst_ty = scalar_data_type::get(sty->context(), component_type(sty->ty()));
+            auto cst_ty = number_type::get(sty->context(), component_type(sty->ty()));
             return create<constant_inst>(val, cst_ty, loc);
         };
 
@@ -476,7 +476,7 @@ template <typename T, typename F> struct value_cast_impl<T, std::complex<F>> {
 template <typename T, typename U> auto value_cast(U const &u) { return value_cast_impl<T, U>{}(u); }
 
 template <typename T>
-auto compute_cast(scalar_data_type *to_ty, T A, location const &loc) -> fold_result {
+auto compute_cast(number_type *to_ty, T A, location const &loc) -> fold_result {
     switch (to_ty->ty()) {
     case scalar_type::i8:
         return create<constant_inst>(value_cast<std::int8_t>(A), to_ty, loc);

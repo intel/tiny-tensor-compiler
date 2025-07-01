@@ -66,15 +66,15 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_typ
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *bt = dyn_cast<boolean_data_type>(ty); bt != nullptr) {
+    if (const auto *bt = dyn_cast<boolean_type>(ty); bt != nullptr) {
         return exception_to_status_code(
             [&] { *instr = constant_inst::create(true, ty, get_optional(loc)).release(); });
     }
 
     scalar_type sty;
-    if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
+    if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
         sty = st->ty();
-    } else if (const auto *ct = dyn_cast<coopmatrix_data_type>(ty); ct != nullptr) {
+    } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
         sty = ct->component_ty();
     } else {
         return tinytc_status_invalid_arguments;
@@ -110,15 +110,15 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_ty
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *bt = dyn_cast<boolean_data_type>(ty); bt != nullptr) {
+    if (const auto *bt = dyn_cast<boolean_type>(ty); bt != nullptr) {
         return exception_to_status_code(
             [&] { *instr = constant_inst::create(false, ty, get_optional(loc)).release(); });
     }
 
     scalar_type sty;
-    if (const auto *st = dyn_cast<scalar_data_type>(ty); st != nullptr) {
+    if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
         sty = st->ty();
-    } else if (const auto *ct = dyn_cast<coopmatrix_data_type>(ty); ct != nullptr) {
+    } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
         sty = ct->component_ty();
     } else {
         return tinytc_status_invalid_arguments;

@@ -14,7 +14,7 @@
 #include <utility>
 
 namespace tinytc {
-class coopmatrix_data_type;
+class coopmatrix_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -52,7 +52,7 @@ class coopmatrix_impl {
     virtual auto cast(cast_inst in, spv_inst *a) -> spv_inst *;
     virtual auto constant(constant_inst in) -> spv_inst *;
 
-    virtual auto spv_ty(coopmatrix_data_type const *ct) -> spv_inst *;
+    virtual auto spv_ty(coopmatrix_type const *ct) -> spv_inst *;
 
   protected:
     auto spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst *;

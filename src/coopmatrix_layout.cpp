@@ -11,7 +11,7 @@
 
 namespace tinytc {
 
-auto get_layout(core_config const &cfg, coopmatrix_data_type const *ct) -> coopmatrix_layout {
+auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix_layout {
     auto l = coopmatrix_layout{};
     l.sty = ct->component_ty();
     l.rows = std::min(ct->shape(0), static_cast<std::int64_t>(cfg.subgroup_size));

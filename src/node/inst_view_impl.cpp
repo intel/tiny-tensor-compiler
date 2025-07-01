@@ -30,24 +30,24 @@
 
 namespace tinytc {
 
-coopmatrix_data_type *get_coopmatrix_type(location const &loc, tinytc_value const &v) {
-    auto m = dyn_cast<coopmatrix_data_type>(v.ty());
+coopmatrix_type *get_coopmatrix_type(location const &loc, tinytc_value const &v) {
+    auto m = dyn_cast<coopmatrix_type>(v.ty());
     if (m == nullptr) {
         throw compilation_error(loc, {&v}, status::ir_expected_coopmatrix);
     }
     return m;
 }
 
-scalar_data_type *get_scalar_type(location const &loc, tinytc_value const &v) {
-    auto m = dyn_cast<scalar_data_type>(v.ty());
+number_type *get_scalar_type(location const &loc, tinytc_value const &v) {
+    auto m = dyn_cast<number_type>(v.ty());
     if (m == nullptr) {
         throw compilation_error(loc, {&v}, status::ir_expected_scalar);
     }
     return m;
 }
 
-memref_data_type *get_memref_type(location const &loc, tinytc_value const &v) {
-    auto m = dyn_cast<memref_data_type>(v.ty());
+memref_type *get_memref_type(location const &loc, tinytc_value const &v) {
+    auto m = dyn_cast<memref_type>(v.ty());
     if (m == nullptr) {
         throw compilation_error(loc, {&v}, status::ir_expected_memref);
     }
@@ -55,13 +55,13 @@ memref_data_type *get_memref_type(location const &loc, tinytc_value const &v) {
 }
 
 void check_index_ty(location const &loc, tinytc_value const &v) {
-    if (auto sty = dyn_cast<scalar_data_type>(v.ty()); !sty || sty->ty() != scalar_type::index) {
+    if (auto sty = dyn_cast<number_type>(v.ty()); !sty || sty->ty() != scalar_type::index) {
         throw compilation_error(loc, {&v}, status::ir_expected_index);
     }
 }
 
-void check_memref_shape(memref_data_type *rt, std::int64_t ri, memref_data_type *ot,
-                        std::int64_t oi, location const &loc) {
+void check_memref_shape(memref_type *rt, std::int64_t ri, memref_type *ot, std::int64_t oi,
+                        location const &loc) {
     if (rt->shape(ri) != ot->shape(oi)) {
         auto extra_info = std::ostringstream{} << "Size of mode " << ri
                                                << " does not match operand mode " << oi << " ["
@@ -69,8 +69,8 @@ void check_memref_shape(memref_data_type *rt, std::int64_t ri, memref_data_type 
         throw compilation_error(loc, status::ir_invalid_shape, std::move(extra_info).str());
     }
 }
-void check_memref_stride(memref_data_type *rt, std::int64_t ri, memref_data_type *ot,
-                         std::int64_t oi, location const &loc) {
+void check_memref_stride(memref_type *rt, std::int64_t ri, memref_type *ot, std::int64_t oi,
+                         location const &loc) {
     if (!is_dynamic_value(rt->stride(ri)) && rt->stride(ri) != ot->stride(oi)) {
         auto extra_info = std::ostringstream{} << "Stride of mode " << ri
                                                << " does not match operand stride " << oi << " ["
@@ -79,7 +79,7 @@ void check_memref_stride(memref_data_type *rt, std::int64_t ri, memref_data_type
     }
 }
 
-void check_memref_mode(memref_data_type *rt, std::int64_t ri, memref_data_type *ot, std::int64_t oi,
+void check_memref_mode(memref_type *rt, std::int64_t ri, memref_type *ot, std::int64_t oi,
                        location const &loc) {
     check_memref_shape(rt, ri, ot, oi, loc);
     check_memref_stride(rt, ri, ot, oi, loc);
@@ -87,8 +87,8 @@ void check_memref_mode(memref_data_type *rt, std::int64_t ri, memref_data_type *
 
 auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_type_t ty,
                                          location const &loc)
-    -> std::pair<memref_data_type *, memref_data_type *> {
-    auto rt = dyn_cast<memref_data_type>(ty);
+    -> std::pair<memref_type *, memref_type *> {
+    auto rt = dyn_cast<memref_type>(ty);
     if (!rt) {
         throw compilation_error(loc, status::ir_expected_memref);
     }
@@ -103,7 +103,7 @@ auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_typ
 }
 
 void alloca_inst::setup_and_check() {
-    auto memref = dyn_cast<memref_data_type>(result().ty());
+    auto memref = dyn_cast<memref_type>(result().ty());
     if (memref == nullptr) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -123,8 +123,8 @@ auto barrier_inst::has_fence(address_space as) -> bool {
 void cast_inst::setup_and_check() {
     auto to_ty = result().ty();
 
-    if (auto rt = dyn_cast<coopmatrix_data_type>(to_ty); rt) {
-        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
+    if (auto rt = dyn_cast<coopmatrix_type>(to_ty); rt) {
+        auto ct = dyn_cast<coopmatrix_type>(a().ty());
         if (!ct) {
             throw compilation_error(loc(), {&a()}, status::ir_expected_coopmatrix);
         }
@@ -142,7 +142,7 @@ void cast_inst::setup_and_check() {
             throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
         }
     } else {
-        auto to_ty_scalar = dyn_cast<scalar_data_type>(to_ty);
+        auto to_ty_scalar = dyn_cast<number_type>(to_ty);
         if (to_ty_scalar == nullptr) {
             throw compilation_error(loc(), status::ir_expected_scalar);
         }
@@ -163,15 +163,15 @@ void constant_inst::setup_and_check() {
                (is_complex_type(ty) && std::holds_alternative<std::complex<double>>(val));
     };
 
-    if (auto bt = dyn_cast<boolean_data_type>(ty); bt) {
+    if (auto bt = dyn_cast<boolean_type>(ty); bt) {
         if (!std::holds_alternative<bool>(value())) {
             throw compilation_error(loc(), status::ir_constant_mismatch);
         }
-    } else if (auto st = dyn_cast<scalar_data_type>(ty); st) {
+    } else if (auto st = dyn_cast<number_type>(ty); st) {
         if (!type_ok(value(), st->ty())) {
             throw compilation_error(loc(), status::ir_constant_mismatch);
         }
-    } else if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
+    } else if (auto ct = dyn_cast<coopmatrix_type>(ty); ct) {
         if (!type_ok(value(), ct->component_ty())) {
             throw compilation_error(loc(), status::ir_constant_mismatch);
         }
@@ -196,7 +196,7 @@ void cooperative_matrix_apply_inst::setup_and_check() {
 
     auto at = get_coopmatrix_type(loc(), a());
 
-    auto i32_ty = scalar_data_type::get(at->context(), scalar_type::i32);
+    auto i32_ty = number_type::get(at->context(), scalar_type::i32);
 
     body().loc(loc());
     body().kind(region_kind::spmd);
@@ -230,7 +230,7 @@ void cooperative_matrix_insert_inst::setup_and_check() {
 }
 
 void cooperative_matrix_load_inst::setup_and_check() {
-    auto rt = dyn_cast<coopmatrix_data_type>(result().ty());
+    auto rt = dyn_cast<coopmatrix_type>(result().ty());
     if (!rt) {
         throw compilation_error(loc(), status::ir_expected_coopmatrix);
     }
@@ -248,7 +248,7 @@ void cooperative_matrix_load_inst::setup_and_check() {
 }
 
 void cooperative_matrix_mul_add_inst::setup_and_check() {
-    auto rt = dyn_cast<coopmatrix_data_type>(result().ty());
+    auto rt = dyn_cast<coopmatrix_type>(result().ty());
     if (!rt) {
         throw compilation_error(loc(), status::ir_expected_memref);
     }
@@ -458,14 +458,13 @@ void fuse_inst::setup_and_check() {
 void if_inst::setup_and_check() {
     then().loc(loc());
     otherwise().loc(loc());
-    if (!isa<boolean_data_type>(*condition().ty())) {
+    if (!isa<boolean_type>(*condition().ty())) {
         throw compilation_error(loc(), {&condition()}, status::ir_expected_boolean);
     }
 
     for (auto &r : results()) {
         auto &ty = *r.ty();
-        if (!isa<boolean_data_type>(ty) && !isa<scalar_data_type>(ty) &&
-            !isa<coopmatrix_data_type>(ty)) {
+        if (!isa<boolean_type>(ty) && !isa<number_type>(ty) && !isa<coopmatrix_type>(ty)) {
             throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
     }
@@ -479,7 +478,7 @@ void load_inst::setup_and_check() {
     auto ty = result().ty();
 
     visit(overloaded{
-              [&](group_data_type &g) {
+              [&](group_type &g) {
                   if (g.ty() != ty) {
                       throw compilation_error(loc(), {&operand()},
                                               status::ir_operand_type_must_match_return_type);
@@ -488,7 +487,7 @@ void load_inst::setup_and_check() {
                       throw compilation_error(loc(), status::ir_invalid_number_of_indices);
                   }
               },
-              [&](memref_data_type &m) {
+              [&](memref_type &m) {
                   if (m.element_data_ty() != ty) {
                       throw compilation_error(loc(), {&operand()},
                                               status::ir_operand_type_must_match_return_type);
@@ -507,18 +506,18 @@ void parallel_inst::setup_and_check() {
 }
 
 void size_inst::setup_and_check() {
-    auto rt = dyn_cast<scalar_data_type>(result().ty());
+    auto rt = dyn_cast<number_type>(result().ty());
     if (!rt || rt->ty() != scalar_type::index) {
         throw compilation_error(loc(), status::ir_expected_index);
     }
 
-    const bool range_ok = visit(
-        overloaded{[&](group_data_type &) -> bool { return 0 <= mode() && mode() < 1; },
-                   [&](memref_data_type &m) -> bool { return 0 <= mode() && mode() < m.dim(); },
-                   [&](auto &) -> bool {
-                       throw compilation_error(loc(), status::ir_expected_memref_or_group);
-                   }},
-        *operand().ty());
+    const bool range_ok =
+        visit(overloaded{[&](group_type &) -> bool { return 0 <= mode() && mode() < 1; },
+                         [&](memref_type &m) -> bool { return 0 <= mode() && mode() < m.dim(); },
+                         [&](auto &) -> bool {
+                             throw compilation_error(loc(), status::ir_expected_memref_or_group);
+                         }},
+              *operand().ty());
     if (!range_ok) {
         throw compilation_error(loc(), status::ir_out_of_bounds);
     }
@@ -526,7 +525,7 @@ void size_inst::setup_and_check() {
 
 void subgroup_broadcast_inst::setup_and_check() {
     auto ty = result().ty();
-    if (!isa<scalar_data_type>(*ty)) {
+    if (!isa<number_type>(*ty)) {
         throw compilation_error(loc(), status::ir_expected_scalar);
     }
 
@@ -534,8 +533,7 @@ void subgroup_broadcast_inst::setup_and_check() {
         throw compilation_error(loc(), {&a()}, status::ir_operand_type_must_match_return_type);
     }
 
-    if (auto idxt = dyn_cast<scalar_data_type>(idx().ty());
-        !idxt || idxt->ty() != scalar_type::i32) {
+    if (auto idxt = dyn_cast<number_type>(idx().ty()); !idxt || idxt->ty() != scalar_type::i32) {
         throw compilation_error(loc(), {&idx()}, status::ir_expected_i32);
     }
 }
@@ -611,7 +609,7 @@ void arith_inst::setup_and_check(support_flags support) {
         throw compilation_error(loc(), {&b()}, status::ir_operand_type_must_match_return_type);
     }
 
-    if (isa<boolean_data_type>(*ty)) {
+    if (isa<boolean_type>(*ty)) {
         if (!(support & supports_bool)) {
             throw compilation_error(loc(), status::ir_boolean_unsupported);
         }
@@ -625,7 +623,7 @@ void arith_inst::setup_and_check(support_flags support) {
             }
         };
 
-        if (auto ct = dyn_cast<coopmatrix_data_type>(ty); ct) {
+        if (auto ct = dyn_cast<coopmatrix_type>(ty); ct) {
             check_scalar_ty(ct->component_ty());
         } else {
             check_scalar_ty(get_scalar_type(loc(), ty)->ty());
@@ -657,7 +655,7 @@ void arith_unary_inst::setup_and_check() {}
 void arith_unary_inst::setup_and_check(support_flags support, bool component_type_match) {
     auto ty = result().ty();
 
-    if (isa<boolean_data_type>(*ty)) {
+    if (isa<boolean_type>(*ty)) {
         if (!(support & supports_bool)) {
             throw compilation_error(loc(), status::ir_boolean_unsupported);
         }
@@ -685,8 +683,8 @@ void arith_unary_inst::setup_and_check(support_flags support, bool component_typ
             }
         };
 
-        auto ct = dyn_cast<coopmatrix_data_type>(a().ty());
-        auto rt = dyn_cast<coopmatrix_data_type>(ty);
+        auto ct = dyn_cast<coopmatrix_type>(a().ty());
+        auto rt = dyn_cast<coopmatrix_type>(ty);
         if (ct && rt) {
             check_scalar_ty(ct->component_ty(), rt->component_ty());
         } else {
@@ -958,7 +956,7 @@ void hadamard_inst::setup_and_check() {
 
 void builtin_inst::setup_and_check() {}
 void builtin_inst::setup_and_check(scalar_type expected_ret_ty, status err) {
-    auto rt = dyn_cast<scalar_data_type>(result().ty());
+    auto rt = dyn_cast<number_type>(result().ty());
     if (!rt) {
         throw compilation_error(loc(), status::ir_expected_scalar);
     }
@@ -994,7 +992,7 @@ void compare_inst::setup_and_check() {}
 void compare_inst::setup_and_check(support_flags support) {
     auto ty = result().ty();
 
-    if (!isa<boolean_data_type>(*ty)) {
+    if (!isa<boolean_type>(*ty)) {
         throw compilation_error(loc(), status::ir_expected_boolean);
     }
 
@@ -1062,8 +1060,7 @@ void for_inst::setup_and_check() {
         if (init[i].ty() != ty) {
             throw compilation_error(loc(), {&init[i]}, status::ir_init_return_type_mismatch);
         }
-        if (!isa<boolean_data_type>(*ty) && !isa<scalar_data_type>(*ty) &&
-            !isa<coopmatrix_data_type>(*ty)) {
+        if (!isa<boolean_type>(*ty) && !isa<number_type>(*ty) && !isa<coopmatrix_type>(*ty)) {
             throw compilation_error(loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
         body().set_param(1 + i, ty);

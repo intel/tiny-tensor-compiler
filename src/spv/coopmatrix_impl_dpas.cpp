@@ -148,7 +148,7 @@ auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::
     return cfg;
 }
 
-auto coopmatrix_impl_dpas::load_fun(coopmatrix_data_type const *result_ty, spv_inst *spv_operand_ty,
+auto coopmatrix_impl_dpas::load_fun(coopmatrix_type const *result_ty, spv_inst *spv_operand_ty,
                                     transpose trans) -> spv_inst * {
     const auto key = load_key{result_ty, spv_operand_ty, trans};
     return lookup(load_funs_, key, [&](load_key const &key) {
@@ -190,7 +190,7 @@ auto coopmatrix_impl_dpas::prefetch_fun(std::int32_t cache_level, scalar_type st
     });
 }
 
-auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct) -> block_config {
+auto coopmatrix_impl_dpas::store_config(coopmatrix_type const *ct) -> block_config {
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
@@ -220,7 +220,7 @@ auto coopmatrix_impl_dpas::store_config(coopmatrix_data_type const *ct) -> block
     return cfg;
 }
 
-auto coopmatrix_impl_dpas::store_fun(coopmatrix_data_type const *val_ty, spv_inst *spv_operand_ty)
+auto coopmatrix_impl_dpas::store_fun(coopmatrix_type const *val_ty, spv_inst *spv_operand_ty)
     -> spv_inst * {
     const auto key = store_key{val_ty, spv_operand_ty};
     return lookup(store_funs_, key, [&](store_key const &key) {
@@ -244,11 +244,9 @@ auto coopmatrix_impl_dpas::store_fun(coopmatrix_data_type const *val_ty, spv_ins
     });
 }
 
-auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
-                                       coopmatrix_data_type const *bt,
-                                       coopmatrix_data_type const *ct,
-                                       coopmatrix_data_type const *rt, bool is_c_zero)
-    -> spv_inst * {
+auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_type const *bt,
+                                       coopmatrix_type const *ct, coopmatrix_type const *rt,
+                                       bool is_c_zero) -> spv_inst * {
     const auto key = mul_add_key{{at, bt, ct, rt}, is_c_zero};
     return lookup(mul_add_funs_, key, [&](mul_add_key const &key) {
         const auto [at, bt, ct, rt] = key.op_ty;
@@ -355,8 +353,8 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_data_type const *at,
     });
 }
 
-auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_data_type const *at,
-                                      coopmatrix_data_type const *rt) -> spv_inst * {
+auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type const *at,
+                                      coopmatrix_type const *rt) -> spv_inst * {
     const auto key = std::make_tuple(sgs, op, at, rt);
     return lookup(reduce_funs_, key, [&](reduce_key const &key) {
         auto [sgs, op, at, rt] = key;

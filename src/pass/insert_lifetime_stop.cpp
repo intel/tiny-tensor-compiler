@@ -43,12 +43,12 @@ auto insert_lifetime_stop_pass::run_on_region(tinytc_region &reg, aa_results con
             rgn_ops.merge(run_on_region(subreg, aa));
         }
         for (auto &v : i.operands()) {
-            if (isa<memref_data_type>(*v.ty())) {
+            if (isa<memref_type>(*v.ty())) {
                 rgn_ops.insert(aa.root(v));
             }
         }
         for (auto &v : i.results()) {
-            if (isa<memref_data_type>(*v.ty())) {
+            if (isa<memref_type>(*v.ty())) {
                 rgn_ops.insert(aa.root(v));
             }
         }

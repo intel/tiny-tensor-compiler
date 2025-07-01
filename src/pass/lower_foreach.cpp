@@ -76,7 +76,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
-    auto i32_ty = scalar_data_type::get(in.get().context(), scalar_type::i32);
+    auto i32_ty = number_type::get(in.get().context(), scalar_type::i32);
 
     auto cloner = inst_cloner{};
     auto loop_vars = in.loop_vars().begin();

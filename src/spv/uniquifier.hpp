@@ -23,7 +23,7 @@ namespace tinytc {
 enum class address_space;
 enum class scalar_type;
 enum class vector_size;
-class memref_data_type;
+class memref_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
@@ -54,7 +54,7 @@ class uniquifier {
     auto function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst *;
     auto index3_ty() -> spv_inst *;
     auto pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment) -> spv_inst *;
-    auto pointer_ty(memref_data_type const *mt) -> spv_inst *;
+    auto pointer_ty(memref_type const *mt) -> spv_inst *;
     auto scalar_ty(scalar_type sty) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst *;

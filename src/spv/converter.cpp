@@ -105,15 +105,15 @@ auto inst_converter::val(tinytc_value const &v) -> spv_inst * {
 auto inst_converter::spv_ty(const_tinytc_type_t ty) -> spv_inst * {
     return tinytc::visit(
         overloaded{
-            [&](void_data_type const &) -> spv_inst * { return unique_.void_ty(); },
-            [&](boolean_data_type const &) -> spv_inst * { return unique_.bool_ty(); },
-            [&](group_data_type const &g) -> spv_inst * {
+            [&](void_type const &) -> spv_inst * { return unique_.void_ty(); },
+            [&](boolean_type const &) -> spv_inst * { return unique_.bool_ty(); },
+            [&](group_type const &g) -> spv_inst * {
                 return unique_.pointer_ty(StorageClass::CrossWorkgroup, spv_ty(g.ty()),
                                           alignment(scalar_type::i64));
             },
-            [&](memref_data_type const &mr) -> spv_inst * { return unique_.pointer_ty(&mr); },
-            [&](scalar_data_type const &ty) -> spv_inst * { return unique_.scalar_ty(ty.ty()); },
-            [&](coopmatrix_data_type const &ty) -> spv_inst * { return matrix_impl().spv_ty(&ty); },
+            [&](memref_type const &mr) -> spv_inst * { return unique_.pointer_ty(&mr); },
+            [&](number_type const &ty) -> spv_inst * { return unique_.scalar_ty(ty.ty()); },
+            [&](coopmatrix_type const &ty) -> spv_inst * { return matrix_impl().spv_ty(&ty); },
             [](auto const &) -> spv_inst * {
                 // @todo
                 throw status::not_implemented;
@@ -128,11 +128,11 @@ auto inst_converter::make_dope_vector(tinytc_value const &v) -> dope_vector * {
 
     auto spv_index_ty = unique_.scalar_ty(scalar_type::index);
     return ::tinytc::visit(
-        overloaded{[&](memref_data_type const &mr) -> dope_vector * {
+        overloaded{[&](memref_type const &mr) -> dope_vector * {
                        return &(dope_vec_[&v] = dope_vector{spv_index_ty, mr.shape(), mr.stride()});
                    },
-                   [&](group_data_type const &g) -> dope_vector * {
-                       if (auto mt = dyn_cast<memref_data_type>(g.ty()); mt) {
+                   [&](group_type const &g) -> dope_vector * {
+                       if (auto mt = dyn_cast<memref_type>(g.ty()); mt) {
                            auto pointer_ty =
                                unique_.pointer_ty(StorageClass::CrossWorkgroup, spv_index_ty,
                                                   alignment(scalar_type::i64));
@@ -208,17 +208,17 @@ void inst_converter::operator()(arith_inst in) {
         throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
 
-    if (isa<boolean_data_type>(*in.result().ty())) {
+    if (isa<boolean_type>(*in.result().ty())) {
         auto ty = unique_.bool_ty();
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(), make_boolean(in.get().type_id(), ty, av, bv));
-    } else if (auto st = dyn_cast<scalar_data_type>(in.result().ty()); st) {
+    } else if (auto st = dyn_cast<number_type>(in.result().ty()); st) {
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(),
                 make_binary_op(unique_, st->ty(), in.get().type_id(), av, bv, in.loc()));
-    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result().ty()); ct) {
+    } else if (auto ct = dyn_cast<coopmatrix_type>(in.result().ty()); ct) {
         auto av = val(in.a());
         auto bv = val(in.b());
         declare(in.result(), matrix_impl().arith(in, av, bv));
@@ -237,14 +237,14 @@ void inst_converter::operator()(arith_unary_inst in) {
         }
         throw compilation_error(in.loc(), status::ir_boolean_unsupported);
     };
-    if (isa<boolean_data_type>(*in.a().ty())) {
+    if (isa<boolean_type>(*in.a().ty())) {
         auto ty = unique_.bool_ty();
         auto av = val(in.a());
         declare(in.result(), make_boolean(in.get().type_id(), ty, av));
-    } else if (auto st = dyn_cast<scalar_data_type>(in.a().ty()); st) {
+    } else if (auto st = dyn_cast<number_type>(in.a().ty()); st) {
         auto av = val(in.a());
         declare(in.result(), make_unary_op(unique_, st->ty(), in.get().type_id(), av, in.loc()));
-    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.a().ty()); ct) {
+    } else if (auto ct = dyn_cast<coopmatrix_type>(in.a().ty()); ct) {
         auto av = val(in.a());
         declare(in.result(), matrix_impl().arith_unary(in, av));
     } else {
@@ -268,11 +268,11 @@ void inst_converter::operator()(barrier_inst in) {
 }
 
 void inst_converter::operator()(cast_inst in) {
-    if (auto st = dyn_cast<scalar_data_type>(in.result().ty()); st) {
+    if (auto st = dyn_cast<number_type>(in.result().ty()); st) {
         auto av = val(in.a());
         auto a_ty = get_scalar_type(in.a());
         declare(in.result(), make_cast(unique_, st->ty(), a_ty, av, in.loc()));
-    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result().ty()); ct) {
+    } else if (auto ct = dyn_cast<coopmatrix_type>(in.result().ty()); ct) {
         declare(in.result(), matrix_impl().cast(in, val(in.a())));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
@@ -370,18 +370,18 @@ void inst_converter::operator()(compare_inst in) {
 }
 
 void inst_converter::operator()(constant_inst in) {
-    if (isa<boolean_data_type>(*in.result().ty())) {
+    if (isa<boolean_type>(*in.result().ty())) {
         if (!std::holds_alternative<bool>(in.value())) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
         declare(in.result(), unique_.bool_constant(std::get<bool>(in.value())));
-    } else if (auto st = dyn_cast<scalar_data_type>(in.result().ty()); st) {
+    } else if (auto st = dyn_cast<number_type>(in.result().ty()); st) {
         auto cst = make_constant(unique_, st->ty(), in.value());
         if (cst == nullptr) {
             throw compilation_error(in.loc(), status::internal_compiler_error);
         }
         declare(in.result(), cst);
-    } else if (auto ct = dyn_cast<coopmatrix_data_type>(in.result().ty()); ct) {
+    } else if (auto ct = dyn_cast<coopmatrix_type>(in.result().ty()); ct) {
         declare(in.result(), matrix_impl().constant(in));
     } else {
         throw compilation_error(in.loc(), status::ir_expected_coopmatrix_or_scalar);
@@ -679,7 +679,7 @@ void inst_converter::operator()(load_inst in) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
 
-    if (auto group_ty = dyn_cast<group_data_type>(in.operand().ty()); group_ty) {
+    if (auto group_ty = dyn_cast<group_type>(in.operand().ty()); group_ty) {
         auto offset = mod_->add<OpIAdd>(spv_index_ty, dv->offset(), val(in.index_list()[0]));
         auto pointer = mod_->add<OpInBoundsPtrAccessChain>(spv_pointer_ty, val(in.operand()),
                                                            offset, std::vector<spv_inst *>{});
@@ -700,7 +700,7 @@ void inst_converter::operator()(load_inst in) {
         for (std::int64_t i = 0; i < rdv->dim(); ++i) {
             rdv->stride(i, make_dope_par(dv->static_stride(i), dv->stride(i)));
         }
-    } else if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
+    } else if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
         const auto pointer = [&](spv_inst *additional_offset0 = nullptr) -> spv_inst * {
             if (memref_ty->dim() == 0) {
                 return val(in.operand());
@@ -834,8 +834,8 @@ void inst_converter::operator()(size_inst in) {
     }
 
     const auto shape = ::tinytc::visit(
-        overloaded{[&](group_data_type const &) -> spv_inst * { return dv->size(); },
-                   [&](memref_data_type const &) -> spv_inst * { return dv->shape(in.mode()); },
+        overloaded{[&](group_type const &) -> spv_inst * { return dv->size(); },
+                   [&](memref_type const &) -> spv_inst * { return dv->shape(in.mode()); },
                    [&](auto const &) -> spv_inst * {
                        throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
                    }},
@@ -864,7 +864,7 @@ void inst_converter::operator()(store_inst in) {
         throw compilation_error(in.loc(), status::spirv_missing_dope_vector);
     }
 
-    if (auto memref_ty = dyn_cast<memref_data_type>(in.operand().ty()); memref_ty) {
+    if (auto memref_ty = dyn_cast<memref_type>(in.operand().ty()); memref_ty) {
         const auto pointer = [&]() -> spv_inst * {
             if (memref_ty->dim() == 0) {
                 return val(in.operand());

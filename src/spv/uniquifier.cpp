@@ -202,7 +202,7 @@ auto uniquifier::pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t
         });
 }
 
-auto uniquifier::pointer_ty(memref_data_type const *mt) -> spv_inst * {
+auto uniquifier::pointer_ty(memref_type const *mt) -> spv_inst * {
     const auto storage_cls = address_space_to_storage_class(mt->addrspace());
     auto ty = scalar_ty(mt->element_ty());
     const auto align = mt->element_alignment();

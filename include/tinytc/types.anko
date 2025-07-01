@@ -6,7 +6,7 @@ include "tinytc/enums.anko"
 type @bool "Bool type" {
 }
 
-type @scalar "Scalar type" {
+type @number "Number type" {
     prop %ty => @scalar_type
 }
 

@@ -28,12 +28,12 @@ class dump_ir_pass {
     void operator()(string_attr const &a);
 
     /* Data type nodes */
-    void operator()(void_data_type const &);
-    void operator()(boolean_data_type const &);
-    void operator()(coopmatrix_data_type const &ct);
-    void operator()(group_data_type const &g);
-    void operator()(memref_data_type const &m);
-    void operator()(scalar_data_type const &s);
+    void operator()(void_type const &);
+    void operator()(boolean_type const &);
+    void operator()(coopmatrix_type const &ct);
+    void operator()(group_type const &g);
+    void operator()(memref_type const &m);
+    void operator()(number_type const &s);
 
     /* Inst nodes */
     void operator()(alloca_inst a);

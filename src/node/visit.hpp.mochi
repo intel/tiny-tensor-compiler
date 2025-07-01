@@ -5,10 +5,13 @@
 #define VISIT_HPP_20250618_MOCHI
 
 #include "node/inst_view.hpp"
+#include "node/type.hpp"
 
 namespace tinytc {
 
-// もち inst_visit_hpp "tinytc/instructions.anko"
+// // もち visit_hpp "tinytc/types.anko"
+
+// もち visit_hpp "tinytc/instructions.anko"
 
 } // namespace tinytc
 

@@ -53,8 +53,8 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         throw compilation_error(in.loc(), status::ir_must_have_yield);
     }
 
-    auto bool_ty = boolean_data_type::get(in.get().context());
-    auto i32_ty = scalar_data_type::get(in.get().context(), scalar_type::i32);
+    auto bool_ty = boolean_type::get(in.get().context());
+    auto i32_ty = number_type::get(in.get().context(), scalar_type::i32);
 
     auto cloner = inst_cloner{};
 
