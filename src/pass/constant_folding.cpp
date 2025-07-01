@@ -3,10 +3,10 @@
 
 #include "pass/constant_folding.hpp"
 #include "error.hpp"
+#include "node/inst.hpp"
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
-#include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 #include "util/casting.hpp"
 #include "util/overloaded.hpp"
@@ -21,115 +21,142 @@ namespace tinytc {
 
 template <typename F> class unary_op_dispatcher {
   private:
-    scalar_type switch_ty;
+    tinytc_type_t dispatch_ty;
     F computer;
 
   public:
-    unary_op_dispatcher(scalar_type sw_ty, F &&f)
-        : switch_ty{sw_ty}, computer{std::forward<F>(f)} {}
+    unary_op_dispatcher(tinytc_type_t ty, F &&f) : dispatch_ty{ty}, computer{std::forward<F>(f)} {}
 
     auto operator()(bool const &) -> fold_result {
-        throw compilation_error(computer.loc, status::ir_scalar_mismatch);
+        throw compilation_error(computer.loc, status::ir_number_mismatch);
     }
     auto operator()(std::int64_t const &A) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::i8:
-            return computer.template operator()<std::int8_t>(A);
-        case scalar_type::i16:
-            return computer.template operator()<std::int16_t>(A);
-        case scalar_type::i32:
-            return computer.template operator()<std::int32_t>(A);
-        case scalar_type::i64:
-            return computer.template operator()<std::int64_t>(A);
-        case scalar_type::index:
-            return computer.template operator()<host_index_type>(A);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        };
+        return visit(overloaded{[&](i8_type &) -> fold_result {
+                                    return computer.template operator()<std::int8_t>(A);
+                                },
+                                [&](i16_type &) -> fold_result {
+                                    return computer.template operator()<std::int16_t>(A);
+                                },
+                                [&](i32_type &) -> fold_result {
+                                    return computer.template operator()<std::int32_t>(A);
+                                },
+                                [&](i64_type &) -> fold_result {
+                                    return computer.template operator()<std::int64_t>(A);
+                                },
+                                [&](index_type &ty) -> fold_result {
+                                    const auto idx_width = ty.context()->index_bit_width();
+                                    if (idx_width == 64) {
+                                        return computer.template operator()<std::int64_t>(A);
+                                    } else if (idx_width == 32) {
+                                        return computer.template operator()<std::int32_t>(A);
+                                    }
+                                    throw status::not_implemented;
+                                },
+                                [&](auto &) -> fold_result {
+                                    throw compilation_error(computer.loc,
+                                                            status::ir_number_mismatch);
+                                }},
+                     *dispatch_ty);
     }
     auto operator()(double const &A) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::bf16:
-            return computer.template operator()<bfloat16>(A);
-        case scalar_type::f16:
-            return computer.template operator()<half>(A);
-        case scalar_type::f32:
-            return computer.template operator()<float>(A);
-        case scalar_type::f64:
-            return computer.template operator()<double>(A);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        }
+        return visit(
+            overloaded{
+                [&](bf16_type &) -> fold_result {
+                    return computer.template operator()<bfloat16>(A);
+                },
+                [&](f16_type &) -> fold_result { return computer.template operator()<half>(A); },
+                [&](f32_type &) -> fold_result { return computer.template operator()<float>(A); },
+                [&](f64_type &) -> fold_result { return computer.template operator()<double>(A); },
+                [&](auto &) -> fold_result {
+                    throw compilation_error(computer.loc, status::ir_number_mismatch);
+                }},
+            *dispatch_ty);
     }
     auto operator()(std::complex<double> const &A) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::c32:
-            return computer.template operator()<std::complex<float>>(A);
-        case scalar_type::c64:
-            return computer.template operator()<std::complex<double>>(A);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        }
+        return visit(overloaded{[&](c32_type &) -> fold_result {
+                                    return computer.template operator()<std::complex<float>>(A);
+                                },
+                                [&](c64_type &) -> fold_result {
+                                    return computer.template operator()<std::complex<double>>(A);
+                                },
+                                [&](auto &) -> fold_result {
+                                    throw compilation_error(computer.loc,
+                                                            status::ir_number_mismatch);
+                                }},
+                     *dispatch_ty);
     }
 };
 
 template <typename F> class binary_op_dispatcher {
   private:
-    scalar_type switch_ty;
+    tinytc_type_t dispatch_ty;
     F computer;
 
   public:
-    binary_op_dispatcher(scalar_type sw_ty, F &&f)
-        : switch_ty{sw_ty}, computer{std::forward<F>(f)} {}
+    binary_op_dispatcher(tinytc_type_t ty, F &&f) : dispatch_ty{ty}, computer{std::forward<F>(f)} {}
 
     auto operator()(std::int64_t const &A, std::int64_t const &B) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::i8:
-            return computer.template operator()<std::int8_t>(A, B);
-        case scalar_type::i16:
-            return computer.template operator()<std::int16_t>(A, B);
-        case scalar_type::i32:
-            return computer.template operator()<std::int32_t>(A, B);
-        case scalar_type::i64:
-            return computer.template operator()<std::int64_t>(A, B);
-        case scalar_type::index:
-            return computer.template operator()<host_index_type>(A, B);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        };
+        return visit(overloaded{[&](i8_type &) -> fold_result {
+                                    return computer.template operator()<std::int8_t>(A, B);
+                                },
+                                [&](i16_type &) -> fold_result {
+                                    return computer.template operator()<std::int16_t>(A, B);
+                                },
+                                [&](i32_type &) -> fold_result {
+                                    return computer.template operator()<std::int32_t>(A, B);
+                                },
+                                [&](i64_type &) -> fold_result {
+                                    return computer.template operator()<std::int64_t>(A, B);
+                                },
+                                [&](index_type &ty) -> fold_result {
+                                    const auto idx_width = ty.context()->index_bit_width();
+                                    if (idx_width == 64) {
+                                        return computer.template operator()<std::int64_t>(A, B);
+                                    } else if (idx_width == 32) {
+                                        return computer.template operator()<std::int32_t>(A, B);
+                                    }
+                                    throw status::not_implemented;
+                                },
+                                [&](auto &) -> fold_result {
+                                    throw compilation_error(computer.loc,
+                                                            status::ir_number_mismatch);
+                                }},
+                     *dispatch_ty);
     }
     auto operator()(double const &A, double const &B) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::bf16:
-            return computer.template operator()<bfloat16>(A, B);
-        case scalar_type::f16:
-            return computer.template operator()<half>(A, B);
-        case scalar_type::f32:
-            return computer.template operator()<float>(A, B);
-        case scalar_type::f64:
-            return computer.template operator()<double>(A, B);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        }
+        return visit(overloaded{[&](bf16_type &) -> fold_result {
+                                    return computer.template operator()<bfloat16>(A, B);
+                                },
+                                [&](f16_type &) -> fold_result {
+                                    return computer.template operator()<half>(A, B);
+                                },
+                                [&](f32_type &) -> fold_result {
+                                    return computer.template operator()<float>(A, B);
+                                },
+                                [&](f64_type &) -> fold_result {
+                                    return computer.template operator()<double>(A, B);
+                                },
+                                [&](auto &) -> fold_result {
+                                    throw compilation_error(computer.loc,
+                                                            status::ir_number_mismatch);
+                                }},
+                     *dispatch_ty);
     }
-    auto operator()(std::complex<double> const &A, std::complex<double> const &B) -> fold_result {
-        switch (switch_ty) {
-        case scalar_type::c32:
-            return computer.template operator()<std::complex<float>>(A, B);
-        case scalar_type::c64:
-            return computer.template operator()<std::complex<double>>(A, B);
-        default:
-            throw compilation_error(computer.loc, status::ir_scalar_mismatch);
-            break;
-        }
+    auto operator()(std::complex<double> const &A, std::complex<double> &B) -> fold_result {
+        return visit(overloaded{[&](c32_type &) -> fold_result {
+                                    return computer.template operator()<std::complex<float>>(A, B);
+                                },
+                                [&](c64_type &) -> fold_result {
+                                    return computer.template operator()<std::complex<double>>(A, B);
+                                },
+                                [&](auto &) -> fold_result {
+                                    throw compilation_error(computer.loc,
+                                                            status::ir_number_mismatch);
+                                }},
+                     *dispatch_ty);
     }
     template <typename T, typename U> auto operator()(T const &, U const &) -> fold_result {
-        throw compilation_error(computer.loc, status::ir_scalar_mismatch);
+        throw compilation_error(computer.loc, status::ir_number_mismatch);
     }
 };
 
@@ -177,24 +204,24 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
         // constant folding on scalar types.
         auto ct = dyn_cast<coopmatrix_type>(op_a.ty());
         if (ct == nullptr) {
-            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
+            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_number_or_boolean);
         }
         at = dyn_cast<number_type>(ct->component_ty());
     }
 
     if (a_const && b_const) {
         auto computer = compute_binary_op{in.get().type_id(), op_a.ty(), in.loc()};
-        auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
+        auto dispatcher = binary_op_dispatcher{at, std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value(), b_const.value());
     } else if (a_const) {
         auto computer =
             compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_b, true, in.loc()};
-        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        auto dispatcher = unary_op_dispatcher{at, std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value());
     } else if (b_const) {
         auto computer =
             compute_binop_identities{unsafe_fp_math_, in.get().type_id(), op_a, false, in.loc()};
-        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        auto dispatcher = unary_op_dispatcher{at, std::move(computer)};
         return std::visit(std::move(dispatcher), b_const.value());
     }
     return tinytc_value_t{};
@@ -223,13 +250,13 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
         // constant folding on scalar types.
         auto ct = dyn_cast<coopmatrix_type>(op_a.ty());
         if (ct == nullptr) {
-            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
+            throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_number);
         }
         at = dyn_cast<number_type>(ct->component_ty());
     }
 
     auto computer = compute_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
-    auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+    auto dispatcher = unary_op_dispatcher{at, std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value());
 }
 
@@ -248,7 +275,7 @@ auto constant_folding::operator()(cast_inst in) -> fold_result {
         // constant folding on scalar types.
         auto ct = dyn_cast<coopmatrix_type>(in.result().ty());
         if (ct == nullptr) {
-            throw compilation_error(in.result().loc(), status::ir_expected_coopmatrix_or_scalar);
+            throw compilation_error(in.result().loc(), status::ir_expected_coopmatrix_or_number);
         }
         rt = dyn_cast<number_type>(ct->component_ty());
     }
@@ -270,11 +297,11 @@ auto constant_folding::operator()(compare_inst in) -> fold_result {
 
     auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
-        throw compilation_error(op_a.loc(), status::ir_expected_scalar);
+        throw compilation_error(op_a.loc(), status::ir_expected_number);
     }
 
     auto computer = compute_compare{in.get().type_id(), in.result().ty(), in.loc()};
-    auto dispatcher = binary_op_dispatcher{at->ty(), std::move(computer)};
+    auto dispatcher = binary_op_dispatcher{at, std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value(), b_const.value());
 }
 
@@ -286,12 +313,12 @@ auto constant_folding::operator()(cooperative_matrix_scale_inst in) -> fold_resu
 
     auto at = dyn_cast<number_type>(op_a.ty());
     if (at == nullptr) {
-        throw compilation_error(op_a.loc(), status::ir_expected_scalar);
+        throw compilation_error(op_a.loc(), status::ir_expected_number);
     }
 
     if (a_const) {
         auto computer = compute_binop_identities{unsafe_fp_math_, IK::IK_mul, op_b, true, in.loc()};
-        auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+        auto dispatcher = unary_op_dispatcher{at, std::move(computer)};
         return std::visit(std::move(dispatcher), a_const.value());
     }
     return tinytc_value_t{};
@@ -311,7 +338,7 @@ auto constant_folding::operator()(math_unary_inst in) -> fold_result {
     }
 
     auto computer = compute_math_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
-    auto dispatcher = unary_op_dispatcher{at->ty(), std::move(computer)};
+    auto dispatcher = unary_op_dispatcher{at, std::move(computer)};
     return std::visit(std::move(dispatcher), a_const.value());
 }
 
@@ -325,8 +352,7 @@ auto constant_folding::operator()(size_inst in) -> fold_result {
               *in.operand().ty());
 
     if (!is_dynamic_value(mode_size)) {
-        return create<constant_inst>(
-            mode_size, number_type::get(in.operand().context(), scalar_type::index), in.loc());
+        return create<constant_inst>(mode_size, index_type::get(in.operand().context()), in.loc());
     }
     return tinytc_value_t{};
 }

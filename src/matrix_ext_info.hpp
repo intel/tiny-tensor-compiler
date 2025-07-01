@@ -5,6 +5,7 @@
 #define MATRIX_EXT_INFO_20241204_HPP
 
 #include "tinytc/tinytc.hpp"
+#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstdint>
@@ -13,9 +14,7 @@
 
 namespace tinytc {
 
-class coopmatrix_type;
-enum class matrix_use;
-enum class scalar_type;
+enum class TK;
 
 struct gemm_mnk {
     std::int64_t M, N, K;
@@ -23,25 +22,23 @@ struct gemm_mnk {
 
 class matrix_ext_type {
   public:
-    matrix_ext_type(scalar_type a, scalar_type b, std::vector<scalar_type> acc,
-                    std::vector<gemm_mnk> mnk);
+    matrix_ext_type(TK a, TK b, std::vector<TK> acc, std::vector<gemm_mnk> mnk);
 
-    inline auto a() const -> scalar_type { return a_; }
-    inline auto b() const -> scalar_type { return b_; }
-    inline auto acc() const -> array_view<scalar_type> { return acc_; }
+    inline auto a() const -> TK { return a_; }
+    inline auto b() const -> TK { return b_; }
+    inline auto acc() const -> array_view<TK> { return acc_; }
     inline auto mnk() const -> array_view<gemm_mnk> { return mnk_; }
 
     auto M_block_sizes() const -> std::vector<std::int32_t>;
     auto N_block_sizes(std::int32_t M) const -> std::vector<std::int32_t>;
     auto K_block_sizes(std::int32_t M, std::int32_t N) const -> std::vector<std::int32_t>;
 
-    auto have_acc(scalar_type acc) const -> bool;
-    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
-        -> bool;
+    auto have_acc(TK acc) const -> bool;
+    auto have_type(TK sty, std::int64_t rows, std::int64_t cols, matrix_use use) const -> bool;
 
   private:
-    scalar_type a_, b_;
-    std::vector<scalar_type> acc_;
+    TK a_, b_;
+    std::vector<TK> acc_;
     std::vector<gemm_mnk> mnk_;
 };
 
@@ -62,13 +59,11 @@ class matrix_ext_info {
         : required_sgs_{required_subgroup_size}, block_io_{block_io},
           mat_types_(std::move(mat_types)) {}
 
-    auto get_precision(scalar_type a, scalar_type b, scalar_type acc) const
-        -> matrix_ext_type const *;
-    auto have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d, std::int64_t M,
-                   std::int64_t N, std::int64_t K) const -> bool;
-    auto have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool;
-    auto have_type(scalar_type sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
+    auto get_precision(TK a, TK b, TK acc) const -> matrix_ext_type const *;
+    auto have_gemm(TK a, TK b, TK c, TK d, std::int64_t M, std::int64_t N, std::int64_t K) const
         -> bool;
+    auto have_precision(TK a, TK b, TK acc) const -> bool;
+    auto have_type(TK sty, std::int64_t rows, std::int64_t cols, matrix_use use) const -> bool;
     auto have_type(const coopmatrix_type *ty) const -> bool;
 
     inline auto required_subgroup_size() const -> std::int32_t { return required_sgs_; }

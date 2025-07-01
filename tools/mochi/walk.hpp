@@ -39,7 +39,7 @@ void walk_down(T *in, std::function<void(T *)> callback,
         prepost_callback(in);
     }
     for (auto &child : in->children()) {
-        walk_down<Order>(child.get(), callback);
+        walk_down<Order>(child.get(), callback, prepost_callback);
     }
     if constexpr (Order == walk_order::post_order) {
         callback(in);

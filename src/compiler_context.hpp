@@ -66,6 +66,8 @@ struct tinytc_compiler_context : tinytc::reference_counted {
     inline auto opt_level() const noexcept -> std::int32_t { return opt_level_; }
     inline void opt_level(std::int32_t level) noexcept { opt_level_ = level; }
 
+    inline auto index_bit_width() const noexcept -> std::size_t { return 64; }
+
   private:
     struct source_input {
         std::string name, text;

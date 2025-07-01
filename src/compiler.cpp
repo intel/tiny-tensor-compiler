@@ -28,7 +28,6 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
-#include <cstdint>
 #include <cstring>
 #include <iostream> // IWYU pragma: keep
 #include <utility>

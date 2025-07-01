@@ -284,7 +284,6 @@ inst @hadamard : @blas_a3 "Hadamard instruction" {
 
 inst @builtin "Builtin instruction" {
     ret %result "result type"
-    cxx "void setup_and_check(scalar_type expected_ret_ty, status err);"
 }
 inst @group_id : @builtin "Group ID instruction" {
     prop %mode => @comp3 "mode"

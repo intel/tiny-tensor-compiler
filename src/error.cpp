@@ -3,7 +3,6 @@
 
 #include "error.hpp"
 #include "location.hpp"
-#include "tinytc/tinytc.h"
 
 #include <algorithm>
 #include <cctype>

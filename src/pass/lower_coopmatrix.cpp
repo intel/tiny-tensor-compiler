@@ -54,7 +54,7 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
     }
 
     auto bool_ty = boolean_type::get(in.get().context());
-    auto i32_ty = number_type::get(in.get().context(), scalar_type::i32);
+    auto i32_ty = i32_type::get(in.get().context());
 
     auto cloner = inst_cloner{};
 

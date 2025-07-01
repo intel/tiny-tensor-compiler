@@ -4,17 +4,19 @@
 #ifndef CONSTANT_FOLDING_HELPER_20241011_HPP
 #define CONSTANT_FOLDING_HELPER_20241011_HPP
 
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
 #include "node/value.hpp"
+#include "node/visit.hpp"
 #include "scalar_type.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -135,11 +137,7 @@ struct compute_unary_op {
             default:
                 return inst{nullptr};
             }
-            number_type *sty = dyn_cast<number_type>(ty);
-            if (!sty) {
-                throw compilation_error(loc, status::ir_expected_scalar);
-            }
-            auto cst_ty = number_type::get(sty->context(), component_type(sty->ty()));
+            auto cst_ty = component_type(ty);
             return create<constant_inst>(val, cst_ty, loc);
         };
 
@@ -477,31 +475,49 @@ template <typename T, typename U> auto value_cast(U const &u) { return value_cas
 
 template <typename T>
 auto compute_cast(number_type *to_ty, T A, location const &loc) -> fold_result {
-    switch (to_ty->ty()) {
-    case scalar_type::i8:
-        return create<constant_inst>(value_cast<std::int8_t>(A), to_ty, loc);
-    case scalar_type::i16:
-        return create<constant_inst>(value_cast<std::int16_t>(A), to_ty, loc);
-    case scalar_type::i32:
-        return create<constant_inst>(value_cast<std::int32_t>(A), to_ty, loc);
-    case scalar_type::i64:
-        return create<constant_inst>(value_cast<std::int64_t>(A), to_ty, loc);
-    case scalar_type::index:
-        return create<constant_inst>(value_cast<host_index_type>(A), to_ty, loc);
-    case scalar_type::bf16:
-        return create<constant_inst>(value_cast<bfloat16>(A), to_ty, loc);
-    case scalar_type::f16:
-        return create<constant_inst>(value_cast<half>(A), to_ty, loc);
-    case scalar_type::f32:
-        return create<constant_inst>(value_cast<float>(A), to_ty, loc);
-    case scalar_type::f64:
-        return create<constant_inst>(value_cast<double>(A), to_ty, loc);
-    case scalar_type::c32:
-        return create<constant_inst>(value_cast<std::complex<float>>(A), to_ty, loc);
-    case scalar_type::c64:
-        return create<constant_inst>(value_cast<std::complex<double>>(A), to_ty, loc);
-    };
-    return {};
+    return visit(
+        overloaded{[&](i8_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::int8_t>(A), to_ty, loc);
+                   },
+                   [&](i16_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::int16_t>(A), to_ty, loc);
+                   },
+                   [&](i32_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::int32_t>(A), to_ty, loc);
+                   },
+                   [&](i64_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::int64_t>(A), to_ty, loc);
+                   },
+                   [&](index_type &ty) -> inst {
+                       const auto idx_width = ty.context()->index_bit_width();
+                       if (idx_width == 64) {
+                           return create<constant_inst>(value_cast<std::int64_t>(A), to_ty, loc);
+                       } else if (idx_width == 32) {
+                           return create<constant_inst>(value_cast<std::int32_t>(A), to_ty, loc);
+                       }
+                       throw status::not_implemented;
+                   },
+                   [&](bf16_type &) -> inst {
+                       return create<constant_inst>(value_cast<bfloat16>(A), to_ty, loc);
+                   },
+                   [&](f16_type &) -> inst {
+                       return create<constant_inst>(value_cast<half>(A), to_ty, loc);
+                   },
+                   [&](f32_type &) -> inst {
+                       return create<constant_inst>(value_cast<float>(A), to_ty, loc);
+                   },
+                   [&](f64_type &) -> inst {
+                       return create<constant_inst>(value_cast<double>(A), to_ty, loc);
+                   },
+                   [&](c32_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::complex<float>>(A), to_ty, loc);
+                   },
+                   [&](c64_type &) -> inst {
+                       return create<constant_inst>(value_cast<std::complex<double>>(A), to_ty,
+                                                    loc);
+                   },
+                   [](auto &) -> inst { throw status::not_implemented; }},
+        *to_ty);
 };
 
 struct compute_math_unary_op {

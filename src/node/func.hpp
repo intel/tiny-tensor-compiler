@@ -9,6 +9,7 @@
 #include "tinytc/types.h"
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <string>
 #include <string_view>

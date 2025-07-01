@@ -116,13 +116,6 @@ TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
                                                      size_t str_length, char const *str);
 
 ////////////////////////////
-//////// Scalar type ///////
-////////////////////////////
-
-//! Size of scalar type in bytes
-TINYTC_EXPORT size_t tinytc_scalar_type_size(tinytc_scalar_type_t ty);
-
-////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
 

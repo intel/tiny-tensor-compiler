@@ -13,7 +13,7 @@
 #include <utility>
 
 namespace tinytc {
-auto is_argument_zero(scalar_type sty, std::size_t arg_size, const void *arg_value) -> bool;
+auto is_argument_zero(tinytc_type_t ty, std::size_t arg_size, const void *arg_value) -> bool;
 } // namespace tinytc
 
 struct tinytc_recipe : tinytc::reference_counted {

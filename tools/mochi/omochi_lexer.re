@@ -29,6 +29,7 @@ auto lex_generator(std::size_t str_length, char const *str) -> std::optional<gen
         "inst_cpp"          { return generator::inst_cpp; }
         "inst_hpp"          { return generator::inst_hpp; }
         "inst_kind_cpp"     { return generator::inst_kind_cpp; }
+        "type_cpp"          { return generator::type_cpp; }
         "type_hpp"          { return generator::type_hpp; }
         "visit_hpp"         { return generator::visit_hpp; }
         "template"          { return generator::template_; }

@@ -10,8 +10,6 @@
 #include "util/ilist.hpp"
 
 #include <algorithm>
-#include <cstdint>
-#include <limits>
 #include <stdexcept>
 #include <vector>
 

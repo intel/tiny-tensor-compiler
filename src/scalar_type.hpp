@@ -4,28 +4,26 @@
 #ifndef SCALAR_TYPE_20240411_HPP
 #define SCALAR_TYPE_20240411_HPP
 
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
+#include <cstddef>
 #include <cstdint>
-#include <optional>
 
 namespace tinytc {
 
-using host_index_type = std::int64_t;
-
 enum class vector_size { v1 = 1, v2 = 2, v3 = 3, v4 = 4, v8 = 8, v16 = 16 };
 
-bool is_floating_type(scalar_type ty);
-bool is_complex_type(scalar_type ty);
-bool is_integer_type(scalar_type ty);
-auto acc_type(scalar_type ty) -> scalar_type;
-auto component_count(scalar_type ty) -> vector_size;
-auto component_type(scalar_type ty) -> scalar_type;
-auto promotable(scalar_type a_ty, scalar_type b_ty) -> bool;
-auto promote(scalar_type a_ty, scalar_type b_ty) -> std::optional<scalar_type>;
-auto promote_or_throw(scalar_type a_ty, scalar_type b_ty, location const &loc) -> scalar_type;
-auto is_cast_allowed(scalar_type from_ty, scalar_type to_ty) -> bool;
-auto alignment(scalar_type ty, vector_size count = vector_size::v1) -> std::int32_t;
+auto acc_type(tinytc_type_t ty) -> tinytc_type_t;
+auto component_count(tinytc_type_t ty) -> vector_size;
+auto component_type(tinytc_type_t ty) -> tinytc_type_t;
+auto promotable(tinytc_type_t a_ty, tinytc_type_t b_ty) -> bool;
+auto promote(tinytc_type_t a_ty, tinytc_type_t b_ty) -> tinytc_type_t;
+auto promote_or_throw(tinytc_type_t a_ty, tinytc_type_t b_ty, location const &loc) -> tinytc_type_t;
+auto is_cast_allowed(tinytc_type_t from_ty, tinytc_type_t to_ty) -> bool;
+auto alignment(tinytc_type_t ty, vector_size count = vector_size::v1) -> std::int32_t;
+auto size(tinytc_type_t ty) -> std::size_t;
+auto bit_width(tinytc_type_t ty) -> std::size_t;
 
 } // namespace tinytc
 

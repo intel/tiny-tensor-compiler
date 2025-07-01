@@ -93,7 +93,8 @@ class uniquifier {
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
                        pointer_key_hash>
         pointer_tys_;
-    std::array<spv_inst *, TINYTC_ENUM_NUM_SCALAR_TYPE> scalar_tys_;
+    spv_inst *i8_ty_, i16_ty_, i32_ty_, i64_ty_, index_ty_, bf16_ty_, f16_ty_, f32_ty_, f64_ty_,
+        c32_ty_, c64_ty_;
     std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash> vec_tys_;
     spv_inst *void_ty_ = nullptr;
 };

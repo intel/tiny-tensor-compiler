@@ -38,7 +38,7 @@ void make_loop0(region_builder &bb, tinytc_value_t from, tinytc_value_t to, tiny
     auto ity = from->ty();
     auto ctx = sg_id->context();
     auto bool_ty = get<boolean_type>(ctx);
-    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
+    auto i32_ty = get<i32_type>(ctx);
     auto sg_lid_i32 = bb.create<subgroup_local_id_inst>(i32_ty, loc);
     auto sg_lid = bb.create<cast_inst>(sg_lid_i32, ity, loc);
     auto size = instant_constant_fold_add(bb, create<sub_inst>(to, from, ity, loc));
@@ -76,7 +76,7 @@ auto foreach_generator::operator()(foreach_inst in) -> inst {
     tinytc_region_t body = &parallel->child_region(0);
     auto bb = region_builder{body};
 
-    auto i32_ty = number_type::get(in.get().context(), scalar_type::i32);
+    auto i32_ty = i32_type::get(in.get().context());
 
     auto cloner = inst_cloner{};
     auto loop_vars = in.loop_vars().begin();

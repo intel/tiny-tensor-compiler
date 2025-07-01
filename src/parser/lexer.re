@@ -127,17 +127,17 @@ lex:
 
         // types
         "bool"              { return parser::make_BOOLEAN(loc_); }
-        "i8"                { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i8, loc_); }
-        "i16"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i16, loc_); }
-        "i32"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i32, loc_); }
-        "i64"               { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::i64, loc_); }
-        "index"             { adv_loc(); return parser::make_INTEGER_TYPE(scalar_type::index, loc_); }
-        "bf16"              { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::bf16, loc_); }
-        "f16"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f16, loc_); }
-        "f32"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f32, loc_); }
-        "f64"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::f64, loc_); }
-        "c32"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::c32, loc_); }
-        "c64"               { adv_loc(); return parser::make_FLOATING_TYPE(scalar_type::c64, loc_); }
+        "i8"                { adv_loc(); return parser::make_I8_TYPE(loc_); }
+        "i16"               { adv_loc(); return parser::make_I16_TYPE(loc_); }
+        "i32"               { adv_loc(); return parser::make_I32_TYPE(loc_); }
+        "i64"               { adv_loc(); return parser::make_I64_TYPE(loc_); }
+        "index"             { adv_loc(); return parser::make_INDEX_TYPE(loc_); }
+        "bf16"              { adv_loc(); return parser::make_BF16_TYPE(loc_); }
+        "f16"               { adv_loc(); return parser::make_F16_TYPE(loc_); }
+        "f32"               { adv_loc(); return parser::make_F32_TYPE(loc_); }
+        "f64"               { adv_loc(); return parser::make_F64_TYPE(loc_); }
+        "c32"               { adv_loc(); return parser::make_C32_TYPE(loc_); }
+        "c64"               { adv_loc(); return parser::make_C64_TYPE(loc_); }
         "coopmatrix"        { adv_loc(); return parser::make_COOPMATRIX(loc_); }
         "memref"            { adv_loc(); return parser::make_MEMREF(loc_); }
         "group"             { adv_loc(); return parser::make_GROUP(loc_); }

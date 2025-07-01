@@ -4,22 +4,20 @@
 #include "matrix_ext_info.hpp"
 #include "node/type.hpp"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
 
 #include <algorithm>
 #include <optional>
 
 namespace tinytc {
 
-matrix_ext_type::matrix_ext_type(scalar_type a, scalar_type b, std::vector<scalar_type> acc,
-                                 std::vector<gemm_mnk> mnk)
+matrix_ext_type::matrix_ext_type(TK a, TK b, std::vector<TK> acc, std::vector<gemm_mnk> mnk)
     : a_{a}, b_{b}, acc_(std::move(acc)), mnk_(std::move(mnk)) {}
 
-auto matrix_ext_type::have_acc(scalar_type acc) const -> bool {
+auto matrix_ext_type::have_acc(TK acc) const -> bool {
     return std::find(acc_.begin(), acc_.end(), acc) != acc_.end();
 }
-auto matrix_ext_type::have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
-                                matrix_use use) const -> bool {
+auto matrix_ext_type::have_type(TK sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
+    -> bool {
     auto find_shape = [&rows, &cols](array_view<gemm_mnk> mnks, std::int64_t gemm_mnk::*shape0,
                                      std::int64_t gemm_mnk::*shape1) {
         for (auto const &mnk : mnks) {
@@ -72,8 +70,7 @@ auto matrix_ext_type::K_block_sizes(std::int32_t M, std::int32_t N) const
     });
 }
 
-auto matrix_ext_info::get_precision(scalar_type a, scalar_type b, scalar_type acc) const
-    -> matrix_ext_type const * {
+auto matrix_ext_info::get_precision(TK a, TK b, TK acc) const -> matrix_ext_type const * {
     for (auto const &mat_type : mat_types_) {
         if (mat_type.a() == a && mat_type.b() == b && mat_type.have_acc(acc)) {
             return &mat_type;
@@ -82,8 +79,8 @@ auto matrix_ext_info::get_precision(scalar_type a, scalar_type b, scalar_type ac
     return nullptr;
 }
 
-auto matrix_ext_info::have_gemm(scalar_type a, scalar_type b, scalar_type c, scalar_type d,
-                                std::int64_t M, std::int64_t N, std::int64_t K) const -> bool {
+auto matrix_ext_info::have_gemm(TK a, TK b, TK c, TK d, std::int64_t M, std::int64_t N,
+                                std::int64_t K) const -> bool {
     for (auto const &mat_type : mat_types_) {
         if (mat_type.have_type(a, M, K, matrix_use::a) &&
             mat_type.have_type(b, K, N, matrix_use::b) &&
@@ -95,12 +92,12 @@ auto matrix_ext_info::have_gemm(scalar_type a, scalar_type b, scalar_type c, sca
     return false;
 }
 
-auto matrix_ext_info::have_precision(scalar_type a, scalar_type b, scalar_type acc) const -> bool {
+auto matrix_ext_info::have_precision(TK a, TK b, TK acc) const -> bool {
     return get_precision(a, b, acc) != nullptr;
 }
 
-auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t cols,
-                                matrix_use use) const -> bool {
+auto matrix_ext_info::have_type(TK sty, std::int64_t rows, std::int64_t cols, matrix_use use) const
+    -> bool {
     for (auto const &mat_type : mat_types_) {
         if (mat_type.have_type(sty, rows, cols, use)) {
             return true;
@@ -110,65 +107,63 @@ auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t
 }
 
 auto matrix_ext_info::have_type(const coopmatrix_type *ty) const -> bool {
-    return have_type(dyn_cast<number_type>(ty->component_ty())->ty(), ty->rows(), ty->cols(),
-                     ty->use());
+    return have_type(ty->component_ty()->type_id(), ty->rows(), ty->cols(), ty->use());
 }
 
-const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types = {
-    {{scalar_type::i8,
-      scalar_type::i8,
-      {scalar_type::i32},
-      {{16, 8, 32},
-       {32, 8, 32},
-       {64, 8, 32},
-       {16, 16, 32},
-       {32, 16, 32},
-       {64, 16, 32},
-       {16, 32, 32},
-       {32, 32, 32},
-       {64, 32, 32},
-       {16, 8, 64},
-       {32, 8, 64},
-       {64, 8, 64},
-       {16, 16, 64},
-       {32, 16, 64},
-       {64, 16, 64},
-       {16, 32, 64},
-       {32, 32, 64},
-       {64, 32, 64}}},
-     {scalar_type::f16,
-      scalar_type::f16,
-      {scalar_type::f16, scalar_type::f32},
-      {{16, 8, 16},
-       {32, 8, 16},
-       {16, 16, 16},
-       {32, 16, 16},
-       {16, 24, 16},
-       {32, 24, 16},
-       {16, 32, 16},
-       {32, 32, 16},
-       {16, 8, 32},
-       {32, 8, 32},
-       {16, 16, 32},
-       {32, 16, 32},
-       {16, 24, 32},
-       {32, 24, 32},
-       {16, 32, 32},
-       {32, 32, 32}}},
-     {scalar_type::bf16,
-      scalar_type::bf16,
-      {scalar_type::bf16, scalar_type::f32},
-      {{16, 8, 16},
-       {32, 8, 16},
-       {16, 16, 16},
-       {32, 16, 16},
-       {16, 32, 16},
-       {32, 32, 16},
-       {16, 8, 32},
-       {32, 8, 32},
-       {16, 16, 32},
-       {32, 16, 32},
-       {16, 32, 32},
-       {32, 32, 32}}}}};
+const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types = {{{TK::TK_i8,
+                                                                TK::TK_i8,
+                                                                {TK::TK_i32},
+                                                                {{16, 8, 32},
+                                                                 {32, 8, 32},
+                                                                 {64, 8, 32},
+                                                                 {16, 16, 32},
+                                                                 {32, 16, 32},
+                                                                 {64, 16, 32},
+                                                                 {16, 32, 32},
+                                                                 {32, 32, 32},
+                                                                 {64, 32, 32},
+                                                                 {16, 8, 64},
+                                                                 {32, 8, 64},
+                                                                 {64, 8, 64},
+                                                                 {16, 16, 64},
+                                                                 {32, 16, 64},
+                                                                 {64, 16, 64},
+                                                                 {16, 32, 64},
+                                                                 {32, 32, 64},
+                                                                 {64, 32, 64}}},
+                                                               {TK::TK_f16,
+                                                                TK::TK_f16,
+                                                                {TK::TK_f16, TK::TK_f32},
+                                                                {{16, 8, 16},
+                                                                 {32, 8, 16},
+                                                                 {16, 16, 16},
+                                                                 {32, 16, 16},
+                                                                 {16, 24, 16},
+                                                                 {32, 24, 16},
+                                                                 {16, 32, 16},
+                                                                 {32, 32, 16},
+                                                                 {16, 8, 32},
+                                                                 {32, 8, 32},
+                                                                 {16, 16, 32},
+                                                                 {32, 16, 32},
+                                                                 {16, 24, 32},
+                                                                 {32, 24, 32},
+                                                                 {16, 32, 32},
+                                                                 {32, 32, 32}}},
+                                                               {TK::TK_bf16,
+                                                                TK::TK_bf16,
+                                                                {TK::TK_bf16, TK::TK_f32},
+                                                                {{16, 8, 16},
+                                                                 {32, 8, 16},
+                                                                 {16, 16, 16},
+                                                                 {32, 16, 16},
+                                                                 {16, 32, 16},
+                                                                 {32, 32, 16},
+                                                                 {16, 8, 32},
+                                                                 {32, 8, 32},
+                                                                 {16, 16, 32},
+                                                                 {32, 16, 32},
+                                                                 {16, 32, 32},
+                                                                 {32, 32, 32}}}}};
 
 } // namespace tinytc

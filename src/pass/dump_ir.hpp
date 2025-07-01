@@ -9,6 +9,7 @@
 #include "node/type.hpp"
 #include "pass/slot_tracker.hpp"
 #include "tinytc/types.h"
+#include "tinytc/types.hpp"
 
 #include <limits>
 #include <ostream>

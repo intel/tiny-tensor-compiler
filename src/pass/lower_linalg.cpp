@@ -45,7 +45,7 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
                       location const &loc) {
     auto ctx = m_block->context();
     auto bool_ty = boolean_type::get(ctx);
-    auto index_ty = number_type::get(ctx, scalar_type::index);
+    auto index_ty = index_type::get(ctx);
 
     const auto check_a = m_check ? checked_flag::rows : checked_flag::none;
     const auto check_b = n_check ? checked_flag::cols : checked_flag::none;
@@ -63,11 +63,10 @@ void gemm_microkernel(region_builder &bb, transpose tA, transpose tB, bool atomi
     auto c_n_block_size = bb.create<constant_inst>(n_block_size, index_ty, loc);
 
     const auto c_acc_ty = [&c_ty, &loc]() {
-        auto ct = dyn_cast<number_type>(c_ty);
-        if (ct == nullptr) {
-            throw compilation_error(loc, status::internal_compiler_error);
+        if (!isa<number_type>(*c_ty)) {
+            throw compilation_error(loc, status::ir_expected_number);
         }
-        return number_type::get(c_ty->context(), acc_type(ct->ty()));
+        return acc_type(c_ty);
     }();
 
     auto coopmatrix_c_ty = get<coopmatrix_type>(c_ty, m_block_size, n_block_size, matrix_use::acc);
@@ -282,7 +281,7 @@ auto linalg_generator::get_memref_type(tinytc_value const &v) const -> const mem
 void linalg_generator::operator()(axpby_inst in) {
     auto ctx = in.alpha().context();
     auto bool_ty = get<boolean_type>(ctx);
-    auto index_ty = get<number_type>(ctx, scalar_type::index);
+    auto index_ty = get<index_type>(ctx);
 
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
@@ -291,7 +290,7 @@ void linalg_generator::operator()(axpby_inst in) {
         tinytc_region_t body = &parallel->child_region(0);
         auto bb = region_builder{body};
 
-        auto i32_ty = get<number_type>(ctx, scalar_type::i32);
+        auto i32_ty = get<i32_type>(ctx);
         auto sg_id = bb.create<subgroup_linear_id_inst>(i32_ty, in.loc());
         auto sg_lid = bb.create<subgroup_local_id_inst>(i32_ty, in.loc());
         auto c0 = bb.create<constant_inst>(0, i32_ty);
@@ -342,13 +341,12 @@ void linalg_generator::operator()(axpby_inst in) {
 void linalg_generator::operator()(cumsum_inst in) {
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
-    auto bt_sty = dyn_cast<number_type>(bt->element_ty())->ty();
 
     const auto num_tiles = tiling_.m_tiles() * tiling_.n_tiles();
     auto ctx = in.alpha().context();
     auto bool_ty = get<boolean_type>(ctx);
-    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
-    auto index_ty = get<number_type>(ctx, scalar_type::index);
+    auto i32_ty = get<i32_type>(ctx);
+    auto index_ty = get<index_type>(ctx);
     const auto &loc = in.loc();
 
     auto const scan_loop_1d = [&](region_builder &bb, work_group_inclusive_scan &scan,
@@ -506,7 +504,7 @@ void linalg_generator::operator()(cumsum_inst in) {
                                            auto a = bb.create<load_inst>(a_sub, array_view{args[0]},
                                                                          at->element_ty(), loc);
                                            auto prefix = mixed_precision_arithmetic<add_inst>(
-                                               bb, bt_sty, args[1], a, loc);
+                                               bb, bt->element_ty(), args[1], a, loc);
                                            blas_update(bb, in.atomic(), &in.alpha(), prefix,
                                                        &in.beta(), b_sub, {args[0]}, loc);
                                            bb.create<yield_inst>(array_view{prefix}, loc);
@@ -524,20 +522,18 @@ void linalg_generator::operator()(gemm_inst in) {
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
     auto ct = get_memref_type(in.C());
-    auto at_sty = dyn_cast<number_type>(at->element_ty())->ty();
-    auto bt_sty = dyn_cast<number_type>(bt->element_ty())->ty();
-    auto ct_sty = dyn_cast<number_type>(ct->element_ty())->ty();
 
     auto ctx = in.alpha().context();
-    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
-    auto index_ty = get<number_type>(ctx, scalar_type::index);
+    auto i32_ty = get<i32_type>(ctx);
+    auto index_ty = get<index_type>(ctx);
 
     auto sg_m = bb.create<subgroup_id_inst>(comp3::x, i32_ty, in.loc());
     auto sg_n = bb.create<subgroup_id_inst>(comp3::y, i32_ty, in.loc());
 
     auto [max_rows, max_cols] = max_register_block_gemm(
-        size(at_sty), size(bt_sty), size(acc_type(ct_sty)), core_cfg_.subgroup_size,
-        core_cfg_.register_space, is_complex_type(ct_sty) ? 2 : 1);
+        size(at->element_ty()), size(bt->element_ty()), size(acc_type(ct->element_ty())),
+        core_cfg_.subgroup_size, core_cfg_.register_space,
+        isa<complex_type>(*ct->element_ty()) ? 2 : 1);
 
     auto c_shape0 =
         instant_constant_fold_add(bb, create<size_inst>(0, &in.C(), index_ty, in.loc()));
@@ -553,7 +549,10 @@ void linalg_generator::operator()(gemm_inst in) {
                 K_block_sizes] =
         [&]() -> std::tuple<std::int32_t, std::int32_t, std::int32_t, std::int32_t, bool,
                             std::vector<std::int32_t>> {
-        if (auto ext_type = core_cfg_.matrix->get_precision(at_sty, bt_sty, ct_sty); ext_type) {
+        if (auto ext_type = core_cfg_.matrix->get_precision(at->element_ty()->type_id(),
+                                                            bt->element_ty()->type_id(),
+                                                            ct->element_ty()->type_id());
+            ext_type) {
             const auto M_bs = ext_type->M_block_sizes();
             // @todo Think about what do if we have multiple sizes for M
             const auto block_size0 = M_bs.back();
@@ -627,12 +626,11 @@ void linalg_generator::operator()(gemm_inst in) {
 }
 
 void linalg_generator::operator()(gemv_inst in) {
-    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = index_type::get(in.alpha().context());
     auto c0 = bb_.constant_zero(index_ty, in.loc());
     auto c_shape0 =
         instant_constant_fold_add(bb_, create<size_inst>(0, &in.C(), index_ty, in.loc()));
     auto ct = get_memref_type(in.C());
-    auto ct_sty = dyn_cast<number_type>(ct->element_ty())->ty();
     bb_.foreach_loop(
         {c0}, {c_shape0},
         [&](region_builder &bb, auto loop_vars) {
@@ -651,9 +649,10 @@ void linalg_generator::operator()(gemv_inst in) {
                     auto a = bb.create<load_inst>(&in.A(), a_idx, at->element_ty(), in.loc());
                     auto b =
                         bb.create<load_inst>(&in.B(), array_view{p[0]}, bt->element_ty(), in.loc());
-                    auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct_sty, a, b, in.loc());
-                    auto ab_c =
-                        mixed_precision_arithmetic<add_inst>(bb, ct_sty, p[1], ab, in.loc());
+                    auto ab =
+                        mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
+                    auto ab_c = mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), p[1], ab,
+                                                                     in.loc());
                     bb.create<yield_inst>(array_view{ab_c}, in.loc());
                 });
             blas_update(bb, in.atomic(), &in.alpha(), c_acc[0], &in.beta(), &in.C(), {loop_vars[0]},
@@ -663,7 +662,7 @@ void linalg_generator::operator()(gemv_inst in) {
 }
 
 void linalg_generator::operator()(ger_inst in) {
-    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = index_type::get(in.alpha().context());
     auto c0 = bb_.constant_zero(index_ty, in.loc());
     auto c_shape0 =
         instant_constant_fold_add(bb_, create<size_inst>(0, &in.C(), index_ty, in.loc()));
@@ -675,12 +674,11 @@ void linalg_generator::operator()(ger_inst in) {
             auto at = get_memref_type(in.A());
             auto bt = get_memref_type(in.B());
             auto ct = get_memref_type(in.C());
-            auto ct_sty = dyn_cast<number_type>(ct->element_ty())->ty();
             auto a =
                 bb.create<load_inst>(&in.A(), array_view{loop_vars[0]}, at->element_ty(), in.loc());
             auto b =
                 bb.create<load_inst>(&in.B(), array_view{loop_vars[1]}, bt->element_ty(), in.loc());
-            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct_sty, a, b, in.loc());
+            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(),
                         {loop_vars[0], loop_vars[1]}, in.loc());
         },
@@ -688,11 +686,10 @@ void linalg_generator::operator()(ger_inst in) {
 }
 
 void linalg_generator::operator()(hadamard_inst in) {
-    auto index_ty = number_type::get(in.alpha().context(), scalar_type::index);
+    auto index_ty = index_type::get(in.alpha().context());
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
     auto ct = get_memref_type(in.C());
-    auto ct_sty = dyn_cast<number_type>(ct->element_ty())->ty();
 
     auto lb = std::vector<tinytc_value_t>(ct->dim());
     auto ub = std::vector<tinytc_value_t>(ct->dim());
@@ -708,7 +705,7 @@ void linalg_generator::operator()(hadamard_inst in) {
         [&](region_builder &bb, auto loop_vars) {
             auto a = bb.create<load_inst>(&in.A(), loop_vars, at->element_ty(), in.loc());
             auto b = bb.create<load_inst>(&in.B(), loop_vars, bt->element_ty(), in.loc());
-            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct_sty, a, b, in.loc());
+            auto ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), a, b, in.loc());
             blas_update(bb, in.atomic(), &in.alpha(), ab, &in.beta(), &in.C(), loop_vars, in.loc());
         },
         in.loc());
@@ -717,12 +714,11 @@ void linalg_generator::operator()(hadamard_inst in) {
 void linalg_generator::operator()(sum_inst in) {
     auto at = get_memref_type(in.A());
     auto bt = get_memref_type(in.B());
-    auto bt_sty = dyn_cast<number_type>(bt->element_ty())->ty();
 
     auto ctx = in.alpha().context();
     auto bool_ty = get<boolean_type>(ctx);
-    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
-    auto index_ty = get<number_type>(ctx, scalar_type::index);
+    auto i32_ty = get<i32_type>(ctx);
+    auto index_ty = get<index_type>(ctx);
 
     if (bt->dim() == 0) {
         const auto num_tiles = tiling_.m_tiles() * tiling_.n_tiles();
@@ -746,14 +742,14 @@ void linalg_generator::operator()(sum_inst in) {
             bb.create<constant_inst>(core_cfg_.subgroup_size * num_tiles, index_ty, in.loc());
         auto c_init = bb.constant_zero(bt->element_ty(), in.loc());
 
-        auto acc = bb.for_loop(
-            from_index, c_trip_count, c_step, {c_init}, {bt->element_ty()},
-            [&](region_builder &bb, array_view<tinytc_value_t> args) {
-                auto a =
-                    bb.create<load_inst>(&in.A(), array_view{args[0]}, at->element_ty(), in.loc());
-                auto sum = mixed_precision_arithmetic<add_inst>(bb, bt_sty, args[1], a, in.loc());
-                bb.create<yield_inst>(array_view{sum}, in.loc());
-            });
+        auto acc = bb.for_loop(from_index, c_trip_count, c_step, {c_init}, {bt->element_ty()},
+                               [&](region_builder &bb, array_view<tinytc_value_t> args) {
+                                   auto a = bb.create<load_inst>(&in.A(), array_view{args[0]},
+                                                                 at->element_ty(), in.loc());
+                                   auto sum = mixed_precision_arithmetic<add_inst>(
+                                       bb, bt->element_ty(), args[1], a, in.loc());
+                                   bb.create<yield_inst>(array_view{sum}, in.loc());
+                               });
         auto acc_reduced = reducer.make(bb, acc[0], in.loc());
 
         auto c_zero = bb.constant_zero(i32_ty, in.loc());
@@ -787,8 +783,8 @@ void linalg_generator::operator()(sum_inst in) {
                         }
                         auto a =
                             bb.create<load_inst>(&in.A(), index_list, at->element_ty(), in.loc());
-                        auto sum =
-                            mixed_precision_arithmetic<add_inst>(bb, bt_sty, args[1], a, in.loc());
+                        auto sum = mixed_precision_arithmetic<add_inst>(bb, bt->element_ty(),
+                                                                        args[1], a, in.loc());
                         bb.create<yield_inst>(array_view{sum}, in.loc());
                     });
                 blas_update(bb, in.atomic(), &in.alpha(), acc[0], &in.beta(), &in.B(),

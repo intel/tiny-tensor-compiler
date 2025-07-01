@@ -9,6 +9,7 @@
 #include "node/func.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
+#include "node/value.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
@@ -31,37 +32,29 @@ auto get_shapes(tinytc_func &fn) -> std::vector<blas_shape> {
     auto shape_set = std::unordered_set<blas_shape>{};
 
     walk<walk_order::pre_order>(fn, [&shape_set](tinytc_inst &i) {
-        visit(overloaded{[&](blas_a2_inst in) {
-                             auto a = get_memref_type(in.A());
-                             auto b = get_memref_type(in.B());
-                             auto a_sty = dyn_cast<number_type>(a->element_ty())->ty();
-                             auto b_sty = dyn_cast<number_type>(b->element_ty())->ty();
-                             if (b->dim() == 1) {
-                                 shape_set.insert({a_sty, a_sty, b_sty, {b->shape(0), 0}});
-                             } else if (b->dim() >= 2) {
-                                 shape_set.insert(
-                                     {a_sty, a_sty, b_sty, {b->shape(0), b->shape(1)}});
-                             }
-                         },
-                         [&](blas_a3_inst in) {
-                             auto a = get_memref_type(in.A());
-                             auto b = get_memref_type(in.B());
-                             auto c = get_memref_type(in.C());
-                             auto a_sty = dyn_cast<number_type>(a->element_ty())->ty();
-                             auto b_sty = dyn_cast<number_type>(b->element_ty())->ty();
-                             auto c_sty = dyn_cast<number_type>(c->element_ty())->ty();
-                             if (c->dim() == 1) {
-                                 shape_set.insert({a_sty, b_sty, c_sty, {c->shape(0), 0}});
-                             } else if (c->dim() >= 2) {
-                                 shape_set.insert({a_sty,
-                                                   b_sty,
-                                                   c_sty,
-                                                   {c->shape(0), c->shape(1)},
-                                                   isa<gemm_inst>(in.get())});
-                             }
-                         },
-                         [](inst_view) {}},
-              i);
+        visit(
+            overloaded{[&](blas_a2_inst in) {
+                           auto a = in.A().ty();
+                           auto b = get_memref_type(in.B());
+                           if (b->dim() == 1) {
+                               shape_set.insert(blas_shape{a, a, b, {b->shape(0), 0}});
+                           } else if (b->dim() >= 2) {
+                               shape_set.insert(blas_shape{a, a, b, {b->shape(0), b->shape(1)}});
+                           }
+                       },
+                       [&](blas_a3_inst in) {
+                           auto a = in.A().ty();
+                           auto b = in.B().ty();
+                           auto c = get_memref_type(in.C());
+                           if (c->dim() == 1) {
+                               shape_set.insert(blas_shape{a, b, c, {c->shape(0), 0}});
+                           } else if (c->dim() >= 2) {
+                               shape_set.insert(blas_shape{
+                                   a, b, c, {c->shape(0), c->shape(1)}, isa<gemm_inst>(in.get())});
+                           }
+                       },
+                       [](inst_view) {}},
+            i);
     });
 
     return std::vector<blas_shape>(shape_set.begin(), shape_set.end());

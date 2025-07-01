@@ -572,7 +572,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
  *
  * @param recipe [out] pointer to the recipe object created
  * @param info [in] core info object
- * @param ty [in] Scalar types of alpha, A, B, beta, C
+ * @param number_ty [in] Number types of alpha, A, B, beta, C
  * @param tA [in] Transpose A
  * @param tB [in] Transpose B
  * @param M [in] Number of rows of A, C
@@ -589,7 +589,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty,
     tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
     int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC,
     tinytc_compiler_context_t ctx);
@@ -643,7 +643,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  *
  * @param recipe [out] pointer to the recipe object created
  * @param info [in] core info object
- * @param ty [in] Scalar type of alpha, A, B, beta, C
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
  * @param N [in] Number of columns of B, C
  * @param K [in] Number columns of A, number of rows of B
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
@@ -653,7 +653,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t N,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t N,
     int64_t K, int32_t M_block_size, tinytc_compiler_context_t ctx);
 
 /**
@@ -680,7 +680,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  *
  * @param recipe [out] pointer to the recipe object created
  * @param info [in] core info object
- * @param ty [in] Scalar type of alpha, A, B, beta, C
+ * @param number_ty [in] Number type of alpha, A, B, beta, C
  * @param M [in] Number of rows of A, C; can be TINYTC_DYNAMIC
  * @param N [in] Number of columns of B, C
  * @param K [in] Number columns of A, number of rows of B
@@ -697,7 +697,7 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @return
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_scalar_type_t ty, int64_t M,
+    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t M,
     int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
     int32_t alignC, int32_t M_block_size, tinytc_compiler_context_t ctx);
 

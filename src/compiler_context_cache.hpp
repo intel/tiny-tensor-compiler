@@ -7,7 +7,6 @@
 #include "tinytc/types.h"
 #include "util/fnv1a.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -59,7 +58,8 @@ class compiler_context_cache {
     compiler_context_cache &operator=(compiler_context_cache const &) = delete;
 
     std::unique_ptr<tinytc_type> void_ty, bool_ty;
-    std::array<std::unique_ptr<tinytc_type>, TINYTC_ENUM_NUM_SCALAR_TYPE> scalar_tys;
+    std::unique_ptr<tinytc_type> i8_ty, i16_ty, i32_ty, i64_ty, index_ty, bf16_ty, f16_ty, f32_ty,
+        f64_ty, c32_ty, c64_ty;
     unique_storage<tinytc_type_t> coopmatrix_tys, group_tys, memref_tys;
 
     unique_storage<tinytc_attr_t> array_attrs, dictionary_attrs, integer_attrs, string_attrs;

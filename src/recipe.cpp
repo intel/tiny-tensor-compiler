@@ -2,10 +2,14 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "recipe.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
+#include "node/type.hpp"
+#include "node/visit.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <complex>
@@ -18,32 +22,33 @@ template <typename T> bool is_argument_zero(std::size_t arg_size, const void *ar
     return v == T(0);
 }
 
-auto is_argument_zero(scalar_type sty, std::size_t arg_size, const void *arg_value) -> bool {
-    switch (sty) {
-    case scalar_type::index:
-        return is_argument_zero<std::int64_t>(arg_size, arg_value);
-    case scalar_type::i8:
-        return is_argument_zero<std::int8_t>(arg_size, arg_value);
-    case scalar_type::i16:
-        return is_argument_zero<std::int16_t>(arg_size, arg_value);
-    case scalar_type::i32:
-        return is_argument_zero<std::int32_t>(arg_size, arg_value);
-    case scalar_type::i64:
-        return is_argument_zero<std::int64_t>(arg_size, arg_value);
-    case scalar_type::bf16:
-        return is_argument_zero<bfloat16>(arg_size, arg_value);
-    case scalar_type::f16:
-        return is_argument_zero<half>(arg_size, arg_value);
-    case scalar_type::f32:
-        return is_argument_zero<float>(arg_size, arg_value);
-    case scalar_type::f64:
-        return is_argument_zero<double>(arg_size, arg_value);
-    case scalar_type::c32:
-        return is_argument_zero<std::complex<float>>(arg_size, arg_value);
-    case scalar_type::c64:
-        return is_argument_zero<std::complex<double>>(arg_size, arg_value);
-    };
-    throw status::invalid_arguments;
+auto is_argument_zero(tinytc_type_t ty, std::size_t arg_size, const void *arg_value) -> bool {
+    return visit(
+        overloaded{
+            [&](i8_type &) { return is_argument_zero<std::int8_t>(arg_size, arg_value); },
+            [&](i16_type &) { return is_argument_zero<std::int16_t>(arg_size, arg_value); },
+            [&](i32_type &) { return is_argument_zero<std::int32_t>(arg_size, arg_value); },
+            [&](i64_type &) { return is_argument_zero<std::int64_t>(arg_size, arg_value); },
+            [&](index_type &ty) {
+                const auto idx_width = ty.context()->index_bit_width();
+                if (idx_width == 64) {
+                    return is_argument_zero<std::int64_t>(arg_size, arg_value);
+                } else if (idx_width == 32) {
+                    return is_argument_zero<std::int32_t>(arg_size, arg_value);
+                }
+                throw status::not_implemented;
+            },
+            [&](bf16_type &) { return is_argument_zero<bfloat16>(arg_size, arg_value); },
+            [&](f16_type &) { return is_argument_zero<half>(arg_size, arg_value); },
+            [&](f32_type &) { return is_argument_zero<float>(arg_size, arg_value); },
+            [&](f64_type &) { return is_argument_zero<double>(arg_size, arg_value); },
+            [&](c32_type &) { return is_argument_zero<std::complex<float>>(arg_size, arg_value); },
+            [&](c64_type &) { return is_argument_zero<std::complex<double>>(arg_size, arg_value); },
+            [](auto &) {
+                throw status::ir_expected_number;
+                return false;
+            }},
+        *ty);
 }
 
 } // namespace tinytc

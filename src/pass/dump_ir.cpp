@@ -122,7 +122,7 @@ void dump_ir_pass::operator()(memref_type const &d) {
     }
     *os_ << ">";
 }
-void dump_ir_pass::operator()(number_type const &s) { *os_ << to_string(s.ty()); }
+void dump_ir_pass::operator()(number_type const &t) { *os_ << to_string(t.type_id()); }
 
 /* Value nodes */
 void dump_ir_pass::dump_val(tinytc_value const &v) {

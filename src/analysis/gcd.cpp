@@ -11,14 +11,13 @@
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
+#include "scalar_type.hpp"
 #include "support/walk.hpp"
-#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/iterator.hpp"
 #include "util/overloaded.hpp"
-#include "util/visit.hpp"
 
 #include <cstdlib> // IWYU pragma: keep
 #include <functional>
@@ -103,9 +102,8 @@ void gcd_helper::operator()(alloca_inst in) {
         }
         // alloca shape/stride must be static, therefore we can set shape_gcd/stride_gcd to
         // shape/stride
-        gcd_.set_memref(in.result(),
-                        memref_info(i / size(dyn_cast<number_type>(rt->element_ty())->ty()),
-                                    rt->shape(), rt->stride()));
+        auto rt_number_size = size(rt->element_ty());
+        gcd_.set_memref(in.result(), memref_info(i / rt_number_size, rt->shape(), rt->stride()));
     }
 }
 void gcd_helper::operator()(arith_inst in) {
@@ -352,8 +350,8 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
             }
         }
 
-        return memref_info(alignment / size(dyn_cast<number_type>(mr->element_ty())->ty()),
-                           std::move(shape_gcd), std::move(stride_gcd));
+        auto mr_number_size = size(mr->element_ty());
+        return memref_info(alignment / mr_number_size, std::move(shape_gcd), std::move(stride_gcd));
     };
     for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();

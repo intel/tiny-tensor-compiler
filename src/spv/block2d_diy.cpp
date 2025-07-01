@@ -2,10 +2,15 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/block2d_diy.hpp"
+#include "compiler_context.hpp"
+#include "node/type.hpp"
+#include "node/visit.hpp"
 #include "spv/xe_constants.hpp"
 #include "support/temp_counter.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/math.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <array>
@@ -56,28 +61,26 @@ auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
     -> std::array<std::int32_t, 2u> {
     return {byte_offset / xe::grf_size, byte_offset % xe::grf_size / element_size};
 }
-auto visa_type(scalar_type sty) -> char const * {
-    switch (sty) {
-    case scalar_type::i8:
-        return "b";
-    case scalar_type::i16:
-        return "w";
-    case scalar_type::i32:
-        return "d";
-    case scalar_type::i64:
-    case scalar_type::index:
-        return "q";
-    case scalar_type::f16:
-        return "hf";
-    case scalar_type::bf16:
-        return "bf";
-    case scalar_type::f32:
-        return "f";
-    case scalar_type::f64:
-        return "df";
-    default:
-        throw status::internal_compiler_error;
-    }
+auto visa_type(tinytc_type_t ty) -> char const * {
+    return visit(overloaded{[&](i8_type &) { return "b"; },  //
+                            [&](i16_type &) { return "w"; }, //
+                            [&](i32_type &) { return "d"; }, //
+                            [&](i64_type &) { return "q"; }, //
+                            [&](index_type &ty) {
+                                const auto idx_width = ty.context()->index_bit_width();
+                                if (idx_width == 64) {
+                                    return "q";
+                                } else if (idx_width == 32) {
+                                    return "d";
+                                }
+                                throw status::not_implemented;
+                            },
+                            [&](bf16_type &) { return "bf"; }, //
+                            [&](f16_type &) { return "hf"; },  //
+                            [&](f32_type &) { return "f"; },   //
+                            [&](f64_type &) { return "df"; },  //
+                            [](auto &) -> char const * { throw status::internal_compiler_error; }},
+                 *ty);
 }
 
 /**

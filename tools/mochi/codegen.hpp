@@ -67,6 +67,7 @@ void generate_inst_kind_cpp(std::ostream &os, objects const &obj);
 auto needs_context_param(type *ty) -> bool;
 void generate_type_class(std::ostream &os, type *ty);
 
+void generate_type_cpp(std::ostream &os, objects const &obj);
 void generate_type_hpp(std::ostream &os, objects const &obj);
 
 void generate_forward_hpp(std::ostream &os, objects const &obj);

@@ -189,6 +189,8 @@ auto void_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
     return ctx->cache()->void_ty.get();
 }
 
+// もち type_cpp "tinytc/types.anko"
+
 } // namespace tinytc
 
 extern "C" {

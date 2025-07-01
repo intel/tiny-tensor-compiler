@@ -7,7 +7,6 @@
 #include "tinytc/types.h"
 
 #include <cassert>
-#include <cstdint>
 #include <string>
 
 using namespace tinytc;

@@ -23,6 +23,7 @@ enum class generator {
     inst_cpp,
     inst_hpp,
     inst_kind_cpp,
+    type_cpp,
     type_hpp,
     visit_hpp,
     template_,

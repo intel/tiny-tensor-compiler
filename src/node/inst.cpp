@@ -3,7 +3,6 @@
 
 #include "node/inst.hpp"
 #include "error.hpp"
-#include "node/inst_view.hpp"
 #include "node/region.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
@@ -16,7 +15,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <iterator>
-#include <limits>
 #include <memory>
 #include <new>
 #include <stdexcept>

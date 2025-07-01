@@ -130,6 +130,20 @@
     STRIDED         "strided"
 ;
 %token
+    I8_TYPE    "i8"
+    I16_TYPE   "i16"
+    I32_TYPE   "i32"
+    I64_TYPE   "i64"
+    INDEX_TYPE "index"
+    BF16_TYPE  "bf16"
+    F16_TYPE   "f16"
+    F32_TYPE   "f32"
+    F64_TYPE   "f64"
+    C32_TYPE   "c32"
+    C64_TYPE   "64"
+;
+
+%token
     ALLOCA                        "alloca"
     BARRIER                       "barrier"
     CAST                          "cast"
@@ -221,8 +235,6 @@
 %token <bool> BOOLEAN_CONSTANT
 %token <std::int64_t> INTEGER_CONSTANT
 %token <double> FLOATING_CONSTANT
-%token <scalar_type> INTEGER_TYPE
-%token <scalar_type> FLOATING_TYPE
 %token <comp3> COMP3
 %token <reduce_mode> REDUCE_MODE
 %token <matrix_use> MATRIX_USE
@@ -417,8 +429,17 @@ boolean_type:
 ;
 
 scalar_type:
-    INTEGER_TYPE  { yytry(ctx, [&] { $$ = get<number_type>(ctx.cctx().get(), $INTEGER_TYPE);  }, @scalar_type); }
-  | FLOATING_TYPE { yytry(ctx, [&] { $$ = get<number_type>(ctx.cctx().get(), $FLOATING_TYPE); }, @scalar_type); }
+    I8_TYPE    { yytry(ctx, [&] { $$ = get<i8_type>(ctx.cctx().get());  }, @scalar_type); }
+  | I16_TYPE   { yytry(ctx, [&] { $$ = get<i16_type>(ctx.cctx().get());  }, @scalar_type); }
+  | I32_TYPE   { yytry(ctx, [&] { $$ = get<i32_type>(ctx.cctx().get());  }, @scalar_type); }
+  | I64_TYPE   { yytry(ctx, [&] { $$ = get<i64_type>(ctx.cctx().get());  }, @scalar_type); }
+  | INDEX_TYPE { yytry(ctx, [&] { $$ = get<index_type>(ctx.cctx().get());  }, @scalar_type); }
+  | BF16_TYPE  { yytry(ctx, [&] { $$ = get<bf16_type>(ctx.cctx().get());  }, @scalar_type); }
+  | F16_TYPE   { yytry(ctx, [&] { $$ = get<f16_type>(ctx.cctx().get());  }, @scalar_type); }
+  | F32_TYPE   { yytry(ctx, [&] { $$ = get<f32_type>(ctx.cctx().get());  }, @scalar_type); }
+  | F64_TYPE   { yytry(ctx, [&] { $$ = get<f64_type>(ctx.cctx().get());  }, @scalar_type); }
+  | C32_TYPE   { yytry(ctx, [&] { $$ = get<c32_type>(ctx.cctx().get());  }, @scalar_type); }
+  | C64_TYPE   { yytry(ctx, [&] { $$ = get<c64_type>(ctx.cctx().get());  }, @scalar_type); }
 ;
 
 coopmatrix_type:

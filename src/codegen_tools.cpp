@@ -127,25 +127,18 @@ void tile_loop_uniformly(region_builder &bb, tinytc_value_t loop_trip_count, int
         [&](region_builder &bb, tinytc_value_t block) { body(bb, block, bs); }, for_attributes);
 }
 
-auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_value_t a,
+auto promote_binop_operands(region_builder &bb, tinytc_type_t result_ty, tinytc_value_t a,
                             tinytc_value_t b, location const &loc)
     -> std::pair<tinytc_value_t, tinytc_value_t> {
-    number_type *at = dyn_cast<number_type>(a->ty());
-    number_type *bt = dyn_cast<number_type>(b->ty());
-    if (at == nullptr || bt == nullptr) {
-        throw compilation_error(loc, status::ir_expected_scalar);
-    }
-    if (at->ty() != result_ty || bt->ty() != result_ty) {
-        if (!promotable(at->ty(), result_ty) || !promotable(bt->ty(), result_ty)) {
+    if (a->ty() != result_ty || b->ty() != result_ty) {
+        if (!promotable(a->ty(), result_ty) || !promotable(b->ty(), result_ty)) {
             throw compilation_error(loc, status::ir_forbidden_promotion);
         }
-        auto promoted_ty = number_type::get(at->context(), result_ty);
-
-        if (at->ty() != result_ty) {
-            a = bb.create<cast_inst>(a, promoted_ty, loc);
+        if (a->ty() != result_ty) {
+            a = bb.create<cast_inst>(a, result_ty, loc);
         }
-        if (bt->ty() != result_ty) {
-            b = bb.create<cast_inst>(b, promoted_ty, loc);
+        if (b->ty() != result_ty) {
+            b = bb.create<cast_inst>(b, result_ty, loc);
         }
     }
     return {a, b};
@@ -153,21 +146,17 @@ auto promote_binop_operands(region_builder &bb, scalar_type result_ty, tinytc_va
 
 auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tinytc_value_t b,
                                       location const &loc) -> tinytc_value_t {
-    number_type *at = dyn_cast<number_type>(a->ty());
-    if (at == nullptr) {
-        throw compilation_error(loc, status::ir_expected_scalar);
-    }
     coopmatrix_type *bt = dyn_cast<coopmatrix_type>(b->ty());
     if (bt == nullptr) {
         throw compilation_error(loc, status::ir_expected_coopmatrix);
     }
-    const auto a_ty = at->ty();
-    const auto b_ty = dyn_cast<number_type>(bt->component_ty())->ty();
+    const auto a_ty = a->ty();
+    const auto b_ty = bt->component_ty();
     if (a_ty != b_ty) {
         if (!promotable(a_ty, b_ty)) {
             throw compilation_error(loc, status::ir_forbidden_promotion);
         }
-        a = bb.create<cast_inst>(a, bt->component_ty(), loc);
+        a = bb.create<cast_inst>(a, b_ty, loc);
     }
     return bb.create<cooperative_matrix_scale_inst>(a, b, bt, loc);
 }
@@ -188,10 +177,9 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
                  location const &loc) {
     memref_type *ct = dyn_cast<memref_type>(C->ty());
     if (ct == nullptr) {
-        throw compilation_error(loc, {C}, status::ir_expected_scalar);
+        throw compilation_error(loc, {C}, status::ir_expected_number);
     }
-    auto alpha_ab = mixed_precision_arithmetic<mul_inst>(
-        bb, dyn_cast<number_type>(ct->element_ty())->ty(), alpha, ab, loc);
+    auto alpha_ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), alpha, ab, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -200,10 +188,9 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
         bb.create<store_inst>(*flag, alpha_ab, C, index_list, loc);
     } else {
         auto c = bb.create<load_inst>(C, index_list, ct->element_ty(), loc);
-        auto beta_c = mixed_precision_arithmetic<mul_inst>(
-            bb, dyn_cast<number_type>(ct->element_ty())->ty(), beta, c, loc);
-        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic<add_inst>(
-            bb, dyn_cast<number_type>(ct->element_ty())->ty(), alpha_ab, beta_c, loc);
+        auto beta_c = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), beta, c, loc);
+        auto alpha_ab_plus_beta_c =
+            mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), alpha_ab, beta_c, loc);
         bb.create<store_inst>(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc);
     }
 }
@@ -255,26 +242,19 @@ auto get_int_constant(tinytc_value const &val) -> std::optional<std::int64_t> {
     return get_int_constant(&val);
 }
 
-auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_type const * {
+auto get_coopmatrix_type(tinytc_value const &v) -> coopmatrix_type * {
     auto ct = dyn_cast<coopmatrix_type>(v.ty());
     if (!ct) {
         throw compilation_error(v.loc(), status::ir_expected_coopmatrix);
     }
     return ct;
 }
-auto get_memref_type(tinytc_value const &v) -> memref_type const * {
+auto get_memref_type(tinytc_value const &v) -> memref_type * {
     auto mt = dyn_cast<memref_type>(v.ty());
     if (!mt) {
         throw compilation_error(v.loc(), status::ir_expected_memref);
     }
     return mt;
-}
-auto get_scalar_type(tinytc_value const &v) -> scalar_type {
-    auto st = dyn_cast<number_type>(v.ty());
-    if (!st) {
-        throw compilation_error(v.loc(), status::ir_expected_scalar);
-    }
-    return st->ty();
 }
 auto get_yield(location const &loc, tinytc_region &reg) -> yield_inst {
     auto y = yield_inst(nullptr);
@@ -316,8 +296,8 @@ auto work_group_reduce::make(region_builder &bb, tinytc_value_t a, location cons
     if (num_tiles_ > 1) {
         auto ctx = a->context();
         auto bool_ty = get<boolean_type>(ctx);
-        auto i32_ty = get<number_type>(ctx, scalar_type::i32);
-        auto index_ty = get<number_type>(ctx, scalar_type::index);
+        auto i32_ty = get<i32_type>(ctx);
+        auto index_ty = get<index_type>(ctx);
 
         auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
@@ -363,11 +343,11 @@ auto work_group_inclusive_scan::make(region_builder &bb, tinytc_value_t a, bool 
     auto a_scan = bb.create<subgroup_inclusive_scan_add_inst>(a, ty_, loc);
 
     auto ctx = a->context();
-    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
+    auto i32_ty = get<i32_type>(ctx);
 
     if (num_tiles_ > 1) {
         auto bool_ty = get<boolean_type>(ctx);
-        auto index_ty = get<number_type>(ctx, scalar_type::index);
+        auto index_ty = get<index_type>(ctx);
 
         auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);

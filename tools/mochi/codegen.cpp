@@ -814,6 +814,19 @@ public:
     os << "};\n";
 }
 
+void generate_type_cpp(std::ostream &os, objects const &obj) {
+    os << "auto to_string(TK tk) -> char const* {\n"
+          "switch (tk) {\n";
+    for (auto &t : obj.types()) {
+        walk_down<walk_order::pre_order, type, true>(t.get(), [&os](type *ty) {
+            os << std::format("case TK::TK_{0}: return \"{0}\";\n", ty->name());
+        });
+    }
+    os << "default: break;\n"
+          "}\nreturn \"unknown\";\n"
+          "}\n\n";
+}
+
 void generate_type_hpp(std::ostream &os, objects const &obj) {
     os << "enum class TK {\n";
     for (auto &t : obj.types()) {
