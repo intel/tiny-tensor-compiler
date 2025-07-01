@@ -19,10 +19,12 @@ int main() {
 
     try {
         auto ctx = make_compiler_context();
-        auto element_ty = get_scalar(ctx, sty);
-        auto ty = get_memref(element_ty, {M, N});
+        auto element_ty = get<number_type>(ctx.get(), sty);
+        auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
+                                   address_space::global);
 
-        auto f = make_func("copy", {ty, ty}, get_void(ctx));
+        auto void_ty = get<void_type>(ctx.get());
+        auto f = make_func("copy", {ty, ty}, void_ty);
 
         auto body = get_body(f);
         std::array<tinytc_value_t, 2u> params;

@@ -32,25 +32,30 @@ auto get_shapes(tinytc_func &fn) -> std::vector<blas_shape> {
 
     walk<walk_order::pre_order>(fn, [&shape_set](tinytc_inst &i) {
         visit(overloaded{[&](blas_a2_inst in) {
-                             auto aty = get_memref_type(in.A())->element_ty();
+                             auto a = get_memref_type(in.A());
                              auto b = get_memref_type(in.B());
+                             auto a_sty = dyn_cast<number_type>(a->element_ty())->ty();
+                             auto b_sty = dyn_cast<number_type>(b->element_ty())->ty();
                              if (b->dim() == 1) {
-                                 shape_set.insert({aty, aty, b->element_ty(), {b->shape(0), 0}});
+                                 shape_set.insert({a_sty, a_sty, b_sty, {b->shape(0), 0}});
                              } else if (b->dim() >= 2) {
                                  shape_set.insert(
-                                     {aty, aty, b->element_ty(), {b->shape(0), b->shape(1)}});
+                                     {a_sty, a_sty, b_sty, {b->shape(0), b->shape(1)}});
                              }
                          },
                          [&](blas_a3_inst in) {
-                             auto aty = get_memref_type(in.A())->element_ty();
-                             auto bty = get_memref_type(in.B())->element_ty();
+                             auto a = get_memref_type(in.A());
+                             auto b = get_memref_type(in.B());
                              auto c = get_memref_type(in.C());
+                             auto a_sty = dyn_cast<number_type>(a->element_ty())->ty();
+                             auto b_sty = dyn_cast<number_type>(b->element_ty())->ty();
+                             auto c_sty = dyn_cast<number_type>(c->element_ty())->ty();
                              if (c->dim() == 1) {
-                                 shape_set.insert({aty, bty, c->element_ty(), {c->shape(0), 0}});
+                                 shape_set.insert({a_sty, b_sty, c_sty, {c->shape(0), 0}});
                              } else if (c->dim() >= 2) {
-                                 shape_set.insert({aty,
-                                                   bty,
-                                                   c->element_ty(),
+                                 shape_set.insert({a_sty,
+                                                   b_sty,
+                                                   c_sty,
                                                    {c->shape(0), c->shape(1)},
                                                    isa<gemm_inst>(in.get())});
                              }
@@ -79,7 +84,7 @@ void work_group_size_pass::run_on_function(tinytc_func &fn) {
 
     const auto shapes = get_shapes(fn);
 
-    auto ctx = compiler_context{fn.ty()->context(), true};
+    auto ctx = fn.ty()->context();
     const auto subgroup_size = [&] {
         if (!sgs_attr) {
             auto sgs = suggest_subgroup_size(shapes, *info_);

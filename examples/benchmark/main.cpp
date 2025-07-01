@@ -77,25 +77,25 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
         return l;
     };
     auto const make_memref = [](tinytc_type_t element_ty, transpose t, int64_t A, std::int64_t B,
-                                std::array<std::int64_t, 2u> const &stride, location const &loc) {
+                                std::array<std::int64_t, 2u> const &stride) {
         auto s = std::array<std::int64_t, 2u>{A, B};
         if (t == transpose::T) {
             std::swap(s[0], s[1]);
         }
-        return get_memref(element_ty, s, stride, address_space::global, loc);
+        return get<memref_type>(element_ty, s, stride, address_space::global);
     };
 
-    auto kernel = [&](compiler_context const &ctx) {
-        auto index_ty = get_scalar(ctx, scalar_type::index);
-        auto element_ty = get_scalar(ctx, ty);
-        auto A_ty = make_memref(element_ty, tA, M, K, A_stride, my_loc());
-        auto B_ty = make_memref(element_ty, tB, K, N, B_stride, my_loc());
-        auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride, my_loc());
-        auto f =
-            make_func("gemm",
-                      {get_group(A_ty, dynamic, 0, my_loc()), get_group(B_ty, dynamic, 0, my_loc()),
-                       get_group(C_ty, dynamic, 0, my_loc())},
-                      get_void(ctx), my_loc());
+    auto kernel = [&](tinytc_compiler_context_t ctx) {
+        auto index_ty = get<number_type>(ctx, scalar_type::index);
+        auto element_ty = get<number_type>(ctx, ty);
+        auto A_ty = make_memref(element_ty, tA, M, K, A_stride);
+        auto B_ty = make_memref(element_ty, tB, K, N, B_stride);
+        auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride);
+        auto void_ty = get<void_type>(ctx);
+        auto f = make_func("gemm",
+                           {get<group_type>(A_ty, dynamic, 0), get<group_type>(B_ty, dynamic, 0),
+                            get<group_type>(C_ty, dynamic, 0)},
+                           void_ty, my_loc());
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
                 ctx, named_attr{get_string_attr(ctx, "align"), get_integer_attr(ctx, alignment)});
@@ -129,7 +129,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 
     try {
         auto p = make_prog(ctx, my_loc());
-        add_function(p, kernel(ctx));
+        add_function(p, kernel(ctx.get()));
         if (dump_code) {
             dump(p);
         }

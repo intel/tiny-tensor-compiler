@@ -22,6 +22,7 @@
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 #include "util/math.hpp"
 
 #include <algorithm>
@@ -58,7 +59,7 @@ auto coopmatrix_impl_dpas::check_2d_block_io(tinytc_value const &operand, tinytc
     -> bool {
     if (auto mi = gcd().get_memref_if(operand); mi) {
         auto const mt = get_memref_type(operand);
-        const auto sty_size = size(mt->element_ty());
+        const auto sty_size = size(dyn_cast<number_type>(mt->element_ty())->ty());
         auto const &block_io = cfg().matrix->block_io();
 
         const bool sfid_ok = mt->addrspace() == address_space::global;
@@ -154,8 +155,9 @@ auto coopmatrix_impl_dpas::load_fun(coopmatrix_type const *result_ty, spv_inst *
     return lookup(load_funs_, key, [&](load_key const &key) {
         const auto [result_ty, spv_operand_ty, trans] = key;
 
-        const auto cfg = load_config(result_ty->component_ty(), result_ty->rows(),
-                                     result_ty->cols(), result_ty->use(), trans);
+        auto sty = dyn_cast<number_type>(result_ty->component_ty())->ty();
+        const auto cfg =
+            load_config(sty, result_ty->rows(), result_ty->cols(), result_ty->use(), trans);
         auto code = load_block2d_native(cfg, tmp_);
 
         auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
@@ -194,8 +196,8 @@ auto coopmatrix_impl_dpas::store_config(coopmatrix_type const *ct) -> block_conf
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
-    cfg.sty = ct->component_ty();
-    cfg.element_size = size(ct->component_ty());
+    cfg.sty = dyn_cast<number_type>(ct->component_ty())->ty();
+    cfg.element_size = size(cfg.sty);
     cfg.array_length = 1;
     cfg.rows = ct->rows();
     cfg.cols = ct->cols();
@@ -253,7 +255,11 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_typ
 
         auto oasm = std::ostringstream{};
 
-        const std::int32_t ops_per_chan = xe::channel_size / size(at->component_ty());
+        auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
+        auto bt_sty = dyn_cast<number_type>(bt->component_ty())->ty();
+        auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
+        auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
+        const std::int32_t ops_per_chan = xe::channel_size / size(at_sty);
         const std::int32_t K = ops_per_chan * xe::sdepth;
 
         oasm << "{\n";
@@ -261,7 +267,7 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_typ
         std::string temp = result_placeholder;
         if (rt->component_ty() != ct->component_ty() && at->cols() / K > 1) {
             temp = tmp_("temp");
-            oasm << ".decl " << temp << " v_type=G type=" << visa_type(ct->component_ty())
+            oasm << ".decl " << temp << " v_type=G type=" << visa_type(ct_sty)
                  << " num_elts=" << ct->rows() * ct->cols() << " align=wordx32\n";
         }
         const auto mat_A = tmp_("matrix_A");
@@ -313,23 +319,19 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_typ
          *               { (bk,bn) else
          *
          */
-        const auto precision_src1 = precision(at->component_ty());
-        const auto precision_src2 = precision(bt->component_ty());
+        const auto precision_src1 = precision(at_sty);
+        const auto precision_src2 = precision(bt_sty);
         for (std::int32_t k = 0; k < at->cols(); k += K) {
             char const *src0 = k > 0 ? temp.c_str() : (!key.is_c_zero ? "$3" : "%null");
             char const *dst = k + K >= at->cols() ? result_placeholder.c_str() : temp.c_str();
-            const auto rsize =
-                k + K >= at->cols() ? size(rt->component_ty()) : size(ct->component_ty());
+            const auto rsize = k + K >= at->cols() ? size(rt_sty) : size(ct_sty);
             for (std::int32_t m = 0; m < ct->rows(); m += xe::exec_size) {
                 for (std::int32_t n = 0; n < ct->cols(); n += xe::rcount) {
-                    const auto aoffset =
-                        (k * xe::exec_size + m * at->cols()) * size(at->component_ty());
-                    const auto brow =
-                        (k * bt->cols() + n * K) * size(bt->component_ty()) / xe::grf_size;
-                    const auto coffset =
-                        !key.is_c_zero || k > 0
-                            ? (m * ct->cols() + n * xe::exec_size) * size(ct->component_ty())
-                            : 0;
+                    const auto aoffset = (k * xe::exec_size + m * at->cols()) * size(at_sty);
+                    const auto brow = (k * bt->cols() + n * K) * size(bt_sty) / xe::grf_size;
+                    const auto coffset = !key.is_c_zero || k > 0
+                                             ? (m * ct->cols() + n * xe::exec_size) * size(ct_sty)
+                                             : 0;
                     const auto roffset = (m * rt->cols() + n * xe::exec_size) * rsize;
                     oasm << "dpas." << precision_src1 << "." << precision_src2 << "." << xe::sdepth
                          << "." << xe::rcount << " (M1," << xe::exec_size << ") " << dst << "."
@@ -361,17 +363,18 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type c
         auto rl = get_layout(cfg(), rt);
         auto al = get_layout(cfg(), at);
         auto matrix_ty = spv_ty(rl);
-        const auto sty = rt->component_ty();
+        const auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
+        const auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
         const auto sty_size = size(sty);
 
         auto oasm = std::ostringstream{};
 
         oasm << "{\n";
         auto aview = tmp_("aview");
-        oasm << ".decl " << aview << " v_type=G type=" << visa_type(at->component_ty())
+        oasm << ".decl " << aview << " v_type=G type=" << visa_type(at_sty)
              << " num_elts=" << al.length * sgs << " align=wordx32 alias=<$1,0>\n";
         auto rview = tmp_("rview");
-        oasm << ".decl " << rview << " v_type=G type=" << visa_type(rt->component_ty())
+        oasm << ".decl " << rview << " v_type=G type=" << visa_type(sty)
              << " num_elts=" << rl.length * sgs << " align=wordx32 alias=<$0,0>\n";
         auto predicate = tmp_("predicate");
         oasm << ".decl " << predicate << " v_type=P num_elts=" << sgs << "\n";
@@ -396,7 +399,7 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type c
             std::string src = aview;
             if (al.blocks > 1) {
                 auto tmp = tmp_("tmp");
-                oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at->component_ty())
+                oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at_sty)
                      << " num_elts=" << sgs * sgs << " align=wordx32\n";
                 for (std::int32_t j0 = offset; j0 < offset + remainder; ++j0) {
                     const auto t1 = region_origin(sty_size, sgs * (j0 - offset) * sty_size);
@@ -430,7 +433,7 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type c
                 auto dst_offset = offset;
                 if (2 * v < sgs) {
                     auto tmp = tmp_("tmp");
-                    oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at->component_ty())
+                    oasm << ".decl " << tmp << " v_type=G type=" << visa_type(at_sty)
                          << " num_elts=" << sgs * sgs / (2 * v) << " align=wordx32\n";
                     dst = tmp;
                     dst_offset = 0;
@@ -438,10 +441,10 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type c
 
                 for (int i = 0; i < sgs / v && i < remainder; i += 2) {
                     auto tmp1 = tmp_("tmp");
-                    oasm << ".decl " << tmp1 << " v_type=G type=" << visa_type(at->component_ty())
+                    oasm << ".decl " << tmp1 << " v_type=G type=" << visa_type(at_sty)
                          << " num_elts=" << sgs << " align=wordx32\n";
                     auto tmp2 = tmp_("tmp");
-                    oasm << ".decl " << tmp2 << " v_type=G type=" << visa_type(at->component_ty())
+                    oasm << ".decl " << tmp2 << " v_type=G type=" << visa_type(at_sty)
                          << " num_elts=" << sgs << " align=wordx32\n";
 
                     const auto t0 = region_origin(sty_size, (dst_offset + sgs * i / 2) * sty_size);
@@ -483,12 +486,13 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst in, dope_vector con
     }
 
     auto ot = get_memref_type(in.operand());
+    auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
     auto ct = get_coopmatrix_type(in.result());
     auto fun = load_fun(ct, unique().pointer_ty(ot), in.t());
 
     auto &mod = unique().mod();
     auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
-    auto csize = unique().constant(static_cast<std::int32_t>(size(ot->element_ty())));
+    auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
     auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
     auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
     auto height = mod.add<OpSConvert>(spv_i32_ty, odv.shape(1));
@@ -508,10 +512,13 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst in, spv_inst 
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result());
+    auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
+    auto bt_sty = dyn_cast<number_type>(bt->component_ty())->ty();
+    auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
+    auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const bool have_gemm =
-        cfg().matrix->have_gemm(at->component_ty(), bt->component_ty(), ct->component_ty(),
-                                rt->component_ty(), rt->rows(), rt->cols(), at->cols());
+        cfg().matrix->have_gemm(at_sty, bt_sty, ct_sty, rt_sty, rt->rows(), rt->cols(), at->cols());
     if (!sgs_ok || !have_gemm) {
         return coopmatrix_impl_block::mul_add(in, a, b, c);
     }
@@ -523,21 +530,22 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst in, spv_inst 
 void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst in, dope_vector const &odv,
                                     spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
+    auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
-    const auto type_ok = size(ot->element_ty()) <= 4;
+    const auto type_ok = size(ot_sty) <= 4;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
 
     if (!sgs_ok || !type_ok || !block_io_ok) {
         coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
     } else {
-        auto fun = prefetch_fun(in.cache_level(), ot->element_ty(), unique().pointer_ty(ot),
-                                in.rows(), in.cols());
+        auto fun =
+            prefetch_fun(in.cache_level(), ot_sty, unique().pointer_ty(ot), in.rows(), in.cols());
 
         if (fun) {
             auto &mod = unique().mod();
             auto spv_void_ty = unique().void_ty();
             auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
-            auto csize = unique().constant(static_cast<std::int32_t>(size(ot->element_ty())));
+            auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
             auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
             auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
             auto height = mod.add<OpSConvert>(spv_i32_ty, odv.shape(1));
@@ -565,12 +573,13 @@ void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst in, dope_vector c
         coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
     } else {
         auto ot = get_memref_type(in.operand());
+        auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
         auto fun = store_fun(ct, unique().pointer_ty(ot));
 
         auto &mod = unique().mod();
         auto spv_void_ty = unique().void_ty();
         auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
-        auto csize = unique().constant(static_cast<std::int32_t>(size(ot->element_ty())));
+        auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
         auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
         auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
         auto height = mod.add<OpSConvert>(spv_i32_ty, odv.shape(1));

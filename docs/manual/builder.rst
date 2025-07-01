@@ -57,9 +57,9 @@ by actual values:
           tinytc_prog_create(&program, ctx, NULL);
 
           // Get types
-          tinytc_scalar_type_get(&element_ty, ctx, sty);
+          tinytc_number_type_get(&element_ty, ctx, sty);
           int64_t shape[2] = {M, N};
-          tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global, NULL);
+          tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
 
           // Get void type
           tinytc_void_type_get(&void_ty, ctx);
@@ -105,10 +105,12 @@ by actual values:
           int64_t N = ...;
 
           auto ctx = make_compiler_context();
-          auto element_ty = get_scalar(ctx, sty);
-          auto ty = get_memref(element_ty, {M, N});
+          auto element_ty = get<number_type>(ctx.get(), sty);
+          auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
+                                     address_space::global);
 
-          auto f = make_func("copy", {ty, ty}, get_void(ctx));
+          auto void_ty = get<void_type>(ctx.get());
+          auto f = make_func("copy", {ty, ty}, void_ty);
 
           auto body = f.get_body();
           std::array<tinytc_value_t, 2u> params;

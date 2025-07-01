@@ -75,7 +75,7 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_typ
     if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
         sty = st->ty();
     } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        sty = ct->component_ty();
+        sty = dyn_cast<number_type>(ct->component_ty())->ty();
     } else {
         return tinytc_status_invalid_arguments;
     }
@@ -119,7 +119,7 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_ty
     if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
         sty = st->ty();
     } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        sty = ct->component_ty();
+        sty = dyn_cast<number_type>(ct->component_ty())->ty();
     } else {
         return tinytc_status_invalid_arguments;
     }

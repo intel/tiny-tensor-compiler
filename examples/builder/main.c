@@ -29,9 +29,9 @@ int main(void) {
     tinytc_prog_create(&program, ctx, NULL);
 
     // Get types
-    tinytc_scalar_type_get(&element_ty, ctx, sty);
+    tinytc_number_type_get(&element_ty, ctx, sty);
     int64_t shape[2] = {M, N};
-    tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global, NULL);
+    tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
 
     // Get void type
     tinytc_void_type_get(&void_ty, ctx);

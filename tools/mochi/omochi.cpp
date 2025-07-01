@@ -25,14 +25,14 @@ auto to_string(generator g) -> char const * {
         return "enum_h";
     case generator::enum_hpp:
         return "enum_hpp";
+    case generator::forward_hpp:
+        return "forward_hpp";
     case generator::inst_cpp:
         return "inst_cpp";
     case generator::inst_hpp:
         return "inst_hpp";
     case generator::inst_kind_cpp:
         return "inst_hpp";
-    case generator::inst_forward_hpp:
-        return "inst_forward_hpp";
     case generator::type_hpp:
         return "type_hpp";
     case generator::visit_hpp:
@@ -70,6 +70,9 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
             case generator::enum_hpp:
                 generate_enum_hpp(os, *obj);
                 break;
+            case generator::forward_hpp:
+                generate_forward_hpp(os, *obj);
+                break;
             case generator::inst_cpp:
                 generate_inst_cpp(os, *obj);
                 break;
@@ -78,9 +81,6 @@ void please_do(std::ostream &os, action const &a, std::vector<char const *> cons
                 break;
             case generator::inst_kind_cpp:
                 generate_inst_kind_cpp(os, *obj);
-                break;
-            case generator::inst_forward_hpp:
-                generate_inst_forward_hpp(os, *obj);
                 break;
             case generator::type_hpp:
                 generate_type_hpp(os, *obj);

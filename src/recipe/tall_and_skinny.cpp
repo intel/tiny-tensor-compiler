@@ -71,9 +71,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     }
 
     auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
+    ctx = ctx_.get();
     std::int32_t source_id = 0;
-    TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(ctx_.get(), "recipe/tall_and_skinny.cpp",
-                                                           "", &source_id));
+    TINYTC_CHECK_STATUS(
+        tinytc_compiler_context_add_source(ctx, "recipe/tall_and_skinny.cpp", "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -91,9 +92,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
     return exception_to_status_code(
         [&] {
-            auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
-            auto const bool_ty = get_boolean(ctx_);
-            auto const index_ty = get_scalar(ctx_, scalar_type::index);
+            auto const ty_ = get<number_type>(ctx, enum_cast<scalar_type>(ty));
+            auto const bool_ty = get<boolean_type>(ctx);
+            auto const void_ty = get<void_type>(ctx);
+            auto const index_ty = get<number_type>(ctx, scalar_type::index);
 
             auto const bshape = blas_shape{enum_cast<scalar_type>(ty),
                                            enum_cast<scalar_type>(ty),
@@ -107,6 +109,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             while (tiling[0] < tiling[1] && tiling[1] > 1) {
                 tiling[1] /= 2;
             }
+
+            auto const A_stride = std::array<std::int64_t, 2u>{1, ldA};
+            auto const B_stride = std::array<std::int64_t, 2u>{1, ldB};
+            auto const C_stride = std::array<std::int64_t, 2u>{1, ldC};
 
             auto const body = [&](region_builder &bb, tinytc_value_t alpha, tinytc_value_t A,
                                   tinytc_value_t B, bool is_beta_nonzero, tinytc_value_t beta_arg,
@@ -123,9 +129,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto const A_static_sizes = std::array<std::int64_t, 2u>{M_block_size, K};
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{M_block_size, N};
                     auto at =
-                        get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
+                        get<memref_type>(ty_, A_static_sizes, A_stride, address_space::global);
                     auto ct =
-                        get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
+                        get<memref_type>(ty_, C_static_sizes, C_stride, address_space::global);
                     auto a = bb.create<subview_inst>(static_offsets, A_static_sizes, A, offsets,
                                                      array_view<tinytc_value_t>{}, at, my_loc());
                     auto c = bb.create<subview_inst>(static_offsets, C_static_sizes, C, offsets,
@@ -138,9 +144,9 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                     auto const C_static_sizes = std::array<std::int64_t, 2u>{dynamic, N};
                     auto const sizes = array_view<tinytc_value_t>(dyn_block_size);
                     auto at =
-                        get_memref(ty_, A_static_sizes, {1, ldA}, address_space::global, my_loc());
+                        get<memref_type>(ty_, A_static_sizes, A_stride, address_space::global);
                     auto ct =
-                        get_memref(ty_, C_static_sizes, {1, ldC}, address_space::global, my_loc());
+                        get<memref_type>(ty_, C_static_sizes, C_stride, address_space::global);
                     auto a = bb.create<subview_inst>(static_offsets, A_static_sizes, A, offsets,
                                                      sizes, at, my_loc());
                     auto c = bb.create<subview_inst>(static_offsets, C_static_sizes, C, offsets,
@@ -164,19 +170,22 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
             };
 
             auto const kernel = [&](char const *name, bool is_beta_nonzero) {
-                auto A_ty = get_memref(ty_, {M, K}, {1, ldA}, address_space::global, my_loc());
-                auto B_ty = get_memref(ty_, {K, N}, {1, ldB}, address_space::global, my_loc());
-                auto C_ty = get_memref(ty_, {M, N}, {1, ldC}, address_space::global, my_loc());
-                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, get_void(ctx_), my_loc());
+                auto A_shape = std::array{M, K};
+                auto B_shape = std::array{K, N};
+                auto C_shape = std::array{M, N};
+                auto A_ty = get<memref_type>(ty_, A_shape, A_stride, address_space::global);
+                auto B_ty = get<memref_type>(ty_, B_shape, B_stride, address_space::global);
+                auto C_ty = get<memref_type>(ty_, C_shape, C_stride, address_space::global);
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, void_ty, my_loc());
 
                 auto alignments = std::array<std::pair<std::int32_t, std::int32_t>, 3u>{
                     {{1, alignA}, {2, alignB}, {4, alignC}}};
-                auto align_attr = named_attr{get_string_attr(ctx_, "align"), nullptr};
+                auto align_attr = named_attr{get_string_attr(ctx, "align"), nullptr};
                 for (auto &[param_no, alignment] : alignments) {
                     if (alignment > 0) {
-                        align_attr.attr = get_integer_attr(ctx_, alignment);
+                        align_attr.attr = get_integer_attr(ctx, alignment);
                         set_parameter_attr(f, param_no,
-                                           get_dictionary_attr_with_sorted(ctx_, align_attr));
+                                           get_dictionary_attr_with_sorted(ctx, align_attr));
                     }
                 }
 
@@ -190,10 +199,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 set_name(params[4], "C");
                 auto const wgs = tiling.work_group_size(sgs);
                 auto const wgs_attr =
-                    named_attr{get_string_attr(ctx_, "work_group_size"),
-                               get_array_attr(ctx_, {get_integer_attr(ctx_, wgs[0]),
-                                                     get_integer_attr(ctx_, wgs[1])})};
-                set_attr(f, get_dictionary_attr_with_sorted(ctx_, wgs_attr));
+                    named_attr{get_string_attr(ctx, "work_group_size"),
+                               get_array_attr(ctx, {get_integer_attr(ctx, wgs[0]),
+                                                    get_integer_attr(ctx, wgs[1])})};
+                set_attr(f, get_dictionary_attr_with_sorted(ctx, wgs_attr));
 
                 auto bb = region_builder{fn_body};
                 body(bb, params[0], params[1], params[2], is_beta_nonzero, params[3], params[4]);
@@ -212,7 +221,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                                                                ldB, ldC, M_block_size)
                           .release();
         },
-        ctx_.get());
+        ctx);
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_suggest_block_size(const_tinytc_core_info_t info,

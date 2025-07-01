@@ -85,7 +85,8 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
         }
         auto j1 = bb_.create<constant_inst>(u * col_inc_factor, i32_ty, in.loc());
         auto col = j0 ? bb_.create<add_inst>(j0, j1, i32_ty, in.loc()) : j1;
-        auto val = bb_.create<cooperative_matrix_extract_inst>(v, &in.a(), ct->ty(), in.loc());
+        auto val =
+            bb_.create<cooperative_matrix_extract_inst>(v, &in.a(), ct->component_ty(), in.loc());
 
         cloner.set_subs(&in.row(), row);
         cloner.set_subs(&in.col(), col);
@@ -101,10 +102,10 @@ bool coopmatrix_code_generator::operator()(cooperative_matrix_apply_inst in) {
                                       cloner.clone_region(in.body(), *bb.get_region());
                                   },
                                   [&](region_builder &bb) {
-                                      auto c0 = bb.constant_zero(ct->ty(), in.loc());
+                                      auto c0 = bb.constant_zero(ct->component_ty(), in.loc());
                                       bb.create<yield_inst>(array_view{c0});
                                   },
-                                  {ct->ty()}, in.loc())
+                                  {ct->component_ty()}, in.loc())
                                .front();
         } else {
             cloner.clone_region(in.body(), *bb_.get_region());

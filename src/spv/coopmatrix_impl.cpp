@@ -18,6 +18,7 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 #include "util/overloaded.hpp"
 
 #include <algorithm>
@@ -184,8 +185,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
             val_ij = extract(layout, val, walker.component_no());
         }
 
-        make_store(*unique_, in.flag(), ot->element_ty(), ot->addrspace(), pointer, val_ij,
-                   in.loc());
+        make_store(*unique_, in.flag(), layout.sty, ot->addrspace(), pointer, val_ij, in.loc());
     };
     auto const st_block = [&](tinytc_spv_mod &mod) {
         for (std::int64_t u = 0; u < layout.length / layout.blocks; u += cols_per_store) {
@@ -239,11 +239,11 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, s
     auto cl = get_layout(cfg(), ct);
     auto rl = get_layout(cfg(), rt);
 
-    const auto a_ty = at->component_ty();
-    const auto b_ty = bt->component_ty();
+    const auto a_ty = dyn_cast<number_type>(at->component_ty())->ty();
+    const auto b_ty = dyn_cast<number_type>(bt->component_ty())->ty();
     const auto b_component_ty = component_type(b_ty);
-    const auto c_ty = ct->component_ty();
-    const auto r_ty = rt->component_ty();
+    const auto c_ty = dyn_cast<number_type>(ct->component_ty())->ty();
+    const auto r_ty = dyn_cast<number_type>(rt->component_ty())->ty();
     const auto spv_b_ty = unique_->scalar_ty(b_ty);
     const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
     const auto spv_c_ty = unique_->scalar_ty(c_ty);
@@ -367,7 +367,7 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> 
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), at);
     auto matrix_ty = spv_ty(rl);
-    const auto sty = rt->component_ty();
+    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = unique_->scalar_ty(sty);
     auto bool_ty = unique_->bool_ty();
     auto i32_ty = unique_->scalar_ty(scalar_type::i32);
@@ -441,7 +441,7 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst in, spv_inst *a, spv_i
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
-    auto sty = rt->component_ty();
+    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -460,7 +460,7 @@ auto coopmatrix_impl::arith(arith_inst in, spv_inst *a, spv_inst *b) -> spv_inst
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
-    auto sty = rt->component_ty();
+    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -479,7 +479,7 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto sty = rt->component_ty();
+    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -496,10 +496,10 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
 auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto al = get_layout(cfg(), at);
-    auto a_ty = at->component_ty();
+    auto a_ty = dyn_cast<number_type>(at->component_ty())->ty();
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto r_ty = rt->component_ty();
+    auto r_ty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -554,7 +554,7 @@ auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
 auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto sty = rt->component_ty();
+    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto spv_result_ty = spv_ty(rl);
 
     if (in.is_zero()) {

@@ -36,14 +36,16 @@ void generate_c_to_cxx_cast(std::ostream &os, quantifier q, cxx_type const &ty,
 void generate_docstring(std::ostream &os, std::string const &doc);
 
 void generate_inst_params(
-    inst *in, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
-                  format_arg);
+    inst *in,
+    std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view, bool)>
+        format_arg);
 void generate_inst_c_params(std::ostream &os, inst *in);
 void generate_inst_cxx_params(std::ostream &os, inst *in);
 
 void generate_type_params(
-    type *ty, std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view)>
-                  format_arg);
+    type *ty,
+    std::function<void(quantifier, cxx_type const &, std::string_view, std::string_view, bool)>
+        format_arg);
 void generate_type_c_params(std::ostream &os, type *ty);
 void generate_type_cxx_params(std::ostream &os, type *ty);
 
@@ -61,13 +63,13 @@ void generate_inst_create(std::ostream &os, inst *in);
 void generate_inst_cpp(std::ostream &os, objects const &obj);
 void generate_inst_hpp(std::ostream &os, objects const &obj);
 void generate_inst_kind_cpp(std::ostream &os, objects const &obj);
-void generate_inst_forward_hpp(std::ostream &os, objects const &obj);
 
 auto needs_context_param(type *ty) -> bool;
 void generate_type_class(std::ostream &os, type *ty);
 
 void generate_type_hpp(std::ostream &os, objects const &obj);
 
+void generate_forward_hpp(std::ostream &os, objects const &obj);
 void generate_visit_hpp(std::ostream &os, objects const &obj);
 
 } // namespace mochi

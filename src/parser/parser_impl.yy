@@ -68,12 +68,14 @@
         }
     }
     template <typename F>
-    void yytry(parse_context& ctx, F&& f) {
+    void yytry(parse_context& ctx, F&& f, location const& loc = {}) {
         try {
             f();
         } catch (compilation_error const &e) {
             report_error(ctx.cctx(), e);
             throw parser::syntax_error({}, "");
+        } catch (status st) {
+            throw parser::syntax_error(loc, to_string(st));
         }
     }
     } // namespace tinytc
@@ -302,26 +304,27 @@ func:
     FUNC GLOBAL_IDENTIFIER LPAREN parameters RPAREN function_attributes <func>{
         auto loc = @FUNC;
         loc.end = @RPAREN.end;
-        try {
-            ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
-            auto func_node = std::make_unique<tinytc_func>($GLOBAL_IDENTIFIER, $parameters.second,
-                                                           get_void(ctx.cctx()), loc);
-            func_node->attr($function_attributes);
-            ctx.push_scope();
-            auto name_it = $parameters.first.begin();
-            for (auto &p : func_node->params()) {
-                ctx.val(name_it->id, p, name_it->loc);
-                if (name_it->dict != 0) {
-                    func_node->param_attr(name_it - $parameters.first.begin(), name_it->dict);
+        yytry(
+            ctx,
+            [&] {
+                ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
+                auto void_ty = get<void_type>(ctx.cctx().get());
+                auto func_node =
+                    std::make_unique<tinytc_func>($GLOBAL_IDENTIFIER, $parameters.second, void_ty, loc);
+                func_node->attr($function_attributes);
+                ctx.push_scope();
+                auto name_it = $parameters.first.begin();
+                for (auto &p : func_node->params()) {
+                    ctx.val(name_it->id, p, name_it->loc);
+                    if (name_it->dict != 0) {
+                        func_node->param_attr(name_it - $parameters.first.begin(), name_it->dict);
+                    }
+                    ++name_it;
                 }
-                ++name_it;
-            }
-            ctx.push_region(&func_node->body());
-            $$ = func{func_node.release()};
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
+                ctx.push_region(&func_node->body());
+                $$ = func{func_node.release()};
+            },
+            loc);
     }[prototype] region {
         ctx.pop_region();
         ctx.pop_scope();
@@ -410,33 +413,31 @@ data_type:
 ;
 
 boolean_type:
-    BOOLEAN { $$ = get_boolean(ctx.cctx()); }
+    BOOLEAN { yytry(ctx, [&] { $$ = get<boolean_type>(ctx.cctx().get()); }, @boolean_type); }
 ;
 
 scalar_type:
-    INTEGER_TYPE  { $$ = get_scalar(ctx.cctx(), $INTEGER_TYPE); }
-  | FLOATING_TYPE { $$ = get_scalar(ctx.cctx(), $FLOATING_TYPE); }
+    INTEGER_TYPE  { yytry(ctx, [&] { $$ = get<number_type>(ctx.cctx().get(), $INTEGER_TYPE);  }, @scalar_type); }
+  | FLOATING_TYPE { yytry(ctx, [&] { $$ = get<number_type>(ctx.cctx().get(), $FLOATING_TYPE); }, @scalar_type); }
 ;
 
 coopmatrix_type:
     COOPMATRIX LCHEV scalar_type TIMES INTEGER_CONSTANT[rows] TIMES INTEGER_CONSTANT[cols] COMMA MATRIX_USE RCHEV {
-        try {
-            $$ = get_coopmatrix($scalar_type, $rows, $cols, $MATRIX_USE, @coopmatrix_type);
-        } catch (compilation_error const& e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
+        yytry(
+            ctx, [&] { $$ = get<coopmatrix_type>($scalar_type, $rows, $cols, $MATRIX_USE); },
+            @coopmatrix_type);
     }
 ;
 
 memref_type:
     MEMREF LCHEV scalar_type mode_list optional_address_space RCHEV {
-        try {
-            $$ = get_memref($scalar_type, $mode_list, {}, $optional_address_space, @memref_type);
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
+        yytry(
+            ctx,
+            [&] {
+                auto empty = array_view<std::int64_t>{};
+                $$ = get<memref_type>($scalar_type, $mode_list, empty, $optional_address_space);
+            },
+            @memref_type);
     }
   | MEMREF LCHEV scalar_type mode_list COMMA STRIDED LCHEV optional_stride_list RCHEV optional_address_space RCHEV {
         if ($mode_list.size() != $optional_stride_list.size()) {
@@ -444,13 +445,13 @@ memref_type:
             loc.end = @optional_stride_list.end;
             throw syntax_error(loc, "Shape and stride list must have the same length");
         }
-        try {
-            $$ = get_memref($scalar_type, $mode_list, $optional_stride_list,
-                            $optional_address_space, @memref_type);
-        } catch (compilation_error const &e) {
-            report_error(ctx.cctx(), e);
-            YYERROR;
-        }
+        yytry(
+            ctx,
+            [&] {
+                $$ = get<memref_type>($scalar_type, $mode_list, $optional_stride_list,
+                                      $optional_address_space);
+            },
+            @memref_type);
     }
 ;
 
@@ -482,7 +483,9 @@ constant_or_dynamic:
 
 group_type:
     GROUP LCHEV memref_type TIMES constant_or_dynamic[group_size] group_offset RCHEV {
-        $$ = get_group(std::move($memref_type), $group_size, $group_offset, @group_type);
+        yytry(
+            ctx, [&] { $$ = get<group_type>(std::move($memref_type), $group_size, $group_offset); },
+            @group_type);
     }
 ;
 

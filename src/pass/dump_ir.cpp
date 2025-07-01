@@ -79,7 +79,7 @@ void dump_ir_pass::operator()(void_type const &) { *os_ << "void"; }
 void dump_ir_pass::operator()(boolean_type const &) { *os_ << "bool"; }
 void dump_ir_pass::operator()(coopmatrix_type const &ct) {
     *os_ << "coopmatrix<";
-    visit(*this, *ct.ty());
+    visit(*this, *ct.component_ty());
     *os_ << "x" << ct.rows() << "x" << ct.cols() << "," << to_string(ct.use()) << ">";
 }
 void dump_ir_pass::operator()(group_type const &g) {
@@ -106,7 +106,8 @@ void dump_ir_pass::operator()(memref_type const &d) {
         }
         return *os_ << v;
     };
-    *os_ << "memref<" << to_string(d.element_ty());
+    *os_ << "memref<";
+    visit(*this, *d.element_ty());
     for (auto const &s : d.shape()) {
         *os_ << "x";
         val(s);

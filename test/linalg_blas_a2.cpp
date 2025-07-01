@@ -14,25 +14,26 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
                        std::int32_t work_group_size) -> prog {
     auto ctx = make_compiler_context();
 
-    auto const alphat = get_scalar(ctx, alpha_ty);
-    auto const at = get_scalar(ctx, A_ty);
-    auto const betat = get_scalar(ctx, beta_ty);
-    auto const bt = get_scalar(ctx, B_ty);
+    auto const alphat = get<number_type>(ctx.get(), alpha_ty);
+    auto const at = get<number_type>(ctx.get(), A_ty);
+    auto const betat = get<number_type>(ctx.get(), beta_ty);
+    auto const bt = get<number_type>(ctx.get(), B_ty);
 
     auto p = make_prog(ctx);
 
-    auto At =
-        get_memref(at, layoutA.static_shape(), layoutA.static_stride(), address_space::global);
-    auto Bt =
-        get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
+    auto At = get<memref_type>(at, layoutA.static_shape(), layoutA.static_stride(),
+                               address_space::global);
+    auto Bt = get<memref_type>(bt, layoutB.static_shape(), layoutB.static_stride(),
+                               address_space::global);
 
-    auto f = make_func(name, {alphat, At, betat, Bt}, get_void(ctx));
+    auto void_ty = get<void_type>(ctx.get());
+    auto f = make_func(name, {alphat, At, betat, Bt}, void_ty);
     if (work_group_size) {
         auto const wgs_attr =
-            named_attr{get_string_attr(ctx, "work_group_size"),
-                       get_array_attr(ctx, {get_integer_attr(ctx, work_group_size),
-                                            get_integer_attr(ctx, 1)})};
-        set_attr(f, get_dictionary_attr_with_sorted(ctx, wgs_attr));
+            named_attr{get_string_attr(ctx.get(), "work_group_size"),
+                       get_array_attr(ctx.get(), {get_integer_attr(ctx.get(), work_group_size),
+                                                  get_integer_attr(ctx.get(), 1)})};
+        set_attr(f, get_dictionary_attr_with_sorted(ctx.get(), wgs_attr));
     }
 
     auto fn_body = get_body(f);

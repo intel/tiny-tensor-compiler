@@ -90,9 +90,9 @@ using named_attr = tinytc_named_attr_t;
  *
  * @return Attribute
  */
-inline attr get_array_attr(compiler_context const &ctx, array_view<attr> array) {
+inline attr get_array_attr(tinytc_compiler_context_t ctx, array_view<attr> array) {
     attr a;
-    CHECK_STATUS(tinytc_array_attr_get(&a, ctx.get(), array.size(), array.data()));
+    CHECK_STATUS(tinytc_array_attr_get(&a, ctx, array.size(), array.data()));
     return a;
 }
 
@@ -104,9 +104,9 @@ inline attr get_array_attr(compiler_context const &ctx, array_view<attr> array) 
  *
  * @return Attribute
  */
-inline attr get_boolean_attr(compiler_context const &ctx, bool value) {
+inline attr get_boolean_attr(tinytc_compiler_context_t ctx, bool value) {
     attr a;
-    CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx.get(), value));
+    CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx, value));
     return a;
 }
 
@@ -120,9 +120,10 @@ inline attr get_boolean_attr(compiler_context const &ctx, bool value) {
  *
  * @return Attribute
  */
-inline attr get_dictionary_attr(compiler_context const &ctx, mutable_array_view<named_attr> items) {
+inline attr get_dictionary_attr(tinytc_compiler_context_t ctx,
+                                mutable_array_view<named_attr> items) {
     attr a;
-    CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx.get(), items.size(), items.data()));
+    CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx, items.size(), items.data()));
     return a;
 }
 
@@ -136,10 +137,10 @@ inline attr get_dictionary_attr(compiler_context const &ctx, mutable_array_view<
  *
  * @return Attribute
  */
-inline attr get_dictionary_attr_with_sorted(compiler_context const &ctx,
+inline attr get_dictionary_attr_with_sorted(tinytc_compiler_context_t ctx,
                                             array_view<named_attr> items) {
     attr a;
-    CHECK_STATUS(tinytc_dictionary_attr_get_with_sorted(&a, ctx.get(), items.size(), items.data()));
+    CHECK_STATUS(tinytc_dictionary_attr_get_with_sorted(&a, ctx, items.size(), items.data()));
     return a;
 }
 
@@ -162,9 +163,9 @@ inline void sort_items(mutable_array_view<named_attr> items) {
  *
  * @return Attribute
  */
-inline attr get_integer_attr(compiler_context const &ctx, std::int64_t value) {
+inline attr get_integer_attr(tinytc_compiler_context_t ctx, std::int64_t value) {
     attr a;
-    CHECK_STATUS(tinytc_integer_attr_get(&a, ctx.get(), value));
+    CHECK_STATUS(tinytc_integer_attr_get(&a, ctx, value));
     return a;
 }
 
@@ -176,9 +177,9 @@ inline attr get_integer_attr(compiler_context const &ctx, std::int64_t value) {
  *
  * @return Attribute
  */
-inline attr get_string_attr(compiler_context const &ctx, std::string_view str) {
+inline attr get_string_attr(tinytc_compiler_context_t ctx, std::string_view str) {
     attr a;
-    CHECK_STATUS(tinytc_string_attr_get(&a, ctx.get(), str.size(), str.data()));
+    CHECK_STATUS(tinytc_string_attr_get(&a, ctx, str.size(), str.data()));
     return a;
 }
 
@@ -186,111 +187,19 @@ inline attr get_string_attr(compiler_context const &ctx, std::string_view str) {
 ///////// Data type ////////
 ////////////////////////////
 
-/**
- * @brief Get the boolean data type
- *
- * Cf. \ref tinytc_boolean_type_get
- *
- * @param ctx Compiler context
- *
- * @return Data type
- */
-inline tinytc_type_t get_boolean(compiler_context const &ctx) {
-    tinytc_type_t bt;
-    CHECK_STATUS(tinytc_boolean_type_get(&bt, ctx.get()));
-    return bt;
-}
+template <typename T> struct getter;
+
+// もち api_builder_hpp "tinytc/types.anko"
 
 /**
- * @brief Get a scalar data type
+ * @brief Get type
  *
- * Cf. \ref tinytc_scalar_type_get
+ * @param args Arguments forwarded to getter
  *
- * @param ctx Compiler context
- * @param scalar_ty Scalar type
- *
- * @return Data type
+ * @return Type
  */
-inline tinytc_type_t get_scalar(compiler_context const &ctx, scalar_type scalar_ty) {
-    tinytc_type_t st;
-    CHECK_STATUS(
-        tinytc_scalar_type_get(&st, ctx.get(), static_cast<tinytc_scalar_type_t>(scalar_ty)));
-    return st;
-}
-
-/**
- * @brief Get a memref data type
- *
- * Cf. \ref tinytc_memref_type_get
- *
- * @param scalar_ty Element type
- * @param shape Tensor shape
- * @param stride Tensor stride
- * @param addrspace Address space
- * @param loc Source code location
- *
- * @return Data type
- */
-inline tinytc_type_t get_memref(tinytc_type_t scalar_ty, array_view<std::int64_t> shape,
-                                array_view<std::int64_t> stride = {},
-                                address_space addrspace = address_space::global,
-                                location const &loc = {}) {
-    tinytc_type_t mt;
-    CHECK_STATUS_LOC(tinytc_memref_type_get(&mt, scalar_ty, shape.size(), shape.data(),
-                                            stride.size(), stride.data(),
-                                            static_cast<tinytc_address_space_t>(addrspace), &loc),
-                     loc);
-    return mt;
-}
-
-/**
- * @brief Get a group data type
- *
- * @param memref_ty Memref data type
- * @param size Size parameter
- * @param offset Offset parameter
- * @param loc Source code location
- *
- * @return Data type
- */
-inline tinytc_type_t get_group(tinytc_type_t memref_ty, std::int64_t size, std::int64_t offset = 0,
-                               location const &loc = {}) {
-    tinytc_type_t gt;
-    CHECK_STATUS_LOC(tinytc_group_type_get(&gt, memref_ty, size, offset, &loc), loc);
-    return gt;
-}
-
-/**
- * @brief Get a coopmatrix data type
- *
- * @param scalar_ty Component type
- * @param rows Number of rows
- * @param cols Number of cols
- * @param use Matrix use
- * @param loc Source code location
- *
- * @return Data type
- */
-inline tinytc_type_t get_coopmatrix(tinytc_type_t scalar_ty, std::int64_t rows, std::int64_t cols,
-                                    matrix_use use, location const &loc = {}) {
-    tinytc_type_t ct;
-    CHECK_STATUS_LOC(tinytc_coopmatrix_type_get(&ct, scalar_ty, rows, cols,
-                                                static_cast<::tinytc_matrix_use_t>(use), &loc),
-                     loc);
-    return ct;
-}
-
-/**
- * @brief Get a void data type
- *
- * @param ctx Context
- *
- * @return Data type
- */
-inline tinytc_type_t get_void(compiler_context const &ctx) {
-    tinytc_type_t vt;
-    CHECK_STATUS(tinytc_void_type_get(&vt, ctx.get()));
-    return vt;
+template <typename T, typename... Args> inline auto get(Args &&...args) -> tinytc_type_t {
+    return getter<T>{}(std::forward<Args>(args)...);
 }
 
 ////////////////////////////

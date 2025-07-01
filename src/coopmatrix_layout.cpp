@@ -6,6 +6,7 @@
 #include "node/type.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 
@@ -13,12 +14,12 @@ namespace tinytc {
 
 auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix_layout {
     auto l = coopmatrix_layout{};
-    l.sty = ct->component_ty();
-    l.rows = std::min(ct->shape(0), static_cast<std::int64_t>(cfg.subgroup_size));
-    l.cols = (1 + (l.rows * ct->shape(1) - 1) / cfg.subgroup_size) * cfg.subgroup_size / l.rows;
-    l.blocks = ct->shape(0) / l.rows;
+    l.sty = dyn_cast<number_type>(ct->component_ty())->ty();
+    l.rows = std::min(ct->rows(), static_cast<std::int64_t>(cfg.subgroup_size));
+    l.cols = (1 + (l.rows * ct->cols() - 1) / cfg.subgroup_size) * cfg.subgroup_size / l.rows;
+    l.blocks = ct->rows() / l.rows;
     l.length = l.rows * l.cols * l.blocks / cfg.subgroup_size;
-    l.shape1 = ct->shape(1);
+    l.shape1 = ct->cols();
     l.blocks1 = 1;
     if (ct->use() == matrix_use::b && l.blocks > 1) {
         const auto omega_b = std::max(1, static_cast<int>(2 / size(l.sty)));

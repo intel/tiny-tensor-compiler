@@ -84,22 +84,23 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
     -> prog {
     auto ctx = make_compiler_context();
 
-    auto const alphat = get_scalar(ctx, alpha_ty);
-    auto const at = get_scalar(ctx, A_ty);
-    auto const bt = get_scalar(ctx, B_ty);
-    auto const betat = get_scalar(ctx, beta_ty);
-    auto const ct = get_scalar(ctx, C_ty);
+    auto const alphat = get<number_type>(ctx.get(), alpha_ty);
+    auto const at = get<number_type>(ctx.get(), A_ty);
+    auto const bt = get<number_type>(ctx.get(), B_ty);
+    auto const betat = get<number_type>(ctx.get(), beta_ty);
+    auto const ct = get<number_type>(ctx.get(), C_ty);
 
     auto p = make_prog(ctx);
 
-    auto At =
-        get_memref(at, layoutA.static_shape(), layoutA.static_stride(), address_space::global);
-    auto Bt =
-        get_memref(bt, layoutB.static_shape(), layoutB.static_stride(), address_space::global);
-    auto Ct =
-        get_memref(ct, layoutC.static_shape(), layoutC.static_stride(), address_space::global);
+    auto At = get<memref_type>(at, layoutA.static_shape(), layoutA.static_stride(),
+                               address_space::global);
+    auto Bt = get<memref_type>(bt, layoutB.static_shape(), layoutB.static_stride(),
+                               address_space::global);
+    auto Ct = get<memref_type>(ct, layoutC.static_shape(), layoutC.static_stride(),
+                               address_space::global);
 
-    auto f = make_func(name, {alphat, At, Bt, betat, Ct}, get_void(ctx));
+    auto void_ty = get<void_type>(ctx.get());
+    auto f = make_func(name, {alphat, At, Bt, betat, Ct}, void_ty);
     auto fn_body = get_body(f);
     auto params = std::array<tinytc_value_t, 5u>{};
     get_parameters(fn_body, params);

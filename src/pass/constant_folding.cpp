@@ -5,6 +5,7 @@
 #include "error.hpp"
 #include "node/type.hpp"
 #include "node/value.hpp"
+#include "node/visit.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 #include "util/casting.hpp"
@@ -178,7 +179,7 @@ auto constant_folding::operator()(arith_inst in) -> fold_result {
         if (ct == nullptr) {
             throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_scalar_or_boolean);
         }
-        at = dyn_cast<number_type>(ct->ty());
+        at = dyn_cast<number_type>(ct->component_ty());
     }
 
     if (a_const && b_const) {
@@ -224,7 +225,7 @@ auto constant_folding::operator()(arith_unary_inst in) -> fold_result {
         if (ct == nullptr) {
             throw compilation_error(op_a.loc(), status::ir_expected_coopmatrix_or_scalar);
         }
-        at = dyn_cast<number_type>(ct->ty());
+        at = dyn_cast<number_type>(ct->component_ty());
     }
 
     auto computer = compute_unary_op{in.get().type_id(), op_a.ty(), in.loc()};
@@ -249,7 +250,7 @@ auto constant_folding::operator()(cast_inst in) -> fold_result {
         if (ct == nullptr) {
             throw compilation_error(in.result().loc(), status::ir_expected_coopmatrix_or_scalar);
         }
-        rt = dyn_cast<number_type>(ct->ty());
+        rt = dyn_cast<number_type>(ct->component_ty());
     }
 
     return std::visit(

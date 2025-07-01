@@ -9,7 +9,7 @@
 
 namespace tinytc {
 
-// // もち visit_hpp "tinytc/types.anko"
+// もち visit_hpp "tinytc/types.anko"
 
 // もち visit_hpp "tinytc/instructions.anko"
 

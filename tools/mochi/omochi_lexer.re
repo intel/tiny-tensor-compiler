@@ -25,10 +25,10 @@ auto lex_generator(std::size_t str_length, char const *str) -> std::optional<gen
         "enum_cpp"          { return generator::enum_cpp; }
         "enum_h"            { return generator::enum_h; }
         "enum_hpp"          { return generator::enum_hpp; }
+        "forward_hpp"       { return generator::forward_hpp; }
         "inst_cpp"          { return generator::inst_cpp; }
         "inst_hpp"          { return generator::inst_hpp; }
         "inst_kind_cpp"     { return generator::inst_kind_cpp; }
-        "inst_forward_hpp"  { return generator::inst_forward_hpp; }
         "type_hpp"          { return generator::type_hpp; }
         "visit_hpp"         { return generator::visit_hpp; }
         "template"          { return generator::template_; }

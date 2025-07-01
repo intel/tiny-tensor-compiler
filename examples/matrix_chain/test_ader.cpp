@@ -63,8 +63,8 @@ template <typename T>
 auto test_ader<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
-    auto opt_kernel = [&](compiler_context const &ctx) {
-        auto element_ty = get_scalar(ctx, real_t);
+    auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
+        auto element_ty = get<number_type>(ctx, real_t);
         std::array<tinytc_type_t, 2 * dim + 3> param_types;
         param_types[0] = element_ty;
         for (std::size_t i = 0; i < dim; ++i) {
@@ -76,7 +76,8 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         param_types[1 + 2 * dim + 0] = dQ_[0].type(element_ty);
         param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
 
-        auto f = make_func("ader_kernel", param_types, get_void(ctx));
+        auto void_ty = get<void_type>(ctx);
+        auto f = make_func("ader_kernel", param_types, void_ty);
         auto fn_body = get_body(f);
 
         std::array<tinytc_value_t, 2 * dim + 3> params;
@@ -98,7 +99,8 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         auto bb = region_builder{fn_body};
         auto const c0 = bb.constant_zero(element_ty);
         auto const c1 = bb.constant_one(element_ty);
-        auto const gid = bb.create<group_id_inst>(comp3::x, get_scalar(ctx, scalar_type::index));
+        auto const gid =
+            bb.create<group_id_inst>(comp3::x, get<number_type>(ctx, scalar_type::index));
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
@@ -107,15 +109,19 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
             return {b.nrows(), b.ncols()};
         };
         auto const offsets3 = array_view<tinytc_value_t>(gid);
-        auto dqt = get_memref(element_ty, static_sizes2(dQ_[0]), {1, dynamic});
+        const auto dynamic_stride = std::array{std::int64_t{1}, dynamic};
+        auto dqt = get<memref_type>(element_ty, static_sizes2(dQ_[0]), dynamic_stride,
+                                    address_space::global);
         auto dq = bb.create<subview_inst>(static_offsets3, static_sizes3(dQ_[0]), Q, offsets3,
                                           array_view<tinytc_value_t>{}, dqt);
         for (std::size_t d = 0; d < dim; ++d) {
-            auto At = get_memref(element_ty, static_sizes2(A_[d]));
+            auto At = get<memref_type>(element_ty, static_sizes2(A_[d]), array_view<std::int64_t>{},
+                                       address_space::global);
             A(d) = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[d]), A(d), offsets3,
                                            array_view<tinytc_value_t>{}, At);
         }
-        auto it = get_memref(element_ty, static_sizes2(I_opt_), {1, dynamic});
+        auto it = get<memref_type>(element_ty, static_sizes2(I_opt_), dynamic_stride,
+                                   address_space::global);
         auto i = bb.create<subview_inst>(static_offsets3, static_sizes3(I_opt_), I, offsets3,
                                          array_view<tinytc_value_t>{}, it);
         bb.create<axpby_inst>(false, transpose::N, c1, dq, c1, i);
@@ -130,14 +136,16 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
             auto cfactor = bb.create<div_inst>(cnum, cdenom, get_type(cnum));
             auto bn = Bd_aligned(N_ - n);
             auto dq_next = bb.create<alloca_inst>(dQ_[n].local_type(element_ty));
-            auto dq_nextvt = get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local);
+            auto dq_nextvt = get<memref_type>(element_ty, std::array{bn, P_}, dynamic_stride,
+                                              address_space::local);
             auto dq_nextv = bb.create<subview_inst>(static_offsets2, array_view{bn, P_}, dq_next,
                                                     array_view<tinytc_value_t>{},
                                                     array_view<tinytc_value_t>{}, dq_nextvt);
-            auto tmp = bb.create<alloca_inst>(
-                get_memref(element_ty, {bn, P_}, {1, dynamic}, address_space::local));
+            auto tmp = bb.create<alloca_inst>(get<memref_type>(
+                element_ty, std::array{bn, P_}, dynamic_stride, address_space::local));
             for (std::size_t d = 0; d < dim; ++d) {
-                auto Kvt = get_memref(element_ty, {bn, Bd(N_ - n + 1)}, {1, dynamic});
+                auto Kvt = get<memref_type>(element_ty, std::array{bn, Bd(N_ - n + 1)},
+                                            dynamic_stride, address_space::global);
                 auto Kv = bb.create<subview_inst>(static_offsets2, array_view{bn, Bd(N_ - n + 1)},
                                                   K(d), array_view<tinytc_value_t>{},
                                                   array_view<tinytc_value_t>{}, Kvt);
@@ -145,7 +153,8 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
                 bb.create<gemm_inst>(false, transpose::N, transpose::N, c1, tmp, A(d),
                                      d > 0 ? c1 : c0, dq_nextv);
             }
-            auto ivt = get_memref(element_ty, {Bd(N_ - n), P_}, {1, dynamic});
+            auto ivt = get<memref_type>(element_ty, std::array{Bd(N_ - n), P_}, dynamic_stride,
+                                        address_space::global);
             auto iv = bb.create<subview_inst>(static_offsets2, array_view{Bd(N_ - n), P_}, i,
                                               array_view<tinytc_value_t>{},
                                               array_view<tinytc_value_t>{}, ivt);
@@ -160,7 +169,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         std::cerr << what << std::endl;
     });
     auto p = make_prog(ctx);
-    add_function(p, opt_kernel(ctx));
+    add_function(p, opt_kernel(ctx.get()));
     if (dump_code) {
         dump(p);
     }

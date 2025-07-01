@@ -36,9 +36,9 @@ template <typename F>
 void make_loop0(region_builder &bb, tinytc_value_t from, tinytc_value_t to, tinytc_value_t sg_id,
                 int sgs, int num_tiles, F &&make_body, location const &loc) {
     auto ity = from->ty();
-    auto ctx = compiler_context{sg_id->context(), true};
-    auto bool_ty = get_boolean(ctx);
-    auto i32_ty = get_scalar(ctx, scalar_type::i32);
+    auto ctx = sg_id->context();
+    auto bool_ty = get<boolean_type>(ctx);
+    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
     auto sg_lid_i32 = bb.create<subgroup_local_id_inst>(i32_ty, loc);
     auto sg_lid = bb.create<cast_inst>(sg_lid_i32, ity, loc);
     auto size = instant_constant_fold_add(bb, create<sub_inst>(to, from, ity, loc));

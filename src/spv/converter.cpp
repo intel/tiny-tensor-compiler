@@ -102,22 +102,21 @@ auto inst_converter::val(tinytc_value const &v) -> spv_inst * {
     throw compilation_error(v.loc(), status::spirv_undefined_value);
 }
 
-auto inst_converter::spv_ty(const_tinytc_type_t ty) -> spv_inst * {
+auto inst_converter::spv_ty(tinytc_type_t ty) -> spv_inst * {
     return tinytc::visit(
-        overloaded{
-            [&](void_type const &) -> spv_inst * { return unique_.void_ty(); },
-            [&](boolean_type const &) -> spv_inst * { return unique_.bool_ty(); },
-            [&](group_type const &g) -> spv_inst * {
-                return unique_.pointer_ty(StorageClass::CrossWorkgroup, spv_ty(g.ty()),
-                                          alignment(scalar_type::i64));
-            },
-            [&](memref_type const &mr) -> spv_inst * { return unique_.pointer_ty(&mr); },
-            [&](number_type const &ty) -> spv_inst * { return unique_.scalar_ty(ty.ty()); },
-            [&](coopmatrix_type const &ty) -> spv_inst * { return matrix_impl().spv_ty(&ty); },
-            [](auto const &) -> spv_inst * {
-                // @todo
-                throw status::not_implemented;
-            }},
+        overloaded{[&](void_type &) -> spv_inst * { return unique_.void_ty(); },
+                   [&](boolean_type &) -> spv_inst * { return unique_.bool_ty(); },
+                   [&](group_type &g) -> spv_inst * {
+                       return unique_.pointer_ty(StorageClass::CrossWorkgroup, spv_ty(g.ty()),
+                                                 alignment(scalar_type::i64));
+                   },
+                   [&](memref_type &mr) -> spv_inst * { return unique_.pointer_ty(&mr); },
+                   [&](number_type &ty) -> spv_inst * { return unique_.scalar_ty(ty.ty()); },
+                   [&](coopmatrix_type &ty) -> spv_inst * { return matrix_impl().spv_ty(&ty); },
+                   [](auto &) -> spv_inst * {
+                       // @todo
+                       throw status::not_implemented;
+                   }},
         *ty);
 }
 
@@ -883,8 +882,9 @@ void inst_converter::operator()(store_inst in) {
                                                        std::vector<spv_inst *>{});
         };
 
-        make_store(unique_, in.flag(), memref_ty->element_ty(), memref_ty->addrspace(), pointer(),
-                   val(in.val()), in.loc());
+        auto memref_sty = dyn_cast<number_type>(memref_ty->element_ty())->ty();
+        make_store(unique_, in.flag(), memref_sty, memref_ty->addrspace(), pointer(), val(in.val()),
+                   in.loc());
     } else {
         throw compilation_error(in.loc(), status::ir_expected_memref);
     }

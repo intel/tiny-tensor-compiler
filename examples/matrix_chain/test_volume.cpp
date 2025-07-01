@@ -59,8 +59,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
     constexpr auto real_t = to_scalar_type_v<T>;
     // Optimized kernel
-    auto opt_kernel = [&](compiler_context const &ctx) {
-        auto element_ty = get_scalar(ctx, real_t);
+    auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
+        auto element_ty = get<number_type>(ctx, real_t);
         std::array<tinytc_type_t, 2 * dim + 2> param_types;
         for (std::size_t i = 0; i < dim; ++i) {
             param_types[i] = A_[i].type(element_ty);
@@ -71,7 +71,8 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         param_types[2 * dim + 0] = Q_opt_.type(element_ty);
         param_types[2 * dim + 1] = I_.type(element_ty);
 
-        auto f = make_func("volume_kernel", param_types, get_void(ctx));
+        auto void_ty = get<void_type>(ctx);
+        auto f = make_func("volume_kernel", param_types, void_ty);
         auto fn_body = get_body(f);
 
         std::array<tinytc_value_t, 2 * dim + 2> params;
@@ -90,7 +91,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         set_name(I, "I");
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.create<group_id_inst>(comp3::x, get_scalar(ctx, scalar_type::index));
+        auto gid = bb.create<group_id_inst>(comp3::x, get<number_type>(ctx, scalar_type::index));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {
@@ -99,20 +100,27 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};
         };
+        auto const default_stride = array_view<std::int64_t>{};
         auto const offsets3 = array_view<tinytc_value_t>(gid);
         auto const sizeK2 = std::array<std::int64_t, 2u>{B3_aligned_, B2_};
-        auto tmp = bb.create<alloca_inst>(
-            get_memref(element_ty, {B2_aligned_, P_}, {}, address_space::local));
+        auto tmp = bb.create<alloca_inst>(get<memref_type>(element_ty, std::array{B2_aligned_, P_},
+                                                           default_stride, address_space::local));
 
-        auto a0t = get_memref(element_ty, static_sizes2(A_[0]));
-        auto a1t = get_memref(element_ty, static_sizes2(A_[1]));
-        auto a2t = get_memref(element_ty, static_sizes2(A_[2]));
-        auto k0t = get_memref(element_ty, sizeK2);
-        auto k1t = get_memref(element_ty, sizeK2);
-        auto k2t = get_memref(element_ty, sizeK2);
-        auto qvt = get_memref(element_ty, {B3_aligned_, P_});
-        auto ivt = get_memref(element_ty, {B2_aligned_, P_}, {1, dynamic});
-        auto tmpvt = get_memref(element_ty, {B2_, P_}, {}, address_space::local);
+        auto a0t = get<memref_type>(element_ty, static_sizes2(A_[0]), default_stride,
+                                    address_space::global);
+        auto a1t = get<memref_type>(element_ty, static_sizes2(A_[1]), default_stride,
+                                    address_space::global);
+        auto a2t = get<memref_type>(element_ty, static_sizes2(A_[2]), default_stride,
+                                    address_space::global);
+        auto k0t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto k1t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto k2t = get<memref_type>(element_ty, sizeK2, default_stride, address_space::global);
+        auto qvt = get<memref_type>(element_ty, std::array{B3_aligned_, P_}, default_stride,
+                                    address_space::global);
+        auto ivt = get<memref_type>(element_ty, std::array{B2_aligned_, P_},
+                                    std::array{std::int64_t{1}, dynamic}, address_space::global);
+        auto tmpvt =
+            get<memref_type>(element_ty, std::array{B2_, P_}, default_stride, address_space::local);
         auto a0 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[0]), A(0), offsets3,
                                           array_view<tinytc_value_t>{}, a0t);
         auto a1 = bb.create<subview_inst>(static_offsets3, static_sizes3(A_[1]), A(1), offsets3,
@@ -149,7 +157,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         return f;
     };
     auto p = make_prog(ctx_);
-    add_function(p, opt_kernel(ctx_));
+    add_function(p, opt_kernel(ctx_.get()));
     if (dump_code) {
         dump(p);
     }

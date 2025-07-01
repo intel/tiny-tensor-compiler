@@ -11,6 +11,7 @@
 #include "support/fnv1a_array_view.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 #include "util/overloaded.hpp"
 
 #include <algorithm>
@@ -204,7 +205,7 @@ auto uniquifier::pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t
 
 auto uniquifier::pointer_ty(memref_type const *mt) -> spv_inst * {
     const auto storage_cls = address_space_to_storage_class(mt->addrspace());
-    auto ty = scalar_ty(mt->element_ty());
+    auto ty = scalar_ty(dyn_cast<number_type>(mt->element_ty())->ty());
     const auto align = mt->element_alignment();
     return pointer_ty(storage_cls, ty, align);
 }

@@ -7,6 +7,7 @@
 #include "node/region.hpp"
 #include "node/type.hpp"
 #include "node/value.hpp"
+#include "node/visit.hpp"
 #include "scalar_type.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
@@ -93,7 +94,7 @@ auto get_and_check_memref_type_addrspace(tinytc_value const &operand, tinytc_typ
         throw compilation_error(loc, status::ir_expected_memref);
     }
     auto ot = get_memref_type(loc, operand);
-    if (rt->element_data_ty() != ot->element_data_ty()) {
+    if (rt->element_ty() != ot->element_ty()) {
         throw compilation_error(loc, {&operand}, status::ir_scalar_mismatch);
     }
     if (rt->addrspace() != ot->addrspace()) {
@@ -138,7 +139,9 @@ void cast_inst::setup_and_check() {
         if (!use_matches && !use_conversion_allowed) {
             throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
         }
-        if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {
+        auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
+        auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
+        if (!is_cast_allowed(ct_sty, rt_sty)) {
             throw compilation_error(loc(), {&a()}, status::ir_forbidden_cast);
         }
     } else {
@@ -172,7 +175,8 @@ void constant_inst::setup_and_check() {
             throw compilation_error(loc(), status::ir_constant_mismatch);
         }
     } else if (auto ct = dyn_cast<coopmatrix_type>(ty); ct) {
-        if (!type_ok(value(), ct->component_ty())) {
+        auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
+        if (!type_ok(value(), ct_sty)) {
             throw compilation_error(loc(), status::ir_constant_mismatch);
         }
     } else {
@@ -203,14 +207,14 @@ void cooperative_matrix_apply_inst::setup_and_check() {
     body().set_num_params(3);
     body().set_param(0, i32_ty);
     body().set_param(1, i32_ty);
-    body().set_param(2, at->ty());
+    body().set_param(2, at->component_ty());
 }
 
 void cooperative_matrix_extract_inst::setup_and_check() {
     auto ty = result().ty();
 
     auto matt = get_coopmatrix_type(loc(), mat());
-    if (matt->ty() != ty) {
+    if (matt->component_ty() != ty) {
         throw compilation_error(loc(), {&mat()}, status::ir_scalar_mismatch);
     }
 }
@@ -224,7 +228,7 @@ void cooperative_matrix_insert_inst::setup_and_check() {
 
     auto valt = get_scalar_type(loc(), val());
     auto matt = get_coopmatrix_type(loc(), mat());
-    if (matt->ty() != valt) {
+    if (matt->component_ty() != valt) {
         throw compilation_error(loc(), {&val(), &mat()}, status::ir_scalar_mismatch);
     }
 }
@@ -259,6 +263,10 @@ void cooperative_matrix_mul_add_inst::setup_and_check() {
     auto at = get_coopmatrix_type(loc(), a());
     auto bt = get_coopmatrix_type(loc(), b());
     auto ct = get_coopmatrix_type(loc(), c());
+    auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
+    auto bt_sty = dyn_cast<number_type>(bt->component_ty())->ty();
+    auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
+    auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
     if (at->use() != matrix_use::a) {
         throw compilation_error(loc(), {&a()}, status::ir_invalid_matrix_use);
     }
@@ -284,14 +292,14 @@ void cooperative_matrix_mul_add_inst::setup_and_check() {
                                 oss.str());
     }
 
-    const auto AB_ty = promote(at->component_ty(), bt->component_ty());
+    const auto AB_ty = promote(at_sty, bt_sty);
     if (!AB_ty) {
         throw compilation_error(loc(), {&a(), &b()}, status::ir_forbidden_promotion);
     }
-    if (!promotable(*AB_ty, ct->component_ty())) {
+    if (!promotable(*AB_ty, ct_sty)) {
         throw compilation_error(loc(), {&a(), &b(), &c()}, status::ir_forbidden_promotion);
     }
-    if (!is_cast_allowed(ct->component_ty(), rt->component_ty())) {
+    if (!is_cast_allowed(ct_sty, rt_sty)) {
         throw compilation_error(loc(), {&c()}, status::ir_forbidden_cast);
     }
 }
@@ -323,7 +331,7 @@ void cooperative_matrix_prefetch_inst::setup_and_check() {
 void cooperative_matrix_reduce_inst::setup_and_check() {
     auto at = get_coopmatrix_type(loc(), a());
     auto rt = get_coopmatrix_type(loc(), result().ty());
-    if (at->ty() != rt->ty()) {
+    if (at->component_ty() != rt->component_ty()) {
         throw compilation_error(loc(), {&a()}, status::ir_scalar_mismatch);
     }
     if (at->use() != rt->use()) {
@@ -351,10 +359,9 @@ void cooperative_matrix_scale_inst::setup_and_check() {
         throw compilation_error(loc(), {&b()}, status::ir_operand_type_must_match_return_type);
     }
 
-    auto at = get_scalar_type(loc(), a());
     auto bt = get_coopmatrix_type(loc(), b());
 
-    if (at->ty() != bt->component_ty()) {
+    if (a().ty() != bt->component_ty()) {
         throw compilation_error(loc(), {&a(), &b()}, status::ir_scalar_mismatch);
     }
 }
@@ -488,7 +495,7 @@ void load_inst::setup_and_check() {
                   }
               },
               [&](memref_type &m) {
-                  if (m.element_data_ty() != ty) {
+                  if (m.element_ty() != ty) {
                       throw compilation_error(loc(), {&operand()},
                                               status::ir_operand_type_must_match_return_type);
                   }
@@ -584,10 +591,9 @@ void store_inst::setup_and_check() {
         check_index_ty(loc(), val);
     }
 
-    auto v = get_scalar_type(loc(), val());
     auto o = get_memref_type(loc(), operand());
 
-    if (v->ty() != o->element_ty()) {
+    if (val().ty() != o->element_ty()) {
         throw compilation_error(loc(), {&val(), &operand()}, status::ir_scalar_mismatch);
     }
 
@@ -624,7 +630,7 @@ void arith_inst::setup_and_check(support_flags support) {
         };
 
         if (auto ct = dyn_cast<coopmatrix_type>(ty); ct) {
-            check_scalar_ty(ct->component_ty());
+            check_scalar_ty(dyn_cast<number_type>(ct->component_ty())->ty());
         } else {
             check_scalar_ty(get_scalar_type(loc(), ty)->ty());
         }
@@ -686,7 +692,8 @@ void arith_unary_inst::setup_and_check(support_flags support, bool component_typ
         auto ct = dyn_cast<coopmatrix_type>(a().ty());
         auto rt = dyn_cast<coopmatrix_type>(ty);
         if (ct && rt) {
-            check_scalar_ty(ct->component_ty(), rt->component_ty());
+            check_scalar_ty(dyn_cast<number_type>(ct->component_ty())->ty(),
+                            dyn_cast<number_type>(rt->component_ty())->ty());
         } else {
             check_scalar_ty(get_scalar_type(loc(), a())->ty(),
                             get_scalar_type(loc(), result())->ty());
@@ -709,16 +716,18 @@ void re_inst::setup_and_check() { arith_unary_inst::setup_and_check(supports_com
 void blas_a2_inst::setup_and_check() {
     auto At = get_memref_type(loc(), A());
     auto Bt = get_memref_type(loc(), B());
+    auto At_sty = dyn_cast<number_type>(At->element_ty())->ty();
+    auto Bt_sty = dyn_cast<number_type>(Bt->element_ty())->ty();
     auto alphat = get_scalar_type(loc(), alpha());
     auto betat = get_scalar_type(loc(), beta());
 
-    if (!promotable(alphat->ty(), At->element_ty())) {
+    if (!promotable(alphat->ty(), At_sty)) {
         throw compilation_error(loc(), {&alpha(), &A()}, status::ir_forbidden_promotion);
     }
-    if (!promotable(At->element_ty(), Bt->element_ty())) {
+    if (!promotable(At_sty, Bt_sty)) {
         throw compilation_error(loc(), {&A(), &B()}, status::ir_forbidden_promotion);
     }
-    if (!promotable(betat->ty(), Bt->element_ty())) {
+    if (!promotable(betat->ty(), Bt_sty)) {
         throw compilation_error(loc(), {&beta(), &B()}, status::ir_forbidden_promotion);
     }
 }
@@ -797,20 +806,23 @@ void blas_a3_inst::setup_and_check() {
     auto At = get_memref_type(loc(), A());
     auto Bt = get_memref_type(loc(), B());
     auto Ct = get_memref_type(loc(), C());
+    auto At_sty = dyn_cast<number_type>(At->element_ty())->ty();
+    auto Bt_sty = dyn_cast<number_type>(Bt->element_ty())->ty();
+    auto Ct_sty = dyn_cast<number_type>(Ct->element_ty())->ty();
     auto alphat = get_scalar_type(loc(), alpha());
     auto betat = get_scalar_type(loc(), beta());
 
-    const auto AB_ty = promote(At->element_ty(), Bt->element_ty());
+    const auto AB_ty = promote(At_sty, Bt_sty);
     if (!AB_ty) {
         throw compilation_error(loc(), {&A(), &B()}, status::ir_forbidden_promotion);
     }
     if (!promotable(alphat->ty(), *AB_ty)) {
         throw compilation_error(loc(), {&alpha(), &A(), &B()}, status::ir_forbidden_promotion);
     }
-    if (!promotable(*AB_ty, Ct->element_ty())) {
+    if (!promotable(*AB_ty, Ct_sty)) {
         throw compilation_error(loc(), {&A(), &B(), &C()}, status::ir_forbidden_promotion);
     }
-    if (!promotable(betat->ty(), Ct->element_ty())) {
+    if (!promotable(betat->ty(), Ct_sty)) {
         throw compilation_error(loc(), {&beta(), &C()}, status::ir_forbidden_promotion);
     }
 }

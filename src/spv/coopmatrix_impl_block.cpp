@@ -18,6 +18,7 @@
 #include "tinytc/builder.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 #include "util/math.hpp"
 
 #include <algorithm>
@@ -148,7 +149,7 @@ void coopmatrix_impl_block::store(cooperative_matrix_store_inst in, dope_vector 
 
     auto vt = get_coopmatrix_type(in.val());
     auto layout = get_layout(cfg(), vt);
-    auto sty = vt->component_ty();
+    auto sty = dyn_cast<number_type>(vt->component_ty())->ty();
 
     const bool layout_ok = layout.rows >= cfg().subgroup_size;
     const bool transpose_ok = in.t() == transpose::N;
@@ -269,7 +270,7 @@ auto coopmatrix_impl_block::get_io_sty(scalar_type sty) -> scalar_type {
 auto coopmatrix_impl_block::is_aligned(std::int32_t alignment, tinytc_value const &operand,
                                        tinytc_value const &pos0) -> bool {
     auto const mt = get_memref_type(operand);
-    const auto sty_size = size(mt->element_ty());
+    const auto sty_size = size(dyn_cast<number_type>(mt->element_ty())->ty());
     if (sty_size >= static_cast<std::size_t>(alignment)) {
         return true;
     }

@@ -37,7 +37,6 @@ set(SOURCES
     node/inst_view_impl.cpp
     node/region.cpp
     node/prog.cpp
-    node/type.cpp
     node/value.cpp
     parser/parse_context.cpp
     parser.cpp
@@ -97,6 +96,8 @@ add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                         node/inst_kind.cpp.mochi
                                         node/inst_view.cpp.mochi
                                         node/inst_view.hpp.mochi
+                                        node/type.cpp.mochi
+                                        node/type.hpp.mochi
                                         node/visit.hpp.mochi
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/builder.h.mochi
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/builder.hpp.mochi
@@ -105,6 +106,7 @@ add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
                                     DEPENDS
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/enums.anko
                                         ${PROJECT_SOURCE_DIR}/include/tinytc/instructions.anko
+                                        ${PROJECT_SOURCE_DIR}/include/tinytc/types.anko
                                     SEARCH_PATHS ${PROJECT_SOURCE_DIR}/include)
 
 set(PUBLIC_HEADERS

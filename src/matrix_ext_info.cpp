@@ -4,6 +4,7 @@
 #include "matrix_ext_info.hpp"
 #include "node/type.hpp"
 #include "tinytc/types.hpp"
+#include "util/casting.hpp"
 
 #include <algorithm>
 #include <optional>
@@ -109,7 +110,8 @@ auto matrix_ext_info::have_type(scalar_type sty, std::int64_t rows, std::int64_t
 }
 
 auto matrix_ext_info::have_type(const coopmatrix_type *ty) const -> bool {
-    return have_type(ty->component_ty(), ty->rows(), ty->cols(), ty->use());
+    return have_type(dyn_cast<number_type>(ty->component_ty())->ty(), ty->rows(), ty->cols(),
+                     ty->use());
 }
 
 const std::array<matrix_ext_type, 3u> pvc_matrix_ext_types = {

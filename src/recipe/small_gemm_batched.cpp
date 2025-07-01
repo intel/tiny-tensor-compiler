@@ -58,9 +58,10 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     }
 
     auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
+    ctx = ctx_.get();
     std::int32_t source_id = 0;
-    TINYTC_CHECK_STATUS(tinytc_compiler_context_add_source(
-        ctx_.get(), "recipe/small_gemm_batched.cpp", "", &source_id));
+    TINYTC_CHECK_STATUS(
+        tinytc_compiler_context_add_source(ctx, "recipe/small_gemm_batched.cpp", "", &source_id));
 
     auto const my_loc = [&](std::source_location const loc = std::source_location::current()) {
         auto l = location{};
@@ -81,8 +82,9 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
     return exception_to_status_code(
         [&] {
-            auto const ty_ = get_scalar(ctx_, enum_cast<scalar_type>(ty));
-            auto const index_ty = get_scalar(ctx_, scalar_type::index);
+            auto const ty_ = get<number_type>(ctx, enum_cast<scalar_type>(ty));
+            auto const index_ty = get<number_type>(ctx, scalar_type::index);
+            auto const void_ty = get<void_type>(ctx);
             auto const tA_ = enum_cast<transpose>(tA);
             auto const tB_ = enum_cast<transpose>(tB);
 
@@ -92,13 +94,16 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto const B_static_sizes = make_static_sizes(tB_, K, N);
                 auto const C_static_sizes = make_static_sizes(transpose::N, M, N);
 
-                auto A_ty = get_memref(ty_, {A_static_sizes[0], A_static_sizes[1], dynamic},
-                                       {1, ldA, strideA}, address_space::global, my_loc());
-                auto B_ty = get_memref(ty_, {B_static_sizes[0], B_static_sizes[1], dynamic},
-                                       {1, ldB, strideB}, address_space::global, my_loc());
-                auto C_ty = get_memref(ty_, {M, N, dynamic}, {1, ldC, strideC},
-                                       address_space::global, my_loc());
-                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, get_void(ctx_), my_loc());
+                const auto A_shape = std::array{A_static_sizes[0], A_static_sizes[1], dynamic};
+                const auto B_shape = std::array{B_static_sizes[0], B_static_sizes[1], dynamic};
+                const auto C_shape = std::array{M, N, dynamic};
+                const auto A_stride = std::array{std::int64_t{1}, ldA, strideA};
+                const auto B_stride = std::array{std::int64_t{1}, ldB, strideB};
+                const auto C_stride = std::array{std::int64_t{1}, ldC, strideC};
+                auto A_ty = get<memref_type>(ty_, A_shape, A_stride, address_space::global);
+                auto B_ty = get<memref_type>(ty_, B_shape, B_stride, address_space::global);
+                auto C_ty = get<memref_type>(ty_, C_shape, C_stride, address_space::global);
+                auto f = make_func(name, {ty_, A_ty, B_ty, ty_, C_ty}, void_ty, my_loc());
                 auto fn_body = get_body(f);
                 auto params = std::array<tinytc_value_t, 5u>{};
                 get_parameters(fn_body, params);
@@ -111,21 +116,19 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto bb = region_builder{fn_body};
 
                 auto gid = bb.create<group_id_inst>(comp3::x, index_ty, my_loc());
-                auto at = get_memref(ty_, array_view(A_static_sizes.data(), 2), {1, ldA},
-                                     address_space::global, my_loc());
-                auto bt = get_memref(ty_, array_view(B_static_sizes.data(), 2), {1, ldB},
-                                     address_space::global, my_loc());
-                auto ct = get_memref(ty_, array_view(C_static_sizes.data(), 2), {1, ldC},
-                                     address_space::global, my_loc());
+                auto at = get<memref_type>(ty_, array_view(A_static_sizes.data(), 2),
+                                           array_view{A_stride.data(), 2}, address_space::global);
+                auto bt = get<memref_type>(ty_, array_view(B_static_sizes.data(), 2),
+                                           array_view{B_stride.data(), 2}, address_space::global);
+                auto ct = get<memref_type>(ty_, array_view(C_static_sizes.data(), 2),
+                                           array_view{C_stride.data(), 2}, address_space::global);
+                auto empty = array_view<tinytc_value_t>{};
                 auto a = bb.create<subview_inst>(static_offsets, A_static_sizes, params[1],
-                                                 array_view{gid}, array_view<tinytc_value_t>{}, at,
-                                                 my_loc());
+                                                 array_view{gid}, empty, at, my_loc());
                 auto b = bb.create<subview_inst>(static_offsets, B_static_sizes, params[2],
-                                                 array_view{gid}, array_view<tinytc_value_t>{}, bt,
-                                                 my_loc());
+                                                 array_view{gid}, empty, bt, my_loc());
                 auto c = bb.create<subview_inst>(static_offsets, C_static_sizes, params[4],
-                                                 array_view{gid}, array_view<tinytc_value_t>{}, ct,
-                                                 my_loc());
+                                                 array_view{gid}, empty, ct, my_loc());
                 auto beta = is_beta_nonzero ? params[3] : bb.constant_zero(ty_, my_loc());
                 bb.create<gemm_inst>(false, tA_, tB_, params[0], std::move(a), std::move(b), beta,
                                      std::move(c), my_loc());
@@ -144,7 +147,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                                                                   enum_cast<scalar_type>(ty))
                           .release();
         },
-        ctx_.get());
+        ctx);
 }
 
 tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(

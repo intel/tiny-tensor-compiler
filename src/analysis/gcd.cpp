@@ -104,7 +104,8 @@ void gcd_helper::operator()(alloca_inst in) {
         // alloca shape/stride must be static, therefore we can set shape_gcd/stride_gcd to
         // shape/stride
         gcd_.set_memref(in.result(),
-                        memref_info(i / size(rt->element_ty()), rt->shape(), rt->stride()));
+                        memref_info(i / size(dyn_cast<number_type>(rt->element_ty())->ty()),
+                                    rt->shape(), rt->stride()));
     }
 }
 void gcd_helper::operator()(arith_inst in) {
@@ -351,8 +352,8 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
             }
         }
 
-        return memref_info(alignment / size(mr->element_ty()), std::move(shape_gcd),
-                           std::move(stride_gcd));
+        return memref_info(alignment / size(dyn_cast<number_type>(mr->element_ty())->ty()),
+                           std::move(shape_gcd), std::move(stride_gcd));
     };
     for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();

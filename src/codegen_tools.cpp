@@ -162,12 +162,12 @@ auto mixed_precision_coopmatrix_scale(region_builder &bb, tinytc_value_t a, tiny
         throw compilation_error(loc, status::ir_expected_coopmatrix);
     }
     const auto a_ty = at->ty();
-    const auto b_ty = bt->component_ty();
+    const auto b_ty = dyn_cast<number_type>(bt->component_ty())->ty();
     if (a_ty != b_ty) {
         if (!promotable(a_ty, b_ty)) {
             throw compilation_error(loc, status::ir_forbidden_promotion);
         }
-        a = bb.create<cast_inst>(a, bt->ty(), loc);
+        a = bb.create<cast_inst>(a, bt->component_ty(), loc);
     }
     return bb.create<cooperative_matrix_scale_inst>(a, b, bt, loc);
 }
@@ -190,7 +190,8 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
     if (ct == nullptr) {
         throw compilation_error(loc, {C}, status::ir_expected_scalar);
     }
-    auto alpha_ab = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), alpha, ab, loc);
+    auto alpha_ab = mixed_precision_arithmetic<mul_inst>(
+        bb, dyn_cast<number_type>(ct->element_ty())->ty(), alpha, ab, loc);
     if (atomic) {
         auto flag = get_atomic_store_flag(beta);
         if (!flag) {
@@ -198,10 +199,11 @@ void blas_update(region_builder &bb, bool atomic, tinytc_value_t alpha, tinytc_v
         }
         bb.create<store_inst>(*flag, alpha_ab, C, index_list, loc);
     } else {
-        auto c = bb.create<load_inst>(C, index_list, ct->element_data_ty(), loc);
-        auto beta_c = mixed_precision_arithmetic<mul_inst>(bb, ct->element_ty(), beta, c, loc);
-        auto alpha_ab_plus_beta_c =
-            mixed_precision_arithmetic<add_inst>(bb, ct->element_ty(), alpha_ab, beta_c, loc);
+        auto c = bb.create<load_inst>(C, index_list, ct->element_ty(), loc);
+        auto beta_c = mixed_precision_arithmetic<mul_inst>(
+            bb, dyn_cast<number_type>(ct->element_ty())->ty(), beta, c, loc);
+        auto alpha_ab_plus_beta_c = mixed_precision_arithmetic<add_inst>(
+            bb, dyn_cast<number_type>(ct->element_ty())->ty(), alpha_ab, beta_c, loc);
         bb.create<store_inst>(store_flag::regular, alpha_ab_plus_beta_c, C, index_list, loc);
     }
 }
@@ -295,7 +297,8 @@ work_group_op::work_group_op(std::int32_t num_tiles, std::int32_t subgroup_size,
 
 void work_group_op::setup(region_builder &bb, location const &loc) {
     if (num_tiles_ > 1) {
-        auto tmp_ty = get_memref(ty_, {num_tiles_}, {}, address_space::local, loc);
+        auto tmp_ty = get<memref_type>(ty_, array_view<std::int64_t>{num_tiles_},
+                                       array_view<std::int64_t>{}, address_space::local);
         tmp_ = bb.create<alloca_inst>(tmp_ty, loc);
     }
 }
@@ -311,10 +314,10 @@ auto work_group_reduce::make(region_builder &bb, tinytc_value_t a, location cons
     auto a_reduced = bb.create<subgroup_reduce_add_inst>(a, ty_, loc);
 
     if (num_tiles_ > 1) {
-        auto ctx = compiler_context{a->context(), true};
-        auto bool_ty = get_boolean(ctx);
-        auto i32_ty = get_scalar(ctx, scalar_type::i32);
-        auto index_ty = get_scalar(ctx, scalar_type::index);
+        auto ctx = a->context();
+        auto bool_ty = get<boolean_type>(ctx);
+        auto i32_ty = get<number_type>(ctx, scalar_type::i32);
+        auto index_ty = get<number_type>(ctx, scalar_type::index);
 
         auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);
@@ -359,12 +362,12 @@ auto work_group_inclusive_scan::make(region_builder &bb, tinytc_value_t a, bool 
     -> std::pair<tinytc_value_t, tinytc_value_t> {
     auto a_scan = bb.create<subgroup_inclusive_scan_add_inst>(a, ty_, loc);
 
-    auto ctx = compiler_context{a->context(), true};
-    auto i32_ty = get_scalar(ctx, scalar_type::i32);
+    auto ctx = a->context();
+    auto i32_ty = get<number_type>(ctx, scalar_type::i32);
 
     if (num_tiles_ > 1) {
-        auto bool_ty = get_boolean(ctx);
-        auto index_ty = get_scalar(ctx, scalar_type::index);
+        auto bool_ty = get<boolean_type>(ctx);
+        auto index_ty = get<number_type>(ctx, scalar_type::index);
 
         auto sgid = bb.create<subgroup_linear_id_inst>(i32_ty, loc);
         auto sglid = bb.create<subgroup_local_id_inst>(i32_ty, loc);

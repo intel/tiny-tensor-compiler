@@ -78,7 +78,7 @@ class inst_converter {
     auto get_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto declare(tinytc_value const &v, spv_inst *in);
     auto val(tinytc_value const &v) -> spv_inst *;
-    auto spv_ty(const_tinytc_type_t ty) -> spv_inst *;
+    auto spv_ty(tinytc_type_t ty) -> spv_inst *;
     auto make_dope_vector(tinytc_value const &v) -> dope_vector *;
     auto matrix_impl() -> coopmatrix_impl &;
     auto make_matrix_impl() -> std::unique_ptr<coopmatrix_impl>;
