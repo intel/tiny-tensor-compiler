@@ -7,7 +7,6 @@
 #include <stdint.h>
 
 int main(void) {
-    tinytc_scalar_type_t sty = tinytc_scalar_type_f32;
     int64_t M = 64;
     int64_t N = 32;
 
@@ -29,7 +28,7 @@ int main(void) {
     tinytc_prog_create(&program, ctx, NULL);
 
     // Get types
-    tinytc_number_type_get(&element_ty, ctx, sty);
+    tinytc_f32_type_get(&element_ty, ctx);
     int64_t shape[2] = {M, N};
     tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
 

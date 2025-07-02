@@ -793,13 +793,16 @@ public:
     }
 
     // get function
+    auto oss = std::ostringstream{};
+    generate_type_cxx_params(oss, ty);
+    auto params = std::move(oss).str();
     if (!ty->has_children()) {
-        auto oss = std::ostringstream{};
-        generate_type_cxx_params(oss, ty);
-        auto params = std::move(oss).str();
         os << std::format("static auto get({}) -> tinytc_type_t;\n\n", params);
-        os << "protected:\n";
-        os << std::format("{}({});\n", ty->class_name(), params);
+    }
+    os << "protected:\n";
+    char const *extra_arg = ty->has_children() ? "TK tid, " : "";
+    os << std::format("{}({}{});\n", ty->class_name(), extra_arg, params);
+    if (!ty->has_children()) {
         os << "friend class compiler_context_cache;\n\n";
     }
 

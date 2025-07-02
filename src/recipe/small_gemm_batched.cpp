@@ -3,8 +3,8 @@
 
 #include "small_gemm_batched.hpp"
 #include "error.hpp"
+#include "number.hpp"
 #include "recipe.hpp"
-#include "scalar_type.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.h"
 #include "tinytc/tinytc.hpp"

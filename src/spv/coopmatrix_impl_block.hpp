@@ -22,7 +22,7 @@ class coopmatrix_impl_block : public coopmatrix_impl {
                spv_inst *operand, spv_inst *pos0, spv_inst *pos1) override;
 
   private:
-    auto get_io_sty(scalar_type sty) -> scalar_type;
+    auto get_io_sty(tinytc_type_t ty) -> tinytc_type_t;
     auto is_aligned(std::int32_t alignment, tinytc_value const &operand, tinytc_value const &pos0)
         -> bool;
 };

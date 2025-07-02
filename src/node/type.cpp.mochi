@@ -6,7 +6,7 @@
 #include "error.hpp"
 #include "location.hpp"
 #include "node/type.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 #include "tinytc/builder.h"
 #include "tinytc/builder.hpp"
@@ -53,7 +53,7 @@ coopmatrix_type::coopmatrix_type(tinytc_type_t component_ty, std::int64_t rows0,
     : tinytc_type(TK::TK_coopmatrix, component_ty->context()),
       component_ty_(std::move(component_ty)), rows_{rows0}, cols_{cols0}, use_(use) {
     if (!isa<number_type>(*component_ty_)) {
-        throw status::ir_expected_scalar;
+        throw status::ir_expected_number;
     }
     if (rows() < 0 || is_dynamic_value(rows())) {
         throw status::ir_invalid_shape;
@@ -71,7 +71,7 @@ auto group_type::get(tinytc_type_t memref_ty, std::int64_t size, std::int64_t of
     const auto hash = fnv1a_combine(memref_ty, size, offset);
     const auto is_equal = [&](tinytc_type_t ty) {
         const auto gt = dyn_cast<group_type>(ty);
-        return gt && memref_ty == gt->ty() && size == gt->size() && offset == gt->offset();
+        return gt && memref_ty == gt->element_ty() && size == gt->size() && offset == gt->offset();
     };
     const auto make = [&]() { return new group_type(memref_ty, size, offset); };
 
@@ -79,9 +79,10 @@ auto group_type::get(tinytc_type_t memref_ty, std::int64_t size, std::int64_t of
     return tys.get(hash, std::move(is_equal), std::move(make));
 }
 
-group_type::group_type(tinytc_type_t ty, std::int64_t size, std::int64_t offset)
-    : tinytc_type(TK::TK_group, ty->context()), ty_(std::move(ty)), size_(size), offset_(offset) {
-    if (!isa<memref_type>(*ty_)) {
+group_type::group_type(tinytc_type_t element_ty, std::int64_t size, std::int64_t offset)
+    : tinytc_type(TK::TK_group, element_ty->context()), element_ty_(std::move(element_ty)),
+      size_(size), offset_(offset) {
+    if (!isa<memref_type>(*element_ty_)) {
         throw status::ir_expected_memref;
     }
     if (size < 0 && !is_dynamic_value(size)) {
@@ -97,7 +98,7 @@ memref_type::memref_type(tinytc_type_t element_ty, array_view<std::int64_t> shap
     : tinytc_type(TK::TK_memref, element_ty->context()), element_ty_(element_ty), shape_(shape),
       stride_(stride), addrspace_(addrspace) {
     if (!isa<number_type>(*element_ty_)) {
-        throw status::ir_expected_scalar;
+        throw status::ir_expected_number;
     }
     if (stride_.size() != shape_.size()) {
         throw status::ir_shape_stride_mismatch;
@@ -124,13 +125,13 @@ bool memref_type::is_dynamic() const { return is_dynamic_shape() || is_dynamic_s
 bool memref_type::is_canonical_stride() const { return stride_ == canonical_stride(shape_); }
 
 auto memref_type::element_alignment() const -> std::int32_t {
-    return ::tinytc::alignment(dyn_cast<number_type>(element_ty())->ty());
+    return ::tinytc::alignment(element_ty());
 }
 auto memref_type::size_in_bytes() const -> std::int64_t {
     if (is_dynamic()) {
         return dynamic;
     }
-    std::size_t s = size(dyn_cast<number_type>(element_ty())->ty());
+    std::size_t s = size(element_ty());
     if (dim() > 0) {
         s *= stride_.back() * shape_.back();
     }
@@ -176,11 +177,57 @@ auto memref_type::canonical_stride(array_view<std::int64_t> shape) -> std::vecto
     return stride;
 }
 
-number_type::number_type(tinytc_compiler_context_t ctx, scalar_type ty)
-    : tinytc_type(TK::TK_number, ctx), ty_{ty} {}
+number_type::number_type(TK tid, tinytc_compiler_context_t ctx) : tinytc_type(tid, ctx) {}
 
-auto number_type::get(tinytc_compiler_context_t ctx, scalar_type ty) -> tinytc_type_t {
-    return ctx->cache()->scalar_tys[static_cast<tinytc_scalar_type_t>(ty)].get();
+integer_type::integer_type(TK tid, tinytc_compiler_context_t ctx) : number_type(tid, ctx) {}
+i8_type::i8_type(tinytc_compiler_context_t ctx) : integer_type(TK::TK_i8, ctx) {}
+i16_type::i16_type(tinytc_compiler_context_t ctx) : integer_type(TK::TK_i16, ctx) {}
+i32_type::i32_type(tinytc_compiler_context_t ctx) : integer_type(TK::TK_i32, ctx) {}
+i64_type::i64_type(tinytc_compiler_context_t ctx) : integer_type(TK::TK_i64, ctx) {}
+index_type::index_type(tinytc_compiler_context_t ctx) : integer_type(TK::TK_index, ctx) {}
+
+float_type::float_type(TK tid, tinytc_compiler_context_t ctx) : number_type(tid, ctx) {}
+bf16_type::bf16_type(tinytc_compiler_context_t ctx) : float_type(TK::TK_bf16, ctx) {}
+f16_type::f16_type(tinytc_compiler_context_t ctx) : float_type(TK::TK_f16, ctx) {}
+f32_type::f32_type(tinytc_compiler_context_t ctx) : float_type(TK::TK_f32, ctx) {}
+f64_type::f64_type(tinytc_compiler_context_t ctx) : float_type(TK::TK_f64, ctx) {}
+
+complex_type::complex_type(TK tid, tinytc_compiler_context_t ctx) : number_type(tid, ctx) {}
+c32_type::c32_type(tinytc_compiler_context_t ctx) : complex_type(TK::TK_c32, ctx) {}
+c64_type::c64_type(tinytc_compiler_context_t ctx) : complex_type(TK::TK_c64, ctx) {}
+
+auto i8_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->i8_ty.get();
+}
+auto i16_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->i16_ty.get();
+}
+auto i32_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->i32_ty.get();
+}
+auto i64_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->i64_ty.get();
+}
+auto index_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->index_ty.get();
+}
+auto bf16_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->bf16_ty.get();
+}
+auto f16_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->f16_ty.get();
+}
+auto f32_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->f32_ty.get();
+}
+auto f64_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->f64_ty.get();
+}
+auto c32_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->c32_ty.get();
+}
+auto c64_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    return ctx->cache()->c64_ty.get();
 }
 
 void_type::void_type(tinytc_compiler_context_t ctx) : tinytc_type(TK::TK_void, ctx) {}

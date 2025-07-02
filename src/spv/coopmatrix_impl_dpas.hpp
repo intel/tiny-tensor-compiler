@@ -63,11 +63,11 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
 
     auto max_rows_in_block(matrix_use use, std::int32_t element_size) const -> std::int32_t;
     auto check_2d_block_io(tinytc_value const &operand, tinytc_value const &pos0) -> bool;
-    auto load_config(scalar_type sty, std::int32_t rows, std::int32_t cols, matrix_use use,
+    auto load_config(tinytc_type_t sty, std::int32_t rows, std::int32_t cols, matrix_use use,
                      transpose trans, std::int32_t cache_level = -1) -> block_config;
     auto load_fun(coopmatrix_type const *result_ty, spv_inst *spv_operand_ty, transpose trans)
         -> spv_inst *;
-    auto prefetch_fun(std::int32_t cache_level, scalar_type sty, spv_inst *spv_operand_ty,
+    auto prefetch_fun(std::int32_t cache_level, tinytc_type_t sty, spv_inst *spv_operand_ty,
                       std::int32_t rows, std::int32_t cols) -> spv_inst *;
     auto store_config(coopmatrix_type const *ct) -> block_config;
     auto store_fun(coopmatrix_type const *val_ty, spv_inst *spv_operand_ty) -> spv_inst *;
@@ -79,7 +79,7 @@ class coopmatrix_impl_dpas : public coopmatrix_impl_block {
 
     using load_key = std::tuple<coopmatrix_type const *, spv_inst *, transpose>;
     using prefetch_key =
-        std::tuple<std::int32_t, scalar_type, spv_inst *, std::int32_t, std::int32_t>;
+        std::tuple<std::int32_t, tinytc_type_t, spv_inst *, std::int32_t, std::int32_t>;
     using store_key = std::tuple<coopmatrix_type const *, spv_inst *>;
     using reduce_key =
         std::tuple<std::int32_t, IK, coopmatrix_type const *, coopmatrix_type const *>;

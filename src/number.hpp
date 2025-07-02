@@ -1,8 +1,8 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
-//
-#ifndef SCALAR_TYPE_20240411_HPP
-#define SCALAR_TYPE_20240411_HPP
+
+#ifndef NUMBER_20250702_HPP
+#define NUMBER_20250702_HPP
 
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -27,4 +27,4 @@ auto bit_width(tinytc_type_t ty) -> std::size_t;
 
 } // namespace tinytc
 
-#endif // SCALAR_TYPE_20240411_HPP
+#endif // NUMBER_20250702_HPP

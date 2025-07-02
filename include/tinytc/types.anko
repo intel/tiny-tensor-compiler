@@ -33,7 +33,7 @@ type @coopmatrix "Coopmatrix type" {
 }
 
 type @group "Group type" {
-    prop %ty => type_t  "element type"
+    prop %element_ty => type_t  "element type"
     prop %size => i64   "group size"
     prop %offset => i64 "offset added on element access"
 }

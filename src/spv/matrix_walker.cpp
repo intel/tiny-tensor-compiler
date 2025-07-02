@@ -3,6 +3,8 @@
 
 #include "spv/matrix_walker.hpp"
 #include "coopmatrix_layout.hpp"
+#include "node/type.hpp"
+#include "spv/converter_aux.hpp"
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
@@ -17,7 +19,7 @@ matrix_walker::matrix_walker(uniquifier &unique, std::int32_t sgs, coopmatrix_la
                              spv_inst *stride0, spv_inst *stride1, checked_flag chk,
                              std::int32_t constant_p)
     : unique_{unique}, layout_{layout}, chk_{chk} {
-    index_ty_ = unique.scalar_ty(scalar_type::index);
+    index_ty_ = get_spv_index_ty(unique, layout.sty->context());
 
     auto &mod = unique_.mod();
     auto crows = unique.constant(layout_.rows);

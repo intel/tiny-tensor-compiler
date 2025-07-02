@@ -7,7 +7,7 @@
 #include "error.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "spv/dope_vector.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
@@ -61,7 +61,7 @@ auto coopmatrix_impl::load(cooperative_matrix_load_inst in, dope_vector const &o
                            spv_inst *operand, spv_inst *pos0, spv_inst *pos1) -> spv_inst * {
     auto ot = get_memref_type(in.operand());
     auto rt = get_coopmatrix_type(in.result());
-    auto pointer_ty = unique_->pointer_ty(ot);
+    auto pointer_ty = get_spv_ty(*unique_, ot);
 
     auto layout = get_layout(cfg(), rt);
     auto matrix_ty = spv_ty(layout);
@@ -146,7 +146,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
     const std::int32_t cols_per_store = [&]() -> std::int32_t {
         std::int32_t cols_per_store = 1;
         const std::int32_t max_cols_per_store = 16;
-        const bool sty_ok = layout.sty != scalar_type::c64;
+        const bool sty_ok = !isa<complex_type>(*layout.sty);
         const bool transpose_ok = in.t() == transpose::T;
         const bool checked_ok =
             in.checked() != checked_flag::cols && in.checked() != checked_flag::both;
@@ -160,7 +160,7 @@ void coopmatrix_impl::store(cooperative_matrix_store_inst in, dope_vector const 
         }
         return cols_per_store;
     }();
-    spv_inst *io_ty = unique().scalar_ty(layout.sty);
+    spv_inst *io_ty = get_spv_ty_non_coopmatrix(unique(), layout.sty);
     spv_inst *io_vec_ty = cols_per_store > 1 ? unique().vec_ty(io_ty, cols_per_store) : io_ty;
     const auto pointer_ty = [&] {
         const auto storage_cls = address_space_to_storage_class(ot->addrspace());
@@ -239,15 +239,15 @@ auto coopmatrix_impl::mul_add(cooperative_matrix_mul_add_inst in, spv_inst *a, s
     auto cl = get_layout(cfg(), ct);
     auto rl = get_layout(cfg(), rt);
 
-    const auto a_ty = dyn_cast<number_type>(at->component_ty())->ty();
-    const auto b_ty = dyn_cast<number_type>(bt->component_ty())->ty();
+    const auto a_ty = at->component_ty();
+    const auto b_ty = bt->component_ty();
     const auto b_component_ty = component_type(b_ty);
-    const auto c_ty = dyn_cast<number_type>(ct->component_ty())->ty();
-    const auto r_ty = dyn_cast<number_type>(rt->component_ty())->ty();
-    const auto spv_b_ty = unique_->scalar_ty(b_ty);
-    const auto spv_b_component_ty = unique_->scalar_ty(b_component_ty);
-    const auto spv_c_ty = unique_->scalar_ty(c_ty);
-    const bool a_and_b_complex = is_complex_type(a_ty) && is_complex_type(b_ty);
+    const auto c_ty = ct->component_ty();
+    const auto r_ty = rt->component_ty();
+    const auto spv_b_ty = get_spv_ty_non_coopmatrix(*unique_, b_ty);
+    const auto spv_b_component_ty = get_spv_ty_non_coopmatrix(*unique_, b_component_ty);
+    const auto spv_c_ty = get_spv_ty_non_coopmatrix(*unique_, c_ty);
+    const bool a_and_b_complex = isa<complex_type>(*a_ty) && isa<complex_type>(*b_ty);
 
     auto &mod = unique_->mod();
     auto result_ty = spv_ty(rl);
@@ -367,10 +367,10 @@ auto coopmatrix_impl::reduce(cooperative_matrix_reduce_inst in, spv_inst *a) -> 
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), at);
     auto matrix_ty = spv_ty(rl);
-    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
-    auto ty = unique_->scalar_ty(sty);
+    auto sty = rt->component_ty();
+    auto ty = get_spv_ty_non_coopmatrix(*unique_, sty);
     auto bool_ty = unique_->bool_ty();
-    auto i32_ty = unique_->scalar_ty(scalar_type::i32);
+    auto i32_ty = unique_->int_ty(32);
 
     auto const binary_arith = [&in](IK op) {
         switch (op) {
@@ -441,7 +441,7 @@ auto coopmatrix_impl::scale(cooperative_matrix_scale_inst in, spv_inst *a, spv_i
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
-    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
+    auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -460,7 +460,7 @@ auto coopmatrix_impl::arith(arith_inst in, spv_inst *a, spv_inst *b) -> spv_inst
     auto rl = get_layout(cfg(), rt);
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto bl = get_layout(cfg(), get_coopmatrix_type(in.b()));
-    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
+    auto sty = rt->component_ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -479,14 +479,13 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
     auto al = get_layout(cfg(), get_coopmatrix_type(in.a()));
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
     spv_inst *result = mod.add<OpUndef>(ty);
     for (LiteralInteger v = 0; v < static_cast<LiteralInteger>(rl.length); ++v) {
         auto a_v = extract(al, a, v);
-        auto r_v = make_unary_op(*unique_, sty, in.get().type_id(), a_v, in.loc());
+        auto r_v = make_unary_op(*unique_, al.sty, in.get().type_id(), a_v, in.loc());
         result = insert(rl, r_v, result, v);
     }
 
@@ -496,10 +495,10 @@ auto coopmatrix_impl::arith_unary(arith_unary_inst in, spv_inst *a) -> spv_inst 
 auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
     auto at = get_coopmatrix_type(in.a());
     auto al = get_layout(cfg(), at);
-    auto a_ty = dyn_cast<number_type>(at->component_ty())->ty();
+    auto a_ty = at->component_ty();
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto r_ty = dyn_cast<number_type>(rt->component_ty())->ty();
+    auto r_ty = rt->component_ty();
     auto ty = spv_ty(rl);
 
     auto &mod = unique_->mod();
@@ -554,7 +553,7 @@ auto coopmatrix_impl::cast(cast_inst in, spv_inst *a) -> spv_inst * {
 auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
     auto rt = get_coopmatrix_type(in.result());
     auto rl = get_layout(cfg(), rt);
-    auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
+    auto sty = rt->component_ty();
     auto spv_result_ty = spv_ty(rl);
 
     if (in.is_zero()) {
@@ -565,11 +564,11 @@ auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
     }
 
     auto const init_vector = [&]() {
-        if (is_complex_type(sty)) {
+        if (isa<complex_type>(*sty)) {
             const auto c = std::get<std::complex<double>>(in.value());
-            auto cty = component_type(sty);
-            auto re = make_constant(*unique_, cty, c.real());
-            auto im = make_constant(*unique_, cty, c.imag());
+            auto comp_ty = component_type(sty);
+            auto re = make_constant(*unique_, comp_ty, c.real());
+            auto im = make_constant(*unique_, comp_ty, c.imag());
             auto vec = std::vector<spv_inst *>(2 * rl.length);
             for (std::int64_t v = 0; v < rl.length; ++v) {
                 vec[2 * v] = re;
@@ -579,36 +578,28 @@ auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
         } else if (rl.ops_per_chan > 1) {
             auto cst = std::visit(
                 overloaded{[&](std::int64_t i) -> spv_inst * {
-                               switch (rl.sty) {
-                               case scalar_type::i8: {
+                               if (isa<i8_type>(*rl.sty)) {
                                    auto v8 =
                                        std::bit_cast<std::uint8_t>(static_cast<std::int8_t>(i));
                                    return unique_->constant(
                                        std::int32_t{v8 | (v8 << 8) | (v8 << 16) | (v8 << 24)});
-                               }
-                               case scalar_type::i16: {
+                               } else if (isa<i16_type>(*rl.sty)) {
                                    auto v16 =
                                        std::bit_cast<std::uint16_t>(static_cast<std::int16_t>(i));
                                    return unique_->constant(std::int32_t{v16 | (v16 << 16)});
                                }
-                               default:
-                                   return nullptr;
-                               }
+                               return nullptr;
                            },
                            [&](double d) -> spv_inst * {
                                const float f = static_cast<float>(d);
-                               switch (rl.sty) {
-                               case scalar_type::bf16: {
+                               if (isa<bf16_type>(*rl.sty)) {
                                    std::uint16_t v16 = bfloat16{f}.bits();
                                    return unique_->constant(std::int32_t{v16 | (v16 << 16)});
-                               }
-                               case scalar_type::f16: {
+                               } else if (isa<f16_type>(*rl.sty)) {
                                    std::uint16_t v16 = half{f}.bits();
                                    return unique_->constant(std::int32_t{v16 | (v16 << 16)});
                                }
-                               default:
-                                   return nullptr;
-                               }
+                               return nullptr;
                            },
                            [&](auto const &) -> spv_inst * { return nullptr; }},
                 in.value());
@@ -624,7 +615,7 @@ auto coopmatrix_impl::constant(constant_inst in) -> spv_inst * {
 }
 
 auto coopmatrix_impl::spv_interface_ty(coopmatrix_layout const &layout) -> spv_inst * {
-    return unique_->scalar_ty(layout.sty);
+    return get_spv_ty_non_coopmatrix(*unique_, layout.sty);
 }
 
 auto coopmatrix_impl::spv_storage_ty(coopmatrix_layout const &layout) -> spv_inst * {
@@ -632,9 +623,9 @@ auto coopmatrix_impl::spv_storage_ty(coopmatrix_layout const &layout) -> spv_ins
         if (layout.ops_per_chan * size(layout.sty) != 4) {
             throw status::internal_compiler_error;
         }
-        return unique_->scalar_ty(scalar_type::i32);
+        return unique_->int_ty(32);
     }
-    return unique_->scalar_ty(component_type(layout.sty));
+    return get_spv_ty_non_coopmatrix(*unique_, component_type(layout.sty));
 }
 
 auto coopmatrix_impl::spv_ty(coopmatrix_layout const &layout) -> spv_inst * {
@@ -658,7 +649,7 @@ auto coopmatrix_impl::extract(coopmatrix_layout const &layout, spv_inst *mat, Li
     }
     const auto ty = spv_interface_ty(layout);
     auto &mod = unique_->mod();
-    if (is_complex_type(layout.sty)) {
+    if (isa<complex_type>(*layout.sty)) {
         const auto storage_ty = spv_storage_ty(layout);
         auto re = mod.add<OpCompositeExtract>(storage_ty, mat, std::vector{2 * v});
         auto im = mod.add<OpCompositeExtract>(storage_ty, mat, std::vector{2 * v + 1});
@@ -685,7 +676,7 @@ auto coopmatrix_impl::insert(coopmatrix_layout const &layout, spv_inst *val, spv
     }
     auto matrix_ty = spv_ty(layout);
     auto &mod = unique_->mod();
-    if (is_complex_type(layout.sty)) {
+    if (isa<complex_type>(*layout.sty)) {
         const auto storage_ty = spv_storage_ty(layout);
         auto re = mod.add<OpCompositeExtract>(storage_ty, val, std::vector{0});
         auto im = mod.add<OpCompositeExtract>(storage_ty, val, std::vector{1});

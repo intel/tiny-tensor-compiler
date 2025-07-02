@@ -4,8 +4,8 @@
 ; RUN: %tinytc-oc -S -O0 < %s | filecheck %s
 
 ; CHECK: %[[#I64:]] = OpTypeInt 64 0
-; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#I8:]] = OpTypeInt 8 0
+; CHECK: %[[#F32:]] = OpTypeFloat 32
 ; CHECK: %[[#F64:]] = OpTypeFloat 64
 ; CHECK: %[[#C64:]] = OpTypeVector %[[#F64]] 2
 ; CHECK: %[[#C64_NULL:]] = OpConstantNull %[[#C64]]

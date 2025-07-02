@@ -90,7 +90,7 @@ void dump_ir_pass::operator()(group_type const &g) {
         return *os_ << v;
     };
     *os_ << "group<";
-    visit(*this, *g.ty());
+    visit(*this, *g.element_ty());
     *os_ << "x";
     val(g.size());
     if (g.offset() != 0) {

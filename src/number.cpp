@@ -1,7 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/type.hpp"
@@ -20,7 +20,7 @@ auto acc_type(tinytc_type_t ty) -> tinytc_type_t {
         overloaded{[](i8_type &ty) -> tinytc_type_t { return i32_type::get(ty.context()); },
                    [](bf16_type &ty) -> tinytc_type_t { return f32_type::get(ty.context()); },
                    [](f16_type &ty) -> tinytc_type_t { return f32_type::get(ty.context()); },
-                   [](auto &ty) -> tinytc_type_t { return &ty; }},
+                   [](tinytc_type &ty) -> tinytc_type_t { return &ty; }},
         *ty);
 }
 
@@ -92,7 +92,7 @@ auto size(tinytc_type_t ty) -> std::size_t {
                             [](f64_type &) -> std::size_t { return 8; },  //
                             [](c32_type &) -> std::size_t { return 8; },  //
                             [](c64_type &) -> std::size_t { return 16; }, //
-                            [](auto &) -> std::size_t {
+                            [](tinytc_type &) -> std::size_t {
                                 // only call size for number types
                                 throw status::ir_expected_number;
                             }},

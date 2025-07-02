@@ -13,13 +13,12 @@
 using namespace tinytc;
 
 int main() {
-    scalar_type sty = scalar_type::f32;
     int64_t M = 64;
     int64_t N = 32;
 
     try {
         auto ctx = make_compiler_context();
-        auto element_ty = get<number_type>(ctx.get(), sty);
+        auto element_ty = get<f32_type>(ctx.get());
         auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
                                    address_space::global);
 

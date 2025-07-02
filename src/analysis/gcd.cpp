@@ -11,7 +11,7 @@
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "support/walk.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
@@ -249,7 +249,7 @@ void gcd_helper::operator()(size_inst in) {
                              }
                              return s_i;
                          },
-                         [&](auto &) -> std::int64_t {
+                         [&](tinytc_type &) -> std::int64_t {
                              throw compilation_error(in.loc(), status::ir_expected_memref_or_group);
                          }},
               *in.operand().ty());
@@ -356,7 +356,7 @@ void gcd_helper::set_from_attributes(tinytc_func &fn) {
     for (std::size_t arg_no = 0; arg_no < fn.num_params(); ++arg_no) {
         auto ty = fn.params()[arg_no].ty();
         if (auto g = dyn_cast<group_type>(ty); g) {
-            ty = g->ty();
+            ty = g->element_ty();
         }
         if (auto mr = dyn_cast<memref_type>(ty); mr) {
             gcd_.set_memref(fn.params()[arg_no], known_memref_info(mr, fn.param_attr(arg_no)));

@@ -16,12 +16,12 @@ namespace tinytc {
 class core_config;
 
 struct coopmatrix_layout {
-    tinytc_type_t cty;
+    tinytc_type_t sty;
     std::int64_t rows, cols, blocks, length, shape1, blocks1;
     std::int32_t ops_per_chan;
 
     inline auto operator==(coopmatrix_layout const &other) const {
-        return cty == other.cty && rows == other.rows && cols == other.cols &&
+        return sty == other.sty && rows == other.rows && cols == other.cols &&
                blocks == other.blocks && length == other.length && shape1 == other.shape1 &&
                blocks1 == other.blocks1 && ops_per_chan == other.ops_per_chan;
     }
@@ -43,7 +43,7 @@ auto get_layout(core_config const &cfg, coopmatrix_type const *ct) -> coopmatrix
 namespace std {
 template <> struct hash<tinytc::coopmatrix_layout> {
     inline auto operator()(tinytc::coopmatrix_layout const &key) const -> std::size_t {
-        return tinytc::fnv1a_combine(key.cty, key.rows, key.cols, key.blocks, key.length,
+        return tinytc::fnv1a_combine(key.sty, key.rows, key.cols, key.blocks, key.length,
                                      key.shape1, key.blocks1, key.ops_per_chan);
     }
 };

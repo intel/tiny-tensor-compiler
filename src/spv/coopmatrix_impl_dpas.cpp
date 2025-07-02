@@ -9,7 +9,10 @@
 #include "matrix_ext_info.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
+#include "node/visit.hpp"
+#include "number.hpp"
 #include "spv/block2d_diy.hpp"
+#include "spv/converter_aux.hpp"
 #include "spv/coopmatrix_impl.hpp"
 #include "spv/defs.hpp"
 #include "spv/dope_vector.hpp"
@@ -24,6 +27,7 @@
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/math.hpp"
+#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <sstream>
@@ -33,17 +37,13 @@
 
 namespace tinytc::spv {
 
-auto precision(scalar_type sty) -> char const * {
-    switch (sty) {
-    case scalar_type::f16:
-        return "hf";
-    case scalar_type::bf16:
-        return "bf";
-    case scalar_type::i8:
-        return "s8";
-    default:
-        throw status::internal_compiler_error;
-    }
+auto precision(tinytc_type_t ty) -> char const * {
+    return visit(
+        overloaded{[&](i8_type &) { return "s8"; },   //
+                   [&](bf16_type &) { return "bf"; }, //
+                   [&](f16_type &) { return "hf"; },  //
+                   [](tinytc_type &) -> char const * { throw status::internal_compiler_error; }},
+        *ty);
 }
 
 auto coopmatrix_impl_dpas::max_rows_in_block(matrix_use use, std::int32_t element_size) const
@@ -59,7 +59,7 @@ auto coopmatrix_impl_dpas::check_2d_block_io(tinytc_value const &operand, tinytc
     -> bool {
     if (auto mi = gcd().get_memref_if(operand); mi) {
         auto const mt = get_memref_type(operand);
-        const auto sty_size = size(dyn_cast<number_type>(mt->element_ty())->ty());
+        const auto sty_size = size(mt->element_ty());
         auto const &block_io = cfg().matrix->block_io();
 
         const bool sfid_ok = mt->addrspace() == address_space::global;
@@ -75,7 +75,7 @@ auto coopmatrix_impl_dpas::check_2d_block_io(tinytc_value const &operand, tinytc
     return false;
 }
 
-auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::int32_t cols,
+auto coopmatrix_impl_dpas::load_config(tinytc_type_t sty, std::int32_t rows, std::int32_t cols,
                                        matrix_use use, transpose trans, int32_t cache_level)
     -> block_config {
     auto cfg = block_config{};
@@ -119,7 +119,7 @@ auto coopmatrix_impl_dpas::load_config(scalar_type sty, std::int32_t rows, std::
 
         const auto ops_per_chan = 4 / cfg.element_size;
         cfg.rows /= ops_per_chan;
-        cfg.sty = scalar_type::i32;
+        cfg.sty = i32_type::get(sty->context());
         cfg.element_size = 4;
         cfg.pos0_shr = ilog2(ops_per_chan);
         cfg.vnni = false;
@@ -155,12 +155,12 @@ auto coopmatrix_impl_dpas::load_fun(coopmatrix_type const *result_ty, spv_inst *
     return lookup(load_funs_, key, [&](load_key const &key) {
         const auto [result_ty, spv_operand_ty, trans] = key;
 
-        auto sty = dyn_cast<number_type>(result_ty->component_ty())->ty();
+        auto sty = result_ty->component_ty();
         const auto cfg =
             load_config(sty, result_ty->rows(), result_ty->cols(), result_ty->use(), trans);
         auto code = load_block2d_native(cfg, tmp_);
 
-        auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+        auto spv_i32_ty = unique().int_ty(32);
         auto spv_result_ty = spv_ty(result_ty);
         auto fun_ty = unique().function_ty(
             spv_result_ty, array_view<spv_inst *>{spv_operand_ty, spv_i32_ty, spv_i32_ty,
@@ -171,7 +171,7 @@ auto coopmatrix_impl_dpas::load_fun(coopmatrix_type const *result_ty, spv_inst *
     });
 }
 
-auto coopmatrix_impl_dpas::prefetch_fun(std::int32_t cache_level, scalar_type sty,
+auto coopmatrix_impl_dpas::prefetch_fun(std::int32_t cache_level, tinytc_type_t sty,
                                         spv_inst *spv_operand_ty, std::int32_t rows,
                                         std::int32_t cols) -> spv_inst * {
     const auto key = prefetch_key{cache_level, sty, spv_operand_ty, rows, cols};
@@ -181,7 +181,7 @@ auto coopmatrix_impl_dpas::prefetch_fun(std::int32_t cache_level, scalar_type st
         const auto cfg = load_config(sty, rows, cols, matrix_use::acc, transpose::N, cache_level);
         auto code = prefetch_block2d_native(cfg, tmp_);
 
-        auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+        auto spv_i32_ty = unique().int_ty(32);
         auto spv_void_ty = unique().void_ty();
         auto fun_ty = unique().function_ty(
             spv_void_ty, array_view<spv_inst *>{spv_operand_ty, spv_i32_ty, spv_i32_ty, spv_i32_ty,
@@ -196,7 +196,7 @@ auto coopmatrix_impl_dpas::store_config(coopmatrix_type const *ct) -> block_conf
     constexpr std::int32_t max_cols_in_block = 8;
 
     auto cfg = block_config{};
-    cfg.sty = dyn_cast<number_type>(ct->component_ty())->ty();
+    cfg.sty = ct->component_ty();
     cfg.element_size = size(cfg.sty);
     cfg.array_length = 1;
     cfg.rows = ct->rows();
@@ -233,7 +233,7 @@ auto coopmatrix_impl_dpas::store_fun(coopmatrix_type const *val_ty, spv_inst *sp
 
         auto spv_void_ty = unique().void_ty();
         auto spv_val_ty = spv_ty(val_ty);
-        auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+        auto spv_i32_ty = unique().int_ty(32);
         auto fun_ty = unique().function_ty(
             spv_void_ty, array_view<spv_inst *>{spv_val_ty, spv_operand_ty, spv_i32_ty, spv_i32_ty,
                                                 spv_i32_ty, spv_i32_ty, spv_i32_ty});
@@ -255,10 +255,10 @@ auto coopmatrix_impl_dpas::mul_add_fun(coopmatrix_type const *at, coopmatrix_typ
 
         auto oasm = std::ostringstream{};
 
-        auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
-        auto bt_sty = dyn_cast<number_type>(bt->component_ty())->ty();
-        auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
-        auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
+        auto at_sty = at->component_ty();
+        auto bt_sty = bt->component_ty();
+        auto ct_sty = ct->component_ty();
+        auto rt_sty = rt->component_ty();
         const std::int32_t ops_per_chan = xe::channel_size / size(at_sty);
         const std::int32_t K = ops_per_chan * xe::sdepth;
 
@@ -363,8 +363,8 @@ auto coopmatrix_impl_dpas::reduce_fun(std::int32_t sgs, IK op, coopmatrix_type c
         auto rl = get_layout(cfg(), rt);
         auto al = get_layout(cfg(), at);
         auto matrix_ty = spv_ty(rl);
-        const auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
-        const auto sty = dyn_cast<number_type>(rt->component_ty())->ty();
+        const auto at_sty = at->component_ty();
+        const auto sty = rt->component_ty();
         const auto sty_size = size(sty);
 
         auto oasm = std::ostringstream{};
@@ -486,12 +486,12 @@ auto coopmatrix_impl_dpas::load(cooperative_matrix_load_inst in, dope_vector con
     }
 
     auto ot = get_memref_type(in.operand());
-    auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
+    auto ot_sty = ot->element_ty();
     auto ct = get_coopmatrix_type(in.result());
-    auto fun = load_fun(ct, unique().pointer_ty(ot), in.t());
+    auto fun = load_fun(ct, get_spv_ty(unique(), ot), in.t());
 
     auto &mod = unique().mod();
-    auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+    auto spv_i32_ty = unique().int_ty(32);
     auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
     auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
     auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
@@ -512,10 +512,10 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst in, spv_inst 
     auto bt = get_coopmatrix_type(in.b());
     auto ct = get_coopmatrix_type(in.c());
     auto rt = get_coopmatrix_type(in.result());
-    auto at_sty = dyn_cast<number_type>(at->component_ty())->ty();
-    auto bt_sty = dyn_cast<number_type>(bt->component_ty())->ty();
-    auto ct_sty = dyn_cast<number_type>(ct->component_ty())->ty();
-    auto rt_sty = dyn_cast<number_type>(rt->component_ty())->ty();
+    auto at_sty = at->component_ty()->type_id();
+    auto bt_sty = bt->component_ty()->type_id();
+    auto ct_sty = ct->component_ty()->type_id();
+    auto rt_sty = rt->component_ty()->type_id();
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const bool have_gemm =
         cfg().matrix->have_gemm(at_sty, bt_sty, ct_sty, rt_sty, rt->rows(), rt->cols(), at->cols());
@@ -530,7 +530,7 @@ auto coopmatrix_impl_dpas::mul_add(cooperative_matrix_mul_add_inst in, spv_inst 
 void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst in, dope_vector const &odv,
                                     spv_inst *pointer, spv_inst *pos0, spv_inst *pos1) {
     auto ot = get_memref_type(in.operand());
-    auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
+    auto ot_sty = ot->element_ty();
     const bool sgs_ok = cfg().subgroup_size == cfg().matrix->required_subgroup_size();
     const auto type_ok = size(ot_sty) <= 4;
     const auto block_io_ok = check_2d_block_io(in.operand(), in.pos0());
@@ -539,12 +539,12 @@ void coopmatrix_impl_dpas::prefetch(cooperative_matrix_prefetch_inst in, dope_ve
         coopmatrix_impl_block::prefetch(in, odv, pointer, pos0, pos1);
     } else {
         auto fun =
-            prefetch_fun(in.cache_level(), ot_sty, unique().pointer_ty(ot), in.rows(), in.cols());
+            prefetch_fun(in.cache_level(), ot_sty, get_spv_ty(unique(), ot), in.rows(), in.cols());
 
         if (fun) {
             auto &mod = unique().mod();
             auto spv_void_ty = unique().void_ty();
-            auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+            auto spv_i32_ty = unique().int_ty(32);
             auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
             auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
             auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);
@@ -573,12 +573,12 @@ void coopmatrix_impl_dpas::store(cooperative_matrix_store_inst in, dope_vector c
         coopmatrix_impl_block::store(in, odv, val, pointer, pos0, pos1);
     } else {
         auto ot = get_memref_type(in.operand());
-        auto ot_sty = dyn_cast<number_type>(ot->element_ty())->ty();
-        auto fun = store_fun(ct, unique().pointer_ty(ot));
+        auto ot_sty = ot->element_ty();
+        auto fun = store_fun(ct, get_spv_ty(unique(), ot));
 
         auto &mod = unique().mod();
         auto spv_void_ty = unique().void_ty();
-        auto spv_i32_ty = unique().scalar_ty(scalar_type::i32);
+        auto spv_i32_ty = unique().int_ty(32);
         auto csize = unique().constant(static_cast<std::int32_t>(size(ot_sty)));
         auto shape0_i32 = mod.add<OpSConvert>(spv_i32_ty, odv.shape(0));
         auto width_in_bytes = mod.add<OpIMul>(spv_i32_ty, shape0_i32, csize);

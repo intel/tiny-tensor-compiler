@@ -35,7 +35,6 @@ by actual values:
 
        .. code:: C
 
-          tinytc_scalar_type_t sty = ...;
           int64_t M = ...;
           int64_t N = ...;
 
@@ -57,7 +56,7 @@ by actual values:
           tinytc_prog_create(&program, ctx, NULL);
 
           // Get types
-          tinytc_number_type_get(&element_ty, ctx, sty);
+          tinytc_f32_type_get(&element_ty, ctx);
           int64_t shape[2] = {M, N};
           tinytc_memref_type_get(&ty, element_ty, 2, shape, 0, NULL, tinytc_address_space_global);
 
@@ -100,12 +99,11 @@ by actual values:
 
        .. code:: C++
 
-          scalar_type sty = ...;
           int64_t M = ...;
           int64_t N = ...;
 
           auto ctx = make_compiler_context();
-          auto element_ty = get<number_type>(ctx.get(), sty);
+          auto element_ty = get<f32_type>(ctx.get());
           auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
                                      address_space::global);
 

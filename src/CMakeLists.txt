@@ -38,6 +38,7 @@ set(SOURCES
     node/region.cpp
     node/prog.cpp
     node/value.cpp
+    number.cpp
     parser/parse_context.cpp
     parser.cpp
     pass/check_ir.cpp
@@ -61,7 +62,6 @@ set(SOURCES
     recipe.cpp
     recipe/small_gemm_batched.cpp
     recipe/tall_and_skinny.cpp
-    scalar_type.cpp
     spv/block2d_diy.cpp
     spv/capex_util.cpp
     spv/converter.cpp

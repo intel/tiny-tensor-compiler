@@ -30,7 +30,7 @@ capex::capex(uniquifier &unique) : unique_{&unique} {}
 void capex::operator()(spv_inst const &) {}
 void capex::operator()(OpAtomicStore const &in) {
     auto ty = visit(overloaded{[](inst_with_return_type auto &a) -> spv_inst * { return a.type(); },
-                               [](auto &) -> spv_inst * { return nullptr; }},
+                               [](spv_inst &) -> spv_inst * { return nullptr; }},
                     *in.op3());
     if (!ty) {
         throw status::internal_compiler_error;
@@ -51,7 +51,7 @@ auto capex::float_atomic_class(spv_inst *raw_ty, spv_inst *op0)
     auto pointer_ty = visit(overloaded{[](inst_with_return_type auto &a) -> OpTypePointer * {
                                            return dyn_cast<OpTypePointer>(a.type());
                                        },
-                                       [](auto &) -> OpTypePointer * { return nullptr; }},
+                                       [](spv_inst &) -> OpTypePointer * { return nullptr; }},
                             *op0);
     if (!pointer_ty) {
         throw status::internal_compiler_error;

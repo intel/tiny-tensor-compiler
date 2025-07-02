@@ -5,7 +5,8 @@
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
 #include "matrix_ext_info.hpp"
-#include "scalar_type.hpp"
+#include "node/type.hpp"
+#include "number.hpp"
 #include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
@@ -34,7 +35,8 @@ auto suggest_subgroup_size(array_view<blas_shape> const &shapes, ::tinytc_core_i
 
     for (auto &shape : shapes) {
         auto const &mext = info.matrix();
-        if (shape.is_gemm && mext.have_precision(shape.op1_ty, shape.op2_ty, shape.dst_ty)) {
+        if (shape.is_gemm && mext.have_precision(shape.op1_ty->type_id(), shape.op2_ty->type_id(),
+                                                 shape.dst_ty->type_id())) {
             return mext.required_subgroup_size();
         }
     }
@@ -167,6 +169,6 @@ auto suggest_subgroup_size_and_tiling(array_view<blas_shape> const &shapes,
 } // namespace tinytc
 
 std::size_t std::hash<tinytc::blas_shape>::operator()(tinytc::blas_shape const &x) const {
-    return fnv1a_combine(x.op1_ty, x.op2_ty, x.dst_ty, x.is_gemm, x.shape[0], x.shape[1]);
+    return tinytc::fnv1a_combine(x.op1_ty, x.op2_ty, x.dst_ty, x.is_gemm, x.shape[0], x.shape[1]);
 }
 

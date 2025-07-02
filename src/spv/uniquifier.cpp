@@ -3,7 +3,8 @@
 
 #include "spv/uniquifier.hpp"
 #include "node/type.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
+#include "spv/defs.hpp"
 #include "spv/instructions.hpp"
 #include "spv/lut.hpp"
 #include "spv/module.hpp"
@@ -28,9 +29,7 @@ auto address_space_to_storage_class(address_space as) -> StorageClass {
     return as == address_space::local ? StorageClass::Workgroup : StorageClass::CrossWorkgroup;
 }
 
-uniquifier::uniquifier(tinytc_spv_mod &m) : mod_(&m) {
-    std::fill(std::begin(scalar_tys_), std::end(scalar_tys_), nullptr);
-}
+uniquifier::uniquifier(tinytc_spv_mod &m) : mod_(&m) {}
 
 auto uniquifier::asm_target() -> spv_inst * {
     if (!asm_target_) {
@@ -60,10 +59,10 @@ auto uniquifier::builtin_alignment(BuiltIn b) -> std::int32_t {
     case BuiltIn::NumEnqueuedSubgroups:
     case BuiltIn::SubgroupId:
     case BuiltIn::SubgroupLocalInvocationId:
-        return alignment(scalar_type::i32);
+        return 4; // i32
     case BuiltIn::GlobalLinearId:
     case BuiltIn::LocalInvocationIndex:
-        return alignment(scalar_type::index);
+        return mod().context()->index_bit_width() / 8; // index
     case BuiltIn::GlobalSize:
     case BuiltIn::GlobalInvocationId:
     case BuiltIn::WorkgroupSize:
@@ -72,8 +71,7 @@ auto uniquifier::builtin_alignment(BuiltIn b) -> std::int32_t {
     case BuiltIn::NumWorkgroups:
     case BuiltIn::WorkgroupId:
     case BuiltIn::GlobalOffset:
-        return alignment(scalar_type::index, vector_size::v3);
-        break;
+        return 4 * (mod().context()->index_bit_width() / 8); // index x 3
     default:
         throw status::internal_compiler_error;
     }
@@ -88,10 +86,10 @@ auto uniquifier::builtin_pointee_ty(BuiltIn b) -> spv_inst * {
     case BuiltIn::NumEnqueuedSubgroups:
     case BuiltIn::SubgroupId:
     case BuiltIn::SubgroupLocalInvocationId:
-        return scalar_ty(scalar_type::i32);
+        return int_ty(32); // i32
     case BuiltIn::GlobalLinearId:
     case BuiltIn::LocalInvocationIndex:
-        return scalar_ty(scalar_type::index);
+        return int_ty(mod().context()->index_bit_width()); // index
     case BuiltIn::GlobalSize:
     case BuiltIn::GlobalInvocationId:
     case BuiltIn::WorkgroupSize:
@@ -99,9 +97,10 @@ auto uniquifier::builtin_pointee_ty(BuiltIn b) -> spv_inst * {
     case BuiltIn::LocalInvocationId:
     case BuiltIn::NumWorkgroups:
     case BuiltIn::WorkgroupId:
-    case BuiltIn::GlobalOffset:
-        return index3_ty();
-        break;
+    case BuiltIn::GlobalOffset: {
+        auto index_ty = int_ty(mod().context()->index_bit_width());
+        return vec_ty(index_ty, vector_size::v3); // index x 3
+    }
     default:
         throw status::internal_compiler_error;
     }
@@ -126,11 +125,30 @@ void uniquifier::capability(Capability cap) {
 }
 
 auto uniquifier::constant(LiteralContextDependentNumber cst) -> spv_inst * {
-    return lookup(cst_map_, cst, [&](LiteralContextDependentNumber const &cst) {
-        scalar_type sty = std::visit(
-            overloaded{[](auto const &c) { return to_scalar_type_v<std::decay_t<decltype(c)>>; }},
-            cst);
-        return mod_->add_to<OpConstant>(section::type_const_var, scalar_ty(sty), cst);
+    return lookup(cst_map_, cst, [&](LiteralContextDependentNumber cst) {
+        const auto visitor = overloaded{
+            [&](std::int8_t &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, int_ty(8), cst);
+            },
+            [&](std::int16_t &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, int_ty(16), cst);
+            },
+            [&](std::int32_t &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, int_ty(32), cst);
+            },
+            [&](std::int64_t &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, int_ty(64), cst);
+            },
+            [&](half &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, float_ty(16), cst);
+            },
+            [&](float &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, float_ty(32), cst);
+            },
+            [&](double &) -> spv_inst * {
+                return mod_->add_to<OpConstant>(section::type_const_var, float_ty(64), cst);
+            }};
+        return std::visit(visitor, cst);
     });
 }
 
@@ -166,7 +184,11 @@ auto uniquifier::bool_ty() -> spv_inst * {
     return bool_ty_;
 }
 
-auto uniquifier::bool2_ty() -> spv_inst * { return vec_ty(bool_ty(), vector_size::v2); }
+auto uniquifier::float_ty(std::int32_t width) -> spv_inst * {
+    return lookup(float_tys_, width, [&](std::int32_t width) {
+        return mod_->add_to<OpTypeFloat>(section::type_const_var, width);
+    });
+}
 
 auto uniquifier::function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst * {
     const auto map_key = fnv1a_step(fnv1a_step(fnv1a0(), return_ty), params);
@@ -184,8 +206,10 @@ auto uniquifier::function_ty(spv_inst *return_ty, array_view<spv_inst *> params)
         ->second;
 }
 
-auto uniquifier::index3_ty() -> spv_inst * {
-    return vec_ty(scalar_ty(scalar_type::index), vector_size::v3);
+auto uniquifier::int_ty(std::int32_t width) -> spv_inst * {
+    return lookup(int_tys_, width, [&](std::int32_t width) {
+        return mod_->add_to<OpTypeInt>(section::type_const_var, width, 0);
+    });
 }
 
 auto uniquifier::pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment)
@@ -201,59 +225,6 @@ auto uniquifier::pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t
             }
             return pointer_ty;
         });
-}
-
-auto uniquifier::pointer_ty(memref_type const *mt) -> spv_inst * {
-    const auto storage_cls = address_space_to_storage_class(mt->addrspace());
-    auto ty = scalar_ty(dyn_cast<number_type>(mt->element_ty())->ty());
-    const auto align = mt->element_alignment();
-    return pointer_ty(storage_cls, ty, align);
-}
-
-auto uniquifier::scalar_ty(scalar_type sty) -> spv_inst * {
-    auto const make_ty = [this](scalar_type sty) -> spv_inst * {
-        switch (sty) {
-        case scalar_type::i8:
-            return mod_->add_to<OpTypeInt>(section::type_const_var, 8, 0);
-        case scalar_type::i16:
-            return mod_->add_to<OpTypeInt>(section::type_const_var, 16, 0);
-        case scalar_type::i32:
-            return mod_->add_to<OpTypeInt>(section::type_const_var, 32, 0);
-        case scalar_type::i64:
-            return mod_->add_to<OpTypeInt>(section::type_const_var, 64, 0);
-        case scalar_type::index: {
-            const auto sz = size(scalar_type::index);
-            if (sz == 8) {
-                return scalar_ty(scalar_type::i64);
-            }
-            return scalar_ty(scalar_type::i32);
-        }
-        case scalar_type::bf16:
-            return scalar_ty(scalar_type::i16);
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            return mod_->add_to<OpTypeFloat>(section::type_const_var, size(sty) * 8);
-        case scalar_type::c32: {
-            auto f32_ty = scalar_ty(scalar_type::f32);
-            return vec_ty(f32_ty, vector_size::v2);
-        }
-        case scalar_type::c64: {
-            auto f64_ty = scalar_ty(scalar_type::f64);
-            return vec_ty(f64_ty, vector_size::v2);
-        }
-        }
-        throw status::internal_compiler_error;
-    };
-
-    const auto index = static_cast<tinytc_scalar_type_t>(sty);
-    if (index < 0 || index >= scalar_tys_.size()) {
-        throw status::internal_compiler_error;
-    }
-    if (!scalar_tys_[index]) {
-        scalar_tys_[index] = make_ty(sty);
-    }
-    return scalar_tys_[index];
 }
 
 auto uniquifier::vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst * {

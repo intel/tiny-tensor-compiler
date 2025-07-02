@@ -3,7 +3,7 @@
 
 #include "device_info.hpp"
 #include "gemm_tools.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "tiling.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"

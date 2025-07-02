@@ -4,19 +4,20 @@
 #ifndef BLOCK2D_DIY_20250219_HPP
 #define BLOCK2D_DIY_20250219_HPP
 
+#include "tinytc/types.h"
+
 #include <array>
 #include <cstdint>
 #include <string>
 
 namespace tinytc {
 class temp_counter;
-enum class scalar_type;
 } // namespace tinytc
 
 namespace tinytc::spv {
 
 struct block_config {
-    scalar_type sty;
+    tinytc_type_t sty;
     std::int32_t element_size;
     std::int32_t array_length;
     std::int32_t rows;
@@ -40,7 +41,7 @@ struct block_config {
 auto lsc_data_size(std::int32_t element_size) -> std::int32_t;
 auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
     -> std::array<std::int32_t, 2u>;
-auto visa_type(scalar_type sty) -> char const *;
+auto visa_type(tinytc_type_t ty) -> char const *;
 
 auto load_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;
 auto prefetch_block2d_native(block_config const &cfg, temp_counter &make_tmp) -> std::string;

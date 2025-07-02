@@ -62,25 +62,26 @@ auto region_origin(std::int32_t element_size, std::int32_t byte_offset)
     return {byte_offset / xe::grf_size, byte_offset % xe::grf_size / element_size};
 }
 auto visa_type(tinytc_type_t ty) -> char const * {
-    return visit(overloaded{[&](i8_type &) { return "b"; },  //
-                            [&](i16_type &) { return "w"; }, //
-                            [&](i32_type &) { return "d"; }, //
-                            [&](i64_type &) { return "q"; }, //
-                            [&](index_type &ty) {
-                                const auto idx_width = ty.context()->index_bit_width();
-                                if (idx_width == 64) {
-                                    return "q";
-                                } else if (idx_width == 32) {
-                                    return "d";
-                                }
-                                throw status::not_implemented;
-                            },
-                            [&](bf16_type &) { return "bf"; }, //
-                            [&](f16_type &) { return "hf"; },  //
-                            [&](f32_type &) { return "f"; },   //
-                            [&](f64_type &) { return "df"; },  //
-                            [](auto &) -> char const * { throw status::internal_compiler_error; }},
-                 *ty);
+    return visit(
+        overloaded{[&](i8_type &) { return "b"; },  //
+                   [&](i16_type &) { return "w"; }, //
+                   [&](i32_type &) { return "d"; }, //
+                   [&](i64_type &) { return "q"; }, //
+                   [&](index_type &ty) {
+                       const auto idx_width = ty.context()->index_bit_width();
+                       if (idx_width == 64) {
+                           return "q";
+                       } else if (idx_width == 32) {
+                           return "d";
+                       }
+                       throw status::not_implemented;
+                   },
+                   [&](bf16_type &) { return "bf"; }, //
+                   [&](f16_type &) { return "hf"; },  //
+                   [&](f32_type &) { return "f"; },   //
+                   [&](f64_type &) { return "df"; },  //
+                   [](tinytc_type &) -> char const * { throw status::internal_compiler_error; }},
+        *ty);
 }
 
 /**

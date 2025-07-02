@@ -7,7 +7,7 @@
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -471,27 +471,29 @@ void lifetime_stop_inst::setup_and_check() {}
 void load_inst::setup_and_check() {
     auto ty = result().ty();
 
-    visit(overloaded{
-              [&](group_type &g) {
-                  if (g.ty() != ty) {
-                      throw compilation_error(loc(), {&operand()},
-                                              status::ir_operand_type_must_match_return_type);
-                  }
-                  if (static_cast<std::int64_t>(index_list().size()) != 1) {
-                      throw compilation_error(loc(), status::ir_invalid_number_of_indices);
-                  }
-              },
-              [&](memref_type &m) {
-                  if (m.element_ty() != ty) {
-                      throw compilation_error(loc(), {&operand()},
-                                              status::ir_operand_type_must_match_return_type);
-                  }
-                  if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
-                      throw compilation_error(loc(), status::ir_invalid_number_of_indices);
-                  }
-              },
-              [&](auto &) { throw compilation_error(loc(), status::ir_expected_memref_or_group); }},
-          *operand().ty());
+    visit(
+        overloaded{[&](group_type &g) {
+                       if (g.element_ty() != ty) {
+                           throw compilation_error(loc(), {&operand()},
+                                                   status::ir_operand_type_must_match_return_type);
+                       }
+                       if (static_cast<std::int64_t>(index_list().size()) != 1) {
+                           throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+                       }
+                   },
+                   [&](memref_type &m) {
+                       if (m.element_ty() != ty) {
+                           throw compilation_error(loc(), {&operand()},
+                                                   status::ir_operand_type_must_match_return_type);
+                       }
+                       if (m.dim() != static_cast<std::int64_t>(index_list().size())) {
+                           throw compilation_error(loc(), status::ir_invalid_number_of_indices);
+                       }
+                   },
+                   [&](tinytc_type &) {
+                       throw compilation_error(loc(), status::ir_expected_memref_or_group);
+                   }},
+        *operand().ty());
 }
 
 void parallel_inst::setup_and_check() {
@@ -507,7 +509,7 @@ void size_inst::setup_and_check() {
     const bool range_ok =
         visit(overloaded{[&](group_type &) -> bool { return 0 <= mode() && mode() < 1; },
                          [&](memref_type &m) -> bool { return 0 <= mode() && mode() < m.dim(); },
-                         [&](auto &) -> bool {
+                         [&](tinytc_type &) -> bool {
                              throw compilation_error(loc(), status::ir_expected_memref_or_group);
                          }},
               *operand().ty());
@@ -1125,7 +1127,7 @@ void native_exp2_inst::setup_and_check() {
 
 void subgroup_operation_inst::setup_and_check() {}
 void subgroup_operation_inst::setup_and_check(support_flags support) {
-    if (isa<number_type>(*a().ty())) {
+    if (!isa<number_type>(*a().ty())) {
         throw compilation_error(loc(), {&a()}, status::ir_expected_number);
     }
     if (!(support & supports_complex) && isa<complex_type>(*a().ty())) {

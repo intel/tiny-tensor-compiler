@@ -50,12 +50,10 @@ class uniquifier {
     // types
     auto array_ty(spv_inst *element_ty, std::int32_t length) -> spv_inst *;
     auto bool_ty() -> spv_inst *;
-    auto bool2_ty() -> spv_inst *;
+    auto float_ty(std::int32_t width) -> spv_inst *;
     auto function_ty(spv_inst *return_ty, array_view<spv_inst *> params) -> spv_inst *;
-    auto index3_ty() -> spv_inst *;
+    auto int_ty(std::int32_t width) -> spv_inst *;
     auto pointer_ty(StorageClass cls, spv_inst *pointee_ty, std::int32_t alignment) -> spv_inst *;
-    auto pointer_ty(memref_type const *mt) -> spv_inst *;
-    auto scalar_ty(scalar_type sty) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, std::int32_t length) -> spv_inst *;
     auto vec_ty(spv_inst *component_ty, vector_size length) -> spv_inst *;
     auto void_ty() -> spv_inst *;
@@ -93,8 +91,7 @@ class uniquifier {
     std::unordered_map<std::tuple<StorageClass, spv_inst *, std::int32_t>, spv_inst *,
                        pointer_key_hash>
         pointer_tys_;
-    spv_inst *i8_ty_, i16_ty_, i32_ty_, i64_ty_, index_ty_, bf16_ty_, f16_ty_, f32_ty_, f64_ty_,
-        c32_ty_, c64_ty_;
+    std::unordered_map<std::int32_t, spv_inst *> int_tys_, float_tys_;
     std::unordered_map<std::pair<spv_inst *, std::int32_t>, spv_inst *, array_key_hash> vec_tys_;
     spv_inst *void_ty_ = nullptr;
 };

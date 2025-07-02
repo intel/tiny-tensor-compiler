@@ -17,11 +17,22 @@
 
 namespace tinytc::test {
 
-auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
-                       scalar_type alpha_ty, scalar_type A_ty, scalar_type beta_ty,
-                       scalar_type B_ty,
+auto make_blas_a2_prog(compiler_context const &ctx, char const *name, tensor_layout const &layoutA,
+                       tensor_layout const &layoutB, tinytc_type_t alpha_ty, tinytc_type_t A_ty,
+                       tinytc_type_t beta_ty, tinytc_type_t B_ty,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
                        std::int32_t work_group_size = 0) -> prog;
+
+template <typename AlphaT, typename AT, typename BetaT, typename BT>
+auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
+                       std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
+                       std::int32_t work_group_size = 0) -> prog {
+    auto ctx = make_compiler_context();
+    return make_blas_a2_prog(
+        ctx, name, layoutA, layoutB, get<to_number_type_t<AlphaT>>(ctx.get()),
+        get<to_number_type_t<AT>>(ctx.get()), get<to_number_type_t<BetaT>>(ctx.get()),
+        get<to_number_type_t<BT>>(ctx.get()), std::move(make_op), work_group_size);
+}
 
 template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby {
   public:
@@ -38,10 +49,8 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby
     auto lB() const -> tensor_layout const & { return lB_; }
 
     auto make_prog() const -> prog {
-        return make_blas_a2_prog(
-            kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
-            to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
-            [&](region_builder &bb, array_view<tinytc_value_t> params) {
+        return make_blas_a2_prog<AlphaT, AT, BetaT, BT>(
+            kernel_name, lA_, lB_, [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<axpby_inst>(false, tA_, params[0], params[1], params[2], params[3]);
             });
     }
@@ -97,9 +106,8 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class cumsu
     auto lB() const -> tensor_layout const & { return lB_; }
 
     auto make_prog() const -> prog {
-        return make_blas_a2_prog(
-            kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
-            to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
+        return make_blas_a2_prog<AlphaT, AT, BetaT, BT>(
+            kernel_name, lA_, lB_,
             [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<cumsum_inst>(false, mode_, params[0], params[1], params[2], params[3]);
             },
@@ -168,9 +176,8 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT> class sum {
     auto lB() const -> tensor_layout const & { return lB_; }
 
     auto make_prog() const -> prog {
-        return make_blas_a2_prog(
-            kernel_name, lA_, lB_, to_scalar_type_v<AlphaT>, to_scalar_type_v<AT>,
-            to_scalar_type_v<BetaT>, to_scalar_type_v<BT>,
+        return make_blas_a2_prog<AlphaT, AT, BetaT, BT>(
+            kernel_name, lA_, lB_,
             [&](region_builder &bb, array_view<tinytc_value_t> params) {
                 bb.create<sum_inst>(false, tA_, params[0], params[1], params[2], params[3]);
             },

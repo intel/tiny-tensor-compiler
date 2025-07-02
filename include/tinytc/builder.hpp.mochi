@@ -8,6 +8,8 @@
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.hpp"
 
+#include <complex>
+
 namespace tinytc {
 
 ////////////////////////////
@@ -176,6 +178,14 @@ template <> struct to_number_type<float> {
 //! to_number_type specialization
 template <> struct to_number_type<double> {
     using type = f64_type; ///< type
+};
+//! to_number_type specialization
+template <> struct to_number_type<std::complex<float>> {
+    using type = c32_type; ///< type
+};
+//! to_number_type specialization
+template <> struct to_number_type<std::complex<double>> {
+    using type = c64_type; ///< type
 };
 /**
  * Convenience variable for to_number_type.

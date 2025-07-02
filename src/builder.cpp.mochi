@@ -5,11 +5,13 @@
 #include "location.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
+#include "node/visit.hpp"
 #include "tinytc/builder.h"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
+#include "util/overloaded.hpp"
 
 #include <complex>
 #include <cstdint>
@@ -66,41 +68,29 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_typ
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *bt = dyn_cast<boolean_type>(ty); bt != nullptr) {
-        return exception_to_status_code(
-            [&] { *instr = constant_inst::create(true, ty, get_optional(loc)).release(); });
+    if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
+        ty = ct->component_ty();
     }
-
-    scalar_type sty;
-    if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
-        sty = st->ty();
-    } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        sty = dyn_cast<number_type>(ct->component_ty())->ty();
-    } else {
-        return tinytc_status_invalid_arguments;
-    }
-
     return exception_to_status_code([&] {
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            *instr = constant_inst::create(std::int64_t{1}, ty, get_optional(loc)).release();
-            break;
-        case scalar_type::bf16:
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            *instr = constant_inst::create(double{1}, ty, get_optional(loc)).release();
-            break;
-        case scalar_type::c32:
-        case scalar_type::c64:
-            *instr =
-                constant_inst::create(std::complex<double>{1}, ty, get_optional(loc)).release();
-            break;
-        }
+        *instr = visit(
+            overloaded{
+                [&](boolean_type &) -> tinytc_inst_t {
+                    return constant_inst::create(true, ty, get_optional(loc)).release();
+                },
+                [&](integer_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::int64_t{1}, ty, get_optional(loc)).release();
+                },
+                [&](float_type &) -> tinytc_inst_t {
+                    return constant_inst::create(double{1}, ty, get_optional(loc)).release();
+                },
+                [&](complex_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::complex<double>{1}, ty, get_optional(loc))
+                        .release();
+                },
+                [&](tinytc_type &) -> tinytc_inst_t {
+                    throw compilation_error(get_optional(loc), status::ir_expected_number);
+                }},
+            *ty);
     });
 }
 
@@ -110,41 +100,29 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_ty
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *bt = dyn_cast<boolean_type>(ty); bt != nullptr) {
-        return exception_to_status_code(
-            [&] { *instr = constant_inst::create(false, ty, get_optional(loc)).release(); });
+    if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
+        ty = ct->component_ty();
     }
-
-    scalar_type sty;
-    if (const auto *st = dyn_cast<number_type>(ty); st != nullptr) {
-        sty = st->ty();
-    } else if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        sty = dyn_cast<number_type>(ct->component_ty())->ty();
-    } else {
-        return tinytc_status_invalid_arguments;
-    }
-
     return exception_to_status_code([&] {
-        switch (sty) {
-        case scalar_type::i8:
-        case scalar_type::i16:
-        case scalar_type::i32:
-        case scalar_type::i64:
-        case scalar_type::index:
-            *instr = constant_inst::create(std::int64_t{0}, ty, get_optional(loc)).release();
-            break;
-        case scalar_type::bf16:
-        case scalar_type::f16:
-        case scalar_type::f32:
-        case scalar_type::f64:
-            *instr = constant_inst::create(double{0}, ty, get_optional(loc)).release();
-            break;
-        case scalar_type::c32:
-        case scalar_type::c64:
-            *instr =
-                constant_inst::create(std::complex<double>{0}, ty, get_optional(loc)).release();
-            break;
-        }
+        *instr = visit(
+            overloaded{
+                [&](boolean_type &) -> tinytc_inst_t {
+                    return constant_inst::create(false, ty, get_optional(loc)).release();
+                },
+                [&](integer_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::int64_t{0}, ty, get_optional(loc)).release();
+                },
+                [&](float_type &) -> tinytc_inst_t {
+                    return constant_inst::create(double{0}, ty, get_optional(loc)).release();
+                },
+                [&](complex_type &) -> tinytc_inst_t {
+                    return constant_inst::create(std::complex<double>{0}, ty, get_optional(loc))
+                        .release();
+                },
+                [&](tinytc_type &) -> tinytc_inst_t {
+                    throw compilation_error(get_optional(loc), status::ir_expected_number);
+                }},
+            *ty);
     });
 }
 }

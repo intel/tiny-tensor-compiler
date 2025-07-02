@@ -13,7 +13,7 @@
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
-#include "scalar_type.hpp"
+#include "number.hpp"
 #include "support/walk.hpp"
 #include "tiling.hpp"
 #include "tinytc/builder.hpp"
