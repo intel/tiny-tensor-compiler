@@ -68,8 +68,9 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_typ
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        ty = ct->component_ty();
+    auto dispatch_ty = ty;
+    if (const auto *ct = dyn_cast<coopmatrix_type>(dispatch_ty); ct != nullptr) {
+        dispatch_ty = ct->component_ty();
     }
     return exception_to_status_code([&] {
         *instr = visit(
@@ -90,7 +91,7 @@ tinytc_status_t tinytc_constant_inst_create_one(tinytc_inst_t *instr, tinytc_typ
                 [&](tinytc_type &) -> tinytc_inst_t {
                     throw compilation_error(get_optional(loc), status::ir_expected_number);
                 }},
-            *ty);
+            *dispatch_ty);
     });
 }
 
@@ -100,8 +101,9 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_ty
         return tinytc_status_invalid_arguments;
     }
 
-    if (const auto *ct = dyn_cast<coopmatrix_type>(ty); ct != nullptr) {
-        ty = ct->component_ty();
+    auto dispatch_ty = ty;
+    if (const auto *ct = dyn_cast<coopmatrix_type>(dispatch_ty); ct != nullptr) {
+        dispatch_ty = ct->component_ty();
     }
     return exception_to_status_code([&] {
         *instr = visit(
@@ -122,7 +124,7 @@ tinytc_status_t tinytc_constant_inst_create_zero(tinytc_inst_t *instr, tinytc_ty
                 [&](tinytc_type &) -> tinytc_inst_t {
                     throw compilation_error(get_optional(loc), status::ir_expected_number);
                 }},
-            *ty);
+            *dispatch_ty);
     });
 }
 }
