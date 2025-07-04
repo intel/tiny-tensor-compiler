@@ -17,51 +17,62 @@ namespace tinytc {
 ///////// Attribute ////////
 ////////////////////////////
 
-/**
- * @brief Get array attribute
- *
- * @param ctx compiler context
- * @param array attribute array
- *
- * @return Attribute
- */
-inline tinytc_attr_t get_array_attr(tinytc_compiler_context_t ctx,
-                                    array_view<tinytc_attr_t> array) {
-    tinytc_attr_t a;
-    CHECK_STATUS(tinytc_array_attr_get(&a, ctx, array.size(), array.data()));
-    return a;
-}
+template <typename T> struct getter;
 
-/**
- * @brief Get boolean attribute
- *
- * @param ctx compiler context
- * @param value boolean value
- *
- * @return Attribute
- */
-inline tinytc_attr_t get_boolean_attr(tinytc_compiler_context_t ctx, bool value) {
-    tinytc_attr_t a;
-    CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx, value));
-    return a;
-}
+//! getter specialization for array_attr
+template <> struct getter<array_attr> {
+    /**
+     * @brief Get array attribute
+     *
+     * @param ctx compiler context
+     * @param array attribute array
+     *
+     * @return Attribute
+     */
+    inline auto operator()(tinytc_compiler_context_t ctx, array_view<tinytc_attr_t> array)
+        -> tinytc_attr_t {
+        tinytc_attr_t a;
+        CHECK_STATUS(tinytc_array_attr_get(&a, ctx, array.size(), array.data()));
+        return a;
+    }
+};
 
-/**
- * @brief Get dictionary attribute
- *
- * Each name must only appear once.
- *
- * @param ctx compiler context
- * @param items named items array
- *
- * @return Attribute
- */
-inline tinytc_attr_t get_dictionary_attr(tinytc_compiler_context_t ctx,
-                                         mutable_array_view<tinytc_named_attr_t> items) {
-    tinytc_attr_t a;
-    CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx, items.size(), items.data()));
-    return a;
-}
+//! getter specialization for boolean_attr
+template <> struct getter<boolean_attr> {
+    /**
+     * @brief Get boolean attribute
+     *
+     * @param ctx compiler context
+     * @param value boolean value
+     *
+     * @return Attribute
+     */
+    inline auto operator()(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr_t {
+        tinytc_attr_t a;
+        CHECK_STATUS(tinytc_boolean_attr_get(&a, ctx, value));
+        return a;
+    }
+};
+
+//! getter specialization for dictionary_attr
+template <> struct getter<dictionary_attr> {
+    /**
+     * @brief Get dictionary attribute
+     *
+     * Each name must only appear once.
+     *
+     * @param ctx compiler context
+     * @param items named items array
+     *
+     * @return Attribute
+     */
+    inline auto operator()(tinytc_compiler_context_t ctx,
+                           mutable_array_view<tinytc_named_attr_t> items) -> tinytc_attr_t {
+        tinytc_attr_t a;
+        CHECK_STATUS(tinytc_dictionary_attr_get(&a, ctx, items.size(), items.data()));
+        return a;
+    }
+};
 
 /**
  * @brief Get dictionary attribute
@@ -91,39 +102,43 @@ inline void sort_items(mutable_array_view<tinytc_named_attr_t> items) {
     CHECK_STATUS(tinytc_dictionary_attr_sort(items.size(), items.data()));
 }
 
-/**
- * @brief Get integer attribute
- *
- * @param ctx compiler context
- * @param value integer value
- *
- * @return Attribute
- */
-inline tinytc_attr_t get_integer_attr(tinytc_compiler_context_t ctx, std::int64_t value) {
-    tinytc_attr_t a;
-    CHECK_STATUS(tinytc_integer_attr_get(&a, ctx, value));
-    return a;
-}
+//! getter specialization for integer_attr
+template <> struct getter<integer_attr> {
+    /**
+     * @brief Get integer attribute
+     *
+     * @param ctx compiler context
+     * @param value integer value
+     *
+     * @return Attribute
+     */
+    inline auto operator()(tinytc_compiler_context_t ctx, std::int64_t value) -> tinytc_attr_t {
+        tinytc_attr_t a;
+        CHECK_STATUS(tinytc_integer_attr_get(&a, ctx, value));
+        return a;
+    }
+};
 
-/**
- * @brief Get string attribute
- *
- * @param ctx compiler context
- * @param str string
- *
- * @return Attribute
- */
-inline tinytc_attr_t get_string_attr(tinytc_compiler_context_t ctx, std::string_view str) {
-    tinytc_attr_t a;
-    CHECK_STATUS(tinytc_string_attr_get(&a, ctx, str.size(), str.data()));
-    return a;
-}
+//! getter specialization for string_attr
+template <> struct getter<string_attr> {
+    /**
+     * @brief Get string attribute
+     *
+     * @param ctx compiler context
+     * @param str string
+     *
+     * @return Attribute
+     */
+    inline auto operator()(tinytc_compiler_context_t ctx, std::string_view str) -> tinytc_attr_t {
+        tinytc_attr_t a;
+        CHECK_STATUS(tinytc_string_attr_get(&a, ctx, str.size(), str.data()));
+        return a;
+    }
+};
 
 ////////////////////////////
 ///////// Data type ////////
 ////////////////////////////
-
-template <typename T> struct getter;
 
 // もち api_builder_hpp "tinytc/types.anko"
 
@@ -134,7 +149,7 @@ template <typename T> struct getter;
  *
  * @return Type
  */
-template <typename T, typename... Args> inline auto get(Args &&...args) -> tinytc_type_t {
+template <typename T, typename... Args> inline auto get(Args &&...args) {
     return getter<T>{}(std::forward<Args>(args)...);
 }
 

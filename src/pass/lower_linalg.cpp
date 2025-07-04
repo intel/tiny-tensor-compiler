@@ -603,7 +603,8 @@ void linalg_generator::operator()(gemm_inst in) {
             });
     } else {
         auto no_unroll = get_dictionary_attr_with_sorted(
-            ctx, tinytc_named_attr_t{get_string_attr(ctx, "unroll"), get_boolean_attr(ctx, false)});
+            ctx,
+            tinytc_named_attr_t{get<string_attr>(ctx, "unroll"), get<boolean_attr>(ctx, false)});
         tile_loop_by_sgs(
             bb, c_shape1, block_size1 * num_blocks1, tiling_.n_tiles(), sg_n,
             [&](region_builder &bb, tinytc_value_t n_block, bool n_check, tinytc_value_t) {

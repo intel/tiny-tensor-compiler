@@ -39,7 +39,7 @@ auto array_attr::get(tinytc_compiler_context_t ctx, array_view<tinytc_attr_t> va
 }
 
 array_attr::array_attr(tinytc_compiler_context_t ctx, std::vector<tinytc_attr_t> values)
-    : tinytc_attr(AK::array, ctx), values_{std::move(values)} {}
+    : tinytc_attr(AK::AK_array, ctx), values_{std::move(values)} {}
 
 auto boolean_attr::get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr_t {
     auto cache = ctx->cache();
@@ -47,7 +47,7 @@ auto boolean_attr::get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr
 }
 
 boolean_attr::boolean_attr(tinytc_compiler_context_t ctx, bool value)
-    : tinytc_attr(AK::boolean, ctx), value_{value} {}
+    : tinytc_attr(AK::AK_boolean, ctx), value_{value} {}
 
 auto dictionary_attr::get(tinytc_compiler_context_t ctx,
                           array_view<tinytc_named_attr_t> sorted_attrs) -> tinytc_attr_t {
@@ -97,7 +97,7 @@ void dictionary_attr::sort(mutable_array_view<tinytc_named_attr_t> unsorted_attr
 
 dictionary_attr::dictionary_attr(tinytc_compiler_context_t ctx,
                                  std::vector<tinytc_named_attr_t> sorted_attrs)
-    : tinytc_attr(AK::dictionary, ctx), attrs_{std::move(sorted_attrs)} {}
+    : tinytc_attr(AK::AK_dictionary, ctx), attrs_{std::move(sorted_attrs)} {}
 
 auto dictionary_attr::find(tinytc_attr_t name) -> tinytc_attr_t {
     if (!attrs_.empty() && name) {
@@ -136,7 +136,7 @@ auto integer_attr::get(tinytc_compiler_context_t ctx, std::int64_t value) -> tin
 }
 
 integer_attr::integer_attr(tinytc_compiler_context_t ctx, std::int64_t value)
-    : tinytc_attr(AK::integer, ctx), value_{value} {}
+    : tinytc_attr(AK::AK_integer, ctx), value_{value} {}
 
 auto string_attr::get(tinytc_compiler_context_t ctx, std::string_view str) -> tinytc_attr_t {
     const auto hash = fnv1a_combine(str);
@@ -151,7 +151,7 @@ auto string_attr::get(tinytc_compiler_context_t ctx, std::string_view str) -> ti
 }
 
 string_attr::string_attr(tinytc_compiler_context_t ctx, std::string str)
-    : tinytc_attr(AK::string, ctx), str_{std::move(str)} {}
+    : tinytc_attr(AK::AK_string, ctx), str_{std::move(str)} {}
 
 auto get_attr(tinytc_attr_t dict, tinytc_attr_t name) -> tinytc_attr_t {
     if (auto da = dyn_cast<dictionary_attr>(dict); da) {

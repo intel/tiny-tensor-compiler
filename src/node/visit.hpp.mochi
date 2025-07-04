@@ -4,10 +4,34 @@
 #ifndef VISIT_HPP_20250618_MOCHI
 #define VISIT_HPP_20250618_MOCHI
 
+#include "node/attr.hpp"
 #include "node/inst_view.hpp"
 #include "node/type.hpp"
 
 namespace tinytc {
+
+template <typename Visitor> auto visit(Visitor &&visitor, tinytc_attr &a) {
+    switch (a.type_id()) {
+    case AK::AK_array: {
+        return visitor(*static_cast<array_attr *>(&a));
+    }
+    case AK::AK_boolean: {
+        return visitor(*static_cast<boolean_attr *>(&a));
+    }
+    case AK::AK_dictionary: {
+        return visitor(*static_cast<dictionary_attr *>(&a));
+    }
+    case AK::AK_integer: {
+        return visitor(*static_cast<integer_attr *>(&a));
+    }
+    case AK::AK_string: {
+        return visitor(*static_cast<string_attr *>(&a));
+    }
+    default:
+        break;
+    }
+    throw status::internal_compiler_error;
+}
 
 // もち visit_hpp "tinytc/types.anko"
 

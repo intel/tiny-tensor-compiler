@@ -24,9 +24,9 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
     auto f = make_func(name, {alpha_ty, At, beta_ty, Bt}, void_ty);
     if (work_group_size) {
         auto const wgs_attr = tinytc_named_attr_t{
-            get_string_attr(ctx.get(), "work_group_size"),
-            get_array_attr(ctx.get(), {get_integer_attr(ctx.get(), work_group_size),
-                                       get_integer_attr(ctx.get(), 1)})};
+            get<string_attr>(ctx.get(), "work_group_size"),
+            get<array_attr>(ctx.get(), array_view{get<integer_attr>(ctx.get(), work_group_size),
+                                                  get<integer_attr>(ctx.get(), 1)})};
         set_attr(f.get(), get_dictionary_attr_with_sorted(ctx.get(), wgs_attr));
     }
 

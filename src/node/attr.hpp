@@ -8,7 +8,6 @@
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
-#include "util/type_list.hpp"
 
 #include <concepts>
 #include <cstddef>
@@ -18,15 +17,11 @@
 #include <vector>
 
 namespace tinytc {
-enum class AK { array, boolean, dictionary, integer, string };
-using attr_nodes = type_list<class array_attr, class boolean_attr, class dictionary_attr,
-                             class integer_attr, class string_attr>;
+enum class AK;
 } // namespace tinytc
 
 struct tinytc_attr {
   public:
-    using leaves = tinytc::attr_nodes;
-
     inline tinytc_attr(tinytc::AK tid, tinytc_compiler_context_t ctx) : tid_(tid), ctx_(ctx) {}
     virtual ~tinytc_attr() = default;
     inline auto type_id() const -> tinytc::AK { return tid_; }
@@ -39,9 +34,11 @@ struct tinytc_attr {
 
 namespace tinytc {
 
+enum class AK { AK_array, AK_boolean, AK_dictionary, AK_integer, AK_string };
+
 class array_attr : public tinytc_attr {
   public:
-    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::array; }
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::AK_array; }
     static auto get(tinytc_compiler_context_t ctx, array_view<tinytc_attr_t> values)
         -> tinytc_attr_t;
 
@@ -62,7 +59,7 @@ class array_attr : public tinytc_attr {
 
 class boolean_attr : public tinytc_attr {
   public:
-    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::boolean; }
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::AK_boolean; }
     static auto get(tinytc_compiler_context_t ctx, bool value) -> tinytc_attr_t;
 
     inline auto value() const { return value_; }
@@ -77,7 +74,7 @@ class boolean_attr : public tinytc_attr {
 
 class dictionary_attr : public tinytc_attr {
   public:
-    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::dictionary; }
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::AK_dictionary; }
     static auto get(tinytc_compiler_context_t ctx, array_view<tinytc_named_attr_t> sorted_attrs)
         -> tinytc_attr_t;
     static void sort(mutable_array_view<tinytc_named_attr_t> unsorted_attrs);
@@ -104,7 +101,7 @@ class dictionary_attr : public tinytc_attr {
 
 class integer_attr : public tinytc_attr {
   public:
-    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::integer; }
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::AK_integer; }
     static auto get(tinytc_compiler_context_t ctx, std::int64_t value) -> tinytc_attr_t;
 
     inline auto value() const -> std::int64_t { return value_; }
@@ -118,7 +115,7 @@ class integer_attr : public tinytc_attr {
 
 class string_attr : public tinytc_attr {
   public:
-    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::string; }
+    inline static bool classof(tinytc_attr const &a) { return a.type_id() == AK::AK_string; }
     static auto get(tinytc_compiler_context_t ctx, std::string_view str) -> tinytc_attr_t;
 
     inline auto str() const -> std::string_view { return str_; }

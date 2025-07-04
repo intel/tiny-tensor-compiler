@@ -172,10 +172,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
 
                 auto alignments = std::array<std::pair<std::int32_t, std::int32_t>, 3u>{
                     {{1, alignA}, {2, alignB}, {4, alignC}}};
-                auto align_attr = tinytc_named_attr_t{get_string_attr(ctx, "align"), nullptr};
+                auto align_attr = tinytc_named_attr_t{get<string_attr>(ctx, "align"), nullptr};
                 for (auto &[param_no, alignment] : alignments) {
                     if (alignment > 0) {
-                        align_attr.attr = get_integer_attr(ctx, alignment);
+                        align_attr.attr = get<integer_attr>(ctx, alignment);
                         set_parameter_attr(f.get(), param_no,
                                            get_dictionary_attr_with_sorted(ctx, align_attr));
                     }
@@ -190,10 +190,10 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 set_name(params[3], "beta");
                 set_name(params[4], "C");
                 auto const wgs = tiling.work_group_size(sgs);
-                auto const wgs_attr =
-                    tinytc_named_attr_t{get_string_attr(ctx, "work_group_size"),
-                                        get_array_attr(ctx, {get_integer_attr(ctx, wgs[0]),
-                                                             get_integer_attr(ctx, wgs[1])})};
+                auto const wgs_attr = tinytc_named_attr_t{
+                    get<string_attr>(ctx, "work_group_size"),
+                    get<array_attr>(ctx, array_view{get<integer_attr>(ctx, wgs[0]),
+                                                    get<integer_attr>(ctx, wgs[1])})};
                 set_attr(f.get(), get_dictionary_attr_with_sorted(ctx, wgs_attr));
 
                 auto bb = region_builder{fn_body};

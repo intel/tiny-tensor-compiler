@@ -205,6 +205,16 @@ template <typename T> class unique_handle {
 };
 
 ////////////////////////////
+/////////// Attr ///////////
+////////////////////////////
+
+class array_attr;      // IWYU pragma: export
+class boolean_attr;    // IWYU pragma: export
+class dictionary_attr; // IWYU pragma: export
+class integer_attr;    // IWYU pragma: export
+class string_attr;     // IWYU pragma: export
+
+////////////////////////////
 /////////// Type ///////////
 ////////////////////////////
 

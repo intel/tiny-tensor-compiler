@@ -28,13 +28,14 @@ Builder C++-API:
       - tinytc::dynamic
   Attribute:
     function:
-      - get_array_attr
-      - get_boolean_attr
-      - get_dictionary_attr
       - get_dictionary_attr_with_sorted
-      - get_integer_attr
-      - get_string_attr
       - sort_items
+    struct:
+      - tinytc::getter< array_attr >
+      - tinytc::getter< boolean_attr >
+      - tinytc::getter< dictionary_attr >
+      - tinytc::getter< integer_attr >
+      - tinytc::getter< string_attr >
   Data Type:
     function:
       - tinytc::get

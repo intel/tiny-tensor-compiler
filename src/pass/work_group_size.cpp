@@ -84,7 +84,7 @@ void work_group_size_pass::run_on_function(tinytc_func &fn) {
     const auto subgroup_size = [&] {
         if (!sgs_attr) {
             auto sgs = suggest_subgroup_size(shapes, *info_);
-            sgs_attr = get_integer_attr(ctx, sgs);
+            sgs_attr = get<integer_attr>(ctx, sgs);
             return sgs;
         } else {
             return fn.subgroup_size();
@@ -102,8 +102,8 @@ void work_group_size_pass::run_on_function(tinytc_func &fn) {
         if (!wgs_attr) {
             auto tiling = suggest_local_tiling(shapes, cfg);
             auto wgs = std::array<std::int32_t, 2u>{tiling[0] * subgroup_size, tiling[1]};
-            wgs_attr =
-                get_array_attr(ctx, {get_integer_attr(ctx, wgs[0]), get_integer_attr(ctx, wgs[1])});
+            wgs_attr = get<array_attr>(
+                ctx, array_view{get<integer_attr>(ctx, wgs[0]), get<integer_attr>(ctx, wgs[1])});
             return wgs;
         } else {
             return fn.work_group_size();
@@ -119,8 +119,8 @@ void work_group_size_pass::run_on_function(tinytc_func &fn) {
     }
 
     fn.attr(get_dictionary_attr_with_sorted(
-        ctx, {tinytc_named_attr_t{get_string_attr(ctx, "subgroup_size"), sgs_attr},
-              tinytc_named_attr_t{get_string_attr(ctx, "work_group_size"), wgs_attr}}));
+        ctx, {tinytc_named_attr_t{get<string_attr>(ctx, "subgroup_size"), sgs_attr},
+              tinytc_named_attr_t{get<string_attr>(ctx, "work_group_size"), wgs_attr}}));
 }
 
 } // namespace tinytc

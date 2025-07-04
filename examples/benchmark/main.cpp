@@ -94,8 +94,8 @@ auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, t
                            void_ty, my_loc());
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
-                ctx, tinytc_named_attr_t{get_string_attr(ctx, "align"),
-                                         get_integer_attr(ctx, alignment)});
+                ctx, tinytc_named_attr_t{get<string_attr>(ctx, "align"),
+                                         get<integer_attr>(ctx, alignment)});
             set_parameter_attr(f.get(), 0, align_attr);
             set_parameter_attr(f.get(), 1, align_attr);
             set_parameter_attr(f.get(), 2, align_attr);

@@ -14,7 +14,6 @@
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
 #include "util/overloaded.hpp"
-#include "util/visit.hpp"
 
 #include <complex>
 #include <cstddef>
