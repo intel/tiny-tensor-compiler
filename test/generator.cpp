@@ -6,7 +6,7 @@
 #include "number.hpp"
 #include "tiling.hpp"
 #include "tinytc/builder.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

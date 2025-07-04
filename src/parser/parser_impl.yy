@@ -5,8 +5,6 @@
 %language "c++"
 
 %code requires {
-    #include "node/inst_view.hpp"
-    #include "tinytc/builder.hpp"
     #include "tinytc/types.h"
     #include "tinytc/types.hpp"
     #include <cstddef>
@@ -40,12 +38,12 @@
     #include "node/func.hpp"
     #include "node/inst.hpp"
     #include "node/inst_view.hpp"
-    #include "node/prog.hpp"
     #include "node/region.hpp"
     #include "node/value.hpp"
     #include "parser/lexer.hpp"
     #include "parser/parse_context.hpp"
-    #include "tinytc/tinytc.hpp"
+    #include "tinytc/builder.hpp"
+    #include "tinytc/core.hpp"
     #include "util/ilist.hpp"
     #include "util/iterator.hpp"
     #include "util/overloaded.hpp"

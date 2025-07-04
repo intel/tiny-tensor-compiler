@@ -5,7 +5,7 @@
 #define ERROR_20240410_HPP
 
 #include "compiler_context.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

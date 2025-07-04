@@ -6,7 +6,7 @@
 
 #include "../recipe.hpp"
 #include "argument_handler.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 
 #include <memory>
 #include <sycl/sycl.hpp>

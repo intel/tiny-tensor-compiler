@@ -4,7 +4,7 @@
 #include "../device_info.hpp"
 #include "device_info_helper.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_cl.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"

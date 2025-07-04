@@ -8,7 +8,7 @@
 #include "spv/module.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/ilist.hpp"

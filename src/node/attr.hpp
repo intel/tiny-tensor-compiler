@@ -4,7 +4,7 @@
 #ifndef ATTR_20250626_HPP
 #define ATTR_20250626_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

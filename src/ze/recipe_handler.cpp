@@ -5,7 +5,6 @@
 #include "../recipe.hpp"
 #include "error.hpp"
 #include "tinytc/builder.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"

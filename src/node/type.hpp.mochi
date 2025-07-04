@@ -4,17 +4,15 @@
 #ifndef TYPE_20250626_HPP
 #define TYPE_20250626_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
-#include "util/type_list.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cstdint>
 #include <vector>
 
 namespace tinytc {
+enum class address_space;
+enum class matrix_use;
 enum class TK;
 } // namespace tinytc
 

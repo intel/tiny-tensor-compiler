@@ -4,7 +4,7 @@
 #ifndef FNV1A_ARRAY_VIEW_20241010_HPP
 #define FNV1A_ARRAY_VIEW_20241010_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "util/fnv1a.hpp"
 
 namespace tinytc {

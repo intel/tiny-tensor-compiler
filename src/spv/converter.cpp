@@ -5,6 +5,7 @@
 #include "analysis/gcd.hpp"
 #include "analysis/stack.hpp"
 #include "codegen_tools.hpp"
+#include "compiler_context.hpp"
 #include "converter_aux.hpp"
 #include "error.hpp"
 #include "matrix_ext_info.hpp"
@@ -17,28 +18,24 @@
 #include "node/type.hpp"
 #include "node/value.hpp"
 #include "node/visit.hpp"
-#include "number.hpp"
 #include "spv/coopmatrix_impl_block.hpp"
 #include "spv/coopmatrix_impl_dpas.hpp"
 #include "spv/enums.hpp"
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
-#include "spv/opencl.std.hpp"
 #include "spv/pass/capex.hpp"
 #include "spv/uniquifier.hpp"
 #include "spv/visit.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"
 #include "util/iterator.hpp"
 #include "util/overloaded.hpp"
-#include "util/visit.hpp"
 
 #include <algorithm>
 #include <array>
-#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -47,7 +44,6 @@
 #include <string>
 #include <unordered_map>
 #include <utility>
-#include <variant>
 #include <vector>
 
 namespace tinytc::spv {

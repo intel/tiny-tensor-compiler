@@ -4,6 +4,8 @@
 #ifndef COOPMATRIX_IMPL_DPAS_20250428_HPP
 #define COOPMATRIX_IMPL_DPAS_20250428_HPP
 
+#include "node/inst_view.hpp"
+#include "node/type.hpp"
 #include "spv/block2d_diy.hpp"
 #include "spv/coopmatrix_impl_block.hpp"
 #include "support/temp_counter.hpp"
@@ -17,10 +19,6 @@
 #include <tuple>
 #include <unordered_map>
 #include <variant>
-
-namespace tinytc {
-class coopmatrix_type;
-} // namespace tinytc
 
 namespace tinytc::spv {
 

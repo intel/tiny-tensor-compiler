@@ -5,7 +5,7 @@
 #include "spv/instructions.hpp"
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
 #include "util/ilist_base.hpp"

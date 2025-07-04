@@ -7,8 +7,7 @@
 #include "matrix_ext_info.hpp"
 #include "node/type.hpp"
 #include "number.hpp"
-#include "tinytc/builder.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/fnv1a.hpp"
 

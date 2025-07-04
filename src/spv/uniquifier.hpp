@@ -6,11 +6,10 @@
 
 #include "spv/defs.hpp"
 #include "spv/enums.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "util/fnv1a.hpp"
 
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <tuple>
@@ -21,9 +20,7 @@
 
 namespace tinytc {
 enum class address_space;
-enum class scalar_type;
 enum class vector_size;
-class memref_type;
 } // namespace tinytc
 
 namespace tinytc::spv {

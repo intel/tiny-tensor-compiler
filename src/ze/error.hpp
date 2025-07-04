@@ -4,8 +4,8 @@
 #ifndef ZE_ERROR_20240419_HPP
 #define ZE_ERROR_20240419_HPP
 
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
+#include "tinytc/core.hpp"
 
 #include <new>
 

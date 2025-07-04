@@ -4,7 +4,7 @@
 #ifndef ZE_TEST_RUNTIME_20240314_HPP
 #define ZE_TEST_RUNTIME_20240314_HPP
 
-#include "tinytc/tinytc_ze.hpp"
+#include "tinytc/tinytc_ze.hpp" // IWYU pragma: keep
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

@@ -8,10 +8,8 @@
 #include "node/value.hpp"
 #include "node/visit.hpp"
 #include "number_dispatch.hpp"
-#include "tinytc/tinytc.hpp"
 #include "util/casting.hpp"
 #include "util/overloaded.hpp"
-#include "util/visit.hpp"
 
 #include <complex>
 #include <cstdint>

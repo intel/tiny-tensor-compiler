@@ -5,7 +5,7 @@
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
 #include "node/value.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

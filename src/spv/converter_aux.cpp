@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/converter_aux.hpp"
+#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/type.hpp"
 #include "node/visit.hpp"
@@ -13,7 +14,7 @@
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "spv/uniquifier.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/ilist.hpp"
@@ -25,6 +26,7 @@
 #include <complex>
 #include <cstdint>
 #include <memory>
+#include <type_traits>
 #include <variant>
 #include <vector>
 

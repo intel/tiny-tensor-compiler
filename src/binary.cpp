@@ -3,7 +3,7 @@
 
 #include "binary.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "util/casting.hpp"
 

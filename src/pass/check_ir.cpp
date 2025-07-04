@@ -8,7 +8,7 @@
 #include "node/value.hpp"
 #include "node/visit.hpp"
 #include "support/walk.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/ilist_base.hpp"
 

@@ -5,7 +5,7 @@
 #define CL_TEST_RUNTIME_20240314_HPP
 
 #include "cl/argument_handler.hpp"
-#include "tinytc/tinytc_cl.hpp"
+#include "tinytc/tinytc_cl.hpp" // IWYU pragma: keep
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

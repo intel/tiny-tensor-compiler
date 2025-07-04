@@ -5,7 +5,7 @@
 #define REGION_20250626_HPP
 
 #include "node/value.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/ilist.hpp"

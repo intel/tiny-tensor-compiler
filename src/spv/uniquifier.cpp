@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "spv/uniquifier.hpp"
-#include "node/type.hpp"
+#include "compiler_context.hpp"
 #include "number.hpp"
 #include "spv/defs.hpp"
 #include "spv/instructions.hpp"
@@ -10,15 +10,11 @@
 #include "spv/module.hpp"
 #include "spv/opencl.std.hpp"
 #include "support/fnv1a_array_view.hpp"
-#include "tinytc/builder.hpp"
 #include "tinytc/types.hpp"
-#include "util/casting.hpp"
 #include "util/overloaded.hpp"
 
 #include <algorithm>
-#include <iterator>
 #include <optional>
-#include <type_traits>
 #include <utility>
 #include <variant>
 #include <vector>

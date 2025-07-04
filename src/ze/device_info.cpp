@@ -3,7 +3,7 @@
 
 #include "../device_info.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/tinytc_ze.hpp"
 #include "tinytc/types.h"

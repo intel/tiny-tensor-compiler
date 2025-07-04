@@ -4,9 +4,7 @@
 #ifndef CONVERTER_AUX_20250416_HPP
 #define CONVERTER_AUX_20250416_HPP
 
-#include "coopmatrix_layout.hpp"
 #include "node/inst_view.hpp"
-#include "spv/enums.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

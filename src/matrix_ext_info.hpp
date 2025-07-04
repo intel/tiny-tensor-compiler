@@ -4,7 +4,7 @@
 #ifndef MATRIX_EXT_INFO_20241204_HPP
 #define MATRIX_EXT_INFO_20241204_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 
 #include <array>

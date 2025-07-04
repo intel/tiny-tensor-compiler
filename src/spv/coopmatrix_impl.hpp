@@ -7,14 +7,15 @@
 #include "analysis/gcd.hpp"
 #include "coopmatrix_layout.hpp" // IWYU pragma: keep
 #include "device_info.hpp"
-#include "node/inst_view.hpp"
 #include "spv/defs.hpp"
 #include "tinytc/types.hpp"
 
 #include <utility>
 
 namespace tinytc {
-class coopmatrix_type;
+class arith_inst;
+class arith_unary_inst;
+class cooperative_matrix_reduce_inst;
 } // namespace tinytc
 
 namespace tinytc::spv {

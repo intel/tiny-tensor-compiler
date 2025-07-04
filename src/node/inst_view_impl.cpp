@@ -8,7 +8,7 @@
 #include "node/value.hpp"
 #include "node/visit.hpp"
 #include "number.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

@@ -6,7 +6,7 @@
 #include "spv/inst_assembler.hpp"
 #include "spv/module.hpp"
 #include "spv/visit.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

@@ -11,6 +11,8 @@
 
 namespace tinytc {
 
+template <typename T> class shared_handle;
+
 enum class tall_and_skinny_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto tall_and_skinny_kernel_name(tall_and_skinny_kernel k) -> char const *;
 

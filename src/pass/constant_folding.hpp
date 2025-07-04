@@ -4,31 +4,27 @@
 #ifndef CONSTANT_FOLDING_HELPER_20241011_HPP
 #define CONSTANT_FOLDING_HELPER_20241011_HPP
 
-#include "compiler_context.hpp"
 #include "error.hpp"
 #include "node/inst_view.hpp"
-#include "node/type.hpp"
 #include "node/value.hpp"
-#include "node/visit.hpp"
 #include "number.hpp"
 #include "number_dispatch.hpp"
 #include "support/fp_util.hpp" // IWYU pragma: keep
 #include "tinytc/builder.hpp"
-#include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
-#include "util/overloaded.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <complex>
-#include <cstdint>
 #include <cstdlib>
 #include <type_traits>
-#include <utility>
 #include <variant>
 
 namespace tinytc {
+
+class number_type;
+template <typename T, typename F16f> class lp_float;
 
 using fold_result = std::variant<tinytc_value_t, unique_handle<tinytc_inst_t>>;
 

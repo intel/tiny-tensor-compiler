@@ -2,10 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "../compiler_options.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/tinytc_ze.h"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstddef>
 #include <cstdint>

@@ -3,7 +3,7 @@
 
 #include "argparser_common.hpp"
 #include "argparser.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "util/fnv1a.hpp"
 
 #include <cstring>

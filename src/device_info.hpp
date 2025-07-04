@@ -6,7 +6,7 @@
 
 #include "matrix_ext_info.hpp"
 #include "reference_counted.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 
 #include <array>

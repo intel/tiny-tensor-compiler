@@ -13,7 +13,7 @@
 #include "node/visit.hpp"
 #include "number.hpp"
 #include "support/walk.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
 #include "util/iterator.hpp"

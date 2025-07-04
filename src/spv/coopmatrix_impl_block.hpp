@@ -6,7 +6,6 @@
 
 #include "spv/coopmatrix_impl.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <cstdint>
 

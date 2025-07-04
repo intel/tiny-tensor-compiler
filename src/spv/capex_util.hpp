@@ -7,7 +7,7 @@
 #ifndef GENERATED_CAPEX_UTIL_20250630_HPP
 #define GENERATED_CAPEX_UTIL_20250630_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 
 namespace tinytc::spv {
 

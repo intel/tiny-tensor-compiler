@@ -8,7 +8,7 @@
 #define GENERATED_DEFS_20250630_HPP
 
 #include "enums.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "util/ilist_base.hpp"
 
 #include <cstdint>

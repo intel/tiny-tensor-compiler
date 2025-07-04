@@ -24,7 +24,7 @@
 #include "passes.hpp"
 #include "spv/pass/assemble.hpp"
 #include "spv/pass/assign_ids.hpp"
-#include "tinytc/tinytc.h"
+#include "tinytc/core.h"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 

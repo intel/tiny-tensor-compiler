@@ -6,9 +6,8 @@
 
 #include "compiler_context_cache.hpp"
 #include "reference_counted.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
-#include "tinytc/types.hpp"
 
 #include <array>
 #include <cstddef>
@@ -19,6 +18,8 @@
 #include <vector>
 
 namespace tinytc {
+enum class optflag;
+
 void default_error_reporter(char const *what, const tinytc_location_t *location, void *user_data);
 } // namespace tinytc
 

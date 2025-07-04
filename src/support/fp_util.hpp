@@ -4,7 +4,7 @@
 #ifndef FP_UTIL_20241126_HPP
 #define FP_UTIL_20241126_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 
 #include <complex>
 #include <type_traits>

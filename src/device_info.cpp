@@ -3,8 +3,8 @@
 
 #include "device_info.hpp"
 #include "error.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.h"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

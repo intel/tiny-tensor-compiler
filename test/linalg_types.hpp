@@ -4,7 +4,8 @@
 #ifndef LINALG_TYPES_20241023_HPP
 #define LINALG_TYPES_20241023_HPP
 
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
+#include "tinytc/types.h"
 #include "tinytc/types.hpp"
 
 #include <array>

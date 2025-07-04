@@ -4,13 +4,11 @@
 #include "compiler_context.hpp"
 #include "compiler_context_cache.hpp"
 #include "error.hpp"
-#include "location.hpp"
 #include "node/type.hpp"
 #include "number.hpp"
 #include "support/fnv1a_array_view.hpp" // IWYU pragma: keep
 #include "tinytc/builder.h"
-#include "tinytc/builder.hpp"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"
@@ -18,7 +16,6 @@
 #include "util/math.hpp"
 
 #include <algorithm>
-#include <array>
 #include <cstddef>
 #include <cstdint>
 #include <memory>

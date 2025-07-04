@@ -7,7 +7,7 @@
 #include "node/type.hpp"
 #include "node/visit.hpp"
 #include "tinytc/builder.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
 #include "util/casting.hpp"

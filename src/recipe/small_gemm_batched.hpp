@@ -9,6 +9,8 @@
 
 namespace tinytc {
 
+template <typename T> class shared_handle;
+
 enum class small_gemm_batched_kernel : int { gemm = 0, gemm_beta0 = 1, num_kernels = 2 };
 auto small_gemm_batched_kernel_name(small_gemm_batched_kernel k) -> char const *;
 

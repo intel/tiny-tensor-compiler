@@ -2,15 +2,9 @@
 // SPDX-License-Identifier: BSD-3-Clause
 
 #include "recipe.hpp"
-#include "compiler_context.hpp"
 #include "error.hpp"
-#include "node/type.hpp"
-#include "node/visit.hpp"
 #include "number_dispatch.hpp"
-#include "tinytc/tinytc.h"
-#include "tinytc/tinytc.hpp"
-#include "tinytc/types.hpp"
-#include "util/overloaded.hpp"
+#include "tinytc/core.h"
 
 #include <algorithm>
 #include <complex>
