@@ -5,7 +5,7 @@
 #define BUILDER_HPP_20250625
 
 #include "tinytc/builder.h"
-#include "tinytc/tinytc.hpp"
+#include "tinytc/core.hpp"
 #include "tinytc/types.hpp"
 
 #include <complex>

@@ -112,6 +112,8 @@ add_mochi_or_pregenerated_to_target(TARGET tinytc-objects
 set(PUBLIC_HEADERS
     ${PROJECT_BINARY_DIR}/include/tinytc/builder.h
     ${PROJECT_BINARY_DIR}/include/tinytc/builder.hpp
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.h
+    ${PROJECT_SOURCE_DIR}/include/tinytc/core.hpp
     ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.h
     ${PROJECT_SOURCE_DIR}/include/tinytc/tinytc.hpp
     ${PROJECT_BINARY_DIR}/include/tinytc/types.h
