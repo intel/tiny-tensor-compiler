@@ -11,11 +11,13 @@ C++-API <SYCL C++-API>:
       - tinytc::get_global_size(sycl::range<3u> const &,sycl::range<3u> const &)
       - tinytc::get_group_size(sycl::kernel const &)
       - tinytc::make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &,char const *)
-      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,binary const &)
-      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,prog,tinytc_core_feature_flags_t)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,const_tinytc_binary_t)
+      - tinytc::make_kernel_bundle(sycl::context const &,sycl::device const &,tinytc_prog_t,tinytc_core_feature_flags_t)
   Recipe:
     function:
-      - tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,recipe const &)
-      - tinytc::make_recipe_handler(sycl::queue const&,recipe const&)
-    class:
-      - tinytc::sycl_recipe_handler
+      - tinytc::make_recipe_handler(sycl::context const &,sycl::device const &,tinytc_recipe_t)
+      - tinytc::make_recipe_handler(sycl::queue const&,tinytc_recipe_t)
+      - tinytc::parallel_for
+      - tinytc::submit(tinytc_recipe_handler_t,sycl::queue)
+      - tinytc::submit(tinytc_recipe_handler_t,sycl::queue,std::vector<sycl::event> const &)
+      - tinytc::submit(tinytc_recipe_handler_t,sycl::queue,sycl::event const &)

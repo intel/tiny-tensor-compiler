@@ -1309,6 +1309,95 @@ make_prog
 
 .. doxygenfunction:: tinytc::make_prog
 
+Recipe
+======
+
+* Functions
+
+  * :ref:`tinytc::get_prog`
+
+  * :ref:`tinytc::get_binary`
+
+  * :ref:`tinytc::get_recipe`
+
+  * :ref:`tinytc::make_small_gemm_batched`
+
+  * :ref:`tinytc::make_tall_and_skinny`
+
+  * :ref:`tinytc::make_tall_and_skinny_specialized`
+
+  * :ref:`tinytc::set_small_gemm_batched_args`
+
+  * :ref:`tinytc::set_tall_and_skinny_args`
+
+  * :ref:`tinytc::to_string(mem_type)`
+
+Recipe Functions
+----------------
+
+.. _tinytc::get_prog:
+
+get_prog
+........
+
+.. doxygenfunction:: tinytc::get_prog
+
+.. _tinytc::get_binary:
+
+get_binary
+..........
+
+.. doxygenfunction:: tinytc::get_binary
+
+.. _tinytc::get_recipe:
+
+get_recipe
+..........
+
+.. doxygenfunction:: tinytc::get_recipe
+
+.. _tinytc::make_small_gemm_batched:
+
+make_small_gemm_batched
+.......................
+
+.. doxygenfunction:: tinytc::make_small_gemm_batched
+
+.. _tinytc::make_tall_and_skinny:
+
+make_tall_and_skinny
+....................
+
+.. doxygenfunction:: tinytc::make_tall_and_skinny
+
+.. _tinytc::make_tall_and_skinny_specialized:
+
+make_tall_and_skinny_specialized
+................................
+
+.. doxygenfunction:: tinytc::make_tall_and_skinny_specialized
+
+.. _tinytc::set_small_gemm_batched_args:
+
+set_small_gemm_batched_args
+...........................
+
+.. doxygenfunction:: tinytc::set_small_gemm_batched_args
+
+.. _tinytc::set_tall_and_skinny_args:
+
+set_tall_and_skinny_args
+........................
+
+.. doxygenfunction:: tinytc::set_tall_and_skinny_args
+
+.. _tinytc::to_string(mem_type):
+
+to_string(mem_type)
+...................
+
+.. doxygenfunction:: tinytc::to_string(mem_type)
+
 Region
 ======
 

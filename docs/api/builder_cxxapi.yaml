@@ -155,6 +155,17 @@ Builder C++-API:
     function:
       - tinytc::add_function
       - tinytc::make_prog
+  Recipe:
+    function:
+      - tinytc::get_prog
+      - tinytc::get_binary
+      - tinytc::get_recipe
+      - tinytc::make_small_gemm_batched
+      - tinytc::make_tall_and_skinny
+      - tinytc::make_tall_and_skinny_specialized
+      - tinytc::set_small_gemm_batched_args
+      - tinytc::set_tall_and_skinny_args
+      - tinytc::to_string(mem_type)
   Region:
     function:
       - tinytc::append

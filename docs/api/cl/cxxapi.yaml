@@ -10,15 +10,15 @@ C++-API <OpenCL C++-API>:
       - tinytc::make_core_info(cl_device_id)
   Kernel:
     function:
-      - tinytc::get_global_size(std::array<std::size_t, 3u> const &,std::array<std::size_t, 3u> const &)
+      - tinytc::get_global_size(std::array<std::size_t,3u> const &,std::array<std::size_t,3u> const &)
       - tinytc::get_group_size(cl_kernel)
       - tinytc::make_kernel(cl_program,char const*)
-      - tinytc::make_kernel_bundle(cl_context,cl_device_id,binary const&)
-      - tinytc::make_kernel_bundle(cl_context,cl_device_id,prog,tinytc_core_feature_flags_t)
+      - tinytc::make_kernel_bundle(cl_context,cl_device_id,const_tinytc_binary_t)
+      - tinytc::make_kernel_bundle(cl_context,cl_device_id,tinytc_prog_t,tinytc_core_feature_flags_t)
   Recipe:
     function:
-      - tinytc::make_recipe_handler(cl_context,cl_device_id,recipe const&)
-    class:
-      - tinytc::opencl_recipe_handler
+      - tinytc::make_recipe_handler(cl_context,cl_device_id,tinytc_recipe_t)
+      - tinytc::submit(tinytc_recipe_handler_t,cl_command_queue,uint32_t,cl_event*)
+      - tinytc::submit_no_event
     struct:
       - tinytc::auto_mem_type< cl_mem >

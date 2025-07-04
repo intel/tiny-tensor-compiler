@@ -12,10 +12,9 @@ C++-API <Level Zero C++-API>:
     function:
       - tinytc::get_group_size(ze_kernel_handle_t)
       - tinytc::make_kernel(ze_module_handle_t,char const *)
-      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&)
-      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)
+      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t)
+      - tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t)
   Recipe:
     function:
-      - tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&)
-    class:
-      - tinytc::level_zero_recipe_handler
+      - tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t)
+      - tinytc::submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t*)

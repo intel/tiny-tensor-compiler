@@ -59,9 +59,9 @@ Kernel
 
   * :ref:`tinytc::make_kernel(ze_module_handle_t,char const \*)`
 
-  * :ref:`tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&)`
+  * :ref:`tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t)`
 
-  * :ref:`tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)`
+  * :ref:`tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t)`
 
 Kernel Functions
 ----------------
@@ -80,48 +80,43 @@ make_kernel(ze_module_handle_t,char const \*)
 
 .. doxygenfunction:: tinytc::make_kernel(ze_module_handle_t,char const *)
 
-.. _tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&):
+.. _tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t):
 
-make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&)
-........................................................................
+make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t)
+................................................................................
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,binary const&)
+.. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,const_tinytc_binary_t)
 
-.. _tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t):
+.. _tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t):
 
-make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)
-...........................................................................................
+make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t)
+....................................................................................................
 
-.. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,prog,tinytc_core_feature_flags_t)
+.. doxygenfunction:: tinytc::make_kernel_bundle(ze_context_handle_t,ze_device_handle_t,tinytc_prog_t,tinytc_core_feature_flags_t)
 
 Recipe
 ======
 
 * Functions
 
-  * :ref:`tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&)`
+  * :ref:`tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t)`
 
-* Classes
-
-  * :ref:`tinytc::level_zero_recipe_handler`
+  * :ref:`tinytc::submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t\*)`
 
 Recipe Functions
 ----------------
 
-.. _tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&):
+.. _tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t):
 
-make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&)
-.........................................................................
+make_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t)
+...........................................................................
 
-.. doxygenfunction:: tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,recipe const&)
+.. doxygenfunction:: tinytc::make_recipe_handler(ze_context_handle_t,ze_device_handle_t,tinytc_recipe_t)
 
-Recipe Classes
---------------
+.. _tinytc::submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t\*):
 
-.. _tinytc::level_zero_recipe_handler:
+submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t\*)
+.......................................................................................................
 
-level_zero_recipe_handler
-.........................
-
-.. doxygenclass:: tinytc::level_zero_recipe_handler
+.. doxygenfunction:: tinytc::submit(tinytc_recipe_handler_t,ze_command_list_handle_t,ze_event_handle_t,uint32_t,ze_event_handle_t*)
 

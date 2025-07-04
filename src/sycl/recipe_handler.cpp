@@ -3,6 +3,7 @@
 
 #include "recipe_handler.hpp"
 #include "dispatch.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc_cl.hpp"
 #include "tinytc/tinytc_sycl.hpp"
 #include "tinytc/tinytc_ze.hpp"

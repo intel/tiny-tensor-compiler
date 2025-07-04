@@ -509,6 +509,80 @@ template <typename T> mutable_array_view(T *, std::size_t) -> mutable_array_view
 template <typename T> mutable_array_view(T *, T *) -> mutable_array_view<T>;
 
 ////////////////////////////
+///////// Mem type /////////
+////////////////////////////
+
+/**
+ * @brief Guess memory type of memory object
+ *
+ * @tparam T memory object type
+ */
+template <typename T, typename Enable = void> struct auto_mem_type;
+
+/**
+ * @brief Check whether T maps to a scalar data type
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_supported_scalar_type = std::is_same_v<T, std::int8_t> ||         // i8
+                                          std::is_same_v<T, std::int16_t> ||        // i16
+                                          std::is_same_v<T, std::int32_t> ||        // i32
+                                          std::is_same_v<T, std::int64_t> ||        // i64
+                                          std::is_same_v<T, float> ||               // f32
+                                          std::is_same_v<T, double> ||              // f64
+                                          std::is_same_v<T, std::complex<float>> || // c32
+                                          std::is_same_v<T, std::complex<double>>;  // c64
+
+/**
+ * @brief True if T is either pointer to a support scalar type or a pointer to a pointer to a
+ * supported scalar type; void* is fine, too
+ *
+ * @tparam T type
+ */
+template <typename T>
+constexpr bool is_usm_pointer_type =
+    std::is_same_v<T, void *> ||
+    (std::is_pointer_v<T> &&
+     (is_supported_scalar_type<std::remove_pointer_t<T>> ||
+      is_supported_scalar_type<std::remove_pointer_t<std::remove_pointer_t<T>>>));
+
+/**
+ * @brief Specialize auto_mem_type for pointer to non-class types
+ *
+ * All pointers to scalars are assumed to be Unified Shared Memory pointers.
+ * (Automatic guessing for Shared Virtual Memory pointers not implemented.)
+ *
+ * @tparam T memory object type
+ */
+template <typename T> struct auto_mem_type<T, std::enable_if_t<is_usm_pointer_type<T>>> {
+    constexpr static mem_type value = mem_type::usm_pointer; ///< Pointer maps to USM pointer type
+};
+
+/**
+ * @brief Convenience wrapper for auto_mem_type
+ *
+ * @tparam T memory object type
+ */
+template <typename T> inline constexpr auto auto_mem_type_v = auto_mem_type<T>::value;
+
+//! Type-safe wrapper for memory objects
+struct mem {
+    /**
+     * @brief ctor
+     *
+     * @tparam T pointer type or buffer type
+     * @param value USM / SVM pointer or cl_mem (cl_mem implicitly converts to void*)
+     * @param type memory object type
+     */
+    template <typename T>
+    inline mem(T const value, mem_type type = auto_mem_type_v<T>) : value{value}, type{type} {}
+
+    const void *value; ///< USM / SVM pointer or cl_mem (passed by value)
+    mem_type type;     ///< Memory object type
+};
+
+////////////////////////////
 ///// Compiler context /////
 ////////////////////////////
 
@@ -1020,251 +1094,6 @@ inline auto spirv_assemble(tinytc_spv_mod_t mod) -> shared_handle<tinytc_binary_
     return shared_handle{bin};
 }
 
-////////////////////////////
-////////// Recipe //////////
-////////////////////////////
-
-/**
- * @brief Guess memory type of memory object
- *
- * @tparam T memory object type
- */
-template <typename T, typename Enable = void> struct auto_mem_type;
-
-/**
- * @brief Check whether T maps to a scalar data type
- *
- * @tparam T type
- */
-template <typename T>
-constexpr bool is_supported_scalar_type = std::is_same_v<T, std::int8_t> ||         // i8
-                                          std::is_same_v<T, std::int16_t> ||        // i16
-                                          std::is_same_v<T, std::int32_t> ||        // i32
-                                          std::is_same_v<T, std::int64_t> ||        // i64
-                                          std::is_same_v<T, float> ||               // f32
-                                          std::is_same_v<T, double> ||              // f64
-                                          std::is_same_v<T, std::complex<float>> || // c32
-                                          std::is_same_v<T, std::complex<double>>;  // c64
-
-/**
- * @brief True if T is either pointer to a support scalar type or a pointer to a pointer to a
- * supported scalar type; void* is fine, too
- *
- * @tparam T type
- */
-template <typename T>
-constexpr bool is_usm_pointer_type =
-    std::is_same_v<T, void *> ||
-    (std::is_pointer_v<T> &&
-     (is_supported_scalar_type<std::remove_pointer_t<T>> ||
-      is_supported_scalar_type<std::remove_pointer_t<std::remove_pointer_t<T>>>));
-
-/**
- * @brief Specialize auto_mem_type for pointer to non-class types
- *
- * All pointers to scalars are assumed to be Unified Shared Memory pointers.
- * (Automatic guessing for Shared Virtual Memory pointers not implemented.)
- *
- * @tparam T memory object type
- */
-template <typename T> struct auto_mem_type<T, std::enable_if_t<is_usm_pointer_type<T>>> {
-    constexpr static mem_type value = mem_type::usm_pointer; ///< Pointer maps to USM pointer type
-};
-
-/**
- * @brief Convenience wrapper for auto_mem_type
- *
- * @tparam T memory object type
- */
-template <typename T> inline constexpr auto auto_mem_type_v = auto_mem_type<T>::value;
-
-//! Type-safe wrapper for memory objects
-struct mem {
-    /**
-     * @brief ctor
-     *
-     * @tparam T pointer type or buffer type
-     * @param value USM / SVM pointer or cl_mem (cl_mem implicitly converts to void*)
-     * @param type memory object type
-     */
-    template <typename T>
-    inline mem(T const value, mem_type type = auto_mem_type_v<T>) : value{value}, type{type} {}
-
-    const void *value; ///< USM / SVM pointer or cl_mem (passed by value)
-    mem_type type;     ///< Memory object type
-};
-
-/**
- * @brief Get program
- *
- * @param rec Recipe
- *
- * @return Program
- */
-inline auto get_prog(const_tinytc_recipe_t rec) -> shared_handle<tinytc_prog_t> {
-    tinytc_prog_t prg;
-    CHECK_STATUS(tinytc_recipe_get_prog(rec, &prg));
-    return shared_handle{prg, true};
-}
-
-/**
- * @brief Get binary
- *
- * @param rec Recipe
- *
- * @return Binary
- */
-inline auto get_binary(const_tinytc_recipe_t rec) -> shared_handle<tinytc_binary_t> {
-    tinytc_binary_t bin;
-    CHECK_STATUS(tinytc_recipe_get_binary(rec, &bin));
-    return shared_handle{bin, true};
-}
-
-/**
- * @brief Get recipe
- *
- * @param handler Recipe handler
- *
- * @return Recipe
- */
-inline auto get_recipe(const_tinytc_recipe_handler_t handler) -> shared_handle<tinytc_recipe_t> {
-    tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_handler_get_recipe(handler, &rec));
-    return shared_handle{rec, true};
-}
-
-/**
- * @brief Set kernel arguments
- *
- * @tparam T Scalar type; must match scalar_type passed to constructor
- * @param handler Recipe handler
- * @param howmany Batch size
- * @param alpha @f$\alpha@f$
- * @param A Memory object used for A-matrix
- * @param B Memory object used for B-matrix
- * @param beta @f$\beta@f$
- * @param C Memory object used for C-matrix
- */
-template <typename T>
-static void set_small_gemm_batched_args(tinytc_recipe_handler_t handler, std::int64_t howmany,
-                                        T alpha, mem A, mem B, T beta, mem C) {
-    CHECK_STATUS(tinytc_recipe_small_gemm_batched_set_args(
-        handler, howmany, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type), A.value,
-        static_cast<tinytc_mem_type_t>(B.type), B.value, sizeof(beta), &beta,
-        static_cast<tinytc_mem_type_t>(C.type), C.value));
-}
-
-/**
- * @brief Make small GEMM batched recipe
- *
- * Cf. @ref tinytc_recipe_small_gemm_batched_create
- *
- * @param info Core info
- * @param number_ty Number type of @f$\alpha@f$, A, B, @f$\beta@f$, C
- * @param tA Operation applied on A
- * @param tB Operation applied on B
- * @param M Number of rows of A and C
- * @param N Number of columns of B and C
- * @param K Number of columns of A, number of rows of B
- * @param ldA Leading dimension of an A matrix
- * @param strideA Stride of A-matrices
- * @param ldB Leading dimension of an B matrix
- * @param strideB Stride of B-matrices
- * @param ldC Leading dimension of an C matrix
- * @param strideC Stride of C-matrices
- *
- * @return Small GEMM batched recipe
- */
-inline auto make_small_gemm_batched(tinytc_core_info_t info, tinytc_type_t number_ty, transpose tA,
-                                    transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
-                                    std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
-                                    std::int64_t strideB, std::int64_t ldC, std::int64_t strideC)
-    -> shared_handle<tinytc_recipe_t> {
-    tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
-        &rec, info, number_ty, static_cast<tinytc_transpose_t>(tA),
-        static_cast<tinytc_transpose_t>(tB), M, N, K, ldA, strideA, ldB, strideB, ldC, strideC));
-    return shared_handle{rec};
-}
-
-/**
- * @brief Set kernel arguments
- *
- * @tparam T Scalar type; must match scalar_type passed to constructor
- * @param handler Recipe handler
- * @param M Number of rows of A and C
- * @param alpha @f$\alpha@f$
- * @param A Memory object used for A-matrix
- * @param ldA Leading dimension of A
- * @param B Memory object used for B-matrix
- * @param ldB Leading dimension of B
- * @param beta @f$\beta@f$
- * @param C Memory object used for C-matrix
- * @param ldC Leading dimension of C
- */
-template <typename T>
-static void set_tall_and_skinny_args(tinytc_recipe_handler_t handler, std::int64_t M, T alpha,
-                                     mem A, std::int64_t ldA, mem B, std::int64_t ldB, T beta,
-                                     mem C, std::int64_t ldC) {
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_set_args(
-        handler, M, sizeof(alpha), &alpha, static_cast<tinytc_mem_type_t>(A.type), A.value, ldA,
-        static_cast<tinytc_mem_type_t>(B.type), B.value, ldB, sizeof(beta), &beta,
-        static_cast<tinytc_mem_type_t>(C.type), C.value, ldC));
-}
-
-/**
- * @brief Make tall and skinny recipe
- *
- * Cf. @ref tinytc_recipe_tall_and_skinny_create
- *
- * @param info Core info
- * @param number_ty Number type of @f$\alpha@f$, A, B, @f$\beta@f$, C
- * @param N Number of columns of B and C
- * @param K Number of columns of A, number of rows of B
- * @param M_block_size Chunk size for M-mode
- *
- * @return Tall and skinny recipe
- */
-inline auto make_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_ty, std::int64_t N,
-                                 std::int64_t K, std::int32_t M_block_size = 0)
-    -> shared_handle<tinytc_recipe_t> {
-    tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&rec, info, number_ty, N, K, M_block_size));
-    return shared_handle{rec};
-}
-
-/**
- * @brief Make tall and skinny recipe with additional specialization constants
- *
- * Cf. @ref tinytc_recipe_tall_and_skinny_create_specialized
- *
- * @param info Core info
- * @param number_ty Number type of @f$\alpha@f$, A, B, @f$\beta@f$, C
- * @param M Number of rows of A and C; can be dynamic
- * @param N Number of columns of B and C
- * @param K Number of columns of A, number of rows of B
- * @param ldA Leading dimension of A; can be dynamic
- * @param ldB Leading dimension of B; can be dynamic
- * @param ldC Leading dimension of C; can be dynamic
- * @param alignA [in] Memory alignment of A; can be 0
- * @param alignB [in] Memory alignment of B; can be 0
- * @param alignC [in] Memory alignment of C; can be 0
- * @param M_block_size Chunk size for M-mode
- *
- * @return Tall and skinny recipe
- */
-inline auto make_tall_and_skinny_specialized(tinytc_core_info_t info, tinytc_type_t number_ty,
-                                             std::int64_t M, std::int64_t N, std::int64_t K,
-                                             std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
-                                             std::int32_t alignA, std::int32_t alignB,
-                                             std::int32_t alignC, std::int32_t M_block_size = 0)
-    -> shared_handle<tinytc_recipe_t> {
-    tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
-        &rec, info, number_ty, M, N, K, ldA, ldB, ldC, alignA, alignB, alignC, M_block_size));
-    return shared_handle{rec};
-}
-
 } // namespace tinytc
 
 namespace std {
@@ -1274,7 +1103,6 @@ template <typename... T> struct hash<tinytc::lp_float<T...>> {
         return h{}(val.bits());
     }
 };
-
 } // namespace std
 
 #endif // TINYTC_20240403_HPP
