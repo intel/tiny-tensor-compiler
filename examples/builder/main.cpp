@@ -18,13 +18,13 @@ int main() {
     int64_t N = 32;
 
     try {
-        auto ctx = make_compiler_context();
+        auto ctx = create_compiler_context();
         auto element_ty = get<f32_type>(ctx.get());
         auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
                                    address_space::global);
 
         auto void_ty = get<void_type>(ctx.get());
-        auto f = make_func("copy", {ty, ty}, void_ty);
+        auto f = create_func("copy", {ty, ty}, void_ty);
 
         auto body = get_body(f.get());
         std::array<tinytc_value_t, 2u> params;
@@ -35,7 +35,7 @@ int main() {
         auto beta = bb.constant_zero(element_ty);
         bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
-        auto p = make_prog(ctx.get());
+        auto p = create_prog(ctx.get());
         add_function(p.get(), std::move(f));
 
         dump(p.get());

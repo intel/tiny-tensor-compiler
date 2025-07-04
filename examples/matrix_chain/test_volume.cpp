@@ -18,13 +18,13 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
                             std::size_t alignment, queue q, bool dump)
     : B3_(num_basis(N, dim)), B2_(num_basis(N - 1, dim)), P_(P), howmany_(howmany),
       B3_aligned_(aligned<T>(B3_, alignment)), B2_aligned_(aligned<T>(B2_, alignment)),
-      q_(std::move(q)), dev_info_(make_core_info(q_.get_device())),
+      q_(std::move(q)), dev_info_(create_core_info(q_.get_device())),
       Q_ref_(B3_, P_, B3_aligned_, howmany_, q_), Q_opt_(B3_, P_, B3_aligned_, howmany_, q_),
       I_(B3_, P_, B3_aligned_, howmany_, q_), tmp_(B3_, P_, B2_aligned_, howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(B3_, B3_, B3_aligned_, 1, q_)), ctx_(make_compiler_context()),
       opt_bundle_(make_optimized_kernel(dump)),
-      opt_kernel_(make_kernel(opt_bundle_, "volume_kernel")) {
+      opt_kernel_(create_kernel(opt_bundle_, "volume_kernel")) {
     Q_ref_.random();
     Q_opt_.random();
     I_.random();
@@ -36,21 +36,21 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
         k.random();
     }
 
-    g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
-                                    transpose::N, B2_aligned_, P_, P_, B3_aligned_,
-                                    B3_aligned_ * P_, P_, P_ * P_, B2_aligned_, B2_aligned_ * P_)
+    g_.emplace_back(create_recipe_handler(
+        q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                      transpose::N, B2_aligned_, P_, P_, B3_aligned_,
+                                      B3_aligned_ * P_, P_, P_ * P_, B2_aligned_, B2_aligned_ * P_)
                 .get()));
-    g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
-                                    transpose::N, B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)
+    g_.emplace_back(create_recipe_handler(
+        q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx_.get()), transpose::N,
+                                      transpose::N, B3_aligned_, P_, B2_, B3_aligned_, 0,
+                                      B2_aligned_, B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)
                 .get()));
 }
 
 template <typename T>
 auto test_volume<T>::make_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
-    auto ctx = ::tinytc::make_compiler_context();
+    auto ctx = ::tinytc::create_compiler_context();
     set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
@@ -74,7 +74,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         param_types[2 * dim + 1] = I_.type(element_ty);
 
         auto void_ty = get<void_type>(ctx);
-        auto f = make_func("volume_kernel", param_types, void_ty);
+        auto f = create_func("volume_kernel", param_types, void_ty);
         auto fn_body = get_body(f.get());
 
         std::array<tinytc_value_t, 2 * dim + 2> params;
@@ -158,13 +158,13 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
 
         return f;
     };
-    auto p = make_prog(ctx_.get());
+    auto p = create_prog(ctx_.get());
     add_function(p.get(), opt_kernel(ctx_.get()));
     if (dump_code) {
         dump(p.get());
     }
     auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
-    return make_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
+    return create_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T> std::vector<event> test_volume<T>::reference() {

@@ -60,8 +60,8 @@ Builder C++-API:
       - tinytc::getter< void_type >
   Function:
     function:
+      - tinytc::create_func
       - tinytc::get_body
-      - tinytc::make_func
       - tinytc::set_attr(tinytc_func_t,tinytc_attr_t)
       - tinytc::set_parameter_attr
   Instruction:
@@ -155,15 +155,15 @@ Builder C++-API:
   Program:
     function:
       - tinytc::add_function
-      - tinytc::make_prog
+      - tinytc::create_prog
   Recipe:
     function:
+      - tinytc::create_small_gemm_batched
+      - tinytc::create_tall_and_skinny
+      - tinytc::create_tall_and_skinny_specialized
       - tinytc::get_prog
       - tinytc::get_binary
       - tinytc::get_recipe
-      - tinytc::make_small_gemm_batched
-      - tinytc::make_tall_and_skinny
-      - tinytc::make_tall_and_skinny_specialized
       - tinytc::set_small_gemm_batched_args
       - tinytc::set_tall_and_skinny_args
       - tinytc::to_string(mem_type)

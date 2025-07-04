@@ -88,10 +88,10 @@ auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, t
         auto B_ty = make_memref(element_ty, tB, K, N, B_stride);
         auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride);
         auto void_ty = get<void_type>(ctx);
-        auto f = make_func("gemm",
-                           {get<group_type>(A_ty, dynamic, 0), get<group_type>(B_ty, dynamic, 0),
-                            get<group_type>(C_ty, dynamic, 0)},
-                           void_ty, my_loc());
+        auto f = create_func("gemm",
+                             {get<group_type>(A_ty, dynamic, 0), get<group_type>(B_ty, dynamic, 0),
+                              get<group_type>(C_ty, dynamic, 0)},
+                             void_ty, my_loc());
         if (alignment > 0) {
             auto align_attr = get_dictionary_attr_with_sorted(
                 ctx, tinytc_named_attr_t{get<string_attr>(ctx, "align"),
@@ -125,13 +125,13 @@ auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, t
     };
 
     try {
-        auto p = make_prog(ctx.get(), my_loc());
+        auto p = create_prog(ctx.get(), my_loc());
         add_function(p.get(), kernel(ctx.get()));
         if (dump_code) {
             dump(p.get());
         }
 
-        auto info = make_core_info(q.get_device());
+        auto info = create_core_info(q.get_device());
         set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
         return compile_to_spirv_and_assemble(p.get(), info.get());
     } catch (builder_error const &e) {
@@ -145,7 +145,7 @@ auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, t
 }
 
 template <typename T> void test(queue q, args &a) {
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
@@ -224,8 +224,8 @@ template <typename T> void test(queue q, args &a) {
                 {1, a.trans_a ? c.k : c.m}, {1, a.trans_b ? c.n : c.k}, a.update, {1, c.m},
                 a.alignment, a.internal_repetitions, a.dump, q);
             if (src) {
-                auto bundle = make_kernel_bundle(q.get_context(), q.get_device(), src.get());
-                auto kernel = make_kernel(bundle, "gemm");
+                auto bundle = create_kernel_bundle(q.get_context(), q.get_device(), src.get());
+                auto kernel = create_kernel(bundle, "gemm");
                 auto exe_range = get_execution_range(kernel, sycl::range<3u>{1u, 1u, howmany});
                 q.submit([&](handler &h) {
                      h.set_args(AA, howmany, BB, howmany, CC, howmany);

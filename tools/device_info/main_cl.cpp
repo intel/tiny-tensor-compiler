@@ -65,7 +65,7 @@ int main() {
                     break;
                 }
                 std::cout << ": " << name << std::endl;
-                auto info = make_core_info(device);
+                auto info = create_core_info(device);
                 std::cout << "\t\t" << "Subgroup sizes  :";
                 for (auto sgs : get_subgroup_sizes(info.get())) {
                     std::cout << " " << sgs;

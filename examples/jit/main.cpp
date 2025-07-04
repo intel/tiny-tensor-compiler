@@ -15,7 +15,7 @@ int main(int argc, char **argv) {
     }
 
     try {
-        auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
+        auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
         auto prog = parse_file(argv[1]);
         if (!prog) {
             return -1;

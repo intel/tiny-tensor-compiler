@@ -298,7 +298,7 @@
 %%
 prog:
     func_list {
-        auto p = make_prog(ctx.cctx(), @prog);
+        auto p = create_prog(ctx.cctx(), @prog);
         for (auto& f : $func_list) {
             add_function(p.get(), std::move(f));
         }
@@ -320,7 +320,7 @@ func:
             [&] {
                 ctx.add_global_name($GLOBAL_IDENTIFIER, loc);
                 auto void_ty = get<void_type>(ctx.cctx());
-                auto func_node = make_func($GLOBAL_IDENTIFIER, $parameters.second, void_ty, loc);
+                auto func_node = create_func($GLOBAL_IDENTIFIER, $parameters.second, void_ty, loc);
                 func_node->attr($function_attributes);
                 ctx.push_scope();
                 auto name_it = $parameters.first.begin();

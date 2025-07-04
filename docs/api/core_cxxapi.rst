@@ -206,13 +206,13 @@ Binary
 
 * Functions
 
+  * :ref:`tinytc::create_binary`
+
   * :ref:`tinytc::get_compiler_context(const_tinytc_binary_t)`
 
   * :ref:`tinytc::get_core_features(const_tinytc_binary_t)`
 
   * :ref:`tinytc::get_raw`
-
-  * :ref:`tinytc::make_binary`
 
   * :ref:`tinytc::to_string(bundle_format)`
 
@@ -232,6 +232,13 @@ bundle_format
 
 Binary Functions
 ----------------
+
+.. _tinytc::create_binary:
+
+create_binary
+.............
+
+.. doxygenfunction:: tinytc::create_binary
 
 .. _tinytc::get_compiler_context(const_tinytc_binary_t):
 
@@ -253,13 +260,6 @@ get_raw
 .......
 
 .. doxygenfunction:: tinytc::get_raw
-
-.. _tinytc::make_binary:
-
-make_binary
-...........
-
-.. doxygenfunction:: tinytc::make_binary
 
 .. _tinytc::to_string(bundle_format):
 
@@ -342,7 +342,7 @@ Compiler Context
 
   * :ref:`tinytc::add_source`
 
-  * :ref:`tinytc::make_compiler_context`
+  * :ref:`tinytc::create_compiler_context`
 
   * :ref:`tinytc::set_error_reporter`
 
@@ -374,12 +374,12 @@ add_source
 
 .. doxygenfunction:: tinytc::add_source
 
-.. _tinytc::make_compiler_context:
+.. _tinytc::create_compiler_context:
 
-make_compiler_context
-.....................
+create_compiler_context
+.......................
 
-.. doxygenfunction:: tinytc::make_compiler_context
+.. doxygenfunction:: tinytc::create_compiler_context
 
 .. _tinytc::set_error_reporter:
 
@@ -429,6 +429,14 @@ Device Info
 
 * Functions
 
+  * :ref:`tinytc::create_core_info_generic`
+
+  * :ref:`tinytc::create_core_info_intel`
+
+  * :ref:`tinytc::create_core_info_intel_from_arch`
+
+  * :ref:`tinytc::create_core_info_intel_from_name`
+
   * :ref:`tinytc::get_core_features(const_tinytc_core_info_t)`
 
   * :ref:`tinytc::get_subgroup_sizes`
@@ -436,14 +444,6 @@ Device Info
   * :ref:`tinytc::get_register_space`
 
   * :ref:`tinytc::have_spirv_feature`
-
-  * :ref:`tinytc::make_core_info_generic`
-
-  * :ref:`tinytc::make_core_info_intel`
-
-  * :ref:`tinytc::make_core_info_intel_from_arch`
-
-  * :ref:`tinytc::make_core_info_intel_from_name`
 
   * :ref:`tinytc::set_core_features`
 
@@ -484,6 +484,34 @@ spirv_feature
 Device Info Functions
 ---------------------
 
+.. _tinytc::create_core_info_generic:
+
+create_core_info_generic
+........................
+
+.. doxygenfunction:: tinytc::create_core_info_generic
+
+.. _tinytc::create_core_info_intel:
+
+create_core_info_intel
+......................
+
+.. doxygenfunction:: tinytc::create_core_info_intel
+
+.. _tinytc::create_core_info_intel_from_arch:
+
+create_core_info_intel_from_arch
+................................
+
+.. doxygenfunction:: tinytc::create_core_info_intel_from_arch
+
+.. _tinytc::create_core_info_intel_from_name:
+
+create_core_info_intel_from_name
+................................
+
+.. doxygenfunction:: tinytc::create_core_info_intel_from_name
+
 .. _tinytc::get_core_features(const_tinytc_core_info_t):
 
 get_core_features(const_tinytc_core_info_t)
@@ -511,34 +539,6 @@ have_spirv_feature
 ..................
 
 .. doxygenfunction:: tinytc::have_spirv_feature
-
-.. _tinytc::make_core_info_generic:
-
-make_core_info_generic
-......................
-
-.. doxygenfunction:: tinytc::make_core_info_generic
-
-.. _tinytc::make_core_info_intel:
-
-make_core_info_intel
-....................
-
-.. doxygenfunction:: tinytc::make_core_info_intel
-
-.. _tinytc::make_core_info_intel_from_arch:
-
-make_core_info_intel_from_arch
-..............................
-
-.. doxygenfunction:: tinytc::make_core_info_intel_from_arch
-
-.. _tinytc::make_core_info_intel_from_name:
-
-make_core_info_intel_from_name
-..............................
-
-.. doxygenfunction:: tinytc::make_core_info_intel_from_name
 
 .. _tinytc::set_core_features:
 

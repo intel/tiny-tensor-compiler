@@ -17,13 +17,13 @@ template <typename T>
 test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, std::size_t alignment,
                         queue q, bool dump)
     : N_(N), P_(P), howmany_(howmany), alignment_(alignment), q_(std::move(q)),
-      dev_info_(make_core_info(q_.get_device())), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
+      dev_info_(create_core_info(q_.get_device())), I_ref_(Bd(), P_, Bd_aligned(), howmany_, q_),
       I_opt_(Bd(), P_, Bd_aligned(), howmany_, q_),
       tmp_(Bd(), P_, Bd_aligned(N_ - 1), howmany_, q_),
       A_(dim, matrix_batch<T>(P_, P_, P_, howmany_, q_)),
       K_(dim, matrix_batch<T>(Bd(), Bd(), Bd_aligned(N_ - 1), 1, q_)), dQ_(make_dQ()),
       opt_bundle_(make_optimized_kernel(dump)),
-      opt_kernel_(make_kernel(opt_bundle_, "ader_kernel")) {
+      opt_kernel_(create_kernel(opt_bundle_, "ader_kernel")) {
     I_ref_.random();
     I_opt_.random();
     for (auto &a : A_) {
@@ -38,18 +38,18 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
         d->fill(0);
     }
 
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
-        g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
-                                        transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
-                                        dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)
+        g_.emplace_back(create_recipe_handler(
+            q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
+                                          transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
+                                          dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)
                     .get()));
-        g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
-                                        transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
-                                        A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())
+        g_.emplace_back(create_recipe_handler(
+            q_, create_small_gemm_batched(dev_info_.get(), to_type<T>(ctx.get()), transpose::N,
+                                          transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
+                                          A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())
                     .get()));
     }
 }
@@ -79,7 +79,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         param_types[1 + 2 * dim + 1] = I_opt_.type(element_ty);
 
         auto void_ty = get<void_type>(ctx);
-        auto f = make_func("ader_kernel", param_types, void_ty);
+        auto f = create_func("ader_kernel", param_types, void_ty);
         auto fn_body = get_body(f.get());
 
         std::array<tinytc_value_t, 2 * dim + 3> params;
@@ -165,17 +165,17 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
 
         return f;
     };
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });
-    auto p = make_prog(ctx.get());
+    auto p = create_prog(ctx.get());
     add_function(p.get(), opt_kernel(ctx.get()));
     if (dump_code) {
         dump(p.get());
     }
     auto bin = compile_to_spirv_and_assemble(p.get(), dev_info_.get());
-    return make_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
+    return create_kernel_bundle(q_.get_context(), q_.get_device(), bin.get());
 }
 
 template <typename T>

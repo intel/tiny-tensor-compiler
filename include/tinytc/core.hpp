@@ -607,7 +607,7 @@ inline auto add_source(tinytc_compiler_context_t ctx, char const *name, char con
  *
  * @return Compiler context
  */
-inline auto make_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
+inline auto create_compiler_context() -> shared_handle<tinytc_compiler_context_t> {
     tinytc_compiler_context_t ctx;
     CHECK_STATUS(tinytc_compiler_context_create(&ctx));
     return shared_handle{ctx};
@@ -854,8 +854,8 @@ inline void set_default_alignment(tinytc_core_info_t info, std::int32_t alignmen
  *
  * @return Core info
  */
-inline auto make_core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
-                                   array_view<std::int32_t> sgs)
+inline auto create_core_info_generic(std::int32_t register_space, std::int32_t max_work_group_size,
+                                     array_view<std::int32_t> sgs)
     -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_generic_create(&info, register_space, max_work_group_size,
@@ -870,7 +870,7 @@ inline auto make_core_info_generic(std::int32_t register_space, std::int32_t max
  *
  * @return Core info
  */
-inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch)
+inline auto create_core_info_intel_from_arch(intel_gpu_architecture arch)
     -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_arch(
@@ -885,7 +885,8 @@ inline auto make_core_info_intel_from_arch(intel_gpu_architecture arch)
  *
  * @return Core info
  */
-inline auto make_core_info_intel_from_name(char const *name) -> shared_handle<tinytc_core_info_t> {
+inline auto create_core_info_intel_from_name(char const *name)
+    -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create_from_name(&info, name));
     return shared_handle{info};
@@ -901,8 +902,8 @@ inline auto make_core_info_intel_from_name(char const *name) -> shared_handle<ti
  *
  * @return Core info
  */
-inline auto make_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
-                                 std::int32_t num_threads_per_eu, array_view<std::int32_t> sgs)
+inline auto create_core_info_intel(std::uint32_t ip_version, std::int32_t num_eus_per_subslice,
+                                   std::int32_t num_threads_per_eu, array_view<std::int32_t> sgs)
     -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(tinytc_core_info_intel_create(&info, ip_version, num_eus_per_subslice,
@@ -1009,7 +1010,7 @@ inline auto get_raw(tinytc_binary_t bin) -> raw_binary {
 }
 
 /**
- * @brief Make binary
+ * @brief Create binary
  *
  * @param ctx Compiler context
  * @param format Bundle format (SPIR-V or Native)
@@ -1020,8 +1021,9 @@ inline auto get_raw(tinytc_binary_t bin) -> raw_binary {
  *
  * @return Binary
  */
-inline auto make_binary(tinytc_compiler_context_t ctx, bundle_format format, std::size_t data_size,
-                        std::uint8_t const *data, tinytc_core_feature_flags_t core_features)
+inline auto create_binary(tinytc_compiler_context_t ctx, bundle_format format,
+                          std::size_t data_size, std::uint8_t const *data,
+                          tinytc_core_feature_flags_t core_features)
     -> shared_handle<tinytc_binary_t> {
     tinytc_binary_t bin;
     CHECK_STATUS(tinytc_binary_create(&bin, ctx, static_cast<tinytc_bundle_format_t>(format),

@@ -301,7 +301,7 @@ template <typename T> struct creator;
 template <> struct creator<constant_inst> {
     constexpr static std::int32_t max_returned_values = 1;
     /**
-     * @brief Make boolean constant
+     * @brief Create boolean constant
      *
      * @param value Constant
      * @param ty Data type
@@ -317,7 +317,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make complex constant
+     * @brief Create complex constant
      *
      * @param value Complex constant
      * @param ty Data type
@@ -334,7 +334,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make floating constant
+     * @brief Create floating constant
      *
      * @param value Constant
      * @param ty Data type
@@ -350,7 +350,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make integer constant
+     * @brief Create integer constant
      *
      * @param value Constant
      * @param ty Data type
@@ -366,7 +366,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make integer constant
+     * @brief Create integer constant
      *
      * @param value Constant
      * @param ty Data type
@@ -382,7 +382,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make multiplicative identity constant ("1") for the given data type
+     * @brief Create multiplicative identity constant ("1") for the given data type
      *
      * @param ty Scalar data type
      * @param loc Source code location
@@ -396,7 +396,7 @@ template <> struct creator<constant_inst> {
     }
 
     /**
-     * @brief Make additive identity constant ("0") for the given data type
+     * @brief Create additive identity constant ("0") for the given data type
      *
      * @param ty Scalar data type
      * @param loc Source code location
@@ -542,7 +542,7 @@ inline auto get_body(tinytc_func_t f) -> tinytc_region_t {
 }
 
 /**
- * @brief Make function
+ * @brief Create function
  *
  * @param name Function name
  * @param param_type_list List of parameter types
@@ -551,8 +551,9 @@ inline auto get_body(tinytc_func_t f) -> tinytc_region_t {
  *
  * @return Function
  */
-inline auto make_func(std::string_view name, array_view<tinytc_type_t> param_type_list,
-                      tinytc_type_t ty, location const &loc = {}) -> unique_handle<tinytc_func_t> {
+inline auto create_func(std::string_view name, array_view<tinytc_type_t> param_type_list,
+                        tinytc_type_t ty, location const &loc = {})
+    -> unique_handle<tinytc_func_t> {
     tinytc_func_t fun;
     CHECK_STATUS_LOC(tinytc_func_create(&fun, name.size(), name.data(), param_type_list.size(),
                                         param_type_list.data(), ty, &loc),
@@ -594,14 +595,14 @@ inline void add_function(tinytc_prog_t prg, unique_handle<tinytc_func_t> &&fun) 
 }
 
 /**
- * @brief Make program
+ * @brief Create program
  *
  * @param ctx Compiler context
  * @param loc Source code location
  *
  * @return Program
  */
-inline auto make_prog(tinytc_compiler_context_t ctx, location const &loc = {})
+inline auto create_prog(tinytc_compiler_context_t ctx, location const &loc = {})
     -> shared_handle<tinytc_prog_t> {
     tinytc_prog_t prg;
     CHECK_STATUS_LOC(tinytc_prog_create(&prg, ctx, &loc), loc);
@@ -686,7 +687,7 @@ class region_builder {
     }
 
     /**
-     * @brief Make multiplicative identity constant ("1") for the given data type
+     * @brief Create multiplicative identity constant ("1") for the given data type
      *
      * @param ty Scalar data type
      * @param loc Source code location
@@ -697,7 +698,7 @@ class region_builder {
         return add(creator<constant_inst>{}.one(ty, loc));
     }
     /**
-     * @brief Make additive identity constant ("0") for the given data type
+     * @brief Create additive identity constant ("0") for the given data type
      *
      * @param ty Scalar data type
      * @param loc Source code location
@@ -949,7 +950,7 @@ static void set_small_gemm_batched_args(tinytc_recipe_handler_t handler, std::in
 }
 
 /**
- * @brief Make small GEMM batched recipe
+ * @brief Create small GEMM batched recipe
  *
  * Cf. @ref tinytc_recipe_small_gemm_batched_create
  *
@@ -969,11 +970,11 @@ static void set_small_gemm_batched_args(tinytc_recipe_handler_t handler, std::in
  *
  * @return Small GEMM batched recipe
  */
-inline auto make_small_gemm_batched(tinytc_core_info_t info, tinytc_type_t number_ty, transpose tA,
-                                    transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
-                                    std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
-                                    std::int64_t strideB, std::int64_t ldC, std::int64_t strideC)
-    -> shared_handle<tinytc_recipe_t> {
+inline auto create_small_gemm_batched(tinytc_core_info_t info, tinytc_type_t number_ty,
+                                      transpose tA, transpose tB, std::int64_t M, std::int64_t N,
+                                      std::int64_t K, std::int64_t ldA, std::int64_t strideA,
+                                      std::int64_t ldB, std::int64_t strideB, std::int64_t ldC,
+                                      std::int64_t strideC) -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
         &rec, info, number_ty, static_cast<tinytc_transpose_t>(tA),
@@ -1007,7 +1008,7 @@ static void set_tall_and_skinny_args(tinytc_recipe_handler_t handler, std::int64
 }
 
 /**
- * @brief Make tall and skinny recipe
+ * @brief Create tall and skinny recipe
  *
  * Cf. @ref tinytc_recipe_tall_and_skinny_create
  *
@@ -1019,8 +1020,8 @@ static void set_tall_and_skinny_args(tinytc_recipe_handler_t handler, std::int64
  *
  * @return Tall and skinny recipe
  */
-inline auto make_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_ty, std::int64_t N,
-                                 std::int64_t K, std::int32_t M_block_size = 0)
+inline auto create_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_ty, std::int64_t N,
+                                   std::int64_t K, std::int32_t M_block_size = 0)
     -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&rec, info, number_ty, N, K, M_block_size));
@@ -1028,7 +1029,7 @@ inline auto make_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_t
 }
 
 /**
- * @brief Make tall and skinny recipe with additional specialization constants
+ * @brief Create tall and skinny recipe with additional specialization constants
  *
  * Cf. @ref tinytc_recipe_tall_and_skinny_create_specialized
  *
@@ -1047,11 +1048,11 @@ inline auto make_tall_and_skinny(tinytc_core_info_t info, tinytc_type_t number_t
  *
  * @return Tall and skinny recipe
  */
-inline auto make_tall_and_skinny_specialized(tinytc_core_info_t info, tinytc_type_t number_ty,
-                                             std::int64_t M, std::int64_t N, std::int64_t K,
-                                             std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
-                                             std::int32_t alignA, std::int32_t alignB,
-                                             std::int32_t alignC, std::int32_t M_block_size = 0)
+inline auto create_tall_and_skinny_specialized(tinytc_core_info_t info, tinytc_type_t number_ty,
+                                               std::int64_t M, std::int64_t N, std::int64_t K,
+                                               std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
+                                               std::int32_t alignA, std::int32_t alignB,
+                                               std::int32_t alignC, std::int32_t M_block_size = 0)
     -> shared_handle<tinytc_recipe_t> {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(

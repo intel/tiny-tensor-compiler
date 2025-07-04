@@ -72,7 +72,7 @@ void run_custom_test_case(std::string const &code, char const *kernel_name, T &.
         gpu_rt->memcpy_h2d(bp.device, bp.host, bp.size);
     }
 
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
         std::cerr << what << std::endl;
     });

@@ -28,7 +28,7 @@ template <typename AlphaT, typename AT, typename BetaT, typename BT>
 auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_layout const &layoutB,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
                        std::int32_t work_group_size = 0) -> shared_handle<tinytc_prog_t> {
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     return make_blas_a2_prog(name, layoutA, layoutB, to_type<AlphaT>(ctx.get()),
                              to_type<AT>(ctx.get()), to_type<BetaT>(ctx.get()),
                              to_type<BT>(ctx.get()), std::move(make_op), work_group_size);

@@ -20,12 +20,12 @@ ze_recipe_handler::ze_recipe_handler(ze_context_handle_t context, ze_device_hand
                                      shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_binary(get_recipe()).get());
+    module_ = create_kernel_bundle(context, device, get_binary(get_recipe()).get());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
     }
 }
 

@@ -39,7 +39,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
                        tensor_layout const &layoutC,
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
     -> shared_handle<tinytc_prog_t> {
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     return make_blas_a3_prog(name, layoutA, layoutB, layoutC, to_type<AlphaT>(ctx.get()),
                              to_type<AT>(ctx.get()), to_type<BT>(ctx.get()),
                              to_type<BetaT>(ctx.get()), to_type<CT>(ctx.get()), std::move(make_op));

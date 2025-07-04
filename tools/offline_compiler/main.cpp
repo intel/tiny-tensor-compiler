@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 
     auto parser = cmd::arg_parser{};
     try {
-        info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
+        info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
 
         parser.set_short_opt('O', &opt_level, "Optimization level, default is -O2")
             .validator([](std::int32_t level) { return 0 <= level; });
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
                            "Device name (cf. intel_gpu_architecture enum), default is \"pvc\"")
             .converter(
                 [](char const *str, shared_handle<tinytc_core_info_t> &val) -> cmd::parser_status {
-                    val = make_core_info_intel_from_name(str);
+                    val = create_core_info_intel_from_name(str);
                     if (!val) {
                         return cmd::parser_status::invalid_argument;
                     }
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
     }
 
     try {
-        auto ctx = make_compiler_context();
+        auto ctx = create_compiler_context();
         set_error_reporter(ctx.get(), [](char const *what, const tinytc_location_t *, void *) {
             std::cerr << what << std::endl;
         });

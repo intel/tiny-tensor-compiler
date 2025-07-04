@@ -37,22 +37,22 @@ void sycl_test_runtime::memcpy_d2h(void *dst, const_mem_t src, std::size_t bytes
 }
 
 auto sycl_test_runtime::get_core_info() const -> tinytc::shared_handle<tinytc_core_info_t> {
-    return ::tinytc::make_core_info(q_.get_device());
+    return ::tinytc::create_core_info(q_.get_device());
 }
 auto sycl_test_runtime::get_device() -> device_t { return q_.get_device(); }
 auto sycl_test_runtime::get_context() -> context_t { return q_.get_context(); }
 auto sycl_test_runtime::get_command_list() -> command_list_t { return q_; }
 auto sycl_test_runtime::get_recipe_handler(tinytc_recipe_t rec)
     -> tinytc::shared_handle<tinytc_recipe_handler_t> {
-    return tinytc::make_recipe_handler(q_, rec);
+    return tinytc::create_recipe_handler(q_, rec);
 }
 auto sycl_test_runtime::get_kernel_bundle(tinytc_prog_t p,
                                           tinytc_core_feature_flags_t core_features)
     -> kernel_bundle_t {
-    return ::tinytc::make_kernel_bundle(q_.get_context(), q_.get_device(), p, core_features);
+    return ::tinytc::create_kernel_bundle(q_.get_context(), q_.get_device(), p, core_features);
 }
 auto sycl_test_runtime::get_kernel(kernel_bundle_t const &bundle, char const *name) -> kernel_t {
-    return ::tinytc::make_kernel(bundle, name);
+    return ::tinytc::create_kernel(bundle, name);
 }
 void sycl_test_runtime::set_arg(kernel_t &kernel, std::uint32_t arg_index, std::size_t arg_size,
                                 const void *arg_value) {

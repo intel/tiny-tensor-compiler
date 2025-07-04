@@ -104,7 +104,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
                 auto A_ty = get<memref_type>(ty, A_shape, A_stride, address_space::global);
                 auto B_ty = get<memref_type>(ty, B_shape, B_stride, address_space::global);
                 auto C_ty = get<memref_type>(ty, C_shape, C_stride, address_space::global);
-                auto f = make_func(name, {ty, A_ty, B_ty, ty, C_ty}, void_ty, my_loc());
+                auto f = create_func(name, {ty, A_ty, B_ty, ty, C_ty}, void_ty, my_loc());
                 auto fn_body = get_body(f.get());
                 auto params = std::array<tinytc_value_t, 5u>{};
                 get_parameters(fn_body, params);
@@ -136,7 +136,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
                 return f;
             };
-            auto p = make_prog(ctx, my_loc());
+            auto p = create_prog(ctx, my_loc());
             add_function(
                 p.get(),
                 kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));

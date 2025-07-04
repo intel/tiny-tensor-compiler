@@ -48,7 +48,7 @@ inline auto get_support_level(cl_device_id device) -> support_level {
  *
  * @return core info
  */
-inline auto make_core_info(cl_device_id device) -> shared_handle<tinytc_core_info_t> {
+inline auto create_core_info(cl_device_id device) -> shared_handle<tinytc_core_info_t> {
     tinytc_core_info_t info;
     CHECK_STATUS(::tinytc_cl_core_info_create(&info, device));
     return shared_handle{info};
@@ -92,8 +92,8 @@ template <> struct shared_handle_traits<cl_kernel> {
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, tinytc_prog_t prg,
-                               tinytc_core_feature_flags_t core_features = 0)
+inline auto create_kernel_bundle(cl_context context, cl_device_id device, tinytc_prog_t prg,
+                                 tinytc_core_feature_flags_t core_features = 0)
     -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(
@@ -110,7 +110,7 @@ inline auto make_kernel_bundle(cl_context context, cl_device_id device, tinytc_p
  *
  * @return cl_program (shared handle)
  */
-inline auto make_kernel_bundle(cl_context context, cl_device_id device, const_tinytc_binary_t bin)
+inline auto create_kernel_bundle(cl_context context, cl_device_id device, const_tinytc_binary_t bin)
     -> shared_handle<cl_program> {
     cl_program obj;
     CHECK_STATUS(tinytc_cl_kernel_bundle_create_with_binary(&obj, context, device, bin));
@@ -125,7 +125,7 @@ inline auto make_kernel_bundle(cl_context context, cl_device_id device, const_ti
  *
  * @return cl_kernel (shared handle)
  */
-inline auto make_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
+inline auto create_kernel(cl_program mod, char const *name) -> shared_handle<cl_kernel> {
     cl_int err;
     cl_kernel obj = clCreateKernel(mod, name, &err);
     CL_CHECK_STATUS(err);
@@ -224,7 +224,7 @@ inline void submit_no_event(tinytc_recipe_handler_t handler, cl_command_queue qu
  *
  * @return OpenCL recipe handler
  */
-inline auto make_recipe_handler(cl_context context, cl_device_id device, tinytc_recipe_t rec)
+inline auto create_recipe_handler(cl_context context, cl_device_id device, tinytc_recipe_t rec)
     -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler;
     CHECK_STATUS(tinytc_cl_recipe_handler_create(&handler, context, device, rec));

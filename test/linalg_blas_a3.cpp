@@ -83,7 +83,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
     -> shared_handle<tinytc_prog_t> {
     auto ctx = get_compiler_context(alpha_ty);
-    auto p = make_prog(ctx.get());
+    auto p = create_prog(ctx.get());
 
     auto At = get<memref_type>(A_ty, layoutA.static_shape(), layoutA.static_stride(),
                                address_space::global);
@@ -93,7 +93,7 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
                                address_space::global);
 
     auto void_ty = get<void_type>(ctx.get());
-    auto f = make_func(name, {alpha_ty, At, Bt, beta_ty, Ct}, void_ty);
+    auto f = create_func(name, {alpha_ty, At, Bt, beta_ty, Ct}, void_ty);
     auto fn_body = get_body(f.get());
     auto params = std::array<tinytc_value_t, 5u>{};
     get_parameters(fn_body, params);

@@ -34,7 +34,7 @@ TEST_CASE("device (Level Zero)") {
     ZE_CHECK_STATUS(zeDeviceGetProperties(device, &dev_props));
 
     if (dev_ip_ver.ipVersion >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
-        auto info = make_core_info(device);
+        auto info = create_core_info(device);
 
         const auto sgs = get_subgroup_sizes(info.get());
         REQUIRE(sgs.size() == 2u);

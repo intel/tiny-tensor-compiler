@@ -35,7 +35,7 @@ TINYTC_EXPORT auto get_support_level(sycl::device const &dev) -> support_level;
  *
  * @return core info
  */
-TINYTC_EXPORT auto make_core_info(sycl::device const &dev) -> shared_handle<tinytc_core_info_t>;
+TINYTC_EXPORT auto create_core_info(sycl::device const &dev) -> shared_handle<tinytc_core_info_t>;
 
 ////////////////////////////
 ////////// Kernel //////////
@@ -52,9 +52,9 @@ TINYTC_EXPORT auto make_core_info(sycl::device const &dev) -> shared_handle<tiny
  *
  * @return SYCL kernel bundle
  */
-TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                                      tinytc_prog_t prg,
-                                      tinytc_core_feature_flags_t core_features = 0)
+TINYTC_EXPORT auto create_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                        tinytc_prog_t prg,
+                                        tinytc_core_feature_flags_t core_features = 0)
     -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
@@ -66,8 +66,8 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  *
  * @return SYCL kernel bundle
  */
-TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
-                                      const_tinytc_binary_t bin)
+TINYTC_EXPORT auto create_kernel_bundle(sycl::context const &ctx, sycl::device const &dev,
+                                        const_tinytc_binary_t bin)
     -> sycl::kernel_bundle<sycl::bundle_state::executable>;
 
 /**
@@ -78,8 +78,8 @@ TINYTC_EXPORT auto make_kernel_bundle(sycl::context const &ctx, sycl::device con
  *
  * @return SYCL kernel
  */
-TINYTC_EXPORT auto make_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
-                               char const *name) -> sycl::kernel;
+TINYTC_EXPORT auto create_kernel(sycl::kernel_bundle<sycl::bundle_state::executable> const &bundle,
+                                 char const *name) -> sycl::kernel;
 
 /**
  * @brief Get work-group size
@@ -170,8 +170,8 @@ TINYTC_EXPORT auto submit(tinytc_recipe_handler_t handler, sycl::queue q,
  *
  * @return SYCL recipe handler
  */
-TINYTC_EXPORT auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
-                                       tinytc_recipe_t rec)
+TINYTC_EXPORT auto create_recipe_handler(sycl::context const &ctx, sycl::device const &dev,
+                                         tinytc_recipe_t rec)
     -> shared_handle<tinytc_recipe_handler_t>;
 /**
  * @brief Make recipe handler
@@ -181,7 +181,7 @@ TINYTC_EXPORT auto make_recipe_handler(sycl::context const &ctx, sycl::device co
  *
  * @return SYCL recipe handler
  */
-TINYTC_EXPORT auto make_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
+TINYTC_EXPORT auto create_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
     -> shared_handle<tinytc_recipe_handler_t>;
 
 } // namespace tinytc

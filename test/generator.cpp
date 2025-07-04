@@ -20,10 +20,10 @@
 using namespace tinytc;
 
 TEST_CASE("suggest work group size") {
-    auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
+    auto info = create_core_info_intel_from_arch(intel_gpu_architecture::pvc);
     set_core_features(info.get(), tinytc_core_feature_flag_large_register_file);
     REQUIRE(info->register_space() == 64 * 256);
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     auto f64_ty = get<f64_type>(ctx.get());
     auto check = [&info, &f64_ty](std::int64_t M, std::int64_t N, std::size_t sgs,
                                   std::size_t m_tiles, std::size_t n_tiles) {
@@ -89,7 +89,7 @@ TEST_CASE("block size") {
 }
 
 TEST_CASE("compatible scalar type") {
-    auto ctx = make_compiler_context();
+    auto ctx = create_compiler_context();
     std::array<tinytc_type_t, 10u> types = {get<i8_type>(ctx.get()),  get<bf16_type>(ctx.get()),
                                             get<f16_type>(ctx.get()), get<i16_type>(ctx.get()),
                                             get<f32_type>(ctx.get()), get<i32_type>(ctx.get()),

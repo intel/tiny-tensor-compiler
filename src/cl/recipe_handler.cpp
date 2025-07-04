@@ -20,13 +20,13 @@ cl_recipe_handler::cl_recipe_handler(cl_context context, cl_device_id device,
                                      shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)) {
 
-    module_ = make_kernel_bundle(context, device, get_binary(get_recipe()).get());
+    module_ = create_kernel_bundle(context, device, get_binary(get_recipe()).get());
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_.get(), get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_.get(), get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back().get()));
     }
 

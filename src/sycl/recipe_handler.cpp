@@ -28,13 +28,13 @@ sycl_recipe_handler_impl::sycl_recipe_handler_impl(sycl::context const &context,
                                                    sycl::device const &device,
                                                    shared_handle<tinytc_recipe_t> rec)
     : ::tinytc_recipe_handler(std::move(rec)),
-      module_(make_kernel_bundle(context, device, get_binary(get_recipe()).get())) {
+      module_(create_kernel_bundle(context, device, get_binary(get_recipe()).get())) {
 
     auto const num_kernels = get_recipe()->num_kernels();
     kernels_.reserve(num_kernels);
     local_size_.reserve(num_kernels);
     for (int num = 0; num < num_kernels; ++num) {
-        kernels_.emplace_back(make_kernel(module_, get_recipe()->kernel_name(num)));
+        kernels_.emplace_back(create_kernel(module_, get_recipe()->kernel_name(num)));
         local_size_.emplace_back(get_group_size(kernels_.back()));
     }
 
@@ -70,14 +70,14 @@ auto sycl_recipe_handler_impl::local_size() const -> sycl::range<3u> const & {
     return local_size_[active_kernel_];
 }
 
-auto make_recipe_handler(sycl::context const &ctx, sycl::device const &dev, tinytc_recipe_t rec)
+auto create_recipe_handler(sycl::context const &ctx, sycl::device const &dev, tinytc_recipe_t rec)
     -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler =
         std::make_unique<sycl_recipe_handler_impl>(ctx, dev, shared_handle{rec, true}).release();
     return shared_handle{handler};
 }
 
-auto make_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
+auto create_recipe_handler(sycl::queue const &q, tinytc_recipe_t rec)
     -> shared_handle<tinytc_recipe_handler_t> {
     tinytc_recipe_handler_t handler = std::make_unique<sycl_recipe_handler_impl>(
                                           q.get_context(), q.get_device(), shared_handle{rec, true})

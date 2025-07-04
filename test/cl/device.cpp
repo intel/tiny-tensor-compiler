@@ -49,7 +49,7 @@ TEST_CASE("device (OpenCL)") {
         return;
     }
 
-    auto info = make_core_info(device);
+    auto info = create_core_info(device);
     const auto sgs = get_subgroup_sizes(info.get());
 
     if (ip_ver >= static_cast<std::uint32_t>(intel_gpu_architecture::pvc)) {
