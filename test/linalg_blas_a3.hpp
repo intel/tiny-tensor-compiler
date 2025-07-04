@@ -40,11 +40,9 @@ auto make_blas_a3_prog(char const *name, tensor_layout const &layoutA, tensor_la
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op)
     -> prog {
     auto ctx = make_compiler_context();
-    return make_blas_a3_prog(
-        ctx, name, layoutA, layoutB, layoutC, get<to_number_type_t<AlphaT>>(ctx.get()),
-        get<to_number_type_t<AT>>(ctx.get()), get<to_number_type_t<BT>>(ctx.get()),
-        get<to_number_type_t<BetaT>>(ctx.get()), get<to_number_type_t<CT>>(ctx.get()),
-        std::move(make_op));
+    return make_blas_a3_prog(ctx, name, layoutA, layoutB, layoutC, to_type<AlphaT>(ctx.get()),
+                             to_type<AT>(ctx.get()), to_type<BT>(ctx.get()),
+                             to_type<BetaT>(ctx.get()), to_type<CT>(ctx.get()), std::move(make_op));
 }
 
 template <typename AlphaT, typename AT, typename BT, typename BetaT, typename CT> class gemm {

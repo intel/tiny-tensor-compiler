@@ -1168,20 +1168,18 @@ class small_gemm_batched : public recipe {
  * @param strideB Stride of B-matrices
  * @param ldC Leading dimension of an C matrix
  * @param strideC Stride of C-matrices
- * @param ctx Compiler context
  *
  * @return Small GEMM batched recipe
  */
 inline auto make_small_gemm_batched(core_info const &info, tinytc_type_t number_ty, transpose tA,
                                     transpose tB, std::int64_t M, std::int64_t N, std::int64_t K,
                                     std::int64_t ldA, std::int64_t strideA, std::int64_t ldB,
-                                    std::int64_t strideB, std::int64_t ldC, std::int64_t strideC,
-                                    compiler_context const &ctx = {}) -> small_gemm_batched {
+                                    std::int64_t strideB, std::int64_t ldC, std::int64_t strideC)
+    -> small_gemm_batched {
     tinytc_recipe_t rec;
     CHECK_STATUS(tinytc_recipe_small_gemm_batched_create(
         &rec, info.get(), number_ty, static_cast<tinytc_transpose_t>(tA),
-        static_cast<tinytc_transpose_t>(tB), M, N, K, ldA, strideA, ldB, strideB, ldC, strideC,
-        ctx.get()));
+        static_cast<tinytc_transpose_t>(tB), M, N, K, ldA, strideA, ldB, strideB, ldC, strideC));
     return small_gemm_batched{rec};
 }
 
@@ -1225,16 +1223,14 @@ class tall_and_skinny : public recipe {
  * @param N Number of columns of B and C
  * @param K Number of columns of A, number of rows of B
  * @param M_block_size Chunk size for M-mode
- * @param ctx Compiler context
  *
  * @return Tall and skinny recipe
  */
 inline auto make_tall_and_skinny(core_info const &info, tinytc_type_t number_ty, std::int64_t N,
-                                 std::int64_t K, std::int32_t M_block_size = 0,
-                                 compiler_context const &ctx = {}) -> tall_and_skinny {
+                                 std::int64_t K, std::int32_t M_block_size = 0) -> tall_and_skinny {
     tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create(&rec, info.get(), number_ty, N, K,
-                                                      M_block_size, ctx.get()));
+    CHECK_STATUS(
+        tinytc_recipe_tall_and_skinny_create(&rec, info.get(), number_ty, N, K, M_block_size));
     return tall_and_skinny{rec};
 }
 
@@ -1255,7 +1251,6 @@ inline auto make_tall_and_skinny(core_info const &info, tinytc_type_t number_ty,
  * @param alignB [in] Memory alignment of B; can be 0
  * @param alignC [in] Memory alignment of C; can be 0
  * @param M_block_size Chunk size for M-mode
- * @param ctx Compiler context
  *
  * @return Tall and skinny recipe
  */
@@ -1263,12 +1258,11 @@ inline auto make_tall_and_skinny_specialized(core_info const &info, tinytc_type_
                                              std::int64_t M, std::int64_t N, std::int64_t K,
                                              std::int64_t ldA, std::int64_t ldB, std::int64_t ldC,
                                              std::int32_t alignA, std::int32_t alignB,
-                                             std::int32_t alignC, std::int32_t M_block_size = 0,
-                                             compiler_context const &ctx = {}) -> tall_and_skinny {
+                                             std::int32_t alignC, std::int32_t M_block_size = 0)
+    -> tall_and_skinny {
     tinytc_recipe_t rec;
-    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(&rec, info.get(), number_ty, M, N,
-                                                                  K, ldA, ldB, ldC, alignA, alignB,
-                                                                  alignC, M_block_size, ctx.get()));
+    CHECK_STATUS(tinytc_recipe_tall_and_skinny_create_specialized(
+        &rec, info.get(), number_ty, M, N, K, ldA, ldB, ldC, alignA, alignB, alignC, M_block_size));
     return tall_and_skinny{rec};
 }
 

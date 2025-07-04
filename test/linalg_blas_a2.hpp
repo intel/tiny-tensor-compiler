@@ -28,10 +28,9 @@ auto make_blas_a2_prog(char const *name, tensor_layout const &layoutA, tensor_la
                        std::function<void(region_builder &, array_view<tinytc_value_t>)> make_op,
                        std::int32_t work_group_size = 0) -> prog {
     auto ctx = make_compiler_context();
-    return make_blas_a2_prog(
-        ctx, name, layoutA, layoutB, get<to_number_type_t<AlphaT>>(ctx.get()),
-        get<to_number_type_t<AT>>(ctx.get()), get<to_number_type_t<BetaT>>(ctx.get()),
-        get<to_number_type_t<BT>>(ctx.get()), std::move(make_op), work_group_size);
+    return make_blas_a2_prog(ctx, name, layoutA, layoutB, to_type<AlphaT>(ctx.get()),
+                             to_type<AT>(ctx.get()), to_type<BetaT>(ctx.get()),
+                             to_type<BT>(ctx.get()), std::move(make_op), work_group_size);
 }
 
 template <typename AlphaT, typename AT, typename BetaT, typename BT> class axpby {

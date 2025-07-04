@@ -5,6 +5,7 @@
 
 #include <argparser.hpp>
 #include <sycl/sycl.hpp>
+#include <tinytc/builder.hpp>
 #include <tinytc/tinytc.hpp>
 #include <tinytc/tinytc_sycl.hpp>
 
@@ -26,7 +27,7 @@ struct args {
     bool dump = false;
     bool specialize_M = false;
     bool specialize_ld = false;
-    scalar_type ty = scalar_type::f32;
+    examples::test_type ty = examples::test_type::f32;
     bool update = false;
     bool verify = false;
     std::int32_t alignment = 0;
@@ -116,9 +117,9 @@ template <typename T> void test(queue q, args &a) {
             set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
                 std::cerr << what << std::endl;
             });
-            auto r = make_tall_and_skinny_specialized(info, a.ty, M, c.n, c.k, ldA, ldB, ldC,
-                                                      a.alignment, a.alignment, a.alignment,
-                                                      a.M_block_size, ctx);
+            auto r = make_tall_and_skinny_specialized(info, to_type<T>(ctx.get()), M, c.n, c.k, ldA,
+                                                      ldB, ldC, a.alignment, a.alignment,
+                                                      a.alignment, a.M_block_size);
             if (a.dump) {
                 dump(get_prog(r));
             }
@@ -135,8 +136,8 @@ template <typename T> void test(queue q, args &a) {
 
             const auto ops_per_mnk = [&] {
                 switch (a.ty) {
-                case scalar_type::c32:
-                case scalar_type::c64:
+                case examples::test_type::c32:
+                case examples::test_type::c64:
                     return 8;
                 default:
                     return 2;
@@ -171,7 +172,7 @@ int main(int argc, char **argv) {
     try {
         parser.set_short_opt('a', &a.alignment, "Override memory alignment");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
-        parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
+        parser.set_short_opt('f', &a.ty, "Data type (bf16, f16, f32, f64, c32, c64)")
             .converter(examples::convert_data_type);
         parser.set_short_opt('h', &help, "Show help");
         parser.set_short_opt('u', &a.update,
@@ -202,28 +203,7 @@ int main(int argc, char **argv) {
 
     std::cout << "precision,m,n,k,update,time,bandwidth,gflops" << std::endl;
     try {
-        switch (a.ty) {
-        case scalar_type::bf16:
-            test<tinytc::bfloat16>(std::move(q), a);
-            break;
-        case scalar_type::f16:
-            test<tinytc::half>(std::move(q), a);
-            break;
-        case scalar_type::f32:
-            test<float>(std::move(q), a);
-            break;
-        case scalar_type::f64:
-            test<double>(std::move(q), a);
-            break;
-        case scalar_type::c32:
-            test<std::complex<float>>(std::move(q), a);
-            break;
-        case scalar_type::c64:
-            test<std::complex<double>>(std::move(q), a);
-            break;
-        default:
-            return -1;
-        }
+        dispatch(a.ty, [&]<typename T>() { test<T>(q, a); });
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;

@@ -4,6 +4,7 @@
 #include "tall_and_skinny.hpp"
 #include "device_info.hpp"
 #include "error.hpp"
+#include "node/type.hpp"
 #include "number.hpp"
 #include "recipe.hpp"
 #include "tiling.hpp"
@@ -55,23 +56,22 @@ extern "C" {
 tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
                                                      const_tinytc_core_info_t info,
                                                      tinytc_type_t ty, int64_t N, int64_t K,
-                                                     int32_t M_block_size,
-                                                     tinytc_compiler_context_t ctx) {
-    return tinytc_recipe_tall_and_skinny_create_specialized(
-        recipe, info, ty, TINYTC_DYNAMIC, N, K, TINYTC_DYNAMIC, TINYTC_DYNAMIC, TINYTC_DYNAMIC, 0,
-        0, 0, M_block_size, ctx);
+                                                     int32_t M_block_size) {
+    return tinytc_recipe_tall_and_skinny_create_specialized(recipe, info, ty, TINYTC_DYNAMIC, N, K,
+                                                            TINYTC_DYNAMIC, TINYTC_DYNAMIC,
+                                                            TINYTC_DYNAMIC, 0, 0, 0, M_block_size);
 }
 
 tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t ty, int64_t M, int64_t N,
     int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
-    int32_t alignC, int32_t M_block_size, tinytc_compiler_context_t ctx) {
-    if (recipe == nullptr || info == nullptr || N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC) {
+    int32_t alignC, int32_t M_block_size) {
+    if (recipe == nullptr || info == nullptr || ty == nullptr || N == TINYTC_DYNAMIC ||
+        K == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 
-    auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
-    ctx = ctx_.get();
+    auto ctx = ty->context();
     std::int32_t source_id = 0;
     TINYTC_CHECK_STATUS(
         tinytc_compiler_context_add_source(ctx, "recipe/tall_and_skinny.cpp", "", &source_id));
@@ -200,7 +200,7 @@ tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
                 return f;
             };
 
-            auto p = make_prog(ctx_, my_loc());
+            auto p = make_prog(compiler_context{ctx, true}, my_loc());
             add_function(p,
                          kernel(tall_and_skinny_kernel_name(tall_and_skinny_kernel::gemm), true));
             add_function(

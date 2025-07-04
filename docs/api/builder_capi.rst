@@ -22,8 +22,6 @@ Common
 
   * :ref:`tinytc_reduce_mode_t`
 
-  * :ref:`tinytc_scalar_type_t`
-
   * :ref:`tinytc_store_flag_t`
 
   * :ref:`tinytc_transpose_t`
@@ -43,10 +41,6 @@ Common
   * :ref:`tinytc_matrix_use_to_string`
 
   * :ref:`tinytc_reduce_mode_to_string`
-
-  * :ref:`tinytc_scalar_type_size`
-
-  * :ref:`tinytc_scalar_type_to_string`
 
   * :ref:`tinytc_store_flag_to_string`
 
@@ -134,13 +128,6 @@ tinytc_reduce_mode_t
 
 .. doxygenenum:: tinytc_reduce_mode_t
 
-.. _tinytc_scalar_type_t:
-
-tinytc_scalar_type_t
-....................
-
-.. doxygenenum:: tinytc_scalar_type_t
-
 .. _tinytc_store_flag_t:
 
 tinytc_store_flag_t
@@ -202,20 +189,6 @@ tinytc_reduce_mode_to_string
 ............................
 
 .. doxygenfunction:: tinytc_reduce_mode_to_string
-
-.. _tinytc_scalar_type_size:
-
-tinytc_scalar_type_size
-.......................
-
-.. doxygenfunction:: tinytc_scalar_type_size
-
-.. _tinytc_scalar_type_to_string:
-
-tinytc_scalar_type_to_string
-............................
-
-.. doxygenfunction:: tinytc_scalar_type_to_string
 
 .. _tinytc_store_flag_to_string:
 
@@ -455,13 +428,33 @@ Data Type
 
   * :ref:`tinytc_boolean_type_get`
 
+  * :ref:`tinytc_i8_type_get`
+
+  * :ref:`tinytc_i16_type_get`
+
+  * :ref:`tinytc_i32_type_get`
+
+  * :ref:`tinytc_i64_type_get`
+
+  * :ref:`tinytc_index_type_get`
+
+  * :ref:`tinytc_f16_type_get`
+
+  * :ref:`tinytc_bf16_type_get`
+
+  * :ref:`tinytc_f32_type_get`
+
+  * :ref:`tinytc_f64_type_get`
+
+  * :ref:`tinytc_c32_type_get`
+
+  * :ref:`tinytc_c64_type_get`
+
   * :ref:`tinytc_coopmatrix_type_get`
 
   * :ref:`tinytc_group_type_get`
 
   * :ref:`tinytc_memref_type_get`
-
-  * :ref:`tinytc_scalar_type_get`
 
   * :ref:`tinytc_void_type_get`
 
@@ -474,6 +467,83 @@ tinytc_boolean_type_get
 .......................
 
 .. doxygenfunction:: tinytc_boolean_type_get
+
+.. _tinytc_i8_type_get:
+
+tinytc_i8_type_get
+..................
+
+.. doxygenfunction:: tinytc_i8_type_get
+
+.. _tinytc_i16_type_get:
+
+tinytc_i16_type_get
+...................
+
+.. doxygenfunction:: tinytc_i16_type_get
+
+.. _tinytc_i32_type_get:
+
+tinytc_i32_type_get
+...................
+
+.. doxygenfunction:: tinytc_i32_type_get
+
+.. _tinytc_i64_type_get:
+
+tinytc_i64_type_get
+...................
+
+.. doxygenfunction:: tinytc_i64_type_get
+
+.. _tinytc_index_type_get:
+
+tinytc_index_type_get
+.....................
+
+.. doxygenfunction:: tinytc_index_type_get
+
+.. _tinytc_f16_type_get:
+
+tinytc_f16_type_get
+...................
+
+.. doxygenfunction:: tinytc_f16_type_get
+
+.. _tinytc_bf16_type_get:
+
+tinytc_bf16_type_get
+....................
+
+.. doxygenfunction:: tinytc_bf16_type_get
+
+.. _tinytc_f32_type_get:
+
+tinytc_f32_type_get
+...................
+
+.. doxygenfunction:: tinytc_f32_type_get
+
+.. _tinytc_f64_type_get:
+
+tinytc_f64_type_get
+...................
+
+.. doxygenfunction:: tinytc_f64_type_get
+
+.. _tinytc_c32_type_get:
+
+tinytc_c32_type_get
+...................
+
+.. doxygenfunction:: tinytc_c32_type_get
+
+.. _tinytc_c64_type_get:
+
+tinytc_c64_type_get
+...................
+
+.. doxygenfunction:: tinytc_c64_type_get
 
 .. _tinytc_coopmatrix_type_get:
 
@@ -495,13 +565,6 @@ tinytc_memref_type_get
 ......................
 
 .. doxygenfunction:: tinytc_memref_type_get
-
-.. _tinytc_scalar_type_get:
-
-tinytc_scalar_type_get
-......................
-
-.. doxygenfunction:: tinytc_scalar_type_get
 
 .. _tinytc_void_type_get:
 

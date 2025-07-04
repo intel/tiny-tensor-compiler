@@ -8,7 +8,6 @@ Builder C++-API:
       - tinytc::comp3
       - tinytc::matrix_use
       - tinytc::reduce_mode
-      - tinytc::scalar_type
       - tinytc::store_flag
       - tinytc::transpose
     function:
@@ -18,10 +17,8 @@ Builder C++-API:
       - tinytc::to_string(comp3)
       - tinytc::to_string(matrix_use)
       - tinytc::to_string(reduce_mode)
-      - tinytc::to_string(scalar_type)
       - tinytc::to_string(store_flag)
       - tinytc::to_string(transpose)
-      - tinytc::size
     class:
       - tinytc::builder_error
     typedef:
@@ -43,16 +40,26 @@ Builder C++-API:
       - tinytc::named_attr
   Data Type:
     function:
-      - tinytc::get_boolean
-      - tinytc::get_coopmatrix
-      - tinytc::get_group
-      - tinytc::get_memref
-      - tinytc::get_scalar
-      - tinytc::get_void
+      - tinytc::get
+      - tinytc::get_compiler_context(tinytc_type_t)
+      - tinytc::to_type
     struct:
-      - tinytc::to_scalar_type
-    variable:
-      - tinytc::to_scalar_type_v
+      - tinytc::getter< boolean_type >
+      - tinytc::getter< i8_type >
+      - tinytc::getter< i16_type >
+      - tinytc::getter< i32_type >
+      - tinytc::getter< i64_type >
+      - tinytc::getter< index_type >
+      - tinytc::getter< f16_type >
+      - tinytc::getter< bf16_type >
+      - tinytc::getter< f32_type >
+      - tinytc::getter< f64_type >
+      - tinytc::getter< c32_type >
+      - tinytc::getter< c64_type >
+      - tinytc::getter< coopmatrix_type >
+      - tinytc::getter< group_type >
+      - tinytc::getter< memref_type >
+      - tinytc::getter< void_type >
   Function:
     function:
       - tinytc::get_body

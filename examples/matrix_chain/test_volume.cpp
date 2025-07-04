@@ -37,13 +37,13 @@ test_volume<T>::test_volume(std::int64_t N, std::int64_t P, std::int64_t howmany
     }
 
     g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+        q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx_.get()), transpose::N, transpose::N,
                                     B2_aligned_, P_, P_, B3_aligned_, B3_aligned_ * P_, P_, P_ * P_,
-                                    B2_aligned_, B2_aligned_ * P_, ctx_)));
+                                    B2_aligned_, B2_aligned_ * P_)));
     g_.emplace_back(make_recipe_handler(
-        q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
+        q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx_.get()), transpose::N, transpose::N,
                                     B3_aligned_, P_, B2_, B3_aligned_, 0, B2_aligned_,
-                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_, ctx_)));
+                                    B2_aligned_ * P_, B3_aligned_, B3_aligned_ * P_)));
 }
 
 template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_context {
@@ -57,10 +57,9 @@ template <typename T> auto test_volume<T>::make_compiler_context() -> compiler_c
 template <typename T>
 auto test_volume<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
-    constexpr auto real_t = to_scalar_type_v<T>;
     // Optimized kernel
     auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
-        auto element_ty = get<number_type>(ctx, real_t);
+        auto element_ty = to_type<T>(ctx);
         std::array<tinytc_type_t, 2 * dim + 2> param_types;
         for (std::size_t i = 0; i < dim; ++i) {
             param_types[i] = A_[i].type(element_ty);
@@ -91,7 +90,7 @@ auto test_volume<T>::make_optimized_kernel(bool dump_code)
         set_name(I, "I");
 
         auto bb = region_builder{fn_body};
-        auto gid = bb.create<group_id_inst>(comp3::x, get<number_type>(ctx, scalar_type::index));
+        auto gid = bb.create<group_id_inst>(comp3::x, get<index_type>(ctx));
         auto const static_offsets2 = std::array<std::int64_t, 2u>{0, 0};
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes2 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 2u> {

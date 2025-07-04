@@ -8,7 +8,6 @@ Builder C-API:
       - tinytc_comp3_t
       - tinytc_matrix_use_t
       - tinytc_reduce_mode_t
-      - tinytc_scalar_type_t
       - tinytc_store_flag_t
       - tinytc_transpose_t
     define:
@@ -19,8 +18,6 @@ Builder C-API:
       - tinytc_comp3_to_string
       - tinytc_matrix_use_to_string
       - tinytc_reduce_mode_to_string
-      - tinytc_scalar_type_size
-      - tinytc_scalar_type_to_string
       - tinytc_store_flag_to_string
       - tinytc_transpose_to_string
     struct:
@@ -57,11 +54,22 @@ Builder C-API:
   Data Type:
     function:
       - tinytc_boolean_type_get
+      - tinytc_i8_type_get
+      - tinytc_i16_type_get
+      - tinytc_i32_type_get
+      - tinytc_i64_type_get
+      - tinytc_index_type_get
+      - tinytc_f16_type_get
+      - tinytc_bf16_type_get
+      - tinytc_f32_type_get
+      - tinytc_f64_type_get
+      - tinytc_c32_type_get
+      - tinytc_c64_type_get
       - tinytc_coopmatrix_type_get
       - tinytc_group_type_get
       - tinytc_memref_type_get
-      - tinytc_scalar_type_get
       - tinytc_void_type_get
+      - tinytc_type_get_compiler_context
   Function:
     function:
       - tinytc_func_create

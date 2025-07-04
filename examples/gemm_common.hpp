@@ -24,24 +24,68 @@ struct test_case {
     std::int64_t k;
 };
 
-inline auto convert_data_type(char const *str, scalar_type &val) -> cmd::parser_status {
+enum class test_type { bf16, f16, f32, f64, c32, c64 };
+auto to_string(test_type ty) {
+    switch (ty) {
+    case test_type::bf16:
+        return "bf16";
+    case test_type::f16:
+        return "f16";
+    case test_type::f32:
+        return "f32";
+    case test_type::f64:
+        return "f64";
+    case test_type::c32:
+        return "c32";
+    case test_type::c64:
+        return "c64";
+    }
+    return "unknown";
+}
+
+inline auto convert_data_type(char const *str, test_type &val) -> cmd::parser_status {
     if (std::strcmp(str, "bf16") == 0) {
-        val = scalar_type::bf16;
+        val = test_type::bf16;
     } else if (std::strcmp(str, "f16") == 0) {
-        val = scalar_type::f16;
+        val = test_type::f16;
     } else if (std::strcmp(str, "f32") == 0) {
-        val = scalar_type::f32;
+        val = test_type::f32;
     } else if (std::strcmp(str, "f64") == 0) {
-        val = scalar_type::f64;
+        val = test_type::f64;
     } else if (std::strcmp(str, "c32") == 0) {
-        val = scalar_type::c32;
+        val = test_type::c32;
     } else if (std::strcmp(str, "c64") == 0) {
-        val = scalar_type::c64;
+        val = test_type::c64;
     } else {
         return cmd::parser_status::invalid_argument;
     }
     return cmd::parser_status::success;
-};
+}
+template <typename F> auto dispatch(test_type ty, F &&f) {
+    switch (ty) {
+    case test_type::bf16:
+        f.template operator()<tinytc::bfloat16>();
+        break;
+    case test_type::f16:
+        f.template operator()<tinytc::half>();
+        break;
+    case test_type::f32:
+        f.template operator()<float>();
+        break;
+    case test_type::f64:
+        f.template operator()<double>();
+        break;
+    case test_type::c32:
+        f.template operator()<std::complex<float>>();
+        break;
+    case test_type::c64:
+        f.template operator()<std::complex<double>>();
+        break;
+    default:
+        throw std::runtime_error("Unknown test type");
+    }
+}
+
 inline auto convert_test_case(char const *str, test_case &tc) -> cmd::parser_status {
     auto const parse = [](std::int64_t *v, char const *str, char **end, char sep) {
         *v = strtol(str, end, 10);

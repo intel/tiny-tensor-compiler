@@ -5,6 +5,7 @@
 #include "gemm_tools.hpp"
 #include "number.hpp"
 #include "tiling.hpp"
+#include "tinytc/builder.hpp"
 #include "tinytc/tinytc.hpp"
 #include "tinytc/types.h"
 #include "tinytc/types.hpp"
@@ -22,10 +23,12 @@ TEST_CASE("suggest work group size") {
     auto info = make_core_info_intel_from_arch(intel_gpu_architecture::pvc);
     set_core_features(info, tinytc_core_feature_flag_large_register_file);
     REQUIRE(info->register_space() == 64 * 256);
-    auto check = [&info](std::int64_t M, std::int64_t N, std::size_t sgs, std::size_t m_tiles,
-                         std::size_t n_tiles) {
+    auto ctx = make_compiler_context();
+    auto f64_ty = get<f64_type>(ctx.get());
+    auto check = [&info, &f64_ty](std::int64_t M, std::int64_t N, std::size_t sgs,
+                                  std::size_t m_tiles, std::size_t n_tiles) {
         auto const core_cfg = info->get_core_config(sgs);
-        auto const shape = blas_shape{scalar_type::f64, scalar_type::f64, scalar_type::f64, {M, N}};
+        auto const shape = blas_shape{f64_ty, f64_ty, f64_ty, {M, N}};
         auto tiling = suggest_local_tiling(shape, core_cfg);
         CHECK(tiling.m_tiles() == m_tiles);
         CHECK(tiling.n_tiles() == n_tiles);
@@ -86,9 +89,12 @@ TEST_CASE("block size") {
 }
 
 TEST_CASE("compatible scalar type") {
-    std::array<scalar_type, 10u> types = {
-        scalar_type::i8,  scalar_type::bf16, scalar_type::f16, scalar_type::i16, scalar_type::f32,
-        scalar_type::i32, scalar_type::f64,  scalar_type::i64, scalar_type::c32, scalar_type::c64};
+    auto ctx = make_compiler_context();
+    std::array<tinytc_type_t, 10u> types = {get<i8_type>(ctx.get()),  get<bf16_type>(ctx.get()),
+                                            get<f16_type>(ctx.get()), get<i16_type>(ctx.get()),
+                                            get<f32_type>(ctx.get()), get<i32_type>(ctx.get()),
+                                            get<f64_type>(ctx.get()), get<i64_type>(ctx.get()),
+                                            get<c32_type>(ctx.get()), get<c64_type>(ctx.get())};
     std::array<std::array<bool, 10u>, 10u> relmatrix = {{{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
                                                          {0, 1, 0, 0, 1, 0, 1, 0, 1, 1},
                                                          {0, 0, 1, 0, 1, 0, 1, 0, 1, 1},

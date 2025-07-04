@@ -9,6 +9,7 @@
 #include "tinytc/types.hpp"
 
 #include <complex>
+#include <type_traits>
 
 namespace tinytc {
 
@@ -142,55 +143,51 @@ template <typename T, typename... Args> inline auto get(Args &&...args) -> tinyt
 }
 
 /**
- * Returns the number type class corresponding to C++ type T
+ * Returns an appropriate tinytc type for C++ type T
  *
- * Specializations exist for bool, (u)int8_t, (u)int16_t, (u)int32_t, (u)int64_t, float, double.
+ * Specializations exist for bool, int8_t, int16_t, int32_t, int64_t, bfloat16, half, float, double,
+ * std::complex<float>, std::complex<double>
  */
-template <typename T> struct to_number_type;
-//! to_number_type specialization
-template <> struct to_number_type<std::int8_t> {
-    using type = i8_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<std::int16_t> {
-    using type = i16_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<std::int32_t> {
-    using type = i32_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<std::int64_t> {
-    using type = i64_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<bfloat16> {
-    using type = bf16_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<half> {
-    using type = f16_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<float> {
-    using type = f32_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<double> {
-    using type = f64_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<std::complex<float>> {
-    using type = c32_type; ///< type
-};
-//! to_number_type specialization
-template <> struct to_number_type<std::complex<double>> {
-    using type = c64_type; ///< type
-};
+template <typename T> auto to_type(tinytc_compiler_context_t ctx) -> tinytc_type_t {
+    if constexpr (std::is_same_v<T, bool>) {
+        return get<boolean_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::int8_t>) {
+        return get<i8_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::int16_t>) {
+        return get<i16_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::int32_t>) {
+        return get<i32_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::int64_t>) {
+        return get<i64_type>(ctx);
+    } else if constexpr (std::is_same_v<T, bfloat16>) {
+        return get<bf16_type>(ctx);
+    } else if constexpr (std::is_same_v<T, half>) {
+        return get<f16_type>(ctx);
+    } else if constexpr (std::is_same_v<T, float>) {
+        return get<f32_type>(ctx);
+    } else if constexpr (std::is_same_v<T, double>) {
+        return get<f64_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::complex<float>>) {
+        return get<c32_type>(ctx);
+    } else if constexpr (std::is_same_v<T, std::complex<double>>) {
+        return get<c64_type>(ctx);
+    } else {
+        static_assert(false, "Not implemented");
+    }
+}
+
 /**
- * Convenience variable for to_number_type.
+ * @brief Get context
+ *
+ * @param ty type
+ *
+ * @return Compiler context
  */
-template <typename T> using to_number_type_t = typename to_number_type<T>::type;
+inline auto get_compiler_context(const_tinytc_type_t ty) -> compiler_context {
+    tinytc_compiler_context_t ctx;
+    CHECK_STATUS(tinytc_type_get_compiler_context(ty, &ctx));
+    return compiler_context{ctx, true};
+}
 
 ////////////////////////////
 /////////// Value //////////

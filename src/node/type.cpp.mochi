@@ -242,4 +242,12 @@ auto void_type::get(tinytc_compiler_context_t ctx) -> tinytc_type_t {
 
 extern "C" {
 // もち api_builder_cpp "tinytc/types.anko"
+
+tinytc_status_t tinytc_type_get_compiler_context(const_tinytc_type_t ty,
+                                                 tinytc_compiler_context_t *ctx) {
+    if (ty == nullptr || ctx == nullptr) {
+        return tinytc_status_invalid_arguments;
+    }
+    return exception_to_status_code([&] { *ctx = ty->context(); });
+}
 }

@@ -224,7 +224,7 @@ template <> struct unique_handle_traits<tinytc_inst_t> {
 };
 } // namespace internal
 
-//! @brief Reference-counting wrapper for tinytc_inst_t
+//! @brief Unique wrapper for tinytc_inst_t
 class inst : public unique_handle<tinytc_inst_t> {
   public:
     using unique_handle::unique_handle;
@@ -242,7 +242,7 @@ template <> struct unique_handle_traits<tinytc_func_t> {
 };
 } // namespace internal
 
-//! @brief Reference-counting wrapper for tinytc_func_t
+//! @brief Unique wrapper for tinytc_func_t
 class func : public unique_handle<tinytc_func_t> {
   public:
     using unique_handle::unique_handle;

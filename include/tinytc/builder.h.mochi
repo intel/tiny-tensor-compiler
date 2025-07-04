@@ -121,6 +121,19 @@ TINYTC_EXPORT tinytc_status_t tinytc_string_attr_get(tinytc_attr_t *attr,
 
 // もち api_builder_h "tinytc/types.anko"
 
+/**
+ * @brief Get context object from type object
+ *
+ * The reference count of the context remains unchanged.
+ *
+ * @param ty [in] type object
+ * @param ctx [out] pointer to context object
+ *
+ * @return tinytc_status_success on success and error otherwise
+ */
+TINYTC_EXPORT tinytc_status_t tinytc_type_get_compiler_context(const_tinytc_type_t ty,
+                                                               tinytc_compiler_context_t *ctx);
+
 ////////////////////////////
 /////////// Value //////////
 ////////////////////////////

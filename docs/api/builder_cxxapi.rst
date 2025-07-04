@@ -22,8 +22,6 @@ Common
 
   * :ref:`tinytc::reduce_mode`
 
-  * :ref:`tinytc::scalar_type`
-
   * :ref:`tinytc::store_flag`
 
   * :ref:`tinytc::transpose`
@@ -42,13 +40,9 @@ Common
 
   * :ref:`tinytc::to_string(reduce_mode)`
 
-  * :ref:`tinytc::to_string(scalar_type)`
-
   * :ref:`tinytc::to_string(store_flag)`
 
   * :ref:`tinytc::to_string(transpose)`
-
-  * :ref:`tinytc::size`
 
 * Classes
 
@@ -101,13 +95,6 @@ reduce_mode
 ...........
 
 .. doxygenenum:: tinytc::reduce_mode
-
-.. _tinytc::scalar_type:
-
-scalar_type
-...........
-
-.. doxygenenum:: tinytc::scalar_type
 
 .. _tinytc::store_flag:
 
@@ -168,13 +155,6 @@ to_string(reduce_mode)
 
 .. doxygenfunction:: tinytc::to_string(reduce_mode)
 
-.. _tinytc::to_string(scalar_type):
-
-to_string(scalar_type)
-......................
-
-.. doxygenfunction:: tinytc::to_string(scalar_type)
-
 .. _tinytc::to_string(store_flag):
 
 to_string(store_flag)
@@ -188,13 +168,6 @@ to_string(transpose)
 ....................
 
 .. doxygenfunction:: tinytc::to_string(transpose)
-
-.. _tinytc::size:
-
-size
-....
-
-.. doxygenfunction:: tinytc::size
 
 Common Classes
 --------------
@@ -332,90 +305,175 @@ Data Type
 
 * Functions
 
-  * :ref:`tinytc::get_boolean`
+  * :ref:`tinytc::get`
 
-  * :ref:`tinytc::get_coopmatrix`
-
-  * :ref:`tinytc::get_group`
-
-  * :ref:`tinytc::get_memref`
-
-  * :ref:`tinytc::get_scalar`
-
-  * :ref:`tinytc::get_void`
+  * :ref:`tinytc::to_type`
 
 * Structures
 
-  * :ref:`tinytc::to_scalar_type`
+  * :ref:`tinytc::getter\< boolean_type \>`
 
-* Variables
+  * :ref:`tinytc::getter\< i8_type \>`
 
-  * :ref:`tinytc::to_scalar_type_v`
+  * :ref:`tinytc::getter\< i16_type \>`
+
+  * :ref:`tinytc::getter\< i32_type \>`
+
+  * :ref:`tinytc::getter\< i64_type \>`
+
+  * :ref:`tinytc::getter\< index_type \>`
+
+  * :ref:`tinytc::getter\< f16_type \>`
+
+  * :ref:`tinytc::getter\< bf16_type \>`
+
+  * :ref:`tinytc::getter\< f32_type \>`
+
+  * :ref:`tinytc::getter\< f64_type \>`
+
+  * :ref:`tinytc::getter\< c32_type \>`
+
+  * :ref:`tinytc::getter\< c64_type \>`
+
+  * :ref:`tinytc::getter\< coopmatrix_type \>`
+
+  * :ref:`tinytc::getter\< group_type \>`
+
+  * :ref:`tinytc::getter\< memref_type \>`
+
+  * :ref:`tinytc::getter\< void_type \>`
 
 Data Type Functions
 -------------------
 
-.. _tinytc::get_boolean:
+.. _tinytc::get:
 
-get_boolean
-...........
+get
+...
 
-.. doxygenfunction:: tinytc::get_boolean
+.. doxygenfunction:: tinytc::get
 
-.. _tinytc::get_coopmatrix:
+.. _tinytc::to_type:
 
-get_coopmatrix
-..............
+to_type
+.......
 
-.. doxygenfunction:: tinytc::get_coopmatrix
-
-.. _tinytc::get_group:
-
-get_group
-.........
-
-.. doxygenfunction:: tinytc::get_group
-
-.. _tinytc::get_memref:
-
-get_memref
-..........
-
-.. doxygenfunction:: tinytc::get_memref
-
-.. _tinytc::get_scalar:
-
-get_scalar
-..........
-
-.. doxygenfunction:: tinytc::get_scalar
-
-.. _tinytc::get_void:
-
-get_void
-........
-
-.. doxygenfunction:: tinytc::get_void
+.. doxygenfunction:: tinytc::to_type
 
 Data Type Structures
 --------------------
 
-.. _tinytc::to_scalar_type:
+.. _tinytc::getter\< boolean_type \>:
 
-to_scalar_type
-..............
+getter<boolean_type>
+....................
 
-.. doxygenstruct:: tinytc::to_scalar_type
+.. doxygenstruct:: tinytc::getter< boolean_type >
 
-Data Type Variables
--------------------
+.. _tinytc::getter\< i8_type \>:
 
-.. _tinytc::to_scalar_type_v:
+getter<i8_type>
+...............
 
-to_scalar_type_v
+.. doxygenstruct:: tinytc::getter< i8_type >
+
+.. _tinytc::getter\< i16_type \>:
+
+getter<i16_type>
 ................
 
-.. doxygenvariable:: tinytc::to_scalar_type_v
+.. doxygenstruct:: tinytc::getter< i16_type >
+
+.. _tinytc::getter\< i32_type \>:
+
+getter<i32_type>
+................
+
+.. doxygenstruct:: tinytc::getter< i32_type >
+
+.. _tinytc::getter\< i64_type \>:
+
+getter<i64_type>
+................
+
+.. doxygenstruct:: tinytc::getter< i64_type >
+
+.. _tinytc::getter\< index_type \>:
+
+getter<index_type>
+..................
+
+.. doxygenstruct:: tinytc::getter< index_type >
+
+.. _tinytc::getter\< f16_type \>:
+
+getter<f16_type>
+................
+
+.. doxygenstruct:: tinytc::getter< f16_type >
+
+.. _tinytc::getter\< bf16_type \>:
+
+getter<bf16_type>
+.................
+
+.. doxygenstruct:: tinytc::getter< bf16_type >
+
+.. _tinytc::getter\< f32_type \>:
+
+getter<f32_type>
+................
+
+.. doxygenstruct:: tinytc::getter< f32_type >
+
+.. _tinytc::getter\< f64_type \>:
+
+getter<f64_type>
+................
+
+.. doxygenstruct:: tinytc::getter< f64_type >
+
+.. _tinytc::getter\< c32_type \>:
+
+getter<c32_type>
+................
+
+.. doxygenstruct:: tinytc::getter< c32_type >
+
+.. _tinytc::getter\< c64_type \>:
+
+getter<c64_type>
+................
+
+.. doxygenstruct:: tinytc::getter< c64_type >
+
+.. _tinytc::getter\< coopmatrix_type \>:
+
+getter<coopmatrix_type>
+.......................
+
+.. doxygenstruct:: tinytc::getter< coopmatrix_type >
+
+.. _tinytc::getter\< group_type \>:
+
+getter<group_type>
+..................
+
+.. doxygenstruct:: tinytc::getter< group_type >
+
+.. _tinytc::getter\< memref_type \>:
+
+getter<memref_type>
+...................
+
+.. doxygenstruct:: tinytc::getter< memref_type >
+
+.. _tinytc::getter\< void_type \>:
+
+getter<void_type>
+.................
+
+.. doxygenstruct:: tinytc::getter< void_type >
 
 Function
 ========

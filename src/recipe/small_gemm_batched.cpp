@@ -3,6 +3,7 @@
 
 #include "small_gemm_batched.hpp"
 #include "error.hpp"
+#include "node/type.hpp"
 #include "number.hpp"
 #include "recipe.hpp"
 #include "tinytc/builder.hpp"
@@ -49,16 +50,15 @@ extern "C" {
 tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t ty, tinytc_transpose_t tA,
     tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA, int64_t strideA,
-    int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC, tinytc_compiler_context_t ctx) {
-    if (recipe == nullptr || info == nullptr || M == TINYTC_DYNAMIC || N == TINYTC_DYNAMIC ||
-        K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC || strideA == TINYTC_DYNAMIC ||
-        ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC || ldC == TINYTC_DYNAMIC ||
-        strideC == TINYTC_DYNAMIC) {
+    int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC) {
+    if (recipe == nullptr || info == nullptr || ty == nullptr || M == TINYTC_DYNAMIC ||
+        N == TINYTC_DYNAMIC || K == TINYTC_DYNAMIC || ldA == TINYTC_DYNAMIC ||
+        strideA == TINYTC_DYNAMIC || ldB == TINYTC_DYNAMIC || strideB == TINYTC_DYNAMIC ||
+        ldC == TINYTC_DYNAMIC || strideC == TINYTC_DYNAMIC) {
         return tinytc_status_invalid_arguments;
     }
 
-    auto ctx_ = ctx ? compiler_context{ctx, true} : make_compiler_context();
-    ctx = ctx_.get();
+    auto ctx = ty->context();
     std::int32_t source_id = 0;
     TINYTC_CHECK_STATUS(
         tinytc_compiler_context_add_source(ctx, "recipe/small_gemm_batched.cpp", "", &source_id));
@@ -134,7 +134,7 @@ tinytc_status_t tinytc_recipe_small_gemm_batched_create(
 
                 return f;
             };
-            auto p = make_prog(ctx_, my_loc());
+            auto p = make_prog(compiler_context{ctx, true}, my_loc());
             add_function(
                 p, kernel(small_gemm_batched_kernel_name(small_gemm_batched_kernel::gemm), true));
             add_function(

@@ -1,6 +1,7 @@
 // Copyright (C) 2024 Intel Corporation
 // SPDX-License-Identifier: BSD-3-Clause
 
+#include <tinytc/builder.h>
 #include <tinytc/tinytc.h>
 #include <tinytc/tinytc_ze.h>
 
@@ -40,17 +41,21 @@ tinytc_status_t gemm(ze_context_handle_t context, ze_device_handle_t device,
                      ze_command_list_handle_t list) {
     tinytc_status_t status = tinytc_status_success;
     tinytc_core_info_t info = NULL;
+    tinytc_compiler_context_t ctx = NULL;
+    tinytc_type_t f32_ty = NULL;
     tinytc_recipe_t recipe = NULL;
     tinytc_recipe_handler_t handler = NULL;
     void *A = NULL, *B = NULL, *C = NULL;
     float *Chost = NULL;
 
     CHECK(tinytc_ze_core_info_create(&info, device));
+    CHECK(tinytc_compiler_context_create(&ctx));
+    CHECK(tinytc_f32_type_get(&f32_ty, ctx));
 
     const uint32_t M = 64, N = 64, K = 64, howmany = 1000;
-    CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, tinytc_scalar_type_f32,
-                                                  tinytc_transpose_N, tinytc_transpose_N, M, N, K,
-                                                  M, M * K, K, K * N, M, M * N, NULL));
+    CHECK(tinytc_recipe_small_gemm_batched_create(&recipe, info, f32_ty, tinytc_transpose_N,
+                                                  tinytc_transpose_N, M, N, K, M, M * K, K, K * N,
+                                                  M, M * N));
     CHECK(tinytc_ze_recipe_handler_create(&handler, context, device, recipe));
 
     const size_t Abytes = M * K * howmany * sizeof(float);
@@ -107,6 +112,7 @@ err:
     }
     tinytc_recipe_handler_release(handler);
     tinytc_recipe_release(recipe);
+    tinytc_compiler_context_release(ctx);
     tinytc_core_info_release(info);
 
     return status;
@@ -144,7 +150,7 @@ tinytc_status_t custom_kernel(ze_context_handle_t context, ze_device_handle_t de
 
     static const char source_text[] =
         "func @copy(%A: memref<i32x" CHUNK_SIZE_S "x?>, %B: memref<i32x" CHUNK_SIZE_S "x?>) {\n"
-        "    %gid = builtin.group_id.x : index\n"
+        "    %gid = group_id.x : index\n"
         "    %a = subview %A[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
         "    %b = subview %B[0:" CHUNK_SIZE_S ",%gid] : memref<i32x" CHUNK_SIZE_S ">\n"
         "    %c0 = constant 0 : i32\n"

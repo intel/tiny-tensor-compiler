@@ -33,7 +33,7 @@ struct args {
     std::int32_t internal_repetitions = 1;
     bool trans_a = false;
     bool trans_b = false;
-    scalar_type ty = scalar_type::f32;
+    examples::test_type ty = examples::test_type::f32;
     bool update = false;
     bool verify = false;
     std::vector<examples::test_case> tc;
@@ -53,17 +53,14 @@ template <typename F> double bench(F f, int nrepeat = 10) {
     return min_exec_time_ns;
 }
 
-auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose tB, bool atomic,
-                                       std::int64_t M, std::int64_t N, std::int64_t K,
+auto gemm_kernel_with_inner_repetition(tinytc_type_t element_ty, transpose tA, transpose tB,
+                                       bool atomic, std::int64_t M, std::int64_t N, std::int64_t K,
                                        std::array<std::int64_t, 2> A_stride,
                                        std::array<std::int64_t, 2> B_stride, bool update,
                                        std::array<std::int64_t, 2> C_stride, std::int32_t alignment,
                                        std::int32_t repetitions, bool dump_code, queue q)
     -> binary {
-    auto ctx = make_compiler_context();
-    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
-        std::cerr << what << std::endl;
-    });
+    auto ctx = get_compiler_context(element_ty);
     char const *file_name = std::source_location::current().file_name();
     auto const source_id = add_source(ctx, file_name, "");
 
@@ -86,8 +83,7 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
     };
 
     auto kernel = [&](tinytc_compiler_context_t ctx) {
-        auto index_ty = get<number_type>(ctx, scalar_type::index);
-        auto element_ty = get<number_type>(ctx, ty);
+        auto index_ty = get<index_type>(ctx);
         auto A_ty = make_memref(element_ty, tA, M, K, A_stride);
         auto B_ty = make_memref(element_ty, tB, K, N, B_stride);
         auto C_ty = make_memref(element_ty, transpose::N, M, N, C_stride);
@@ -148,6 +144,11 @@ auto gemm_kernel_with_inner_repetition(scalar_type ty, transpose tA, transpose t
 }
 
 template <typename T> void test(queue q, args &a) {
+    auto ctx = make_compiler_context();
+    set_error_reporter(ctx, [](char const *what, const tinytc_location_t *, void *) {
+        std::cerr << what << std::endl;
+    });
+
     auto total_reals = 1024 * 1024 * 1024 / sizeof(T);
     T *A_host = new T[total_reals];
     T *B_host = new T[total_reals];
@@ -216,7 +217,7 @@ template <typename T> void test(queue q, args &a) {
         double min_exec_time_ns = 0.0;
         try {
             auto src = gemm_kernel_with_inner_repetition(
-                a.ty, a.trans_a ? transpose::T : transpose::N,
+                to_type<T>(ctx.get()), a.trans_a ? transpose::T : transpose::N,
                 a.trans_b ? transpose::T : transpose::N, a.atomic, c.m, c.n, c.k,
                 {1, a.trans_a ? c.k : c.m}, {1, a.trans_b ? c.n : c.k}, a.update, {1, c.m},
                 a.alignment, a.internal_repetitions, a.dump, q);
@@ -240,8 +241,8 @@ template <typename T> void test(queue q, args &a) {
 
                 const auto ops_per_mnk = [&] {
                     switch (a.ty) {
-                    case scalar_type::c32:
-                    case scalar_type::c64:
+                    case examples::test_type::c32:
+                    case examples::test_type::c64:
                         return 8;
                     default:
                         return 2;
@@ -286,7 +287,7 @@ int main(int argc, char **argv) {
     try {
         parser.set_short_opt('a', &a.atomic, "Update C atomically");
         parser.set_short_opt('d', &a.dump, "Dump IR to stdout");
-        parser.set_short_opt('f', &a.ty, "Data type (f32, f64, c32, c64)")
+        parser.set_short_opt('f', &a.ty, "Data type (bf16, f16, f32, f64, c32, c64)")
             .converter(examples::convert_data_type);
         parser
             .set_short_opt('i', &a.internal_repetitions,
@@ -320,28 +321,7 @@ int main(int argc, char **argv) {
                  "repetitions"
               << std::endl;
     try {
-        switch (a.ty) {
-        case scalar_type::bf16:
-            test<tinytc::bfloat16>(std::move(q), a);
-            break;
-        case scalar_type::f16:
-            test<tinytc::half>(std::move(q), a);
-            break;
-        case scalar_type::f32:
-            test<float>(std::move(q), a);
-            break;
-        case scalar_type::f64:
-            test<double>(std::move(q), a);
-            break;
-        case scalar_type::c32:
-            test<std::complex<float>>(std::move(q), a);
-            break;
-        case scalar_type::c64:
-            test<std::complex<double>>(std::move(q), a);
-            break;
-        default:
-            return -1;
-        }
+        dispatch(a.ty, [&]<typename T>() { test<T>(q, a); });
     } catch (std::exception const &e) {
         std::cerr << e.what() << std::endl;
         return -1;

@@ -38,16 +38,17 @@ test_ader<T>::test_ader(std::int64_t N, std::int64_t P, std::int64_t howmany, st
         d->fill(0);
     }
 
+    auto ctx = make_compiler_context();
     for (std::int64_t n = 1; n <= N_; ++n) {
         auto bn = Bd_aligned(N_ - n);
         g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                        bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0, dQ_[n - 1].ld(),
-                                        dQ_[n - 1].stride(), bn, bn * P_)));
+            q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx.get()), transpose::N,
+                                        transpose::N, bn, P_, Bd(N_ - n + 1), K_[0].ld(), 0,
+                                        dQ_[n - 1].ld(), dQ_[n - 1].stride(), bn, bn * P_)));
         g_.emplace_back(make_recipe_handler(
-            q_, make_small_gemm_batched(dev_info_, to_scalar_type_v<T>, transpose::N, transpose::N,
-                                        bn, P_, P_, bn, bn * P_, A_[0].ld(), A_[0].stride(),
-                                        dQ_[n].ld(), dQ_[n].stride())));
+            q_, make_small_gemm_batched(dev_info_, to_type<T>(ctx.get()), transpose::N,
+                                        transpose::N, bn, P_, P_, bn, bn * P_, A_[0].ld(),
+                                        A_[0].stride(), dQ_[n].ld(), dQ_[n].stride())));
     }
 }
 
@@ -62,9 +63,8 @@ template <typename T> std::vector<matrix_batch<T>> test_ader<T>::make_dQ() {
 template <typename T>
 auto test_ader<T>::make_optimized_kernel(bool dump_code)
     -> sycl::kernel_bundle<sycl::bundle_state::executable> {
-    constexpr auto real_t = to_scalar_type_v<T>;
     auto opt_kernel = [&](tinytc_compiler_context_t ctx) {
-        auto element_ty = get<number_type>(ctx, real_t);
+        auto element_ty = to_type<T>(ctx);
         std::array<tinytc_type_t, 2 * dim + 3> param_types;
         param_types[0] = element_ty;
         for (std::size_t i = 0; i < dim; ++i) {
@@ -99,8 +99,7 @@ auto test_ader<T>::make_optimized_kernel(bool dump_code)
         auto bb = region_builder{fn_body};
         auto const c0 = bb.constant_zero(element_ty);
         auto const c1 = bb.constant_one(element_ty);
-        auto const gid =
-            bb.create<group_id_inst>(comp3::x, get<number_type>(ctx, scalar_type::index));
+        auto const gid = bb.create<group_id_inst>(comp3::x, get<index_type>(ctx));
         auto const static_offsets3 = std::array<std::int64_t, 3u>{0, 0, dynamic};
         auto const static_sizes3 = [](matrix_batch<T> const &b) -> std::array<std::int64_t, 3u> {
             return {b.nrows(), b.ncols(), 0};

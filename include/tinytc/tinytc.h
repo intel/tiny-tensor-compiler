@@ -584,15 +584,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_binary_get_core_features(
  * @param strideB [in] Number of elements between B-matrices
  * @param ldC [in] Leading dimension of C
  * @param strideC [in] Number of elements between C-matrices
- * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_create(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty,
     tinytc_transpose_t tA, tinytc_transpose_t tB, int64_t M, int64_t N, int64_t K, int64_t ldA,
-    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC,
-    tinytc_compiler_context_t ctx);
+    int64_t strideA, int64_t ldB, int64_t strideB, int64_t ldC, int64_t strideC);
 
 /**
  * @brief Set kernel arguments for small GEMM batched recipe
@@ -648,13 +646,14 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_small_gemm_batched_set_args(
  * @param K [in] Number columns of A, number of rows of B
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
  * the parameter auto-selected
- * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return tinytc_status_success on success and error otherwise
  */
-TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
-    tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t N,
-    int64_t K, int32_t M_block_size, tinytc_compiler_context_t ctx);
+TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(tinytc_recipe_t *recipe,
+                                                                   const_tinytc_core_info_t info,
+                                                                   tinytc_type_t number_ty,
+                                                                   int64_t N, int64_t K,
+                                                                   int32_t M_block_size);
 
 /**
  * @brief Returns a tall and skinny recipe with additional specialization constants
@@ -692,14 +691,13 @@ TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create(
  * @param alignC [in] Memory alignment of C; can be 0
  * @param M_block_size [in][optional] Size of M block that each work group gets; pass 0 to have
  * the parameter auto-selected
- * @param ctx [inout][optional] context object; a new context is created if ctx is nullptr
  *
  * @return
  */
 TINYTC_EXPORT tinytc_status_t tinytc_recipe_tall_and_skinny_create_specialized(
     tinytc_recipe_t *recipe, const_tinytc_core_info_t info, tinytc_type_t number_ty, int64_t M,
     int64_t N, int64_t K, int64_t ldA, int64_t ldB, int64_t ldC, int32_t alignA, int32_t alignB,
-    int32_t alignC, int32_t M_block_size, tinytc_compiler_context_t ctx);
+    int32_t alignC, int32_t M_block_size);
 
 /**
  * @brief Suggest an M block size for tall and skinny recipe
