@@ -23,7 +23,7 @@ Consider the following simple copy kernel
     func @copy(%A: memref<${type}x${M}x${N}>, %B: memref<${type}x${M}x${M}>) {
         %c0 = constant 0.0 : ${type}
         %c1 = constant 1.0 : ${type}
-        axpby.n %c1, %A, %c0, %B
+        axpby %c1, %A, %c0, %B
     }
 
 In the following example we build the above code programmatically and replace the place-holders (${.})
@@ -102,15 +102,15 @@ by actual values:
           int64_t M = ...;
           int64_t N = ...;
 
-          auto ctx = make_compiler_context();
+          auto ctx = create_compiler_context();
           auto element_ty = get<f32_type>(ctx.get());
           auto ty = get<memref_type>(element_ty, array_view{M, N}, array_view<std::int64_t>{},
                                      address_space::global);
 
           auto void_ty = get<void_type>(ctx.get());
-          auto f = make_func("copy", {ty, ty}, void_ty);
+          auto f = create_func("copy", {ty, ty}, void_ty);
 
-          auto body = get_body(f);
+          auto body = get_body(f.get());
           std::array<tinytc_value_t, 2u> params;
           get_parameters(body, params);
 
@@ -119,7 +119,7 @@ by actual values:
           auto beta = bb.constant_zero(element_ty);
           bb.create<axpby_inst>(false, transpose::N, alpha, params[0], beta, params[1]);
 
-          auto p = make_prog(ctx);
-          add_function(p, std::move(f));
+          auto p = create_prog(ctx.get());
+          add_function(p.get(), std::move(f));
 
-          dump(p);
+          dump(p.get());
